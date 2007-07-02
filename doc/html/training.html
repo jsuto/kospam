@@ -1,0 +1,230 @@
+<html>
+<title>Training the token database</title>
+<link rel="stylesheet" type="text/css" href="style.css">
+<body bgcolor=white text=darkblue vlink=#AC003A>
+<blockquote>
+
+<h1><img src="logo.png"></h1>
+
+<h2>Training the token database</h2>
+
+No antispam measure is perfect, eventually clapf will make a mistake, ie.
+commits a false positive or negative error. In such a case clapf should
+be trained that next time it will recognise a message like that correctly.
+
+This documentation describes how to train further the token database (after
+you have <a href="tokendatabase.html">created the initial token database</a>).<p/>
+
+
+<h3>1. Using the CDB backend</h3><p>
+
+One way to recreate the token database is from scratch, ie. append the message to be
+trained to the appropriate corpus (either HAM or SPAM). Then issue the following
+command again, then copy the new tokens.cdb over the old one (usually /opt/av/tokens.cdb).
+
+<pre>
+sh util/kcdb.sh /path/to/HAM /path/to/SPAM
+</pre>
+
+This approach requires the system administrator to do this stuff whenever required
+or use the spamdrop utility from maildrop so every user can maintain his own token
+database and configuration file. Unfortunately this latter requires shell access to
+the users.<p/>
+
+<h3>2. Using MySQL database</h3><p>
+
+Life is much easier if you store the tokens in a MySQL database and recreate the CDB
+file if necessary. This can be done several methods:
+
+<pre>
+a) using a command line utility
+b) using a CGI program
+c) forward a mail to a special email address
+</pre>
+
+These methods apply to the MySQL backend too, except you don't have to recreate the
+CDB file as clapf reads the tokens directly from MySQL database.<p/>
+
+<strong><u>2.1. Training with the command line utility</u></strong><p>
+
+Usage:<p>
+
+train -c &lt;config file&gt; [ -S &lt;spam message file&gt; | -H &lt;ham message file&gt; ]<p>
+
+If you want to train with a spam message:<p>
+
+<pre>
+train -c /usr/local/etc/clapf.conf -S message
+</pre>
+
+And similarly with a ham message:<p>
+
+<pre>
+train -c /usr/local/etc/clapf.conf -H message
+</pre>
+
+Then recreate the CDB file and move it to /opt/av:<p>
+
+<pre>
+sh util/mysql2cdb.sh tokens /path/to/my.cnf
+mv tokens* /opt/av
+</pre>
+
+Of course, you may create a cron entry to do this job:
+
+<pre>
+1 * * * * sh util/mysql2cdb.sh /opt/av/tokens /path/to/my.cnf
+</pre>
+
+this can be run from crontab, and it will recreate the CDB file if it necessary<p/>
+
+<strong><u>2.2. Training with the CGI interface</u></strong><p/>
+
+
+I assume you have a working web server (such as Apache).<p/>
+
+
+Create a directory (or a separate virtual host) and put TRAINING/index.html there.
+It contains a simple form with a select menu (ham or spam) and a textarea field
+to hold the message.<p/>
+
+<pre>
+mkdir /var/www/html/train
+cp TRAINING/index.html /var/www/html/train
+</pre>
+
+(Re)compile clapf with --enable-cgi option then put the file called traincgi
+to your cgi-bin directory. I strongly recommend you to put some access control
+at least to the traincgi program eg. a login/password protection.<p/>
+
+<pre>
+cp traincgi /var/www/cgi-bin
+vi /var/www/cgi-bin/.htaccess
+vi /var/www/cgi-bin/.htpasswd
+</pre>
+
+The traincgi program reads the configuration file of clapf (by default: /usr/local/etc/clapf.conf)
+for the mysql account parameters and the url of the training site. I strongly
+recommend you to remove world read permission from the configuration file let only
+the web server and the user running clapf read this file.<p/>
+
+One last step should be done: recreate the CDB database file and move it to /opt/av as
+written in 2.1.<p/>
+
+<strong>How to use the CGI interface?</strong><p/>
+
+<ol>
+<li>user visits and authenticates oneself at the web site</li>
+
+<li>Assuming Thunderbird (an excellent MUA application), the user
+issues the following key-combinations:<p>
+
+<pre>
+CTRL + u: show the source of the message
+CTRL + a: select the whole message
+CTRL + c: copy the selected stuff
+</pre></li>
+
+<li>User pastes the selection with (CTRL + v) to the textarea field then selects
+that this message is either ham or spam, then clicks on the submit button.</li>
+
+</ol>
+
+
+<strong><u>2.3. Training by forwarding the message to a special email address</u></strong><p/>
+
+This is the most convinient (and recommended) way to train the user database. Let's say
+Bob (joe@domain.com) wants to train the database. Just tell him to forward his missed
+spam to spam+joe@domain.com, and his missed ham to ham+joe@domain.com. (Important: the message
+must be forwarded as an attachment otherwise the trainer utilities discard it). Just a few clicks
+in his mailer application (Thunderbird, Outlook, ...) and done.<p/>
+
+For you - as the system adminstrator - a little setup is required.
+
+<ol>
+
+<li>Install <a href="http://www.courier-mta.org/maildrop/">maildrop</a></li>
+
+<li>Configure postfix to allow the plus (+) sign as a recipient delimiter.
+Set the following in main.cf, then issue a <i>postfix reload</i> command.
+
+<pre>
+recipient_delimiter = +
+</pre>
+
+</li>
+
+<li>
+Setup two accounts, one for handling spams to be trained and one for handling hams
+to be trained.
+
+<pre>
+# create users and groups
+groupadd ham; useradd -g ham -d /home/ham -s /bin/sh ham
+usermod -L ham
+groupadd spam; useradd -g spam -d /home/spam -s /bin/sh spam
+usermod -L spam
+
+mkdir ~ham; chown -R ham:ham ~ham
+mkdir ~spam; chown -R spam:spam ~spam
+
+# setup .forward files
+echo "|/usr/local/bin/maildrop" > ~ham/.forward
+echo "|/usr/local/bin/maildrop" > ~spam/.forward
+
+# create maildrop configuration files as follows:
+echo '`/usr/local/bin/ham-fwd-train /usr/local/etc/clapf.conf`' > ~ham/.mailfilter
+echo '`/usr/local/bin/spam-fwd-train /usr/local/etc/clapf.conf`' > ~spam/.mailfilter
+
+# fix owner and permissions
+chown ham:ham ~ham/.mailfilter
+chown spam:spam ~spam/.mailfilter
+chmod 600 ~ham/.mailfilter
+chmod 600 ~spam/.mailfilter
+</pre>
+
+</li>
+
+<li>Configure clapf to copy messages to the queue directory by setting the queuedir parameter
+in clapf.conf, then issue a <i>killall -HUP clapf</i> command:
+
+<pre>
+queuedir=/opt/av/queue
+</pre>
+</li>
+
+<li>You should run a cron entry to purge aged queue files from <i>queuedir</i> such as
+<pre>
+find /opt/av/queue -type f -atime +3 -exec rm -f '{}' \;
+</pre>
+
+This will give 3 days (72 hours) to the users while they can train with a specific
+message. Every mailer application (and user) forwards messages different ways so
+clapf keeps a copy of the <i>original message</i> in the <i>queuedir</i> directory.<p/>
+
+When a user forwards a message to be trained as spam, the spam-fwd-train utility
+extracts the 2nd occurence of the message id (that's why we need the original headers
+and forwarded as an attachment), then reads that file from the queuedir.
+If the file is already missing (ie. the cron job has removed it) it obviously cannot
+use it for training. In this case users may still use the web form as an auxiliary
+training method.
+</li>
+
+<li>Put every user to the user table, ie. create an entry with an SQL command like this:
+
+<pre>
+INSERT INTO user (uid, username, email, action) VALUES(1000, 'joe', 'joe@example.com', 'junk');
+</pre>
+
+Note: the user ids (uid) should be unique. It's not forced with an sql key or unique
+as this may be used for other feature too.
+</li>
+
+</ol>
+
+
+<center><a href="index.html">home</a></center><p>
+
+
+</blockquote>
+</body></html>

@@ -1,0 +1,37 @@
+.\" Manual is created by Janos SUTO, 2006.03.13
+.TH "SPLITMBOX" "1" "March 13, 2006" "Janos SUTO" "Clapf network filter"
+.SH "NAME"
+.LP 
+splitmbox \- splits an mbox format mailbox file to separate message files
+.SH "SYNOPSIS"
+.LP
+splitmbox <mbox format mailbox file> <message file basename>
+
+.SH "DESCRIPTION"
+.LP 
+
+splitmbox reads and parses an mbox format mailbox file then writes each message to
+a separate file. It is useful if you want to test the filter with multiple emails.
+
+.SH "EXAMPLE"
+.LP
+
+.TP
+Parse the SPAM mailbox from the file '~/mail/spam.mbox' then write the messages to
+/tmp/spam-message-1, /tmp/spam-message-2, .... /tmp/spam-message-N
+.TP
+\fBsplitmbox ~/mail/spam /tmp/spam-message
+
+.SH "FILES"
+.LP
+/usr/local/etc/clapf.conf
+
+.SH "LATEST VERSION"
+.LP
+Please check the primary site: http://clapf.acts.hu/ or the Sourceforge mirror
+http://clapf.sf.net/ for the latest and hottest version of clapf as well as
+online documentation.
+
+.SH "AUTHOR"
+.LP
+Janos SUTO <sj@acts.hu>

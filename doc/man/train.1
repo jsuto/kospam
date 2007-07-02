@@ -1,0 +1,69 @@
+.\" Manual is created by Janos SUTO, 2006.01.23
+.TH "TRAIN" "1" "Januar 23, 2006" "Janos SUTO" "Clapf network filter"
+.SH "NAME"
+.LP 
+train \- train the MySQL database with a single RFC-822 format message
+.SH "SYNOPSIS"
+.LP 
+train -c <configuration file> [-S <spam message> | -H <ham message>]
+.SH "DESCRIPTION"
+.LP 
+
+The train utility is for training the intermediate MySQL database. It reads
+the MySQL parameters from the configuration file to know how to connect to
+the database. Then it reads and parses the message file containing a RFC-822
+formatted email and inserts or updates the corresponding tokens. A single
+message is either ham or spam so you cannot use the -S and -H switches
+together.
+
+The train utility is also suitable to handle Maildir format mailboxes.
+
+See the util/mysql2cdb.sh shell script how to (re)create the CDB files.
+
+.SH "OPTIONS"
+.LP
+
+.TP
+
+.TP
+\fB\-c FILE\fR
+Read configuration from FILE.
+
+.TP
+\fB\-S messagefile
+Read email from messagefile and it is a spam.
+
+.TP
+\fB\-H messagefile
+Read email from messagefile and it is a ham.
+
+.SH "EXAMPLES"
+.LP
+
+.TP
+Train the database with a spam message:
+.TP
+\fBtrain -c /usr/local/etc/clapf.conf -S letter1
+
+.TP
+Train the database with a ham message:
+.TP
+\fBtrain -c /usr/local/etc/clapf.conf -H letter2
+
+.SH "FILES"
+.LP
+/usr/local/etc/clapf.conf
+
+.SH "MORE INFORMATION"
+.LP
+Please see http://clapf.acts.hu/training.html 
+
+.SH "LATEST VERSION"
+.LP
+Please check the primary site: http://clapf.acts.hu/ or the Sourceforge mirror
+http://clapf.sf.net/ for the latest and hottest version of clapf as well as
+online documentation.
+
+.SH "AUTHOR"
+.LP
+Janos SUTO <sj@acts.hu>

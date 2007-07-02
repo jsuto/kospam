@@ -1,0 +1,90 @@
+0.3.29:
+-------
+
+Added new directives to fight image spam.
+
+Unified syslog messages.
+
+Enhanced inverse chi-square implementation.
+
+Better parser algorithm.
+
+Exclude neutral tokens around a configurable radius.
+
+Improved spam quarantine.
+
+Removed openssl dependency.
+
+0.3.28:
+-------
+
+Spam can be marked in the subject line too.
+
+Skip the names of the months while parsing the message.
+
+Image / word .doc spam can be recognised via external applications
+such as gocr/netpbm and catdoc.
+
+Added Maildir support for creating the token database.
+
+Localisation is supported with your messages.xx.h file.
+
+Better spam quarantine (paging available).
+
+The blackhole feature does not use any mysql stuff any longer.
+
+The memory hash db has a smaller footprint.
+
+Binary messages (particularly those containing NUL characters) are
+handled properly.
+
+The CDB_File Perl module is not needed any longer. Use the cdb
+utility (part of the tinycdb package).
+
+Images can be penalized in the message assigning a special spammy
+token. Embedded images may have an extra penalty to avoid unnecessary
+OCR processes.
+
+0.3.27:
+-------
+
+Multiple header lines can be inserted to spam messages. At least
+one clapf_spam_header_line instance should be defined.
+
+Active Directory support via openldap.
+
+Spam can be directed to a different smtp server.
+
+Created the spamdrop utility can be used with an LDA such as maildrop.
+Spamdrop returns 1 in case of spam and otherwise 0.
+
+Clapf can connect to a MySQL server via unix domain socket too.
+
+Modified the surbl code to prevent unnecessary lookups.
+
+The configure script has better mysql handling.
+
+The ESF code is disabled by default (esf_h = esf_s = 1). You may
+adjust these variables for your needs.
+
+The configure script detects the GNU GSL library and uses its chi-square
+implementation. Otherwise the internal chi-square function is used.
+
+Three more characters added to the invalid_junk_characters array.
+
+0.3.26:
+-------
+
+Added SURBL support.
+
+User preferences are stored in LDAP directory or MySQL database.
+They can manage their own preferences via CGI.
+
+Redesigned the spam quarantine. Users may manage their own spam and
+determine what to do with it (drop, move into the quarantine or
+deliver it into their junk folder).
+
+Tokens are all lower cased.
+
+Invalid characters are replaced to see the message on the terminal.
+

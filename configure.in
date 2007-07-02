@@ -1,0 +1,494 @@
+AC_INIT(clapf.c)
+AM_CONFIG_HEADER(clapf-config.h)
+
+dnl Checks for programs.
+AC_PROG_CC
+AM_PROG_CC_STDC
+AC_PROG_MAKE_SET
+AC_PROG_INSTALL
+
+dnl Checks for header files.
+AC_HEADER_STDC
+AC_CHECK_HEADERS(sys/socket.h sys/time.h syslog.h signal.h ctype.h unistd.h)
+
+
+AC_SUBST(defs)
+AC_SUBST(INCDIR)
+AC_SUBST(LIBDIR)
+AC_SUBST(OBJS)
+AC_SUBST(parsembox)
+AC_SUBST(cgi)
+AC_SUBST(passmail)
+AC_SUBST(passmail_install)
+AC_SUBST(parsembox_install)
+AC_SUBST(train_install)
+AC_SUBST(mysql_includes)
+AC_SUBST(mysql_libs)
+AC_SUBST(user_obj)
+AC_SUBST(ldap_libs)
+AC_SUBST(mysql_obj)
+
+have_libclamav="no"
+have_clamd="no"
+have_avg="no"
+have_avast="no"
+have_kav="no"
+have_drweb="no"
+have_case="no"
+
+have_antispam="no"
+have_blackhole="no"
+have_cgi="no"
+have_train="no"
+have_mysql="no"
+have_ldap="no"
+have_hash_db="no"
+have_surbl="no"
+have_gsl="no"
+
+antispam_libs=""
+defs=""
+objs=""
+user_obj=""
+mysql_obj=""
+ldap_libs=""
+os=`uname -s`
+keep_old_token_format="no"
+
+dnl clamav
+
+AC_ARG_ENABLE(libclamav,
+	[  --enable-libclamav      build libclamav antivirus support], want_clamav=$enableval, want_clamav="no")
+
+   if test "$want_clamav" = "yes"; then
+
+	AC_CHECK_HEADERS(clamav.h, have_libclamav=yes, have_libclamav=no)
+	AC_HAVE_LIBRARY(clamav, AC_CHECK_LIB(clamav, cl_scanfile, have_libclamav=yes, have_libclamav=no))
+
+	if test "$have_libclamav" = "no"; then
+   	   echo "clamav not found";
+   	   exit 1;
+	fi
+   fi
+
+dnl clamd
+
+
+AC_ARG_ENABLE(clamd,
+	[  --enable-clamd          build clamd antivirus support], want_clamd=$enableval, want_clamd="no")
+   if test "$want_clamd" = "yes"; then
+      have_clamd="yes"
+   fi
+
+
+dnl avg
+
+AC_ARG_ENABLE(avg,
+          [  --enable-avg            build AVG Linux antivirus support], want_avg=$enableval, want_avg="no")
+
+    if test "$want_avg" = "yes"; then
+       have_avg="yes"
+    fi
+
+dnl avast!
+
+AC_ARG_ENABLE(avast,
+         [  --enable-avast          build avast! antivirus support], want_avast=$enableval, want_avast="no")
+
+    if test "$want_avast" = "yes"; then
+       have_avast="yes"
+    fi
+
+
+dnl KAV
+
+AC_ARG_ENABLE(kav,
+         [  --enable-kav            build Kaspersky antivirus support], want_kav=$enableval, want_kav="no")
+
+    if test "$want_kav" = "yes"; then
+       have_kav="yes"
+    fi
+
+
+
+dnl Dr.Web
+
+AC_ARG_ENABLE(drweb,
+         [  --enable-drweb          build Dr.Web antivirus support], want_drweb=$enableval, want_drweb="no")
+
+    if test "$want_drweb" = "yes"; then
+       have_drweb="yes"
+    fi
+
+
+dnl use case sensitive tokens
+
+AC_ARG_ENABLE(case,
+	[  --enable-case           use case sensitive tokens], want_case=$enableval, want_case="no")
+
+   if test "$want_case" = "yes"; then
+      have_case="yes"
+   fi
+dnl antispam feature
+
+AC_ARG_ENABLE(antispam,
+       [  --disable-antispam      do not build antispam support], want_antispam=$enableval, want_antispam="yes")
+
+  if test "$want_antispam" = "yes"; then
+
+    dnl math library
+
+    AC_CHECK_HEADERS(math.h, have_math=yes, have_math=no)
+    AC_HAVE_LIBRARY(m, AC_CHECK_LIB(m, fabs), have_math=yes, ""; exit)
+
+    have_antispam="yes"
+
+    antispam_libs="-lm"
+
+    defs="-DHAVE_ANTISPAM"
+    objs="hash.o chi.o bayes.o"
+
+    parsembox="make parsembox"
+
+    dnl mysql database
+
+    AC_ARG_ENABLE(mysql,
+	AC_HELP_STRING([--enable-mysql],[build with MySQL support]),
+        [have_mysql=$enableval],
+	[have_mysql=no]
+    )
+
+    if test "$have_mysql" = "yes"; then
+
+    AC_CHECK_PROG(MYSQL_CONFIG, mysql_config, yes)
+
+	if test x$MYSQL_CONFIG = xyes; then
+	    AC_DEFINE(USE_MYSQL, 1, [MySql database support enabled])
+
+	    mysql_includes=`mysql_config --cflags`
+	    mysql_libs=`mysql_config --libs_r`
+	    defs="$defs -DHAVE_MYSQL"
+	    have_train="yes"
+
+	    parsembox="$parsembox; make train"
+	else
+	    echo "MySQL database not found"
+            exit 1
+	    have_mysql=no
+	fi
+    fi
+
+    parsembox="$parsembox; make test"
+
+
+    dnl ldap database
+
+    AC_CHECK_HEADERS(ldap.h, have_ldap=yes, echo "ldap.h is not found")
+    AC_HAVE_LIBRARY(ldap, AC_CHECK_LIB(ldap, ldap_simple_bind_s, have_ldap=yes, echo "libldap.so is not found"; have_ldap=no))
+
+    dnl hash_db
+
+    AC_ARG_ENABLE(hash_db,
+          [  --enable-hash-db        use the internal hash database], want_hash_db=$enableval, want_hash_db="no")
+
+    if test "$want_hash_db" = "yes"; then
+       have_hash_db="yes"
+    fi
+
+
+    dnl surbl support
+
+    AC_ARG_ENABLE(surbl,
+          [  --enable-surbl          use the SURBL database], want_surbl=$enableval, want_surbl="no")
+
+    if test "$want_surbl" = "yes"; then
+       have_surbl="yes"
+    fi
+
+
+    dnl token format
+
+    AC_ARG_ENABLE(old-format,
+          [  --enable-old-format     use old token format], keep_old_token_format=$enableval, keep_old_token_format"no")
+
+
+    dnl gsl support
+
+    AC_CHECK_HEADERS(gsl/gsl_cdf.h, have_gsl=yes, echo "gsl_cdf.h is not found")
+
+    if test "$have_gsl" = "yes"; then
+       defs="$defs -DHAVE_GSL"
+       gsl_libs="-lgslcblas -lgsl"
+    fi
+
+
+
+    dnl the blackhole feature
+
+    AC_ARG_ENABLE(blackhole,
+          [  --enable-blackhole      build the blackhole feature], want_blackhole=$enableval, want_blackhole="no")
+
+    if test "$want_blackhole" = "yes"; then
+       have_blackhole="yes"
+       echo "So you've selected the blackhole feature ... good"
+    fi
+
+
+    dnl the cgi training interface
+
+    AC_ARG_ENABLE(cgi,
+          [  --enable-cgi            build the web interface to train the database], want_cgi=$enableval, want_cgi="no")
+
+    if test "$want_cgi" = "yes"; then
+
+       dnl check if we have mysql/ldap support
+
+       if test "$have_mysql" = "yes" || test "$have_ldap" = "yes"; then
+          cgi="make cgi"
+          have_cgi="yes"
+       else
+          echo "you need mysql/ldap support for the cgi feature"
+          exit 1;
+       fi
+
+    fi
+
+
+AC_ARG_WITH(userdb,
+[  --with-userdb[[=ldap|mysql]]      use either ldap or mysql database holding user data (default: none)],[
+  if test "$withval" != "no" -a "$withval" != "yes"; then
+    USERDB=$withval
+    passmail="make passmail"
+    passmail_install='$(INSTALL) -m 0755 passmail $(root)$(DESTDIR)$(bindir)'
+    parsembox_install='make install-parsembox'
+    train_install='make install-train'
+  fi
+])
+
+
+AC_ARG_WITH(tokendb,
+[  --with-tokendb[[=cdb|mysql]]      use either cdb or mysql database holding user data (default: none)],[
+  if test "$withval" != "no" -a "$withval" != "yes"; then
+    TOKENDB=$withval
+  fi
+])
+
+
+  fi
+
+
+dnl configure config directory
+cfg_dir=`echo $sysconfdir | grep prefix`
+
+if test -n "$cfg_dir"; then
+    if test "$prefix" = "NONE"
+    then
+        cfg_dir="$ac_default_prefix/etc"
+    else
+        cfg_dir="$prefix/etc"
+    fi
+else
+    cfg_dir="$sysconfdir"
+fi
+
+CFGDIR=$cfg_dir
+AC_SUBST(CFGDIR)
+AC_DEFINE_UNQUOTED(CONFDIR,"$cfg_dir",[where to look for the config file])
+
+
+if test "x$TOKENDB" = "x" && test "$have_antispam" = "yes"; then echo "please specify the token database with --with-tokendb"; exit 1; fi
+
+dnl tinycdb
+
+if test "$TOKENDB" = "cdb"; then
+   AC_CHECK_HEADERS(cdb.h)
+   AC_HAVE_LIBRARY(cdb, AC_CHECK_LIB(cdb, cdb_find, have_cdb=yes, echo "you need the cdb package"; exit))
+   defs="$defs -DHAVE_CDB"
+   objs="$objs cdb.o"
+   antispam_libs="$antispam_libs -lcdb"
+fi
+
+if test "$TOKENDB" = "mysql"; then
+   if test "$have_mysql" = "no"; then
+      echo "you need mysql support, please specify the --enable-mysql configure option"
+      exit 1
+   fi
+   defs="$defs -DHAVE_MYSQL_TOKEN_DATABASE"
+   mysql_obj="mysql.o"
+fi
+
+
+dnl let us know if we are building on FreeBSD
+
+if test "$os" = "FreeBSD"; then
+   defs="$defs -DFREEBSD"
+fi
+
+dnl whether we have antivirus support
+
+if test "$have_libclamav" = "yes" || test "$have_clamd" = "yes" || test "$have_avg" = "yes" || test "$have_avast" = "yes" || test "$have_kav" = "yes"  || test "$have_drweb" = "yes" ; then
+   defs="$defs -DHAVE_ANTIVIRUS"
+fi
+
+dnl if we need our mime code
+
+if test "$have_avg" = "yes" ; then
+   objs="$objs mime.o"
+fi
+
+echo; echo
+
+if test "$have_libclamav" = "yes"; then
+   echo "libclamav support: yes"
+   libclamav="-lclamav"
+   defs="$defs -DHAVE_LIBCLAMAV"
+else
+   echo "libclamav support: no"
+fi
+
+if test "$have_clamd" = "yes"; then
+   echo "clamd support: yes"
+   objs="$objs clamd.o"
+   defs="$defs -DHAVE_CLAMD"
+else
+   echo "clamd support: no"
+fi
+
+if test "$have_avg" = "yes"; then
+   echo "AVG support: yes"
+   objs="$objs avg.o"
+   defs="$defs -DHAVE_AVG"
+else
+   echo "AVG support: no"
+fi
+
+if test "$have_avast" = "yes"; then
+   echo "avast! support: yes"
+   objs="$objs avast.o"
+   defs="$defs -DHAVE_AVAST"
+else
+   echo "avast support: no"
+fi
+
+if test "$have_kav" = "yes"; then
+   echo "kav support: yes"
+   objs="$objs kav.o"
+   defs="$defs -DHAVE_KAV"
+else
+   echo "kav support: no"
+fi
+
+if test "$have_drweb" = "yes"; then
+   echo "Dr.Web support: yes"
+   objs="$objs drweb.o"
+   defs="$defs -DHAVE_DRWEB"
+else
+   echo "Dr.Web support: no"
+fi
+
+
+if test "$have_antispam" = "yes"; then
+   echo "antispam support: yes"
+else
+   echo "antispam support: no"
+fi
+
+if test "$have_hash_db" = "yes"; then
+   echo "hash_db support: yes"
+   objs="$objs hash_db.o"
+   defs="$defs -DHAVE_HASH_DB"
+else
+   echo "hash_db support: no"
+fi
+
+
+if test "$have_gsl" = "yes"; then
+   echo "chi square implementation: GNU GSL"
+else
+   echo "chi square implementation: internal"
+fi
+
+if test "$have_mysql" = "yes"; then
+   echo "MySQL support: yes"
+else
+   echo "MySQL support: no"
+   defs="$defs -DHAVE_NO_64_HASH"
+fi
+
+if test "$have_blackhole" = "yes"; then
+   echo "blackhole feature: yes"
+   defs="$defs -DHAVE_BLACKHOLE"
+   objs="$objs black.o"
+else
+   echo "blackhole feature: no"
+fi
+
+if test "$have_train" = "yes"; then
+   echo "train utilities: yes"
+else
+   echo "train utilities: no"
+fi
+
+if test "$have_cgi" = "yes"; then
+   echo "CGI interface: yes"
+else
+   echo "CGI interface: no"
+fi
+
+
+if test "$have_surbl" = "yes"; then
+   echo "SURBL support: yes"
+   defs="$defs -DHAVE_SURBL"
+   objs="$objs rbl.o"
+else
+   echo "SURBL support: no"
+fi
+
+if test "$keep_old_token_format" = "yes"; then
+   defs="$defs -DHAVE_NO_64_HASH"
+   echo "token format: old"
+   cp db-old.sql db.sql
+else
+   echo "token format: hash (2^64)"
+   cp db-new.sql db.sql
+fi
+
+if test "$USERDB" = "mysql" && test "$have_mysql" = "yes"; then
+   echo "user database: mysql"
+   defs="$defs -DHAVE_USERDB -DHAVE_USER_MYSQL"
+   #objs="$objs user.o"
+   user_obj="user.o"
+fi
+
+if test "$USERDB" = "ldap" && test "$have_ldap" = "yes"; then
+   echo "user database: ldap"
+   defs="$defs -DHAVE_USERDB -DHAVE_USER_LDAP"
+   #objs="$objs user.o"
+   user_obj="user.o"
+   ldap_libs="-lldap -llber"
+fi
+
+echo "token database backend: $TOKENDB"
+
+if test "$have_case" = "yes"; then
+   defs="$defs -DHAVE_CASE"
+   echo "tokens are case sensitive: yes"
+else
+   echo "tokens are case sensitive: no"
+fi
+
+if test "$have_libclamav" = "no" && test "$have_clamd" = "no" && test "$have_avg" = "no" && test "$have_avast" = "no" && test "$have_kav" = "no" && test "$have_drweb" = "no" ; then
+   echo; echo
+   echo "You have not selected any antivirus support."
+   echo "clapf will not protect you from hostile code coming in e-mail"
+fi
+
+echo; echo
+
+
+
+CFLAGS="-O2 -Wall"
+LIBS="$libclamav $antispam_libs $gsl_libs"
+OBJS="misc.o cfg.o smtp.o sig.o session.o decoder.o parser.o cgi.o $objs"
+
+AC_OUTPUT(Makefile)

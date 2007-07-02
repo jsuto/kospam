@@ -1,0 +1,109 @@
+<html>
+<title>Statistics</title>
+<link rel="stylesheet" type="text/css" href="style.css">
+<body bgcolor=white text=darkblue vlink=#AC003A>
+<blockquote>
+
+<h1><img src="logo.png"></h1>
+
+<h2>Statistics</h2>
+
+<h3>System wide statistics</h3>
+
+You may create various graphs about the operation of clapf like the following:<p/>
+
+<img src="ham-spam.png">
+<img src="spam-ratio.png"><p/>
+<img src="spam-size.png"><p/>
+
+
+<strong>Prerequisites</strong><p>
+
+<ul>
+<li>install rrdtool: <a href="http://www.rrdtool.org/">http://www.rrdtool.org/</a>
+</ul>
+
+
+0. Create a cron entry to parse your mail log and extract clapf entries:<p>
+
+<pre>
+59 * * * * stat/process_syslog.pl `date +%b\ %e\ %H` < /var/log/maillog >> /home/sj/clapf.stat
+</pre>
+
+stat/process_syslog.pl needs the following arguments (your date command may be different):<p>
+
+<pre>
+%b     locale's abbreviated month name (Jan..Dec)
+%e     day of month, blank padded ( 1..31)
+%H     hour (00..23)
+</pre>
+
+1. Create the rrd file:<p>
+
+<pre>
+sh clapf-rrd-create.sh /home/sj/clapf-ham-spam.rrd `date +%s`
+</pre>
+
+2. Create another cron entry to update the rrd file (of course, you may merge these cron entries):<p>
+
+<pre>
+1 * * * * sh clapf-rrd-update.sh /home/sj/clapf-ham-spam.rrd `tail -1 /home/sj/clapf.stat | awk '{ print $1 ":" $5 ":" $8 }'`
+</pre>
+
+
+3. Run the following commands to create a daily, weekly and a monthly graph:<p>
+
+<pre>
+sh stat/clapf-rrd-graph.sh /home/sj/clapf-ham-spam.rrd /home/sj/daily.png day
+sh stat/clapf-rrd-graph.sh /home/sj/clapf-ham-spam.rrd /home/sj/weekly.png week
+sh stat/clapf-rrd-graph.sh /home/sj/clapf-ham-spam.rrd /home/sj/monthly.png month
+</pre>
+
+Of course you may adjust clapf-rrd-graph.sh to use different time intervals.<p>
+
+Let's say you want statistics about the spam ratio:<p>
+
+<pre>
+sh stat/clapf-rrd-create.sh /home/sj/clapf-spam-ratio.rrd `date +%s`
+sh clapf-rrd-update.sh /home/sj/clapf-spam-ratio.rrd `tail -1 /home/sj/clapf.stat | awk '{ if($2 &gt; 0) print $1 ":" 100*$8/$2 ":0"; else print $1 ":0:0" }'`
+sh clapf-rrd-graph-oneline.sh /home/sj/clapf-spam-ratio.rrd /home/sj/spam-ratio.png "spam ratio" month
+</pre>
+
+and about the spam size:<p>
+
+<pre>
+sh stat/clapf-rrd-create.sh /home/sj/clapf-spam-size.rrd `date +%s`
+sh clapf-rrd-update.sh /home/sj/clapf-spam-size.rrd `tail -1 /home/sj/clapf.stat | awk '{ print $1 ":" $9 ":0"}'`
+sh clapf-rrd-graph-oneline.sh /home/sj/clapf-spam-size.rrd /home/sj/spam-size.png "spam size" month
+</pre>
+
+So you've got the idea how to create any report you want.<p/>
+
+
+This is the format of clapf.stat:<p/>
+
+<font size="1">&lt;timestamp&gt; &lt;number of messages&gt; &lt;average message size in bytes&gt; &lt;average processing time in usec&gt;
+        &lt;number of ham messages&gt; &lt;average ham message size in bytes&gt; &lt;average ham processing time in usec&gt;
+        &lt;number of sam messages&gt; &lt;average sam message size in bytes&gt; &lt;average sam processing time in usec&gt;</font><p>
+
+<h3>Personal statistics</h3>
+
+Add the following cron entry to collect hourly statitics about per user email activity:
+
+<pre>
+59 * * * * /usr/local/bin/spamstat.pl `date +%b\ %e\ %H` < /var/log/maillog | /usr/local/bin/spamstat /usr/local/etc/clapf.conf
+</pre>
+
+All users must be present in the user table, such an SQL statement like (uid should be unique):
+
+<pre>
+INSERT INTO user (uid, username, email, action) VALUES(1000, 'joe', 'joe@example.com', 'junk');
+</pre>
+
+Then let the users go to http://www.yourdomain.com/cgi-bin/quarantine/statcgi or whatever you have configured
+as statcgi_url in clapf.conf there they may see their own 24 hours or 30 days long history.<p/>
+
+<center><a href="index.html">home</a></center><p>
+
+</blockquote>
+</body></html>

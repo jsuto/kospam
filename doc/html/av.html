@@ -1,0 +1,190 @@
+<html>
+<title>Antivirus support</title>
+<link rel="stylesheet" type="text/css" href="style.css">
+<body bgcolor=white text=darkblue vlink=#AC003A>
+<blockquote>
+
+<h1><img src="logo.png"></h1>
+
+<h2>Antivirus support</h2>
+
+Clapf supports several antivirus products to provide antivirus support:
+
+<ul>
+<li><a href="#ss11">avast!</a>
+<li><a href="#ss12">AVG Linux</a>
+<li><a href="#ss13">clamav</a>
+<li><a href="#ss14">Dr.Web</a>
+<li><a href="#ss15">Kaspersky</a>
+</ul>
+
+<a name="ss11"></a>
+<h3>avast!</h3>
+
+<strong><u>Prerequisites</u></strong><p>
+
+You have a working <a href="http://www.avast.com/">avast!</a> installation.<p>
+
+<strong><u>Installation and configuration</u></strong><p>
+
+Edit /etc/avastd.conf and set the following variable in the [local] section:
+
+<pre>
+listen = 127.0.0.1:5036
+</pre>
+
+Use the <strong>--enable-avast</strong> configure option and (re)compile clapf:<p>
+
+<pre>
+./configure --enable-avast ...
+make clean all
+</pre>
+
+Set the following variables in clapf.conf:<p>
+
+<pre>
+avast_addr=127.0.0.1
+avast_port=5036
+</pre>
+
+
+<a name="ss12"></a>
+<h3>AVG Linux</h3>
+
+<strong><u>Prerequisites</u></strong><p>
+
+You have a working <a href="http://www.grisoft.com/">AVG Linux</a> installation.<p>
+
+<strong><u>Installation and configuration</u></strong><p>
+
+Edit /etc/avg.conf and set the following variable in the [AvgCommon] section to
+enable the scanning of archive files:<p>
+
+<pre>
+processesArchives = 1
+</pre>
+
+Use the <strong>--enable-avg</strong> configure option and (re)compile clapf:<p>
+
+<pre>
+./configure --enable-avg ...
+make clean all
+</pre>
+
+Set the following variables in clapf.conf:<p>
+
+<pre>
+avg_addr=127.0.0.1
+avg_port=55555
+</pre>
+
+
+
+<a name="ss13"></a>
+<h3>clamav</h3>
+
+<strong><u>Prerequisites</u></strong><p>
+
+You have a working <a href="http://www.clamav.net/">clamav</a> installation with periodic
+checks for updates.<p>
+
+Clamav can be used by either through libclamav when clapf is linked against libclamav
+(in this case no need to run clamd) or may use with clamd (in this case no need
+to link clapf with libclamav).<p>
+
+
+For using libclamav use the <strong>--enable-libclamav</strong> configure option and (re)compile clapf:<p>
+
+<pre>
+./configure --enable-libclamav
+make clean all
+</pre>
+
+Set the following variables in clapf.conf:<p>
+
+<pre>
+use_libclamav_block_max_feature=1
+clamav_maxfile=100
+clamav_max_archived_file_size=31457280
+clamav_max_recursion_level=5
+clamav_archive_mem_limit=0
+</pre>
+
+
+If you prefer clamd, use the <strong>--enable-clamd</strong> configure option and (re)compile clapf:<p>
+
+<pre>
+./configure --enable-clamd
+make clean all
+</pre>
+
+The variables above don't matter. They should be set in clamd.conf.
+Instead set the following variable in clapf.conf:<p>
+
+<pre>
+clamd_socket=/tmp/clamd
+</pre>
+
+Important! Using clapf with clamd, it's important that the clamav user (who is
+running clamd) should have access to the temporary files of clapf, so set the
+/opt/av directory to mode 711 by the following command:<p>
+
+<pre>
+chmod 711 /opt/av
+</pre>
+
+
+<a name="ss14"></a>
+<h3>Dr.Web</h3>
+
+<strong><u>Prerequisites</u></strong><p>
+
+You have a working <a href="http://www.drweb.com/">Dr.Web</a> installation (4.33 is known to work).<p>
+
+<strong><u>Installation and configuration</u></strong><p>
+
+Use the <strong>--enable-drweb</strong> configure option and (re)compile clapf:<p>
+
+<pre>
+./configure --enable-drweb ...
+make clean all
+
+
+</pre>
+
+Set the following variables in clapf.conf:<p>
+
+<pre>
+drweb_socket=/var/drweb/run/.daemon
+</pre>
+
+
+<a name="ss15"></a>
+<h3>Kaspersky Anti-Virus for File Server and Mail Server</h3>
+
+<strong><u>Prerequisites</u></strong><p>
+
+You have a working <a href="http://www.kaspersky.com/">aveserver</a> installation.<p>
+
+<strong><u>Installation and configuration</u></strong><p>
+
+Use the <strong>--enable-kav</strong> configure option and (re)compile clapf:<p>
+
+<pre>
+./configure --enable-kav ...
+make clean all
+
+</pre>
+
+Set the following variables in clapf.conf:<p>
+
+<pre>
+kav_socket=/var/run/aveserver
+</pre>
+
+
+
+<center><a href="index.html">home</a></center><p>
+
+</blockquote>
+</body></html>

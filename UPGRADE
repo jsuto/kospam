@@ -1,0 +1,37 @@
+1. Always backup your current clapf.conf file
+
+2. Do a "make install" to replace your old binaries, and other stuff.
+
+3. If you already have a clapf.conf file "make install" will not
+update it, you should review the newer config file and modify it
+according to your settings, then copy it over the old config.
+
+4. (if possible) rebuild the token database, including the
+mysql t_token and t_misc tables as the parser might be modified
+in newer versions. If you decide to rebuild the token database
+issue the following sql commands before using the kcdb_mysql.sh
+script:
+
+DROP INDEX t_token_idx ON t_token;
+DELETE FROM t_misc;
+DELETE FROM t_token;
+
+IMPORTANT NOTE
+--------------
+
+Clapf (as of version 0.3.29) stores tokens as numerical hashes by default.
+If you are upgrading from a previous (<0.3.29) version. You must either
+recreate the t_token table or add the -DHAVE_NO_64_HASH compile option
+to the 'DEFS' section of the Makefile after running the configure script
+to keep using the old format t_token table.
+
+I recommend you (if possible at your configuration) to update to the new
+format as it makes the MySQL token table smaller in size and it should
+produce faster lookups.
+
+If you choose not to rebuild the token database (by dropping the t_misc
+and t_token tables) you must update the t_misc table as follows:
+
+ALTER TABLE t_misc CHANGE COLUMN N_HAM nham int unsigned default 0;
+ALTER TABLE t_misc CHANGE COLUMN N_SPAM nspam int unsigned default 0;
+

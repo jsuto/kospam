@@ -1,0 +1,5 @@
+AuthType basic
+AuthName "clapf training site"
+AuthUserFile /www/data/dev.acts.hu/clapf/train/.htpasswd
+
+require valid-user

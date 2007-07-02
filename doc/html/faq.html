@@ -1,0 +1,168 @@
+<html>
+<title>FAQ</title>
+<link rel="stylesheet" type="text/css" href="style.css">
+<body bgcolor=white text=darkblue vlink=#AC003A>
+<blockquote>
+
+<h1><img src="logo.png"></h1>
+
+<h2>FAQ</h2>
+
+<p>
+
+<a name="ss11">What to do with the clamav error messages?</a><p>
+
+<strong>Issue:</strong> You can see the following error messages:<p>
+
+<pre>
+
+"LibClamAV Error: cli_cvdload():  Can't create temporary directory /tmp/clamav-a0480b63a7872f98"
+
+"LibClamAV Error: Wrote 0 instead of 512 (/tmp/clamav-75668d156e64018e/main.db).
+ LibClamAV Error: cli_cvdload(): Can't unpack CVD file."
+
+"cl_loaddbdir: CVD extraction failure."
+</pre>
+
+These messages mean that clapf has not got enough space under $TMPDIR. This may occur
+if you have configured clapf to use the libclamav library (not clamd).<p>
+
+
+
+<a name="ss12">I see a lot of "451 Error in processing, try again later ..." messages in the maillog</a><p>
+
+<strong>Issue:</strong> you have several hundred messages in your postfix queue.
+When you issue the <b>postfix flush</b> command to flush the queue, the first
+10-20-30 messages are delivered but the rest of them are rejected with<br>
+
+<pre>
+"451 Error in processing, try again later (in reply to end of DATA command)"
+</pre>
+
+This issue was fixed in 0.3.22-rc2. I managed to flush 773 messages without
+any problem. If you still encounter this kind problem, please let me know
+and try the following workaround:<p>
+
+<strong>Workaround:</strong> flush only ~20-30 messages at a time and repeat this
+until all the messages are delivered from the queue.<p>
+
+<pre>
+for i in `mailq | grep ^[0-9A-F] | head -30 | awk '{ print $1 }'`; do postsuper -r $i; sleep 2; done
+</pre>
+
+<a name="ss13">How could I know what is really happening during message processing?</a><p>
+
+Set verbosity level at least 3 in clapf.conf, then send a HUP signal.
+
+<pre>
+verbosity=3
+</pre>
+
+Clapf will syslog a lot of things, eg. what SMTP conversation occurs from postfix to
+clapf and from clapf to postfix. You may see what clapf does, eg. runs virus scanning,
+parsing the message into tokens, etc.<p>
+
+I recommend you do not set verbosity greater than 1 unless you want to debug something.<p>
+
+<a name="ss14">Mailbox issues</a><p>
+
+You should run the dos2unix program to 'fix' the ^M line end issue if you took the mailbox file
+from a Dos/Windows host.<p>
+
+<a name="ss14">Problems with NUL characters inside a message</a><p>
+
+Some of you may ran into a problem caused by messages having
+NUL characters inside. Though the RFCs don't prohibit this
+to happen I found not a single legal (I mean ham) message
+that had NUL characters.<p>
+
+Some functions - notably fgets() - may have problems with
+buffers having the NUL character inside. I got some messages
+that clapf was not able to send back to postfix properly thus
+it remained in the queue.<p>
+
+If you had encountered this problem you have two options:<p>
+
+
+<b>A) download the 0.3.28-rc1 or newer version</b>
+that fixes this problem (<a href="http://clapf.acts.hu/clapf-0.3.28-rc1.tar.gz">
+http://clapf.acts.hu/clapf-0.3.28-rc1.tar.gz</a>)<p>
+
+If you choose to upgrade please read its example.conf some new
+variables has been added or altered (particularly the spam_smtp_addr
+and spam_smtp_port variables).<p>
+
+OR<p>
+
+<b>B) configure your MTA to reject messages having NUL characters.</b>
+Please note that Victor Duchovni wrote the following (2004.09.28):<p>
+
+<i>"Postfix dictionary lookup API uses NUL terminated keys. It is
+not possible to use header_checks and body_checks to reject
+ASCII NUL in the message content."<p>
+
+"The only viable option at this time is to use a before-queue filter
+with Postfix 2.1. The filter can return a 5XX code after "." if the
+message body contains any NUL characters.<br>
+
+It should not be too hard to cobble-up a suitable proxy in Perl, but
+understand the pre-filter proxy requirements carefully... Bennett Todd's
+smtpprox may be a start, but it was designed as an SMTP only (no ESMTP)
+proxy content filter not a pre-queue filter, so some changes will need
+to be made..."<p></i>
+
+For more info, please visit <a href="http://www.webservertalk.com/archive281-2004-9-413017.html">
+http://www.webservertalk.com/archive281-2004-9-413017.html</a><p>
+
+I've seen that others have a(n unofficial) patch for postfix to reject messages with
+NUL characters. Anyway this latter B) option may be tricky. I recommend the
+solution A).<p>
+
+And of course clapf as an advanced content filter may check the message
+for the series of NUL characters and optionally return 5xx code
+as Victor Duchovni mentioned above. If you want this option, just
+let me know and I'll code it.<p>
+
+
+<a name="ss15">I have Outlook Express mailbox. How can I create a token database?</a><p>
+
+I found the following article: 
+<a href="http://mail.python.org/pipermail/spambayes/2003-March/004128.html">http://mail.python.org/pipermail/spambayes/2003-March/004128.html</a><p>
+
+<i>Well, it appears as if I've spoken a bit too soon on this one.  I did some 
+digging, and found a program called MailNavigator 
+(<a href="http://www.mailnavigator.com/mailnavigator.html">http://www.mailnavigator.com/mailnavigator.html</a>), that can read OE mailboxes 
+and export them as an mbox.  I've downloaded it, tried it, and it works.<p> 
+
+When you start it up, do File->Load External Mailbox...  Point the browser 
+window at the OE inbox.dbx file, normally in Documents and Settings
+\currentuser\Local Settings\Application Data\Identities\{bunchaglorp}
+\Microsoft\Outlook Express.  You should see your inbox (or whatever folder you 
+loaded) contents in MailNavigator.  Then do Message->Select All, then 
+Message->Save As... pick a file name and location, and select file type 
+RFC822-text file... et voila, you have an mbox!</i><p>
+
+
+
+<a name="ss16">Clapf failed to read raw tokens file</a><p>
+
+A similar message in the syslog means that clapf cannot read the raw token file.<p/>
+
+Clapf is a statistical filter application. It works on word (token) probabilities. It
+has to know what the spamicity value of the given token is. So you have to create the
+token database with either the kcdb.sh or the kcdb_mysql.sh utility before use clapf.<p/>
+
+If you have configured clapf with ./configure <i>--enable-hash-db</i> it would rather
+use a file called tokens.raw instead of the regular CBD file called tokens.cdb by default.<p/>
+
+The token database creator scripts (kcdb.sh or kcdb_mysql.sh) would make the tokens.raw
+file for you. When created put it to <i>/opt/av</i> (or whatever directory you configured
+in clapf.conf).<p/>
+
+Please note that clapf needs only read permissions on the tokens file (tokens.cdb or tokens.raw).<p/>
+
+
+<center><a href="index.html">home</a></center><p>
+
+</blockquote>
+</body></html>

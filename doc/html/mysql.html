@@ -1,0 +1,93 @@
+<html>
+<title>mysql support</title>
+<link rel="stylesheet" type="text/css" href="style.css">
+<body bgcolor=white text=darkblue vlink=#AC003A>
+<blockquote>
+
+<h1><img src="logo.png"></h1>
+
+<h2>mysql support</h2>
+
+
+Mysql (or LDAP) is needed to query the email address of the user using the spam quarantine in order to
+deliver the spam from the spam quarantine to his own mailbox. Otherwise he can review, remove
+and train as ham their spam.<p>
+
+<strong><u>Prerequisites</u></strong><p>
+
+You have a working <a href ="http://www.mysql.com/">mysql</a> installation.<p>
+
+
+<strong><u>Installation and configuration</u></strong><p>
+
+user.sql is an example how to create your user data table.<p>
+
+1. Use the --with-userdb=mysql configure option and (re)compile clapf:
+
+<pre>
+./confgure --with-userdb=mysql ....
+make clean all
+</pre>
+
+2. Set the following variables in clapf.conf:<p>
+
+<pre>
+
+spam_mail_from=spamquarantine@yourdomain.com
+
+spam_smtp_addr=127.0.0.1
+spam_smtp_port=10026
+
+mysqlhost=127.0.0.1
+mysqlport=3306
+mysqluser=xxxxx
+mysqlpwd=xxxxx
+mysqldb=xxxx
+mysqltokentable=t_token
+mysqlmisctable=t_misc
+mysqlblackholetable=blackhole
+mysqlusertable=user
+mysqltraininglogtable=training_log
+</pre>
+
+Then use the following SQL statement to add user joe to the user list:<p/>
+
+<pre>
+INSERT INTO user (email, action, pagelen, username) VALUES('joe@yourdomain.com', 'quarantine', 30, 'joe');
+</pre>
+
+
+About the clapfAction parameter values, please read the <a href="user.html">user preferences manual</a>.<p/>
+
+I recommend you to configure the <a href="http://dev.mysql.com/doc/refman/5.0/en/query-cache-configuration.html">query cache</a>
+to allow faster lookups. Be careful with these settings at always test your configuration for the
+best results.<p/>
+
+<pre class="programlisting">mysql&gt; <strong class="userinput"><code>SHOW VARIABLES LIKE 'have_query_cache';</code></strong>
++------------------+-------+
+| Variable_name    | Value |
++------------------+-------+
+| have_query_cache | YES   |
++------------------+-------+
+
+</pre>
+
+<pre class="programlisting">mysql&gt; <strong class="userinput"><code>SET GLOBAL query_cache_size = 1000000;</code></strong>
+Query OK, 0 rows affected (0.00 sec)
+</pre>
+
+<pre class="programlisting">mysql&gt; <strong class="userinput"><code>SHOW VARIABLES LIKE 'query_cache_size';</code></strong>
++------------------+--------+
+| Variable_name    | Value  |
++------------------+--------+
+| query_cache_size | 999424 | 
++------------------+--------+
+1 row in set (0.00 sec)
+</pre>
+
+
+<center><a href="index.html">home</a></center><p>
+
+
+</blockquote>
+</body></html>

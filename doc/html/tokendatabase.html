@@ -1,0 +1,132 @@
+<html>
+<title>Token database</title>
+<link rel="stylesheet" type="text/css" href="style.css">
+<body bgcolor=white text=darkblue vlink=#AC003A>
+
+<h1><img src="logo.png"></h1>
+
+<h2>Token database</h2>
+
+This documentation describes how to create the initial token database.<p/>
+
+Clapf supports the following database backends: CDB and MySQL. Each has its own pros and cons.<p/>
+
+<table border="1">
+   <tr>
+      <th>Backend</th>
+      <th>Pros</th>
+      <th>Cons</th>
+   </tr>
+   <tr>
+      <td>CDB</td>
+      <td>Extremly fast, smaller size</td>
+      <td>Read-only, must be recreated after each train, difficult user customisation</td>
+   </tr>
+   <tr>
+      <td>MySQL</td>
+      <td>Simple training, easy customisation for users</td>
+      <td>Slower than CDB</td>
+   </tr>
+</table><p/>
+
+
+<h3>Using the CDB backend</h3>
+
+Install the <a href="http://www.corpit.ru/mjt/tinycdb.html">tinycdb</a> package then configure
+and compile clapf with the --with-tokendb=cdb option.<p/>
+
+Issue the following command and that's all. It will create a file named tokens.cdb
+copy it where tokensfile points in your clapf.conf file, and you are done<p>
+
+<pre>
+sh util/kcdb.sh /path/to/HAM /path/to/SPAM
+</pre>
+
+HAM and SPAM are either RFC-822 (mbox) or Maildir format mailboxes containing only ham (good email)
+and spam (no need to explain) respectively. I recommend you to include at least 1000
+messages in both ham and spam corpus (or better ~2000 messages in each corpus).<p/>
+
+
+<h3>Using the MySQL backend</h3>
+
+Have a working <a href="http://www.mysql.com/">MySQL database</a>. Configure and compile clapf
+with the --with-tokendb=mysql option.<p/>
+
+Create a user account and a database dedicated to clapf and put the mysql account
+information to a file eg. my.cnf (be sure to set proper permissions on my.cnf).
+The my.cnf file should look like this:<p/>
+
+<pre>
+[mysql]
+
+database = clapf
+user = clapf
+password = someuncrackablepassword
+
+</pre>
+
+Now execute the following command:<p/>
+
+<pre>
+sh util/kcdb_mysql.sh /path/to/HAM /path/to/SPAM /path/to/my.cnf
+</pre>
+
+HAM and SPAM are either RFC-822 (mbox) or Maildir format mailboxes containing only ham
+(good email) and spam (no need to explain) respectively. I recommend you to include at
+least 1000 messages in both ham and spam corpus (or better ~2000 messages in each corpus).<p/>
+
+The kcdb_mysql.sh utility creates the necessary tables, puts the tokens in and
+creates a cdb file as well if you have the cdb utility in your PATH.<p/>
+
+Set the following variables in clapf.conf:<p>
+
+<pre>
+mysqlhost=127.0.0.1
+mysqlport=3306
+mysqluser=clapf
+mysqlpwd=yourveryheavypassword
+mysqldb=clapf
+mysqltokentable=t_token
+mysqlmisctable=t_misc
+mysqlusertable=user
+mysqltraininglogtable=t_train_log
+mysqlqueuetable=t_queue
+mysqlstattable=t_stat
+</pre>
+
+Clapf is ready to read the tokens from the MySQL tables.<p/>
+
+I recommend you to configure the <a href="http://dev.mysql.com/doc/refman/5.0/en/query-cache-configuration.html">query cache</a>
+to allow faster lookups. Be careful with these settings and always test your configuration for the
+best results.<p/>
+
+<pre class="programlisting">mysql&gt; <strong class="userinput"><code>SHOW VARIABLES LIKE 'have_query_cache';</code></strong>
++------------------+-------+
+| Variable_name    | Value |
++------------------+-------+
+| have_query_cache | YES   |
++------------------+-------+
+
+</pre>
+
+<pre class="programlisting">mysql&gt; <strong class="userinput"><code>SET GLOBAL query_cache_size = 1000000;</code></strong>
+Query OK, 0 rows affected (0.00 sec)
+</pre>
+
+<pre class="programlisting">mysql&gt; <strong class="userinput"><code>SHOW VARIABLES LIKE 'query_cache_size';</code></strong>
++------------------+--------+
+| Variable_name    | Value  |
++------------------+--------+
+| query_cache_size | 999424 | 
++------------------+--------+
+1 row in set (0.00 sec)
+</pre>
+
+You are also free to do other tuning to make MySQL even faster, consult the <a href="http://dev.mysql.com/doc/">MySQL documentation</a>.<p/>
+
+See the <a href="training.html">training paper</a> for how to train the token database</a>.<p/>
+
+<center><a href="index.html">home</a></center><p>
+
+
+</body></html>

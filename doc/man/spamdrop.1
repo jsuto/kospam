@@ -1,0 +1,44 @@
+.\" Manual is created by Janos SUTO, 2006.06.29
+.TH "SPAMDROP" "1" "Januar 18, 2006" "Janos SUTO" "Clapf network filter"
+.SH "NAME"
+.LP 
+spamdrop \- check whether the given RFC-822 is spam or not
+.SH "SYNOPSIS"
+.LP 
+cat <RFC-822 formatted message file> | spamdrop <configuration file> [v]
+.SH "DESCRIPTION"
+.LP 
+
+spamdrop is a command line utility to determine whether the incoming message
+is spam or not. It reads its configuration and takes the message from the
+standard input then returns 1 if the message is spam or 0 otherwise.
+spamdrop is designed to collaborate with maildrop.
+
+You may use "v" as the 2nd command line switch to print the spamicity value
+and execution time on the standard error.
+
+.SH "EXAMPLE"
+.LP
+
+To use spamdrop with maildrop you may use the following configuration snippet:
+
+.nf
+`/usr/local/bin/spamdrop /usr/local/etc/clapf.conf `
+if($RETURNCODE == 1)
+{
+    to "mail/junk"
+}
+
+.SH "FILES"
+.LP
+/usr/local/etc/clapf.conf
+
+.SH "LATEST VERSION"
+.LP
+Please check the primary site: http://clapf.acts.hu/ or the Sourceforge mirror
+http://clapf.sf.net/ for the latest and hottest version of clapf as well as
+online documentation.
+
+.SH "AUTHOR"
+.LP
+Janos SUTO <sj@acts.hu>

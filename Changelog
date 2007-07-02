@@ -1,0 +1,2188 @@
+0.3.29:
+
+2007.07.02, SJ
+
+Added an option to instantiate a spamy token for octet-stream attachments.
+It may help you to fight PDF spam.
+(example.conf, cfg.h. cfg.c, parser.h, parser.c, bayes.c)
+
+2007.06.28, SJ
+
+Adding \r\n at the end of every line. Qmail really needs this.
+http://pobox.com/~djb/docs/smtplf.html
+(splitmbox.c)
+
+2007.06.26, SJ
+
+Fixed spamdrop to be able to read message through pipe, thus
+can be used in .mailfilter in local delivery mode.
+(spamdrop.c)
+
+Messages are saved to mysql table instead the queue directory.
+Do not forget to periodically purge aged messages from the t_queue
+table, eg.
+echo "delete t_queue where UNIX_TIMESTAMP() - ts > 604800" | mysql
+
+
+(db-new.sql, db-old.sql, mysql.c, spamdrop.c, spam-fwd-train.c, crtab)
+
+2007.06.21, SJ
+
+Added a white list option: if the sender of the email (From: ...)
+has sent us at least 10 good emails and 0 spam let his email
+come without statistical analysis.
+(bayes.c)
+
+2007.06.16, SJ
+
+Fixed a typo in bayes.c
+(bayes.c)
+
+Fixed potential underflow when while corrective TUM training.
+(mysql.c)
+
+2007.06.15, SJ
+
+Fixed a bug around assembling the extra header for insertion.
+(session.c)
+
+2007.06.14, SJ
+
+Added TUM support for the training stuff.
+(mysql.c, train.c, traincgi.c, misc.h, bayes.c, session.c)
+
+2007.06.13, SJ
+
+Added merged group support. Now both shared and merged groups are available.
+Added TUM (Train Until Mature) training mode. Now both TOE (Train On Error)
+and TUM mode is supported.
+(mysql.c, bayes.c, cfg.c, cfg.h, example.conf)
+
+2007.06.09, SJ
+
+Updated the parser not to chain between individual header lines.
+(parser.c, parser.h)
+
+2007.06.07, SJ
+
+Updated the parser routine to generate token pairs too. Thus
+simplified the training utilities.
+(parser.c, parser.h, train.c, traincgi.c, spam-fwd-train.c)
+
+Removed the unnecessary ptable.h file.
+
+Added html decoder function.
+(decoder.c, decoder.h, parser.c)
+
+2007.06.01, SJ
+
+Fixed a bug around the spamicity calculation
+(bayes.c)
+
+The configure script now honors the --sysconfdir option,
+and you don't have to specify the -c /path/to/clapf.conf
+if its default path is fine for you.
+(configure*, clapf-config.h.in, bayes.c)
+(credits: Johannes Russek)
+
+Added a command line switch (-d) allowing clapf going to
+the background.
+(clapf.c, config.h)
+(credits: Johannes Russek)
+
+2007.05.30, SJ
+
+Fixed some compile time issues in case of a setup without
+the antispam stuff.
+(credits: Johannes Russek)
+
+Introduced the APHash() function. It creates a 2^64 bits version of
+the token strings in the mysql table resulting a much smaller table.
+See http://www.partow.net/programming/hashfunctions/#APHashFunction
+for more details on this hashing function.
+(misc.c, mysql.c, cdb.c, db.sql, util/kcdb_mysql.sh)
+
+2007.05.29, SJ
+
+Tokens are mysql escaped.
+(mysql.c)
+
+2007.05.27, SJ
+
+Fixed a bug in the spam-fwd-utility, and added some logging too.
+(spam-fwd-train.c)
+
+2007.05.24, SJ
+
+Fixed the same bug in parsembox as in splitmbox
+(parsembox.c)
+
+2007.05.23, SJ
+
+"make install" copies the splitmbox utility to $(root)$(DESTDIR)$(bindir)
+
+Fixed a bug in splitmbox.
+(splitmbox.c)
+
+2007.05.22, SJ
+
+Fixed the kcdb_mysql.sh script. It did not imported the tokens into
+the mysql database without the presence of the cdb utility.
+(util/kcdb_mysql.sh)
+
+Better quoted-printable decoding
+(parser.c)
+
+2007.05.21, SJ
+
+Fixed logging to mysql table using traincgi.
+(traincgi.c)
+
+The "make install" command does not overwrite the existing clapf.conf.
+You should review what's new and update your existing configuration file.
+(Makefile.in)
+
+Fixed a bug in the training utilities
+(mysql.c, train.c, traincgi.c, spam-fwd-train.c)
+
+Cut the number of database lookups half - if possible. It's no use to query
+the single tokens from the database if we can classify the message according
+to the token phrases. This is (ok, should be) the case after proper training
+most of the time.
+(bayes.c)
+
+2007.05.19, SJ
+
+Updating documentation
+(doc/html/*)
+
+2007.05.18, SJ
+
+Added personal statistics
+(statcgi.c, trainlogcgi.c, messages.h*)
+
+2007.05.17, SJ
+
+Added a new training method by forwarding the message to spam+user@domain
+or to ham+user@domain.
+(spam-fwd-train.c, mysql.c, Makefile.in)
+
+2007.05.15, SJ
+
+Added mysql support as a backend for tokens. It can be used instead
+of the cdb backend. Use the --with-tokendb=... configuration option.
+(bayes.c, cdb.c, mysql.c)
+
+Do not chain with URLs
+(bayes.c)
+
+2007.05.14, SJ
+
+Modified the kcdb.sh and kcdb_mysql.sh scripts to handle Maildir format mboxes too.
+Removed the maildir.sh script.
+(util/kcdb.sh, util/kcdb_mysql.sh)
+
+Removed the perl/mbox.pl script. Not used.
+
+2007.05.04, SJ
+
+Degenerate tokens if they end with punctuation
+(misc.c, misc.h, parser.c)
+
+0.3.29-rc2:
+
+2007.05.02, SJ
+
+Created a shell script to add users to the spam quarantine.
+(util/user2sq.sh) 
+
+2007.04.27, SJ
+
+Use the single token hash (shash) if we have very few phrases
+(bayes.c)
+
+2007.04.24, SJ
+
+Removed trailing space from skipped header definitions.
+(shdr.h)
+
+2007.04.19, SJ
+
+Fixed a 'Content-Type' issue.
+(parser.c)
+
+TRAINING/tokens.sql and user.sql merged into db.sql
+(db.sql)
+
+2007.04.18, SJ
+
+Removed the unnecessary <openssl/evp.h> header file inclusion
+(decoder.c)
+
+Fixed compile time warnings about signed-unsigned differences
+(misc.h, misc.c, parser.c)
+
+2007.04.05, SJ
+
+Added an extra log entry to collect per user/email address ham/spam statistics.
+(misc.c, misc.h, session.c)
+
+2007.04.03, SJ
+
+Do not count invalid junk characters in the "To:" lines. I got
+some emails containing Czech and Romanian names with unusual
+letters - found in the invalid_junk_characters[] array - causing
+false positives problems.
+(parser.c)
+
+2007.03.20, SJ
+
+Minor fix in the graph shell script.
+(stat/clapf-rrd-graph.sh)
+
+2007.03.19, SJ
+
+A little bit nicer spam quarantine. A cosmetic only change.
+(spamcgi.c, trainlogcgi.c, usercgi.c, doc.html/style.css)
+
+
+0.3.29-rc1:
+
+2007.03.07, SJ
+
+The spamcgi utility limits the length of the subject to MAX_CGI_SUBJECT_LEN (see config.h)
+(spamcgi.c, config.h)
+
+2007.03.06, SJ
+
+The splitmbox utility terminates line with CR-LF (\r\n).
+(splitmbox.c)
+
+Check for CR-LF at the end of the mail header in the black.pl script
+and fixed the RFC-822 date string.
+(blackhole/black.pl)
+
+2007.03.03, SJ
+
+Added the "X-Keywords" header field to the exclusion list.
+(shdr.h)
+
+The skip_headers[] list is case insensitive now.
+(parser.c)
+
+2007.02.27, SJ
+
+The exclude_unknown_tokens configuration parameter has been removed and
+introduced the exclusion_radius parameter that can be used to eliminate
+neutral tokens.
+(cfg.h, cfg.c, example.conf, bayes.c)
+
+Modified the parser routine to include DSN report attachments.
+(parser.c)
+
+More header stuff has been discarded. You may customise the excluded header
+lines in shdr.h.
+(shdr.h)
+
+2007.02.26, SJ
+
+Modified the chi2inv() function according to http://garyrob.blogs.com/chi2p.py
+(chi.h. chi.c, hash.c)
+
+2007.02.17, SJ
+
+Gcc optimisation level changed from -O3 to -O2.
+(configure.in)
+
+2007.02.07, SJ
+
+Added an option allowing you to reject spam. If you want this to
+happen set the spaminess_oblivion_limit variable to a value above
+your spam_overall_limit (eg. 0.99) and clapf will drop all the
+spam if its spamicity value is >= 0.99. I think it may be useful
+on some outgoing smtp servers eliminating most of the outgoing
+spam from your own network. Be careful with this setting.
+(cfg.h, cfg.c, session.c, example.conf)
+
+2007.02.05, SJ
+
+Modified the syslog messages slightly to become more unified.
+(avast.c, avg.c, clamd.c, drweb.c, kav.c, session.c, bayes.c)
+
+2007.02.02, SJ
+
+Added a configuration directive (keep_queue_files) to determine whether to
+keep the queue files after processing. It's useful only for debugging. If
+you want to keep those files set keep_queue_files=1 otherwise they are
+removed (this is the default behaviour).
+
+(cfg.c, cfg.h, session.c, example.conf)
+
+2007.01.16, SJ
+
+Added a date field to the spam quarantine.
+(spamcgi.c)
+
+2007.01.10, SJ
+
+Added a new feature to fight embedded image spam. If the message is not good
+enough (=its spamicity value is greater than max_embed_image_spamicity) the
+message is marked as spam. This way messages from strangers with images may
+land in your spam folder.
+(cfg.c, cfg.h, bayes.c, examples.conf)
+
+
+0.3.28:
+
+2007.01.08, SJ
+
+Modified the shell scripts (util/*) and set the PATH variable.
+
+Removed the clamav database upgrade stuff from the util/ directory.
+(util/)
+
+2007.01.07, SJ
+
+The CDB Perl modul is not needed any longer since the cdb utility (part of
+the tinycdb package) is able to create cdb files, eg. "cdb -c -m -w tokens.cdb tokens.raw"
+(see the cdb (1) man page)
+
+2007.01.04, SJ
+
+Extended the max. length of the tokens (18->19) thus the Content-Disposition
+header line also fits.
+(config.h, perl/shrink.pl)
+
+2007.01.03, SJ
+
+Added a new variable (penalize_embed_images) to fight image spam aggressively.
+If set (penalize_embed_images=1) it creates a special spammy token (EMBED*) thus
+increasing the spam probability. Please note that this variable has no affects
+on attached or linked (<img src="http://....">) images.
+
+If you really hate all the embedded images you may add the following line to
+/etc/postfix/body_checks:
+
+/src\s*\=(3D){0,}\s*["']?cid:/
+
+2007.01.01, SJ
+
+Count invalid junk characters only if it's not an UTF-8 encoded part.
+The FSM newsletters tend to contain such a strange character sequence (=E2=80=94).
+I don't get it why the word Magazines should be written as "Magazine=E2=80=99s"...
+
+2006.12.22, SJ
+
+Fixed a bug preventing 'make install' to copy the default configuration file.
+(Makefile.in)
+
+Added an option (useful for package builders) to install clapf under a different root
+directory, eg. 'make install root=/tmp/aaa' installs clapf under /tmp/aaa/usr/local/...
+(Makefile.in, configure.in)
+
+2006.12.15, SJ
+
+Fixed the fix_url() function to handle complex URLs properly:
+http://www.ajandekkaracsonyra.hu/email.php?page=email&cmd=unsubscribe&email=yy@xxxx.kom
+(misc.c)
+
+2006.12.11, SJ
+
+Modified the translate() and fix_url() functions to leave the URLs intact
+and to allow us to capture url redirects such as
+http://www.google.com/url?q=http://1234567.026.annasiksboredok.com/
+(parser.c, misc.c)
+
+
+2006.12.06, SJ
+
+Skip the "User-Agent:" header field and the 3 letter long names of the months.
+(shdr.h)
+
+Clean up the extracted attachments while parsing a message.
+(parser.c)
+
+**********************************
+
+0.3.28-rc3:
+
+2006.11.27, SJ
+
+Added Word support via the catdoc package (http://www.45.free.net/~vitus/software/catdoc/).
+Tested with 0.94.2.
+
+(bayes.c, cfg.h, cfg.c, example.conf)
+
+2006.11.18, SJ
+
+The "X-MimeOLE:" header line is skipped. Remove it from shdr.h if you want to look for it.
+(shdr.h)
+
+2006.11.16, SJ
+
+Added OCR support via the gocr and netpbm packages. You need gocr (http://jocr.sourceforge.net/)
+0.41 is known to work, and netpbm (http://netpbm.sourceforge.net/), 10.18.12 should be fine.
+
+2006.11.13, SJ
+
+Modified inject_mail() function to insert a spam prefix to the Subject: line
+if it is a spam.
+(smtp.c, config.h, cfg.c)
+
+Skip the names of the months. Using any date would bias the affected tokens.
+(parser.c, shdr.h)
+
+2006.11.09, SJ
+
+Modified the parser routine to recognise the oriental spam better. The SURBL checks
+are performed only if we are still unsure and no enough strange/junk characters to
+eliminate the unnecessary DNS lookups.
+(parser.c, misc.c, misc.h, bayes.c)
+
+2006.10.28, SJ
+
+Modified the parser routine to include the Content-Type and Content-Transfer-Encoding
+element to fight image spam better. Added a new variable (penalize_images). Set it to
+1 to enable or 0 (or commented out) to disable.
+(parser.c, bayes.c, cfg.c, cfg.h, example.conf)
+
+2006.10.27, SJ
+
+Removed the "#include <ldap.h>" reference from the 12th line of user.c.
+It's unnecessary if you want to hold user preferences in a MySQL table.
+(user.c)
+
+2006.10.25, SJ
+
+Modified the TRAINING/tokens.sql and util/kcdb_mysql.sh scripts for the easier
+Maildir format training.
+(TRAINING/tokens.sql, util/kcdb_mysql.sh)
+
+
+**********************************
+
+0.3.28-rc2:
+
+2006.10.13, SJ
+
+Log token database training action into mysql table. Look at the
+mysqltraininglogtable parameter in example.conf.
+(cfg.c, cfg.h, cgi.c, cgi.h, traincgi.c, trainlogcgi.c, user.sql, example.conf)
+
+The "Next" and "Last" messages can be seen only if you have more than 'page_len'
+messages in your spam quarantine.
+(spamcgi.c)
+
+2006.10.10, SJ
+
+Spamdrop works from CDB database even if we have compiled with --enable-hash-db
+(bayes.c)
+
+2006.10.09, SJ
+
+Changed the default queue directory to /opt/av/tmp
+(example.conf)
+
+Added a check to prevent creating an IP-address entry in the blackhole directory
+if there's no valid Received: line.
+(blackhole/black.pl)
+
+Added a Hungarian messages.h file. If you want to localise your own language
+create a messages.h.xx (where 'xx' is your language) file, then translate and
+send it to me - please.
+(messages.h.hu)
+
+2006.10.06, SJ
+
+The traincgi utility is able to save the trained messages.
+(traincgi.c, cgi.c, cgi.h, cfg.c, cfg.h, example.conf)
+
+2006.10.05, SJ
+
+Added an extra header to specify the reason why clapf decided about a certain
+message that it's a spam. Expect more definitions in the future.
+(session.c, messages.h)
+
+Fixed the configure script to let the --disable- option to work.
+(credits: Anatoly Shipitsin)
+(configure.*, Makefile.in)
+
+2006.10.04, SJ
+
+Added a syslog support to the black.pl script.
+(blackhole/black.pl)
+
+2006.10.03, SJ
+
+Fixed a bug in the parse() routine. Clapf now checks the second Received line,
+ie. the machine contacted you. Of course you may adjust clapf to check the first
+machine (ie. in the last Received: line), but please note that the Received
+lines can be spoofed, that's why I decided to check the last computer in the
+Received: chain (not counting ourself). If you want to hack this feature, look
+at parser.c around the 125th line and adjust (or remove it for the last Received
+line) the "state.ipcnt < 2" snippet.
+(parser.c)
+
+2006.10.02, SJ
+
+Modified the blackhole feature to use a special directory holding
+IP-address entries instead a mysql table.
+(black.c, black.h, bayes.c, cfg.c, cfg.h, example.conf, blackhole/black.pl, blackhole/black.crtab.sh)
+
+2006.09.29, SJ
+
+Changed the default action to "junk" in passmail.
+(passmail.c)
+
+2006.09.28, SJ
+
+Added a paging option to the spam quarantine.
+(spamcgi.c, cfg.h, cfg.c)
+
+2006.09.20, SJ
+
+Commented out a disturbing print line in the maillog processing Perl script
+(stat/process_syslog.pl)
+
+
+************************
+
+0.3.28-rc1:
+
+2006.09.06, SJ
+
+The passmail utility uses read() system calls instead of fgets().
+(passmail.c)
+
+2006.09.04, SJ
+
+Added a paging option to the spam quarantine listing. Please
+recompile the spamcgi and traincgi utilities as they cannot see
+the older spam messages because in order for the correct paging
+now we use a "timestamp." (YYYYMMDDhhmmss.) before the original name
+of the spam file. I recommend you either to remove or backup/deliver
+them if you need them any longer.
+(spamcgi.c)
+
+Added common header links.
+(spamcgi.c, usercgi.c, cfg.h, cfg.c, example.conf)
+
+2006.09.01, SJ
+
+Modified the spamcgi cgi utility to print html links instead
+of form submit buttons. I found this a more elegant and nicer
+solution.
+(spamcgi.c)
+
+The usercgi cgi utility adds a few html tags at the bottom of
+the generated html page. It's a cosmetic only fix.
+(usercgi.c)
+
+Fixed a looping problem while trying to deliver a message from
+the spam quarantine.
+(smtp.c)
+
+2006.08.25, SJ
+
+Modified the hash table creation in the hash_db memory table
+for a smaller memory footprint.
+(hash_db.h, hash_db.c)
+
+2006.08.21, SJ
+
+Binary messages (particularly those containing NUL characters) are
+handled properly.
+(config.h, smtp.c)
+
+************************
+
+0.3.27:
+
+2006.08.18, SJ
+
+Added a fix in 'make install' to copy the default config file in case
+of a fresh install with no previous config file.
+(Makefile.in)
+
+2006.08.15, SJ
+
+Modified the mail injection to allow multiple headers to be inserted
+in case of spam. I try it with fgets() again with a dirty hack to
+handle binary emails.
+(config.h, cfg.h, cfg.c, session.c, smtp.c)
+
+(credits: Mariano Reingart)
+
+0.3.27-rc3:
+
+2006.07.17, SJ
+
+Modified the inject_mail() function to able to handle binary messages correctly.
+(smtp.c)
+
+Fixed typo in mysql.c. The word 'token' was misspelled as 'tokem' causing error
+in database training.
+(mysql.c)
+
+2006.07.11, SJ
+
+Modified the configure script to build the cgi utilities if we
+have an LDAP user database.
+(configure*, Makefile.in)
+
+2006.07.06, SJ
+
+Tested the configuration with Active Directory and added a little docs
+on this issue. The name of the LDAP entries can be changed they are defined
+in user.h.
+(user.c, user.h)
+
+2006.06.30, SJ
+
+Modified clapf to be able to send spam to an smtp server other than our
+postfix on 127.0.0.1:10026. It's useful if you want to create a distributed
+setup, eg. if you may want to implement a spam quarantine on a dedicated
+machine other than the computer where your users have their own mailboxes.
+In this case set spam_smtp_addr and spam_smtp_port to point to this box.
+
+Otherwise set spam_smtp_addr and spam_smtp_port to the same values
+like postfix_addr and postfix_port respectively (this is the default).
+(session.c, cfg.c)
+
+
+************************
+
+0.3.27-rc2:
+
+2006.06.29, SJ
+
+Created the spamdrop utility to use it with an LDA such as maildrop.
+
+You may use the following code snippet with maildrop to collect spam in the
+junk folder:
+
+`/usr/local/bin/spamdrop /usr/local/etc/clapf.conf `
+if($RETURNCODE == 1)
+{
+       to "mail/junk"
+}
+
+(Makefile.in, spamdrop.c, doc/man/spamdrop.1)
+
+Removed the hash database conditional stuff from spamtest. It's not useful
+to read the tokens into memory while testing a single message.
+(test.c)
+
+Modified a decription slightly in clapf.schema
+(ldap/clapf.schema)
+
+2006.06.27, SJ
+
+Added an option to let clapf connect to the MySQL server through a unix domain socket
+(cfg.h, cfg.c, black.c, user.c, user.h, passmail.c, smtp.c, train.c, traincgi.c, example.conf)
+
+2006.06.23, SJ
+
+Modified the surbl code to check the URLs in the message against the surbl
+domain(s) defined only if we are not sure that the email is certainly ham
+or spam thus eliminating unecessary (and costly) SURBL lookups.
+In other words the surbl code is only used if we are unsure whether the
+message is spam or ham.
+(bayes.c)
+
+2006.06.19, SJ
+
+Modified the configure script to have a better (and gentoo compatible) mysql check.
+You should add the --enable-mysql if you need mysql support.
+(configure*, Makefile.in)
+(credits: Anatoly Shipitsin)
+
+
+************************
+
+0.3.27-rc1:
+
+
+2006.06.12, SJ
+
+Fixed small typo in doc/html/config.html in the esf_h section.
+(doc/html/config.html)
+
+2006.06.06, SJ
+
+The findnode() function returns the pointer of the node if possible.
+(hash.h, hash.c)
+
+Added a small code to the surbl support to able to mark the message
+as spam if it has too many SURBL caught URLs though the spamicity
+does not reach the spam limit. See the following parameters:
+rude_surbl and spaminess_of_caught_by_surbl
+(cfg.h, cfg.c, bayes.c, example.conf)
+
+2006.06.05, SJ
+
+Added a spec file suitable to create an RPM package from clapf.
+(clapf.spec)
+(credits: Tim Philips)
+
+2006.06.02, SJ
+
+Changed the defaults of both esf_h and esf_s to 1. It needs
+more investigation when using non integer degrees of freedom values.
+(cfg.c, example.conf, doc/html/config.html)
+
+Added support to use the GNU GSL library if available. It has a better
+chi square function implementation as it allows the degrees of freedom
+to be a double type. Our internal implementation allows only integer as
+the degrees of freedom though current tests show that it may be just fine.
+And the chi square function went to a separate file.
+(chi.c, chi.h, configure*, hash.c, hash.h)
+
+2006.06.01, SJ
+
+Added three more characters to the invalid_junk_characters array
+(ijc.h)
+
+************************
+
+
+0.3.26:
+
+2006.05.23, SJ
+
+Checking for content-type-encoding was case sensitive. Fixed.
+(parser.c)
+
+2006.05.18, SJ
+
+Added the 'X-Mailer' stuff to the skip_headers[] list.
+Remove it if it bothers you.
+(shdr.h)
+
+Fixed 'Subject' handling.
+(parser.c)
+
+2006.05.16, SJ
+
+Fixed a minor bug in perl/shrink.pl to handle URLs properly
+(perl/shrink.pl)
+
+*******************************
+
+0.3.26-rc3:
+
+2006.05.10, SJ
+
+Fixed the install entry in Makefile: do not try to install the passmail
+utility if it is not compiled.
+(credits: Pintér Tamás)
+(configure*, Makefile.in)
+
+Fixed a minor bug in the configure script. When selecting clamd
+the configure script has said "You have not selected any antivirus support.
+clapf will not protect you from hostile code coming in e-mail", though
+it did configured clamd antivirus support.
+
+(credits: Pintér Tamás)
+(configure*)
+
+2006.05.09, SJ
+
+Modified the count_invalid_junk() function to replace junk characters
+with JUNK_REPLACEMENT_CHAR
+(misc.c)
+
+2006.05.04, SJ
+
+Virus quarantine directory is undefined from now. Let clapf
+not collect infected files by default. Specify the quarantine_dir
+variable in clapf.conf if you want to maintain a virus quarantine
+directory.
+(cfg.c, config.h)
+
+Moved passmail in Makefile.in
+(Makefile.in, configure*)
+
+Antivirus documentation merged into av.html
+(doc/html/av.html)
+
+2006.05.03, SJ
+
+Lower case is the default for now. If you want clapf to be case sensitive,
+please use the --enable-case configure option. The --enable-lower option
+is withdrawn. I recommend you to recreate the token database (CDB file).
+(configure.*, misc.c, bayes.c)
+
+If a token in the Subject: line is not found try it without the 'Subject*' prefix.
+(bayes.c)
+
+The SURBL* special token is only included in the token list if it the domain is
+found in the SURBL database.
+(bayes.c)
+
+2006.04.27, SJ
+
+Fixed the max_junk_spamicity declaration in cfg.h
+(cfg.h)
+
+2006.04.26, SJ
+
+Passmail is able to move the spam into the quarantine or silently discard.
+The action is stored either in mysql database or ldap directory.
+(passmail.c, user.c, user.sql, ldap/clapf.schema)
+
+Created the usercgi cgi utility to let users set their own preference.
+(usercgi.c, user.c, user.h)
+
+2006.04.25, SJ
+
+Modified the traincgi utility a little.
+(traincgi.c)
+
+Tried to lowercase everything. Use the --enable-lower configure option.
+I recommend you to recreate your token database (tokens.cdb)
+(misc.c)
+
+******************
+
+
+0.3.26-rc2:
+
+2006.04.19, SJ
+
+Changed MAX_RCPT_TO 16->128. Adjust this variable to your need.
+(config.h)
+
+2006.04.11, SJ
+
+Spam quarantine has been redesigned. Now each user has his own spam
+quarantine and can manage it. You may store the users' email addresses
+either in LDAP or Mysql database.
+(passmail.c, session.c, spamcgi.c, smtp.c, smtp.h, cfg.c, cfg.h)
+
+******************
+
+0.3.26-rc1:
+
+2006.04.07, SJ
+
+Clapf now honors user preferences. For now the idea is very simple.
+We have a CDB file containing emails and username mapping as well
+as username and preferences mapping.
+(cfg.c, cfg.h, perl/userpref.pl, session.c, user.c, misc.c)
+
+2006.04.06, SJ
+
+Modified the SURBL code to allow to query multiply URI blacklist domains.
+If you want to do so build a comma separated list of URI blacklist domains.
+(bayes.c)
+
+Buffer overflow bug has fixed in the parser routine.
+(parser.c)
+
+2006.04.05, SJ
+
+Added SURBL support. It is a kind of RBL list. It can be used to check domains in the message
+against a central database. If the domain exists in the database a special token is created
+SURBL*domainname and assigned 0.9999 as its spamicity.
+(bayes.c, cfg.c, cfg.h, configure*, example.conf)
+
+Fixed the fix_url() function :-)
+(misc.c)
+
+0.3.25:
+
+2006.04.03, SJ
+
+Cleaned under perl/ and util/ directories
+
+**************************
+
+0.3.25-rc4:
+
+2006.03.31, SJ
+
+Fixed minor typo in stat/clapf-rrd-graph-oneline.sh
+(stat/clapf-rrd-graph-oneline.sh)
+
+2006.03.29, SJ
+
+Revised the HTML documentation.
+
+2006.03.28, SJ
+
+MIN_WORD_LEN raised 2->3 and MAX_WORD_LEN changed 24->18
+If you get worse results feel free to change these values.
+(config.h, perl/shrink.pl)
+
+2006.03.22, SJ
+
+Try to auto utf8- and quoted-printable decode lines. It should not hurt.
+(parser.c)
+
+Removed the question mark(?) from the translation table.
+(trans.h)
+
+2006.03.21, SJ
+
+Modified the bayes_file() routine to let a junk email come in if its
+spamicity score is under a certain limit (=max_junk_spamicity).
+(bayes.c, cfg.c, cfg.h, example.conf)
+
+Removed the '£' sign from the invalid_junk_characters list.
+(ijc.h)
+
+2006.03.20, SJ
+
+Created ptable.h to hold a list words you don't want to train the database
+with them. Also modified the perl/shrink.pl file according to this.
+(train.c, traincgi.c, per/shrink.pl)
+
+2006.03.17, SJ
+
+Modified the configure.* scripts to build the splitmbox utility if the
+antispam support is disabled.
+(configure.in)
+
+2006.03.16, SJ
+
+Skip lines having an RFC822 formatted date (eg. "Tue, 14 Mar 2006 15:46:03 ")
+to eliminate the impact of dates.
+(parser.c)
+
+Decremented the min_phrase_number from 40 to 30. (config.h, example.conf)
+
+2006.03.14, SJ
+
+Tried the following: create 2 hash tables: one holding only the single
+tokens and the other only the phrases (token pairs). URLs are in both
+tables. Now let's calculate the spamicity from both tables then choose
+the one with greater deviation. Gave up using triplets any longer.
+Testing in progress.
+(perl/shrink.pl, bayes.c)
+
+********************
+
+0.3.25-rc3:
+
+2006.03.13, SJ
+
+Added a utility called splitmbox to split an mbox file to separate messages.
+(splitmbox.c, Makefile.in, doc/man/splitmbox.1)
+
+Ingore the "Date: " lines when parsing a message.
+(perl/shrink.pl, shdr.h)
+
+Changed the number of most interesting words from 20 to 15, because I use
+token pairs only.
+(config.h)
+
+Got a mail having a boundary definition in the mail header but containing no
+boundary line in the body. So I included a check for this.
+(parser.c)
+
+Store the URLs in the form of URL*domain.com, where domain.com is shortened
+to fit in MAX+WORD_LEN size.
+(misc.c, misc.h, bayes.c)
+
+********************
+
+
+0.3.25-rc2:
+
+2006.03.09, SJ
+
+Revised reloading clamav antivirus database. Some error happened
+after the reload. Revised reload_clamav_db() function and removed
+clam.c and clam.h. And added clamd support.
+(clamd.c, clamd.h, cfg.c, cfg.h, example.conf, doc/html/config.html)
+
+2006.03.07, SJ
+
+Changed the time values from [usec] to [ms].
+(bayes.c, avast.c, avg.c, drweb.c, kav.c, session.c)
+
+Introduced a new storage device called hash_db. It reads the raw
+token file into a hash (called t_hash). I expect a better speed.
+Please note that it takes a few MBs extra memory per processes.
+You may enable this feature by using a configure option called
+--enable-hash-db
+(configure.in, Makefile.in, hash_db.c, hash_db.h, cfg.h, cfg.c, example.conf)
+
+Modified the mysql2cdb.pl script to create the raw token data file as well.
+(perl/mysql2cdb.pl)
+
+Changed the default concurrancy from postfix to clapf from 20 to 10.
+(doc/html/install.html)
+
+Introduced the kill_child() function to prevent a child to run for a long time.
+You may use the session_timeout variable to set this value.
+(cfg.c, cfg.h, session.c, example.conf, doc/html/config.hml)
+
+2006.03.06, SJ
+
+Tried a new method: use only the token pairs and single URIs. This
+results a much smaller CDB database (cca. 1/3)
+(perl/shrink.pl, util/kcdb_mysql.sh, util/mysql2cdb.sh, bayes.c)
+
+Added a new variable (tv_sent) to track how much time clapf needs
+to inject a single message back to clapf. Time values are printed
+in msec instead of usec.
+(session.c)
+
+Fixed a bug around message injection if the spam_quarantine variable is set.
+(session.c)
+
+2006.03.02, SJ
+
+Introduced two new hash to hold exclusively token pairs and triplets
+respectively. If we have enough known triplets use only them in the
+spamicity calculation. If we have not then try the same with the
+pairs and even with the phrase hash. We may use the all token holding
+hash as a last resort. This is because overlapping tokens contain
+such a redundancy difficult to handle.
+(bayes.c)
+
+Simplified the boundary handling
+(parser.c, parser.h)
+
+Try to utf-8 decode everything in the buffer. It should not hurt.
+(parser.c)
+
+2006.03.01, SJ
+
+Revised qouted-printable soft break handling
+(parser.c)
+
+Improved utf-8 decoding
+(decoder.c)
+
+Removed the paragraph sign from ijc.h
+(ijc.h)
+
+2006.02.28, SJ
+
+Added Dr.Web antivirus support.
+(cfg.c, cfg.h, drweb.c, drweb.h, example.conf, doc/html/config.html)
+
+2006.02.27, SJ
+
+Nesty bug was found. MUAs put a few lines at the beginning of the message.
+When you test a single message with spamtest or you make the spamicity
+database these lines are used. But clapf cannot see these lines when it
+gets the message thus the calculated result might be different. I modified
+the parser routine to discared these lines:
+"Return-Path: ", "X-Original-To: "
+and the first line if it starts with "From "
+(parser.c, parser.h)
+
+Fixed a bug in util/kcdb_mysql.sh
+(util/kcdb_mysql.sh)
+
+*********
+
+2006.02.24, SJ
+
+Intoduced a new hash containing only phrases (token pairs and triplets).
+If we have more than min_phrase_number phrases, do not care about single
+tokens.
+(cfg.h, cfg.c, bayes.c, example.conf)
+
+Raised MAX_SAMPLES_TO_CHOOSE from 15 to 20 because we have more tokens
+by using phrases too.
+(config.h)
+
+Introduced the 'effective size factor' (ESF) variable to help against the
+annoying redundancy. ys and yh are both set to 0.2 for now to test it.
+If you want to disable the ESF set both esf_h and esf_s to 1.
+(hash.c)
+
+Released 0.3.24.
+
+2006.02.23, SJ
+
+Added the inverse chi-square algorithm
+(hash.c)
+
+Robinson probability is the default again
+(util/kcdb.sh, util/kcdb_mysql.sh, util/mysql2cdb.sh)
+
+2006.02.22, SJ
+
+Removed left hard coded WORK_DIR from session.c
+(session.c)
+(credits: Anatoly Shipitsin)
+
+Removed test (and annoying) stuff from the hash function
+(hash.c)
+
+2006.02.21, SJ
+
+Thunderbird starts with a "From - Thu Sep 15 11:27:01 2005"-like line
+(parsembox.c)
+
+If clapf cannot read the specified file it returns ERR_BAYES_* and
+clapf will syslog the event with its 'error code'.
+(bayes.c, config.h)
+
+Added Kaspersky (kav) support
+(session.c, kav.c, kav.h, cfg.c, cfg.h, config.h, example.conf, doc/html/kav.html)
+
+2006.02.20, SJ
+
+Introduced the clamav html documentation file
+(doc/html/clamav.html)
+
+Replaced the configuration file options with a reference link in the
+manual page.
+(doc/man/clapf.8)
+
+Replaced the relocate_timeout with relocate_delay
+(cfg.h, cfg.c, traincgi.c, example.conf)
+
+Created a configuration file directive list
+(doc/html/config.html)
+
+Modified the parser routine to skip specific message headers listed
+in the shdr.h. Unfortunately my mail already contains some headers
+I don't trust. This of course distorted the result clapf calculated.
+(parser.c, shdr.h)
+
+2006.02.17, SJ
+
+Modified the parser routine to include all the header information
+and to skip all the numeric only tokens. This increased the size
+of my spamicity database with 3%.
+(parser.c, bayes.c)
+
+Minor fix in the util/kcdb_mysql.sh script
+(util/kcdb_mysql.sh)
+
+2006.02.16, SJ
+
+Removed the use_quarantine configuration file option.
+It is enough to check the quarantine_dir variable
+(cfg.c, cfg.h, session.c, example.conf)
+
+2006.02.15, SJ
+
+Fixed bug in the translate function.
+(misc.c)
+
+Added a new configuration file option (exclude_unknown_tokens) to
+exclude unknown tokens from the final calculation. If you have only
+a few known token in the database and a lot of unknown token you
+may experience higher false positives as well as false negatives
+rate but you may catch such a spam which includes a single url or
+image with some unknown tokens.
+I recommend you to turn off this feature if it causes more trouble
+than good.
+(cfg.c, cfg.h, hash.c, bayes.c, example.conf)
+
+2006.02.11, SJ
+
+Reimplemented connection handling according to D.J. Berstein's
+tcpserver. Postfix to clapf SMTP communication code went to session.*
+(clapf.c, session.c, session.h, sig.c, sig.h)
+
+2006.02.10, SJ
+
+Moved cgi.c functionality to traincgi.c which compiles into traincgi
+(cfg.c, traincgi.c, spamcgi.c, cfg.c cfg.h, example.conf, doc/man/clapf.8)
+
+Simplified the 'train' utility
+(train.c)
+
+Redesigned configure script. It prints a summary of selected features.
+--enable-clamav is renamed to --enable-libclamav
+(configure*)
+
+A very strange and nesty thing has happened. Suddenly all the children
+one after one became zombies. I decided to disable the connection limiting
+code until this issue would be resolved and let postfix to decide how many
+connections to open for us.
+(clapf.c)
+
+2006.02.09, SJ
+
+Modified debugging not show the spamicity of all the tokens just
+the most interesting ones and print lines of the message being parsed
+(hash.c, parser.c)
+
+Added an option to determine what tokens to include in spamicity
+calculation. The more use you use the more accurate result you get
+at the cost of more queries against the database. By default all
+tokens are used.
+(cfg.c, cfg.h, bayes.c, example.conf)
+
+No antivirus product selected by default, you should choose one (or more)
+with the appropriate configure option.
+(configure*)
+
+Removed the spam training recommendation feature. I'm not sure that
+it's useful.
+(cfg.c, cfg.h, clapf.c)
+
+MIME decoder was changed to understand one level nested attachments
+(mime.c)
+
+The spam quarantine cgi utility was changed to use spam_quarantine_dir
+configuration file variable and it is able to deliver the message to
+the recipient if the system administrator wants to do so.
+(spamcgi.c)
+
+
+2006.02.08, SJ
+
+Cleaned up some code around antivirus handling
+(clapf.c)
+
+Cosmetic modification with AVG
+(avg.c)
+
+Modified the parser routine to handle base64 or quoted-printable encoded
+Subject lines. Note I don't care about multiple encoded stuff eg.
+Subject: =?iso-8859-2?Q?T?= =?iso-8859-2?Q?E?= =?iso-8859-2?Q?S?= =?iso-8859-2?Q?T?=
+(parser.c)
+
+2006.02.07, SJ
+
+Modified the boundary handling to accept nested boundaries (one level)
+(parser.c)
+
+Added avast! support
+(cfg.c, cfg.h, example.conf, clapf.c, avast.c, avast.h)
+
+Modified the syslog processing script to handle the days 1-9 correctly
+(stat/process_stat.pl)
+
+Released 0.3.24-rc1
+
+2006.02.06, SJ
+
+Added smtp response if the message was moved into the spam quarantine directory
+(clapf.c)
+
+2006.02.02, SJ
+
+Developed a small code to catch even more Chinese, Japanese, Korean, ... spam
+(cfg.c, cfg.h. bayes.c, parser.c, parser.h, example.conf)
+
+2006.01.30, SJ
+
+The invalid_junk_limit and invalid_hex_junk_limit features can be disabled
+by setting them to 0.
+(cfg.c, bayes.c)
+
+Connection handling was slightly modified
+(clapf.c)
+
+2006.01.27, SJ
+
+Removed the openssl version of base64 decoder implementation
+(decoder.c, configure*)
+
+Fixed base64 decoder to handle binary files properly
+(decoder.c, decoder.h)
+
+Implemented AVG anti virus support
+(mime.c, mime.h, avg.c, avg.h, cfg.c, cfg.h)
+
+Released 0.3.23-rc3
+
+2006.01.26, SJ
+
+Minor glitch was fixed when moving a message to quarantine has failed
+(clapf.c)
+
+Removed hapaxes (tokens occurring only once) from the token dictionary
+(perl/create*.pl, perl/mysql2*pl)
+
+If a token is not found, convert it to upper than lower case and try again
+(bayes.c)
+
+Released 0.3.23-rc2.
+
+2006.01.25, SJ
+
+Removed the spam_quarantine variable, the spam_quarantine_dir variable
+is sufficient alone.
+(example.conf, clapf.c, doc/man/clapf.8)
+
+2006.01.24, SJ
+
+Spam quarantine cgi utility has been created
+(Makefile.in, spamcgi.c, cfg.c, cfg.h, example.conf)
+
+2006.01.23, SJ
+
+Spamicity value is printed with %.4f
+(clapf.c)
+
+CDB handling was rewritten to use only a single cdb database
+Forced database creation from mysql database can be done
+just add a 3rd argument as "x" to util/mysql2cdb.sh.
+
+eg: sh util/mysql2cdb.sh tokens my.cnf x
+
+(bayes.c, cfg.c, cfg.h, perl/mysql2markov.pl, util/mysql2cdb.sh)
+
+2006.01.19, SJ
+
+Delivery information is written to the quarantine
+directory when a file is put there. It may be used
+to determine whose messages it is or to have it
+delivered back to postfix.
+(misc.c, misc.h, clapf.c)
+
+2006.01.18, SJ
+
+Man pages went to doc/man
+(clapf.8)
+
+1 was renamed to spamtest
+(Makefile.in)
+
+More man pages are created
+(train.1, spamtest.1, parsembox.1)
+
+Much of the documentation went to the manual pages and to the html (online) pages
+(doc/).
+
+2006.01.16, SJ
+
+The backlog parameter in the listen() system call can be set
+in the configuration file
+(cfg.c, cfg.h, clapf.c, example.conf)
+
+Released 0.3.22
+
+2006.01.13, SJ
+
+Modified the new connection handling code
+(clapf.c, errmsg.h, example.conf)
+
+Terminate connection immediately if the client has issued the QUIT
+command and we have answered with 221.
+(clapf.c)
+
+2006.01.12, SJ
+
+max. number of connections (eg. the listen() system call)
+can be set in the configuration file
+
+2006.01.11, SJ
+
+clamav archive variables can be set in the config file
+(cfg.c, cfg.h, clapf.c, example.conf)
+
+Created an initial manual page
+(clapf.8, Makefile.in)
+
+Introduced move_message_to_quarantine() function to move files
+to a quarantine directory
+(cfg.c, cfg.h, clapf.c, misc.c, misc.h, example.conf)
+
+Update the timestamp of existing records in the blackhole table
+(blackhole/black.pl)
+
+2006.01.10, SJ
+
+Fixed minor bug in translate() function
+(misc.c)
+
+Fixed minor configure error
+(configure*)
+
+2006.01.09, SJ
+
+Removed 1.conf from the source tree.
+
+Introduced a command line trainig utility
+(train.c, config.h, errmsg.h, Makefile.in, doc/TRAINING)
+
+Introduced logging levels
+(config.h, clapf.c, bayes.c, stmp.c)
+
+2006.01.05, SJ
+
+Added a fix to handle base64 decoded parts better. If a base64 encoded line
+does not end with a line break (in the decoded text). It will save the
+last and incomplete part.
+(parser.c, parser.h)
+
+Added a similar fix to handle soft breaks in quoted-printable parts for better
+parsing.
+(parser.c, parser.h, misc.c)
+
+2006.01.04, SJ
+
+Introduced an alternate base64 decoder function without the openssl crypto library
+and this is the default from now. Use the "--enable-openssl" configure option to
+stick with the openssl implementation.
+(decoder.c, configure*)
+
+2006.01.03, SJ
+
+Added more detailed debug
+(clapf.c, smtp.c, doc/SYSLOG)
+
+Changed MAXCONN: 15 -> 20
+(config.h)
+
+Added a check for every free() call.
+(bayes.c, hash.c)
+
+Released 0.3.22-rc2
+
+Fixed license / copyright docs and removed doc/COPYRIGHT
+(doc/LICENSE)
+
+2006.01.02, SJ
+
+Spam statistics creation is possible with an external tools (rrdtool)
+(stat/clapf-rrd-*sh, doc/STATISTICS)
+
+Added an option to mark base64 encoded textual messages as spam
+(parser.c, parser.h, bayes.c, 1.conf, example.conf)
+
+2005.12.30, SJ
+
+Added dist_clean option to Makefile(.am) which removes
+Makefile, config.status and config.log
+
+2005.12.29, SJ
+
+Fixed smtp stuff around the RSET command
+(clapf.c)
+
+Fixed documentation
+(doc/README)
+
+2005.12.25, SJ
+
+buffer oveflow bug was fixed
+(parser.c)
+
+Code cleanup
+(bayes.c, config.h, hash.c, hash.h, misc.c, misc.h, 1.conf, example.conf)
+
+Released 0.3.21
+
+2005.12.23, SJ
+
+You may choose to save the trapped emails to a file
+(blackhole/black.pl)
+
+Fixed parser routine. It will check only IPv4 addresses in the blackhole code
+(parser.c)
+
+2005.12.22, SJ
+
+Fixed IP-address extraction in blackhole/black.pl
+(blackhole/black.pl)
+
+2005.12.21, SJ
+
+Few config.h parameters can be set from configuration file
+(cfg.c, cfg.h, 1.conf, example.conf)
+
+Released 0.3.21
+
+2005.12.19, SJ
+
+Added a check for free() in free_and_print_list()
+(parser.c)
+
+Introduced an alternative spamicity calculation method.
+To prevent a gigantic database skip tokens occuring only once
+in either in the ham or in the spam corpus.
+
+(perl/create_markov_cdb.pl, util/kcdb.sh)
+
+2005.12.13, SJ
+
+Modified boundary search algorithm
+(parser.c)
+
+2005.12.12, SJ
+
+Merged the inject_mail() and send_notify() functions
+(smtp.c, smtp.h, clapf.c)
+
+Released 0.3.21-rc3
+(config.h)
+
+Changed blackhole handling
+(blackhole/black.pl)
+
+2005.12.10, SJ
+
+Cleaning code in inject_mail()
+(smtp.c)
+
+Adding debugging
+(clapf.c, smtp.c)
+
+2005.12.09, SJ
+
+Removed heuristic tests from clapf. Perhaps I will include
+some of them if they needed by the clapf users.
+(cfg.c, cfg.h, 1.conf, example.conf)
+
+Parsing the "Received: from" lines went to parser.c
+(parser.c, parser.h)
+
+Renamed the inoculation feature to blackhole
+(bayes.c, configure, configure.in)
+
+Redesigned the blackhole feature with MySQL instead of SQLite3
+(bayes.c, black.c, black.h)
+
+Cleaned some smtp injecting code (smtp.c)
+
+2005.12.08, SJ
+
+Introduced a new configuration file parameter (max_message_size_to_filter)
+to skip spam test if the size of the message is greater than this value.
+0 is the default and it means no such a limit
+(clapf.c, cfg.c, cfg.h, 1.conf, example.conf)
+
+Fixed a buffer size problem in the parser module
+(parser.c, parser.h, config.h)
+
+Token database can be teach via a cgi program called "cgi"
+It needs mysql database
+(cgi.c)
+
+2005.12.07, SJ
+
+Introduced two new characters into the invalid_junk_characters[] buffer
+(ijc.h)
+
+Introduced a new configuration option (use_all_the_most_interesting_tokens)
+to enable to use all the most interesting tokens in the spamicity calculation
+(cfg.c, cfg.h, hash.c, 1.conf, example.conf)
+
+Removed message parsing from clapf.c and use bayes_file() as in
+parsembox.c
+(clapf.c)
+
+Fixed a minor bug in the chained list handling
+(parser.c)
+
+2005.12.06, SJ
+
+Integrated the new parser routine
+(clapf.c, bayes.c, parsembox.c)
+
+Removed heuristic support for now except one: if you have
+too many spammy token in the top15 and have_too_spammy_top10 is
+enabled it returns 0.998877 and marks the message as spam.
+Use the spam_ratio_in_top10 variable. It is calculated as spammy tokens / all tokens
+(cfg.c, cfg.h, bayes.c, hash.c)
+
+2005.12.05, SJ
+
+Introduced a message parser routine to avoid implementing it multiple times
+(parser.c, parser.h)
+
+2005.12.01, SJ
+
+Introduced new function split() to parse message lines
+(misc.c, misc.h, bayes.c)
+
+2005.11.30, SJ
+
+Fixed token pair and triplet creation
+(perl/shrink.pl)
+
+2005.11.29, SJ
+
+Some of the clamav stuff went to clam.[ch]
+(clapf.c, clam.c, clam.h)
+
+2005.11.28, SJ
+
+perl/askdbm.pl was removed
+
+Splitted the token database into 3 files (tokens*.cdb)
+(cfg.c, cfg.h, config.h, bayes.c, util/kcdb.sh, perl/createcdb.pl, Makefile.in)
+
+clamav antivirus support is optional from now. Use the
+--disable-clamav configure option to disable it
+(configure, configure.in, clapf.c)
+
+
+2005.11.24, SJ
+
+Introduced the findnode() function to prevent querying the token database
+multiply time for a single token
+(hash.c, hash.h, bayes.c)
+
+2005.11.23, SJ
+
+Modified to handle text-only message parts where there is no Content-Type field
+after the boundary
+(bayes.c, parsembox.c)
+
+2005.11.22, SJ
+
+pcre stuff was rewritten, so you do not need pcre any more
+(parsembox.c, bayes.c, config.h)
+
+2005.11.21, SJ
+
+The configure option "--enable-blackhole" was renamed to "--enable-inoculation"
+(configure.in, configure, doc/README)
+
+2005.11.18, SJ
+
+Added autoconf style configuration
+(Makefile.in. aclocal.m4, install-sh, configure, configure.in)
+
+Released new version: 0.3.20
+
+2005.11.17, SJ
+
+unescape(), base64_decode(), utf8_decode and qp_decode went to decoder.c
+and unescape was renamed to url_decode()
+(misc.c, misc.h, decoder.c, decoder.h, bayes.c, parsembox.c, Makefile, Makefile.blackhole)
+
+2005.11.16, SJ
+
+Fixed calculating the overall spamicity if we have
+tokens with 0.4 spamicity in the top15
+(hash.c)
+
+Introducing new heuristic check: counting the length of too long
+tokens compared to the lenght of the body
+(bayes.c, cfg.c, cfg.h, 1.conf, example.conf)
+
+Mailbox parsing revised
+(parsembox.c)
+
+Adding blackhole functionality
+(black.c, black.h, bayes.c, Makefile.blackhole, ino/*)
+
+2005.11.15, SJ
+
+Fixed Content-Type handling
+(bayes.c)
+
+If there's no valid token return DEFAULT_SPAMICITY
+(hash.c)
+
+Simpilfied the cdb interface
+(bayes.c, clapf.c)
+
+2005.11.14, SJ
+
+Fixed Content-Type handling
+(bayes.c)
+
+2005.11.11, SJ
+
+Count invalid junk stuff only where we analysis data
+(bayes.c)
+
+2005.11.10, SJ
+
+Renamed bayes_init(), bayes_close() and ERR_BAYES_INIT
+(bayes.c, bayes.h, errmsg.h, clapf.c, test.c)
+
+Removed parsembox from the"make av_only" section
+(Makefile)
+
+Documentation stuff, copyright and license info went to doc/
+(README, TRAINING, COPYRIGHT, LICENSE)
+
+Introduced new header field to keep track of message IDs
+(clapf.c)
+
+Minor bug fixed in parsing mbox files
+(parsembox.c)
+ 
+2005.11.09, SJ
+
+Give token pairs a greater distance from the neutral 0.5
+and do not include all the interesting tokens only the 15
+most interesting one.
+(perl/createcdb.pl, hash.c, clapf.c, test.c)
+
+Introduced token triplets for even greater accuracy
+(bayes.c, perl/shrink.pl, perl/createcdb.pl)
+
+Introduced a new heuristic check; ratio of spaces to the whole body
+(cfg.c, cfg.h, bayes.c, 1.conf. example.conf)
+
+Simplified and speed up the creation of the CDB database, DB part is removed
+(util/kcdb.sh, perl/createcdb.pl)
+
+2005.11.08, SJ
+
+Introduced qp_decode() function
+(misc.c, misc.h, bayes.c)
+
+2005.11.05, SJ
+
+Introduced utf8_decode() function
+(misc.c, misc.h, bayes.c)
+
+Min. token length changed from 3 to 2
+(config.h, perl/shrink.pl)
+
+ü, Ü added to translation table
+(trans.h)
+
+2005.11.04, SJ
+
+Introduced new function count_invalid_hexa_stuff to count
+the invalid hexa encoded junk characters
+(misc.c, misc.h, bayes.c)
+
+2005.11.02, SJ
+
+If the message is surely spam/ham according to the Bayesian
+calculation, return with the result immediately.
+(bayes.c)
+
+Skip tokens in the top15 if they are unknown in the spamicity database.
+(hash.c)
+
+2005.10.28, SJ
+
+Fixed URL counting and true ham/spam ratio
+(bayes.c)
+
+REAL_SPAM_TOKEN_PROBABILITY variable restored to 0.9999
+and introduced new variable: MOST_INTERESTING_DEVIATION 0.4998
+(config.h)
+
+Post sorting has been removed, since I think false positives are worse
+than false negatives and I include all the most interesting tokens
+calculating the overall spamicity so I do NOT give precedence for
+the real-spam tokens over the real-ham tokens.
+(hash.c)
+
+2005.10.27, SJ
+
+REAL_SPAM_TOKEN_PROBABILITY variable changed
+(config.h)
+
+Do not count spam-only tokens to the suspicious tokens.
+They have precedence over the ham-only tokens.
+(bayes.c)
+
+2005.10.26, SJ
+
+Minor code cleanup
+(bayes.c)
+
+2005.10.21, SJ
+
+Few cleanups and a minor fix in counting short tokens
+(clapf.c, bayes.c)
+
+2005.10.17, SJ
+
+Fixed context creation
+(bayes.c)
+
+Real spam tokens have precedence over real ham tokens in the top15
+Do not care about ham/spam token ratio in the top15
+(hash.c, cfg.h, cfg.c, 1.conf, example.conf)
+
+2005.10.13, SJ
+
+Few cleanups
+(bayes.c, config.h)
+
+2005.10.11, SJ
+
+New option added to configuration file called trueham_truespam_ratio
+to handle such a situation where we have only 0.0001 values in the
+top 15 but the whole message has a lot of spammy tokens, much more
+than ham only tokens.
+
+(cfg.c, cfg.c, bayes.c, example.conf, 1.conf)
+
+2005.10.10, SJ
+
+Created contexts (consecutive tokens) in the spam database
+(bayes.c, perl/shrink.pl)
+
+Removed spam-only tokens occuring only once as they are probably noise.
+(perl/createcdb.pl)
+
+2005.10.06, SJ
+
+too_many_html_tags was changed from the very permissive 0.4 to 0.22
+(cfg.c, example.conf)
+
+minor changes in bayes.c
+
+2005.10.04, SJ
+
+SMTP codes went to smtpcodes.h
+
+Postmaster notification is possible now when a virus infected email arrives
+It is disabled by default set the localpostmaster and clapfemail in the
+configuration file.
+
+
+(smtp.c, smtp.h, clapf.c)
+
+2005.10.03, SJ
+
+Removed the -DBE_RUDE option from Makefile
+(Makefile)
+
+2005.09.30, SJ
+
+Released new version: 0.3.19
+
+Variables can be set in a configuration file.
+Constants went to several .h files from config.h.
+heuristic.h was removed default values are now in cfg.c
+
+
+2005.09.27, SJ
+
+Introduced a new variable SPAM_OVERALL_LIMIT to determine
+whether the whole message is spam or not.
+
+I got some emails containing such a content that the bayesian
+module returned a spamicity value of 0.94xx which was treated
+as not spam though it was. Since this value was really near
+the spam limit I decided to lower the overall spam limit
+a little to handle these cases too. Of course you may set
+SPAM_LIMT and SPAM_OVERALL_LIMIT to the same value.
+
+(config.h, clapf.c)
+
+Introduced a new heuristic check: if the From: and To: address
+is the same (bayes.c, heuritic.h, HEURISTIC)
+
+Introduced another heuristic check testing the ratio of HTML
+tokens to all the tokens (misc.h, misc.c, bayes.c, heuristic.h)
+
+2005.09.12, SJ
+
+Added more heuristic check on the From: header line, testing
+if the address starts/ends with a number and the line contains
+a real name between ""
+(bayes.c, heuristic.h)
+
+2005.09.08, SJ
+
+Added a new heuristic check: testing the subject for all capitals
+(bayes.c)
+
+2005.09.05, SJ
+
+More characters added to the invalid_junk_characters[] buffer
+(ijc.h)
+
+2005.08.29, SJ
+
+If the Content-type is text/plain and the body is base64 encoded
+give some extra score
+(heuristic.h, bayes.c)
+
+2005.08.23, SJ
+
+Created header file for heuristic related definitions.
+(heuristic.h)
+
+Modified spamicity calculation.
+(hash.h, hash.c, bayes.c, config.h)
+
+Released 0.3.18
+(config.h)
+
+2005.08.19, SJ
+
+Extending and fixing the documentation 
+(README)
+(credits: Dieter Rethmeyer)
+
+2005.08.18, SJ
+
+Adding an additional heuristic check to see the ratio of the length of
+the urls in the body to the length of the whole body. This is added
+because spammers send a short letter including a long url pointing
+to the spam message including some innocent looking text
+(bayes.c, config.h, misc.c, misc.h)
+
+2005.07.27, SJ
+
+Additional fix handling Content-Type and Content-Transfer-Encoding
+(bayes.c)
+
+2005.07.26, SJ
+
+Fixed handling Content-Type and Content-Transfer-Encoding parts
+(bayes.c)
+
+2005.05.18, SJ
+
+make_md5_stuff() function replaced with make_rnd_string() which copies the random
+bytes directly into the buffer avoiding the use of the MD5 hash algorithm.
+I did this change because the make_md5_stuff() function started to produce only
+one kind of queue ID: 00000000000000000000000000000000
+(misc.c, misc.h, clapf.c, config.h)
+
+2005.04.21, SJ
+
+modified the assign_spaminess() function to mark tokens as spammy if their spaminess
+is above SPAM_LIMIT instead of SPAMINESS_OF_TRUE_SPAM
+(bayes.c)
+
+2005.04.19, SJ
+
+modified the unescape function to skip not escaped strings
+(misc.c)
+
+2005.04.01, SJ
+
+strcasestr() was renamed to str_case_str() since FreeBSD 5.3 has this function
+(misc.c, misc.h)
+(credits: Joakim Ryden)
+
+modified Makefile to make antivirus-only install easier
+(README, Makefile)
+
+modified CLAPFUSAGE definition to reflect whether one may not want to use the antispam module
+(config.h)
+
+fixed a minor FreeBSD 5.x incompatibility
+(misc.h)
+
+2005.03.25, SJ
+
+Do the following check only at text parts
+(bayes.c, parsembox.c)
+
+2005.03.23, SJ
+
+Base64 decode tricky attachments
+(misc.c, misc.h, bayes.c, parsembox.c)
+
+2005.03.21, SJ
+
+An extra check performed to counter the number of spam only tokens.
+If their number exceeds a certain limit, mark the message as spam.
+(bayes.c, config.h)
+
+2005.02.28, SJ
+
+Added an option (-Q) to move infected files to quarantine
+(clapf.c, config.h, README)
+
+2005.01.31, SJ
+
+Added a new function unescape() to decode %xx or =xx sequences in buffers
+(misc.c, misc.h, parsembox.c, bayes.c)
+
+Added the pre_translate() function before translate()
+(bayes.c)
+
+2005.01.25, SJ
+
+Added a new switch to clapf (-V) to check its verison
+(clapf.c, config.h)
+
+2005.01.19, SJ
+
+introduced the strcasestr() function
+(misc.c, misc.h, bayes.c, parsembox.c)
+
+2005.01.18, SJ
+
+Modified email/mbox parsing with a naive checking for the "Content-Type:" and better url handling
+(parsembox.c, bayes.c, misc.c, misc.h)
+
+Fixed overflow possibility in sorthash()
+(hash.c)
+
+2005.01.17, SJ
+
+Increased MAX_HASH_STR_LEN to be able to hold URLs
+(hash.h)
+
+A collision capable bug was fixed
+(bayes.c)
+
+Fixed line parsing
+(parsembox.c, bayes.c)
+
+Modified documentation
+(README)
+
+2005.01.11, SJ
+
+Added a few syslog() calls to inject_mail() for debug
+(misc.c)
+
+Added a new SMTP 421 answer
+(config.h)
+
+Some initialisation moved after fork() to give a chance to close
+SMTP communication in a correct manner
+(clapf.c)
+
+2005.01.06, SJ
+
+Changed TMPDIR
+(README, util/check_clamav.sh)
+
+cdbq.c has been removed from the source tree
+(Makefile)
+
+Removed the findnode function. Unused.
+(hash.c, hash.h)
+
+Using inithash
+(bayes.c)
+
+Modified error messages for the easier tracking
+(config.h)
+
+2005.01.05, SJ
+
+Halt if the cl_statchkdir() function fails.
+(clapf.c)
+
+Send ALRM signal only if the database has been successfully updated
+(util/upgrade_clamav.sh)
+
+2004.12.22, SJ
+
+Added a new variable for invalid variables in hexa-form
+(bayes.c, config.h)
+
+Added a socket option and a check around the cl_statinidir() function
+
+(clapf.c)
+
+2004.12.21, SJ
+
+Modified buffer parsing containing an url. invalid_junk_characters[] array
+moved to ijc.h
+(misc.c, bayes.h, ijc.h)
+
+Added a check to see if we have the invalid characters in a hexa form (eg. =FF)
+(bayes.c)
+
+2004.12.17, SJ
+
+Allow urls as tokens
+(bayes.c, parsembox.c)
+
+2004.12.13, SJ
+
+Added bayes_close() to the clean_exit() function
+(clapf.c)
+
+2004.12.10, SJ
+
+Handle automatic av database updates without a restart
+(clapf.c, util/upgrade_clamav.sh)
+(credits: Tomasz Kojm)
+
+Handle cdb modifications without a restart
+(bayes.c, misc.h)
+
+2004.12.01, SJ
+
+Added a custom array - called invalid_junk_characters - to list
+some characters being invalid in your codepage. If their number
+exceeds a certain limit, the message is marked as spam with 0.9876
+(bayes.h, misc.h, misc.c, bayes.c)
+
+2004.11.30, SJ
+
+Treat special words (occuring only either in ham or spam) a
+different probability 0.0001 and 0.9999 respectively
+(perl/createcdb.pl)
+
+preserve the hostname part of urls (misc.c)
+
+print single words being alone in a line (parsembox.c)
+
+2004.11.26, SJ
+
+Modified helper perl scripts (shrink.pl, createdbm.pl, createcdb.pl)
+Modified the email parsing (misc.c, parsembox.c, bayes.c)
+Added hash table support to avoid dups (hash.c, hash.h)
+
+2004.11.25, SJ
+
+Moved the bayesian decision implementation to a separate file (bayes.c)
+Modified Makefile
+
+2004.11.16, SJ
+
+Avoid base64 encoded stuff where length is 77 and we have no space inside
+(parsembox.c, clapf.c)
+
+Clasp.c was merged into clapf.c
+
+2004.11.12, SJ
+
+Added clasp and other perl utilities to do bayesian filtering.
+
+2004.10.14, SJ
+
+Intallation section of the documentation was modified regarding configuring postfix
+to enable virtual aliasing (README)
+(credits: Ralf Hildebrandt and Magnus Back)
+
+main.cf:
+
+content_filter = smtp:[127.0.0.1]:10025
+
+master.cf:
+
+127.0.0.1:10026     inet  n      -      n      -      10      smtpd -o content_filter=
+                                        -o receive_override_options=no_address_mappings
+
+2004.09.27, SJ
+
+Remove the tmpfile if we run into a 421 error (clapf.c)
+
+2004.09.23, SJ
+
+SMTP_CMD_PERIOD command is checked by a binary safe function
+which tolerates \x00 in the last2buf buffer (clapf.c, misc.c, misc.h)
+
+2004.09.08, SJ
+
+Modified not to care with defer(red) queue management. If it cannot
+inject the scanned email back clapf returns a '451 temporary error'
+or '550 rejected' if postfix responded with 550 (clapf.c).
+
+2004.09.03, SJ
+
+Added some check in the SMTP communication injecting email back (misc.c)
+
+2004.08.30, SJ
+
+Cleaned up around the PERIOD command handling (clapf.c)
+
+2004.08.24, SJ
+
+Added a new buffer (last2buf) to hold the last two packet after the DATA command (clapf.c)
+
+Send a 421 error message back if clapf runs into timeout (clapf.c)
+
+2004.08.23, SJ
+
+Modified Makefile and changed the order of <#include>'s (config.h)
+
+2004.08.02, SJ
+
+Changed the SMTP_CMD_PERIOD definition (config.h)
+
+#define SMTP_CMD_PERIOD "\x0d\x0a\x2e\x0d\x0a"

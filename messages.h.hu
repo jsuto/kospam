@@ -1,0 +1,92 @@
+/*
+ * messages.h.hu, 2007.06.27, SJ
+ * Hungarian version
+ */
+
+// cgi
+
+#define ERR_CGI_INVALID_METHOD "Érvénytelen CGI metódus"
+
+#define CGI_SPAM_QUARANTINE "Spam Karantén"
+#define ERR_CGI_DELIVER_AND_REMOVE "Kézbesít és töröl"
+#define ERR_CGI_REMOVE "Töröl"
+
+#define ERR_CGI_NUMBER_OF_SPAM_MESSAGES_IN_QUARANTINE "Spam levelek összesen"
+
+#define ERR_CGI_DELIVER_AND_TRAIN_AS_HAM "Kézbesít, HAM üzenetként tanít, majd töröl"
+#define ERR_CGI_TRAIN_AS_HAM "HAM üzenetként tanít, majd töröl"
+
+#define ERR_CGI_INVALID_REQUEST "Érvénytelen CGI kérés"
+#define ERR_CGI_NO_MEMORY "Nincs elég memória"
+#define ERR_CGI_POST_READ "Nem tudom olvasni a POST adatot"
+#define ERR_CGI_NO_MESSAGE "Nem találom az üzenetet"
+
+#define ERR_CGI_CANNOT_OPEN "Nem tudom megnyitni"
+#define ERR_CGI_DELIVERED_AND_REMOVED "Üzenet kézbesítve és törölve"
+#define ERR_CGI_REMOVED "Üzenet törölve"
+#define ERR_CGI_DELIVERY_FAILED "Sikertelen kézbeszítés"
+#define ERR_CGI_INVALID_ID "Érvénytelen üzenet azonosító"
+
+#define ERR_CGI_PURGE_SELECTED "Kijelölt üzenetek törlése"
+#define ERR_CGI_CANCEL "Mégsem"
+#define ERR_CGI_SELECT_ALL "Mindet kijelöli"
+#define ERR_CGI_PURGED_MESSAGES "Üzenetek törölve"
+#define ERR_CGI_BACK "Vissza"
+
+#define ERR_CGI_I_TAUGHT "Köszönöm! Megtanultam a levelet"
+#define ERR_CGI_DELIVERED_REMOVED_AND_TRAINED_AS_HAM "Kézbesítettem a levelet, megtanultam HAM üzenetként, majd töröltem"
+#define ERR_CGI_REMOVED_AND_TRAINED_AS_HAM "HAM üzenetként megtanultam a levelet, majd töröltem"
+
+#define CGI_DATE "Dátum"
+#define CGI_FROM "Feladó"
+#define CGI_SUBJECT "Tárgy"
+#define CGI_USER "Felhasználó"
+#define CGI_MESSAGE "Üzenet"
+#define CGI_HAM_OR_SPAM "Ham/Spam"
+
+// mysql
+
+#define ERR_MYSQL_CONNECT "Nem tudok csatlakozni a mysql szerverhez"
+#define ERR_MYSQL_DATA "Ervenytelen adat a mysql tablabol"
+#define ERR_CGI_MYSQL_NO_USER "Nem talalom a felhasznalot a user tablaban"
+
+// spam quarantine
+
+#define ERR_CANNOT_OPEN "Nem tudom megnyitni"
+#define ERR_CANNOT_CHDIR "Nem tudok könyvtárat váltani"
+#define ERR_CGI_NOT_AUTHENTICATED "Ön nincs azonosítva"
+
+// train
+
+#define ERR_OPEN_MESSGAE_FILE "Nem tudom megnyitni az üzenetet"
+#define ERR_INVALID_MODE "Érvénytelen tanítási mód"
+#define ERR_TRAIN_DONE "Tanítás sikerült"
+#define ERR_TRAINING "tanítás"
+#define ERR_NO_FROM "Nincs From környezeti változó"
+
+#define CGI_TRAIN_LOG "Tanítás napló"
+
+// user preferences
+
+#define CGI_USER_PREF "Felhasználói beállítások"
+#define ERR_CGI_USERPREF_UPDATED "Felhasználói beállítások frissítve"
+#define ERR_CGI_USERPREF_UPDATE_FAILED "Felhasználói beállítások frissítése sikertelen"
+
+#define ERR_INVALID_UID "Érvénytelen felhasználó azonosító"
+#define ERR_EXISTING_UID "Már létezik ez a felhasználó azonosító"
+
+// statistics
+
+#define CGI_PERSONAL_STAT "Statisztika"
+#define CGI_DAILY_REPORT "Napi riport"
+#define CGI_MONTHLY_REPORT "Havi riport"
+
+// reason 
+
+#define MSG_STRANGE_LANGUAGE "az uzenet idegen karaktereket tartalmaz"
+#define MSG_TOO_MUCH_SPAM_IN_TOP15 "az uzenet tul sok spam tokent tartalmaz a top15-ben"
+#define MSG_BLACKHOLED "az uzenet kuldoje a feketelistamon van"
+#define MSG_CAUGHT_BY_SURBL "az uzenet elerte a surbl hatarerteket"
+#define MSG_TEXT_AND_BASE64 "az uzenet szoveges, megis base64 kodolva kuldtek"
+#define MSG_EMBED_IMAGE "az uzenetben beagyazaott kep van"
+#define MSG_ABSOLUTELY_SPAM "az uzenet biztosan spam"

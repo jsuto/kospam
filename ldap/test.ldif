@@ -1,0 +1,20 @@
+dn: dc=yourdomain,dc=com
+dc: yourdomain
+objectClass: top
+objectClass: dcObject
+objectClass: organization
+o: yourdomain.com
+
+dn: ou=clapfusers,dc=yourdomain,dc=com
+ou: clapfusers
+objectClass: top
+objectClass: organizationalUnit
+
+dn: cn=joe,ou=clapfusers,dc=yourdomain,dc=com
+spamOverallLimit: 0.91
+Email: joe@yourdomain.com
+clapfAction: quarantine
+clapfPagelen: 25
+objectClass: top
+objectClass: clapfAccount
+cn: joe

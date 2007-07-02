@@ -1,0 +1,70 @@
+<html>
+<title>Blackhole</title>
+<link rel="stylesheet" type="text/css" href="style.css">
+<body bgcolor=white text=darkblue vlink=#AC003A>
+
+<h1><img src="logo.png"></h1>
+
+<h2>Blackhole</h2>
+
+Some of the spam flood can be prevented with a trap email address.
+Any email sent to an email address like that is obviously spam.<p>
+
+1. Create a directory for clapf holding IP-addresses and make it owned by
+the user running the black.pl script, it's probably you.
+
+<pre>
+mkdir /opt/av/blackhole
+chown you /opt/av/blackhole
+</pre>
+
+2. Have blackhole/black.pl to run every time the trap email address is abused.<p>
+
+If you have maildrop you may try with this:
+
+<pre>
+if(/trapaddress@yourdomain.kom/:h)
+{
+        to "|/usr/local/bin/black.pl"
+}
+</pre>
+
+3. Run a regular cron job to purge aged entries from the blackhole directory<p>
+
+<pre>
+find /opt/av/blackhole -type f -amin +180 | xargs rm -f
+</pre>
+
+This will remove all IP entries older than 3 hours. Look blackhole/black.crtab.sh<p>
+
+4. (Re)configure clapf with the --enable-blackhole option then (re)compile clapf.<p>
+
+5. Edit the configuration and set the <b>blackhole_path</b> parameter and verify the <b>$ipdir</b>
+variable in black.pl.<p>
+
+<pre>
+blackhole_path=/opt/av/blackhole
+</pre>
+
+Then clapf checks the 2nd "Received: from " lines in the incoming message
+and checks whether it is in the blackhole directory. If it is clapf frees the
+token list and marks the message as spam immediately. Otherwise the usual
+statistic test is run.<p>
+
+Of course you are free to modify clapf to investigate the last Received: line
+ie. the IP-address of the originating machine, but please keep in mind that
+the Received: lines can be forged that's why I decided that clapf should check
+only the host contacting us.<p>
+
+You can do even more with the blackhole database. You may create a blackhole zone 
+(eg. blackhole.yourdomain.kom). You may easily modify the black.pl script to refresh
+(or recreate) the data of the 'blackholed zone' (this depends on what DNS implementation
+you use - I recommend you <a href="http://cr.yp.to/djbdns.html">djbdns</a>).<p>
+
+Then configure your SMTP server to check every incoming connection aginst this zone and
+reject mail. I recommend you to extend the cron job in section 3. to refresh the data
+in the blackhole zone.<p>
+
+<center><a href="index.html">home</a></center><p>
+
+</body></html>

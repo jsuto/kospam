@@ -1,0 +1,176 @@
+<html>
+<title>LDAP/Active Directory support</title>
+<link rel="stylesheet" type="text/css" href="style.css">
+<body bgcolor=white text=darkblue vlink=#AC003A>
+<blockquote>
+
+<h1><img src="logo.png"></h1>
+
+<h2>LDAP/Active Directory support</h2>
+
+
+LDAP (or mysql) is needed to query the email address of the user using the spam quarantine in order to
+deliver the spam from the spam quarantine to his own mailbox. Otherwise he can review, remove
+and train as ham their spam.<p>
+
+<strong><u>Prerequisites</u></strong><p>
+
+You have a working LDAP (probably <a href ="http://www.openldap.org/">openldap</a>) installation.<p>
+
+
+<strong><u>Installation and configuration</u></strong><p>
+
+1. Add the ldap/clapf.schema file to the LDAP server's. If you have openldap:<p>
+
+<pre>
+include         /usr/local/etc/clapf.schema
+</pre>
+
+ldap/test.ldif is an example how to organise your own stuff.<p>
+
+If you have Active Directory on windows platform see the instructions at the
+end of the document on how to extend the AD attributes and classes.<p>
+
+2. Use the --with-userdb=ldap configure option and (re)compile clapf:
+
+<pre>
+./confgure --with-userdb=ldap ....
+make clean all
+</pre>
+
+3. Set the following variables in clapf.conf:<p>
+
+<pre>
+
+spam_mail_from=spamquarantine@yourdomain.com
+
+spam_smtp_addr=127.0.0.1
+spam_smtp_port=10026
+
+ldap_host=127.0.0.1
+ldap_base=ou=clapfusers,dc=yourdomain,dc=com
+ldap_user=
+ldap_pwd=
+; whether you want secure (tls) connections to the ldap server
+; If yes then you should add "TLS_REQCERT allow" to ldap.conf
+ldap_use_tls=1
+
+</pre>
+
+Please note, that ldap_user and ldap_pwd must set up correctly for both LDAP get and modify
+operations.<p>
+
+About the clapfAction parameter values, please read the <a href="user.html">user preferences manual</a>.<p/>
+
+
+<strong><u>Active Directory</u></strong><p>
+
+If you have an Active Directory (AD) go no further. Just configure clapf as if you would use it
+with LDAP since AD can be queried via the LDAP protocol.<p>
+
+All you have to do to create a few attributes and a class holding user data.<p>
+
+1. Create the following attributes:<p>
+
+<pre>
+Common Name: spamOverallLimit
+LDAP Display Name: spamOverallLimit
+Unique X500 Object ID: 1.3.6.1.1.123456.1.1
+Syntax: Case Sensitive String
+
+
+Common Name: Email
+LDAP Display Name: Email
+Unique X500 Object ID: 1.3.6.1.1.123456.1.2
+Syntax: Case Sensitive String
+
+
+Common Name: clapfAction
+LDAP Display Name: clapfAction
+Unique X500 Object ID: 1.3.6.1.1.123456.1.3
+Syntax: Case Sensitive String
+</pre>
+
+Note: after creating these attributes make sure to check the <i>"Index this attribute in the Active Directory"</i>
+checkbox!<p>
+
+2. Create a class holding user data:<p>
+
+On the "General" tab:<p>
+
+<pre>
+Common Name: clapfAccount
+X 500 OID: 1.3.6.1.1.123456.2.1
+Class Type: Structural
+Category: person
+</pre>
+
+On the "Relationship" tab:<p>
+
+<pre>
+Parent Class: top
+Auxilary Classes: mailRecipient
+Possible Superior: domainDNS and organizationalUnit
+</pre>
+
+On the "Attributes" tab:<p>
+<pre>
+Mandatory: Email and cn
+Optional: clapfAction and spamOverallLimit
+</pre>
+
+Now create an ldif file as <b>test.ldif</b>:<p>
+
+<pre>
+dn: CN=joe,OU=clapfusers,DC=yourdomain,DC=com
+cn: joe
+objectClass: top
+objectClass: clapfAccount
+Email: joe@yourdomain.com
+spamOverallLimit: 0.91
+clapfAction: junk
+</pre>
+
+then add this entry to the AD:<p>
+
+<pre>
+ldapadd -x -D "cn=Administrator,cn=Users,dc=yourdomain,dc=com" -h 10.1.2.3 -W -f test.ldif
+</pre>
+
+where 10.1.2.3 is the IP address of your AD host. I tested this setup with windows 2000.<p>
+
+You may want to check this new user:<p>
+
+<pre>
+ldapsearch  -x -D "cn=Administrator,ou=Users,dc=yourdomain,dc=com" -h 10.1.2.3 -W -b "cn=joe,ou=clapfusers,dc=yourdomain,dc=com" -Z
+</pre>
+
+and the result:<p>
+
+<pre>
+# joe, clapfusers, yourdomain.com
+dn: CN=joe,OU=clapfusers,DC=yourdomain,DC=com
+cn: joe
+instanceType: 4
+distinguishedName: CN=joe,OU=clapfusers,DC=yourdomain,DC=com
+objectCategory: CN=Person,CN=Schema,CN=Configuration,DC=yourdomain,DC=com
+objectClass: top
+objectClass: clapfAccount
+objectGUID:: VmVnQVDMEUCrHjcVmNhN0g==
+name: joe
+uSNChanged: 3234
+uSNCreated: 3234
+whenChanged: 20060706131727.0Z
+whenCreated: 20060706131727.0Z
+spamOverallLimit: 0.91
+clapfAction: junk
+Email: joe@yourdomain.com
+</pre>
+
+And one final note: I did not manage to make a TLS connection to the AD host, despite the "-Z" flag.
+It may be an issue in your environment.<p>
+
+<center><a href="index.html">home</a></center><p>
+
+</blockquote>
+</body></html>

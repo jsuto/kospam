@@ -1,0 +1,190 @@
+SHELL = @SHELL@
+
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+bindir = @bindir@
+sbindir = @sbindir@
+sysconfdir = @sysconfdir@
+mandir = @mandir@
+datarootdir = @datarootdir@
+
+CC = @CC@
+CFLAGS = @CFLAGS@ @CPPFLAGS@
+DEFS = @defs@
+INCDIR = @INCDIR@ @mysql_includes@
+LIBDIR = @LIBDIR@ @mysql_libs@
+LIBS = @LIBS@
+LDAP_LIBS = @ldap_libs@
+OBJS = @OBJS@
+USER_OBJ = @user_obj@
+
+INSTALL = @INSTALL@
+
+root =
+
+all:
+	make $(OBJS) $(USER_OBJ) @mysql_obj@
+	make clapf
+	@cgi@
+	make splitmbox
+	@parsembox@
+	@passmail@
+
+clapf:
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o clapf clapf.c $(OBJS) @mysql_obj@ $(LIBS) $(LDAP_LIBS) $(LIBDIR) @LDFLAGS@
+
+parsembox:
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c parser.c
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o parsembox parsembox.c $(LIBS) misc.o decoder.o parser.o $(LIBDIR)
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c parser.c
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -DSPAMDROP -c bayes.c
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o spamdrop spamdrop.c $(OBJS) @mysql_obj@ $(LIBS) $(LIBDIR)
+
+splitmbox:
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o splitmbox splitmbox.c misc.o decoder.o parser.o $(LIBDIR)
+
+cgi:
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o spamcgi spamcgi.c $(OBJS) $(USER_OBJ) @mysql_obj@ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o usercgi usercgi.c $(OBJS) $(USER_OBJ) @mysql_obj@ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
+
+train:
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c mysql.c
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o aphash aphash.c misc.o
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o train train.c $(OBJS) mysql.o $(LIBS) $(LIBDIR) @LDFLAGS@
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o traincgi traincgi.c $(OBJS) mysql.o $(USER_OBJ) $(LIBS) $(LDAP_LIBS) $(LIBDIR)
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o trainlogcgi trainlogcgi.c $(OBJS) mysql.o $(USER_OBJ) $(LIBS) $(LDAP_LIBS) $(LIBDIR)
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o statcgi statcgi.c $(OBJS) mysql.o $(USER_OBJ) $(LIBS) $(LDAP_LIBS) $(LIBDIR)
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o spam-fwd-train spam-fwd-train.c $(OBJS) mysql.o $(USER_OBJ) $(LIBS) $(LDAP_LIBS) $(LIBDIR)
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o spamstat spamstat.c $(OBJS) mysql.o $(USER_OBJ) $(LIBS) $(LDAP_LIBS) $(LIBDIR)
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o clapf_admin clapf_admin.c $(OBJS) mysql.o $(USER_OBJ) $(LIBS) $(LDAP_LIBS) $(LIBDIR)
+
+test:
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -DDEBUG -c bayes.c
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -DDEBUG -c black.c
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -DDEBUG -c hash.c
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -DDEBUG -c parser.c
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -DDEBUG -c rbl.c
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -DDEBUG -o spamtest test.c $(OBJS) @mysql_obj@ $(LIBS) $(LIBDIR) @LDFLAGS@
+
+passmail:
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o passmail passmail.c misc.o cfg.o smtp.o $(USER_OBJ) $(LIBS) $(LDAP_LIBS) $(LIBDIR) @LDFLAGS@
+
+cfg.o:
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c cfg.c
+
+misc.o:
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c misc.c
+
+hash.o:
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c hash.c
+
+smtp.o:
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c smtp.c
+
+decoder.o:
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c decoder.c
+
+bayes.o:
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c bayes.c
+
+black.o:
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c black.c
+
+chi.o:
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c chi.c
+
+parser.o:
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c parser.c
+
+mime.o:
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c mime.c
+
+avg.o:
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c avg.c
+
+avast.o:
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c avast.c
+
+kav.o:
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c kav.c
+
+drweb.o:
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c drweb.c
+
+clamd.o:
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c clamd.c
+
+sig.o:
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c sig.c
+
+session.o:
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c session.c
+
+hash_db.o:
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c hash_db.c
+
+rbl.o:
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c rbl.c
+
+cgi.o:
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c cgi.c
+
+user.o:
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c user.c
+
+cdb.o:
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c cdb.c
+
+mysql.o:
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c mysql.c
+
+install-parsembox:
+	$(INSTALL) -m 0755 parsembox $(root)$(DESTDIR)$(bindir)
+	$(INSTALL) -m 0755 aphash $(root)$(DESTDIR)$(bindir)
+	$(INSTALL) -m 0755 spamdrop $(root)$(DESTDIR)$(bindir)
+	$(INSTALL) -m 0755 splitmbox $(root)$(DESTDIR)$(bindir)
+	$(INSTALL) -m 0755 spamtest $(root)$(DESTDIR)$(bindir)
+	$(INSTALL) -m 0755 clapf_admin $(root)$(DESTDIR)$(bindir)
+	$(INSTALL) -m 0755 stat/spamstat.pl $(root)$(DESTDIR)$(bindir)
+	$(INSTALL) -m 0755 perl/createcdb.pl $(root)$(DESTDIR)$(bindir)
+	$(INSTALL) -m 0755 perl/mysql2cdb.pl $(root)$(DESTDIR)$(bindir)
+	$(INSTALL) -m 0755 perl/prepare.pl $(root)$(DESTDIR)$(bindir)
+	$(INSTALL) -m 0755 perl/shrink.pl $(root)$(DESTDIR)$(bindir)
+	$(INSTALL) -m 0755 perl/uribl.pl $(root)$(DESTDIR)$(bindir)
+	$(INSTALL) -m 0755 util/kcdb.sh $(root)$(DESTDIR)$(bindir)
+	$(INSTALL) -m 0755 util/kcdb_mysql.sh $(root)$(DESTDIR)$(bindir)
+	$(INSTALL) -m 0755 util/mysql2cdb.sh $(root)$(DESTDIR)$(bindir)
+	$(INSTALL) -m 0755 util/user2sq.sh $(root)$(DESTDIR)$(bindir)
+	$(INSTALL) -d $(root)$(DESTDIR)$(mandir)/man1
+	$(INSTALL) -m 0644 doc/man/blackhole.1 $(root)$(DESTDIR)$(mandir)/man1
+	$(INSTALL) -m 0644 doc/man/parsembox.1 $(root)$(DESTDIR)$(mandir)/man1
+	$(INSTALL) -m 0644 doc/man/passmail.1 $(root)$(DESTDIR)$(mandir)/man1
+	$(INSTALL) -m 0644 doc/man/spamtest.1 $(root)$(DESTDIR)$(mandir)/man1
+	$(INSTALL) -m 0644 doc/man/spamdrop.1 $(root)$(DESTDIR)$(mandir)/man1
+	$(INSTALL) -m 0644 doc/man/train.1 $(root)$(DESTDIR)$(mandir)/man1
+
+install-train:
+	$(INSTALL) -m 0755 spam-fwd-train $(root)$(DESTDIR)$(bindir)
+	$(INSTALL) -m 0755 spam-fwd-train $(root)$(DESTDIR)$(bindir)/ham-fwd-train
+	$(INSTALL) -m 0755 spamstat $(root)$(DESTDIR)$(bindir)
+
+install:
+	$(INSTALL) -d $(root)$(DESTDIR)$(bindir)
+	$(INSTALL) -m 0755 util/check_clapf.sh $(root)$(DESTDIR)$(bindir)
+	$(INSTALL) -m 0755 clapf $(root)$(DESTDIR)$(bindir)
+	@passmail_install@
+	@parsembox_install@
+	@train_install@
+	$(INSTALL) -d $(root)$(DESTDIR)$(sysconfdir)
+	if [ ! -f "$(root)$(DESTDIR)$(sysconfdir)/clapf.conf" ]; then $(INSTALL) -m 0644 example.conf $(root)$(DESTDIR)$(sysconfdir)/clapf.conf; fi
+	$(INSTALL) -d $(root)$(DESTDIR)$(mandir)/man8
+	$(INSTALL) -m 0644 doc/man/clapf.8 $(root)$(DESTDIR)$(mandir)/man8
+
+clean_db:
+	rm -f CDBFILE.* ham.tmp spam.tmp num_of_spam.tmp num_of_ham.tmp tokens*.cdb tokens.raw temp.*
+
+clean:
+	rm -f *.o *.a db.sql clapf parsembox splitmbox spamtest spamdrop train spamcgi traincgi trainlogcgi usercgi statcgi passmail spam-fwd-train spamstat aphash clapf_admin
+
+dist_clean:
+	rm -f Makefile config.log config.status clapf-config.h stamp.h

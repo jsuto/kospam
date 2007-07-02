@@ -1,0 +1,38 @@
+.\" Manual is created by Janos SUTO, 2006.01.11
+.TH "BLACKHOLE" "1" "Januar 18, 2006" "Janos SUTO" "Clapf network filter"
+.SH "NAME"
+.LP 
+blackhole \- an automatic blacklist to catch spammers
+
+.SH "DESCRIPTION"
+.LP 
+
+The blackhole feature is designed to trap spammers. You may use the black.pl
+Perl script to parse spam messages sent to the trap email address and extract
+the sender IP-address from the "Received: from" lines. Usually it takes the
+second IP-address which is the computer connected to you. Then it puts this
+IP-address to the MySQL database with the current timestamp.
+
+To enable the blackhole feauture compile it in clapf and enable it in the
+configuration file. Then clapf extracts the IP-addresses in the header of
+each incoming message and checks them against the blackhole table. If the
+IP-address is found clapf marks the message immediately as spam.
+
+The blackhole is designed to be automatic so create a cron job to remove
+aged entires from the database such as the following shell script:
+
+x=`date +%s`; echo "delete from blackhole where ts < ($x - 14400);" | mysql --defaults-file=/path/to/my.cnf
+
+.SH "MORE INFORMATION"
+.LP
+Please see http://clapf.acts.hu/blackhole.html
+
+.SH "LATEST VERSION"
+.LP
+Please check the primary site: http://clapf.acts.hu/ or the Sourceforge mirror
+http://clapf.sf.net/ for the latest and hottest version of clapf as well as
+online documentation.
+
+.SH "AUTHOR"
+.LP
+Janos SUTO <sj@acts.hu>

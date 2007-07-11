@@ -1,5 +1,5 @@
 /*
- * session.c, 2007.06.13, SJ
+ * session.c, 2007.07.06, SJ
  */
 
 #include <stdio.h>
@@ -28,13 +28,17 @@
 int sd, inj, ret, rav, prevlen=0;
 char prevbuf[MAXBUFSIZE], last2buf[2*MAXBUFSIZE+1];
 struct timezone tz;
-struct timeval tv_start, tv_rcvd, tv_scnd, tv_sent, tv_stop;
+struct timeval tv_start, tv_rcvd, tv_scnd, tv_sent, tv_stop, tv_meta1, tv_meta2;
 struct session_data sdata;
+int x;
 
 int inject_mail(struct session_data sdata, char *smtpaddr, int smtpport, char *spaminessbuf, struct __config cfg, char *notify);
 
 #ifdef HAVE_MYSQL_TOKEN_DATABASE
-   int update_training_metadata(char *tmpfile, char rcptto[MAX_RCPT_TO][MAXBUFSIZE], int num_of_rcpt_to, struct __config cfg);
+   #include <mysql.h>
+   MYSQL mysql;
+
+   int update_training_metadata(MYSQL mysql, char *tmpfile, char rcptto[MAX_RCPT_TO][MAXBUFSIZE], int num_of_rcpt_to, struct __config cfg);
 #endif
 
 
@@ -384,7 +388,7 @@ void init_child(){
 
             #ifdef HAVE_CLAMD
                chmod(sdata.ttmpfile, 0644);
-               if(clamd_scan(cfg.clamd_socket, cfg.workdir, sdata.ttmpfile, cfg.verbosity, virusinfo) == CLAMD_VIRUS)
+               if(clamd_scan(cfg.clamd_socket, cfg.chrootdir, cfg.workdir, sdata.ttmpfile, cfg.verbosity, virusinfo) == CLAMD_VIRUS)
                   rav = AVIR_VIRUS;
             #endif
 
@@ -435,12 +439,32 @@ void init_child(){
 
                        gettimeofday(&tv_spam_start, &tz);
 
+                    #ifdef HAVE_MYSQL_TOKEN_DATABASE
+                       mysql_init(&mysql);
+                       if(mysql_real_connect(&mysql, cfg.mysqlhost, cfg.mysqluser, cfg.mysqlpwd, cfg.mysqldb, cfg.mysqlport, cfg.mysqlsocket, 0)){
+                          spaminess = bayes_file(mysql, spamfile, sdata, cfg);
+                          gettimeofday(&tv_spam_stop, &tz);
+
+                          gettimeofday(&tv_meta1, &tz);
+                          x = update_training_metadata(mysql, sdata.ttmpfile, sdata.rcptto, sdata.num_of_rcpt_to, cfg);
+                          gettimeofday(&tv_meta2, &tz);
+
+                          mysql_close(&mysql);
+
+                          syslog(LOG_PRIORITY, "%s: storing metadata: %d %ld [ms]", sdata.ttmpfile, x, tvdiff(tv_meta2, tv_meta1)/1000);
+
+                       }
+                       else {
+                          syslog(LOG_PRIORITY, "%s: %s", sdata.ttmpfile, ERR_MYSQL_CONNECT);
+                          spaminess = ERR_BAYES_NO_TOKEN_FILE;
+                       }
+                    #else
                        spaminess = bayes_file(spamfile, sdata, cfg);
+                       gettimeofday(&tv_spam_stop, &tz);
+                    #endif
 
                        if(spaminess >= ERR_BAYES_NO_SPAM_FILE)
                           syslog(LOG_PRIORITY, "%s: Error happened while Bayesian test (%.2f)", sdata.ttmpfile, spaminess);
-
-                       gettimeofday(&tv_spam_stop, &tz);
 
                        syslog(LOG_PRIORITY, "%s: %.4f %d in %ld [ms]", sdata.ttmpfile, spaminess, sdata.tot_len, tvdiff(tv_spam_stop, tv_spam_start)/1000);
 
@@ -499,11 +523,6 @@ void init_child(){
                     else
                        inj = inject_mail(sdata, cfg.postfix_addr, cfg.postfix_port, spaminessbuf, cfg, NULL);
 
-
-                 #ifdef HAVE_MYSQL_TOKEN_DATABASE
-                    /* insert meta data to queue table, 2007.05.16, SJ */
-                    update_training_metadata(sdata.ttmpfile, sdata.rcptto, sdata.num_of_rcpt_to, cfg);
-                 #endif
 
          #else
                     inj = inject_mail(sdata, cfg.postfix_addr, cfg.postfix_port, NULL, cfg, NULL);

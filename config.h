@@ -1,5 +1,5 @@
 /*
- * config.h, 2007.06.21, SJ
+ * config.h, 2007.07.09, SJ
  */
 
 #include <syslog.h>
@@ -29,6 +29,13 @@
 
 #define CLAMD_SOCKET "/tmp/clamd"
 
+
+#define QCACHE_PROGRAM_NAME "Qcache"
+#define QCACHE_ADDR "127.0.0.1"
+#define QCACHE_PORT 48791
+#define QCACHE_SOCKET "/tmp/qcache"
+
+
 #define WORK_DIR "/opt/av"
 #define QUARANTINELEN 255
 #define PROGNAME "clapf"
@@ -43,6 +50,8 @@
 #define RND_STR_LEN 32
 #define BUFLEN 32
 #define IPLEN 16
+
+#define MAX_THREADS 30
 
 /* this should be at least header_size_limit, see the output of postconf, 2006.08.21, SJ */
 #define MAX_MAIL_HEADER_SIZE 128000
@@ -89,7 +98,6 @@
 #define MAX_TOKEN_LEN 8*MAX_WORD_LEN
 #define DELIMITER ' '
 #define TOKENSCDB WORK_DIR "/tokens.cdb"
-#define RAW_TOKENS WORK_DIR "/tokens.raw"
 #define SPAMINESS_HEADER_FIELD "X-Clapf-spamicity: "
 #define BOUNDARY_LEN 255
 #define MAX_NUM_OF_SAMPLES 65535
@@ -103,6 +111,7 @@
 #define TUM_LIMIT 25
 #define NUMBER_OF_GOOD_FROM 10
 #define MAX_ATTACHMENTS 8
+#define MAX_ITERATIVE_TRAIN_LOOPS 5
 
 #define MAX_CGI_SUBJECT_LEN 50
 #define MAX_CGI_FROM_LEN 50

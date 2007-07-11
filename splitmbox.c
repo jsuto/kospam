@@ -26,6 +26,7 @@ int main(int argc, char **argv){
       __fatal("open");
 
    while(fgets(buf, MAXBUFSIZE-1, F)){
+      trim(buf);
 
       if(buf[0] == 'F' && buf[1] == 'r' && buf[2] == 'o' && buf[3] == 'm' && buf[4] == ' '){
          if(strncmp("From MAILER-DAEMON", buf, 18) == 0 || strchr(buf, '@') || strncmp("From - ", buf, 7) == 0){
@@ -49,15 +50,15 @@ int main(int argc, char **argv){
                   printf("parsing message %d ...\n", tot_msgs);
                   snprintf(fname, 200, "%s-%d", argv[2], tot_msgs);
                   f = fopen(fname, "w+");
-                  fprintf(f, "%s\r\n", buf);
+                  if(f) fprintf(f, "%s\r\n", buf);
                   continue;
                }
             }
          }
       }
 
-      trim(buf);
-      fprintf(f, "%s\r\n", buf);
+      //trim(buf);
+      if(f) fprintf(f, "%s\r\n", buf);
    }
 
    if(f) fclose(f);

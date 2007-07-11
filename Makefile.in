@@ -29,7 +29,7 @@ all:
 	make splitmbox
 	@parsembox@
 	@passmail@
-
+	make qcache
 clapf:
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o clapf clapf.c $(OBJS) @mysql_obj@ $(LIBS) $(LDAP_LIBS) $(LIBDIR) @LDFLAGS@
 
@@ -68,6 +68,11 @@ test:
 
 passmail:
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o passmail passmail.c misc.o cfg.o smtp.o $(USER_OBJ) $(LIBS) $(LDAP_LIBS) $(LIBDIR) @LDFLAGS@
+
+qcache:
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c qcache.c
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o qs qs.c misc.o cfg.o qcache.o $(LIBS) $(LIBDIR)
+	#$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o 1 q1.c
 
 cfg.o:
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c cfg.c
@@ -119,9 +124,6 @@ sig.o:
 
 session.o:
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c session.c
-
-hash_db.o:
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c hash_db.c
 
 rbl.o:
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c rbl.c
@@ -181,10 +183,10 @@ install:
 	$(INSTALL) -m 0644 doc/man/clapf.8 $(root)$(DESTDIR)$(mandir)/man8
 
 clean_db:
-	rm -f CDBFILE.* ham.tmp spam.tmp num_of_spam.tmp num_of_ham.tmp tokens*.cdb tokens.raw temp.*
+	rm -f CDBFILE.* ham.tmp spam.tmp num_of_spam.tmp num_of_ham.tmp tokens*.cdb temp.*
 
 clean:
-	rm -f *.o *.a db.sql clapf parsembox splitmbox spamtest spamdrop train spamcgi traincgi trainlogcgi usercgi statcgi passmail spam-fwd-train spamstat aphash clapf_admin
+	rm -f *.o *.a qs db.sql clapf parsembox splitmbox spamtest spamdrop train spamcgi traincgi trainlogcgi usercgi statcgi passmail spam-fwd-train spamstat aphash clapf_admin
 
 dist_clean:
 	rm -f Makefile config.log config.status clapf-config.h stamp.h

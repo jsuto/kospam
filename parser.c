@@ -258,6 +258,22 @@ struct _state parse(char *buf, struct _state st){
    #endif
 
 
+      /* extract prefix type */
+
+      memset(puf, 0, MAXBUFSIZE);
+
+      if(!isspace(buf[0])){
+         p = strchr(buf, ':');
+         if(p)
+            memcpy(puf, buf, p-buf);
+      }
+
+      /* we are interested in only these header lines, 2007.07.10, SJ */
+
+      if(strlen(puf) >= 2 && strcasecmp(puf, "Received") && strcasecmp(puf, "From") && strcasecmp(puf, "To") && strcasecmp(puf, "Subject") &&
+           strcasecmp(puf, "Content-Type") && strcasecmp(puf, "Content-Transfer-Encoding") && strcasecmp(puf, "Content-Disposition") )
+         return state;
+
    }
 
    /* end of header checks */
@@ -277,9 +293,11 @@ struct _state parse(char *buf, struct _state st){
 
       /* extract Content type */
 
-      p = strchr(buf, ' ');
+      p = strchr(buf, ':');
       if(p){
-         snprintf(state.attachments[state.n_attachments].type, SMALLBUFSIZE-1, "%s", ++p);
+         p++;
+         if(*p == ' ' || *p == '\t') p++;
+         snprintf(state.attachments[state.n_attachments].type, SMALLBUFSIZE-1, "%s", p);
          trim(state.attachments[state.n_attachments].type);
          p = strchr(state.attachments[state.n_attachments].type, ';');
          if(p) *p = '\0';
@@ -404,17 +422,18 @@ struct _state parse(char *buf, struct _state st){
    /* end of boundary check */
 
 
-   /* dump attachment, 2006.11.14, SJ */
+   /* dump attachment, 2007.07.03, SJ */
 
-   if(!strchr(buf, ' ') && !strchr(buf, '\t') && buf[0] != '\n' && buf[0] != '\r' && state.fd != -1){
-      if(state.base64 == 1){
+   if(!strchr(buf, '\t') && buf[0] != '\n' && buf[0] != '\r' && state.fd != -1){
+      if(state.base64 == 1 && !strchr(buf, ' ')){
          b64_len = base64_decode(buf, puf);
          state.attachments[state.n_attachments].size += b64_len;
          if(state.has_to_dump == 1)
             write(state.fd, puf, b64_len);
       }
-      else
+      else if(state.is_header == 0){
          state.attachments[state.n_attachments].size += strlen(buf);
+      }
    }
 
 

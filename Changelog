@@ -1,5 +1,81 @@
 0.3.29:
 
+2007.07.11, SJ
+
+Added iterative training to the email forwarder trainer. It trains the
+email until it classifies it correctly (but max. 5 times, see the
+MAX_ITERATIVE_TRAIN_LOOPS parameter in config.h)
+(misc.c, misc.h, spam-fwd-train.c, config.h)
+
+Minor fix in the Qcache daemon.
+(qs.c)
+
+2007.07.10, SJ
+
+The parser discards any header line except a few such as Received, From,
+To, Subject, Content-type, Content-Transfer-Encoding
+(parser.c)
+
+2007.07.09, SJ
+
+Added a query cache. If you want to retrieve lots of tokens from a MySQL
+table, it might take x * 100 ms. Though it's usually acceptable for a
+small network, a query cache might improve the performance. MySQL has an
+internal query cache. Unfortunately MySQL discards it if the t_token table
+is written (update/delete/insert/...) which occurs frequently if you choose
+the Training Until Mature (TUM) trainig mode.
+
+So I decided to write my own version of query cache. The "qs" utility is able
+to listen on both TCP and Unix domain socket. It handles all the select and
+update requests aimed at the t_token table. It's important that it supports
+only the new hashed format tokens.
+
+If you want to use it, adjust the following parameters:
+
+qcache_addr=127.0.0.1
+qcache_port=48791
+
+or
+
+qcache_socket=/tmp/qcache
+
+Qcache syslog()'s the achieved cache hit rate so you can track if it's really
+useful for you.
+
+Please note that this feature is still experimental. All comments are welcome.
+
+(qcache.c, qcache.h, qs.c, bayes.c, mysql.c, cfg.c, cfg.h, example.conf)
+
+Added an option for chroot() environments and clamd. If you run clapf in a
+chroot()'ed environment you might find it painful to run clamd in the chroot
+environment too (because clapf passes the filename as it sees, eg. /opt/av/tmp/xxxxxxxxx).
+
+Now you are good to to run clamd outside the chroot, just set the chrootdir
+parameter in clapf.conf pointing to the chroot path.
+
+if your chroot / is /myjail then set:
+
+chrootdir=/myjail
+
+(clamd.c, clamd.h, session.c, cfg.c, cfg.h, example.conf)
+
+2007.07.06, SJ
+
+Eliminated multiple mysql_real_connect() calls in the same session.
+(session.c, bayes.c, mysql.c)
+
+Modified the spamdrop utility to use only the getuid() function
+to get the user id of the recipient.
+(spamdrop.c)
+
+Fixed a bug in splitmbox.
+(splitmbox.c)
+
+2007.07.03, SJ
+
+Removed hash_db support
+(cfg.h, cfg.c, clapf.c, bayes.c, example.conf)
+
 2007.07.02, SJ
 
 Added an option to instantiate a spamy token for octet-stream attachments.

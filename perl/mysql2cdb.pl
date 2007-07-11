@@ -74,4 +74,6 @@ print STDERR "Creating cdb file . . .\n";
 
 system("cdb -c -m -w $CDBBASE.cdb $CDBBASE.raw");
 
+unlink $rawtextfile;
+
 print STDERR "Done.\n";

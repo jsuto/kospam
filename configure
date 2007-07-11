@@ -1270,7 +1270,6 @@ Optional Features:
   --enable-case           use case sensitive tokens
   --disable-antispam      do not build antispam support
   --enable-mysql          build with MySQL support
-  --enable-hash-db        use the internal hash database
   --enable-surbl          use the SURBL database
   --enable-old-format     use old token format
   --enable-blackhole      build the blackhole feature
@@ -1281,6 +1280,7 @@ Optional Packages:
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   --with-userdb[=ldap|mysql]      use either ldap or mysql database holding user data (default: none)
   --with-tokendb[=cdb|mysql]      use either cdb or mysql database holding user data (default: none)
+  --with-qcache[=tcp|socket]      use Qcache via either a TCP or Unix domain socket (default: none)
 
 Some influential environment variables:
   CC          C compiler command
@@ -3702,7 +3702,6 @@ have_cgi="no"
 have_train="no"
 have_mysql="no"
 have_ldap="no"
-have_hash_db="no"
 have_surbl="no"
 have_gsl="no"
 
@@ -4723,19 +4722,6 @@ ac_cv_lib_ldap=ac_cv_lib_ldap_main
 
 
 
-    # Check whether --enable-hash_db was given.
-if test "${enable_hash_db+set}" = set; then
-  enableval=$enable_hash_db; want_hash_db=$enableval
-else
-  want_hash_db="no"
-fi
-
-
-    if test "$want_hash_db" = "yes"; then
-       have_hash_db="yes"
-    fi
-
-
 
     # Check whether --enable-surbl was given.
 if test "${enable_surbl+set}" = set; then
@@ -4755,7 +4741,7 @@ fi
 if test "${enable_old_format+set}" = set; then
   enableval=$enable_old_format; keep_old_token_format=$enableval
 else
-  keep_old_token_format"no"
+  keep_old_token_format="no"
 fi
 
 
@@ -4971,6 +4957,20 @@ if test "${with_tokendb+set}" = set; then
   withval=$with_tokendb;
   if test "$withval" != "no" -a "$withval" != "yes"; then
     TOKENDB=$withval
+  fi
+
+fi
+
+
+
+
+# Check whether --with-qcache was given.
+if test "${with_qcache+set}" = set; then
+  withval=$with_qcache;
+  if test "$withval" != "no" -a "$withval" != "yes"; then
+    QCACHE=$withval
+  else
+    echo "please specify the connection type of the qcache: tcp or unix socket"; exit 1;
   fi
 
 fi
@@ -5359,14 +5359,6 @@ else
    echo "antispam support: no"
 fi
 
-if test "$have_hash_db" = "yes"; then
-   echo "hash_db support: yes"
-   objs="$objs hash_db.o"
-   defs="$defs -DHAVE_HASH_DB"
-else
-   echo "hash_db support: no"
-fi
-
 
 if test "$have_gsl" = "yes"; then
    echo "chi square implementation: GNU GSL"
@@ -5442,6 +5434,17 @@ if test "$have_case" = "yes"; then
 else
    echo "tokens are case sensitive: no"
 fi
+
+
+if test "$QCACHE" = "tcp"; then
+   defs="$defs -DHAVE_QCACHE -DHAVE_TCP"
+   echo "Qcache: tcp"
+fi
+if test "$QCACHE" = "socket"; then
+   defs="$defs -DHAVE_QCACHE"
+   echo "Qcache: socket"
+fi
+
 
 if test "$have_libclamav" = "no" && test "$have_clamd" = "no" && test "$have_avg" = "no" && test "$have_avast" = "no" && test "$have_kav" = "no" && test "$have_drweb" = "no" ; then
    echo; echo

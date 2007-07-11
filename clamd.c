@@ -13,7 +13,7 @@
 #include "clamd.h"
 #include "config.h"
 
-int clamd_scan(char *clamd_socket, char *workdir, char *tmpfile, int v, char *clamdinfo){
+int clamd_scan(char *clamd_socket, char *chrootdir, char *workdir, char *tmpfile, int v, char *clamdinfo){
    int s, n;
    char *p, *q, buf[MAXBUFSIZE], scan_cmd[SMALLBUFSIZE];
    struct sockaddr_un server;
@@ -44,7 +44,7 @@ int clamd_scan(char *clamd_socket, char *workdir, char *tmpfile, int v, char *cl
 
    
    memset(scan_cmd, 0, SMALLBUFSIZE);
-   snprintf(scan_cmd, SMALLBUFSIZE-1, "SCAN %s/%s\r\n", workdir, tmpfile);
+   snprintf(scan_cmd, SMALLBUFSIZE-1, "SCAN %s/%s/%s\r\n", chrootdir, workdir, tmpfile);
 
    if(v >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: CLAMD CMD: %s", tmpfile, scan_cmd);
 

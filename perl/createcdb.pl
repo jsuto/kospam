@@ -140,3 +140,4 @@ print STDERR "Put $cnt records\n";
 print STDERR "Skipped: $ham_1_skipped ham only token\n";
 print STDERR "Skipped: $spam_1_skipped spam only token\n";
 
+unlink $TEMP;

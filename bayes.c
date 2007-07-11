@@ -1,5 +1,5 @@
 /*
- * bayes.c, 2007.06.21, SJ
+ * bayes.c, 2007.07.06, SJ
  */
 
 #include <stdio.h>
@@ -7,6 +7,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/un.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <fcntl.h>
@@ -19,7 +20,6 @@
 #include "decoder.h"
 #include "parser.h"
 #include "black.h"
-#include "hash_db.h"
 #include "rbl.h"
 #include "hdr.h"
 #include "messages.h"
@@ -32,29 +32,24 @@ float n_tokens = 0;
 
 int surbl_match = 0;
 int has_embed_image = 0;
+int sd=-1;
 
 unsigned long uid = 0;
 
 struct timezone tz;
 struct timeval tv1, tv2;
 
-#if defined DEBUG || defined SPAMDROP
-   #undef HAVE_HASH_DB
-#endif
-
-/* use mysql or CDB backend */
 
 #ifdef HAVE_MYSQL
    #include <mysql.h>
-   MYSQL mysql;
    MYSQL_RES *res;
    MYSQL_ROW row;
    int mysql_conn = 0;
 #endif
 
 #ifdef HAVE_MYSQL_TOKEN_DATABASE
-   float myqry(MYSQL mysql, char *tokentable, char *token, float ham_msg, float spam_msg, unsigned int uid, struct node *xhash[MAXHASH]);
-   int my_walk_hash(MYSQL mysql, int ham_or_spam, char *tokentable, struct node *xhash[MAXHASH], unsigned int uid, int train_mode);
+   float myqry(MYSQL mysql, int sockfd, char *tokentable, char *token, float ham_msg, float spam_msg, unsigned int uid, struct node *xhash[MAXHASH]);
+   int my_walk_hash(MYSQL mysql, int sockfd, int ham_or_spam, char *tokentable, struct node *xhash[MAXHASH], unsigned int uid, int train_mode);
 
    float ham_msg=0, spam_msg=0;
 #endif
@@ -84,7 +79,12 @@ int is_header_field(char *s){
  * assign spaminess value to token
  */
 
+#ifdef HAVE_MYSQL_TOKEN_DATABASE
+int assign_spaminess(MYSQL mysql, char *p, struct __config cfg, unsigned int uid){
+#else
 int assign_spaminess(char *p, struct __config cfg, unsigned int uid){
+#endif
+
    float spaminess=0;
    char t[MAX_TOKEN_LEN], *s;
 
@@ -93,15 +93,10 @@ int assign_spaminess(char *p, struct __config cfg, unsigned int uid){
    if(findnode(shash, p))
       return 0;
 
-#ifdef HAVE_HASH_DB
-   spaminess = get_spamicity(t_hash, p);
+#ifdef HAVE_MYSQL_TOKEN_DATABASE
+   spaminess = myqry(mysql, sd, cfg.mysqltokentable, p, ham_msg, spam_msg, uid, tumhash);
 #else
-   #if defined HAVE_CDB
    spaminess = cdbqry(tokenscdb, p);
-   #endif
-   #ifdef HAVE_MYSQL_TOKEN_DATABASE
-   spaminess = myqry(mysql, cfg.mysqltokentable, p, ham_msg, spam_msg, uid, tumhash);
-   #endif
 #endif
 
    /* if it was at the Subject: header line, let's try it if it were not in the Subject line, 2006.05.03, SJ */
@@ -118,15 +113,10 @@ int assign_spaminess(char *p, struct __config cfg, unsigned int uid){
       else
          strncpy(t, p+8, MAX_TOKEN_LEN-1);
 
-   #ifdef HAVE_HASH_DB
-      spaminess = get_spamicity(t_hash, t);
+   #ifdef HAVE_MYSQL_TOKEN_DATABASE
+      spaminess = myqry(mysql, sd, cfg.mysqltokentable, t, ham_msg, spam_msg, uid, tumhash);
    #else
-      #if defined HAVE_CDB
       spaminess = cdbqry(tokenscdb, t);
-      #endif
-      #ifdef HAVE_MYSQL_TOKEN_DATABASE
-      spaminess = myqry(mysql, cfg.mysqltokentable, t, ham_msg, spam_msg, uid, tumhash);
-      #endif
    #endif
 
    }
@@ -150,7 +140,12 @@ int assign_spaminess(char *p, struct __config cfg, unsigned int uid){
 }
 
 
+#ifdef HAVE_MYSQL_TOKEN_DATABASE
+int walk_hash(MYSQL mysql, struct node *xhash[MAXHASH], struct __config cfg){
+#else
 int walk_hash(struct node *xhash[MAXHASH], struct __config cfg){
+#endif
+
    int i, n=0;
    struct node *p, *q;
 
@@ -159,7 +154,12 @@ int walk_hash(struct node *xhash[MAXHASH], struct __config cfg){
       while(q != NULL){
          p = q;
 
+      #ifdef HAVE_MYSQL_TOKEN_DATABASE
+         assign_spaminess(mysql, p->str, cfg, uid);
+      #else
          assign_spaminess(p->str, cfg, uid);
+      #endif
+
          n++;
 
          q = q->r;
@@ -173,7 +173,12 @@ int walk_hash(struct node *xhash[MAXHASH], struct __config cfg){
  * evaulate tokens
  */
 
+#ifdef HAVE_MYSQL_TOKEN_DATABASE
+double eval_tokens(MYSQL mysql, char *spamfile, struct __config cfg, struct _state state){
+#else
 double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
+#endif
+
    unsigned long n=0;
    struct _token *p, *q;
    float spaminess, spaminess2;
@@ -210,7 +215,7 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
       /* add to URL hash, 2006.06.23, SJ */
 
       if(strncmp(p->str, "URL*", 4) == 0){
-         assign_spaminess(p->str, cfg, uid);
+         assign_spaminess(mysql, p->str, cfg, uid);
 
          addnode(B_hash, p->str, 0, 0);
 
@@ -223,7 +228,7 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
 
       /* 2007.06.06, SJ */
 
-      if(cfg.use_pairs == 1 && strchr(p->str, '+')) assign_spaminess(p->str, cfg, uid);
+      if(cfg.use_pairs == 1 && strchr(p->str, '+')) assign_spaminess(mysql, p->str, cfg, uid);
       else addnode(B_hash, p->str, 0, 0);
 
 
@@ -244,8 +249,8 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
 
 
 
-      if(p)
-         free(p);
+      /*if(p)
+         free(p);*/
 
       p = q;
    }
@@ -253,7 +258,7 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
 
    /* add a spammy token if we got a binary, eg. PDF attachment, 2007.07.02, SJ */
 
-   if(cfg.penalize_octet_stream == 1 && attachment_by_type(state, "application/octet-stream") == 1){
+   if(cfg.penalize_octet_stream == 1 && (attachment_by_type(state, "application/octet-stream") == 1 || attachment_by_type(state, "application/pdf") == 1)){
        spaminess = REAL_SPAM_TOKEN_PROBABILITY;
        n_phrases += addnode(s_phrase_hash, "OCTET_STREAM*", spaminess, DEVIATION(spaminess));
        n_tokens += addnode(shash, "OCTET_STREAM*", spaminess, DEVIATION(spaminess));
@@ -269,7 +274,7 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
 
 
    /* add the From line, 2007.06.16, SJ */
-   assign_spaminess(state.from, cfg, uid);
+   assign_spaminess(mysql, state.from, cfg, uid);
    addnode(B_hash, state.from, 0, 0);
 
 
@@ -284,13 +289,22 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
        */
 
       if(DEVIATION(spaminess) < cfg.min_deviation_to_use_single_tokens || (spaminess < cfg.spam_overall_limit && spaminess > cfg.use_single_tokens_min_limit)){
+      #ifdef HAVE_MYSQL_TOKEN_DATABASE
+         walk_hash(mysql, B_hash, cfg);
+      #else
          walk_hash(B_hash, cfg);
+      #endif
          spaminess2 = sorthash(shash, MAX_TOKENS_TO_CHOOSE, cfg);
       }
    }
    /* use the single tokens hash if we have not enough phrases, 2007.04.27, SJ */
    else {
+   #ifdef HAVE_MYSQL_TOKEN_DATABASE
+      n_tokens += walk_hash(mysql, B_hash, cfg);
+   #else
       n_tokens += walk_hash(B_hash, cfg);
+   #endif
+
       spaminess = sorthash(shash, MAX_TOKENS_TO_CHOOSE, cfg);
    }
 
@@ -382,12 +396,25 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
          spaminess = sorthash(s_phrase_hash, MAX_PHRASES_TO_CHOOSE, cfg);
       }
       else {
-         if(n_tokens < 8) n_tokens += walk_hash(B_hash, cfg);
+         if(n_tokens < 8){
+         #ifdef HAVE_MYSQL_TOKEN_DATABASE
+            n_tokens += walk_hash(mysql, B_hash, cfg);
+         #else
+            n_tokens += walk_hash(B_hash, cfg);
+         #endif
+         }
          spaminess = sorthash(shash, MAX_TOKENS_TO_CHOOSE, cfg);
       }
 
       if(DEVIATION(spaminess) < cfg.min_deviation_to_use_single_tokens || (spaminess < cfg.spam_overall_limit && spaminess > cfg.use_single_tokens_min_limit)){
-         if(n_tokens < 8) n_tokens += walk_hash(B_hash, cfg);
+         if(n_tokens < 8){
+         #ifdef HAVE_MYSQL_TOKEN_DATABASE
+            n_tokens += walk_hash(mysql, B_hash, cfg);
+         #else
+            n_tokens += walk_hash(B_hash, cfg);
+         #endif
+         }
+
          spaminess2 = sorthash(shash, MAX_TOKENS_TO_CHOOSE, cfg);
       }
 
@@ -423,11 +450,11 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
       gettimeofday(&tv1, &tz);
 
       if(spaminess >= cfg.spam_overall_limit){
-         n = my_walk_hash(mysql, 1, cfg.mysqltokentable, tumhash, uid, T_TOE);
+         n = my_walk_hash(mysql, sd, 1, cfg.mysqltokentable, tumhash, uid, T_TOE);
          snprintf(buf, MAXBUFSIZE-1, "update %s set nspam=nspam+1 WHERE uid=%ld", cfg.mysqlmisctable, uid);
       }
       else {
-         n = my_walk_hash(mysql, 0, cfg.mysqltokentable, tumhash, uid, T_TOE);
+         n = my_walk_hash(mysql, sd, 0, cfg.mysqltokentable, tumhash, uid, T_TOE);
          snprintf(buf, MAXBUFSIZE-1, "update %s set nham=nham+1 WHERE uid=%ld", cfg.mysqlmisctable, uid);
       }
 
@@ -463,7 +490,12 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
  * Bayesian result of the file
  */
 
+#ifdef HAVE_MYSQL_TOKEN_DATABASE
+double bayes_file(MYSQL mysql, char *spamfile, struct session_data sdata, struct __config cfg){
+#else
 double bayes_file(char *spamfile, struct session_data sdata, struct __config cfg){
+#endif
+
    struct _state state;
    char buf[MAXBUFSIZE], ext_cmd[SMALLBUFSIZE], ifile[SMALLBUFSIZE], *p, *q;
    float spaminess, ham_from=0, spam_from=0;
@@ -521,17 +553,7 @@ double bayes_file(char *spamfile, struct session_data sdata, struct __config cfg
 
 
 
-   /* initialise backend */
-
 #ifdef HAVE_MYSQL_TOKEN_DATABASE
-
-   mysql_init(&mysql);
-   if(!mysql_real_connect(&mysql, cfg.mysqlhost, cfg.mysqluser, cfg.mysqlpwd, cfg.mysqldb, cfg.mysqlport, cfg.mysqlsocket, 0)){
-      free_and_print_list(state.first, 0);
-      syslog(LOG_PRIORITY, "%s: %s", p, ERR_MYSQL_CONNECT);
-      return ERR_BAYES_NO_TOKEN_FILE;
-   }
-
 
    /*
     * determine uid if we use a merged group, 2007.06.13, SJ
@@ -588,7 +610,6 @@ double bayes_file(char *spamfile, struct session_data sdata, struct __config cfg
    }
 
    if(ham_msg <= 0 || spam_msg <= 0){
-      mysql_close(&mysql);
       free_and_print_list(state.first, 0);
       syslog(LOG_PRIORITY, "%s: %s", p, ERR_MYSQL_DATA);
       return ERR_BAYES_NO_TOKEN_FILE;
@@ -630,11 +651,6 @@ double bayes_file(char *spamfile, struct session_data sdata, struct __config cfg
 #endif
 
 
-#ifdef HAVE_HASH_DB
-   if(!cfg.raw_text_datafile)
-      return ERR_BAYES_NO_TOKEN_FILE;
-#endif
-
 #ifdef HAVE_CDB
    if(!cfg.tokensfile)
       return ERR_BAYES_NO_TOKEN_FILE;
@@ -644,11 +660,28 @@ double bayes_file(char *spamfile, struct session_data sdata, struct __config cfg
 #endif
 
 
+/* Query cache support */
+
+#ifdef HAVE_QCACHE
+   sd = qcache_socket(cfg.qcache_addr, cfg.qcache_port, cfg.qcache_socket);
+   if(sd == -1)
+      return DEFAULT_SPAMICITY;
+#endif
+
 
    /* evaluate the tokens */
 
+#ifdef HAVE_MYSQL_TOKEN_DATABASE
+   spaminess = eval_tokens(mysql, p, cfg, state);
+#else
    spaminess = eval_tokens(p, cfg, state);
+#endif
 
+   free_and_print_list(state.first, 0);
+
+#ifdef HAVE_QCACHE
+   close(sd);
+#endif
 
    /* if we shall mark the message as spam because of the embedded image */
 
@@ -686,7 +719,14 @@ double bayes_file(char *spamfile, struct session_data sdata, struct __config cfg
             if(cfg.verbosity >= _LOG_DEBUG)
                syslog(LOG_PRIORITY, "%s: running external check: %s", p, ext_cmd);
 
+         #ifdef HAVE_MYSQL_TOKEN_DATABASE
+            spaminess = eval_tokens(mysql, spamfile, cfg, state);
+         #else
             spaminess = eval_tokens(spamfile, cfg, state);
+         #endif
+
+            free_and_print_list(state.first, 0);
+
          }
       }
 
@@ -695,10 +735,6 @@ double bayes_file(char *spamfile, struct session_data sdata, struct __config cfg
 
 #ifdef HAVE_CDB
    close_cdbs(tokenscdb);
-#endif
-
-#ifdef HAVE_MYSQL
-   mysql_close(&mysql);
 #endif
 
    return spaminess;

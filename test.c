@@ -1,5 +1,5 @@
 /*
- * test.c, 2007.06.13, SJ
+ * test.c, 2007.07.05, SJ
  *
  * test the bayesian decision with a single message
  */
@@ -11,8 +11,12 @@
 #include "misc.h"
 #include "bayes.h"
 #include "errmsg.h"
-#include "hash_db.h"
 #include "config.h"
+
+#ifdef HAVE_MYSQL_TOKEN_DATABASE
+   #include <mysql.h>
+   MYSQL mysql;
+#endif
 
 int main(int argc, char **argv){
    double spaminess;
@@ -35,7 +39,20 @@ int main(int argc, char **argv){
    if(argc >= 4) sdata.uid = atoi(argv[3]);
 
    gettimeofday(&tv_spam_start, &tz);
+
+#ifdef HAVE_MYSQL_TOKEN_DATABASE
+   mysql_init(&mysql);
+   if(mysql_real_connect(&mysql, cfg.mysqlhost, cfg.mysqluser, cfg.mysqlpwd, cfg.mysqldb, cfg.mysqlport, cfg.mysqlsocket, 0)){
+      spaminess = bayes_file(mysql, argv[2], sdata, cfg);
+      mysql_close(&mysql);
+   }
+   else {
+      spaminess = ERR_BAYES_NO_TOKEN_FILE;
+   }
+#else
    spaminess = bayes_file(argv[2], sdata, cfg);
+#endif
+
    gettimeofday(&tv_spam_stop, &tz);
 
    fprintf(stderr, "%s: %.4f in %ld [ms]\n", argv[2], spaminess, tvdiff(tv_spam_stop, tv_spam_start)/1000);

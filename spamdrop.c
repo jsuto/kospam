@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2007.06.28, SJ
+ * spamdrop.c, 2007.07.06, SJ
  *
  * check if a single RFC-822 formatted messages is spam or not
  */
@@ -32,7 +32,7 @@ MYSQL_ROW row;
 
 
 #ifdef HAVE_MYSQL_TOKEN_DATABASE
-   int update_training_metadata(char *tmpfile, char rcptto[MAX_RCPT_TO][MAXBUFSIZE], int num_of_rcpt_to, struct __config cfg);
+   int update_training_metadata(MYSQL mysql, char *tmpfile, char rcptto[MAX_RCPT_TO][MAXBUFSIZE], int num_of_rcpt_to, struct __config cfg);
 #endif
 
 
@@ -99,37 +99,17 @@ int main(int argc, char **argv){
 
       /* select uid or email from user table */
 
-      q = getenv("FROM");
-      if(q){
-         snprintf(sdata.rcptto[0], SMALLBUFSIZE-1, "<%s>", q);
+      snprintf(buf, MAXBUFSIZE-1, "SELECT email FROM %s WHERE uid=%ld", cfg.mysqlusertable, uid);
 
-         snprintf(buf, MAXBUFSIZE-1, "SELECT uid FROM %s WHERE email='%s'", cfg.mysqlusertable, q);
-
-         if(mysql_real_query(&mysql, buf, strlen(buf)) == 0){
-            while((res = mysql_store_result(&mysql))){
-               row = mysql_fetch_row(res);
-               if(row){
-                  uid = atol(row[0]);
-               }
+      if(mysql_real_query(&mysql, buf, strlen(buf)) == 0){
+         while((res = mysql_store_result(&mysql))){
+            row = mysql_fetch_row(res);
+            if(row){
+               snprintf(sdata.rcptto[0], SMALLBUFSIZE-1, "<%s>", row[0]);
             }
-            mysql_free_result(res);
          }
+         mysql_free_result(res);
       }
-      else {
-
-         snprintf(buf, MAXBUFSIZE-1, "SELECT email FROM %s WHERE uid=%ld", cfg.mysqlusertable, uid);
-
-         if(mysql_real_query(&mysql, buf, strlen(buf)) == 0){
-            while((res = mysql_store_result(&mysql))){
-               row = mysql_fetch_row(res);
-               if(row){
-                  snprintf(sdata.rcptto[0], SMALLBUFSIZE-1, "<%s>", row[0]);
-               }
-            }
-            mysql_free_result(res);
-         }
-      }
-
    }
    else 
       syslog(LOG_PRIORITY, "%s", ERR_MYSQL_CONNECT);
@@ -167,13 +147,18 @@ int main(int argc, char **argv){
       close(fd);
 
       gettimeofday(&tv_spam_start, &tz);
-      spaminess = bayes_file(sdata.ttmpfile, sdata, cfg);
-      gettimeofday(&tv_spam_stop, &tz);
 
    #ifdef HAVE_MYSQL_TOKEN_DATABASE
-      x = update_training_metadata(sdata.ttmpfile, sdata.rcptto, sdata.num_of_rcpt_to, cfg);
+      spaminess = bayes_file(mysql, sdata.ttmpfile, sdata, cfg);
+
+      x = update_training_metadata(mysql, sdata.ttmpfile, sdata.rcptto, sdata.num_of_rcpt_to, cfg);
       if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "update metadata result: %d", x);
+
+   #else
+      spaminess = bayes_file(sdata.ttmpfile, sdata, cfg);
    #endif
+
+      gettimeofday(&tv_spam_stop, &tz);
 
       unlink(sdata.ttmpfile);
    }

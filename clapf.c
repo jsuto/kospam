@@ -22,7 +22,6 @@
 #include "sig.h"
 #include "errmsg.h"
 #include "session.h"
-#include "hash_db.h"
 #include "config.h"
 
 extern char *optarg;
@@ -32,10 +31,6 @@ int sd;
 int nconn = 0;
 char *configfile = CONFIG_FILE;
 struct __config cfg;
-
-#ifdef HAVE_HASH_DB
-   int t_hash_ready = 0;
-#endif
 
 void clean_exit();
 void fatal(char *s);
@@ -97,10 +92,6 @@ void clean_exit(){
    if(sd != -1)
       close(sd);
 
-#ifdef HAVE_HASH_DB
-   clear_token_hash(t_hash);
-#endif
-
 #ifdef HAVE_LIBCLAMAV
    if(root)
       cl_free(root);
@@ -129,42 +120,21 @@ void reload_config(){
    if(chdir(cfg.workdir))
       fatal(ERR_CHDIR);
 
-   /* reload the memory storage */
+#ifdef HAVE_LIBCLAMAV
 
-   #ifdef HAVE_HASH_DB
-      if(t_hash_ready == 1){
-         clear_token_hash(t_hash);
-         if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "freed the token database: %s", cfg.raw_text_datafile);
-      }
+    /* set up archive limits */
 
-      init_token_hash(t_hash);
+    memset(&limits, 0, sizeof(struct cl_limits));
 
-      t_hash_ready = read_datafile(cfg.raw_text_datafile, t_hash);
+    limits.maxfiles = cfg.clamav_maxfile;
+    limits.maxfilesize = cfg.clamav_max_archived_file_size;
+    limits.maxreclevel = cfg.clamav_max_recursion_level;
+    limits.maxratio = cfg.clamav_max_compress_ratio;
+    limits.archivememlim = cfg.clamav_archive_mem_limit;
 
-      if(t_hash_ready == 1)
-         syslog(LOG_PRIORITY, "read the raw token file successfully: %s", cfg.raw_text_datafile);
-      else
-         syslog(LOG_PRIORITY, "failed to read raw tokens file: %s", cfg.raw_text_datafile);
-   #endif
+#endif
 
-   #ifdef HAVE_LIBCLAMAV
-
-       /* set up archive limits */
-
-       memset(&limits, 0, sizeof(struct cl_limits));
-
-       limits.maxfiles = cfg.clamav_maxfile;
-       limits.maxfilesize = cfg.clamav_max_archived_file_size;
-       limits.maxreclevel = cfg.clamav_max_recursion_level;
-       limits.maxratio = cfg.clamav_max_compress_ratio;
-       limits.archivememlim = cfg.clamav_archive_mem_limit;
-
-   #endif
-
-   if(configfile)
-      syslog(LOG_PRIORITY, "reloaded config: %s", configfile);
-   else
-      syslog(LOG_PRIORITY, "reloaded default config");
+   syslog(LOG_PRIORITY, "reloaded config: %s", configfile);
 }
 
 /*

@@ -31,6 +31,7 @@ int readfrompool(int fd, void *_s, size_t n);
 int get_random_bytes(unsigned char *buf, int len);
 int recvtimeout(int s, char *buf, int len, int timeout);
 int make_rnd_string(char *res);
+int qcache_socket(char *qcache_addr, int qcache_port, char *qcache_socket);
 int move_message_to_quarantine(char *tmpfile, char *quarantine_dir, char *mailfrom, char rcptto[MAX_RCPT_TO][MAXBUFSIZE], int num_of_rcpt_to);
 
 double check_bayes(char *file);

@@ -7,6 +7,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/un.h>
 #include <sys/stat.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -573,6 +574,62 @@ int make_rnd_string(char *res){
    }
 
    return 1;
+}
+
+
+/*
+ * create socket for Qcache
+ */
+
+int qcache_socket(char *qcache_addr, int qcache_port, char *qcache_socket){
+   int sd;
+   char buf[SMALLBUFSIZE];
+
+   #ifdef HAVE_TCP
+      struct sockaddr_in their_addr;
+      struct in_addr addr;
+
+      if((sd = socket(AF_INET, SOCK_STREAM, 0)) == -1){
+         syslog(LOG_PRIORITY, "cannot create socket to Qcache");
+         return -1;
+      }
+
+      their_addr.sin_family = AF_INET;
+      their_addr.sin_port = htons(qcache_port);
+      inet_aton(qcache_addr, &addr);
+      their_addr.sin_addr.s_addr = addr.s_addr;
+      memset(their_addr.sin_zero, '\0', sizeof their_addr.sin_zero);
+
+      if(connect(sd, (struct sockaddr *)&their_addr, sizeof their_addr) == -1){
+         close(sd);
+         syslog(LOG_PRIORITY, "cannot connect to Qcache");
+         return -1;
+      }
+
+   #else
+      struct sockaddr_un server;
+
+      if((sd = socket(AF_UNIX, SOCK_STREAM, 0)) == -1){
+         syslog(LOG_PRIORITY, "cannot create socket to Qcache");
+         return -1;
+      }
+
+      strcpy(server.sun_path, qcache_socket);
+      server.sun_family = AF_UNIX;
+
+      if(connect(sd, (struct sockaddr *)&server, strlen(server.sun_path) + sizeof (server.sun_family)) == -1){
+         close(sd);
+         syslog(LOG_PRIORITY, "cannot connect to Qcache");
+         return -1;
+      }
+   #endif
+
+   /* read the Qcache banner */
+
+   memset(buf, 0, SMALLBUFSIZE);
+   recv(sd, buf, SMALLBUFSIZE-1, 0);
+
+   return sd;
 }
 
 

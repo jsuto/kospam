@@ -1,11 +1,12 @@
 /*
- * mysql.c, 2007.06.26, SJ
+ * mysql.c, 2007.07.05, SJ
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
+#include <sys/socket.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -26,7 +27,7 @@
  * updates the counter of (or inserts) the given token in the token table
  */
 
-int do_mysql_qry(MYSQL mysql, int ham_or_spam, char *token, char *tokentable, unsigned int uid, int train_mode){
+int do_mysql_qry(MYSQL mysql, int sockfd, int ham_or_spam, char *token, char *tokentable, unsigned int uid, int train_mode){
    MYSQL_RES *res;
    MYSQL_ROW row;
    unsigned long nham=0, nspam=0;
@@ -58,21 +59,35 @@ int do_mysql_qry(MYSQL mysql, int ham_or_spam, char *token, char *tokentable, un
             /* update statement */
 
             if(ham_or_spam == 1){
-               if(train_mode == T_TUM && nham > 0) snprintf(puf, SMALLBUFSIZE-1, ", nham=nham-1");
+               if(train_mode == T_TUM && nham > 0){ snprintf(puf, SMALLBUFSIZE-1, ", nham=nham-1"); nham--; }
 
                #ifdef HAVE_NO_64_HASH
                   snprintf(stmt, MAXBUFSIZE-1, "UPDATE %s SET nspam=nspam+1%s WHERE token='%s' AND uid=%d", tokentable, puf, buf, uid);
                #else
-                  snprintf(stmt, MAXBUFSIZE-1, "UPDATE %s SET nspam=nspam+1%s WHERE token=%llu AND uid=%d", tokentable, puf, hash, uid);
+                  #ifdef HAVE_QCACHE
+                     snprintf(stmt, MAXBUFSIZE-1, "UPDATE %llu %d %ld %ld\r\n", hash, uid, nham, nspam+1);
+                     if(sockfd != -1){
+                        send(sockfd, stmt, strlen(stmt), 0);
+                     }
+                  #else
+                     snprintf(stmt, MAXBUFSIZE-1, "UPDATE %s SET nspam=nspam+1%s WHERE token=%llu AND uid=%d", tokentable, puf, hash, uid);
+                  #endif
                #endif
             }
             else {
-               if(train_mode == T_TUM && nspam > 0) snprintf(puf, SMALLBUFSIZE-1, ", nspam=nspam-1");
+               if(train_mode == T_TUM && nspam > 0){ snprintf(puf, SMALLBUFSIZE-1, ", nspam=nspam-1"); nspam--; }
 
                #ifdef HAVE_NO_64_HASH
                   snprintf(stmt, MAXBUFSIZE-1, "UPDATE %s SET nham=nham+1%s WHERE token='%s' AND uid=%d", tokentable, puf, buf, uid);
                #else
-                  snprintf(stmt, MAXBUFSIZE-1, "UPDATE %s SET nham=nham+1%s WHERE token=%llu AND uid=%d", tokentable, puf, hash, uid);
+                  #ifdef HAVE_QCACHE
+                     snprintf(stmt, MAXBUFSIZE-1, "UPDATE %llu %d %ld %ld\r\n", hash, uid, nham, nspam);
+                     if(sockfd != -1){
+                        send(sockfd, stmt, strlen(stmt), 0);
+                     }
+                  #else
+                     snprintf(stmt, MAXBUFSIZE-1, "UPDATE %s SET nham=nham+1%s WHERE token=%llu AND uid=%d", tokentable, puf, hash, uid);
+                  #endif
                #endif
             }
 
@@ -113,7 +128,7 @@ int do_mysql_qry(MYSQL mysql, int ham_or_spam, char *token, char *tokentable, un
  * walk through the hash table and add/update its elements in mysql table
  */
 
-int my_walk_hash(MYSQL mysql, int ham_or_spam, char *tokentable, struct node *xhash[MAXHASH], unsigned int uid, int train_mode){
+int my_walk_hash(MYSQL mysql, int sockfd, int ham_or_spam, char *tokentable, struct node *xhash[MAXHASH], unsigned int uid, int train_mode){
    int i, n=0;
    struct node *p, *q;
 
@@ -122,7 +137,8 @@ int my_walk_hash(MYSQL mysql, int ham_or_spam, char *tokentable, struct node *xh
       while(q != NULL){
          p = q;
 
-         do_mysql_qry(mysql, ham_or_spam, p->str, tokentable, uid, train_mode);
+         do_mysql_qry(mysql, sockfd, ham_or_spam, p->str, tokentable, uid, train_mode);
+
          n++;
 
          q = q->r;
@@ -141,11 +157,9 @@ int my_walk_hash(MYSQL mysql, int ham_or_spam, char *tokentable, struct node *xh
  * query the spamicity value of a token from token database
  */
 
-float myqry(MYSQL mysql, char *tokentable, char *token, float ham_msg, float spam_msg, unsigned int uid, struct node *xhash[MAXHASH]){
-   MYSQL_RES *res;
-   MYSQL_ROW row;
+float myqry(MYSQL mysql, int sockfd, char *tokentable, char *token, float ham_msg, float spam_msg, unsigned int uid, struct node *xhash[MAXHASH]){
    float nham=0, nspam=0;
-   float r = DEFAULT_SPAMICITY, ham_prob, spam_prob;
+   float r = DEFAULT_SPAMICITY, ham_prob=0, spam_prob=0;
    char stmt[MAXBUFSIZE];
    int n;
 
@@ -162,6 +176,32 @@ float myqry(MYSQL mysql, char *tokentable, char *token, float ham_msg, float spa
    snprintf(stmt, MAXBUFSIZE-1, "SELECT nham, nspam FROM %s WHERE token=%llu AND (uid=0 OR uid=%d)", tokentable, hash, uid);
 #endif
 
+#ifdef HAVE_QCACHE
+   char *p, *q;
+
+   snprintf(stmt, MAXBUFSIZE-1, "SELECT %llu %d\r\n", hash, uid);
+   send(sockfd, stmt, strlen(stmt), 0);
+   memset(stmt, 0, MAXBUFSIZE);
+   recv(sockfd, stmt, MAXBUFSIZE, 0);
+
+   /* is it a valid response (status code: 250) */
+
+   if(strncmp(stmt, "250 ", 4) == 0){
+      p = strchr(stmt, ' ');
+      if(p){
+         *p = '\0';
+         q = strchr(++p, ' ');
+         if(q){
+            *q = '\0';
+            nham = atof(p);
+            nspam = atof(++q);
+         }
+      }
+   }
+#else
+   MYSQL_RES *res;
+   MYSQL_ROW row;
+
    if(mysql_real_query(&mysql, stmt, strlen(stmt)) == 0){
       res = mysql_store_result(&mysql);
       if(res != NULL){
@@ -170,35 +210,42 @@ float myqry(MYSQL mysql, char *tokentable, char *token, float ham_msg, float spa
             nspam += atol(row[1]);
          }
 
-         /* if the token has occurred at least N times, 2007.06.13, SJ */
-
-         if(nham + nspam > 1){
-            ham_prob = nham / ham_msg;
-            spam_prob = nspam / spam_msg;
-
-            if(ham_prob > 1) ham_prob = 1;
-            if(spam_prob > 1) spam_prob = 1;
-
-            r = spam_prob / (ham_prob + spam_prob);
-
-            /* deal with rare words */
-
-            if(nham < FREQ_MIN && nspam < FREQ_MIN){
-               n = nham;
-               if(nspam > n) n = nspam;
-
-               r = (0.5 + n * r) / (1+n);
-            }
-
-         }
-
          mysql_free_result(res);
 
          /* add token to list if not mature enough, 2007.06.13, SJ */
-         if(uid > 0 && nham < TUM_LIMIT && nspam < TUM_LIMIT)
-            addnode(xhash, token, 0 , 0);
+         /*if(uid > 0 && nham < TUM_LIMIT && nspam < TUM_LIMIT)
+            addnode(xhash, token, 0 , 0);*/
 
       }
+   }
+#endif
+
+   /* add token to list if not mature enough, 2007.07.09, SJ */
+   if(uid > 0 && nham < TUM_LIMIT && nspam < TUM_LIMIT)
+      addnode(xhash, token, 0 , 0);
+
+
+
+   /* if the token has occurred at least N times, 2007.06.13, SJ */
+
+   if(nham + nspam > 1){
+      ham_prob = nham / ham_msg;
+      spam_prob = nspam / spam_msg;
+
+      if(ham_prob > 1) ham_prob = 1;
+      if(spam_prob > 1) spam_prob = 1;
+
+      r = spam_prob / (ham_prob + spam_prob);
+
+      /* deal with rare words */
+
+      if(nham < FREQ_MIN && nspam < FREQ_MIN){
+         n = nham;
+         if(nspam > n) n = nspam;
+
+         r = (0.5 + n * r) / (1+n);
+      }
+
    }
 
    if(r < REAL_HAM_TOKEN_PROBABILITY) r = REAL_HAM_TOKEN_PROBABILITY;
@@ -212,21 +259,14 @@ float myqry(MYSQL mysql, char *tokentable, char *token, float ham_msg, float spa
  * insert metadata to queue table
  */
 
-int update_training_metadata(char *tmpfile, char rcptto[MAX_RCPT_TO][MAXBUFSIZE], int num_of_rcpt_to, struct __config cfg){
+int update_training_metadata(MYSQL mysql, char *tmpfile, char rcptto[MAX_RCPT_TO][MAXBUFSIZE], int num_of_rcpt_to, struct __config cfg){
    struct stat st;
-   MYSQL mysql;
    MYSQL_RES *res;
    MYSQL_ROW row;
    char *p, *q, buf[MAXBUFSIZE], email[SMALLBUFSIZE], *map=NULL, *data=NULL;
    unsigned long now=0, uid;
    int i, fd;
 
-   mysql_init(&mysql);
-
-   if(!mysql_real_connect(&mysql, cfg.mysqlhost, cfg.mysqluser, cfg.mysqlpwd, cfg.mysqldb, cfg.mysqlport, cfg.mysqlsocket, 0)){
-      syslog(LOG_PRIORITY, "%s: %s", tmpfile, ERR_MYSQL_CONNECT);
-      return 0;
-   }
 
    time(&now);
 
@@ -298,7 +338,6 @@ int update_training_metadata(char *tmpfile, char rcptto[MAX_RCPT_TO][MAXBUFSIZE]
       }
    }
 
-   mysql_close(&mysql);
 
    return 1;
 }

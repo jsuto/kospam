@@ -12,5 +12,5 @@
 #define CLAMD_VIRUS 403
 #define CLAMD_ERROR 501
 
-int clamd_scan(char *clamav_socket, char *workdir, char *tmpfile, int v, char *clamdinfo);
+int clamd_scan(char *clamav_socket, char *chrootdir, char *workdir, char *tmpfile, int v, char *clamdinfo);
 

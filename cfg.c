@@ -68,10 +68,16 @@ struct __config read_config(char *configfile){
 
    strncpy(cfg.clamd_socket, CLAMD_SOCKET, MAXVAL-1);
 
+   strncpy(cfg.qcache_addr, QCACHE_ADDR, MAXVAL-1);
+   cfg.qcache_port = QCACHE_PORT;
+   strncpy(cfg.qcache_socket, QCACHE_SOCKET, MAXVAL-1);
+
    cfg.max_connections = MAXCONN;
    cfg.backlog = BACKLOG;
 
    cfg.session_timeout = SESSION_TIMEOUT;
+
+   memset(cfg.chrootdir, 0, MAXVAL);
 
    strncpy(cfg.workdir, WORK_DIR, MAXVAL-1);
 
@@ -108,8 +114,6 @@ struct __config read_config(char *configfile){
 
 
    strncpy(cfg.tokensfile, TOKENSCDB, MAXVAL-1);
-
-   strncpy(cfg.raw_text_datafile, RAW_TOKENS, MAXVAL-1);
 
    cfg.use_pairs = 1;
    cfg.use_single_tokens = 1;
@@ -189,11 +193,23 @@ struct __config read_config(char *configfile){
                   if(strcmp(key, "clamd_socket") == 0)
                      memcpy(cfg.clamd_socket, val, MAXVAL-1);
 
+                  if(strcmp(key, "qcache_addr") == 0)
+                     memcpy(cfg.qcache_addr, val, MAXVAL-1);
+
+                  if(strcmp(key, "qcache_port") == 0)
+                     cfg.qcache_port = atoi(val);
+
+                  if(strcmp(key, "qcache_socket") == 0)
+                     memcpy(cfg.qcache_socket, val, MAXVAL-1);
+
                   if(strcmp(key, "max_connections") == 0)
                      cfg.max_connections = atoi(val);
 
                   if(strcmp(key, "backlog") == 0)
                      cfg.backlog = atoi(val);
+
+                  if(strcmp(key, "chrootdir") == 0)
+                     memcpy(cfg.chrootdir, val, MAXVAL-1);
 
                   if(strcmp(key, "workdir") == 0)
                      memcpy(cfg.workdir, val, MAXVAL-1);
@@ -236,9 +252,6 @@ struct __config read_config(char *configfile){
 
                   if(strcmp(key, "tokensfile") == 0)
                      memcpy(cfg.tokensfile, val, MAXVAL-1);
-
-                  if(strcmp(key, "raw_text_datafile") == 0)
-                     memcpy(cfg.raw_text_datafile, val, MAXVAL-1);
 
                   if(strcmp(key, "use_triplets") == 0)
                      cfg.use_triplets = atoi(val);

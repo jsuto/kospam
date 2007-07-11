@@ -1,5 +1,5 @@
 /*
- * spam-fwd-train.c, 2007.06.27, SJ
+ * spam-fwd-train.c, 2007.07.11, SJ
  */
 
 #include <stdio.h>
@@ -7,6 +7,10 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/un.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #include <sys/stat.h>
 #include <sys/file.h>
 #include <fcntl.h>
@@ -22,9 +26,8 @@
 #include "messages.h"
 #include "config.h"
 
-
-void my_walk_hash(MYSQL mysql, int ham_or_spam, char *tokentable, struct node *xhash[MAXHASH], unsigned int uid, int train_mode);
-
+void my_walk_hash(MYSQL mysql, int sockfd, int ham_or_spam, char *tokentable, struct node *xhash[MAXHASH], unsigned int uid, int train_mode);
+double bayes_file(MYSQL mysql, char *spamfile, struct session_data sdata, struct __config cfg);
 
 /*
  * check if it's a valid ID
@@ -49,9 +52,11 @@ int is_valid_id(char *p){
 
 
 int main(int argc, char **argv){
-   int fd, len, i=0, m, is_spam=0, train_mode=T_TOE;
+   int sd, fd, len, i=0, m, is_spam=0, train_mode=T_TOE;
    char *p, *q, *r, ID[RND_STR_LEN+1]="", *from, buf[8*MAXBUFSIZE], puf[SMALLBUFSIZE];
-   unsigned long uid=0, cnt, now;
+   double spaminess;
+   unsigned long uid=0, now;
+   struct session_data sdata;
    struct __config cfg;
    struct _state state;
    struct _token *P, *Q;
@@ -59,6 +64,8 @@ int main(int argc, char **argv){
    MYSQL mysql;
    MYSQL_RES *res;
    MYSQL_ROW row;
+   FILE *f;
+
 
    /* read the default or the given config file */
 
@@ -148,6 +155,9 @@ int main(int argc, char **argv){
 
    /* select message data */
 
+   make_rnd_string(sdata.ttmpfile);
+   sdata.uid = uid;
+
    snprintf(buf, MAXBUFSIZE-1, "SELECT data FROM %s WHERE id='%s' AND uid=%ld", cfg.mysqlqueuetable, ID, uid);
    if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "sql: %s", buf);
 
@@ -158,6 +168,13 @@ int main(int argc, char **argv){
          if(row){
             if(row[0]){
                p = row[0];
+
+               f = fopen(sdata.ttmpfile, "w+");
+               if(f){
+                  fprintf(f, "%s", p);
+                  fclose(f);
+               }
+
                do {
                   p = split(p, '\n', buf, MAXBUFSIZE-2);
                   strncat(buf, "\n", MAXBUFSIZE-1);
@@ -170,59 +187,74 @@ int main(int argc, char **argv){
    }
 
 
-   inithash(tokens);
-
    if(state.first){
 
+     for(i=0; i<MAX_ITERATIVE_TRAIN_LOOPS; i++){
+
+         inithash(tokens);
+
+         spaminess = DEFAULT_SPAMICITY;
          P = state.first;
-         cnt = 0;
 
          while(P != NULL){
             Q = P->r;
             m = 1;
 
             addnode(tokens, P->str, 0, 0);
-
-            if(P)
-               free(P);
-
             P = Q;
-
-            cnt++;
          }
 
+         sd = -1;
 
-         my_walk_hash(mysql, is_spam, cfg.mysqltokentable, tokens, uid, train_mode);
+      #ifdef HAVE_QCACHE
+         sd = qcache_socket(cfg.qcache_addr, cfg.qcache_port, cfg.qcache_socket);
+      #endif
+
+         my_walk_hash(mysql, sd, is_spam, cfg.mysqltokentable, tokens, uid, train_mode);
+
+         if(sd != -1) close(sd);
+
+         if(i == 0){
+
+            if(is_spam == 1){
+               if(train_mode == T_TUM)
+                  snprintf(buf, MAXBUFSIZE-1, "update %s set nspam=nspam+1, nham=nham-1 WHERE uid=%ld", cfg.mysqlmisctable, uid);
+               else
+                  snprintf(buf, MAXBUFSIZE-1, "update %s set nspam=nspam+1 WHERE uid=%ld", cfg.mysqlmisctable, uid);
+            }
+            else {
+               if(train_mode == T_TUM)
+                  snprintf(buf, MAXBUFSIZE-1, "update %s set nham=nham+1, nspam=nspam-1 WHERE uid=%ld", cfg.mysqlmisctable, uid);
+               else
+                  snprintf(buf, MAXBUFSIZE-1, "update %s set nham=nham+1 WHERE uid=%ld", cfg.mysqlmisctable, uid);
+            }
+
+            mysql_real_query(&mysql, buf, strlen(buf));
 
 
-         /* update the t_misc table */
+            snprintf(buf, MAXBUFSIZE-1, "INSERT INTO %s (uid, ts, msgid, is_spam) VALUES(%ld, %ld, '%s', %d)", cfg.mysqltraininglogtable, uid, now, ID, is_spam);
+            mysql_real_query(&mysql, buf, strlen(buf));
 
-         if(is_spam == 1){
-            if(train_mode == T_TUM)
-               snprintf(buf, MAXBUFSIZE-1, "update %s set nspam=nspam+1, nham=nham-1 WHERE uid=%ld", cfg.mysqlmisctable, uid);
-            else
-               snprintf(buf, MAXBUFSIZE-1, "update %s set nspam=nspam+1 WHERE uid=%ld", cfg.mysqlmisctable, uid);
+            syslog(LOG_PRIORITY, "%s: training, mode: %d", ID, train_mode);
          }
-         else {
-            if(train_mode == T_TUM)
-               snprintf(buf, MAXBUFSIZE-1, "update %s set nham=nham+1, nspam=nspam-1 WHERE uid=%ld", cfg.mysqlmisctable, uid);
-            else
-               snprintf(buf, MAXBUFSIZE-1, "update %s set nham=nham+1 WHERE uid=%ld", cfg.mysqlmisctable, uid);
-         }
 
-         mysql_real_query(&mysql, buf, strlen(buf));
+         clearhash(tokens);
 
-         /* add entry to t_train_log table */
+         spaminess = bayes_file(mysql, sdata.ttmpfile, sdata, cfg);
 
-         snprintf(buf, MAXBUFSIZE-1, "INSERT INTO %s (uid, ts, msgid, is_spam) VALUES(%ld, %ld, '%s', %d)", cfg.mysqltraininglogtable, uid, now, ID, is_spam);
-         mysql_real_query(&mysql, buf, strlen(buf));
+         syslog(LOG_PRIORITY, "%s: training round %d, spaminess: %.4f", ID, i, spaminess);
 
-         syslog(LOG_PRIORITY, "%s: training, mode: %d", ID, train_mode);
+         if(is_spam == 1 && spaminess > cfg.spam_overall_limit) break;
+         if(is_spam == 0 && spaminess < cfg.max_junk_spamicity) break;
 
+      }
 
+      /* free token list */
+      free_and_print_list(state.first, 0);
+
+      unlink(sdata.ttmpfile);
    }
 
-   clearhash(tokens);
 
    mysql_close(&mysql);
 

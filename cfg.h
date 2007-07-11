@@ -1,5 +1,5 @@
 /*
- * cfg.h, 2007.06.21, SJ
+ * cfg.h, 2007.07.10, SJ
  */
 
 #define MAXVAL 128
@@ -28,6 +28,7 @@ struct __config {
    int max_connections;
    int backlog;
 
+   char chrootdir[MAXVAL];
    char workdir[MAXVAL];
    char queuedir[MAXVAL];
    char quarantine_dir[MAXVAL];
@@ -47,7 +48,6 @@ struct __config {
    char spam_subject_prefix[MAXVAL];
 
    char tokensfile[MAXVAL];
-   char raw_text_datafile[MAXVAL];
 
    int use_triplets;
    int use_pairs;
@@ -128,6 +128,13 @@ struct __config {
    char mysqltraininglogtable[MAXVAL];
    char mysqlqueuetable[MAXVAL];
    char mysqlstattable[MAXVAL];
+
+
+   // Qcache
+
+   char qcache_addr[MAXVAL];
+   int qcache_port;
+   char qcache_socket[MAXVAL];
 
    // web interface
 

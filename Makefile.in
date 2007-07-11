@@ -169,6 +169,7 @@ install-train:
 	$(INSTALL) -m 0755 spam-fwd-train $(root)$(DESTDIR)$(bindir)
 	$(INSTALL) -m 0755 spam-fwd-train $(root)$(DESTDIR)$(bindir)/ham-fwd-train
 	$(INSTALL) -m 0755 spamstat $(root)$(DESTDIR)$(bindir)
+	$(INSTALL) -m 0755 qs $(root)$(DESTDIR)$(bindir)
 
 install:
 	$(INSTALL) -d $(root)$(DESTDIR)$(bindir)

@@ -136,6 +136,18 @@ if you change this variable. Please also note that the meaning of this variable
 depends on your Unix implementation.<p>
 
 
+<strong>chrootdir</strong><p/>
+syntax: chrootdir=<i>string</i><br/>
+default: none<p/>
+
+The chrootdir directive defines the path of the chroot directory. If you chroot clapf
+we have to pass the correct path to the temporary queue file to clamd.<p/>
+
+If you are running clapf inside the <i>/myjail</i> directory as the root directory then
+set <i>chrootdir=/myjail</i> thus clapf will pass <i>/myjail/opt/av/tmp/xxxxxxx</i> to
+clamd for virus scanning.<p/>
+
+
 <strong>workdir</strong><p/>
 syntax: workdir=<i>string</i><br/>
 default: /opt/av/tmp<p/>
@@ -222,7 +234,7 @@ this feature.<p>
 
 <strong>min_phrase_number</strong><p>
 syntax: min_phrase_number=<i>number</i><br>
-default: 30<p>
+default: 20<p>
 The min_phrase_number directive defines the minimum number of known phrases (token pairs) that can
 be used in the spamicity calculation without the single tokens. This should be set because we can have a greater
 belief in phrases than single words. Set to 0 to disable this feature.<p>
@@ -280,6 +292,16 @@ The penalize_embed_images directive defines whether to add an additional penalty
 or not (0). Embedded images has the src=cid:xxxxx sequence and pointing to the attached image. If set and finds an
 embedded image, a special spammy token is created (EMBED*) thus increasing the spam probability. Only one EMBED*
 token is created even if the message has multiple embedded images.<p>
+
+
+<strong>penalize_octet_stream</strong><p/>
+syntax: penalize_octet_stream=<i>number</i><br/>
+default: 0<p/>
+
+The penalize_octet_stream directive behaves exactly the same way as <i>penalize_images</i> directive except this
+applies to binary or PDF attachments. It may help you to fight PDF based spam. If you want to enable it, set its
+value to 1.<p/>
+
 
 
 <strong>surbl_domain</strong><p>
@@ -658,8 +680,8 @@ default: none<p>
 The mysqlqueuetable directive defines the name of the mysql table holding the message id - user id entries.<p/>
 
 
-<strong>mysqlblackholetable</strong><p>
-syntax: mysqlblackholetable=<i>string</i><br>
+<strong>mysqlstattable</strong><p>
+syntax: mysqlstattable=<i>string</i><br>
 default: none<p>
 
 The mysqlstattable directive defines the name of the mysql table holding personal ham/spam statistics entries.<p/>

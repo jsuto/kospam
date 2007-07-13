@@ -216,8 +216,15 @@ training method.
 INSERT INTO user (uid, username, email, action) VALUES(1000, 'joe', 'joe@example.com', 'junk');
 </pre>
 
+You may use the <i>clapf_admin</i> utility, eg.
+
+<pre>
+clapf_admin -u joe -e joe@example.com -i 1000
+</pre>
+
 Note: the user ids (uid) should be unique. It's not forced with an sql key or unique
-as this may be used for other feature too.
+as this may be used for other feature too. If using spamdrop the user id should match
+the Unix user id (ie. id -u joe)
 </li>
 
 </ol>

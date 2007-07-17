@@ -23,6 +23,7 @@
 #include "rbl.h"
 #include "hdr.h"
 #include "messages.h"
+#include "sql.h"
 #include "config.h"
 
 struct node *s_phrase_hash[MAXHASH], *shash[MAXHASH];
@@ -32,12 +33,11 @@ float n_tokens = 0;
 
 int surbl_match = 0;
 int has_embed_image = 0;
-int sd=-1;
 
-unsigned long uid = 0;
 
 struct timezone tz;
 struct timeval tv1, tv2;
+qry QRY;
 
 
 #ifdef HAVE_MYSQL
@@ -48,10 +48,9 @@ struct timeval tv1, tv2;
 #endif
 
 #ifdef HAVE_MYSQL_TOKEN_DATABASE
-   float myqry(MYSQL mysql, int sockfd, char *tokentable, char *token, float ham_msg, float spam_msg, unsigned int uid, struct node *xhash[MAXHASH]);
-   int my_walk_hash(MYSQL mysql, int sockfd, int ham_or_spam, char *tokentable, struct node *xhash[MAXHASH], unsigned int uid, int train_mode);
-
-   float ham_msg=0, spam_msg=0;
+   float SQL_QUERY(qry QRY, char *tokentable, char *token, struct node *xhash[MAXHASH]);
+   //int my_walk_hash(MYSQL mysql, int sockfd, int ham_or_spam, char *tokentable, struct node *xhash[MAXHASH], unsigned int uid, int train_mode);
+   int my_walk_hash(qry QRY, int ham_or_spam, char *tokentable, struct node *xhash[MAXHASH], int train_mode);
 #endif
 
 #ifdef HAVE_CDB
@@ -94,7 +93,8 @@ int assign_spaminess(char *p, struct __config cfg, unsigned int uid){
       return 0;
 
 #ifdef HAVE_MYSQL_TOKEN_DATABASE
-   spaminess = myqry(mysql, sd, cfg.mysqltokentable, p, ham_msg, spam_msg, uid, tumhash);
+   spaminess = SQL_QUERY(QRY, cfg.mysqltokentable, p, tumhash);
+
 #else
    spaminess = cdbqry(tokenscdb, p);
 #endif
@@ -114,7 +114,7 @@ int assign_spaminess(char *p, struct __config cfg, unsigned int uid){
          strncpy(t, p+8, MAX_TOKEN_LEN-1);
 
    #ifdef HAVE_MYSQL_TOKEN_DATABASE
-      spaminess = myqry(mysql, sd, cfg.mysqltokentable, t, ham_msg, spam_msg, uid, tumhash);
+      spaminess = SQL_QUERY(QRY, cfg.mysqltokentable, t, tumhash);
    #else
       spaminess = cdbqry(tokenscdb, t);
    #endif
@@ -155,9 +155,9 @@ int walk_hash(struct node *xhash[MAXHASH], struct __config cfg){
          p = q;
 
       #ifdef HAVE_MYSQL_TOKEN_DATABASE
-         assign_spaminess(mysql, p->str, cfg, uid);
+         assign_spaminess(mysql, p->str, cfg, QRY.uid);
       #else
-         assign_spaminess(p->str, cfg, uid);
+         assign_spaminess(p->str, cfg, QRY.uid);
       #endif
 
          n++;
@@ -215,7 +215,7 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
       /* add to URL hash, 2006.06.23, SJ */
 
       if(strncmp(p->str, "URL*", 4) == 0){
-         assign_spaminess(mysql, p->str, cfg, uid);
+         assign_spaminess(mysql, p->str, cfg, QRY.uid);
 
          addnode(B_hash, p->str, 0, 0);
 
@@ -228,7 +228,7 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
 
       /* 2007.06.06, SJ */
 
-      if(cfg.use_pairs == 1 && strchr(p->str, '+')) assign_spaminess(mysql, p->str, cfg, uid);
+      if(cfg.use_pairs == 1 && strchr(p->str, '+')) assign_spaminess(mysql, p->str, cfg, QRY.uid);
       else addnode(B_hash, p->str, 0, 0);
 
 
@@ -274,38 +274,45 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
 
 
    /* add the From line, 2007.06.16, SJ */
-   assign_spaminess(mysql, state.from, cfg, uid);
+   assign_spaminess(mysql, state.from, cfg, QRY.uid);
    addnode(B_hash, state.from, 0, 0);
 
 
    /* redesigned spaminess calculation, 2007.05.21, SJ */
 
+   spaminess = sorthash(s_phrase_hash, MAX_PHRASES_TO_CHOOSE, cfg);
+
    if(n_phrases > cfg.min_phrase_number){
-      spaminess = sorthash(s_phrase_hash, MAX_PHRASES_TO_CHOOSE, cfg);
 
       /*
-       * if spamicity is around 0.5 (0.4-0.6) or just a little below the spam limit,
-       * check the single tokens too, then choose the value with greater deviation.
+       * if we are unsure and we have not enough truly interesting tokens, add the single tokens, too, 2007.07.15, SJ
        */
 
-      if(DEVIATION(spaminess) < cfg.min_deviation_to_use_single_tokens || (spaminess < cfg.spam_overall_limit && spaminess > cfg.use_single_tokens_min_limit)){
-      #ifdef HAVE_MYSQL_TOKEN_DATABASE
-         walk_hash(mysql, B_hash, cfg);
-      #else
-         walk_hash(B_hash, cfg);
-      #endif
-         spaminess2 = sorthash(shash, MAX_TOKENS_TO_CHOOSE, cfg);
+      if(spaminess < cfg.spam_overall_limit && spaminess > cfg.max_junk_spamicity && most_interesting_tokens(s_phrase_hash) < MAX_PHRASES_TO_CHOOSE){
+      //if(spaminess < cfg.spam_overall_limit && spaminess > cfg.max_junk_spamicity){
+         goto NEED_SINGLE_TOKENS;
       }
    }
-   /* use the single tokens hash if we have not enough phrases, 2007.04.27, SJ */
    else {
+      NEED_SINGLE_TOKENS:
+
    #ifdef HAVE_MYSQL_TOKEN_DATABASE
       n_tokens += walk_hash(mysql, B_hash, cfg);
    #else
       n_tokens += walk_hash(B_hash, cfg);
    #endif
 
-      spaminess = sorthash(shash, MAX_TOKENS_TO_CHOOSE, cfg);
+      for(i=0;i<MAXHASH;i++){
+         Q = shash[i];
+         while(Q != NULL){
+            addnode(s_phrase_hash, Q->str, Q->spaminess, Q->deviation);
+            Q = Q->r;
+         }
+      }
+
+      spaminess = sorthash(s_phrase_hash, MAX_TOKENS_TO_CHOOSE, cfg);
+      spaminess2 = sorthash(shash, MAX_TOKENS_TO_CHOOSE, cfg);
+
    }
 
 
@@ -392,21 +399,10 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
          urlhash[u] = NULL;
       }
 
-      if(n_phrases > cfg.min_phrase_number){
-         spaminess = sorthash(s_phrase_hash, MAX_PHRASES_TO_CHOOSE, cfg);
-      }
-      else {
-         if(n_tokens < 8){
-         #ifdef HAVE_MYSQL_TOKEN_DATABASE
-            n_tokens += walk_hash(mysql, B_hash, cfg);
-         #else
-            n_tokens += walk_hash(B_hash, cfg);
-         #endif
-         }
-         spaminess = sorthash(shash, MAX_TOKENS_TO_CHOOSE, cfg);
-      }
+      spaminess = sorthash(s_phrase_hash, MAX_PHRASES_TO_CHOOSE, cfg);
 
-      if(DEVIATION(spaminess) < cfg.min_deviation_to_use_single_tokens || (spaminess < cfg.spam_overall_limit && spaminess > cfg.use_single_tokens_min_limit)){
+      if(spaminess < cfg.spam_overall_limit && spaminess > cfg.max_junk_spamicity && most_interesting_tokens(s_phrase_hash) < MAX_PHRASES_TO_CHOOSE){
+      //if(spaminess < cfg.spam_overall_limit && spaminess > cfg.max_junk_spamicity){
          if(n_tokens < 8){
          #ifdef HAVE_MYSQL_TOKEN_DATABASE
             n_tokens += walk_hash(mysql, B_hash, cfg);
@@ -417,6 +413,7 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
 
          spaminess2 = sorthash(shash, MAX_TOKENS_TO_CHOOSE, cfg);
       }
+
 
       if(DEVIATION(spaminess) < DEVIATION(spaminess2))
          spaminess = spaminess2;
@@ -446,21 +443,21 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
     */
 
 
-   if(cfg.training_mode == T_TUM && (uid > 0 || cfg.group_type == 0) && (spaminess >= cfg.spam_overall_limit || spaminess < cfg.max_junk_spamicity)){
+   if(cfg.training_mode == T_TUM && (QRY.uid > 0 || cfg.group_type == 0) && (spaminess >= cfg.spam_overall_limit || spaminess < cfg.max_junk_spamicity)){
       gettimeofday(&tv1, &tz);
 
       if(spaminess >= cfg.spam_overall_limit){
-         n = my_walk_hash(mysql, sd, 1, cfg.mysqltokentable, tumhash, uid, T_TOE);
-         snprintf(buf, MAXBUFSIZE-1, "update %s set nspam=nspam+1 WHERE uid=%ld", cfg.mysqlmisctable, uid);
+         n = my_walk_hash(QRY, 1, cfg.mysqltokentable, tumhash, T_TOE);
+         snprintf(buf, MAXBUFSIZE-1, "update %s set nspam=nspam+1 WHERE uid=%ld", cfg.mysqlmisctable, QRY.uid);
       }
       else {
-         n = my_walk_hash(mysql, sd, 0, cfg.mysqltokentable, tumhash, uid, T_TOE);
-         snprintf(buf, MAXBUFSIZE-1, "update %s set nham=nham+1 WHERE uid=%ld", cfg.mysqlmisctable, uid);
+         n = my_walk_hash(QRY, 0, cfg.mysqltokentable, tumhash, T_TOE);
+         snprintf(buf, MAXBUFSIZE-1, "update %s set nham=nham+1 WHERE uid=%ld", cfg.mysqlmisctable, QRY.uid);
       }
 
       gettimeofday(&tv2, &tz);
 
-      syslog(LOG_PRIORITY, "%s: TUM training %ld tokens for uid: %ld %ld [ms]", spamfile, n, uid, tvdiff(tv2, tv1)/1000);
+      syslog(LOG_PRIORITY, "%s: TUM training %ld tokens for uid: %ld %ld [ms]", spamfile, n, QRY.uid, tvdiff(tv2, tv1)/1000);
 
       mysql_real_query(&mysql, buf, strlen(buf));
 
@@ -505,6 +502,14 @@ double bayes_file(char *spamfile, struct session_data sdata, struct __config cfg
       return ERR_BAYES_NO_SPAM_FILE;
 
    state = init_state();
+
+   /* init query structure */
+
+   QRY.mysql = mysql;
+   QRY.uid = 0;
+   QRY.sockfd = -1;
+   QRY.ham_msg = 0;
+   QRY.spam_msg = 0;
 
 
    if(strlen(cfg.gocr) > 3 || strlen(cfg.catdoc) > 3 )
@@ -577,15 +582,15 @@ double bayes_file(char *spamfile, struct session_data sdata, struct __config cfg
             while((res = mysql_store_result(&mysql))){
                row = mysql_fetch_row(res);
                if(row)
-                  uid = atol(row[0]);
+                  QRY.uid = atol(row[0]);
             }
             mysql_free_result(res);
          }
 
       }
-      else if(sdata.num_of_rcpt_to == -1) uid = sdata.uid;
+      else if(sdata.num_of_rcpt_to == -1) QRY.uid = sdata.uid;
 
-      snprintf(buf, MAXBUFSIZE-1, "SELECT SUM(nham), SUM(nspam) FROM %s WHERE uid=0 OR uid=%ld", cfg.mysqlmisctable, uid);
+      snprintf(buf, MAXBUFSIZE-1, "SELECT SUM(nham), SUM(nspam) FROM %s WHERE uid=0 OR uid=%ld", cfg.mysqlmisctable, QRY.uid);
    }
    else {
       /* or this is a shared group */
@@ -601,15 +606,15 @@ double bayes_file(char *spamfile, struct session_data sdata, struct __config cfg
       res = mysql_store_result(&mysql);
       if(res != NULL){
          while((row = mysql_fetch_row(res))){
-            ham_msg += atof(row[0]);
-            spam_msg += atof(row[1]);
+            QRY.ham_msg += atof(row[0]);
+            QRY.spam_msg += atof(row[1]);
          }
 
          mysql_free_result(res);
       }
    }
 
-   if(ham_msg <= 0 || spam_msg <= 0){
+   if(QRY.ham_msg <= 0 || QRY.spam_msg <= 0){
       free_and_print_list(state.first, 0);
       syslog(LOG_PRIORITY, "%s: %s", p, ERR_MYSQL_DATA);
       return ERR_BAYES_NO_TOKEN_FILE;
@@ -624,7 +629,7 @@ double bayes_file(char *spamfile, struct session_data sdata, struct __config cfg
     */
 
    if(cfg.enable_auto_white_list == 1){
-      snprintf(buf, MAXBUFSIZE-1, "SELECT nham, nspam FROM %s WHERE token=%llu AND  (uid=0 OR uid=%ld)", cfg.mysqltokentable, APHash(state.from), uid);
+      snprintf(buf, MAXBUFSIZE-1, "SELECT nham, nspam FROM %s WHERE token=%llu AND  (uid=0 OR uid=%ld)", cfg.mysqltokentable, APHash(state.from), QRY.uid);
 
       if(mysql_real_query(&mysql, buf, strlen(buf)) == 0){
          res = mysql_store_result(&mysql);
@@ -663,8 +668,8 @@ double bayes_file(char *spamfile, struct session_data sdata, struct __config cfg
 /* Query cache support */
 
 #ifdef HAVE_QCACHE
-   sd = qcache_socket(cfg.qcache_addr, cfg.qcache_port, cfg.qcache_socket);
-   if(sd == -1)
+   QRY.sockfd = qcache_socket(cfg.qcache_addr, cfg.qcache_port, cfg.qcache_socket);
+   if(QRY.sockfd == -1)
       return DEFAULT_SPAMICITY;
 #endif
 
@@ -680,7 +685,7 @@ double bayes_file(char *spamfile, struct session_data sdata, struct __config cfg
    free_and_print_list(state.first, 0);
 
 #ifdef HAVE_QCACHE
-   close(sd);
+   close(QRY.sockfd);
 #endif
 
    /* if we shall mark the message as spam because of the embedded image */

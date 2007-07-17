@@ -134,6 +134,28 @@ struct node *findnode(struct node *xhash[MAXHASH], char *s){
    return NULL;
 }
 
+
+/*
+ * count the most interesting tokens
+ */
+
+int most_interesting_tokens(struct node *xhash[MAXHASH]){
+   int i, most_interesting=0;
+   struct node *q;
+
+   for(i=0;i<MAXHASH;i++){
+      q = xhash[i];
+      while(q != NULL){
+         if(DEVIATION(q->spaminess) >= MOST_INTERESTING_DEVIATION)
+            most_interesting++;
+
+         q = q->r;
+      }
+   }
+
+   return most_interesting;
+}
+
 /*
  * reverse sort the hash and calculate the spamicity value
  */
@@ -258,13 +280,13 @@ double sorthash(struct node *xhash[MAXHASH], int top10, struct __config cfg){
 
    /* if we have a lot spammy tokens in the top10 mark the message as spam, 2005.12.09, SJ */
 
-   if(I < cfg.spam_overall_limit && cfg.spam_ratio_in_top10 > 0 && truespam/how_many_tokens_to_include > cfg.spam_ratio_in_top10){
+   /*if(I < cfg.spam_overall_limit && cfg.spam_ratio_in_top10 > 0 && truespam/how_many_tokens_to_include > cfg.spam_ratio_in_top10){
    #ifdef DEBUG
       fprintf(stderr, "original result: %f\n", I);
    #endif
 
       return cfg.spaminess_of_too_much_spam_in_top15;
-   }
+   }*/
 
    return I;
 }

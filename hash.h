@@ -20,5 +20,6 @@ float clearhash(struct node *xhash[MAXHASH]);
 struct node *makenewnode(struct node *xhash[MAXHASH], char *s, double spaminess, double deviation);
 int addnode(struct node *xhash[MAXHASH], char *s, double spaminess, double deviation);
 struct node *findnode(struct node *xhash[MAXHASH], char *s);
+int most_interesting_tokens(struct node *xhash[MAXHASH]);
 double sorthash(struct node *xhash[MAXHASH], int top10, struct __config cfg);
 unsigned long hash(char *s);

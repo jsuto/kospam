@@ -264,9 +264,15 @@ void init_child(){
          if(strncasecmp(buf, SMTP_CMD_RESET, strlen(SMTP_CMD_RESET)) == 0){
             if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: got: %s", sdata.ttmpfile, buf);
 
+            /* remove old queue file, 2007.07.17, SJ */
+
+            syslog(LOG_PRIORITY, "%s: removed", sdata.ttmpfile);
+            unlink(sdata.ttmpfile);
+
             init_child();
 
             state = SMTP_STATE_HELO;
+
 
             /* recreate file, 2006.01.03, SJ */
 
@@ -396,7 +402,10 @@ void init_child(){
                memset(acceptbuf, 0, MAXBUFSIZE);
 
                if(rav == AVIR_VIRUS){
-                  snprintf(acceptbuf, MAXBUFSIZE-1, "%s Virus found in your mail (%s), id: %s\r\n", SMTP_RESP_550_ERR_PREF, virusinfo, sdata.ttmpfile);
+                  if(cfg.silently_discard_infected_email == 1)
+                     snprintf(acceptbuf, MAXBUFSIZE-1, "%s Virus found in your mail (%s), dropping email, id: %s\r\n", SMTP_RESP_250_OK, virusinfo, sdata.ttmpfile);
+                  else
+                     snprintf(acceptbuf, MAXBUFSIZE-1, "%s Virus found in your mail (%s), id: %s\r\n", SMTP_RESP_550_ERR_PREF, virusinfo, sdata.ttmpfile);
 
                   syslog(LOG_PRIORITY, "%s found in %s, rcvd: %ld [ms], scnd: %ld [ms], len: %d",
                        virusinfo, sdata.ttmpfile, tvdiff(tv_rcvd, tv_start)/1000, tvdiff(tv_scnd, tv_rcvd)/1000, sdata.tot_len);

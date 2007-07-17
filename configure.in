@@ -21,6 +21,7 @@ AC_SUBST(cgi)
 AC_SUBST(passmail)
 AC_SUBST(passmail_install)
 AC_SUBST(parsembox_install)
+AC_SUBST(qcache)
 AC_SUBST(train_install)
 AC_SUBST(mysql_includes)
 AC_SUBST(mysql_libs)
@@ -473,10 +474,12 @@ fi
 if test "$QCACHE" = "tcp"; then
    defs="$defs -DHAVE_QCACHE -DHAVE_TCP"
    echo "Qcache: tcp"
+   qcache="make qcache"
 fi
 if test "$QCACHE" = "socket"; then
    defs="$defs -DHAVE_QCACHE"
    echo "Qcache: socket"
+   qcache="make qcache"
 fi
 
 

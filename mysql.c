@@ -20,6 +20,7 @@
 #include "parser.h"
 #include "errmsg.h"
 #include "messages.h"
+#include "sql.h"
 #include "config.h"
 
 
@@ -124,44 +125,17 @@ int do_mysql_qry(MYSQL mysql, int sockfd, int ham_or_spam, char *token, char *to
 }
 
 
-/*
- * walk through the hash table and add/update its elements in mysql table
- */
-
-int my_walk_hash(MYSQL mysql, int sockfd, int ham_or_spam, char *tokentable, struct node *xhash[MAXHASH], unsigned int uid, int train_mode){
-   int i, n=0;
-   struct node *p, *q;
-
-   for(i=0;i<MAXHASH;i++){
-      q = xhash[i];
-      while(q != NULL){
-         p = q;
-
-         do_mysql_qry(mysql, sockfd, ham_or_spam, p->str, tokentable, uid, train_mode);
-
-         n++;
-
-         q = q->r;
-         if(p)
-            free(p);
-      }
-      xhash[i] = NULL;
-   }
-
-   return n;
-}
-
-
 
 /*
- * query the spamicity value of a token from token database
+ * query the number of occurances from MySQL table
  */
 
-float myqry(MYSQL mysql, int sockfd, char *tokentable, char *token, float ham_msg, float spam_msg, unsigned int uid, struct node *xhash[MAXHASH]){
-   float nham=0, nspam=0;
-   float r = DEFAULT_SPAMICITY, ham_prob=0, spam_prob=0;
+struct te myqry(MYSQL mysql, int sockfd, char *tokentable, char *token, float ham_msg, float spam_msg, unsigned int uid){
+   struct te TE;
    char stmt[MAXBUFSIZE];
-   int n;
+
+   TE.nham = 0;
+   TE.nspam = 0;
 
 #ifdef HAVE_NO_64_HASH
    char buf[MAXBUFSIZE];
@@ -170,7 +144,7 @@ float myqry(MYSQL mysql, int sockfd, char *tokentable, char *token, float ham_ms
       snprintf(stmt, MAXBUFSIZE-1, "SELECT nham, nspam FROM %s WHERE token='%s' AND (uid=0 OR uid=%d)", tokentable, buf, uid);
    }
    else
-      return r;
+      return TE;
 #else
    unsigned long long hash = APHash(token);
    snprintf(stmt, MAXBUFSIZE-1, "SELECT nham, nspam FROM %s WHERE token=%llu AND (uid=0 OR uid=%d)", tokentable, hash, uid);
@@ -193,12 +167,14 @@ float myqry(MYSQL mysql, int sockfd, char *tokentable, char *token, float ham_ms
          q = strchr(++p, ' ');
          if(q){
             *q = '\0';
-            nham = atof(p);
-            nspam = atof(++q);
+            TE.nham = atof(p);
+            TE.nspam = atof(++q);
          }
       }
    }
+
 #else
+
    MYSQL_RES *res;
    MYSQL_ROW row;
 
@@ -206,52 +182,16 @@ float myqry(MYSQL mysql, int sockfd, char *tokentable, char *token, float ham_ms
       res = mysql_store_result(&mysql);
       if(res != NULL){
          while((row = mysql_fetch_row(res))){
-            nham += atol(row[0]);
-            nspam += atol(row[1]);
+            TE.nham += atol(row[0]);
+            TE.nspam += atol(row[1]);
          }
 
          mysql_free_result(res);
-
-         /* add token to list if not mature enough, 2007.06.13, SJ */
-         /*if(uid > 0 && nham < TUM_LIMIT && nspam < TUM_LIMIT)
-            addnode(xhash, token, 0 , 0);*/
-
       }
    }
 #endif
 
-   /* add token to list if not mature enough, 2007.07.09, SJ */
-   if(uid > 0 && nham < TUM_LIMIT && nspam < TUM_LIMIT)
-      addnode(xhash, token, 0 , 0);
-
-
-
-   /* if the token has occurred at least N times, 2007.06.13, SJ */
-
-   if(nham + nspam > 1){
-      ham_prob = nham / ham_msg;
-      spam_prob = nspam / spam_msg;
-
-      if(ham_prob > 1) ham_prob = 1;
-      if(spam_prob > 1) spam_prob = 1;
-
-      r = spam_prob / (ham_prob + spam_prob);
-
-      /* deal with rare words */
-
-      if(nham < FREQ_MIN && nspam < FREQ_MIN){
-         n = nham;
-         if(nspam > n) n = nspam;
-
-         r = (0.5 + n * r) / (1+n);
-      }
-
-   }
-
-   if(r < REAL_HAM_TOKEN_PROBABILITY) r = REAL_HAM_TOKEN_PROBABILITY;
-   if(r > REAL_SPAM_TOKEN_PROBABILITY) r = REAL_SPAM_TOKEN_PROBABILITY;
-
-   return r;
+   return TE;
 }
 
 

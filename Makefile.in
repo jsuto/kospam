@@ -29,7 +29,7 @@ all:
 	make splitmbox
 	@parsembox@
 	@passmail@
-	make qcache
+	@qcache@
 clapf:
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o clapf clapf.c $(OBJS) @mysql_obj@ $(LIBS) $(LDAP_LIBS) $(LIBDIR) @LDFLAGS@
 

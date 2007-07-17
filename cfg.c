@@ -77,6 +77,8 @@ struct __config read_config(char *configfile){
 
    cfg.session_timeout = SESSION_TIMEOUT;
 
+   cfg.silently_discard_infected_email = 1;
+
    memset(cfg.chrootdir, 0, MAXVAL);
 
    strncpy(cfg.workdir, WORK_DIR, MAXVAL-1);
@@ -122,8 +124,8 @@ struct __config read_config(char *configfile){
 
    cfg.enable_auto_white_list = 1;
 
-   cfg.esf_h = 0.2;
-   cfg.esf_s = 0.2;
+   cfg.esf_h = 1;
+   cfg.esf_s = 1;
 
    cfg.exclusion_radius = EXCLUSION_RADIUS;
 
@@ -235,6 +237,8 @@ struct __config read_config(char *configfile){
                   if(strcmp(key, "localpostmaster") == 0)
                      memcpy(cfg.localpostmaster, val, MAXVAL-1);
 
+                  if(strcmp(key, "silently_discard_infected_email") == 0)
+                     cfg.silently_discard_infected_email = atoi(val);
 
                   if(strcmp(key, "use_antispam") == 0)
                      cfg.use_antispam = atoi(val);

@@ -1,4 +1,29 @@
+0.3.30:
+
+2007.07.17, SJ
+
+Added the silently_discard_infected_email option that allows you
+to decide whether to silently discard the infected message (1)
+or let a bounce get back to the sender (0). (credits: Toms Trankalis)
+(cfg.c, cfg.h, example.conf, session.c)
+
+2007.07.15, SJ
+
+Removed the "too much spam in top15" feature.
+(hash.c)
+
+Slightly modified spaminess calculation
+(hash.c, hash.h, bayes.c)
+
 0.3.29:
+
+2007.07.16, SJ
+
+Fixed a compilation issue on FreeBSD (credits: Toms Trankalis)
+(cgi.c)
+
+Fixed a configure issue.
+(configure.*, Makefile.in)
 
 2007.07.11, SJ
 

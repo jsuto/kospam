@@ -673,6 +673,7 @@ cgi
 passmail
 passmail_install
 parsembox_install
+qcache
 train_install
 mysql_includes
 mysql_libs
@@ -3688,6 +3689,7 @@ done
 
 
 
+
 have_libclamav="no"
 have_clamd="no"
 have_avg="no"
@@ -5439,10 +5441,12 @@ fi
 if test "$QCACHE" = "tcp"; then
    defs="$defs -DHAVE_QCACHE -DHAVE_TCP"
    echo "Qcache: tcp"
+   qcache="make qcache"
 fi
 if test "$QCACHE" = "socket"; then
    defs="$defs -DHAVE_QCACHE"
    echo "Qcache: socket"
+   qcache="make qcache"
 fi
 
 
@@ -6149,6 +6153,7 @@ cgi!$cgi$ac_delim
 passmail!$passmail$ac_delim
 passmail_install!$passmail_install$ac_delim
 parsembox_install!$parsembox_install$ac_delim
+qcache!$qcache$ac_delim
 train_install!$train_install$ac_delim
 mysql_includes!$mysql_includes$ac_delim
 mysql_libs!$mysql_libs$ac_delim
@@ -6161,7 +6166,7 @@ LIBOBJS!$LIBOBJS$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 70; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 71; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5

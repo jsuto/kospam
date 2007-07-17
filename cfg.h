@@ -40,6 +40,7 @@ struct __config {
 
    char clapfemail[MAXVAL];
    char localpostmaster[MAXVAL];
+   int silently_discard_infected_email;
 
    int use_antispam;
 

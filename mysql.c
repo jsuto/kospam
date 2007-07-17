@@ -82,7 +82,7 @@ int do_mysql_qry(MYSQL mysql, int sockfd, int ham_or_spam, char *token, char *to
                   snprintf(stmt, MAXBUFSIZE-1, "UPDATE %s SET nham=nham+1%s WHERE token='%s' AND uid=%d", tokentable, puf, buf, uid);
                #else
                   #ifdef HAVE_QCACHE
-                     snprintf(stmt, MAXBUFSIZE-1, "UPDATE %llu %d %ld %ld\r\n", hash, uid, nham, nspam);
+                     snprintf(stmt, MAXBUFSIZE-1, "UPDATE %llu %d %ld %ld\r\n", hash, uid, nham+1, nspam);
                      if(sockfd != -1){
                         send(sockfd, stmt, strlen(stmt), 0);
                      }

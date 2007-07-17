@@ -315,7 +315,7 @@ if test "$TOKENDB" = "mysql"; then
       exit 1
    fi
    defs="$defs -DHAVE_MYSQL_TOKEN_DATABASE"
-   mysql_obj="mysql.o"
+   mysql_obj="mysql.o sql.o"
 fi
 
 

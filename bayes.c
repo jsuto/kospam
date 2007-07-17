@@ -48,8 +48,6 @@ qry QRY;
 #endif
 
 #ifdef HAVE_MYSQL_TOKEN_DATABASE
-   float SQL_QUERY(qry QRY, char *tokentable, char *token, struct node *xhash[MAXHASH]);
-   //int my_walk_hash(MYSQL mysql, int sockfd, int ham_or_spam, char *tokentable, struct node *xhash[MAXHASH], unsigned int uid, int train_mode);
    int my_walk_hash(qry QRY, int ham_or_spam, char *tokentable, struct node *xhash[MAXHASH], int train_mode);
 #endif
 

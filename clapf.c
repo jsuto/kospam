@@ -36,7 +36,6 @@ void clean_exit();
 void fatal(char *s);
 
 #ifdef HAVE_LIBCLAMAV
-   struct cl_node *root = NULL;
    struct cl_stat dbstat;
    struct cl_limits limits;
    struct cl_engine *engine = NULL;
@@ -47,9 +46,9 @@ void fatal(char *s);
       unsigned int sigs = 0;
 
       /* release old structure */
-      if(root){
-         cl_free(root);
-         root = NULL;
+      if(engine){
+         cl_free(engine);
+         engine = NULL;
       }
 
       /* get default database directory */
@@ -68,13 +67,9 @@ void fatal(char *s);
          clean_exit();
       }
 
-      if(!root){
-         syslog(LOG_PRIORITY, "loading db failed");
-         clean_exit();
-      }
-
-      if((retval = cl_build(root)) != 0){
+      if((retval = cl_build(engine)) != 0){
          syslog(LOG_PRIORITY, "Database initialization error: can't build engine: %s", cl_strerror(retval));
+         cl_free(engine);
          clean_exit();
       }
 
@@ -93,8 +88,8 @@ void clean_exit(){
       close(sd);
 
 #ifdef HAVE_LIBCLAMAV
-   if(root)
-      cl_free(root);
+   if(engine)
+      cl_free(engine);
 #endif
 
    syslog(LOG_PRIORITY, "%s has been terminated", PROGNAME);
@@ -260,7 +255,7 @@ int main(int argc, char **argv){
 
            /* handle session, 2006.02.11, SJ */
            #ifdef HAVE_LIBCLAMAV
-              postfix_to_clapf(new_sd, cfg, limits, root);
+              postfix_to_clapf(new_sd, cfg, limits, engine);
            #else
               postfix_to_clapf(new_sd, cfg);
            #endif

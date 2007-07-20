@@ -145,7 +145,7 @@ int main(int argc, char **argv){
 
    /* select uid */
 
-   snprintf(buf, MAXBUFSIZE-1, "SELECT uid FROM %s WHERE email='%s'", cfg.mysqlusertable, from);
+   snprintf(buf, MAXBUFSIZE-1, "SELECT uid FROM %s WHERE email='%s'", SQL_USER_TABLE, from);
    if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "sql: %s", buf);
 
 #ifdef HAVE_MYSQL_TOKEN_DATABASE
@@ -168,7 +168,7 @@ int main(int argc, char **argv){
    make_rnd_string(sdata.ttmpfile);
    sdata.uid = QRY.uid;
 
-   snprintf(buf, MAXBUFSIZE-1, "SELECT data FROM %s WHERE id='%s' AND uid=%ld", cfg.mysqlqueuetable, ID, QRY.uid);
+   snprintf(buf, MAXBUFSIZE-1, "SELECT data FROM %s WHERE id='%s' AND uid=%ld", SQL_QUEUE_TABLE, ID, QRY.uid);
    if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "sql: %s", buf);
 
 #ifdef HAVE_MYSQL_TOKEN_DATABASE
@@ -222,7 +222,7 @@ int main(int argc, char **argv){
          QRY.sockfd = qcache_socket(cfg.qcache_addr, cfg.qcache_port, cfg.qcache_socket);
       #endif
 
-         my_walk_hash(QRY, is_spam, cfg.mysqltokentable, tokens, train_mode);
+         my_walk_hash(QRY, is_spam, SQL_TOKEN_TABLE, tokens, train_mode);
 
          if(QRY.sockfd != -1) close(QRY.sockfd);
 
@@ -230,22 +230,22 @@ int main(int argc, char **argv){
 
             if(is_spam == 1){
                if(train_mode == T_TUM)
-                  snprintf(buf, MAXBUFSIZE-1, "update %s set nspam=nspam+1, nham=nham-1 WHERE uid=%ld", cfg.mysqlmisctable, QRY.uid);
+                  snprintf(buf, MAXBUFSIZE-1, "update %s set nspam=nspam+1, nham=nham-1 WHERE uid=%ld", SQL_MISC_TABLE, QRY.uid);
                else
-                  snprintf(buf, MAXBUFSIZE-1, "update %s set nspam=nspam+1 WHERE uid=%ld", cfg.mysqlmisctable, QRY.uid);
+                  snprintf(buf, MAXBUFSIZE-1, "update %s set nspam=nspam+1 WHERE uid=%ld", SQL_MISC_TABLE, QRY.uid);
             }
             else {
                if(train_mode == T_TUM)
-                  snprintf(buf, MAXBUFSIZE-1, "update %s set nham=nham+1, nspam=nspam-1 WHERE uid=%ld", cfg.mysqlmisctable, QRY.uid);
+                  snprintf(buf, MAXBUFSIZE-1, "update %s set nham=nham+1, nspam=nspam-1 WHERE uid=%ld", SQL_MISC_TABLE, QRY.uid);
                else
-                  snprintf(buf, MAXBUFSIZE-1, "update %s set nham=nham+1 WHERE uid=%ld", cfg.mysqlmisctable, QRY.uid);
+                  snprintf(buf, MAXBUFSIZE-1, "update %s set nham=nham+1 WHERE uid=%ld", SQL_MISC_TABLE, QRY.uid);
             }
 
          #ifdef HAVE_MYSQL_TOKEN_DATABASE   
             mysql_real_query(&mysql, buf, strlen(buf));
          #endif
 
-            snprintf(buf, MAXBUFSIZE-1, "INSERT INTO %s (uid, ts, msgid, is_spam) VALUES(%ld, %ld, '%s', %d)", cfg.mysqltraininglogtable, QRY.uid, now, ID, is_spam);
+            snprintf(buf, MAXBUFSIZE-1, "INSERT INTO %s (uid, ts, msgid, is_spam) VALUES(%ld, %ld, '%s', %d)", SQL_TRAININGLOG_TABLE, QRY.uid, now, ID, is_spam);
 
          #ifdef HAVE_MYSQL_TOKEN_DATABASE
             mysql_real_query(&mysql, buf, strlen(buf));

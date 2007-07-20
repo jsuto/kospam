@@ -104,9 +104,9 @@ int main(int argc, char **argv){
 
    /* add user */
 
-   if(uid == 0) uid = next_uid(cfg.mysqlusertable);
+   if(uid == 0) uid = next_uid(SQL_USER_TABLE);
 
-   snprintf(buf, MAXBUFSIZE-1, "INSERT INTO %s (username, email, uid, action) VALUES('%s', '%s', %ld, '%s')", cfg.mysqlusertable, username, email, uid, action);
+   snprintf(buf, MAXBUFSIZE-1, "INSERT INTO %s (username, email, uid, action) VALUES('%s', '%s', %ld, '%s')", SQL_USER_TABLE, username, email, uid, action);
    mysql_real_query(&mysql, buf, strlen(buf));
 
    if(mysql_affected_rows(&mysql) != 1){
@@ -114,7 +114,7 @@ int main(int argc, char **argv){
       goto END;
    }
 
-   snprintf(buf, MAXBUFSIZE-1, "INSERT INTO %s (nham, nspam, uid) VALUES(0, 0, %ld)", cfg.mysqlmisctable, uid);
+   snprintf(buf, MAXBUFSIZE-1, "INSERT INTO %s (nham, nspam, uid) VALUES(0, 0, %ld)", SQL_MISC_TABLE, uid);
    mysql_real_query(&mysql, buf, strlen(buf));
 
 END:

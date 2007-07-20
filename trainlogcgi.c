@@ -66,7 +66,7 @@ int main(){
 
    /* determine uid in stat table */
 
-   snprintf(buf, SMALLBUFSIZE-1, "SELECT uid FROM %s WHERE username='%s'", cfg.mysqlusertable, getenv("REMOTE_USER"));
+   snprintf(buf, SMALLBUFSIZE-1, "SELECT uid FROM %s WHERE username='%s'", SQL_USER_TABLE, getenv("REMOTE_USER"));
 
    if(mysql_real_query(&mysql, buf, strlen(buf)) == 0){
       res = mysql_store_result(&mysql);
@@ -84,7 +84,7 @@ int main(){
       printf("<table border=\"1\" align=\"center\">\n");
       printf("<tr align=\"center\"><th>%s</th><th>%s</th><th>%s</th></tr>\n", CGI_DATE, CGI_MESSAGE, CGI_HAM_OR_SPAM);
 
-      snprintf(buf, SMALLBUFSIZE-1, "SELECT ts, msgid, is_spam FROM %s WHERE uid=%ld ORDER BY ts DESC", cfg.mysqltraininglogtable, uid);
+      snprintf(buf, SMALLBUFSIZE-1, "SELECT ts, msgid, is_spam FROM %s WHERE uid=%ld ORDER BY ts DESC", SQL_TRAININGLOG_TABLE, uid);
 
       if(mysql_real_query(&mysql, buf, strlen(buf)) == 0){
          res = mysql_store_result(&mysql);

@@ -122,20 +122,17 @@ struct __config {
    char mysqluser[MAXVAL];
    char mysqlpwd[MAXVAL];
    char mysqldb[MAXVAL];
-   char mysqltokentable[MAXVAL];
-   char mysqlmisctable[MAXVAL];
-   char mysqlblackholetable[MAXVAL];
-   char mysqlusertable[MAXVAL];
-   char mysqltraininglogtable[MAXVAL];
-   char mysqlqueuetable[MAXVAL];
-   char mysqlstattable[MAXVAL];
 
+   // sqlite3 stuff
+
+   char sqlite3[MAXVAL];
 
    // Qcache
 
    char qcache_addr[MAXVAL];
    int qcache_port;
    char qcache_socket[MAXVAL];
+   int qcache_update;
 
    // web interface
 

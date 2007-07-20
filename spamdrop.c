@@ -15,26 +15,32 @@
 #include <pwd.h>
 #include <unistd.h>
 #include <sysexits.h>
-#include <mysql.h>
 #include "misc.h"
 #include "bayes.h"
 #include "errmsg.h"
 #include "messages.h"
+#include "sql.h"
 #include "config.h"
 
 
 extern char *optarg;
 extern int optind;
 
-MYSQL mysql;
-MYSQL_RES *res;
-MYSQL_ROW row;
-
 
 #ifdef HAVE_MYSQL_TOKEN_DATABASE
-   int update_training_metadata(MYSQL mysql, char *tmpfile, char rcptto[MAX_RCPT_TO][MAXBUFSIZE], int num_of_rcpt_to, struct __config cfg);
+   #include <mysql.h>
+   MYSQL mysql;
+   MYSQL_RES *res;
+   MYSQL_ROW row;
 #endif
 
+#ifdef HAVE_SQLITE3
+   #include <sqlite3.h>
+   sqlite3 *db;
+   sqlite3_stmt *pStmt;
+   const char **ppzTail=NULL;
+   int rc;
+#endif
 
 void print_header(char *s, char *h){
    char *p, puf[MAXBUFSIZE];
@@ -91,15 +97,14 @@ int main(int argc, char **argv){
    make_rnd_string(&(sdata.ttmpfile[0]));
 
 
+   /* select uid or email from user table */
+
+   snprintf(buf, MAXBUFSIZE-1, "SELECT email FROM %s WHERE uid=%ld", SQL_USER_TABLE, uid);
 
 #ifdef HAVE_MYSQL_TOKEN_DATABASE
    mysql_init(&mysql);
 
    if(mysql_real_connect(&mysql, cfg.mysqlhost, cfg.mysqluser, cfg.mysqlpwd, cfg.mysqldb, cfg.mysqlport, cfg.mysqlsocket, 0)){
-
-      /* select uid or email from user table */
-
-      snprintf(buf, MAXBUFSIZE-1, "SELECT email FROM %s WHERE uid=%ld", cfg.mysqlusertable, uid);
 
       if(mysql_real_query(&mysql, buf, strlen(buf)) == 0){
          while((res = mysql_store_result(&mysql))){
@@ -115,6 +120,22 @@ int main(int argc, char **argv){
       syslog(LOG_PRIORITY, "%s", ERR_MYSQL_CONNECT);
 
 #endif
+#ifdef HAVE_SQLITE3
+   rc = sqlite3_open(cfg.sqlite3, &db);
+   if(rc){
+      syslog(LOG_PRIORITY, "%s", ERR_SQLITE3_OPEN);
+   }
+   else {
+      if(sqlite3_prepare_v2(db, buf, -1, &pStmt, ppzTail) == SQLITE_OK){
+         while(sqlite3_step(pStmt) == SQLITE_ROW){
+            snprintf(sdata.rcptto[0], SMALLBUFSIZE-1, "<%s>", sqlite3_column_text(pStmt, 0));
+         }
+      } 
+      sqlite3_finalize(pStmt);
+   }
+
+#endif
+
 
    sdata.uid = uid;
 
@@ -154,8 +175,9 @@ int main(int argc, char **argv){
       x = update_training_metadata(mysql, sdata.ttmpfile, sdata.rcptto, sdata.num_of_rcpt_to, cfg);
       if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "update metadata result: %d", x);
 
-   #else
-      spaminess = bayes_file(sdata.ttmpfile, sdata, cfg);
+   #endif
+   #ifdef HAVE_SQLITE3
+      spaminess = bayes_file(db, sdata.ttmpfile, sdata, cfg);
    #endif
 
       gettimeofday(&tv_spam_stop, &tz);

@@ -15,6 +15,7 @@
 #include "errmsg.h"
 #include "messages.h"
 #include "cgi.h"
+#include "sql.h"
 #include "config.h"
 
 FILE *cgiIn, *f, *F;
@@ -24,20 +25,24 @@ MYSQL_RES *res;
 MYSQL_ROW row;
 struct node *tokens[MAXHASH];
 
-void my_walk_hash(MYSQL mysql, int ham_or_spam, char *tokentable, struct node *xhash[MAXHASH], unsigned int uid, int train_mode);
+void my_walk_hash(qry QRY, int ham_or_spam, char *tokentable, struct node *xhash[MAXHASH], int train_mode);
+//void my_walk_hash(MYSQL mysql, int ham_or_spam, char *tokentable, struct node *xhash[MAXHASH], unsigned int uid, int train_mode);
 int deliver_message(char *dir, char *message, struct __config cfg);
 
 int main(){
    char *p, *q, *r, *t, buf[MAXBUFSIZE], puf[SMALLBUFSIZE];
    char spamqdir[MAXBUFSIZE], savedfile[SMALLBUFSIZE], qfile[SMALLBUFSIZE], ID[RND_STR_LEN+1]="";
    int i, m, clen=0, is_spam=0, method=M_UNDEF, train_mode=T_TOE;
-   unsigned long cnt, uid=0, now;
+   unsigned long cnt, now;
    struct _state state;
    struct _token *P, *Q;
    struct __config cfg;
+   qry QRY;
 
    cgiIn = stdin;
    input = NULL;
+
+   QRY.uid = 0;
 
    printf("Content-type: text/html\n\n");
 
@@ -61,26 +66,30 @@ int main(){
    if(method == M_UNDEF)
       errout(NULL, ERR_CGI_INVALID_METHOD);
 
-
+#ifdef HAVE_MYSQL_TOKEN_DATABASE
    mysql_init(&mysql);
    if(!mysql_real_connect(&mysql, cfg.mysqlhost, cfg.mysqluser, cfg.mysqlpwd, cfg.mysqldb, cfg.mysqlport, cfg.mysqlsocket, 0))
       errout(NULL, ERR_MYSQL_CONNECT);
 
+   QRY.mysql = mysql;
+#endif
 
    /* select uid */
 
-   snprintf(buf, MAXBUFSIZE-1, "SELECT uid FROM %s WHERE username='%s'", cfg.mysqlusertable, getenv("REMOTE_USER"));
+   snprintf(buf, MAXBUFSIZE-1, "SELECT uid FROM %s WHERE username='%s'", SQL_USER_TABLE, getenv("REMOTE_USER"));
 
+#ifdef HAVE_MYSQL_TOKEN_DATABASE
    if(mysql_real_query(&mysql, buf, strlen(buf)) == 0){
       res = mysql_store_result(&mysql);
       if(res != NULL){
          row = mysql_fetch_row(res);
          if(row){
-            if(row[0]) uid = atol(row[0]);
+            if(row[0]) QRY.uid = atol(row[0]);
          }
          mysql_free_result(res);
       }
    }
+#endif
 
 
    time(&now);
@@ -256,18 +265,29 @@ int main(){
       }
 
 
-      my_walk_hash(mysql, is_spam, cfg.mysqltokentable, tokens, uid, train_mode);
+      QRY.sockfd = -1;
+
+   #ifdef HAVE_QCACHE
+      QRY.sockfd = qcache_socket(cfg.qcache_addr, cfg.qcache_port, cfg.qcache_socket);
+   #endif
+
+      my_walk_hash(QRY, is_spam, SQL_TOKEN_TABLE, tokens, train_mode);
+
+      if(QRY.sockfd != -1) close(QRY.sockfd);
+
+      //my_walk_hash(mysql, is_spam, SQL_TOKEN_TABLE, tokens, QRY.uid, train_mode);
 
 
       /* update the t_misc table */
 
       if(is_spam == 1)
-         snprintf(buf, MAXBUFSIZE-1, "UPDATE %s SET update_cdb=1, nspam=nspam+1", cfg.mysqlmisctable);
+         snprintf(buf, MAXBUFSIZE-1, "UPDATE %s SET update_cdb=1, nspam=nspam+1", SQL_MISC_TABLE);
       else
-         snprintf(buf, MAXBUFSIZE-1, "UPDATE %s SET update_cdb=1, nham=nham+1", cfg.mysqlmisctable);
+         snprintf(buf, MAXBUFSIZE-1, "UPDATE %s SET update_cdb=1, nham=nham+1", SQL_MISC_TABLE);
 
+   #ifdef HAVE_MYSQL_TOKEN_DATABASE
       mysql_real_query(&mysql, buf, strlen(buf));
-
+   #endif
 
       /* fix ID if we have to */
 
@@ -276,11 +296,12 @@ int main(){
 
       /* add entry to t_train_log table, 2007.05.21, SJ */
 
-      snprintf(buf, MAXBUFSIZE-1, "INSERT INTO %s (uid, ts, msgid, is_spam) VALUES(%ld, %ld, '%s', %d)", cfg.mysqltraininglogtable, uid, now, ID, is_spam);
+      snprintf(buf, MAXBUFSIZE-1, "INSERT INTO %s (uid, ts, msgid, is_spam) VALUES(%ld, %ld, '%s', %d)", SQL_TRAININGLOG_TABLE, QRY.uid, now, ID, is_spam);
+   #ifdef HAVE_MYSQL_TOKEN_DATABASE
       mysql_real_query(&mysql, buf, strlen(buf));
-
-
       mysql_close(&mysql);
+   #endif
+
    }
 
    clearhash(tokens);

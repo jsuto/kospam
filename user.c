@@ -38,7 +38,7 @@ int deliver_message(char *dir, char *message, struct __config cfg){
 #endif
 
 #ifdef HAVE_USER_MYSQL
-   u = mysql_get_entry(cfg.mysqlhost, cfg.mysqlport, cfg.mysqlsocket, cfg.mysqluser, cfg.mysqlpwd, cfg.mysqldb, cfg.mysqlusertable, getenv("REMOTE_USER"));
+   u = mysql_get_entry(cfg.mysqlhost, cfg.mysqlport, cfg.mysqlsocket, cfg.mysqluser, cfg.mysqlpwd, cfg.mysqldb, SQL_USER_TABLE, getenv("REMOTE_USER"));
 #endif
 
    /* we got no email address back, 2006.04.11, SJ */

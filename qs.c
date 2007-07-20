@@ -1,5 +1,5 @@
 /*
- * qs.c, 2007.07.11, SJ
+ * qs.c, 2007.07.20, SJ
  */
 
 #include <stdio.h>
@@ -27,9 +27,9 @@
 
 #ifdef HAVE_MYSQL
   #include <mysql.h>
-#else
+#endif
+#ifdef HAVE_SQLITE3
   #include <sqlite3.h>
-  sqlite3 *db;
 #endif
 
 extern char *optarg;
@@ -89,7 +89,8 @@ void fatal(char *s){
 
 #ifdef HAVE_MYSQL
    struct token_entry SELECT(MYSQL mysql, struct qcache *xhash[MAXHASH], unsigned long long token, unsigned int uid, unsigned long ts){
-#else
+#endif
+#ifdef HAVE_SQLITE3
    struct token_entry SELECT(sqlite3 *db, struct qcache *xhash[MAXHASH], unsigned long long token, unsigned int uid, unsigned long ts){
 #endif
 
@@ -99,14 +100,11 @@ void fatal(char *s){
 
    q = findnode(Q, token, uid);
    if(q){
-      //printf("CACHE HIT, token: %llu, uid: %d, nham: %d, nspam: %d\n", token, uid, q->nham, q->nspam);
       res.nham = q->nham;
       res.nspam = q->nspam;
       res.hit = 1;
       return res;
    }
-
-   //printf("token: %llu, uid: %d => not found in cache, getting from database...\n", token, uid);
 
    res.nham = res.nspam = res.hit = 0;
 
@@ -128,7 +126,8 @@ void fatal(char *s){
       }
    }
 
-#else
+#endif
+#ifdef HAVE_SQLITE3
    sqlite3_stmt *pStmt;
    const char **pzTail=NULL;
 
@@ -138,7 +137,7 @@ void fatal(char *s){
 
    while(sqlite3_step(pStmt) == SQLITE_ROW){
       res.nham += sqlite3_column_int(pStmt, 0);
-      res.nspam = sqlite3_column_int(pStmt, 1);
+      res.nspam += sqlite3_column_int(pStmt, 1);
    }
 
    sqlite3_finalize(pStmt);
@@ -156,7 +155,8 @@ void fatal(char *s){
 
 #ifdef HAVE_MYSQL
    void UPDATE(MYSQL mysql, struct qcache *xhash[MAXHASH], unsigned long long token, unsigned int uid, unsigned int nham, unsigned int nspam){
-#else
+#endif
+#ifdef HAVE_SQLITE3
    void UPDATE(sqlite3 *db, struct qcache *xhash[MAXHASH], unsigned long long token, unsigned int uid, unsigned int nham, unsigned int nspam){
 #endif
 
@@ -165,8 +165,6 @@ void fatal(char *s){
 
    if(nham >= 0 && nspam >= 0){
 
-      //printf("UPDATE: +%llu, %d, %d, %d+\n", token, uid, nham, nspam);
-
       q = findnode(Q, token, uid);
       if(q){
          q->nham = nham;
@@ -174,18 +172,18 @@ void fatal(char *s){
       }
 
    #ifdef HAVE_MYSQL
-      snprintf(stmt, SMALLBUFSIZE-1, "UPDATE %s SET nham=%d, nspam=%d WHERE token=%llu AND uid=%d", cfg.mysqltokentable, nham, nspam, token, uid);
-      //printf("updating: %s\n", stmt);
+      snprintf(stmt, SMALLBUFSIZE-1, "UPDATE %s SET nham=%d, nspam=%d WHERE token=%llu AND uid=%d", SQL_TOKEN_TABLE, nham, nspam, token, uid);
       mysql_real_query(&mysql, stmt, strlen(stmt));
-   #else
+   #endif
+   #ifdef HAVE_SQLITE3
       sqlite3_stmt *pStmt;
       const char **pzTail=NULL;
 
-      snprintf(stmt, SMALLBUFSIZE-1, "UPDATE %s SET nham=%d, nspam=%d WHERE token='%llu' AND uid=%d", cfg.mysqltokentable, nham, nspam, token, uid);
-      if(sqlite3_prepare_v2(db, stmt, -1, &pStmt, pzTail == SQLITE_OK){
-         sqlite3_step(pStmt);
-         sqlite3_finalize(pStmt);
-      }
+      snprintf(stmt, SMALLBUFSIZE-1, "UPDATE %s SET nham=%d, nspam=%d WHERE token='%llu' AND uid=%d", SQL_TOKEN_TABLE, nham, nspam, token, uid);
+      sqlite3_prepare_v2(db, stmt, -1, &pStmt, pzTail);
+      sqlite3_step(pStmt);
+      sqlite3_finalize(pStmt);
+
    #endif
 
    }
@@ -242,7 +240,8 @@ void *process_connection(void *ptr){
       goto CLOSE;
    }
 
-#else
+#endif
+#ifdef HAVE_SQLITE3
    sqlite3 *db;
    int rc;
 
@@ -280,7 +279,8 @@ void *process_connection(void *ptr){
 
             #ifdef HAVE_MYSQL
                res = SELECT(mysql, Q, token, uid, ts);
-            #else
+            #endif
+            #ifdef HAVE_SQLITE3
                res = SELECT(db, Q, token, uid, ts);
             #endif
 
@@ -317,12 +317,14 @@ void *process_connection(void *ptr){
                      p++;
                      nspam = atoi(p);
 
-
-                  #ifdef HAVE_MYSQL
-                     UPDATE(mysql, Q, token, uid, nham, nspam);
-                  #else
-                     UPDATE(mysql, Q, token, uid, nham, nspam);
-                  #endif
+                     if(cfg.qcache_update == 1){
+                     #ifdef HAVE_MYSQL
+                        UPDATE(mysql, Q, token, uid, nham, nspam);
+                     #endif
+                     #ifdef HAVE_SQLITE3
+                        UPDATE(db, Q, token, uid, nham, nspam);
+                     #endif
+                     }
                   }
                }
             }
@@ -342,7 +344,8 @@ CLOSE:
 
 #ifdef HAVE_MYSQL
    mysql_close(&mysql);
-#else
+#endif
+#ifdef HAVE_SQLITE3
    sqlite3_close(db);
 #endif
 
@@ -428,18 +431,18 @@ int main(int argc, char **argv){
 #endif
 
    if(setsockopt(listener, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1)
-       fatal(ERR_SET_SOCK_OPT);
+      fatal(ERR_SET_SOCK_OPT);
 
 #ifdef HAVE_TCP
    if(bind(listener, (struct sockaddr *)&local_addr, sizeof(struct sockaddr)) == -1)
 #else
    if(bind(listener, (struct sockaddr *)&saun, sizeof(saun.sun_family) + strlen(saun.sun_path) + 1) == -1)
 #endif
-        fatal(ERR_BIND_TO_PORT);
+      fatal(ERR_BIND_TO_PORT);
 
 
    if(listen(listener, cfg.backlog) == -1)
-        fatal(ERR_LISTEN);
+      fatal(ERR_LISTEN);
 
    FD_SET(listener, &master);
    fdmax = listener;

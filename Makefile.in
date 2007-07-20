@@ -71,7 +71,7 @@ passmail:
 
 qcache:
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c qcache.c
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o qs qs.c misc.o cfg.o qcache.o $(LIBS) $(LIBDIR)
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o qs qs.c misc.o cfg.o qcache.o $(LIBS) -lpthread $(LIBDIR)
 	#$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o 1 q1.c
 
 cfg.o:
@@ -139,6 +139,9 @@ cdb.o:
 
 mysql.o:
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c mysql.c
+
+sqlite3.o:
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c sqlite3.c
 
 sql.o:
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c sql.c

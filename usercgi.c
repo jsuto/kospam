@@ -67,7 +67,7 @@ int main(){
    #endif
 
    #ifdef HAVE_USER_MYSQL
-      u = mysql_get_entry(cfg.mysqlhost, cfg.mysqlport, cfg.mysqlsocket, cfg.mysqluser, cfg.mysqlpwd, cfg.mysqldb, cfg.mysqlusertable, getenv("REMOTE_USER"));
+      u = mysql_get_entry(cfg.mysqlhost, cfg.mysqlport, cfg.mysqlsocket, cfg.mysqluser, cfg.mysqlpwd, cfg.mysqldb, SQL_USER_TABLE, getenv("REMOTE_USER"));
    #endif
 
       printf("<form action=\"%s\" method=\"post\">\n", getenv("SCRIPT_NAME"));
@@ -153,7 +153,7 @@ int main(){
       #endif
 
       #ifdef HAVE_USER_MYSQL
-         i = mysql_set_entry(cfg.mysqlhost, cfg.mysqlport, cfg.mysqlsocket, cfg.mysqluser, cfg.mysqlpwd, cfg.mysqldb, cfg.mysqlusertable, getenv("REMOTE_USER"), u);
+         i = mysql_set_entry(cfg.mysqlhost, cfg.mysqlport, cfg.mysqlsocket, cfg.mysqluser, cfg.mysqlpwd, cfg.mysqldb, SQL_USER_TABLE, getenv("REMOTE_USER"), u);
       #endif
 
       if(i == OK)

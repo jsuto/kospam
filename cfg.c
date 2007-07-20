@@ -71,6 +71,7 @@ struct __config read_config(char *configfile){
    strncpy(cfg.qcache_addr, QCACHE_ADDR, MAXVAL-1);
    cfg.qcache_port = QCACHE_PORT;
    strncpy(cfg.qcache_socket, QCACHE_SOCKET, MAXVAL-1);
+   cfg.qcache_update = 1;
 
    cfg.max_connections = MAXCONN;
    cfg.backlog = BACKLOG;
@@ -107,8 +108,6 @@ struct __config read_config(char *configfile){
    cfg.invalid_junk_line = INVALID_JUNK_LINE;
    cfg.invalid_hex_junk_limit = INVALID_HEX_JUNK_LIMIT;
    cfg.max_junk_spamicity = MAX_JUNK_SPAMICITY;
-
-   //cfg.mysqlport = 3306;
 
    cfg.verbosity = 0;
 
@@ -203,6 +202,9 @@ struct __config read_config(char *configfile){
 
                   if(strcmp(key, "qcache_socket") == 0)
                      memcpy(cfg.qcache_socket, val, MAXVAL-1);
+
+                  if(strcmp(key, "qcache_update") == 0)
+                     cfg.qcache_update = atoi(val);
 
                   if(strcmp(key, "max_connections") == 0)
                      cfg.max_connections = atoi(val);
@@ -409,26 +411,8 @@ struct __config read_config(char *configfile){
                   if(strcmp(key, "mysqldb") == 0)
                      memcpy(cfg.mysqldb, val, MAXVAL-1);
 
-                  if(strcmp(key, "mysqltokentable") == 0)
-                     memcpy(cfg.mysqltokentable, val, MAXVAL-1);
-
-                  if(strcmp(key, "mysqlmisctable") == 0)
-                     memcpy(cfg.mysqlmisctable, val, MAXVAL-1);
-
-                  if(strcmp(key, "mysqlblackholetable") == 0)
-                     memcpy(cfg.mysqlblackholetable, val, MAXVAL-1);
-
-                  if(strcmp(key, "mysqlusertable") == 0)
-                     memcpy(cfg.mysqlusertable, val, MAXVAL-1);
-
-                  if(strcmp(key, "mysqltraininglogtable") == 0)
-                     memcpy(cfg.mysqltraininglogtable, val, MAXVAL-1);
-
-                  if(strcmp(key, "mysqlqueuetable") == 0)
-                     memcpy(cfg.mysqlqueuetable, val, MAXVAL-1);
-
-                  if(strcmp(key, "mysqlstattable") == 0)
-                     memcpy(cfg.mysqlstattable, val, MAXVAL-1);
+                  if(strcmp(key, "sqlite3") == 0)
+                     memcpy(cfg.sqlite3, val, MAXVAL-1);
 
                   if(strcmp(key, "relocate_delay") == 0)
                      cfg.relocate_delay = atoi(val);

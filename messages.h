@@ -49,6 +49,10 @@
 #define ERR_MYSQL_DATA "No valid data from mysql table"
 #define ERR_CGI_MYSQL_NO_USER "User not found in user table"
 
+// sqlite3
+
+#define ERR_SQLITE3_OPEN "Cannot open sqlite3 database"
+
 // spam quarantine
 
 #define ERR_CANNOT_OPEN "Cannot open"

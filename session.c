@@ -1,5 +1,5 @@
 /*
- * session.c, 2007.07.06, SJ
+ * session.c, 2007.07.18, SJ
  */
 
 #include <stdio.h>
@@ -23,6 +23,7 @@
 #include "clamd.h"
 #include "session.h"
 #include "messages.h"
+#include "sql.h"
 #include "config.h"
 
 int sd, inj, ret, rav, prevlen=0;
@@ -37,8 +38,12 @@ int inject_mail(struct session_data sdata, char *smtpaddr, int smtpport, char *s
 #ifdef HAVE_MYSQL_TOKEN_DATABASE
    #include <mysql.h>
    MYSQL mysql;
+#endif
 
-   int update_training_metadata(MYSQL mysql, char *tmpfile, char rcptto[MAX_RCPT_TO][MAXBUFSIZE], int num_of_rcpt_to, struct __config cfg);
+#ifdef HAVE_SQLITE3
+   #include <sqlite3.h>
+   sqlite3 *db;
+   int rc;
 #endif
 
 
@@ -47,7 +52,7 @@ int inject_mail(struct session_data sdata, char *smtpaddr, int smtpport, char *s
  */
 
 void kill_child(){
-   syslog(LOG_PRIORITY, "child is killed by force");
+   syslog(LOG_PRIORITY, "%s: child is killed by force", sdata.ttmpfile);
    unlink(sdata.ttmpfile);
    exit(0);
 }
@@ -467,8 +472,23 @@ void init_child(){
                           syslog(LOG_PRIORITY, "%s: %s", sdata.ttmpfile, ERR_MYSQL_CONNECT);
                           spaminess = ERR_BAYES_NO_TOKEN_FILE;
                        }
-                    #else
-                       spaminess = bayes_file(spamfile, sdata, cfg);
+                    #endif
+                    #ifdef HAVE_SQLITE3
+                       rc = sqlite3_open(cfg.sqlite3, &db);
+                       if(rc){
+                          syslog(LOG_PRIORITY, "%s: %s", sdata.ttmpfile, ERR_SQLITE3_OPEN);
+                          spaminess = ERR_BAYES_NO_TOKEN_FILE;
+                       }
+                       else {
+                          spaminess = bayes_file(db, spamfile, sdata, cfg);
+                       }
+
+                       sqlite3_close(db);
+
+                       gettimeofday(&tv_spam_stop, &tz);
+                    #endif
+                    #ifdef HAVE_CDB
+                       spaminess = bayes_file(cfg.tokensfile, spamfile, sdata, cfg);
                        gettimeofday(&tv_spam_stop, &tz);
                     #endif
 

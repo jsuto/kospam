@@ -25,6 +25,54 @@
 
 
 /*
+ * get uid of the user included in the sql query
+ */
+
+unsigned long get_uid(MYSQL mysql, char *stmt){
+   unsigned long uid = 0;
+   MYSQL_RES *res;
+   MYSQL_ROW row;
+
+   if(mysql_real_query(&mysql, stmt, strlen(stmt)) == 0){
+      if((res = mysql_store_result(&mysql))){
+         row = mysql_fetch_row(res);
+         if(row)
+            uid = atol(row[0]);
+
+         mysql_free_result(res);
+      }
+   }
+
+   return uid;
+}
+
+
+/*
+ * get the total number of ham and spam
+ */
+
+struct te get_ham_spam(MYSQL mysql, char *stmt){
+   struct te TE;
+   MYSQL_RES *res;
+   MYSQL_ROW row;
+
+   TE.nham = TE.nspam = 0;
+
+   if(mysql_real_query(&mysql, stmt, strlen(stmt)) == 0){
+      res = mysql_store_result(&mysql);
+      if(res != NULL){
+         while((row = mysql_fetch_row(res))){
+            TE.nham += atof(row[0]);
+            TE.nspam += atof(row[1]);
+         }
+         mysql_free_result(res);
+      }
+   }
+   return TE;
+}
+
+
+/*
  * updates the counter of (or inserts) the given token in the token table
  */
 
@@ -229,7 +277,7 @@ int update_training_metadata(MYSQL mysql, char *tmpfile, char rcptto[MAX_RCPT_TO
          q = strchr(p, '+');
          if(q) p = q+1;
 
-         snprintf(buf, MAXBUFSIZE-1, "SELECT uid FROM %s WHERE email='%s'", cfg.mysqlusertable, p);
+         snprintf(buf, MAXBUFSIZE-1, "SELECT uid FROM %s WHERE email='%s'", SQL_USER_TABLE, p);
          if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s sql: %s", tmpfile, buf);
 
          if(mysql_real_query(&mysql, buf, strlen(buf)) == 0){
@@ -257,7 +305,7 @@ int update_training_metadata(MYSQL mysql, char *tmpfile, char rcptto[MAX_RCPT_TO
                      if(map == NULL)
                         return ERR_BAYES_MMAP;
 
-                     snprintf(buf, MAXBUFSIZE-1, "INSERT INTO %s (id, uid, ts, data) VALUES('%s', %ld, %ld, \"", cfg.mysqlqueuetable, tmpfile, uid, now);
+                     snprintf(buf, MAXBUFSIZE-1, "INSERT INTO %s (id, uid, ts, data) VALUES('%s', %ld, %ld, \"", SQL_QUEUE_TABLE, tmpfile, uid, now);
 
                      data = malloc(2 * st.st_size + strlen(buf) + 1 + 1 + 1);
                      if(data != NULL){

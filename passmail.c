@@ -54,7 +54,7 @@ int main(int argc, char **argv){
    #endif
 
    #ifdef HAVE_USER_MYSQL
-      u = mysql_get_entry(cfg.mysqlhost, cfg.mysqlport, cfg.mysqlsocket, cfg.mysqluser, cfg.mysqlpwd, cfg.mysqldb, cfg.mysqlusertable, pw->pw_name);
+      u = mysql_get_entry(cfg.mysqlhost, cfg.mysqlport, cfg.mysqlsocket, cfg.mysqluser, cfg.mysqlpwd, cfg.mysqldb, SQL_USER_TABLE, pw->pw_name);
    #endif
 
 #endif

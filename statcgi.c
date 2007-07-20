@@ -73,7 +73,7 @@ int main(){
 
    /* determine uid in stat table */
 
-   snprintf(buf, SMALLBUFSIZE-1, "SELECT uid FROM %s WHERE username='%s'", cfg.mysqlusertable, getenv("REMOTE_USER"));
+   snprintf(buf, SMALLBUFSIZE-1, "SELECT uid FROM %s WHERE username='%s'", SQL_USER_TABLE, getenv("REMOTE_USER"));
 
    if(mysql_real_query(&mysql, buf, strlen(buf)) == 0){
       res = mysql_store_result(&mysql);
@@ -96,9 +96,9 @@ int main(){
       printf("<tr align=\"center\"><th>%s</th><th>HAM</th><th>SPAM</th></tr>\n", CGI_DATE);
 
       if(timespan == 0)
-         snprintf(buf, SMALLBUFSIZE-1, "SELECT ts, nham, nspam FROM %s WHERE uid=%ld ORDER BY ts DESC LIMIT 24", cfg.mysqlstattable, uid);
+         snprintf(buf, SMALLBUFSIZE-1, "SELECT ts, nham, nspam FROM %s WHERE uid=%ld ORDER BY ts DESC LIMIT 24", SQL_STAT_TABLE, uid);
       else
-         snprintf(buf, SMALLBUFSIZE-1, "SELECT FROM_UNIXTIME(ts, '%%Y.%%m.%%d.'), SUM(nham), SUM(nspam) FROM %s WHERE uid=%ld GROUP BY FROM_UNIXTIME(ts, '%%Y.%%m.%%d.') ORDER BY ts DESC", cfg.mysqlstattable, uid);
+         snprintf(buf, SMALLBUFSIZE-1, "SELECT FROM_UNIXTIME(ts, '%%Y.%%m.%%d.'), SUM(nham), SUM(nspam) FROM %s WHERE uid=%ld GROUP BY FROM_UNIXTIME(ts, '%%Y.%%m.%%d.') ORDER BY ts DESC", SQL_STAT_TABLE, uid);
  
       if(mysql_real_query(&mysql, buf, strlen(buf)) == 0){
          res = mysql_store_result(&mysql);

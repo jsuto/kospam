@@ -65,7 +65,7 @@ int main(int argc, char **argv){
 
          uid = 0;
 
-         snprintf(puf, MAXBUFSIZE-1, "SELECT uid FROM %s WHERE email='%s'", cfg.mysqlusertable, buf);
+         snprintf(puf, MAXBUFSIZE-1, "SELECT uid FROM %s WHERE email='%s'", SQL_USER_TABLE, buf);
 
          if(mysql_real_query(&mysql, puf, strlen(puf)) == 0){
             res = mysql_store_result(&mysql);
@@ -78,7 +78,7 @@ int main(int argc, char **argv){
          }
 
          if(uid > 0){
-            snprintf(puf, MAXBUFSIZE-1, "INSERT INTO %s (uid, ts, nham, nspam) VALUES(%ld, %ld, %ld, %ld)", cfg.mysqlstattable, uid, now, nham, nspam);
+            snprintf(puf, MAXBUFSIZE-1, "INSERT INTO %s (uid, ts, nham, nspam) VALUES(%ld, %ld, %ld, %ld)", SQL_STAT_TABLE, uid, now, nham, nspam);
             mysql_real_query(&mysql, puf, strlen(puf));
          }
       }

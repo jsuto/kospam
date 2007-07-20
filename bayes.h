@@ -10,8 +10,15 @@ double spamicity(char *spamfile, struct __config cfg);
 #ifdef HAVE_MYSQL_TOKEN_DATABASE
    #include <mysql.h>
    double bayes_file(MYSQL mysql, char *spamfile, struct session_data sdata, struct __config cfg);
-#else
-   double bayes_file(char *spamfile, struct session_data sdata, struct __config cfg);
+#endif
+
+#ifdef HAVE_SQLITE3
+   #include <sqlite3.h>
+   double bayes_file(sqlite3 *db, char *spamfile, struct session_data sdata, struct __config cfg);
+#endif
+
+#ifdef HAVE_CDB
+   double bayes_file(char *cdbfile, char *spamfile, struct session_data sdata, struct __config cfg);
 #endif
 
 int init_cdbs(struct __config cfg);

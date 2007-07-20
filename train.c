@@ -1,5 +1,5 @@
 /*
- * train.c, 2007.06.28, SJ
+ * train.c, 2007.07.20, SJ
  */
 
 #include <stdio.h>
@@ -13,6 +13,7 @@
 #include "parser.h"
 #include "errmsg.h"
 #include "messages.h"
+#include "sql.h"
 #include "config.h"
 
 extern char *optarg;
@@ -20,7 +21,8 @@ extern int optind;
 
 MYSQL mysql;
 
-void my_walk_hash(MYSQL mysql, int ham_or_spam, char *tokentable, struct node *xhash[MAXHASH], unsigned int uid, int train_mode);
+//void my_walk_hash(MYSQL mysql, int ham_or_spam, char *tokentable, struct node *xhash[MAXHASH], unsigned int uid, int train_mode);
+void my_walk_hash(qry QRY, int ham_or_spam, char *tokentable, struct node *xhash[MAXHASH], int train_mode);
 
 int main(int argc, char **argv){
    char buf[MAXBUFSIZE];
@@ -31,6 +33,7 @@ int main(int argc, char **argv){
    struct _token *P, *Q;
    struct __config cfg;
    struct node *tokens[MAXHASH];
+   qry QRY;
    FILE *F;
 
    while((i = getopt(argc, argv, "c:S:H:h")) > 0){
@@ -71,6 +74,7 @@ int main(int argc, char **argv){
    cfg = read_config(configfile);
 
 
+   QRY.uid = 0;
    state = init_state();
 
    /* read message file */
@@ -83,6 +87,7 @@ int main(int argc, char **argv){
       state = parse(buf, state);
 
 
+#ifdef HAVE_MYSQL_TOKEN_DATABASE
    mysql_init(&mysql);
 
    if(!mysql_real_connect(&mysql, cfg.mysqlhost, cfg.mysqluser, cfg.mysqlpwd, cfg.mysqldb, cfg.mysqlport, cfg.mysqlsocket, 0)){
@@ -91,6 +96,9 @@ int main(int argc, char **argv){
 
       __fatal(ERR_MYSQL_CONNECT);
    }
+
+   QRY.mysql = mysql;
+#endif
 
    inithash(tokens);
 
@@ -113,21 +121,31 @@ int main(int argc, char **argv){
          cnt++;
       }
 
+      QRY.sockfd = -1;
 
-      my_walk_hash(mysql, is_spam, cfg.mysqltokentable, tokens, 0, T_TOE);
+   #ifdef HAVE_QCACHE
+      QRY.sockfd = qcache_socket(cfg.qcache_addr, cfg.qcache_port, cfg.qcache_socket);
+   #endif
+
+      my_walk_hash(QRY, is_spam, SQL_TOKEN_TABLE, tokens, T_TOE);
+
+      if(QRY.sockfd != -1) close(QRY.sockfd);
+
+      //my_walk_hash(mysql, is_spam, SQL_TOKEN_TABLE, tokens, 0, T_TOE);
 
 
       /* update the t_misc table */
 
       if(is_spam == 1)
-         snprintf(buf, MAXBUFSIZE-1, "update %s set update_cdb=1, nspam=nspam+1", cfg.mysqlmisctable);
+         snprintf(buf, MAXBUFSIZE-1, "update %s set update_cdb=1, nspam=nspam+1", SQL_MISC_TABLE);
       else
-         snprintf(buf, MAXBUFSIZE-1, "update %s set update_cdb=1, nham=nham+1", cfg.mysqlmisctable);
+         snprintf(buf, MAXBUFSIZE-1, "update %s set update_cdb=1, nham=nham+1", SQL_MISC_TABLE);
 
+   #ifdef HAVE_MYSQL_TOKEN_DATABASE
       mysql_real_query(&mysql, buf, strlen(buf));
-
-
       mysql_close(&mysql);
+   #endif
+
    }
 
    clearhash(tokens);

@@ -1,11 +1,21 @@
 0.3.30:
 
+2007.07.20, SJ
+
+SQL table names are defined in config.h.
+(config.h, example.conf)
+
+Added sqlite3 support for Qcache and spam evaluation.
+
 2007.07.17, SJ
 
 Added the silently_discard_infected_email option that allows you
 to decide whether to silently discard the infected message (1)
 or let a bounce get back to the sender (0). (credits: Toms Trankalis)
 (cfg.c, cfg.h, example.conf, session.c)
+
+Removed the attachment dumping and analysing code
+(parser.c, bayes.c, example.conf)
 
 2007.07.15, SJ
 
@@ -14,6 +24,8 @@ Removed the "too much spam in top15" feature.
 
 Slightly modified spaminess calculation
 (hash.c, hash.h, bayes.c)
+
+*********************************************
 
 0.3.29:
 

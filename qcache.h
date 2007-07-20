@@ -1,8 +1,8 @@
 /*
- * qcache.h, 2007.07.09, SJ
+ * qcache.h, 2007.07.17, SJ
  */
 
-//#define MAXHASH 32099
+/* prime numbers: 32099, 65831, 128257 */
 #define MAXHASH 65831
 #define MAX_ENTRIES_PER_SLOT 4
 

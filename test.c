@@ -1,5 +1,5 @@
 /*
- * test.c, 2007.07.05, SJ
+ * test.c, 2007.07.17, SJ
  *
  * test the bayesian decision with a single message
  */
@@ -17,6 +17,13 @@
    #include <mysql.h>
    MYSQL mysql;
 #endif
+
+#ifdef HAVE_SQLITE3
+   #include <sqlite3.h>
+   sqlite3 *db;
+   int rc;
+#endif
+
 
 int main(int argc, char **argv){
    double spaminess;
@@ -49,8 +56,22 @@ int main(int argc, char **argv){
    else {
       spaminess = ERR_BAYES_NO_TOKEN_FILE;
    }
-#else
-   spaminess = bayes_file(argv[2], sdata, cfg);
+#endif
+
+#ifdef HAVE_SQLITE3
+   rc = sqlite3_open(cfg.sqlite3, &db);
+   if(rc){
+      fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+      spaminess = ERR_BAYES_NO_TOKEN_FILE;
+   }
+   else {
+      spaminess = bayes_file(db, argv[2], sdata, cfg);
+   }
+   sqlite3_close(db);
+#endif
+
+#ifdef HAVE_CDB
+   spaminess = bayes_file(cfg.tokensfile, argv[2], sdata, cfg);
 #endif
 
    gettimeofday(&tv_spam_stop, &tz);

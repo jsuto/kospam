@@ -50,6 +50,10 @@
 #define ERR_MYSQL_DATA "Ervenytelen adat a mysql tablabol"
 #define ERR_CGI_MYSQL_NO_USER "Nem talalom a felhasznalot a user tablaban"
 
+// sqlite3
+
+#define ERR_SQLITE3_OPEN "Nem tudom megnyitni az sqlite3 adatbázist"
+
 // spam quarantine
 
 #define ERR_CANNOT_OPEN "Nem tudom megnyitni"

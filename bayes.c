@@ -476,7 +476,7 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
     */
 
 #ifndef HAVE_CDB
-   if(cfg.training_mode == T_TUM && (QRY.uid > 0 || cfg.group_type == 0) && (spaminess >= cfg.spam_overall_limit || spaminess < cfg.max_junk_spamicity)){
+   if(cfg.training_mode == T_TUM && (QRY.uid > 0 || cfg.group_type == GROUP_SHARED) && (spaminess >= cfg.spam_overall_limit || spaminess < cfg.max_junk_spamicity)){
       gettimeofday(&tv1, &tz);
 
       if(spaminess >= cfg.spam_overall_limit){
@@ -612,7 +612,7 @@ double bayes_file(char *cdbfile, char *spamfile, struct session_data sdata, stru
     * determine uid if we use a merged group, 2007.06.13, SJ
     */
 
-   if(cfg.group_type == 1){
+   if(cfg.group_type == GROUP_MERGED){
 
       if(cfg.training_mode == T_TUM && sdata.num_of_rcpt_to == 1){
          if(strlen(sdata.rcptto[0]) > 3){

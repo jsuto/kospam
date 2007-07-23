@@ -174,3 +174,8 @@
 
 #define T_TOE 0
 #define T_TUM 1
+
+// group types
+
+#define GROUP_SHARED 0
+#define GROUP_MERGED 1

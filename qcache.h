@@ -1,10 +1,10 @@
 /*
- * qcache.h, 2007.07.17, SJ
+ * qcache.h, 2007.07.20, SJ
  */
 
 /* prime numbers: 32099, 65831, 128257 */
-#define MAXHASH 65831
-#define MAX_ENTRIES_PER_SLOT 4
+#define MAXHASH 128257
+#define MAX_ENTRIES_PER_SLOT 5
 
 #define BANNER_QCACHE_220 "220 QCache OK\r\n"
 #define BANNER_QCACHE_450 "450 QCache temporary error\r\n"
@@ -14,8 +14,8 @@
 struct qcache {
    unsigned long long token;
    unsigned int uid;
-   unsigned nham;
-   unsigned nspam;
+   unsigned int nham;
+   unsigned int nspam;
    unsigned long timestamp;
    unsigned char dirty;
    struct qcache *r;

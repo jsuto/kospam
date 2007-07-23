@@ -1,5 +1,5 @@
 /*
- * train.c, 2007.07.20, SJ
+ * train.c, 2007.07.22, SJ
  */
 
 #include <stdio.h>
@@ -21,7 +21,6 @@ extern int optind;
 
 MYSQL mysql;
 
-//void my_walk_hash(MYSQL mysql, int ham_or_spam, char *tokentable, struct node *xhash[MAXHASH], unsigned int uid, int train_mode);
 void my_walk_hash(qry QRY, int ham_or_spam, char *tokentable, struct node *xhash[MAXHASH], int train_mode);
 
 int main(int argc, char **argv){
@@ -36,7 +35,9 @@ int main(int argc, char **argv){
    qry QRY;
    FILE *F;
 
-   while((i = getopt(argc, argv, "c:S:H:h")) > 0){
+   QRY.uid = 0;
+
+   while((i = getopt(argc, argv, "c:S:H:u:h")) > 0){
        switch(i){
 
          case 'c' :
@@ -54,6 +55,9 @@ int main(int argc, char **argv){
                     messagefile = optarg;
                     break;
 
+         case 'u' :
+                    if(atol(optarg) > 0) QRY.uid = atol(optarg);
+                    break;
 
          case 'h' :
          default  : 
@@ -74,7 +78,6 @@ int main(int argc, char **argv){
    cfg = read_config(configfile);
 
 
-   QRY.uid = 0;
    state = init_state();
 
    /* read message file */
@@ -125,33 +128,38 @@ int main(int argc, char **argv){
 
    #ifdef HAVE_QCACHE
       QRY.sockfd = qcache_socket(cfg.qcache_addr, cfg.qcache_port, cfg.qcache_socket);
+      if(QRY.sockfd == -1){
+         goto ENDE;
+      }
    #endif
 
       my_walk_hash(QRY, is_spam, SQL_TOKEN_TABLE, tokens, T_TOE);
 
       if(QRY.sockfd != -1) close(QRY.sockfd);
 
-      //my_walk_hash(mysql, is_spam, SQL_TOKEN_TABLE, tokens, 0, T_TOE);
-
 
       /* update the t_misc table */
 
       if(is_spam == 1)
-         snprintf(buf, MAXBUFSIZE-1, "update %s set update_cdb=1, nspam=nspam+1", SQL_MISC_TABLE);
+         snprintf(buf, MAXBUFSIZE-1, "update %s set update_cdb=1, nspam=nspam+1 WHERE uid=%ld", SQL_MISC_TABLE, QRY.uid);
       else
-         snprintf(buf, MAXBUFSIZE-1, "update %s set update_cdb=1, nham=nham+1", SQL_MISC_TABLE);
+         snprintf(buf, MAXBUFSIZE-1, "update %s set update_cdb=1, nham=nham+1 WHERE uid=%ld", SQL_MISC_TABLE, QRY.uid);
 
    #ifdef HAVE_MYSQL_TOKEN_DATABASE
       mysql_real_query(&mysql, buf, strlen(buf));
-      mysql_close(&mysql);
    #endif
 
    }
 
-   clearhash(tokens);
 
 
    printf("%s\n", ERR_TRAIN_DONE);
+
+ENDE:
+   clearhash(tokens);
+#ifdef HAVE_MYSQL_TOKEN_DATABASE
+   mysql_close(&mysql);
+#endif
 
    return 0;
 }

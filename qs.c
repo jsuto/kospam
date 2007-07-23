@@ -84,6 +84,71 @@ void fatal(char *s){
 
 
 /*
+ * load all tokens
+ */
+
+int load_all_tokens(struct qcache *xhash[MAXHASH]){
+   char stmt[SMALLBUFSIZE];
+   unsigned int nham, nspam;
+   unsigned long ts;
+
+   time(&ts);
+   snprintf(stmt, SMALLBUFSIZE-1, "SELECT token, nham, nspam FROM %s WHERE uid=0", SQL_TOKEN_TABLE);
+
+#ifdef HAVE_MYSQL
+   MYSQL mysql;
+   MYSQL_RES *res;
+   MYSQL_ROW row;
+   unsigned long long token;
+
+   mysql_init(&mysql);
+   if(!mysql_real_connect(&mysql, cfg.mysqlhost, cfg.mysqluser, cfg.mysqlpwd, cfg.mysqldb, cfg.mysqlport, cfg.mysqlsocket, 0))
+      return 1;
+
+   if(mysql_real_query(&mysql, stmt, strlen(stmt)))
+      return 1;
+
+   res = mysql_store_result(&mysql);
+   if(res == NULL)
+      return 1;
+
+   while((row = mysql_fetch_row(res))){
+      token = strtoull(row[0], NULL, 10);
+      nham = atoi(row[1]);
+      nspam = atoi(row[2]);
+
+      if(token >= 0 && nham >=0 && nspam >= 0) addnode(xhash, token, 0, nham, nspam, ts);
+   }
+
+   mysql_free_result(res);
+#endif
+#ifdef HAVE_SQLITE3
+   sqlite3 *db;
+   int rc;
+   char token[20];
+
+   rc = sqlite3_open(cfg.sqlite3, &db);
+   if(rc)
+      return 1;
+
+   if(sqlite3_prepare_v2(db, stmt, -1, &pStmt, pzTail) != SQLITE_OK) return 1;
+
+   while(sqlite3_step(pStmt) == SQLITE_ROW){
+      token = strtoull(sqlite3_column_text(pStmt, 0), NULL, 10);
+      nham = sqlite3_column_int(pStmt, 1);
+      nspam = sqlite3_column_int(pStmt, 2);
+
+      if(token >= 0 && nham >=0 && nspam >= 0) addnode(xhash, token, 0, nham, nspam, ts);
+   }
+
+   sqlite3_finalize(pStmt);
+#endif
+
+   return 0;
+}
+
+
+/*
  * select token data from either cache or database
  */
 
@@ -277,6 +342,8 @@ void *process_connection(void *ptr){
                token = strtoull(q, NULL, 10);
                uid = atoi(++p);
 
+               if(cfg.group_type == GROUP_SHARED) uid = 0;
+
             #ifdef HAVE_MYSQL
                res = SELECT(mysql, Q, token, uid, ts);
             #endif
@@ -426,8 +493,7 @@ int main(int argc, char **argv){
 #else
    memset(&saun, 0, sizeof(struct sockaddr_un));
    saun.sun_family = AF_UNIX;
-   strcpy(saun.sun_path, QCACHE_SOCKET);
-
+   strcpy(saun.sun_path, cfg.qcache_socket);
 #endif
 
    if(setsockopt(listener, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1)
@@ -446,6 +512,9 @@ int main(int argc, char **argv){
 
    FD_SET(listener, &master);
    fdmax = listener;
+
+   /* load all tokens into memory */
+   if(cfg.group_type == GROUP_SHARED) load_all_tokens(Q);
 
    syslog(LOG_PRIORITY, "started");
  

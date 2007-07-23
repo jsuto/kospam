@@ -12,8 +12,9 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <sys/un.h>
+#include "misc.h"
 
-#define PORT 12345 // the port client will be connecting to 
+#define PORT 48791 // the port client will be connecting to 
 #define QCACHE_SOCKET "/tmp/qcache"
 
 #define MAXDATASIZE 100 // max number of bytes we can get at once 
@@ -21,6 +22,8 @@
 #define TESTFILE "/home/sj/temp/test.aa"
 
 int sockfd;
+struct timezone tz;
+struct timeval tv_start, tv_stop;
 
 void run_test(){
    FILE *f;
@@ -101,7 +104,11 @@ int main(int argc, char *argv[])
 
     printf("banner: %s", buf);
 
+    gettimeofday(&tv_start, &tz);
     run_test();
+    gettimeofday(&tv_stop, &tz);
+
+    printf("time; %ld\n", tvdiff(tv_stop, tv_start));
 
     close(sockfd);
 

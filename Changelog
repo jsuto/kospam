@@ -1,5 +1,10 @@
 0.3.30:
 
+2007.07.22, SJ
+
+Fixed an issue around the Qcache updating while training.
+(mysql.c)
+
 2007.07.20, SJ
 
 SQL table names are defined in config.h.

@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <mysql.h>
 #include <unistd.h>
 #include "misc.h"
 #include "hash.h"
@@ -19,7 +18,17 @@
 extern char *optarg;
 extern int optind;
 
-MYSQL mysql;
+#ifdef HAVE_MYSQL
+   #include <mysql.h>
+   MYSQL mysql;
+#endif
+#ifdef HAVE_SQLITE3
+   #include <sqlite3.h>
+   sqlite3 *db;
+   sqlite3_stmt *pStmt;
+   const char **ppzTail=NULL;
+   int rc;
+#endif
 
 void my_walk_hash(qry QRY, int ham_or_spam, char *tokentable, struct node *xhash[MAXHASH], int train_mode);
 
@@ -102,6 +111,13 @@ int main(int argc, char **argv){
 
    QRY.mysql = mysql;
 #endif
+#ifdef HAVE_SQLITE3
+   rc = sqlite3_open(cfg.sqlite3, &db);
+   if(rc)
+      __fatal(ERR_SQLITE3_OPEN);
+
+   QRY.db = db;   
+#endif
 
    inithash(tokens);
 
@@ -148,6 +164,11 @@ int main(int argc, char **argv){
    #ifdef HAVE_MYSQL_TOKEN_DATABASE
       mysql_real_query(&mysql, buf, strlen(buf));
    #endif
+   #ifdef HAVE_SQLITE3
+      sqlite3_prepare_v2(db, buf, -1, &pStmt, ppzTail);
+      sqlite3_step(pStmt);
+      sqlite3_finalize(pStmt);
+   #endif
 
    }
 
@@ -159,6 +180,9 @@ ENDE:
    clearhash(tokens);
 #ifdef HAVE_MYSQL_TOKEN_DATABASE
    mysql_close(&mysql);
+#endif
+#ifdef HAVE_SQLITE3
+   sqlite3_close(db);
 #endif
 
    return 0;

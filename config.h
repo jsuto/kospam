@@ -59,7 +59,7 @@
 #define CLAPFUSAGE "usage: " PROGNAME " -c <config file> -d -V -h"
 
 #define TRAINGPROGNAME "train"
-#define TRAINUSAGE "usage: " TRAINGPROGNAME " -c <config file> [ <-S spam message> | <-H ham message> ]"
+#define TRAINUSAGE "usage: " TRAINGPROGNAME " -c <config file> [ <-S spam message> | <-H ham message> ] [-u <uid> ]"
 
 #define ADMINPROGNAME "clapf_admin"
 #define ADMINUSAGE "usage: " ADMINPROGNAME " [-c <config file>] -u <username> -e <email address> [-a <action>] [-i <uid>]"

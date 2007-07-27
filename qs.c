@@ -91,6 +91,9 @@ int load_all_tokens(struct qcache *xhash[MAXHASH]){
    char stmt[SMALLBUFSIZE];
    unsigned int nham, nspam;
    unsigned long ts;
+   unsigned long long token;
+
+   syslog(LOG_PRIORITY, "loading tokens");
 
    time(&ts);
    snprintf(stmt, SMALLBUFSIZE-1, "SELECT token, nham, nspam FROM %s WHERE uid=0", SQL_TOKEN_TABLE);
@@ -99,7 +102,6 @@ int load_all_tokens(struct qcache *xhash[MAXHASH]){
    MYSQL mysql;
    MYSQL_RES *res;
    MYSQL_ROW row;
-   unsigned long long token;
 
    mysql_init(&mysql);
    if(!mysql_real_connect(&mysql, cfg.mysqlhost, cfg.mysqluser, cfg.mysqlpwd, cfg.mysqldb, cfg.mysqlport, cfg.mysqlsocket, 0))
@@ -125,7 +127,8 @@ int load_all_tokens(struct qcache *xhash[MAXHASH]){
 #ifdef HAVE_SQLITE3
    sqlite3 *db;
    int rc;
-   char token[20];
+   sqlite3_stmt *pStmt;
+   const char **pzTail=NULL;
 
    rc = sqlite3_open(cfg.sqlite3, &db);
    if(rc)
@@ -139,10 +142,13 @@ int load_all_tokens(struct qcache *xhash[MAXHASH]){
       nspam = sqlite3_column_int(pStmt, 2);
 
       if(token >= 0 && nham >=0 && nspam >= 0) addnode(xhash, token, 0, nham, nspam, ts);
+
    }
 
    sqlite3_finalize(pStmt);
 #endif
+
+   syslog(LOG_PRIORITY, "loaded tokens");
 
    return 0;
 }
@@ -163,6 +169,8 @@ int load_all_tokens(struct qcache *xhash[MAXHASH]){
    char stmt[SMALLBUFSIZE];
    struct token_entry res;
 
+   res.nham = res.nspam = res.hit = 0;
+
    q = findnode(Q, token, uid);
    if(q){
       res.nham = q->nham;
@@ -171,7 +179,7 @@ int load_all_tokens(struct qcache *xhash[MAXHASH]){
       return res;
    }
 
-   res.nham = res.nspam = res.hit = 0;
+   if(cfg.group_type == GROUP_SHARED) return res;
 
 #ifdef HAVE_MYSQL
    MYSQL_RES *r;

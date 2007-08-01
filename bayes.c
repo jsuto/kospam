@@ -198,12 +198,15 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
    unsigned long n=0;
    struct _token *p, *q;
    float spaminess, spaminess2;
+   int i;
+   char buf[MAXBUFSIZE];
+   struct node *Q;
 #ifdef HAVE_SURBL
    struct node *urlhash[MAXHASH];
-   struct node *P, *Q;
-   char *qq, surbl_token[MAX_TOKEN_LEN], rbldomain[MAX_TOKEN_LEN], buf[MAXBUFSIZE];
+   struct node *P;
+   char *qq, surbl_token[MAX_TOKEN_LEN], rbldomain[MAX_TOKEN_LEN];
    float n_urls = 0;
-   int u, i;
+   int u;
 #endif
 
    if(!state.first)

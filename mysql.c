@@ -125,7 +125,7 @@ int do_mysql_qry(MYSQL mysql, int sockfd, int ham_or_spam, char *token, char *to
       #endif
       }
       else {
-         if(train_mode == T_TUM && nspam > 0) snprintf(puf, SMALLBUFSIZE-1, ", nspam=nspam-1");
+         if(train_mode == T_TUM && TE.nspam > 0) snprintf(puf, SMALLBUFSIZE-1, ", nspam=nspam-1");
       #ifdef HAVE_NO_64_HASH
          snprintf(stmt, MAXBUFSIZE-1, "UPDATE %s SET nham=nham+1%s WHERE token='%s' AND uid=%d", tokentable, puf, buf, uid);
       #else
@@ -242,9 +242,9 @@ int update_training_metadata(MYSQL mysql, char *tmpfile, char rcptto[MAX_RCPT_TO
    MYSQL_RES *res;
    MYSQL_ROW row;
    char *p, *q, buf[MAXBUFSIZE], email[SMALLBUFSIZE], *map=NULL, *data=NULL;
-   unsigned long now=0, uid;
+   unsigned long uid;
    int i, fd;
-
+   time_t now;
 
    time(&now);
 

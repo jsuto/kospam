@@ -23,10 +23,11 @@ MYSQL_ROW row;
 
 int main(){
    int method=M_UNDEF, timespan=0;
-   unsigned long uid=0, ts, nham=0, nspam=0;
+   unsigned long uid=0, nham=0, nspam=0;
    char *p, buf[SMALLBUFSIZE];
    struct tm *t;
    struct __config cfg;
+   time_t ts;
 
    cgiIn = stdin;
    input = NULL;

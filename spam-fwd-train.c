@@ -67,6 +67,7 @@ int main(int argc, char **argv){
    MYSQL_RES *res;
    MYSQL_ROW row;
    FILE *f;
+   time_t clock;
 
    QRY.uid = 0;
 
@@ -125,7 +126,8 @@ int main(int argc, char **argv){
       close(fd);
    }
 
-   time(&now);
+   time(&clock);
+   now = clock;
 
    state = init_state();
 

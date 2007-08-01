@@ -242,11 +242,12 @@ int update_training_metadata(MYSQL mysql, char *tmpfile, char rcptto[MAX_RCPT_TO
    MYSQL_RES *res;
    MYSQL_ROW row;
    char *p, *q, buf[MAXBUFSIZE], email[SMALLBUFSIZE], *map=NULL, *data=NULL;
-   unsigned long uid;
+   unsigned long now=0, uid;
    int i, fd;
-   time_t now;
+   time_t clock;
 
-   time(&now);
+   time(&clock);
+   now = clock;
 
    for(i=0; i<num_of_rcpt_to; i++){
       p = q = NULL;

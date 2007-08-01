@@ -25,13 +25,15 @@ int main(int argc, char **argv){
    MYSQL mysql;
    MYSQL_RES *res;
    MYSQL_ROW row;
+   time_t clock;
 
    if(argc < 2)
       cfg = read_config(CONFIG_FILE);
    else
       cfg = read_config(argv[1]);
 
-   time(&now);
+   time(&clock);
+   now = clock;
 
    mysql_init(&mysql);
    if(!mysql_real_connect(&mysql, cfg.mysqlhost, cfg.mysqluser, cfg.mysqlpwd, cfg.mysqldb, cfg.mysqlport, cfg.mysqlsocket, 0))

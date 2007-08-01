@@ -23,10 +23,11 @@ MYSQL_ROW row;
 
 int main(){
    int is_spam, method=M_UNDEF;
-   unsigned long ts, uid=0;
+   unsigned long uid=0;
    char *p, buf[SMALLBUFSIZE];
    struct tm *t;
    struct __config cfg;
+   time_t ts;
 
    cgiIn = stdin;
    input = NULL;

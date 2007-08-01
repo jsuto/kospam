@@ -34,6 +34,7 @@ int main(){
    char spamqdir[MAXBUFSIZE], savedfile[SMALLBUFSIZE], qfile[SMALLBUFSIZE], ID[RND_STR_LEN+1]="";
    int i, m, clen=0, is_spam=0, method=M_UNDEF, train_mode=T_TOE;
    unsigned long cnt, now;
+   time_t clock;
    struct _state state;
    struct _token *P, *Q;
    struct __config cfg;
@@ -92,7 +93,8 @@ int main(){
 #endif
 
 
-   time(&now);
+   time(&clock);
+   now = clock;
 
    inithash(tokens);
 

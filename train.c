@@ -176,7 +176,10 @@ int main(int argc, char **argv){
 
    printf("%s\n", ERR_TRAIN_DONE);
 
+#ifdef HAVE_QCACHE
 ENDE:
+#endif
+
    clearhash(tokens);
 #ifdef HAVE_MYSQL_TOKEN_DATABASE
    mysql_close(&mysql);

@@ -285,7 +285,8 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
 
    /* add a spammy token if we got a binary, eg. PDF attachment, 2007.07.02, SJ */
 
-   if(cfg.penalize_octet_stream == 1 && (attachment_by_type(state, "application/octet-stream") == 1 || attachment_by_type(state, "application/pdf") == 1)){
+   if(cfg.penalize_octet_stream == 1 && (attachment_by_type(state, "application/octet-stream") == 1 || attachment_by_type(state, "application/pdf") == 1
+       || attachment_by_type(state, "application/vnd.ms-excel") == 1)){
        spaminess = REAL_SPAM_TOKEN_PROBABILITY;
        n_phrases += addnode(s_phrase_hash, "OCTET_STREAM*", spaminess, DEVIATION(spaminess));
        n_tokens += addnode(shash, "OCTET_STREAM*", spaminess, DEVIATION(spaminess));
@@ -563,11 +564,13 @@ double bayes_file(char *cdbfile, char *spamfile, struct session_data sdata, stru
 #ifdef HAVE_SQLITE3
    QRY.db = db;
 #endif
-   QRY.uid = 0;
+   //QRY.uid = 0;
+   QRY.uid = sdata.uid;
    QRY.sockfd = -1;
    QRY.ham_msg = 0;
    QRY.spam_msg = 0;
-
+   QRY.rob_s = cfg.rob_s;
+   QRY.rob_x = cfg.rob_x;
 
    F = fopen(spamfile, "r");
    if(!F)
@@ -615,7 +618,7 @@ double bayes_file(char *cdbfile, char *spamfile, struct session_data sdata, stru
     * determine uid if we use a merged group, 2007.06.13, SJ
     */
 
-   if(cfg.group_type == GROUP_MERGED){
+   if(cfg.group_type == GROUP_MERGED && QRY.uid == 0){
 
       if(cfg.training_mode == T_TUM && sdata.num_of_rcpt_to == 1){
          if(strlen(sdata.rcptto[0]) > 3){
@@ -628,6 +631,8 @@ double bayes_file(char *cdbfile, char *spamfile, struct session_data sdata, stru
          }
          else if((q = getenv("FROM")))
             snprintf(buf, MAXBUFSIZE-1, "SELECT uid FROM %s WHERE email='%s'", SQL_USER_TABLE, q);
+
+         if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "stmt for uid: %s", buf);
 
       #ifdef HAVE_MYSQL_TOKEN_DATABASE 
          QRY.uid = get_uid(mysql, buf);

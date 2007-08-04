@@ -1,5 +1,5 @@
 /*
- * sql.c, 2007.07.16, SJ
+ * sql.c, 2007.08.03, SJ
  */
 
 #include <stdio.h>
@@ -76,7 +76,7 @@ float SQL_QUERY(qry QRY, char *tokentable, char *token, struct node *xhash[MAXHA
          n = TE.nham;
          if(TE.nspam > n) n = TE.nspam;
 
-         r = (0.5 + n * r) / (1+n);
+         r = (QRY.rob_s * QRY.rob_x + n * r) / (QRY.rob_s + n);
       }
 
    }
@@ -120,5 +120,126 @@ int my_walk_hash(qry QRY, int ham_or_spam, char *tokentable, struct node *xhash[
    }
 
    return n;
+}
+
+
+/*
+ * get uid from rcptto email address
+ */
+
+#ifdef HAVE_MYSQL_TOKEN_DATABASE
+unsigned long get_uid_from_email(MYSQL mysql, char *tmpfile, char *rcptto){
+   MYSQL_RES *res;
+   MYSQL_ROW row;
+#endif
+#ifdef HAVE_SQLITE3
+unsigned long get_uid_from_email(sqlite3 *db, char *tmpfile, char *rcptto){
+   sqlite3_stmt *pStmt;
+   const char **pzTail=NULL;
+#endif
+   unsigned long uid = 0;
+   char *p, *q, buf[MAXBUFSIZE], email[SMALLBUFSIZE];
+
+   snprintf(email, SMALLBUFSIZE-1, "%s", rcptto);
+   p = strchr(email, '<');
+   if(p){
+      q = strchr(p, '>');
+   }
+
+   if(p && q){
+      *q = '\0';
+
+      p++;
+
+      /* fix address like spam+aaa@domain.com */
+
+      q = strchr(p, '+');
+      if(q) p = q+1;
+
+      snprintf(buf, MAXBUFSIZE-1, "SELECT uid FROM %s WHERE email='%s'", SQL_USER_TABLE, p);
+
+   #ifdef HAVE_MYSQL_TOKEN_DATABASE
+      if(mysql_real_query(&mysql, buf, strlen(buf)) == 0){
+         res = mysql_store_result(&mysql);
+         if(res != NULL){
+            row = mysql_fetch_row(res);
+            if(row)
+               uid = atol(row[0]);
+            mysql_free_result(res);
+         }
+      }
+   #endif
+   #ifdef HAVE_SQLITE3
+      if(sqlite3_prepare_v2(db, buf, -1, &pStmt, pzTail) == SQLITE_OK){
+         if(sqlite3_step(pStmt) == SQLITE_ROW)
+            uid = sqlite3_column_int(pStmt, 0);
+      }
+      sqlite3_finalize(pStmt);
+   #endif
+
+   }
+
+   return uid;
+}
+
+
+/*
+ * insert metadata to queue table
+ */
+
+#ifdef HAVE_MYSQL_TOKEN_DATABASE
+int update_training_metadata(MYSQL mysql, char *tmpfile, unsigned long uid, struct __config cfg){
+#endif
+#ifdef HAVE_SQLITE3
+int update_training_metadata(sqlite3 *db, char *tmpfile, unsigned long uid, struct __config cfg){
+#endif
+   struct stat st;
+   char buf[MAXBUFSIZE], *map=NULL, *data=NULL;
+   unsigned long now=0;
+   int fd;
+   time_t clock;
+
+   time(&clock);
+   now = clock;
+
+   /* reading message file into memory, 2007.06.26, SJ */
+
+   if(stat(tmpfile, &st)){
+      syslog(LOG_PRIORITY, "cannot stat: %s", tmpfile);
+      return ERR_STAT_SPAM_FILE;
+   }
+
+   fd = open(tmpfile, O_RDONLY);
+   if(fd == -1)
+      return ERR_BAYES_OPEN_SPAM_FILE;
+
+   map = mmap(map, st.st_size, PROT_READ, MAP_SHARED, fd, 0);
+   close(fd);
+   if(map == NULL)
+      return ERR_BAYES_MMAP;
+
+   /* then put it into database */
+
+   snprintf(buf, MAXBUFSIZE-1, "INSERT INTO %s (id, uid, ts, data) VALUES('%s', %ld, %ld, \"", SQL_QUEUE_TABLE, tmpfile, uid, now);
+
+   data = malloc(2 * st.st_size + strlen(buf) + 1 + 1 + 1);
+   if(data != NULL){
+
+   #ifdef HAVE_MYSQL_TOKEN_DATABASE
+      snprintf(data, 2 * st.st_size + strlen(buf) + 1, "%s", buf);
+      mysql_real_escape_string(&mysql, data+strlen(buf), map, st.st_size);
+      strncat(data, "\")", 2 * st.st_size + strlen(buf) + 1 + 1);
+      mysql_real_query(&mysql, data, strlen(data));
+   #endif
+   #ifdef HAVE_SQLITE3
+
+   #endif
+
+      free(data);
+   }
+
+   munmap(map, st.st_size);
+
+   return 1;
 }
 

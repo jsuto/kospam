@@ -1,5 +1,17 @@
 0.3.30:
 
+2007.08.04, SJ
+
+Continued to improve spamdrop integration. You may use a single
+/etc/maildroprc file to let all users use spamdrop and set up
+the two training email addresses (see maildroprc):
+(spamdrop.c, sql.c, sql.h, bayes.c, mysql.c)
+
+2007.08.02, SJ
+
+Store metadata even if uid=0.
+(mysql.c)
+
 2007.07.22, SJ
 
 Fixed an issue around the Qcache updating while training.

@@ -1,11 +1,11 @@
 /*
- * config.h, 2007.07.09, SJ
+ * config.h, 2007.08.04, SJ
  */
 
 #include <syslog.h>
 #include "clapf-config.h"
 
-#define VERSION "0.3.29"
+#define VERSION "0.3.30-rc1"
 
 #define HOSTID "av-engine.localhost"
 
@@ -37,6 +37,7 @@
 
 
 #define WORK_DIR "/opt/av"
+#define PER_USER_DIR ".clapf"
 #define QUARANTINELEN 255
 #define PROGNAME "clapf"
 #define BACKLOG 20
@@ -108,7 +109,7 @@
 #define DATE_STR_LEN 15
 #define MESSAGES_PER_ONE_PAGE 25
 #define EXCLUSION_RADIUS 0.1
-#define TUM_LIMIT 25
+#define TUM_LIMIT 50
 #define NUMBER_OF_GOOD_FROM 10
 #define MAX_ATTACHMENTS 8
 #define MAX_ITERATIVE_TRAIN_LOOPS 5

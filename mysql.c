@@ -1,5 +1,5 @@
 /*
- * mysql.c, 2007.07.05, SJ
+ * mysql.c, 2007.08.03, SJ
  */
 
 #include <stdio.h>
@@ -230,95 +230,6 @@ struct te myqry(MYSQL mysql, int sockfd, char *tokentable, char *token, unsigned
 #endif
 
    return TE;
-}
-
-
-/*
- * insert metadata to queue table
- */
-
-int update_training_metadata(MYSQL mysql, char *tmpfile, char rcptto[MAX_RCPT_TO][MAXBUFSIZE], int num_of_rcpt_to, struct __config cfg){
-   struct stat st;
-   MYSQL_RES *res;
-   MYSQL_ROW row;
-   char *p, *q, buf[MAXBUFSIZE], email[SMALLBUFSIZE], *map=NULL, *data=NULL;
-   unsigned long now=0, uid;
-   int i, fd;
-   time_t clock;
-
-   time(&clock);
-   now = clock;
-
-   for(i=0; i<num_of_rcpt_to; i++){
-      p = q = NULL;
-
-      snprintf(email, SMALLBUFSIZE-1, "%s", rcptto[i]);
-      p = strchr(email, '<');
-      if(p){
-         q = strchr(p, '>');
-      }
-
-      if(p && q){
-         *q = '\0';
-
-         uid=0;
-         p++;
-
-         /* fix address like spam+aaa@domain.com */
-         q = strchr(p, '+');
-         if(q) p = q+1;
-
-         snprintf(buf, MAXBUFSIZE-1, "SELECT uid FROM %s WHERE email='%s'", SQL_USER_TABLE, p);
-         if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s sql: %s", tmpfile, buf);
-
-         if(mysql_real_query(&mysql, buf, strlen(buf)) == 0){
-            res = mysql_store_result(&mysql);
-            if(res != NULL){
-               row = mysql_fetch_row(res);
-               if(row){
-                  uid = atol(row[0]);
-
-                  if(uid > 0){
-
-                     /* reading message file into memory, 2007.06.26, SJ */
-
-                     if(stat(tmpfile, &st)){
-                        syslog(LOG_PRIORITY, "cannot stat: %s", tmpfile);
-                        return ERR_STAT_SPAM_FILE;
-                     }
-
-                     fd = open(tmpfile, O_RDONLY);
-                     if(fd == -1)
-                        return ERR_BAYES_OPEN_SPAM_FILE;
-
-                     map = mmap(map, st.st_size, PROT_READ, MAP_SHARED, fd, 0);
-                     close(fd);
-                     if(map == NULL)
-                        return ERR_BAYES_MMAP;
-
-                     snprintf(buf, MAXBUFSIZE-1, "INSERT INTO %s (id, uid, ts, data) VALUES('%s', %ld, %ld, \"", SQL_QUEUE_TABLE, tmpfile, uid, now);
-
-                     data = malloc(2 * st.st_size + strlen(buf) + 1 + 1 + 1);
-                     if(data != NULL){
-                        snprintf(data, 2 * st.st_size + strlen(buf) + 1, "%s", buf);
-                        mysql_real_escape_string(&mysql, data+strlen(buf), map, st.st_size);
-                        strncat(data, "\")", 2 * st.st_size + strlen(buf) + 1 + 1);
-                        mysql_real_query(&mysql, data, strlen(data));
-
-                        free(data);
-                     }
-                     munmap(map, st.st_size);
-                  }
-               }
-
-               mysql_free_result(res);
-            }
-         }
-      }
-   }
-
-
-   return 1;
 }
 
 

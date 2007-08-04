@@ -122,7 +122,7 @@ void init_child(){
    void postfix_to_clapf(int new_sd, struct __config cfg){
 #endif
 
-   int n, state, fd;
+   int i, n, state, fd;
    char buf[MAXBUFSIZE], acceptbuf[MAXBUFSIZE], queuedfile[SMALLBUFSIZE];
 
    #ifdef HAVE_ANTIVIRUS
@@ -140,7 +140,6 @@ void init_child(){
    #endif
 
    #ifdef HAVE_AVG
-      int i;
       struct rfc822_attachment Qmime;
       char mimefile[SMALLBUFSIZE];
    #endif
@@ -460,7 +459,10 @@ void init_child(){
                           gettimeofday(&tv_spam_stop, &tz);
 
                           gettimeofday(&tv_meta1, &tz);
-                          x = update_training_metadata(mysql, sdata.ttmpfile, sdata.rcptto, sdata.num_of_rcpt_to, cfg);
+                          for(i=0; i<sdata.num_of_rcpt_to; i++){
+                             sdata.uid = get_uid_from_email(mysql, sdata.ttmpfile, sdata.rcptto[i]);
+                             if(sdata.uid > 0) x = update_training_metadata(mysql, sdata.ttmpfile, sdata.uid, cfg);
+                          }
                           gettimeofday(&tv_meta2, &tz);
 
                           mysql_close(&mysql);

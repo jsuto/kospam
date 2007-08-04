@@ -58,6 +58,8 @@ struct __config {
 
    int min_phrase_number;
 
+   float rob_s;
+   float rob_x;
    float esf_h;
    float esf_s;
 

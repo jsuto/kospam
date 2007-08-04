@@ -1,0 +1,19 @@
+## this allows you to use the 2 training addresses and
+## the rest of the users check their email with spamdrop
+
+if($LOGNAME =~ /^spam$/)
+{
+	`/usr/local/bin/spam-fwd-train`
+	exit
+}
+if($LOGNAME =~ /^ham$/)
+{
+	`/usr/local/bin/ham-fwd-train`
+	exit
+}
+else
+{
+	xfilter "/usr/local/bin/spamdrop -p"
+	to "Mailbox"
+}
+

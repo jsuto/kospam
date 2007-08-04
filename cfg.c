@@ -123,6 +123,8 @@ struct __config read_config(char *configfile){
 
    cfg.enable_auto_white_list = 1;
 
+   cfg.rob_s = 1.0;
+   cfg.rob_x = 0.5;
    cfg.esf_h = 1;
    cfg.esf_s = 1;
 
@@ -273,6 +275,12 @@ struct __config read_config(char *configfile){
 
                   if(strcmp(key, "enable_auto_white_list") == 0)
                      cfg.enable_auto_white_list = atoi(val);
+
+                  if(strcmp(key, "rob_s") == 0)
+                     cfg.rob_s = atof(val);
+
+                  if(strcmp(key, "rob_x") == 0)
+                     cfg.rob_x = atof(val);
 
                   if(strcmp(key, "esf_h") == 0)
                      cfg.esf_h = atof(val);

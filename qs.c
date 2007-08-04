@@ -524,6 +524,8 @@ int main(int argc, char **argv){
    /* load all tokens into memory */
    if(cfg.group_type == GROUP_SHARED) load_all_tokens(Q);
 
+   chmod(cfg.qcache_socket, 0777);
+
    syslog(LOG_PRIORITY, "started");
  
    for(;;) {

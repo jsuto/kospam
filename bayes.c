@@ -1,5 +1,5 @@
 /*
- * bayes.c, 2007.08.01, SJ
+ * bayes.c, 2007.08.04, SJ
  */
 
 #include <stdio.h>
@@ -286,7 +286,9 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
    /* add a spammy token if we got a binary, eg. PDF attachment, 2007.07.02, SJ */
 
    if(cfg.penalize_octet_stream == 1 && (attachment_by_type(state, "application/octet-stream") == 1 || attachment_by_type(state, "application/pdf") == 1
-       || attachment_by_type(state, "application/vnd.ms-excel") == 1)){
+       || attachment_by_type(state, "application/vnd.ms-excel") == 1
+       || attachment_by_type(state, "application/x-zip-compressed") == 1)
+   ){
        spaminess = REAL_SPAM_TOKEN_PROBABILITY;
        n_phrases += addnode(s_phrase_hash, "OCTET_STREAM*", spaminess, DEVIATION(spaminess));
        n_tokens += addnode(shash, "OCTET_STREAM*", spaminess, DEVIATION(spaminess));

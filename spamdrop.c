@@ -109,7 +109,7 @@ int main(int argc, char **argv){
    close(fd);
    close(fd2);
 
-   if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "written temporary file: %s", sdata.ttmpfile);
+   if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: written temporary file", sdata.ttmpfile);
 
    gettimeofday(&tv_spam_start, &tz);
 
@@ -121,7 +121,7 @@ int main(int argc, char **argv){
       x = update_training_metadata(mysql, sdata.ttmpfile, sdata.uid, cfg);
       mysql_close(&mysql);
 
-      if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "update metadata result: %d", x);
+      if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: update metadata: %d", sdata.ttmpfile, x);
    }
    else
       syslog(LOG_PRIORITY, "%s: %s", sdata.ttmpfile, ERR_MYSQL_CONNECT);
@@ -150,6 +150,7 @@ int main(int argc, char **argv){
             printf("%s%s\r\n", cfg.clapf_header_field, sdata.ttmpfile);
             printf("%s%s%.4f\r\n", trainbuf, cfg.clapf_header_field, spaminess);
             printf("%s%ld ms\r\n", cfg.clapf_header_field, tvdiff(tv_spam_stop, tv_spam_start)/1000);
+            if(spaminess > 0.9999) printf("%s%s\r\n", cfg.clapf_header_field, MSG_ABSOLUTELY_SPAM);
             if(spaminess >= cfg.spam_overall_limit && spaminess < 1.01) printf("%sYes\r\n", cfg.clapf_header_field);
          }
          if(strncmp(buf, cfg.clapf_header_field, strlen(cfg.clapf_header_field)))

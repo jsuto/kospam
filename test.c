@@ -39,6 +39,13 @@ int main(int argc, char **argv){
 
    cfg = read_config(argv[1]);
 
+   /*
+    * override training mode to make sure we will not train the token database
+    * since we are just testing the spam decision against a message, SJ
+    */
+
+   cfg.training_mode = 0;
+
    sdata.uid = 0;
    sdata.num_of_rcpt_to = -1;
    memset(sdata.rcptto[0], MAXBUFSIZE, 0);

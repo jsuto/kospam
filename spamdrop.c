@@ -109,32 +109,34 @@ int main(int argc, char **argv){
    close(fd);
    close(fd2);
 
-   if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: written temporary file", sdata.ttmpfile);
+   if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: written %d bytes", sdata.ttmpfile, tot_len);
 
    gettimeofday(&tv_spam_start, &tz);
 
-#ifdef HAVE_MYSQL_TOKEN_DATABASE
-   mysql_init(&mysql);
-   if(mysql_real_connect(&mysql, cfg.mysqlhost, cfg.mysqluser, cfg.mysqlpwd, cfg.mysqldb, cfg.mysqlport, cfg.mysqlsocket, 0)){
-      spaminess = bayes_file(mysql, sdata.ttmpfile, sdata, cfg);
+   if(tot_len <= cfg.max_message_size_to_filter){
+   #ifdef HAVE_MYSQL_TOKEN_DATABASE
+      mysql_init(&mysql);
+      if(mysql_real_connect(&mysql, cfg.mysqlhost, cfg.mysqluser, cfg.mysqlpwd, cfg.mysqldb, cfg.mysqlport, cfg.mysqlsocket, 0)){
+         spaminess = bayes_file(mysql, sdata.ttmpfile, sdata, cfg);
 
-      x = update_training_metadata(mysql, sdata.ttmpfile, sdata.uid, cfg);
-      mysql_close(&mysql);
+         x = update_training_metadata(mysql, sdata.ttmpfile, sdata.uid, cfg);
+         mysql_close(&mysql);
 
-      if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: update metadata: %d", sdata.ttmpfile, x);
+         if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: update metadata: %d", sdata.ttmpfile, x);
+      }
+      else
+         syslog(LOG_PRIORITY, "%s: %s", sdata.ttmpfile, ERR_MYSQL_CONNECT);
+   #endif
+   #ifdef HAVE_SQLITE3
+      rc = sqlite3_open(cfg.sqlite3, &db);
+      if(rc){
+         syslog(LOG_PRIORITY, "%s: %s", sdata.ttmpfile, ERR_SQLITE3_OPEN);
+      }
+      else {
+         spaminess = bayes_file(db, sdata.ttmpfile, sdata, cfg);
+      }
+   #endif
    }
-   else
-      syslog(LOG_PRIORITY, "%s: %s", sdata.ttmpfile, ERR_MYSQL_CONNECT);
-#endif
-#ifdef HAVE_SQLITE3
-   rc = sqlite3_open(cfg.sqlite3, &db);
-   if(rc){
-      syslog(LOG_PRIORITY, "%s: %s", sdata.ttmpfile, ERR_SQLITE3_OPEN);
-   }
-   else {
-      spaminess = bayes_file(db, sdata.ttmpfile, sdata, cfg);
-   }
-#endif
 
    gettimeofday(&tv_spam_stop, &tz);
 

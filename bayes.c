@@ -566,7 +566,6 @@ double bayes_file(char *cdbfile, char *spamfile, struct session_data sdata, stru
 #ifdef HAVE_SQLITE3
    QRY.db = db;
 #endif
-   //QRY.uid = 0;
    QRY.uid = sdata.uid;
    QRY.sockfd = -1;
    QRY.ham_msg = 0;
@@ -615,10 +614,18 @@ double bayes_file(char *cdbfile, char *spamfile, struct session_data sdata, stru
 #endif
 
 
-
    /*
-    * determine uid if we use a merged group, 2007.06.13, SJ
+    * determine what user id we will use, 2007.08.07, SJ
     */
+
+   /* fix uid and sql statement if this is a shared group */
+
+   if(cfg.group_type == GROUP_SHARED){
+      QRY.uid = 0;
+      snprintf(buf, MAXBUFSIZE-1, "SELECT nham, nspam FROM %s WHERE uid=0", SQL_MISC_TABLE);
+   }
+
+   /* if we use a merged group and we do not know who is calling, 2007.08.07, SJ */
 
    if(cfg.group_type == GROUP_MERGED && QRY.uid == 0){
 
@@ -649,14 +656,13 @@ double bayes_file(char *cdbfile, char *spamfile, struct session_data sdata, stru
       #endif
 
       }
-      else if(sdata.num_of_rcpt_to == -1) QRY.uid = sdata.uid;
+   }
 
+   /* fix sql statment if we use a merged group */
+
+   if(cfg.group_type == GROUP_MERGED)
       snprintf(buf, MAXBUFSIZE-1, "SELECT SUM(nham), SUM(nspam) FROM %s WHERE uid=0 OR uid=%ld", SQL_MISC_TABLE, QRY.uid);
-   }
-   else {
-      /* or this is a shared group */
-      snprintf(buf, MAXBUFSIZE-1, "SELECT nham, nspam FROM %s WHERE uid=0", SQL_MISC_TABLE);
-   }
+
 
 #ifdef DEBUG
    fprintf(stderr, "uid: %ld\n", QRY.uid);
@@ -728,7 +734,6 @@ double bayes_file(char *cdbfile, char *spamfile, struct session_data sdata, stru
          return REAL_HAM_TOKEN_PROBABILITY;
       }
    }
-
 
 
 #ifdef HAVE_CDB

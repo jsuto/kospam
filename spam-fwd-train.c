@@ -164,7 +164,6 @@ int main(int argc, char **argv){
 #endif
 
 
-
    /* select message data */
 
    make_rnd_string(sdata.ttmpfile);
@@ -200,6 +199,11 @@ int main(int argc, char **argv){
    }
 #endif
 
+   /* if this is a shared group, make sure the token database is trained with uid=0 */
+
+   if(cfg.group_type == GROUP_SHARED)
+      QRY.uid = 0;
+
 
    if(state.first){
 
@@ -232,13 +236,13 @@ int main(int argc, char **argv){
 
             if(is_spam == 1){
                if(train_mode == T_TUM)
-                  snprintf(buf, MAXBUFSIZE-1, "update %s set nspam=nspam+1, nham=nham-1 WHERE uid=%ld", SQL_MISC_TABLE, QRY.uid);
+                  snprintf(buf, MAXBUFSIZE-1, "UPDATE %s SET nspam=nspam+1, nham=nham-1 WHERE uid=%ld AND nham > 0", SQL_MISC_TABLE, QRY.uid);
                else
                   snprintf(buf, MAXBUFSIZE-1, "update %s set nspam=nspam+1 WHERE uid=%ld", SQL_MISC_TABLE, QRY.uid);
             }
             else {
                if(train_mode == T_TUM)
-                  snprintf(buf, MAXBUFSIZE-1, "update %s set nham=nham+1, nspam=nspam-1 WHERE uid=%ld", SQL_MISC_TABLE, QRY.uid);
+                  snprintf(buf, MAXBUFSIZE-1, "UPDATE %s SET nham=nham+1, nspam=nspam-1 WHERE uid=%ld AND nspam > 0", SQL_MISC_TABLE, QRY.uid);
                else
                   snprintf(buf, MAXBUFSIZE-1, "update %s set nham=nham+1 WHERE uid=%ld", SQL_MISC_TABLE, QRY.uid);
             }

@@ -1,5 +1,10 @@
 0.3.30:
 
+2007.08.07, SJ
+
+Fixing uid handling in bayes.c
+(bayes.c)
+
 2007.08.04, SJ
 
 Continued to improve spamdrop integration. You may use a single

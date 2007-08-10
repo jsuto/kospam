@@ -15,6 +15,8 @@ with
 
 content_filter = lmtp:[127.0.0.1]:10025
 
+Please note that I have not implemented the ENHANCEDSTATUSCODE and the
+PIPELINING extensions. It seems that postfix is fine without them.
 (session.c)
 
 Parsing the message outside the bayes_file() function.

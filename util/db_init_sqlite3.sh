@@ -1,26 +1,46 @@
 #!/bin/sh
 ##
-## kcdb.sh, 2007.01.08, SJ
-## create the CDB files from scratch
+## db_init_sqlite3.sh, 2007.08.10, SJ
+## create the SQLite3 tables and load ham/spam tokens from scratch
 ##
 
-if [ $# -ne 2 ]; then echo "usage: $0 <ham> <spam>"; exit 1; fi
+if [ $# -ne 3 ]; then echo "usage: $0 <ham> <spam> <database>"; exit 1; fi
 
 export PATH=$PATH:/usr/local/bin:.:`pwd`/perl
+export LC_ALL=C
 
 HAM=$1
 SPAM=$2
+DB=$3
 NHAM=0
 NSPAM=0
+TEMP=`pwd`/temp.$$
 
 TS1=`date +%s`
 
-rm -f ham.tmp spam.tmp tokens*.cdb num_of_ham.tmp num_of_spam.tmp
+rm -f ham.tmp spam.tmp temp.* $DB num_of_ham.tmp num_of_spam.tmp
 
+import_tokens(){
+   rm -f $TEMP
 
-create_cdb_file(){
-   createcdb.pl ham.tmp spam.tmp $NHAM $NSPAM tokens
+   sqlite3.pl ham.tmp spam.tmp $TEMP
+
+   echo "Num of ham messages: $NHAM"
+   echo "Num of spam messages: $NSPAM"
+   echo "Raw token file: $TEMP"
+
+   echo
+
+   if [ -f db-sqlite3.sql ]; then
+      sqlite3 $DB < db-sqlite3.sql
+   fi
+
+   echo "INSERT INTO t_misc (nham, nspam, uid) VALUES($NHAM, $NSPAM, 0);" | sqlite3 $DB
+
+   cat $TEMP | sqlite3 $DB
+
 }
+
 
 process_maildir(){
    echo -n "parsing HAM directory. . . "
@@ -37,7 +57,8 @@ process_maildir(){
    TS2=`date +%s`
    echo `expr $TS2 - $TS1` " [sec]"
 
-   create_cdb_file;
+   import_tokens;
+
 }
 
 process_mbox(){
@@ -59,7 +80,8 @@ process_mbox(){
    NHAM=`cat num_of_ham.tmp`
    NSPAM=`cat num_of_spam.tmp`
 
-   create_cdb_file;
+   import_tokens;
+
 }
 
 

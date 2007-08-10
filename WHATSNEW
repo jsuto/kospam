@@ -1,3 +1,10 @@
+0.3.30:
+-------
+
+Added a query cache to speed up the spamicity query.
+
+wwqAdded LMTP support.
+
 0.3.29:
 -------
 

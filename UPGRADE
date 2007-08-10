@@ -20,7 +20,7 @@ IMPORTANT NOTE
 --------------
 
 Clapf (as of version 0.3.29) stores tokens as numerical hashes by default.
-If you are upgrading from a previous (<0.3.29) version. You must either
+If you are upgrading from a previous (<0.3.29) version, you must either
 recreate the t_token table or add the -DHAVE_NO_64_HASH compile option
 to the 'DEFS' section of the Makefile after running the configure script
 to keep using the old format t_token table.

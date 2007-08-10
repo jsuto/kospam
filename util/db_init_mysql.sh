@@ -1,6 +1,6 @@
 #!/bin/sh
 ##
-## kcdb_mysql.sh, 2007.06.12, SJ
+## db_init_mysql.sh, 2007.08.10, SJ
 ## create the MySQL tables and load ham/spam tokens from scratch
 ##
 
@@ -31,9 +31,11 @@ import_tokens(){
    if test "$HASHED" = "nohash";
    then
       echo "not using hashed tokens..."
+      mysql --defaults-file=$MYCNF < db-old.sql
    else
       aphash < $TEMP > $HASHTEMP
       TEMP=$HASHTEMP
+      mysql --defaults-file=$MYCNF < db-new.sql
    fi
 
    echo "Num of ham messages: $NHAM"
@@ -42,14 +44,9 @@ import_tokens(){
 
    echo
 
-   if [ -f db.sql ]; then
-      mysql --defaults-file=$MYCNF < db.sql
-   fi
-
-   #echo "LOAD DATA LOCAL INFILE '$TEMP' INTO TABLE t_token FIELDS TERMINATED BY ' '" | mysql --defaults-file=$MYCNF
    echo "LOAD DATA INFILE '$TEMP' INTO TABLE t_token FIELDS TERMINATED BY ' '" | mysql --defaults-file=$MYCNF
 
-   echo "INSERT INTO t_misc (update_cdb, nham, nspam, uid) VALUES(0, $NHAM, $NSPAM, 0)" | mysql --defaults-file=$MYCNF
+   echo "INSERT INTO t_misc (nham, nspam, uid) VALUES($NHAM, $NSPAM, 0)" | mysql --defaults-file=$MYCNF
 }
 
 create_cdb_file(){

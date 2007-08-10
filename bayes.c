@@ -509,8 +509,6 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
     */
 
 #ifndef HAVE_CDB
-   syslog(LOG_PRIORITY, "%s: %d %ld %d %.4f", spamfile, cfg.training_mode, QRY.uid, cfg.group_type, spaminess);
-
    if(cfg.training_mode == T_TUM && (QRY.uid > 0 || cfg.group_type == GROUP_SHARED) && (spaminess >= cfg.spam_overall_limit || spaminess < cfg.max_junk_spamicity)){
       gettimeofday(&tv1, &tz);
 

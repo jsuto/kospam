@@ -1,6 +1,5 @@
 
 create table if not exists t_misc (
-	update_cdb int default 0,
 	nham int default 0,
 	nspam int default 0,
 	uid int unsigned default 0

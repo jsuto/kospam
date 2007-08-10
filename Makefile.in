@@ -27,8 +27,8 @@ all:
 	make clapf
 	@cgi@
 	make splitmbox
-	@parsembox@
 	@spamdrop@
+	@parsembox@
 	@passmail@
 	@qcache@
 clapf:

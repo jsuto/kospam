@@ -1,5 +1,5 @@
 /*
- * user.c, 2006.10.27, SJ
+ * user.c, 2007.08.10, SJ
  */
 
 #include <stdio.h>
@@ -16,7 +16,7 @@
 #include "config.h"
 
 
-int inject_mail(struct session_data sdata, char *smtpaddr, int smtpport, char *spaminessbuf, struct __config cfg, char *notify);
+int inject_mail(struct session_data sdata, int msg, char *smtpaddr, int smtpport, char *spaminessbuf, struct __config cfg, char *notify);
 
 int deliver_message(char *dir, char *message, struct __config cfg){
    char sbuf[SMALLBUFSIZE];
@@ -53,8 +53,7 @@ int deliver_message(char *dir, char *message, struct __config cfg){
 
    snprintf(sdata.ttmpfile, SMALLBUFSIZE-1, "%s/%s", dir, message);
 
-   //i = inject_mail(f, mfrom, rcptto, num_of_rcpt_to, cfg.spam_smtp_addr, cfg.spam_smtp_port, sbuf, cfg, NULL);
-   i = inject_mail(sdata, cfg.spam_smtp_addr, cfg.spam_smtp_port, sbuf, cfg, NULL);
+   i = inject_mail(sdata, 0, cfg.spam_smtp_addr, cfg.spam_smtp_port, sbuf, cfg, NULL);
 
    return i;
 }

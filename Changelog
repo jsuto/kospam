@@ -1,5 +1,39 @@
 0.3.30:
 
+2007.08.10, SJ
+
+Removed the --enable-mysql configure option and the HAVE_MYSQL_TOKEN_DATABASE
+definition. Now I use only the #ifdef HAVE_MYSQL option.
+(configure.in, configure, session.c, bayes.c, spamdrop.c, train.c, traincgi.c, spam-fwd-train.c)
+
+Added LMTP support. From now clapf will receive messages via LMTP from postfix.
+Replace the following in /etc/postfix/main.cf:
+
+content_filter = smtp:[127.0.0.1]:10025
+
+with
+
+content_filter = lmtp:[127.0.0.1]:10025
+
+(session.c)
+
+Parsing the message outside the bayes_file() function.
+(bayes.c, session.c, spamdrop.c, test.c)
+
+Removed the --disable-antispam option. The configure script will exit
+if you do not specify neither an antivirus package nor a tokendb type.
+(configure.in, configure)
+
+
+2007.08.08, SJ
+
+Fixed a bug in the 'train' utility to update the t_misc table
+while using an SQLite database.
+(train.c)
+
+Ongoing SQLite3 integration
+(sql.c, session.c, spamdrop.c, train.c)
+
 2007.08.07, SJ
 
 Fixing uid handling in bayes.c

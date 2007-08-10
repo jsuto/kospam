@@ -20,7 +20,7 @@ create index t_token_idx on t_token(token, uid);
 create table if not exists user (
 	uid int unsigned not null,
         email char(128) not null,
-	action enum ('drop', 'junk', 'quarantine') default 'junk',
+	action char(32) default 'junk',
 	pagelen int default 25,
         username char(32) primary key not null
 );
@@ -31,7 +31,7 @@ create table if not exists t_queue (
 	id char(32) not null,
 	uid int unsigned not null,
 	ts bigint unsigned not null,
-	data blob not null,
+	data blob not null
 );
 
 create index t_queue_idx on t_queue(uid, id);

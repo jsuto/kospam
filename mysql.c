@@ -148,9 +148,9 @@ int do_mysql_qry(MYSQL mysql, int sockfd, int ham_or_spam, char *token, char *to
 
    #ifdef HAVE_NO_64_HASH
       if(uid > 0)
-         snprintf(stmt, MAXBUFSIZE-1, "INSERT INTO %s (token, nham, nspam, uid) VALUES('%s', %ld, %ld, %d)", tokentable, buf, TE.nham, TE.nspam, uid);
+         snprintf(stmt, MAXBUFSIZE-1, "INSERT INTO %s (token, nham, nspam, uid) VALUES('%s', %d, %d, %d)", tokentable, buf, TE.nham, TE.nspam, uid);
       else
-         snprintf(stmt, MAXBUFSIZE-1, "INSERT INTO %s (token, nham, nspam) VALUES('%s', %ld, %ld)", tokentable, buf, TE.nham, TE.nspam);
+         snprintf(stmt, MAXBUFSIZE-1, "INSERT INTO %s (token, nham, nspam) VALUES('%s', %d, %d)", tokentable, buf, TE.nham, TE.nspam);
    #else
       if(uid > 0)
          snprintf(stmt, MAXBUFSIZE-1, "INSERT INTO %s (token, nham, nspam, uid) VALUES(%llu, %d, %d, %d)", tokentable, hash, TE.nham, TE.nspam, uid);

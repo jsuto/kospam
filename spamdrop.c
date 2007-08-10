@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2007.08.04, SJ
+ * spamdrop.c, 2007.08.10, SJ
  *
  * check if a single RFC-822 formatted messages is spam or not
  */
@@ -27,7 +27,7 @@ extern char *optarg;
 extern int optind;
 
 
-#ifdef HAVE_MYSQL_TOKEN_DATABASE
+#ifdef HAVE_MYSQL
    #include <mysql.h>
    MYSQL mysql;
    MYSQL_RES *res;
@@ -49,6 +49,7 @@ int main(int argc, char **argv){
    struct timezone tz;
    struct timeval tv_spam_start, tv_spam_stop;
    struct session_data sdata;
+   struct _state state;
    struct __config cfg;
    char buf[MAXBUFSIZE], *configfile=CONFIG_FILE;
    int i, n, x, fd, fd2, print_message=0, is_header=1, tot_len=0;
@@ -95,7 +96,7 @@ int main(int argc, char **argv){
    fd = open("/dev/stdin", O_RDONLY);
    if(fd == -1) return EX_TEMPFAIL;
 
-   fd2 = open(sdata.ttmpfile, O_CREAT|O_EXCL|O_RDWR, S_IRUSR|S_IWUSR);
+   fd2 = open(sdata.ttmpfile, O_CREAT|O_EXCL|O_RDWR|O_TRUNC, S_IRUSR|S_IWUSR);
    if(fd2 == -1){
       close(fd);
       return EX_TEMPFAIL;
@@ -114,15 +115,19 @@ int main(int argc, char **argv){
    gettimeofday(&tv_spam_start, &tz);
 
    if(tot_len <= cfg.max_message_size_to_filter){
-   #ifdef HAVE_MYSQL_TOKEN_DATABASE
+      state = parse_message(sdata.ttmpfile, cfg);
+
+   #ifdef HAVE_MYSQL
       mysql_init(&mysql);
       if(mysql_real_connect(&mysql, cfg.mysqlhost, cfg.mysqluser, cfg.mysqlpwd, cfg.mysqldb, cfg.mysqlport, cfg.mysqlsocket, 0)){
-         spaminess = bayes_file(mysql, sdata.ttmpfile, sdata, cfg);
+         spaminess = bayes_file(mysql, sdata.ttmpfile, state, sdata, cfg);
 
-         x = update_training_metadata(mysql, sdata.ttmpfile, sdata.uid, cfg);
+         if(cfg.store_metadata == 1){
+            x = update_training_metadata(mysql, sdata.ttmpfile, sdata.uid, cfg);
+            if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: update metadata: %d", sdata.ttmpfile, x);
+         }
+
          mysql_close(&mysql);
-
-         if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: update metadata: %d", sdata.ttmpfile, x);
       }
       else
          syslog(LOG_PRIORITY, "%s: %s", sdata.ttmpfile, ERR_MYSQL_CONNECT);
@@ -133,10 +138,20 @@ int main(int argc, char **argv){
          syslog(LOG_PRIORITY, "%s: %s", sdata.ttmpfile, ERR_SQLITE3_OPEN);
       }
       else {
-         spaminess = bayes_file(db, sdata.ttmpfile, sdata, cfg);
+         spaminess = bayes_file(db, sdata.ttmpfile, state, sdata, cfg);
+
+         if(cfg.store_metadata == 1){
+            x = update_training_metadata(db, sdata.ttmpfile, sdata.uid, cfg);
+            if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: update metadata: %d", sdata.ttmpfile, x);
+         }
+
+         sqlite3_close(db);
       }
    #endif
+
+      free_and_print_list(state.first, 0);
    }
+
 
    gettimeofday(&tv_spam_stop, &tz);
 

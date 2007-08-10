@@ -28,6 +28,7 @@ all:
 	@cgi@
 	make splitmbox
 	@parsembox@
+	@spamdrop@
 	@passmail@
 	@qcache@
 clapf:
@@ -36,8 +37,9 @@ clapf:
 parsembox:
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c parser.c
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o parsembox parsembox.c $(LIBS) misc.o decoder.o parser.o $(LIBDIR)
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c parser.c
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -DSPAMDROP -c bayes.c
+
+spamdrop:
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c bayes.c
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o spamdrop spamdrop.c $(OBJS) @mysql_obj@ $(LIBS) $(LIBDIR)
 
 splitmbox:
@@ -48,7 +50,6 @@ cgi:
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o usercgi usercgi.c $(OBJS) $(USER_OBJ) @mysql_obj@ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
 
 train:
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c mysql.c
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o aphash aphash.c misc.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o train train.c $(OBJS) @mysql_obj@ $(LIBS) $(LIBDIR) @LDFLAGS@
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o traincgi traincgi.c $(OBJS) @mysql_obj@ $(USER_OBJ) $(LIBS) $(LDAP_LIBS) $(LIBDIR)

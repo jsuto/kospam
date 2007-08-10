@@ -1,5 +1,5 @@
 /*
- * train.c, 2007.07.22, SJ
+ * train.c, 2007.08.08, SJ
  */
 
 #include <stdio.h>
@@ -99,7 +99,7 @@ int main(int argc, char **argv){
       state = parse(buf, state);
 
 
-#ifdef HAVE_MYSQL_TOKEN_DATABASE
+#ifdef HAVE_MYSQL
    mysql_init(&mysql);
 
    if(!mysql_real_connect(&mysql, cfg.mysqlhost, cfg.mysqluser, cfg.mysqlpwd, cfg.mysqldb, cfg.mysqlport, cfg.mysqlsocket, 0)){
@@ -156,15 +156,20 @@ int main(int argc, char **argv){
 
       /* update the t_misc table */
 
+   #ifdef HAVE_MYSQL
       if(is_spam == 1)
          snprintf(buf, MAXBUFSIZE-1, "update %s set update_cdb=1, nspam=nspam+1 WHERE uid=%ld", SQL_MISC_TABLE, QRY.uid);
       else
          snprintf(buf, MAXBUFSIZE-1, "update %s set update_cdb=1, nham=nham+1 WHERE uid=%ld", SQL_MISC_TABLE, QRY.uid);
 
-   #ifdef HAVE_MYSQL_TOKEN_DATABASE
       mysql_real_query(&mysql, buf, strlen(buf));
    #endif
    #ifdef HAVE_SQLITE3
+      if(is_spam == 1)
+         snprintf(buf, MAXBUFSIZE-1, "update %s set update_cdb=1, nspam=nspam+1 WHERE uid='%ld'", SQL_MISC_TABLE, QRY.uid);
+      else
+         snprintf(buf, MAXBUFSIZE-1, "update %s set update_cdb=1, nham=nham+1 WHERE uid='%ld'", SQL_MISC_TABLE, QRY.uid);
+
       sqlite3_prepare_v2(db, buf, -1, &pStmt, ppzTail);
       sqlite3_step(pStmt);
       sqlite3_finalize(pStmt);
@@ -181,7 +186,7 @@ ENDE:
 #endif
 
    clearhash(tokens);
-#ifdef HAVE_MYSQL_TOKEN_DATABASE
+#ifdef HAVE_MYSQL
    mysql_close(&mysql);
 #endif
 #ifdef HAVE_SQLITE3

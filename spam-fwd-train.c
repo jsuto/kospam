@@ -133,7 +133,7 @@ int main(int argc, char **argv){
 
    if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: trying to train", ID);
 
-#ifdef HAVE_MYSQL_TOKEN_DATABASE
+#ifdef HAVE_MYSQL
    mysql_init(&mysql);
 
    if(!mysql_real_connect(&mysql, cfg.mysqlhost, cfg.mysqluser, cfg.mysqlpwd, cfg.mysqldb, cfg.mysqlport, cfg.mysqlsocket, 0)){
@@ -150,7 +150,7 @@ int main(int argc, char **argv){
    snprintf(buf, MAXBUFSIZE-1, "SELECT uid FROM %s WHERE email='%s'", SQL_USER_TABLE, from);
    if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "sql: %s", buf);
 
-#ifdef HAVE_MYSQL_TOKEN_DATABASE
+#ifdef HAVE_MYSQL
    if(mysql_real_query(&mysql, buf, strlen(buf)) == 0){
       res = mysql_store_result(&mysql);
       if(res != NULL){
@@ -172,7 +172,7 @@ int main(int argc, char **argv){
    snprintf(buf, MAXBUFSIZE-1, "SELECT data FROM %s WHERE id='%s' AND uid=%ld", SQL_QUEUE_TABLE, ID, QRY.uid);
    if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "sql: %s", buf);
 
-#ifdef HAVE_MYSQL_TOKEN_DATABASE
+#ifdef HAVE_MYSQL
    if(mysql_real_query(&mysql, buf, strlen(buf)) == 0){
       res = mysql_store_result(&mysql);
       if(res != NULL){
@@ -247,13 +247,13 @@ int main(int argc, char **argv){
                   snprintf(buf, MAXBUFSIZE-1, "update %s set nham=nham+1 WHERE uid=%ld", SQL_MISC_TABLE, QRY.uid);
             }
 
-         #ifdef HAVE_MYSQL_TOKEN_DATABASE   
+         #ifdef HAVE_MYSQL   
             mysql_real_query(&mysql, buf, strlen(buf));
          #endif
 
             snprintf(buf, MAXBUFSIZE-1, "INSERT INTO %s (uid, ts, msgid, is_spam) VALUES(%ld, %ld, '%s', %d)", SQL_TRAININGLOG_TABLE, QRY.uid, now, ID, is_spam);
 
-         #ifdef HAVE_MYSQL_TOKEN_DATABASE
+         #ifdef HAVE_MYSQL
             mysql_real_query(&mysql, buf, strlen(buf));
          #endif
 

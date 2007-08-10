@@ -3,7 +3,6 @@
  */
 
 #include "bayes.h"
-//#include "smtp.h"
 
 void init_child();
 

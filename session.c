@@ -1,5 +1,5 @@
 /*
- * session.c, 2007.07.18, SJ
+ * session.c, 2007.08.10, SJ
  */
 
 #include <stdio.h>
@@ -33,11 +33,12 @@ struct timeval tv_start, tv_rcvd, tv_scnd, tv_sent, tv_stop, tv_meta1, tv_meta2;
 struct session_data sdata;
 int x;
 
-int inject_mail(struct session_data sdata, char *smtpaddr, int smtpport, char *spaminessbuf, struct __config cfg, char *notify);
+int inject_mail(struct session_data sdata, int msg, char *smtpaddr, int smtpport, char *spaminessbuf, struct __config cfg, char *notify);
 
-#ifdef HAVE_MYSQL_TOKEN_DATABASE
+#ifdef HAVE_MYSQL
    #include <mysql.h>
    MYSQL mysql;
+   int mysql_connection=0;
 #endif
 
 #ifdef HAVE_SQLITE3
@@ -62,28 +63,11 @@ void kill_child(){
  * syslog ham/spam status per email addresses
  */
 
-void log_ham_spam_per_email(struct session_data sdata, int ham_or_spam){
-   int i;
-   char *p, *q, a[MAXBUFSIZE];
-
-   for(i=0; i<sdata.num_of_rcpt_to; i++){
-
-       snprintf(a, MAXBUFSIZE-1, sdata.rcptto[i]);
-       p = strchr(a, '<');
-       if(p){
-          p++;
-          q = strchr(p, '>');
-          if(q)
-             *q = '\0';
-       }
-       else
-          p = a;
-
-       if(ham_or_spam == 0)
-          syslog(LOG_PRIORITY, "%s: %s got HAM", sdata.ttmpfile, p);
-       else
-          syslog(LOG_PRIORITY, "%s: %s got SPAM", sdata.ttmpfile, p);
-   }
+void log_ham_spam_per_email(char *tmpfile, char *email, int ham_or_spam){
+   if(ham_or_spam == 0)
+      syslog(LOG_PRIORITY, "%s: %s got HAM", tmpfile, email);
+   else
+      syslog(LOG_PRIORITY, "%s: %s got SPAM", tmpfile, email);
 }
 
 
@@ -123,7 +107,7 @@ void init_child(){
 #endif
 
    int i, n, state, fd;
-   char buf[MAXBUFSIZE], acceptbuf[MAXBUFSIZE], queuedfile[SMALLBUFSIZE];
+   char *p, buf[MAXBUFSIZE], acceptbuf[MAXBUFSIZE], queuedfile[SMALLBUFSIZE], email[SMALLBUFSIZE];
 
    #ifdef HAVE_ANTIVIRUS
       char virusinfo[SMALLBUFSIZE];
@@ -137,6 +121,7 @@ void init_child(){
       double spaminess=DEFAULT_SPAMICITY;
       char spamfile[MAXBUFSIZE], spaminessbuf[MAXBUFSIZE], reason[SMALLBUFSIZE];
       struct timeval tv_spam_start, tv_spam_stop;
+      struct _state sstate;
    #endif
 
    #ifdef HAVE_AVG
@@ -160,21 +145,27 @@ void init_child(){
        _exit(0);
    }
 
-   // send 220 SMTP banner
+   // send 220 LMTP banner
 
-   send(new_sd, SMTP_RESP_220_BANNER, strlen(SMTP_RESP_220_BANNER), 0);
-   if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent: %s", sdata.ttmpfile, SMTP_RESP_220_BANNER);
+   send(new_sd, LMTP_RESP_220_BANNER, strlen(LMTP_RESP_220_BANNER), 0);
+   if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent: %s", sdata.ttmpfile, LMTP_RESP_220_BANNER);
 
    while((n = recvtimeout(new_sd, buf, MAXBUFSIZE, 0)) > 0){
 
       // HELO/EHLO
 
-      if(strncasecmp(buf, SMTP_CMD_HELO, strlen(SMTP_CMD_HELO)) == 0 || strncasecmp(buf, SMTP_CMD_EHLO, strlen(SMTP_CMD_EHLO)) == 0){
+      if(strncasecmp(buf, SMTP_CMD_HELO, strlen(SMTP_CMD_HELO)) == 0 || strncasecmp(buf, SMTP_CMD_EHLO, strlen(SMTP_CMD_EHLO)) == 0 || strncasecmp(buf, LMTP_CMD_LHLO, strlen(LMTP_CMD_LHLO)) == 0){
          if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: got: %s", sdata.ttmpfile, buf);
 
-            if(state == SMTP_STATE_INIT)
-               state = SMTP_STATE_HELO;
+            if(state == SMTP_STATE_INIT) state = SMTP_STATE_HELO;
+
             send(new_sd, SMTP_RESP_250_OK, strlen(SMTP_RESP_250_OK), 0);
+
+
+            /* FIXME: implement the ENHANCEDSTATUSCODE and the PIPELINING extensions */
+
+
+
             if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent: %s", sdata.ttmpfile, SMTP_RESP_250_OK);
 
             continue;
@@ -211,6 +202,7 @@ void init_child(){
                }
 
                state = SMTP_STATE_RCPT_TO;
+
                send(new_sd, SMTP_RESP_250_OK, strlen(SMTP_RESP_250_OK), 0);
                if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent: %s", sdata.ttmpfile, SMTP_RESP_250_OK);
             }
@@ -403,195 +395,207 @@ void init_child(){
             #endif
 
                gettimeofday(&tv_scnd, &tz);
-               memset(acceptbuf, 0, MAXBUFSIZE);
 
                if(rav == AVIR_VIRUS){
-                  if(cfg.silently_discard_infected_email == 1)
-                     snprintf(acceptbuf, MAXBUFSIZE-1, "%s Virus found in your mail (%s), dropping email, id: %s\r\n", SMTP_RESP_250_OK, virusinfo, sdata.ttmpfile);
-                  else
-                     snprintf(acceptbuf, MAXBUFSIZE-1, "%s Virus found in your mail (%s), id: %s\r\n", SMTP_RESP_550_ERR_PREF, virusinfo, sdata.ttmpfile);
+                  syslog(LOG_PRIORITY, "%s: found %s", sdata.ttmpfile, virusinfo);
 
-                  syslog(LOG_PRIORITY, "%s found in %s, rcvd: %ld [ms], scnd: %ld [ms], len: %d",
-                       virusinfo, sdata.ttmpfile, tvdiff(tv_rcvd, tv_start)/1000, tvdiff(tv_scnd, tv_rcvd)/1000, sdata.tot_len);
-
-
-                  /* move infected mail to quarantine, 2006.02.16, SJ */
-
-                  if(strlen(cfg.quarantine_dir) > 3)
-                     move_message_to_quarantine(sdata.ttmpfile, cfg.quarantine_dir, sdata.mailfrom, sdata.rcptto, sdata.num_of_rcpt_to);
-
-                  /* send notification if cfg.localpostmaster is set, 2005.10.04, SJ */
-
-                  if(strlen(cfg.clapfemail) > 3 && strlen(cfg.localpostmaster) > 3){
-
-                     snprintf(buf, MAXBUFSIZE-1, "From: <%s>\r\nTo: <%s>\r\nSubject: %s has been infected\r\n\r\n"
-                                    "E-mail from %s to %s (id: %s) was infected\r\n\r\n.\r\n",
-                                     cfg.clapfemail, cfg.localpostmaster, sdata.ttmpfile, sdata.mailfrom, sdata.rcptto[0], sdata.ttmpfile);
-
-                     snprintf(sdata.rcptto[0], MAXBUFSIZE-1, "RCPT TO: <%s>\r\n", cfg.localpostmaster);
-                     sdata.num_of_rcpt_to = 1;
-                     ret = inject_mail(sdata, cfg.postfix_addr, cfg.postfix_port, NULL, cfg, buf);
-                     if(ret == 0)
-                        syslog(LOG_PRIORITY, "notification about %s to %s failed", sdata.ttmpfile, cfg.localpostmaster);
-                  }
-
+                  /* FIXME: move quarantine here */
                }
-               else {
+
          #endif /* HAVE_ANTIVIRUS */
 
-         #ifdef HAVE_ANTISPAM
 
-                    /* skip spam test if the message size is above max_message_size_to_filter, 2005.12.08, SJ */
+               /* open database backend handler */
 
-                    if(cfg.use_antispam == 1 && (cfg.max_message_size_to_filter == 0 || sdata.tot_len < cfg.max_message_size_to_filter) ){
-                       if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: running Bayesian test", sdata.ttmpfile);
+            #ifdef HAVE_MYSQL
+               mysql_init(&mysql);
+               if(mysql_real_connect(&mysql, cfg.mysqlhost, cfg.mysqluser, cfg.mysqlpwd, cfg.mysqldb, cfg.mysqlport, cfg.mysqlsocket, 0))
+                  mysql_connection = 1;
+               else {
+                  mysql_connection = 0;
+                  syslog(LOG_PRIORITY, "%s: %s", sdata.ttmpfile, ERR_MYSQL_CONNECT);
+               }
+            #endif
+            #ifdef HAVE_SQLITE3
+                rc = sqlite3_open(cfg.sqlite3, &db);
+                if(rc){
+                   syslog(LOG_PRIORITY, "%s: %s", sdata.ttmpfile, ERR_SQLITE3_OPEN);
+                }
+            #endif
+            #ifdef HAVE_CDB
+                rc = init_cdbs(cfg.tokensfile);
+            #endif
 
-                       memset(trainbuf, 0, SMALLBUFSIZE);
-                       memset(spamfile, 0, MAXBUFSIZE);
-                       snprintf(spamfile, MAXBUFSIZE-1, "%s/%s", cfg.workdir, sdata.ttmpfile);
+            #ifdef HAVE_ANTISPAM
+                sstate = parse_message(sdata.ttmpfile, cfg);
+            #endif
 
-                       gettimeofday(&tv_spam_start, &tz);
+               /* send results back to the '.' command */
 
-                    #ifdef HAVE_MYSQL_TOKEN_DATABASE
-                       mysql_init(&mysql);
-                       if(mysql_real_connect(&mysql, cfg.mysqlhost, cfg.mysqluser, cfg.mysqlpwd, cfg.mysqldb, cfg.mysqlport, cfg.mysqlsocket, 0)){
-                          spaminess = bayes_file(mysql, spamfile, sdata, cfg);
-                          gettimeofday(&tv_spam_stop, &tz);
+               for(i=0; i<sdata.num_of_rcpt_to; i++){
+                  memset(acceptbuf, 0, MAXBUFSIZE);
+                  memset(email, 0, SMALLBUFSIZE);
 
-                          gettimeofday(&tv_meta1, &tz);
-                          for(i=0; i<sdata.num_of_rcpt_to; i++){
-                             sdata.uid = get_uid_from_email(mysql, sdata.ttmpfile, sdata.rcptto[i]);
-                             if(sdata.uid > 0) x = update_training_metadata(mysql, sdata.ttmpfile, sdata.uid, cfg);
-                          }
-                          gettimeofday(&tv_meta2, &tz);
+                  p = strchr(sdata.rcptto[i], '<');
+                  if(p){
+                     snprintf(email, SMALLBUFSIZE-1, "%s", p+1);
+                     p = strchr(email, '>');
+                     if(p) *p = '\0';
+                  }
 
-                          mysql_close(&mysql);
+                  if(rav == AVIR_VIRUS){
+                     snprintf(acceptbuf, MAXBUFSIZE-1, "%s <%s>\r\n", SMTP_RESP_550_ERR_PREF, email);
 
-                          syslog(LOG_PRIORITY, "%s: storing metadata: %d %ld [ms]", sdata.ttmpfile, x, tvdiff(tv_meta2, tv_meta1)/1000);
+                     if(cfg.silently_discard_infected_email == 1)
+                        snprintf(acceptbuf, MAXBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata.ttmpfile, email);
+                     else
+                        snprintf(acceptbuf, MAXBUFSIZE-1, "550 %s %s\r\n", sdata.ttmpfile, email);
 
-                       }
-                       else {
-                          syslog(LOG_PRIORITY, "%s: %s", sdata.ttmpfile, ERR_MYSQL_CONNECT);
-                          spaminess = ERR_BAYES_NO_TOKEN_FILE;
-                       }
-                    #endif
-                    #ifdef HAVE_SQLITE3
-                       rc = sqlite3_open(cfg.sqlite3, &db);
-                       if(rc){
-                          syslog(LOG_PRIORITY, "%s: %s", sdata.ttmpfile, ERR_SQLITE3_OPEN);
-                          spaminess = ERR_BAYES_NO_TOKEN_FILE;
-                       }
-                       else {
-                          spaminess = bayes_file(db, spamfile, sdata, cfg);
-                       }
+                     goto SEND_RESULT;
+                  }
+               #ifdef HAVE_ANTISPAM
 
-                       sqlite3_close(db);
+                  /* run statistical antispam check */
 
-                       gettimeofday(&tv_spam_stop, &tz);
-                    #endif
-                    #ifdef HAVE_CDB
-                       spaminess = bayes_file(cfg.tokensfile, spamfile, sdata, cfg);
-                       gettimeofday(&tv_spam_stop, &tz);
-                    #endif
+                  if(cfg.use_antispam == 1 && (cfg.max_message_size_to_filter == 0 || sdata.tot_len < cfg.max_message_size_to_filter) ){
+                     if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: running Bayesian test", sdata.ttmpfile);
 
-                       if(spaminess >= ERR_BAYES_NO_SPAM_FILE)
-                          syslog(LOG_PRIORITY, "%s: Error happened while Bayesian test (%.2f)", sdata.ttmpfile, spaminess);
+                     memset(trainbuf, 0, SMALLBUFSIZE);
+                     memset(spamfile, 0, MAXBUFSIZE);
+                     snprintf(spamfile, MAXBUFSIZE-1, "%s/%s", cfg.workdir, sdata.ttmpfile);
 
-                       syslog(LOG_PRIORITY, "%s: %.4f %d in %ld [ms]", sdata.ttmpfile, spaminess, sdata.tot_len, tvdiff(tv_spam_stop, tv_spam_start)/1000);
-
-                       if(spaminess >= cfg.spam_overall_limit && spaminess < ERR_BAYES_NO_SPAM_FILE){
-                          memset(reason, 0, SMALLBUFSIZE);
-
-                          if(spaminess == cfg.spaminess_of_strange_language_stuff) snprintf(reason, SMALLBUFSIZE-1, "%s%s\r\n", cfg.clapf_header_field, MSG_STRANGE_LANGUAGE);
-                          if(spaminess == cfg.spaminess_of_too_much_spam_in_top15) snprintf(reason, SMALLBUFSIZE-1, "%s%s\r\n", cfg.clapf_header_field, MSG_TOO_MUCH_SPAM_IN_TOP15);
-                          if(spaminess == cfg.spaminess_of_blackholed_mail) snprintf(reason, SMALLBUFSIZE-1, "%s%s\r\n", cfg.clapf_header_field, MSG_BLACKHOLED);
-                          if(spaminess == cfg.spaminess_of_caught_by_surbl) snprintf(reason, SMALLBUFSIZE-1, "%s%s\r\n", cfg.clapf_header_field, MSG_CAUGHT_BY_SURBL);
-                          if(spaminess == cfg.spaminess_of_text_and_base64) snprintf(reason, SMALLBUFSIZE-1, "%s%s\r\n", cfg.clapf_header_field, MSG_TEXT_AND_BASE64);
-                          if(spaminess == cfg.spaminess_of_embed_image) snprintf(reason, SMALLBUFSIZE-1, "%s%s\r\n", cfg.clapf_header_field, MSG_EMBED_IMAGE);
-                          if(spaminess > 0.9999) snprintf(reason, SMALLBUFSIZE-1, "%s%s\r\n", cfg.clapf_header_field, MSG_ABSOLUTELY_SPAM);
-
-                          /* add additional headers, credits: Mariano, 2006.08.14 */
-
-                          snprintf(spaminessbuf, MAXBUFSIZE-1, "%s%.4f\r\n%s%s\r\n%s%s%s\r\n",
-                             cfg.clapf_header_field, spaminess, cfg.clapf_header_field, sdata.ttmpfile, reason, trainbuf, cfg.clapf_spam_header_field);
+                     gettimeofday(&tv_spam_start, &tz);
 
 
-                          log_ham_spam_per_email(sdata, 1);
-                       }
-                       else {
-                          snprintf(spaminessbuf, MAXBUFSIZE-1, "%s%.4f\r\n%s%s\r\n%s", cfg.clapf_header_field, spaminess, cfg.clapf_header_field, sdata.ttmpfile, trainbuf);
+                  #ifdef HAVE_MYSQL
+                     if(mysql_connection == 1){
+                        sdata.uid = get_uid_from_email(mysql, sdata.ttmpfile, sdata.rcptto[i]);
+                        spaminess = bayes_file(mysql, spamfile, sstate, sdata, cfg);
+                        gettimeofday(&tv_spam_stop, &tz);
 
-                          log_ham_spam_per_email(sdata, 0);
-                       }
+                        if(cfg.store_metadata == 1){
+                           gettimeofday(&tv_meta1, &tz);
+                           x = update_training_metadata(mysql, sdata.ttmpfile, sdata.uid, cfg);
+                           gettimeofday(&tv_meta2, &tz);
+                           syslog(LOG_PRIORITY, "%s: storing metadata: %d %ld [ms]", sdata.ttmpfile, x, tvdiff(tv_meta2, tv_meta1)/1000);
+                        }
 
-                    }
-                    else {
-                       snprintf(spaminessbuf, MAXBUFSIZE-1, "%s%s\r\n", cfg.clapf_header_field, sdata.ttmpfile);
-                    }
+                     }
+                     else {
+                        gettimeofday(&tv_spam_stop, &tz);
+                        spaminess = DEFAULT_SPAMICITY;
+                     }
+                  #endif
+                  #ifdef HAVE_SQLITE3
+                     if(rc){
+                        spaminess = DEFAULT_SPAMICITY;
+                        gettimeofday(&tv_spam_stop, &tz);
+                     }
+                     else {
+                        sdata.uid = get_uid_from_email(db, sdata.ttmpfile, sdata.rcptto[i]);
+                        spaminess = bayes_file(db, spamfile, sstate, sdata, cfg);
+                        gettimeofday(&tv_spam_stop, &tz);
 
-         #endif
-                    gettimeofday(&tv_stop, &tz);
+                        if(cfg.store_metadata == 1){
+                           gettimeofday(&tv_meta1, &tz);
+                           x = update_training_metadata(db, sdata.ttmpfile, sdata.uid, cfg);
+                           gettimeofday(&tv_meta2, &tz);
+                           syslog(LOG_PRIORITY, "%s: storing metadata: %d %ld [ms]", sdata.ttmpfile, x, tvdiff(tv_meta2, tv_meta1)/1000);
+                        }
 
-                    snprintf(acceptbuf, MAXBUFSIZE-1, "250 Ok: queued as %s, rcvd: %ld [ms], scnd: %ld [ms], total: %ld [ms], len: %d\r\n",
-                        sdata.ttmpfile, tvdiff(tv_rcvd, tv_start)/1000, tvdiff(tv_scnd, tv_rcvd)/1000, tvdiff(tv_stop, tv_start)/1000, sdata.tot_len);
+                     }
+                  #endif
+                  #ifdef HAVE_CDB
+                     if(rc == 1)
+                        spaminess = bayes_file(cfg.tokensfile, spamfile, sstate, sdata, cfg);
+                     else
+                        spaminess = DEFAULT_SPAMICITY;
+
+                     gettimeofday(&tv_spam_stop, &tz);
+                  #endif
 
 
-                    gettimeofday(&tv_sent, &tz);
+                     syslog(LOG_PRIORITY, "%s: %.4f %d in %ld [ms]", sdata.ttmpfile, spaminess, sdata.tot_len, tvdiff(tv_spam_stop, tv_spam_start)/1000);
 
-         #ifdef HAVE_ANTISPAM
-                    /*
-                       forward spam to the SMTP server defined by spam_smtp_addr and spam_smtp_port
-                       or pass it back to our postfix, 2006.06.30, SJ
-                     */
+                     if(spaminess >= cfg.spam_overall_limit){
+                        memset(reason, 0, SMALLBUFSIZE);
 
-                    if(spaminess >= cfg.spam_overall_limit && spaminess < ERR_BAYES_NO_SPAM_FILE){
-                       /* shall we redirect the message into oblivion? 2007.02.07, SJ */
-                       if(spaminess >= cfg.spaminess_oblivion_limit)
-                          inj = ERR_DROP_SPAM;
-                       else
-                          inj = inject_mail(sdata, cfg.spam_smtp_addr, cfg.spam_smtp_port, spaminessbuf, cfg, NULL);
-                    }
+                        if(spaminess == cfg.spaminess_of_strange_language_stuff) snprintf(reason, SMALLBUFSIZE-1, "%s%s\r\n", cfg.clapf_header_field, MSG_STRANGE_LANGUAGE);
+                        if(spaminess == cfg.spaminess_of_too_much_spam_in_top15) snprintf(reason, SMALLBUFSIZE-1, "%s%s\r\n", cfg.clapf_header_field, MSG_TOO_MUCH_SPAM_IN_TOP15);
+                        if(spaminess == cfg.spaminess_of_blackholed_mail) snprintf(reason, SMALLBUFSIZE-1, "%s%s\r\n", cfg.clapf_header_field, MSG_BLACKHOLED);
+                        if(spaminess == cfg.spaminess_of_caught_by_surbl) snprintf(reason, SMALLBUFSIZE-1, "%s%s\r\n", cfg.clapf_header_field, MSG_CAUGHT_BY_SURBL);
+                        if(spaminess == cfg.spaminess_of_text_and_base64) snprintf(reason, SMALLBUFSIZE-1, "%s%s\r\n", cfg.clapf_header_field, MSG_TEXT_AND_BASE64);
+                        if(spaminess == cfg.spaminess_of_embed_image) snprintf(reason, SMALLBUFSIZE-1, "%s%s\r\n", cfg.clapf_header_field, MSG_EMBED_IMAGE);
+                        if(spaminess > 0.9999) snprintf(reason, SMALLBUFSIZE-1, "%s%s\r\n", cfg.clapf_header_field, MSG_ABSOLUTELY_SPAM);
+
+                        /* add additional headers, credits: Mariano, 2006.08.14 */
+
+                        snprintf(spaminessbuf, MAXBUFSIZE-1, "%s%.4f\r\n%s%s\r\n%s%s%s\r\n",
+                           cfg.clapf_header_field, spaminess, cfg.clapf_header_field, sdata.ttmpfile, reason, trainbuf, cfg.clapf_spam_header_field);
+
+
+                        log_ham_spam_per_email(sdata.ttmpfile, email, 1);
+                     }
+                     else {
+                        snprintf(spaminessbuf, MAXBUFSIZE-1, "%s%.4f\r\n%s%s\r\n%s", cfg.clapf_header_field, spaminess, cfg.clapf_header_field, sdata.ttmpfile, trainbuf);
+
+                        log_ham_spam_per_email(sdata.ttmpfile, email, 0);
+                     }
+
+                  } /* end of running spam check */
+
+
+                  /* then inject message back */
+
+                  if(spaminess >= cfg.spam_overall_limit){
+                    /* shall we redirect the message into oblivion? 2007.02.07, SJ */
+                    if(spaminess >= cfg.spaminess_oblivion_limit)
+                       inj = ERR_DROP_SPAM;
                     else
-                       inj = inject_mail(sdata, cfg.postfix_addr, cfg.postfix_port, spaminessbuf, cfg, NULL);
+                       inj = inject_mail(sdata, i, cfg.spam_smtp_addr, cfg.spam_smtp_port, spaminessbuf, cfg, NULL);
+                  }
+                  else
+                     inj = inject_mail(sdata, i, cfg.postfix_addr, cfg.postfix_port, spaminessbuf, cfg, NULL);
+
+               #else
+                  inj = inject_mail(sdata, i, cfg.postfix_addr, cfg.postfix_port, NULL, cfg, NULL);
+               #endif
+
+                  /* set the accept buffer */
+
+                  if(inj == OK || inj == ERR_DROP_SPAM){
+                     snprintf(acceptbuf, MAXBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata.ttmpfile, email);
+                  }
+                  else if(inj == ERR_REJECT){
+                     snprintf(acceptbuf, MAXBUFSIZE-1, "550 %s <%s>\r\n", sdata.ttmpfile, email);
+                  }
+                  else {
+                     snprintf(acceptbuf, MAXBUFSIZE-1, "451 %s <%s>\r\n", sdata.ttmpfile, email);
+                  }
+
+               SEND_RESULT:
+                  send(new_sd, acceptbuf, strlen(acceptbuf), 0);
+
+               } /* for */
 
 
-         #else
-                    inj = inject_mail(sdata, cfg.postfix_addr, cfg.postfix_port, NULL, cfg, NULL);
-         #endif
 
-                    /* message was injected back */
+               /* close database backend handler */
 
-                    gettimeofday(&tv_stop, &tz);
+            #ifdef HAVE_ANTISPAM
+               free_and_print_list(sstate.first, 0);
+            #endif
 
-                    if(inj == OK){
-                        snprintf(acceptbuf, MAXBUFSIZE-1, "250 Ok: queued as %s, rcvd: %ld [ms], scnd: %ld [ms], sent: %ld [ms], total: %ld [ms], len: %d\r\n",
-                           sdata.ttmpfile, tvdiff(tv_rcvd, tv_start)/1000, tvdiff(tv_scnd, tv_rcvd)/1000, tvdiff(tv_stop, tv_sent)/1000, tvdiff(tv_stop, tv_start)/1000, sdata.tot_len);
+            #ifdef HAVE_MYSQL
+               mysql_close(&mysql);
+            #endif
+            #ifdef HAVE_SQLITE3
+               sqlite3_close(db);
+            #endif
+            #ifdef HAVE_CDB
+               close_cdbs();
+            #endif
 
-                    }
-
-                    /* message was rejected */
-
-                    else if(inj == ERR_REJECT){
-                       snprintf(acceptbuf, MAXBUFSIZE-1, "550 %s rejected\r\n", sdata.ttmpfile);
-                    }
-
-                    /* this is spam to be dropped, 2007.02.07, SJ */
-
-                    else if(inj == ERR_DROP_SPAM){
-                       snprintf(acceptbuf, MAXBUFSIZE-1, "550 %s dropping spam\r\n", sdata.ttmpfile);
-                    }
-
-                    /* we were not able to inject the message back */
-
-                    else {
-                       snprintf(acceptbuf, MAXBUFSIZE-1, "%s", SMTP_RESP_451_ERR);
-                    }
-
-         #ifdef HAVE_ANTIVIRUS
-                 }
-         #endif
-
-               send(new_sd, acceptbuf, strlen(acceptbuf), 0);
 
             } /* PERIOD found */
 

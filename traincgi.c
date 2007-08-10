@@ -67,7 +67,7 @@ int main(){
    if(method == M_UNDEF)
       errout(NULL, ERR_CGI_INVALID_METHOD);
 
-#ifdef HAVE_MYSQL_TOKEN_DATABASE
+#ifdef HAVE_MYSQL
    mysql_init(&mysql);
    if(!mysql_real_connect(&mysql, cfg.mysqlhost, cfg.mysqluser, cfg.mysqlpwd, cfg.mysqldb, cfg.mysqlport, cfg.mysqlsocket, 0))
       errout(NULL, ERR_MYSQL_CONNECT);
@@ -79,7 +79,7 @@ int main(){
 
    snprintf(buf, MAXBUFSIZE-1, "SELECT uid FROM %s WHERE username='%s'", SQL_USER_TABLE, getenv("REMOTE_USER"));
 
-#ifdef HAVE_MYSQL_TOKEN_DATABASE
+#ifdef HAVE_MYSQL
    if(mysql_real_query(&mysql, buf, strlen(buf)) == 0){
       res = mysql_store_result(&mysql);
       if(res != NULL){
@@ -287,7 +287,7 @@ int main(){
       else
          snprintf(buf, MAXBUFSIZE-1, "UPDATE %s SET update_cdb=1, nham=nham+1", SQL_MISC_TABLE);
 
-   #ifdef HAVE_MYSQL_TOKEN_DATABASE
+   #ifdef HAVE_MYSQL
       mysql_real_query(&mysql, buf, strlen(buf));
    #endif
 
@@ -299,7 +299,7 @@ int main(){
       /* add entry to t_train_log table, 2007.05.21, SJ */
 
       snprintf(buf, MAXBUFSIZE-1, "INSERT INTO %s (uid, ts, msgid, is_spam) VALUES(%ld, %ld, '%s', %d)", SQL_TRAININGLOG_TABLE, QRY.uid, now, ID, is_spam);
-   #ifdef HAVE_MYSQL_TOKEN_DATABASE
+   #ifdef HAVE_MYSQL
       mysql_real_query(&mysql, buf, strlen(buf));
       mysql_close(&mysql);
    #endif

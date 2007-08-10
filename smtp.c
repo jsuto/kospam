@@ -23,7 +23,7 @@
  * inject mail back to postfix
  */
 
-int inject_mail(struct session_data sdata, char *smtpaddr, int smtpport, char *spaminessbuf, struct __config cfg, char *notify){
+int inject_mail(struct session_data sdata, int msg, char *smtpaddr, int smtpport, char *spaminessbuf, struct __config cfg, char *notify){
    int i, n, psd;
    char buf[MAXBUFSIZE+1], line[SMALLBUFSIZE], bigbuf[MAX_MAIL_HEADER_SIZE];
    struct in_addr addr;
@@ -104,14 +104,15 @@ int inject_mail(struct session_data sdata, char *smtpaddr, int smtpport, char *s
       if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent in injecting: %s", sdata.ttmpfile, SMTP_CMD_QUIT);
       close(psd);
       syslog(LOG_PRIORITY, "%s: MAIL FROM failed (%s)", sdata.ttmpfile, buf);
+      if(strncmp(buf, "550", 3) == 0) return ERR_REJECT;
       return ERR_INJECT;
    }
 
    /* RCPT TO */
 
-   for(i=0; i<sdata.num_of_rcpt_to; i++){
-      send(psd, sdata.rcptto[i], strlen(sdata.rcptto[i]), 0);
-      if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent in injecting: %s", sdata.ttmpfile, sdata.rcptto[i]);
+   //for(i=0; i<sdata.num_of_rcpt_to; i++){
+      send(psd, sdata.rcptto[msg], strlen(sdata.rcptto[msg]), 0);
+      if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent in injecting: %s", sdata.ttmpfile, sdata.rcptto[msg]);
 
       n = recvtimeout(psd, buf, MAXBUFSIZE, 0);
       if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: got in injecting: %s", sdata.ttmpfile, buf);
@@ -121,9 +122,11 @@ int inject_mail(struct session_data sdata, char *smtpaddr, int smtpport, char *s
          if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent in injecting: %s", sdata.ttmpfile, SMTP_CMD_QUIT);
          close(psd);
          syslog(LOG_PRIORITY, "%s: RCPT TO failed (%s)", sdata.ttmpfile, buf);
+         if(strncmp(buf, "550", 3) == 0) return ERR_REJECT;
          return ERR_INJECT;
       }
-   }
+   //}
+
 
    /* DATA */
 

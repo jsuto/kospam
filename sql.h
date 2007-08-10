@@ -2,7 +2,7 @@
  * sql.h, 2007.08.03, SJ
  */
 
-#ifdef HAVE_MYSQL_TOKEN_DATABASE
+#ifdef HAVE_MYSQL
    #include <mysql.h>
 #endif
 
@@ -11,7 +11,7 @@
 #endif
 
 typedef struct {
-#ifdef HAVE_MYSQL_TOKEN_DATABASE
+#ifdef HAVE_MYSQL
    MYSQL mysql;
 #endif
 #ifdef HAVE_SQLITE3
@@ -32,7 +32,7 @@ struct te {
 };
 
 
-#ifdef HAVE_MYSQL_TOKEN_DATABASE
+#ifdef HAVE_MYSQL
    unsigned long get_uid(MYSQL mysql, char *stmt);
    struct te get_ham_spam(MYSQL mysql, char *stmt);
    int do_mysql_qry(MYSQL mysql, int sockfd, int ham_or_spam, char *token, char *tokentable, unsigned int uid, int train_mode);

@@ -671,6 +671,7 @@ OBJS
 parsembox
 cgi
 passmail
+spamdrop
 passmail_install
 parsembox_install
 qcache
@@ -1269,8 +1270,6 @@ Optional Features:
   --enable-kav            build Kaspersky antivirus support
   --enable-drweb          build Dr.Web antivirus support
   --enable-case           use case sensitive tokens
-  --disable-antispam      do not build antispam support
-  --enable-mysql          build with MySQL support
   --enable-surbl          use the SURBL database
   --enable-old-format     use old token format
   --enable-blackhole      build the blackhole feature
@@ -3690,6 +3689,7 @@ done
 
 
 
+
 have_libclamav="no"
 have_clamd="no"
 have_avg="no"
@@ -3698,6 +3698,7 @@ have_kav="no"
 have_drweb="no"
 have_case="no"
 
+have_antivirus="no"
 have_antispam="no"
 have_blackhole="no"
 have_cgi="no"
@@ -4002,6 +4003,8 @@ ac_cv_lib_clamav=ac_cv_lib_clamav_main
    	   echo "clamav not found";
    	   exit 1;
 	fi
+
+        have_antivirus="yes"
    fi
 
 
@@ -4015,6 +4018,7 @@ fi
 
    if test "$want_clamd" = "yes"; then
       have_clamd="yes"
+      have_antivirus="yes"
    fi
 
 
@@ -4029,6 +4033,7 @@ fi
 
     if test "$want_avg" = "yes"; then
        have_avg="yes"
+       have_antivirus="yes"
     fi
 
 
@@ -4042,6 +4047,7 @@ fi
 
     if test "$want_avast" = "yes"; then
        have_avast="yes"
+       have_antivirus="yes"
     fi
 
 
@@ -4056,6 +4062,7 @@ fi
 
     if test "$want_kav" = "yes"; then
        have_kav="yes"
+       have_antivirus="yes"
     fi
 
 
@@ -4071,6 +4078,7 @@ fi
 
     if test "$want_drweb" = "yes"; then
        have_drweb="yes"
+       have_antivirus="yes"
     fi
 
 
@@ -4087,15 +4095,8 @@ fi
       have_case="yes"
    fi
 
-# Check whether --enable-antispam was given.
-if test "${enable_antispam+set}" = set; then
-  enableval=$enable_antispam; want_antispam=$enableval
-else
-  want_antispam="yes"
-fi
 
 
-  if test "$want_antispam" = "yes"; then
 
 
 
@@ -4373,26 +4374,11 @@ fi
 ac_cv_lib_m=ac_cv_lib_m_main
 
 
-    have_antispam="yes"
 
     antispam_libs="-lm"
 
-    defs="-DHAVE_ANTISPAM"
-    objs="hash.o chi.o bayes.o"
-
     parsembox="make parsembox"
 
-
-    # Check whether --enable-mysql was given.
-if test "${enable_mysql+set}" = set; then
-  enableval=$enable_mysql; have_mysql=$enableval
-else
-  have_mysql=no
-
-fi
-
-
-    if test "$have_mysql" = "yes"; then
 
     # Extract the first word of "mysql_config", so it can be a program name with args.
 set dummy mysql_config; ac_word=$2
@@ -4432,28 +4418,9 @@ fi
 
 
 
-	if test x$MYSQL_CONFIG = xyes; then
-
-cat >>confdefs.h <<\_ACEOF
-#define USE_MYSQL 1
-_ACEOF
-
-
-	    mysql_includes=`mysql_config --cflags`
-	    mysql_libs=`mysql_config --libs_r`
-	    defs="$defs -DHAVE_MYSQL"
-	    have_train="yes"
-
-	    parsembox="$parsembox; make train"
-	else
-	    echo "MySQL database not found"
-            exit 1
-	    have_mysql=no
-	fi
+    if test x$MYSQL_CONFIG = xyes; then
+       have_mysql="yes"
     fi
-
-    parsembox="$parsembox; make test"
-
 
 
 
@@ -4962,6 +4929,9 @@ if test "${with_tokendb+set}" = set; then
     TOKENDB=$withval
   fi
 
+  have_antispam="yes"
+  spamdrop="make spamdrop"
+
   if test "$withval" = "sqlite3"; then
 
 for ac_header in sqlite3.h
@@ -5241,6 +5211,23 @@ ac_cv_lib_sqlite3=ac_cv_lib_sqlite3_main
   fi
 
 
+  if test "$withval" = "mysql"; then
+     if test "$have_mysql" = "yes"; then
+
+            mysql_includes=`mysql_config --cflags`
+            mysql_libs=`mysql_config --libs_r`
+            have_train="yes"
+            parsembox="$parsembox; make train"
+     else
+        echo "MySQL support is not found"
+        exit 1;
+     fi
+  fi
+
+  parsembox="$parsembox; make test"
+
+
+
 fi
 
 
@@ -5259,7 +5246,6 @@ fi
 
 
 
-  fi
 
 
 cfg_dir=`echo $sysconfdir | grep prefix`
@@ -5559,15 +5545,6 @@ ac_cv_lib_cdb=ac_cv_lib_cdb_main
    antispam_libs="$antispam_libs -lcdb"
 fi
 
-if test "$TOKENDB" = "mysql"; then
-   if test "$have_mysql" = "no"; then
-      echo "you need mysql support, please specify the --enable-mysql configure option"
-      exit 1
-   fi
-   defs="$defs -DHAVE_MYSQL_TOKEN_DATABASE"
-   mysql_obj="mysql.o sql.o"
-fi
-
 if test "$TOKENDB" = "sqlite3"; then
    if test "$have_sqlite3" = "no"; then
       echo "please check your sqlite3 installation"
@@ -5576,6 +5553,25 @@ if test "$TOKENDB" = "sqlite3"; then
    defs="$defs -DHAVE_SQLITE3"
    sqlite3_libs="-lsqlite3"
    mysql_obj="sqlite3.o sql.o"
+fi
+
+if test "$TOKENDB" = "mysql"; then
+   defs="$defs -DHAVE_MYSQL"
+   mysql_obj="mysql.o sql.o"
+fi
+
+
+if test "x$QCACHE" != "x"; then
+   if test "$have_antispam" = "no"; then
+      echo "please specify the --with-tokendb option"
+      exit 1
+   fi
+fi
+
+
+if test "$have_antivirus" = "no" && test "$have_antispam" = "no"; then
+   echo "you have not specified either antivirus or antispam support"
+   exit 1
 fi
 
 
@@ -5599,55 +5595,43 @@ if test "$have_libclamav" = "yes"; then
    echo "libclamav support: yes"
    libclamav="-lclamav"
    defs="$defs -DHAVE_LIBCLAMAV"
-else
-   echo "libclamav support: no"
 fi
 
 if test "$have_clamd" = "yes"; then
    echo "clamd support: yes"
    objs="$objs clamd.o"
    defs="$defs -DHAVE_CLAMD"
-else
-   echo "clamd support: no"
 fi
 
 if test "$have_avg" = "yes"; then
    echo "AVG support: yes"
    objs="$objs avg.o"
    defs="$defs -DHAVE_AVG"
-else
-   echo "AVG support: no"
 fi
 
 if test "$have_avast" = "yes"; then
    echo "avast! support: yes"
    objs="$objs avast.o"
    defs="$defs -DHAVE_AVAST"
-else
-   echo "avast support: no"
 fi
 
 if test "$have_kav" = "yes"; then
    echo "kav support: yes"
    objs="$objs kav.o"
    defs="$defs -DHAVE_KAV"
-else
-   echo "kav support: no"
 fi
 
 if test "$have_drweb" = "yes"; then
    echo "Dr.Web support: yes"
    objs="$objs drweb.o"
    defs="$defs -DHAVE_DRWEB"
-else
-   echo "Dr.Web support: no"
 fi
 
 
 if test "$have_antispam" = "yes"; then
    echo "antispam support: yes"
-else
-   echo "antispam support: no"
+   defs="$defs -DHAVE_ANTISPAM"
+   objs="$objs hash.o chi.o bayes.o"
 fi
 
 
@@ -6440,6 +6424,7 @@ OBJS!$OBJS$ac_delim
 parsembox!$parsembox$ac_delim
 cgi!$cgi$ac_delim
 passmail!$passmail$ac_delim
+spamdrop!$spamdrop$ac_delim
 passmail_install!$passmail_install$ac_delim
 parsembox_install!$parsembox_install$ac_delim
 qcache!$qcache$ac_delim
@@ -6455,7 +6440,7 @@ LIBOBJS!$LIBOBJS$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 71; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 72; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5

@@ -1,5 +1,5 @@
 /*
- * bayes.c, 2007.08.04, SJ
+ * bayes.c, 2007.08.10, SJ
  */
 
 #include <stdio.h>
@@ -71,7 +71,7 @@ float SQL_QUERY(qry QRY, char *tokentable, char *token, struct node *xhash[MAXHA
  * assign spaminess value to token
  */
 
-#ifdef HAVE_MYSQL_TOKEN_DATABASE
+#ifdef HAVE_MYSQL
 int assign_spaminess(MYSQL mysql, char *p, struct __config cfg, unsigned int uid){
 #endif
 #ifdef HAVE_SQLITE3
@@ -89,7 +89,7 @@ int assign_spaminess(char *p, struct __config cfg, unsigned int uid){
    if(findnode(shash, p))
       return 0;
 
-#ifdef HAVE_MYSQL_TOKEN_DATABASE
+#ifdef HAVE_MYSQL
    spaminess = SQL_QUERY(QRY, SQL_TOKEN_TABLE, p, tumhash);
 #endif
 #ifdef HAVE_SQLITE3
@@ -113,7 +113,7 @@ int assign_spaminess(char *p, struct __config cfg, unsigned int uid){
       else
          strncpy(t, p+8, MAX_TOKEN_LEN-1);
 
-   #ifdef HAVE_MYSQL_TOKEN_DATABASE
+   #ifdef HAVE_MYSQL
       spaminess = SQL_QUERY(QRY, SQL_TOKEN_TABLE, t, tumhash);
    #endif
    #ifdef HAVE_SQLITE3
@@ -144,7 +144,7 @@ int assign_spaminess(char *p, struct __config cfg, unsigned int uid){
 }
 
 
-#ifdef HAVE_MYSQL_TOKEN_DATABASE
+#ifdef HAVE_MYSQL
 int walk_hash(MYSQL mysql, struct node *xhash[MAXHASH], struct __config cfg){
 #endif
 #ifdef HAVE_SQLITE3
@@ -162,7 +162,7 @@ int walk_hash(struct node *xhash[MAXHASH], struct __config cfg){
       while(q != NULL){
          p = q;
 
-      #ifdef HAVE_MYSQL_TOKEN_DATABASE
+      #ifdef HAVE_MYSQL
          assign_spaminess(mysql, p->str, cfg, QRY.uid);
       #endif
       #ifdef HAVE_SQLITE3
@@ -181,11 +181,38 @@ int walk_hash(struct node *xhash[MAXHASH], struct __config cfg){
    return n;
 }
 
+
+/*
+ * parse the message into tokens and return the pointer
+ */
+
+struct _state parse_message(char *spamfile, struct __config cfg){
+   FILE *f;
+   char buf[MAXBUFSIZE];
+   struct _state state;
+
+   state = init_state();
+
+   f = fopen(spamfile, "r");
+   if(!f){
+      syslog(LOG_PRIORITY, "%s: cannot open", spamfile);
+      return state;
+   }
+
+   while(fgets(buf, MAXBUFSIZE-1, f))
+      state = parse(buf, state);
+
+   fclose(f);
+
+   return state;
+}
+
+
 /*
  * evaulate tokens
  */
 
-#ifdef HAVE_MYSQL_TOKEN_DATABASE
+#ifdef HAVE_MYSQL
 double eval_tokens(MYSQL mysql, char *spamfile, struct __config cfg, struct _state state){
 #endif
 #ifdef HAVE_SQLITE3
@@ -234,7 +261,7 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
       /* add to URL hash, 2006.06.23, SJ */
 
       if(strncmp(p->str, "URL*", 4) == 0){
-      #ifdef HAVE_MYSQL_TOKEN_DATABASE
+      #ifdef HAVE_MYSQL
          assign_spaminess(mysql, p->str, cfg, QRY.uid);
       #endif
       #ifdef HAVE_SQLITE3
@@ -253,7 +280,7 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
       /* 2007.06.06, SJ */
 
       if(cfg.use_pairs == 1 && strchr(p->str, '+')){
-      #ifdef HAVE_MYSQL_TOKEN_DATABASE
+      #ifdef HAVE_MYSQL
          assign_spaminess(mysql, p->str, cfg, QRY.uid);
       #endif
       #ifdef HAVE_SQLITE3
@@ -305,7 +332,7 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
 
    /* add the From line, 2007.06.16, SJ */
 
-#ifdef HAVE_MYSQL_TOKEN_DATABASE
+#ifdef HAVE_MYSQL
    assign_spaminess(mysql, state.from, cfg, QRY.uid);
 #endif
 #ifdef HAVE_SQLITE3
@@ -333,7 +360,7 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
    else {
       NEED_SINGLE_TOKENS:
 
-   #ifdef HAVE_MYSQL_TOKEN_DATABASE
+   #ifdef HAVE_MYSQL
       n_tokens += walk_hash(mysql, B_hash, cfg);
    #endif
    #ifdef HAVE_SQLITE3
@@ -442,7 +469,7 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
       if(spaminess < cfg.spam_overall_limit && spaminess > cfg.max_junk_spamicity && most_interesting_tokens(s_phrase_hash) < MAX_PHRASES_TO_CHOOSE){
       //if(spaminess < cfg.spam_overall_limit && spaminess > cfg.max_junk_spamicity){
          if(n_tokens < 8){
-         #ifdef HAVE_MYSQL_TOKEN_DATABASE
+         #ifdef HAVE_MYSQL
             n_tokens += walk_hash(mysql, B_hash, cfg);
          #endif
          #ifdef HAVE_SQLITE3
@@ -482,6 +509,8 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
     */
 
 #ifndef HAVE_CDB
+   syslog(LOG_PRIORITY, "%s: %d %ld %d %.4f", spamfile, cfg.training_mode, QRY.uid, cfg.group_type, spaminess);
+
    if(cfg.training_mode == T_TUM && (QRY.uid > 0 || cfg.group_type == GROUP_SHARED) && (spaminess >= cfg.spam_overall_limit || spaminess < cfg.max_junk_spamicity)){
       gettimeofday(&tv1, &tz);
 
@@ -498,7 +527,7 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
 
       syslog(LOG_PRIORITY, "%s: TUM training %ld tokens for uid: %ld %ld [ms]", spamfile, n, QRY.uid, tvdiff(tv2, tv1)/1000);
 
-   #ifdef HAVE_MYSQL_TOKEN_DATABASE
+   #ifdef HAVE_MYSQL
       mysql_real_query(&mysql, buf, strlen(buf));
    #endif
    #ifdef HAVE_SQLITE3
@@ -534,8 +563,8 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
  * Bayesian result of the file
  */
 
-#ifdef HAVE_MYSQL_TOKEN_DATABASE
-double bayes_file(MYSQL mysql, char *spamfile, struct session_data sdata, struct __config cfg){
+#ifdef HAVE_MYSQL
+double bayes_file(MYSQL mysql, char *spamfile, struct _state state, struct session_data sdata, struct __config cfg){
 #endif
 #ifdef HAVE_SQLITE3
 double bayes_file(sqlite3 *db, char *spamfile, struct session_data sdata, struct __config cfg){
@@ -544,23 +573,22 @@ double bayes_file(sqlite3 *db, char *spamfile, struct session_data sdata, struct
 double bayes_file(char *cdbfile, char *spamfile, struct session_data sdata, struct __config cfg){
 #endif
 
-   struct _state state;
-   char buf[MAXBUFSIZE], *p, *q;
+   char buf[MAXBUFSIZE], *p;
    float spaminess, ham_from=0, spam_from=0;
-   FILE *F;
 
-#ifdef HAVE_MYSQL_TOKEN_DATABASE
+#ifdef HAVE_MYSQL
    struct te TE;
 #endif
 
-   if(spamfile == NULL)
-      return ERR_BAYES_NO_SPAM_FILE;
+   if(spamfile == NULL){
+      syslog(LOG_PRIORITY, "%s: no spamfile", sdata.ttmpfile);
+      return DEFAULT_SPAMICITY;
+   }
 
-   state = init_state();
 
    /* init query structure */
 
-#ifdef HAVE_MYSQL_TOKEN_DATABASE
+#ifdef HAVE_MYSQL
    QRY.mysql = mysql;
 #endif
 #ifdef HAVE_SQLITE3
@@ -573,9 +601,6 @@ double bayes_file(char *cdbfile, char *spamfile, struct session_data sdata, stru
    QRY.rob_s = cfg.rob_s;
    QRY.rob_x = cfg.rob_x;
 
-   F = fopen(spamfile, "r");
-   if(!F)
-      return ERR_BAYES_OPEN_SPAM_FILE;
 
    p = strrchr(spamfile, '/');
    if(p)
@@ -584,19 +609,10 @@ double bayes_file(char *cdbfile, char *spamfile, struct session_data sdata, stru
       p = spamfile;
 
 
-   if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: parsing", p);
-
-   while(fgets(buf, MAXBUFSIZE-1, F))
-      state = parse(buf, state);
-
-   fclose(F);
-
-
-
    /* mark base64 encoded textual messages as spam, 2006.01.02, SJ */
 
    if(state.base64_text == 1 && cfg.spaminess_of_text_and_base64 > 0){
-      free_and_print_list(state.first, 0);
+      //free_and_print_list(state.first, 0);
       return cfg.spaminess_of_text_and_base64;
    }
 
@@ -606,7 +622,7 @@ double bayes_file(char *cdbfile, char *spamfile, struct session_data sdata, stru
 #ifdef HAVE_BLACKHOLE
    if(strlen(cfg.blackhole_path) > 3 && blackness(cfg.blackhole_path, state.ip, cfg.verbosity) > 100){
       /* free token list first */
-      free_and_print_list(state.first, 0);
+      //free_and_print_list(state.first, 0);
       syslog(LOG_PRIORITY, "%s: found %s on our blackhole", p, state.ip);
 
       return cfg.spaminess_of_blackholed_mail;
@@ -614,48 +630,11 @@ double bayes_file(char *cdbfile, char *spamfile, struct session_data sdata, stru
 #endif
 
 
-   /*
-    * determine what user id we will use, 2007.08.07, SJ
-    */
-
    /* fix uid and sql statement if this is a shared group */
 
    if(cfg.group_type == GROUP_SHARED){
       QRY.uid = 0;
       snprintf(buf, MAXBUFSIZE-1, "SELECT nham, nspam FROM %s WHERE uid=0", SQL_MISC_TABLE);
-   }
-
-   /* if we use a merged group and we do not know who is calling, 2007.08.07, SJ */
-
-   if(cfg.group_type == GROUP_MERGED && QRY.uid == 0){
-
-      if(cfg.training_mode == T_TUM && sdata.num_of_rcpt_to == 1){
-         if(strlen(sdata.rcptto[0]) > 3){
-            q = strchr(sdata.rcptto[0], '>');
-            if(q){
-               *q = '\0';
-               q = strchr(sdata.rcptto[0], '<');
-               if(q) snprintf(buf, MAXBUFSIZE-1, "SELECT uid FROM %s WHERE email='%s'", SQL_USER_TABLE, ++q);
-            }
-         }
-         else if((q = getenv("FROM")))
-            snprintf(buf, MAXBUFSIZE-1, "SELECT uid FROM %s WHERE email='%s'", SQL_USER_TABLE, q);
-
-         if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "stmt for uid: %s", buf);
-
-      #ifdef HAVE_MYSQL_TOKEN_DATABASE 
-         QRY.uid = get_uid(mysql, buf);
-      #endif
-      #ifdef HAVE_SQLITE3
-         if(sqlite3_prepare_v2(db, buf, -1, &pStmt, pzTail) == SQLITE_OK){
-            while(sqlite3_step(pStmt) == SQLITE_ROW){
-               QRY.uid = sqlite3_column_int(pStmt, 0);
-            }
-         }
-         sqlite3_finalize(pStmt);
-      #endif
-
-      }
    }
 
    /* fix sql statment if we use a merged group */
@@ -672,7 +651,7 @@ double bayes_file(char *cdbfile, char *spamfile, struct session_data sdata, stru
     * select the number of ham and spam messages, and return error if less than 1
     */
 
-#ifdef HAVE_MYSQL_TOKEN_DATABASE
+#ifdef HAVE_MYSQL
    TE = get_ham_spam(mysql, buf);
    QRY.ham_msg = TE.nham;
    QRY.spam_msg = TE.nspam;
@@ -689,9 +668,9 @@ double bayes_file(char *cdbfile, char *spamfile, struct session_data sdata, stru
 
 #ifndef HAVE_CDB
    if(QRY.ham_msg <= 0 || QRY.spam_msg <= 0){
-      free_and_print_list(state.first, 0);
+      //free_and_print_list(state.first, 0);
       syslog(LOG_PRIORITY, "%s: %s", p, ERR_MYSQL_DATA);
-      return ERR_BAYES_NO_TOKEN_FILE;
+      return DEFAULT_SPAMICITY;
    }
 #endif
 
@@ -707,7 +686,7 @@ double bayes_file(char *cdbfile, char *spamfile, struct session_data sdata, stru
 
    if(cfg.enable_auto_white_list == 1){
 
-   #ifdef HAVE_MYSQL_TOKEN_DATABASE
+   #ifdef HAVE_MYSQL
       snprintf(buf, MAXBUFSIZE-1, "SELECT nham, nspam FROM %s WHERE token=%llu AND  (uid=0 OR uid=%ld)", SQL_TOKEN_TABLE, APHash(state.from), QRY.uid);
       TE = get_ham_spam(mysql, buf);
       ham_from = TE.nham;
@@ -730,15 +709,17 @@ double bayes_file(char *cdbfile, char *spamfile, struct session_data sdata, stru
    #endif
 
       if(ham_from > NUMBER_OF_GOOD_FROM && spam_from == 0){
-         free_and_print_list(state.first, 0);
+         //free_and_print_list(state.first, 0);
          return REAL_HAM_TOKEN_PROBABILITY;
       }
    }
 
 
 #ifdef HAVE_CDB
-   if(!cfg.tokensfile)
-      return ERR_BAYES_NO_TOKEN_FILE;
+   if(!cfg.tokensfile){
+      syslog(LOG_PRIORITY, "%s: no token cdb file", sdata.ttmpfile);
+      return DEFAULT_SPAMICITY;
+   }
 
    if(init_cdbs(cfg.tokensfile) == 0)
       return DEFAULT_SPAMICITY;
@@ -756,7 +737,7 @@ double bayes_file(char *cdbfile, char *spamfile, struct session_data sdata, stru
 
    /* evaluate the tokens */
 
-#ifdef HAVE_MYSQL_TOKEN_DATABASE
+#ifdef HAVE_MYSQL
    spaminess = eval_tokens(mysql, p, cfg, state);
 #endif
 #ifdef HAVE_SQLITE3
@@ -766,7 +747,7 @@ double bayes_file(char *cdbfile, char *spamfile, struct session_data sdata, stru
    spaminess = eval_tokens(p, cfg, state);
 #endif
 
-   free_and_print_list(state.first, 0);
+   //free_and_print_list(state.first, 0);
 
 #ifdef HAVE_QCACHE
    close(QRY.sockfd);

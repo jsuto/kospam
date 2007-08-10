@@ -43,3 +43,13 @@
 #define SMTP_RESP_550_ERR_PREF "550 Access denied."
 #define SMTP_RESP_552_ERR "552 Too many recipients\r\n"
 
+
+// LMTP commands
+
+#define LMTP_CMD_LHLO "LHLO"
+
+// LMTP responses
+
+#define LMTP_RESP_220_BANNER "220 " HOSTID " LMTP\r\n"
+#define LMTP_RESP_250_OK "250 Ok\r\n"
+

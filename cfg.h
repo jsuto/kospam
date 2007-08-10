@@ -1,5 +1,5 @@
 /*
- * cfg.h, 2007.07.10, SJ
+ * cfg.h, 2007.08.08, SJ
  */
 
 #define MAXVAL 128
@@ -106,6 +106,8 @@ struct __config {
 
    int training_mode;
    int group_type;
+
+   int store_metadata;
 
    // clamav stuff
 

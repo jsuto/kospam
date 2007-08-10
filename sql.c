@@ -23,7 +23,7 @@
 #include "config.h"
 
 
-#ifdef HAVE_MYSQL_TOKEN_DATABASE
+#ifdef HAVE_MYSQL
    #include <mysql.h>
    int do_mysql_qry(MYSQL mysql, int sockfd, int ham_or_spam, char *token, char *tokentable, unsigned int uid, int train_mode);
 #endif
@@ -44,7 +44,7 @@ float SQL_QUERY(qry QRY, char *tokentable, char *token, struct node *xhash[MAXHA
 
    TE.nham = TE.nspam = 0;
 
-#ifdef HAVE_MYSQL_TOKEN_DATABASE
+#ifdef HAVE_MYSQL
    TE = myqry(QRY.mysql, QRY.sockfd, tokentable, token, QRY.uid);
 #endif
 #ifdef HAVE_SQLITE3
@@ -103,7 +103,7 @@ int my_walk_hash(qry QRY, int ham_or_spam, char *tokentable, struct node *xhash[
       while(q != NULL){
          p = q;
 
-      #ifdef HAVE_MYSQL_TOKEN_DATABASE
+      #ifdef HAVE_MYSQL
          do_mysql_qry(QRY.mysql, QRY.sockfd, ham_or_spam, p->str, tokentable, QRY.uid, train_mode);
       #endif
       #ifdef HAVE_SQLITE3
@@ -127,7 +127,7 @@ int my_walk_hash(qry QRY, int ham_or_spam, char *tokentable, struct node *xhash[
  * get uid from rcptto email address
  */
 
-#ifdef HAVE_MYSQL_TOKEN_DATABASE
+#ifdef HAVE_MYSQL
 unsigned long get_uid_from_email(MYSQL mysql, char *tmpfile, char *rcptto){
    MYSQL_RES *res;
    MYSQL_ROW row;
@@ -158,7 +158,7 @@ unsigned long get_uid_from_email(sqlite3 *db, char *tmpfile, char *rcptto){
 
       snprintf(buf, MAXBUFSIZE-1, "SELECT uid FROM %s WHERE email='%s'", SQL_USER_TABLE, p);
 
-   #ifdef HAVE_MYSQL_TOKEN_DATABASE
+   #ifdef HAVE_MYSQL
       if(mysql_real_query(&mysql, buf, strlen(buf)) == 0){
          res = mysql_store_result(&mysql);
          if(res != NULL){
@@ -187,16 +187,19 @@ unsigned long get_uid_from_email(sqlite3 *db, char *tmpfile, char *rcptto){
  * insert metadata to queue table
  */
 
-#ifdef HAVE_MYSQL_TOKEN_DATABASE
+#ifdef HAVE_MYSQL
 int update_training_metadata(MYSQL mysql, char *tmpfile, unsigned long uid, struct __config cfg){
+   char *data=NULL;
 #endif
 #ifdef HAVE_SQLITE3
 int update_training_metadata(sqlite3 *db, char *tmpfile, unsigned long uid, struct __config cfg){
+   sqlite3_stmt *pStmt;
+   const char **pzTail=NULL;
 #endif
    struct stat st;
-   char buf[MAXBUFSIZE], *map=NULL, *data=NULL;
+   char buf[MAXBUFSIZE], *map=NULL;
    unsigned long now=0;
-   int fd;
+   int fd, rc=1;
    time_t clock;
 
    time(&clock);
@@ -220,26 +223,39 @@ int update_training_metadata(sqlite3 *db, char *tmpfile, unsigned long uid, stru
 
    /* then put it into database */
 
-   snprintf(buf, MAXBUFSIZE-1, "INSERT INTO %s (id, uid, ts, data) VALUES('%s', %ld, %ld, \"", SQL_QUEUE_TABLE, tmpfile, uid, now);
-
+#ifdef HAVE_MYSQL
    data = malloc(2 * st.st_size + strlen(buf) + 1 + 1 + 1);
-   if(data != NULL){
-
-   #ifdef HAVE_MYSQL_TOKEN_DATABASE
-      snprintf(data, 2 * st.st_size + strlen(buf) + 1, "%s", buf);
-      mysql_real_escape_string(&mysql, data+strlen(buf), map, st.st_size);
-      strncat(data, "\")", 2 * st.st_size + strlen(buf) + 1 + 1);
-      mysql_real_query(&mysql, data, strlen(data));
-   #endif
-   #ifdef HAVE_SQLITE3
-
-   #endif
-
-      free(data);
+   if(!data){
+      rc = ERR_MALLOC;
+      goto ENDE;
    }
+
+   snprintf(buf, MAXBUFSIZE-1, "INSERT INTO %s (id, uid, ts, data) VALUES('%s', %ld, %ld, \"", SQL_QUEUE_TABLE, tmpfile, uid, now);
+   snprintf(data, 2 * st.st_size + strlen(buf) + 1, "%s", buf);
+   mysql_real_escape_string(&mysql, data+strlen(buf), map, st.st_size);
+   strncat(data, "\")", 2 * st.st_size + strlen(buf) + 1 + 1);
+   mysql_real_query(&mysql, data, strlen(data));
+
+   free(data);
+#endif
+#ifdef HAVE_SQLITE3
+   snprintf(buf, MAXBUFSIZE-1, "INSERT INTO %s (id, uid, ts, data) VALUES('%s', %ld, %ld, ?)", SQL_QUEUE_TABLE, tmpfile, uid, now);
+   if(sqlite3_prepare_v2(db, buf, -1, &pStmt, pzTail) == SQLITE_OK){
+      sqlite3_bind_blob(pStmt, 1, map, st.st_size, SQLITE_STATIC);
+      sqlite3_step(pStmt);
+      sqlite3_finalize(pStmt);
+   }
+   else {
+      rc = ERR_SQLITE_ERR;
+   }
+#endif
+
+#ifdef HAVE_MYSQL
+ENDE:
+#endif
 
    munmap(map, st.st_size);
 
-   return 1;
+   return rc;
 }
 

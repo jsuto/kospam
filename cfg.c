@@ -1,5 +1,5 @@
 /*
- * cfg.c, 2007.06.13, SJ
+ * cfg.c, 2007.08.08, SJ
  */
 
 #include <stdio.h>
@@ -122,6 +122,8 @@ struct __config read_config(char *configfile){
    cfg.min_phrase_number = MIN_PHRASE_NUMBER;
 
    cfg.enable_auto_white_list = 1;
+
+   cfg.store_metadata = 1;
 
    cfg.rob_s = 1.0;
    cfg.rob_x = 0.5;
@@ -380,6 +382,8 @@ struct __config read_config(char *configfile){
                   if(strcmp(key, "group_type") == 0)
                      cfg.group_type = atoi(val);
 
+                  if(strcmp(key, "store_metadata") == 0)
+                     cfg.store_metadata = atoi(val);
 
                   if(strcmp(key, "use_libclamav_block_max_feature") == 0)
                      cfg.use_libclamav_block_max_feature = atoi(val);

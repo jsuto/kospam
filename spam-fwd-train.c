@@ -28,7 +28,7 @@
 #include "config.h"
 
 void my_walk_hash(qry QRY, int ham_or_spam, char *tokentable, struct node *xhash[MAXHASH], int train_mode);
-double bayes_file(MYSQL mysql, char *spamfile, struct session_data sdata, struct __config cfg);
+double bayes_file(MYSQL mysql, char *spamfile, struct _state state, struct session_data sdata, struct __config cfg);
 
 /*
  * check if it's a valid ID
@@ -108,7 +108,7 @@ int main(int argc, char **argv){
                   r++;
                   if(is_valid_id(r)){
                      i++;
-                     if(i == 2){
+                     if(i <= 2){
                         snprintf(ID, RND_STR_LEN, "%s", r);
                      }
                   }
@@ -263,7 +263,7 @@ int main(int argc, char **argv){
 
          clearhash(tokens);
 
-         spaminess = bayes_file(mysql, sdata.ttmpfile, sdata, cfg);
+         spaminess = bayes_file(mysql, sdata.ttmpfile, state, sdata, cfg);
 
          syslog(LOG_PRIORITY, "%s: training round %d, spaminess: %.4f", ID, i, spaminess);
 

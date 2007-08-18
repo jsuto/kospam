@@ -169,6 +169,11 @@ struct __config {
    char ldap_pwd[MAXVAL];
    int ldap_use_tls;
 
+   // ssl
+
+   char ssl_cert_file[MAXVAL];
+   char ssl_key_file[MAXVAL];
+
    // external applications
    char gocr[MAXVAL];
    char catdoc[MAXVAL];

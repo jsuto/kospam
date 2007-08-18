@@ -48,13 +48,13 @@ splitmbox:
 cgi:
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o spamcgi spamcgi.c $(OBJS) $(USER_OBJ) @mysql_obj@ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o usercgi usercgi.c $(OBJS) $(USER_OBJ) @mysql_obj@ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o traincgi traincgi.c $(OBJS) @mysql_obj@ $(USER_OBJ) $(LIBS) $(LDAP_LIBS) $(LIBDIR)
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o trainlogcgi trainlogcgi.c $(OBJS) @mysql_obj@ $(USER_OBJ) $(LIBS) $(LDAP_LIBS) $(LIBDIR)
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o statcgi statcgi.c $(OBJS) @mysql_obj@ $(USER_OBJ) $(LIBS) $(LDAP_LIBS) $(LIBDIR)
 
 train:
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o aphash aphash.c misc.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o train train.c $(OBJS) @mysql_obj@ $(LIBS) $(LIBDIR) @LDFLAGS@
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o traincgi traincgi.c $(OBJS) @mysql_obj@ $(USER_OBJ) $(LIBS) $(LDAP_LIBS) $(LIBDIR)
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o trainlogcgi trainlogcgi.c $(OBJS) @mysql_obj@ $(USER_OBJ) $(LIBS) $(LDAP_LIBS) $(LIBDIR)
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o statcgi statcgi.c $(OBJS) @mysql_obj@ $(USER_OBJ) $(LIBS) $(LDAP_LIBS) $(LIBDIR)
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o spam-fwd-train spam-fwd-train.c $(OBJS) @mysql_obj@ $(USER_OBJ) $(LIBS) $(LDAP_LIBS) $(LIBDIR)
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o spamstat spamstat.c $(OBJS) @mysql_obj@ $(USER_OBJ) $(LIBS) $(LDAP_LIBS) $(LIBDIR)
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o clapf_admin clapf_admin.c $(OBJS) @mysql_obj@ $(USER_OBJ) $(LIBS) $(LDAP_LIBS) $(LIBDIR)
@@ -74,6 +74,10 @@ qcache:
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c qcache.c
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o qs qs.c misc.o cfg.o qcache.o $(LIBS) -lpthread $(LIBDIR)
 	#$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o 1 q1.c
+
+smapd:
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o smapd smapd.c $(OBJS) @mysql_obj@ $(LIBS) -lpthread -lssl -lcrypto -ldl $(LIBDIR)
+
 
 cfg.o:
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c cfg.c

@@ -5208,6 +5208,9 @@ ac_cv_lib_sqlite3=ac_cv_lib_sqlite3_main
            exit 1;
       fi
 
+    have_train="yes"
+    parsembox="$parsembox; make train"
+
   fi
 
 

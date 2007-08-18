@@ -565,7 +565,7 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
 double bayes_file(MYSQL mysql, char *spamfile, struct _state state, struct session_data sdata, struct __config cfg){
 #endif
 #ifdef HAVE_SQLITE3
-double bayes_file(sqlite3 *db, char *spamfile, struct session_data sdata, struct __config cfg){
+double bayes_file(sqlite3 *db, char *spamfile, struct _state state, struct session_data sdata, struct __config cfg){
 #endif
 #ifdef HAVE_CDB
 double bayes_file(char *cdbfile, char *spamfile, struct session_data sdata, struct __config cfg){

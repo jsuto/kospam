@@ -35,6 +35,7 @@
 #define QCACHE_PORT 48791
 #define QCACHE_SOCKET "/tmp/qcache"
 
+#define SMAPD_PORT 28643
 
 #define WORK_DIR "/opt/av"
 #define PER_USER_DIR ".clapf"
@@ -129,6 +130,7 @@
 #define SQL_TRAININGLOG_TABLE "t_train_log"
 #define SQL_QUEUE_TABLE "t_queue"
 #define SQL_STAT_TABLE "t_stat"
+#define SQL_SMAP_KEY_TABLE "t_smap_key"
 
 // libclamav variables
 

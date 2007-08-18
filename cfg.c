@@ -485,6 +485,13 @@ struct __config read_config(char *configfile){
                      cfg.ldap_use_tls = atoi(val);
 
 
+                  if(strcmp(key, "ssl_cert_file") == 0)
+                     memcpy(cfg.ssl_cert_file, val, MAXVAL-1);
+
+                  if(strcmp(key, "ssl_key_file") == 0)
+                     memcpy(cfg.ssl_key_file, val, MAXVAL-1);
+
+
                   if(strcmp(key, "gocr") == 0)
                      memcpy(cfg.gocr, val, MAXVAL-1);
 

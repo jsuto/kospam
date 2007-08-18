@@ -1,5 +1,5 @@
 /*
- * spamstat.c, 2007.05.18, SJ
+ * spamstat.c, 2007.08.18, SJ
  */
 
 #include <stdio.h>
@@ -10,11 +10,26 @@
 #include <fcntl.h>
 #include <time.h>
 #include <unistd.h>
-#include <mysql.h>
 #include "misc.h"
 #include "cfg.h"
 #include "messages.h"
 #include "config.h"
+
+
+#ifdef HAVE_MYSQL
+   #include <mysql.h>
+   MYSQL mysql;
+   MYSQL_RES *res;
+   MYSQL_ROW row;
+#endif
+
+#ifdef HAVE_SQLITE3
+   #include <sqlite3.h>
+   sqlite3 *db;
+   sqlite3_stmt *pStmt;
+   const char **ppzTail=NULL;
+   int rc;
+#endif
 
 
 int main(int argc, char **argv){
@@ -22,9 +37,6 @@ int main(int argc, char **argv){
    unsigned long uid, now, nham, nspam;
    struct __config cfg;
    FILE *f;
-   MYSQL mysql;
-   MYSQL_RES *res;
-   MYSQL_ROW row;
    time_t clock;
 
    if(argc < 2)
@@ -35,9 +47,16 @@ int main(int argc, char **argv){
    time(&clock);
    now = clock;
 
+#ifdef HAVE_MYSQL
    mysql_init(&mysql);
    if(!mysql_real_connect(&mysql, cfg.mysqlhost, cfg.mysqluser, cfg.mysqlpwd, cfg.mysqldb, cfg.mysqlport, cfg.mysqlsocket, 0))
       __fatal(ERR_MYSQL_CONNECT);
+#endif
+#ifdef HAVE_SQLITE3
+   rc = sqlite3_open(cfg.sqlite3, &db);
+   if(rc)
+      __fatal(ERR_SQLITE3_OPEN);
+#endif
  
    f = fopen("/dev/stdin", "r");
    if(!f)
@@ -69,6 +88,8 @@ int main(int argc, char **argv){
 
          snprintf(puf, MAXBUFSIZE-1, "SELECT uid FROM %s WHERE email='%s'", SQL_USER_TABLE, buf);
 
+      #ifdef HAVE_MYSQL
+
          if(mysql_real_query(&mysql, puf, strlen(puf)) == 0){
             res = mysql_store_result(&mysql);
             if(res != NULL){
@@ -79,15 +100,41 @@ int main(int argc, char **argv){
             }
          }
 
+      #endif
+      #ifdef HAVE_SQLITE3
+
+         if(sqlite3_prepare_v2(db, puf, -1, &pStmt, ppzTail) == SQLITE_OK){
+            if(sqlite3_step(pStmt) == SQLITE_ROW)
+               uid = sqlite3_column_int(pStmt, 0);
+         }
+
+         sqlite3_finalize(pStmt);
+      #endif
+
          if(uid > 0){
             snprintf(puf, MAXBUFSIZE-1, "INSERT INTO %s (uid, ts, nham, nspam) VALUES(%ld, %ld, %ld, %ld)", SQL_STAT_TABLE, uid, now, nham, nspam);
+
+         #ifdef HAVE_MYSQL
             mysql_real_query(&mysql, puf, strlen(puf));
+         #endif
+         #ifdef HAVE_SQLITE3
+            sqlite3_prepare_v2(db, puf, -1, &pStmt, ppzTail);
+            sqlite3_step(pStmt);
+            sqlite3_finalize(pStmt);
+         #endif
+
          }
       }
    }
 
    fclose(f);
+
+#ifdef HAVE_MYSQL
    mysql_close(&mysql);
+#endif
+#ifdef HAVE_SQLITE3
+   sqlite3_close(db);
+#endif
 
    return 0;
 }

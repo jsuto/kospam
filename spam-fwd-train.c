@@ -17,7 +17,6 @@
 #include <pwd.h>
 #include <time.h>
 #include <syslog.h>
-#include <mysql.h>
 #include "misc.h"
 #include "hash.h"
 #include "decoder.h"
@@ -27,8 +26,31 @@
 #include "sql.h"
 #include "config.h"
 
+
+#ifdef HAVE_MYSQL
+   #include <mysql.h>
+   MYSQL mysql;
+   MYSQL_RES *res;
+   MYSQL_ROW row;
+#endif
+
+#ifdef HAVE_SQLITE3
+   #include <sqlite3.h>
+   sqlite3 *db;
+   sqlite3_stmt *pStmt;
+   const char **ppzTail=NULL;
+   int rc;
+#endif
+
+
 void my_walk_hash(qry QRY, int ham_or_spam, char *tokentable, struct node *xhash[MAXHASH], int train_mode);
+
+#ifdef HAVE_MYSQL
 double bayes_file(MYSQL mysql, char *spamfile, struct _state state, struct session_data sdata, struct __config cfg);
+#endif
+#ifdef HAVE_SQLITE3
+double bayes_file(sqlite3 *db, char *spamfile, struct _state state, struct session_data sdata, struct __config cfg);
+#endif
 
 /*
  * check if it's a valid ID
@@ -63,9 +85,6 @@ int main(int argc, char **argv){
    struct _token *P, *Q;
    struct node *tokens[MAXHASH];
    qry QRY;
-   MYSQL mysql;
-   MYSQL_RES *res;
-   MYSQL_ROW row;
    FILE *f;
    time_t clock;
 
@@ -143,6 +162,15 @@ int main(int argc, char **argv){
 
    QRY.mysql = mysql;
 #endif
+#ifdef HAVE_SQLITE3
+   rc = sqlite3_open(cfg.sqlite3, &db);
+   if(rc){
+      syslog(LOG_PRIORITY, "%s", ERR_SQLITE3_OPEN);
+      return 0;
+   }
+
+   QRY.db = db;
+#endif
 
 
    /* select uid */
@@ -162,6 +190,14 @@ int main(int argc, char **argv){
       }
    }
 #endif
+#ifdef HAVE_SQLITE3
+   if(sqlite3_prepare_v2(db, buf, -1, &pStmt, ppzTail) == SQLITE_OK){
+      if(sqlite3_step(pStmt) == SQLITE_ROW)
+         QRY.uid = sqlite3_column_int(pStmt, 0);
+   }
+
+   sqlite3_finalize(pStmt);
+#endif
 
 
    /* select message data */
@@ -180,6 +216,13 @@ int main(int argc, char **argv){
          if(row){
             if(row[0]){
                p = row[0];
+#endif
+#ifdef HAVE_SQLITE3
+   if(sqlite3_prepare_v2(db, buf, -1, &pStmt, ppzTail) == SQLITE_OK){
+            if(sqlite3_step(pStmt) == SQLITE_ROW){
+               p = (char *)sqlite3_column_blob(pStmt, 0);
+
+#endif
 
                f = fopen(sdata.ttmpfile, "w+");
                if(f){
@@ -192,11 +235,17 @@ int main(int argc, char **argv){
                   strncat(buf, "\n", MAXBUFSIZE-1);
                   state = parse(buf, state);
                } while(p);
+
             }
+#ifdef HAVE_MYSQL
          }
          mysql_free_result(res);
       }
    }
+#endif
+#ifdef HAVE_SQLITE3
+   }
+   sqlite3_finalize(pStmt);
 #endif
 
    /* if this is a shared group, make sure the token database is trained with uid=0 */
@@ -250,11 +299,21 @@ int main(int argc, char **argv){
          #ifdef HAVE_MYSQL   
             mysql_real_query(&mysql, buf, strlen(buf));
          #endif
+         #ifdef HAVE_SQLITE3
+            sqlite3_prepare_v2(db, buf, -1, &pStmt, ppzTail);
+            sqlite3_step(pStmt);
+            sqlite3_finalize(pStmt);
+         #endif
 
             snprintf(buf, MAXBUFSIZE-1, "INSERT INTO %s (uid, ts, msgid, is_spam) VALUES(%ld, %ld, '%s', %d)", SQL_TRAININGLOG_TABLE, QRY.uid, now, ID, is_spam);
 
          #ifdef HAVE_MYSQL
             mysql_real_query(&mysql, buf, strlen(buf));
+         #endif
+         #ifdef HAVE_SQLITE3
+            sqlite3_prepare_v2(db, buf, -1, &pStmt, ppzTail);
+            sqlite3_step(pStmt);
+            sqlite3_finalize(pStmt);
          #endif
 
 
@@ -263,7 +322,12 @@ int main(int argc, char **argv){
 
          clearhash(tokens);
 
+      #ifdef HAVE_MYSQL
          spaminess = bayes_file(mysql, sdata.ttmpfile, state, sdata, cfg);
+      #endif
+      #ifdef HAVE_SQLITE3
+         spaminess = bayes_file(db, sdata.ttmpfile, state, sdata, cfg);
+      #endif
 
          syslog(LOG_PRIORITY, "%s: training round %d, spaminess: %.4f", ID, i, spaminess);
 
@@ -279,8 +343,12 @@ int main(int argc, char **argv){
    }
 
 
+#ifdef HAVE_MYSQL
    mysql_close(&mysql);
-
+#endif
+#ifdef HAVE_SQLITE3
+   sqlite3_close(db);
+#endif
 
    return 1;
 }

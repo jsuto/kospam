@@ -1,5 +1,5 @@
 /*
- * misc.c, 2007.06.13, SJ
+ * misc.c, 2007.08.18, SJ
  */
 
 #include <stdio.h>
@@ -557,6 +557,7 @@ int recvtimeout(int s, char *buf, int len, int timeout){
 
     return recv(s, buf, len, 0);
 }
+
 
 /*
  * create a random ID

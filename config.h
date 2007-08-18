@@ -1,5 +1,5 @@
 /*
- * config.h, 2007.08.04, SJ
+ * config.h, 2007.08.18, SJ
  */
 
 #include <syslog.h>
@@ -45,6 +45,8 @@
 #define MAXCONN 30
 #define TIMEOUT 60
 #define TIMEOUT_USEC 500000
+#define SMAP_TIMEOUT 15
+#define SMAP_TIMEOUT_USEC 0
 #define SESSION_TIMEOUT 60
 #define MAXBUFSIZE 8192
 #define SMALLBUFSIZE 512

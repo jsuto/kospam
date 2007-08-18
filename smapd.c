@@ -110,6 +110,36 @@ void decrement_thread_count(void){
 
 
 /*
+ * SSL aware read
+ */
+
+int read1(int sd, char *buf, int use_ssl, SSL *ssl){
+   fd_set fds;
+   int err;
+   struct timeval tv;
+
+   memset(buf, 0, MAXBUFSIZE);
+
+   FD_ZERO(&fds);
+   FD_SET(sd, &fds);
+
+   tv.tv_sec = SMAP_TIMEOUT;
+   tv.tv_usec = SMAP_TIMEOUT_USEC;
+
+   err = select(sd+1, &fds, NULL, NULL, &tv);
+   if(err == 0) return -2; // timeout!
+   if(err == -1) return -1; // error
+
+   if(use_ssl == 1)
+      err = SSL_read(ssl, buf, MAXBUFSIZE-1);
+   else
+      err = recv(sd, buf, MAXBUFSIZE-1, 0);
+
+   return err;
+}
+
+
+/*
  * process a connection
  */
 
@@ -165,7 +195,8 @@ void *process_connection(void *ptr){
 
    /* the first command must be a 'HELO username key' */
 
-   n = SSL_read(ssl, buf, MAXBUFSIZE-1);
+   //n = SSL_read(ssl, buf, MAXBUFSIZE-1);
+   if(read1(QC->sockfd, buf, 1, ssl) <= 0) goto CLOSE;
 
    if(strncmp(buf, "HELO ", 5) == 0){
       p = strchr(&buf[5], ' ');
@@ -223,7 +254,8 @@ void *process_connection(void *ptr){
 
    /* read the message until we got the trailing period */
 
-   while((n = SSL_read(ssl, buf, MAXBUFSIZE-1))){
+   //while((n = SSL_read(ssl, buf, MAXBUFSIZE-1))){
+   while((n = read1(QC->sockfd, buf, 1, ssl))){
       write(fd, buf, n);
 
       tot_len += n;

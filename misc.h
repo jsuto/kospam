@@ -2,6 +2,7 @@
  * misc.h, 2007.06.13, SJ
  */
 
+#include <openssl/ssl.h>
 #include <sys/time.h>
 #include "config.h"
 

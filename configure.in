@@ -220,7 +220,7 @@ dnl  if test "$want_antispam" = "yes"; then
        dnl check if we have mysql/ldap support
 
        if test "$have_mysql" = "yes" || test "$have_ldap" = "yes"; then
-          cgi="cgi"
+          cgi="spamcgi usercgi traincgi trainlogcgi statcgi"
           have_cgi="yes"
        else
           echo "you need mysql/ldap support for the cgi feature"

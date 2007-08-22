@@ -1,5 +1,5 @@
 /*
- * session.c, 2007.08.10, SJ
+ * session.c, 2007.08.22, SJ
  */
 
 #include <stdio.h>
@@ -129,14 +129,16 @@ void init_child(){
    fd = open(sdata.ttmpfile, O_CREAT|O_RDWR, S_IRUSR|S_IWUSR);
    if(fd == -1){
        syslog(LOG_PRIORITY, "%s: %s", ERR_OPEN_TMP_FILE, sdata.ttmpfile);
-       send(new_sd, SMTP_RESP_421_ERR_TMP, strlen(SMTP_RESP_421_ERR_TMP), 0);
+       snprintf(buf, MAXBUFSIZE-1, SMTP_RESP_421_ERR_TMP, cfg.hostid);
+       send(new_sd, buf, strlen(buf), 0);
        _exit(0);
    }
 
    // send 220 LMTP banner
 
-   send(new_sd, LMTP_RESP_220_BANNER, strlen(LMTP_RESP_220_BANNER), 0);
-   if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent: %s", sdata.ttmpfile, LMTP_RESP_220_BANNER);
+   snprintf(buf, MAXBUFSIZE-1, LMTP_RESP_220_BANNER, cfg.hostid);
+   send(new_sd, buf, strlen(buf), 0);
+   if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent: %s", sdata.ttmpfile, buf);
 
    while((n = recvtimeout(new_sd, buf, MAXBUFSIZE, 0)) > 0){
 
@@ -226,8 +228,10 @@ void init_child(){
             if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: got: %s", sdata.ttmpfile, buf);
 
             state = SMTP_STATE_FINISHED;
-            send(new_sd, SMTP_RESP_221_GOODBYE, strlen(SMTP_RESP_221_GOODBYE), 0);
-            if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent: %s", sdata.ttmpfile, SMTP_RESP_221_GOODBYE);
+
+            snprintf(buf, MAXBUFSIZE-1, SMTP_RESP_221_GOODBYE, cfg.hostid);
+            send(new_sd, buf, strlen(buf), 0);
+            if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent: %s", sdata.ttmpfile, buf);
 
             goto QUITTING;
          }
@@ -263,8 +267,11 @@ void init_child(){
             fd = open(sdata.ttmpfile, O_CREAT|O_RDWR, S_IRUSR|S_IWUSR);
             if(fd == -1){
                syslog(LOG_PRIORITY, "%s: %s", ERR_OPEN_TMP_FILE, sdata.ttmpfile);
-               send(new_sd, SMTP_RESP_421_ERR_TMP, strlen(SMTP_RESP_421_ERR_TMP), 0);
-               if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent: %s", sdata.ttmpfile, SMTP_RESP_421_ERR_TMP);
+
+               snprintf(buf, MAXBUFSIZE-1, SMTP_RESP_421_ERR_TMP, cfg.hostid);
+               send(new_sd, buf, strlen(buf), 0);
+               if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent: %s", sdata.ttmpfile, buf);
+
                _exit(0);
             }
 
@@ -608,8 +615,9 @@ void init_child(){
     */
 
    if(state < SMTP_STATE_QUIT && inj != OK){
-      send(new_sd, SMTP_RESP_421_ERR, strlen(SMTP_RESP_421_ERR), 0);
-      if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent: %s", sdata.ttmpfile, SMTP_RESP_421_ERR);
+      snprintf(buf, MAXBUFSIZE-1, SMTP_RESP_421_ERR, cfg.hostid);
+      send(new_sd, buf, strlen(buf), 0);
+      if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent: %s", sdata.ttmpfile, buf);
 
       goto QUITTING;
    }

@@ -1,5 +1,5 @@
 /*
- * smtp.c, 2007.06.26, SJ
+ * smtp.c, 2007.08.22, SJ
  */
 
 #include <stdio.h>
@@ -74,7 +74,7 @@ int inject_mail(struct session_data sdata, int msg, char *smtpaddr, int smtpport
       return ERR_INJECT;
    }
 
-   snprintf(buf, MAXBUFSIZE-1, "HELO %s\r\n", HOSTID);
+   snprintf(buf, MAXBUFSIZE-1, "HELO %s\r\n", cfg.hostid);
    send(psd, buf, strlen(buf), 0);
    if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent in injecting: %s", sdata.ttmpfile, buf);
 

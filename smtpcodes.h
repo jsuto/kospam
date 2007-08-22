@@ -1,5 +1,5 @@
 /*
- * smtpcodes.h, 2007.06.13, SJ
+ * smtpcodes.h, 2007.08.22, SJ
  */
 
 // SMTP states
@@ -27,14 +27,14 @@
 
 // SMTP responses
 
-#define SMTP_RESP_220_BANNER "220 " HOSTID "\r\n"
-#define SMTP_RESP_221_GOODBYE "221 " HOSTID " Goodbye\r\n"
+#define SMTP_RESP_220_BANNER "220 %s\r\n"
+#define SMTP_RESP_221_GOODBYE "221 %s Goodbye\r\n"
 #define SMTP_RESP_250_OK "250 Ok\r\n"
 
 #define SMTP_RESP_354_DATA_OK "354 Send mail data; end it with <CRLF>.<CRLF>\r\n"
 
-#define SMTP_RESP_421_ERR "421 " HOSTID " Error: timed out\r\n"
-#define SMTP_RESP_421_ERR_TMP " 421 " HOSTID " service not available\r\n"
+#define SMTP_RESP_421_ERR "421 %s Error: timed out\r\n"
+#define SMTP_RESP_421_ERR_TMP " 421 %s service not available\r\n"
 #define SMTP_RESP_451_ERR "451 Error in processing, try again later\r\n"
 
 #define SMTP_RESP_502_ERR "502 Command not implemented\r\n"
@@ -50,6 +50,6 @@
 
 // LMTP responses
 
-#define LMTP_RESP_220_BANNER "220 " HOSTID " LMTP\r\n"
+#define LMTP_RESP_220_BANNER "220 %s LMTP\r\n"
 #define LMTP_RESP_250_OK "250 Ok\r\n"
 

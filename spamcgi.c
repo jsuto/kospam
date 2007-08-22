@@ -1,5 +1,5 @@
 /*
- * spamcgi.c, 2007.03.19, SJ
+ * spamcgi.c, 2007.08.22, SJ
  */
 
 #include <stdio.h>
@@ -31,7 +31,7 @@ void errout(char *input, char *s);
 
 
 
-void parse_message(char *dir, char *message, char *from, char *subj){
+void parse2_message(char *dir, char *message, char *from, char *subj){
    FILE *F;
    char m[SMALLBUFSIZE], *p=NULL;
    int i=0;
@@ -116,7 +116,7 @@ int check_directory(char *dir, int page_len){
 
          n_msgs++;
 
-         parse_message(dir, namelist[n]->d_name, from, subj);
+         parse2_message(dir, namelist[n]->d_name, from, subj);
 
          if(n_msgs > page_len*page && n_msgs <= page_len*(page+1)){
             if(stat(namelist[n]->d_name, &st) == 0){

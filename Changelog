@@ -6,6 +6,17 @@ Better configure script and Makefile
 (configure*, Makefile.in)
 (credits: Elso Andras)
 
+Fixed a makefile bug
+(configure*, Makefile.in)
+
+Consisent hostid
+(smtpcodes.h, smtp.c, session.c)
+(credits: Elso Andras)
+
+Fixed a bug in spamcgi
+(spamcgi.c)
+(credits: Elso Andras)
+
 2007.08.20. SJ
 
 Added a statistic logging to spamdrop ("<uid> got HAM|SPAM")

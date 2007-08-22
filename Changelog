@@ -1,5 +1,11 @@
 0.3.30:
 
+2007.08.22, SJ
+
+Better configure script and Makefile
+(configure*, Makefile.in)
+(credits: Elso Andras)
+
 2007.08.20. SJ
 
 Added a statistic logging to spamdrop ("<uid> got HAM|SPAM")

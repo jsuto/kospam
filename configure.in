@@ -157,7 +157,7 @@ dnl  if test "$want_antispam" = "yes"; then
 
     antispam_libs="-lm"
 
-    parsembox="make parsembox"
+    parsembox="parsembox"
 
     dnl mysql database
 
@@ -220,7 +220,7 @@ dnl  if test "$want_antispam" = "yes"; then
        dnl check if we have mysql/ldap support
 
        if test "$have_mysql" = "yes" || test "$have_ldap" = "yes"; then
-          cgi="make cgi"
+          cgi="cgi"
           have_cgi="yes"
        else
           echo "you need mysql/ldap support for the cgi feature"
@@ -234,7 +234,7 @@ AC_ARG_WITH(userdb,
 [  --with-userdb[[=ldap|mysql]]      use either ldap or mysql database holding user data (default: none)],[
   if test "$withval" != "no" -a "$withval" != "yes"; then
     USERDB=$withval
-    passmail="make passmail"
+    passmail="passmail"
     passmail_install='$(INSTALL) -m 0755 passmail $(root)$(DESTDIR)$(bindir)'
     parsembox_install='make install-parsembox'
     train_install='make install-train'
@@ -249,7 +249,7 @@ AC_ARG_WITH(tokendb,
   fi
 
   have_antispam="yes"
-  spamdrop="make spamdrop"
+  spamdrop="spamdrop"
 
   if test "$withval" = "sqlite3"; then
     AC_CHECK_HEADERS(sqlite3.h, have_sqlite3=yes, echo "sqlite3.h is not found")
@@ -262,7 +262,7 @@ AC_ARG_WITH(tokendb,
       fi
 
     have_train="yes"
-    parsembox="$parsembox; make train"
+    parsembox="$parsembox train"
 
   fi
 
@@ -274,14 +274,14 @@ AC_ARG_WITH(tokendb,
             mysql_includes=`mysql_config --cflags`
             mysql_libs=`mysql_config --libs_r`
             have_train="yes"
-            parsembox="$parsembox; make train"
+            parsembox="$parsembox train"
      else
         echo "MySQL support is not found"
         exit 1;
      fi
   fi
 
-  parsembox="$parsembox; make test"
+  parsembox="$parsembox test"
 
 
 ])
@@ -503,12 +503,12 @@ fi
 if test "$QCACHE" = "tcp"; then
    defs="$defs -DHAVE_QCACHE -DHAVE_TCP"
    echo "Qcache: tcp"
-   qcache="make qcache"
+   qcache="qcache"
 fi
 if test "$QCACHE" = "socket"; then
    defs="$defs -DHAVE_QCACHE"
    echo "Qcache: socket"
-   qcache="make qcache"
+   qcache="qcache"
 fi
 
 

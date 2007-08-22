@@ -4377,7 +4377,7 @@ ac_cv_lib_m=ac_cv_lib_m_main
 
     antispam_libs="-lm"
 
-    parsembox="make parsembox"
+    parsembox="parsembox"
 
 
     # Extract the first word of "mysql_config", so it can be a program name with args.
@@ -4895,7 +4895,7 @@ fi
 
 
        if test "$have_mysql" = "yes" || test "$have_ldap" = "yes"; then
-          cgi="make cgi"
+          cgi="cgi"
           have_cgi="yes"
        else
           echo "you need mysql/ldap support for the cgi feature"
@@ -4911,7 +4911,7 @@ if test "${with_userdb+set}" = set; then
   withval=$with_userdb;
   if test "$withval" != "no" -a "$withval" != "yes"; then
     USERDB=$withval
-    passmail="make passmail"
+    passmail="passmail"
     passmail_install='$(INSTALL) -m 0755 passmail $(root)$(DESTDIR)$(bindir)'
     parsembox_install='make install-parsembox'
     train_install='make install-train'
@@ -4930,7 +4930,7 @@ if test "${with_tokendb+set}" = set; then
   fi
 
   have_antispam="yes"
-  spamdrop="make spamdrop"
+  spamdrop="spamdrop"
 
   if test "$withval" = "sqlite3"; then
 
@@ -5209,7 +5209,7 @@ ac_cv_lib_sqlite3=ac_cv_lib_sqlite3_main
       fi
 
     have_train="yes"
-    parsembox="$parsembox; make train"
+    parsembox="$parsembox train"
 
   fi
 
@@ -5220,14 +5220,14 @@ ac_cv_lib_sqlite3=ac_cv_lib_sqlite3_main
             mysql_includes=`mysql_config --cflags`
             mysql_libs=`mysql_config --libs_r`
             have_train="yes"
-            parsembox="$parsembox; make train"
+            parsembox="$parsembox train"
      else
         echo "MySQL support is not found"
         exit 1;
      fi
   fi
 
-  parsembox="$parsembox; make test"
+  parsembox="$parsembox test"
 
 
 
@@ -5717,12 +5717,12 @@ fi
 if test "$QCACHE" = "tcp"; then
    defs="$defs -DHAVE_QCACHE -DHAVE_TCP"
    echo "Qcache: tcp"
-   qcache="make qcache"
+   qcache="qcache"
 fi
 if test "$QCACHE" = "socket"; then
    defs="$defs -DHAVE_QCACHE"
    echo "Qcache: socket"
-   qcache="make qcache"
+   qcache="qcache"
 fi
 
 

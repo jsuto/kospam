@@ -17,47 +17,39 @@ LIBS = @LIBS@
 LDAP_LIBS = @ldap_libs@
 OBJS = @OBJS@
 USER_OBJ = @user_obj@
+MYSQL_OBJS = @mysql_obj@
 
 INSTALL = @INSTALL@
 
 root =
 
-all:
-	make $(OBJS) $(USER_OBJ) @mysql_obj@
-	make clapf
-	@cgi@
-	make splitmbox
-	@spamdrop@
-	@parsembox@
-	@passmail@
-	@qcache@
-clapf:
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o clapf clapf.c $(OBJS) @mysql_obj@ $(LIBS) $(LDAP_LIBS) $(LIBDIR) @LDFLAGS@
+all: clapf splitmbox @cgi@ @spamdrop@ @parsembox@ @passmail@ @qcache@
 
-parsembox:
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c parser.c
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o parsembox parsembox.c $(LIBS) misc.o decoder.o parser.o $(LIBDIR)
+cgi: spamcgi usercgi traincgi trainlogcgi statcgi
 
-spamdrop:
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c bayes.c
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o spamdrop spamdrop.c $(OBJS) @mysql_obj@ $(LIBS) $(LIBDIR)
+clapf: % : %.o $(OBJS) $(MYSQL_OBJS)
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR) @LDFLAGS@
 
-splitmbox:
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o splitmbox splitmbox.c misc.o decoder.o parser.o $(LIBDIR)
+parsembox: % : %.o misc.o decoder.o parser.o
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
 
-cgi:
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o spamcgi spamcgi.c $(OBJS) $(USER_OBJ) @mysql_obj@ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o usercgi usercgi.c $(OBJS) $(USER_OBJ) @mysql_obj@ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o traincgi traincgi.c $(OBJS) @mysql_obj@ $(USER_OBJ) $(LIBS) $(LDAP_LIBS) $(LIBDIR)
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o trainlogcgi trainlogcgi.c $(OBJS) @mysql_obj@ $(USER_OBJ) $(LIBS) $(LDAP_LIBS) $(LIBDIR)
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o statcgi statcgi.c $(OBJS) @mysql_obj@ $(USER_OBJ) $(LIBS) $(LDAP_LIBS) $(LIBDIR)
+spamdrop: % : %.o bayes.o $(OBJS) $(MYSQL_OBJS)
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
 
-train:
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o aphash aphash.c misc.o
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o train train.c $(OBJS) @mysql_obj@ $(LIBS) $(LIBDIR) @LDFLAGS@
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o spam-fwd-train spam-fwd-train.c $(OBJS) @mysql_obj@ $(USER_OBJ) $(LIBS) $(LDAP_LIBS) $(LIBDIR)
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o spamstat spamstat.c $(OBJS) @mysql_obj@ $(USER_OBJ) $(LIBS) $(LDAP_LIBS) $(LIBDIR)
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o clapf_admin clapf_admin.c $(OBJS) @mysql_obj@ $(USER_OBJ) $(LIBS) $(LDAP_LIBS) $(LIBDIR)
+splitmbox: % : %.o misc.o decoder.o parser.o
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
+
+spamcgi usercgi traincgi trainlogcgi statcgi: % : %.o $(OBJS) $(USER_OBJ) $(MYSQL_OBJS)
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
+
+aphash: % : %.o misc.o
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^
+
+spam-fwd-train spamstat clapf_admin smapd: % : %.o $(OBJS) $(MYSQL_OBJS)
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
+
+train: train.o spam-fwd-train spamstat clapf_admin aphash
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ train.o $(OBJS) $(MYSQL_OBJS) $(LIBS) $(LIBDIR) @LDFLAGS@
 
 test:
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -DDEBUG -c bayes.c
@@ -65,92 +57,16 @@ test:
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -DDEBUG -c hash.c
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -DDEBUG -c parser.c
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -DDEBUG -c rbl.c
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -DDEBUG -o spamtest test.c $(OBJS) @mysql_obj@ $(LIBS) $(LIBDIR) @LDFLAGS@
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -DDEBUG -o spamtest test.c $(OBJS) $(MYSQL_OBJS) $(LIBS) $(LIBDIR) @LDFLAGS@
 
-passmail:
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o passmail passmail.c misc.o cfg.o smtp.o $(USER_OBJ) $(LIBS) $(LDAP_LIBS) $(LIBDIR) @LDFLAGS@
+passmail: % : %.o misc.o cfg.o smtp.o $(USER_OBJ)
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
 
-qcache:
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c qcache.c
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o qs qs.c misc.o cfg.o qcache.o $(LIBS) -lpthread $(LIBDIR)
-	#$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o 1 q1.c
+qcache: qs.o misc.o cfg.o qcache.o
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o qs $^ $(LIBS) -lpthread $(LIBDIR)
 
-smapd:
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o smapd smapd.c $(OBJS) @mysql_obj@ $(LIBS) -lpthread -lssl -lcrypto -ldl $(LIBDIR)
-
-
-cfg.o:
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c cfg.c
-
-misc.o:
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c misc.c
-
-hash.o:
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c hash.c
-
-smtp.o:
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c smtp.c
-
-decoder.o:
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c decoder.c
-
-bayes.o:
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c bayes.c
-
-black.o:
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c black.c
-
-chi.o:
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c chi.c
-
-parser.o:
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c parser.c
-
-mime.o:
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c mime.c
-
-avg.o:
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c avg.c
-
-avast.o:
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c avast.c
-
-kav.o:
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c kav.c
-
-drweb.o:
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c drweb.c
-
-clamd.o:
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c clamd.c
-
-sig.o:
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c sig.c
-
-session.o:
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c session.c
-
-rbl.o:
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c rbl.c
-
-cgi.o:
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c cgi.c
-
-user.o:
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c user.c
-
-cdb.o:
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c cdb.c
-
-mysql.o:
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c mysql.c
-
-sqlite3.o:
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c sqlite3.c
-
-sql.o:
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c sql.c
-
+%.o: %.c
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c $< -o $@
 
 install-parsembox:
 	$(INSTALL) -m 0755 parsembox $(root)$(DESTDIR)$(bindir)

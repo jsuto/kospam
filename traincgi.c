@@ -1,11 +1,10 @@
 /*
- * traincgi.c, 2007.06.07, SJ
+ * traincgi.c, 2007.08.22, SJ
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <mysql.h>
 #include <time.h>
 #include <unistd.h>
 #include "misc.h"
@@ -18,15 +17,25 @@
 #include "sql.h"
 #include "config.h"
 
+#ifdef HAVE_MYSQL
+   #include <mysql.h>
+   MYSQL mysql;
+   MYSQL_RES *res;
+   MYSQL_ROW row;
+#endif
+#ifdef HAVE_SQLITE3
+   #include <sqlite3.h>
+   sqlite3 *db;
+   sqlite3_stmt *pStmt;
+   const char **ppzTail=NULL;
+   int rc;
+#endif
+
 FILE *cgiIn, *f, *F;
 char *input;
-MYSQL mysql;
-MYSQL_RES *res;
-MYSQL_ROW row;
 struct node *tokens[MAXHASH];
 
 void my_walk_hash(qry QRY, int ham_or_spam, char *tokentable, struct node *xhash[MAXHASH], int train_mode);
-//void my_walk_hash(MYSQL mysql, int ham_or_spam, char *tokentable, struct node *xhash[MAXHASH], unsigned int uid, int train_mode);
 int deliver_message(char *dir, char *message, struct __config cfg);
 
 int main(){
@@ -74,6 +83,13 @@ int main(){
 
    QRY.mysql = mysql;
 #endif
+#ifdef HAVE_SQLITE3
+   rc = sqlite3_open(cfg.sqlite3, &db);
+   if(rc)
+      errout(NULL, ERR_SQLITE3_OPEN);
+
+   QRY.db = db;   
+#endif
 
    /* select uid */
 
@@ -91,6 +107,17 @@ int main(){
       }
    }
 #endif
+#ifdef HAVE_SQLITE3
+   if(sqlite3_prepare_v2(db, buf, -1, &pStmt, ppzTail) == SQLITE_OK){
+      if(sqlite3_step(pStmt) == SQLITE_ROW)
+         QRY.uid = sqlite3_column_int(pStmt, 0);
+   }
+
+   sqlite3_finalize(pStmt);
+#endif
+
+   /* fix uid if this is a shared group, 2007.08.22, SJ */
+   if(cfg.group_type == GROUP_SHARED) QRY.uid = 0;
 
 
    time(&clock);
@@ -277,18 +304,21 @@ int main(){
 
       if(QRY.sockfd != -1) close(QRY.sockfd);
 
-      //my_walk_hash(mysql, is_spam, SQL_TOKEN_TABLE, tokens, QRY.uid, train_mode);
-
 
       /* update the t_misc table */
 
       if(is_spam == 1)
-         snprintf(buf, MAXBUFSIZE-1, "UPDATE %s SET update_cdb=1, nspam=nspam+1", SQL_MISC_TABLE);
+         snprintf(buf, MAXBUFSIZE-1, "UPDATE %s SET nspam=nspam+1", SQL_MISC_TABLE);
       else
-         snprintf(buf, MAXBUFSIZE-1, "UPDATE %s SET update_cdb=1, nham=nham+1", SQL_MISC_TABLE);
+         snprintf(buf, MAXBUFSIZE-1, "UPDATE %s SET nham=nham+1", SQL_MISC_TABLE);
 
    #ifdef HAVE_MYSQL
       mysql_real_query(&mysql, buf, strlen(buf));
+   #endif
+   #ifdef HAVE_SQLITE3
+      sqlite3_prepare_v2(db, buf, -1, &pStmt, ppzTail);
+      sqlite3_step(pStmt);
+      sqlite3_finalize(pStmt);
    #endif
 
       /* fix ID if we have to */
@@ -299,9 +329,17 @@ int main(){
       /* add entry to t_train_log table, 2007.05.21, SJ */
 
       snprintf(buf, MAXBUFSIZE-1, "INSERT INTO %s (uid, ts, msgid, is_spam) VALUES(%ld, %ld, '%s', %d)", SQL_TRAININGLOG_TABLE, QRY.uid, now, ID, is_spam);
+
    #ifdef HAVE_MYSQL
       mysql_real_query(&mysql, buf, strlen(buf));
       mysql_close(&mysql);
+   #endif
+   #ifdef HAVE_SQLITE3
+      sqlite3_prepare_v2(db, buf, -1, &pStmt, ppzTail);
+      sqlite3_step(pStmt);
+      sqlite3_finalize(pStmt);
+
+      sqlite3_close(db);
    #endif
 
    }

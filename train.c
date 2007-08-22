@@ -158,17 +158,17 @@ int main(int argc, char **argv){
 
    #ifdef HAVE_MYSQL
       if(is_spam == 1)
-         snprintf(buf, MAXBUFSIZE-1, "update %s set update_cdb=1, nspam=nspam+1 WHERE uid=%ld", SQL_MISC_TABLE, QRY.uid);
+         snprintf(buf, MAXBUFSIZE-1, "update %s set nspam=nspam+1 WHERE uid=%ld", SQL_MISC_TABLE, QRY.uid);
       else
-         snprintf(buf, MAXBUFSIZE-1, "update %s set update_cdb=1, nham=nham+1 WHERE uid=%ld", SQL_MISC_TABLE, QRY.uid);
+         snprintf(buf, MAXBUFSIZE-1, "update %s set nham=nham+1 WHERE uid=%ld", SQL_MISC_TABLE, QRY.uid);
 
       mysql_real_query(&mysql, buf, strlen(buf));
    #endif
    #ifdef HAVE_SQLITE3
       if(is_spam == 1)
-         snprintf(buf, MAXBUFSIZE-1, "update %s set update_cdb=1, nspam=nspam+1 WHERE uid='%ld'", SQL_MISC_TABLE, QRY.uid);
+         snprintf(buf, MAXBUFSIZE-1, "update %s set nspam=nspam+1 WHERE uid='%ld'", SQL_MISC_TABLE, QRY.uid);
       else
-         snprintf(buf, MAXBUFSIZE-1, "update %s set update_cdb=1, nham=nham+1 WHERE uid='%ld'", SQL_MISC_TABLE, QRY.uid);
+         snprintf(buf, MAXBUFSIZE-1, "update %s set nham=nham+1 WHERE uid='%ld'", SQL_MISC_TABLE, QRY.uid);
 
       sqlite3_prepare_v2(db, buf, -1, &pStmt, ppzTail);
       sqlite3_step(pStmt);

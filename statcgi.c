@@ -1,11 +1,10 @@
 /*
- * statcgi.c, 2007.05.18, SJ
+ * statcgi.c, 2007.08.22, SJ
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <mysql.h>
 #include <unistd.h>
 #include <time.h>
 #include "misc.h"
@@ -15,11 +14,22 @@
 #include "config.h"
 #include "cfg.h"
 
+#ifdef HAVE_MYSQL
+   #include <mysql.h>
+   MYSQL mysql;
+   MYSQL_RES *res;
+   MYSQL_ROW row;
+#endif
+#ifdef HAVE_SQLITE3
+   #include <sqlite3.h>
+   sqlite3 *db;
+   sqlite3_stmt *pStmt;
+   const char **ppzTail=NULL;
+   int rc;
+#endif
+
 FILE *cgiIn, *f, *F;
 char *input;
-MYSQL mysql;
-MYSQL_RES *res;
-MYSQL_ROW row;
 
 int main(){
    int method=M_UNDEF, timespan=0;
@@ -39,10 +49,16 @@ int main(){
    if(!getenv("REMOTE_USER"))
       errout(NULL, ERR_CGI_NOT_AUTHENTICATED);
 
+#ifdef HAVE_MYSQL
    mysql_init(&mysql);
-
    if(!mysql_real_connect(&mysql, cfg.mysqlhost, cfg.mysqluser, cfg.mysqlpwd, cfg.mysqldb, cfg.mysqlport, cfg.mysqlsocket, 0))
       errout(NULL, ERR_MYSQL_CONNECT);
+#endif
+#ifdef HAVE_SQLITE3
+   rc = sqlite3_open(cfg.sqlite3, &db);
+   if(rc)
+      errout(NULL, ERR_SQLITE3_OPEN);
+#endif
 
 
    if((p = getenv("REQUEST_METHOD"))){
@@ -76,6 +92,7 @@ int main(){
 
    snprintf(buf, SMALLBUFSIZE-1, "SELECT uid FROM %s WHERE username='%s'", SQL_USER_TABLE, getenv("REMOTE_USER"));
 
+#ifdef HAVE_MYSQL
    if(mysql_real_query(&mysql, buf, strlen(buf)) == 0){
       res = mysql_store_result(&mysql);
       if(res != NULL){
@@ -86,6 +103,15 @@ int main(){
          mysql_free_result(res);
       }
    }
+#endif
+#ifdef HAVE_SQLITE3
+   if(sqlite3_prepare_v2(db, buf, -1, &pStmt, ppzTail) == SQLITE_OK){
+      if(sqlite3_step(pStmt) == SQLITE_ROW)
+         uid = sqlite3_column_int(pStmt, 0);
+   }
+
+   sqlite3_finalize(pStmt);
+#endif
 
    if(uid > 0){
       if(timespan == 0)
@@ -100,7 +126,8 @@ int main(){
          snprintf(buf, SMALLBUFSIZE-1, "SELECT ts, nham, nspam FROM %s WHERE uid=%ld ORDER BY ts DESC LIMIT 24", SQL_STAT_TABLE, uid);
       else
          snprintf(buf, SMALLBUFSIZE-1, "SELECT FROM_UNIXTIME(ts, '%%Y.%%m.%%d.'), SUM(nham), SUM(nspam) FROM %s WHERE uid=%ld GROUP BY FROM_UNIXTIME(ts, '%%Y.%%m.%%d.') ORDER BY ts DESC", SQL_STAT_TABLE, uid);
- 
+
+   #ifdef HAVE_MYSQL 
       if(mysql_real_query(&mysql, buf, strlen(buf)) == 0){
          res = mysql_store_result(&mysql);
          if(res != NULL){
@@ -120,6 +147,27 @@ int main(){
             printf("<tr align=\"center\"><td><strong>Total</strong></td><td><strong>%ld</strong></td><td><strong>%ld</strong></td></tr>\n", nham, nspam);
          }
       }
+   #endif
+   #ifdef HAVE_SQLITE3
+      if(sqlite3_prepare_v2(db, buf, -1, &pStmt, ppzTail) == SQLITE_OK){
+         while(sqlite3_step(pStmt) == SQLITE_ROW){
+            nham += sqlite3_column_int(pStmt, 1);
+            nspam += sqlite3_column_int(pStmt, 2);
+
+            if(timespan == 0){
+               ts = sqlite3_column_int(pStmt, 0);
+               t = localtime(&ts);
+               printf("<tr align=\"center\"><td>%04d.%02d.%02d %02d:00</td><td>%d</td><td>%d</td></tr>\n", t->tm_year+1900, t->tm_mon+1, t->tm_mday, t->tm_hour, sqlite3_column_int(pStmt, 1), sqlite3_column_int(pStmt, 2));
+            }
+            else
+               printf("<tr align=\"center\"><td>%ld</td><td>%d</td><td>%d</td></tr>\n", ts, sqlite3_column_int(pStmt, 1), sqlite3_column_int(pStmt, 2));
+         }
+         printf("<tr align=\"center\"><td><strong>Total</strong></td><td><strong>%ld</strong></td><td><strong>%ld</strong></td></tr>\n", nham, nspam);
+      }
+      sqlite3_finalize(pStmt);
+
+   #endif
+
       printf("</table><p>\n");
 
    }
@@ -127,7 +175,12 @@ int main(){
       printf("<center>%s</center>\n", ERR_CGI_MYSQL_NO_USER);
    }
 
+#ifdef HAVE_MYSQL
    mysql_close(&mysql);
+#endif
+#ifdef HAVE_SQLITE3
+   sqlite3_close(db);
+#endif
 
    printf("</blockquote>\n</body></html>\n");
 

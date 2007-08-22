@@ -1,5 +1,5 @@
 /*
- * misc.c, 2007.08.18, SJ
+ * misc.c, 2007.08.20, SJ
  */
 
 #include <stdio.h>
@@ -575,6 +575,18 @@ int make_rnd_string(char *res){
    }
 
    return 1;
+}
+
+
+/*
+ * syslog ham/spam status per email addresses
+ */
+
+void log_ham_spam_per_email(char *tmpfile, char *email, int ham_or_spam){
+   if(ham_or_spam == 0)
+      syslog(LOG_PRIORITY, "%s: %s got HAM", tmpfile, email);
+   else
+      syslog(LOG_PRIORITY, "%s: %s got SPAM", tmpfile, email);
 }
 
 

@@ -12,7 +12,7 @@
 
 Install postfix 2.x: <a href="http://www.postfix.org/">http://www.postfix.org/</a>.
 Clapf was originally designed to work with postfix but you may use it with any
-product capable of SMTP communication. Clapf can be run from the maildrop LDA as
+product capable of LMTP/SMTP communication. Clapf can be run from the maildrop LDA as
 well as with any SMTP server. Appliance mode is also possible.<p/>
 
 I strongly recommend you to install one of the supported antivirus products:<p/>
@@ -166,7 +166,7 @@ Oct 12 13:26:45 thorium clapf[15851]: reloaded with 40544 viruses
 <li>add the following line to main.cf:
 
 <pre>
-content_filter = smtp:[127.0.0.1]:10025
+content_filter = lmtp:[127.0.0.1]:10025
 default_destination_concurrency_limit = 10
 smtpd_recipient_limit = 128
 </pre>

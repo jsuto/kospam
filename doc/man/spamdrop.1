@@ -5,17 +5,29 @@
 spamdrop \- check whether the given RFC-822 is spam or not
 .SH "SYNOPSIS"
 .LP 
-cat <RFC-822 formatted message file> | spamdrop <configuration file> [v]
+cat <RFC-822 formatted message file> | spamdrop -c <configuration file> -p
 .SH "DESCRIPTION"
 .LP 
 
 spamdrop is a command line utility to determine whether the incoming message
 is spam or not. It reads its configuration and takes the message from the
-standard input then returns 1 if the message is spam or 0 otherwise.
-spamdrop is designed to collaborate with maildrop.
+standard input. Then it returns 1 if the message is spam or 0 otherwise.
+If using the -p command line switch it will print the message to the
+standard output. Spamdrop is designed to collaborate with maildrop.
 
-You may use "v" as the 2nd command line switch to print the spamicity value
-and execution time on the standard error.
+
+
+.SH "OPTIONS"
+.LP
+
+.TP
+\fB\-c\fR
+Use the given configuration file instead the default (/usr/local/etc/clapf.conf).
+
+.TP
+\fB\-p\fR
+Print the given message to the standard output and inserting some extra headers.
+
 
 .SH "EXAMPLE"
 .LP
@@ -23,11 +35,13 @@ and execution time on the standard error.
 To use spamdrop with maildrop you may use the following configuration snippet:
 
 .nf
-`/usr/local/bin/spamdrop /usr/local/etc/clapf.conf `
-if($RETURNCODE == 1)
+xfilter "/usr/local/bin/spamdrop -p"
+
+if(/^X-Clapf-spamicity: Yes/:h)
 {
-    to "mail/junk"
+        to "mail/junk"
 }
+to "Mailbox"
 
 .SH "FILES"
 .LP

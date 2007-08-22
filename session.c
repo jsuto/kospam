@@ -60,18 +60,6 @@ void kill_child(){
 
 
 /*
- * syslog ham/spam status per email addresses
- */
-
-void log_ham_spam_per_email(char *tmpfile, char *email, int ham_or_spam){
-   if(ham_or_spam == 0)
-      syslog(LOG_PRIORITY, "%s: %s got HAM", tmpfile, email);
-   else
-      syslog(LOG_PRIORITY, "%s: %s got SPAM", tmpfile, email);
-}
-
-
-/*
  * init SMTP session
  */
 

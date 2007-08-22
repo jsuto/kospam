@@ -195,7 +195,6 @@ void *process_connection(void *ptr){
 
    /* the first command must be a 'HELO username key' */
 
-   //n = SSL_read(ssl, buf, MAXBUFSIZE-1);
    if(read1(QC->sockfd, buf, 1, ssl) <= 0) goto CLOSE;
 
    if(strncmp(buf, "HELO ", 5) == 0){
@@ -254,7 +253,6 @@ void *process_connection(void *ptr){
 
    /* read the message until we got the trailing period */
 
-   //while((n = SSL_read(ssl, buf, MAXBUFSIZE-1))){
    while((n = read1(QC->sockfd, buf, 1, ssl))){
       write(fd, buf, n);
 

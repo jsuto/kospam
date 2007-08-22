@@ -1,5 +1,10 @@
 0.3.30:
 
+2007.08.20. SJ
+
+Added a statistic logging to spamdrop ("<uid> got HAM|SPAM")
+(misc.c, session.c, spamdrop.c)
+
 2007.08.10, SJ
 
 Removed the --enable-mysql configure option and the HAVE_MYSQL_TOKEN_DATABASE

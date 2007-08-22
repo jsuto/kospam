@@ -199,7 +199,7 @@ clean_db:
 	rm -f CDBFILE.* ham.tmp spam.tmp num_of_spam.tmp num_of_ham.tmp tokens*.cdb temp.*
 
 clean:
-	rm -f *.o *.a qs db.sql clapf parsembox splitmbox spamtest spamdrop train spamcgi traincgi trainlogcgi usercgi statcgi passmail spam-fwd-train spamstat aphash clapf_admin
+	rm -f *.o *.a smapd qs db.sql clapf parsembox splitmbox spamtest spamdrop train spamcgi traincgi trainlogcgi usercgi statcgi passmail spam-fwd-train spamstat aphash clapf_admin
 
 dist_clean:
 	rm -f Makefile config.log config.status clapf-config.h stamp.h

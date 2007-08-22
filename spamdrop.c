@@ -52,7 +52,7 @@ int main(int argc, char **argv){
    struct _state state;
    struct __config cfg;
    char buf[MAXBUFSIZE], *configfile=CONFIG_FILE;
-   int i, n, x, fd, fd2, print_message=0, is_header=1, tot_len=0;
+   int i, n, x, fd, fd2, print_message=0, is_header=1, tot_len=0, put_subject_spam_prefix=0, sent_subject_spam_prefix=0;
    FILE *f;
 
    while((i = getopt(argc, argv, "c:p")) > 0){
@@ -161,15 +161,37 @@ int main(int argc, char **argv){
       f = fopen(sdata.ttmpfile, "r");
       if(!f) return EX_TEMPFAIL;
 
+      if(spaminess >= cfg.spam_overall_limit && spaminess < 1.01 && strlen(cfg.spam_subject_prefix) > 1) put_subject_spam_prefix = 1;
+
       while(fgets(buf, MAXBUFSIZE-1, f)){
+
+         /* tag the Subject line if we have to, 2007.08.21, SJ */
+
+         if(is_header == 1 && put_subject_spam_prefix == 1 && strncmp(buf, "Subject: ", 9) == 0 && !strstr(buf, cfg.spam_subject_prefix)){ 
+            printf("Subject: ");
+            printf("%s", cfg.spam_subject_prefix);
+            printf("%s", &buf[9]);
+            sent_subject_spam_prefix = 1;
+         }
+
          if(is_header == 1 && (buf[0] == '\n' || buf[0] == '\r')){
             is_header = 0;
+
             printf("%s%s\r\n", cfg.clapf_header_field, sdata.ttmpfile);
             printf("%s%s%.4f\r\n", trainbuf, cfg.clapf_header_field, spaminess);
             printf("%s%ld ms\r\n", cfg.clapf_header_field, tvdiff(tv_spam_stop, tv_spam_start)/1000);
             if(spaminess > 0.9999) printf("%s%s\r\n", cfg.clapf_header_field, MSG_ABSOLUTELY_SPAM);
-            if(spaminess >= cfg.spam_overall_limit && spaminess < 1.01) printf("%sYes\r\n", cfg.clapf_header_field);
+            if(spaminess >= cfg.spam_overall_limit && spaminess < 1.01){
+
+               /* if we did not find a Subject line */
+
+               if(sent_subject_spam_prefix == 0 && put_subject_spam_prefix == 1)
+                  printf("Subject: %s\r\n", cfg.spam_subject_prefix);
+
+               printf("%sYes\r\n", cfg.clapf_header_field);
+            }
          }
+
          if(strncmp(buf, cfg.clapf_header_field, strlen(cfg.clapf_header_field)))
             printf("%s", buf);
       }
@@ -178,6 +200,13 @@ int main(int argc, char **argv){
 
 
    unlink(sdata.ttmpfile);
+
+   snprintf(buf, MAXBUFSIZE-1, "%ld", sdata.uid);
+
+   if(spaminess >= cfg.spam_overall_limit)
+      log_ham_spam_per_email(sdata.ttmpfile, buf, 1);
+   else
+      log_ham_spam_per_email(sdata.ttmpfile, buf, 0);
 
    if(print_message == 0 && spaminess >= cfg.spam_overall_limit && spaminess < 1.01)
      return 1;

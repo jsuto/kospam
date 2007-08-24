@@ -1,5 +1,10 @@
 0.3.30:
 
+2007.08.24, SJ
+
+Added pid file support: clapf writes its pid to a file.
+(clapf.c, cfg.h, cfg.c)
+
 2007.08.22, SJ
 
 Better configure script and Makefile

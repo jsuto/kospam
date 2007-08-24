@@ -1,5 +1,5 @@
 /*
- * config.h, 2007.08.18, SJ
+ * config.h, 2007.08.24, SJ
  */
 
 #include <syslog.h>
@@ -38,6 +38,7 @@
 #define SMAPD_PORT 28643
 
 #define WORK_DIR "/opt/av"
+#define PIDFILE WORK_DIR "/clapf.pid"
 #define PER_USER_DIR ".clapf"
 #define QUARANTINELEN 255
 #define PROGNAME "clapf"

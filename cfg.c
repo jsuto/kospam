@@ -1,5 +1,5 @@
 /*
- * cfg.c, 2007.08.08, SJ
+ * cfg.c, 2007.08.24, SJ
  */
 
 #include <stdio.h>
@@ -146,6 +146,8 @@ struct __config read_config(char *configfile){
    cfg.clamav_archive_mem_limit = ARCHIVE_MEM_LIMIT;
 
    cfg.page_len = MESSAGES_PER_ONE_PAGE;
+
+   strncpy(cfg.pidfile, PIDFILE, MAXVAL-1);
 
    /* parse the config file */
 
@@ -501,6 +503,9 @@ struct __config read_config(char *configfile){
 
                   if(strcmp(key, "phishtankdb") == 0)
                      memcpy(cfg.phishtankdb, val, MAXVAL-1);
+
+                  if(strcmp(key, "pidfile") == 0)
+                     memcpy(cfg.pidfile, val, MAXVAL-1);
 
                }
 

@@ -1,5 +1,5 @@
 /*
- * clapf.c, 2007.06.01, SJ
+ * clapf.c, 2007.08.24, SJ
  */
 
 #include <stdio.h>
@@ -93,6 +93,9 @@ void clean_exit(){
 #endif
 
    syslog(LOG_PRIORITY, "%s has been terminated", PROGNAME);
+
+   unlink(cfg.pidfile);
+
    exit(1);
 }
 
@@ -150,6 +153,7 @@ int main(int argc, char **argv){
     unsigned int clen;
     struct sockaddr_in client_addr, serv_addr;
     struct in_addr addr;
+    FILE *f;
 
     while((i = getopt(argc, argv, "c:dVhQ")) > 0){
        switch(i){
@@ -208,6 +212,15 @@ int main(int argc, char **argv){
         fatal(ERR_LISTEN);
 
     syslog(LOG_PRIORITY, "%s %s starting", PROGNAME, VERSION);
+
+    /* write pid file, 2007.08.24, SJ */
+
+    f = fopen(cfg.pidfile, "w");
+    if(f){
+       fprintf(f, "%d", getpid());
+       fclose(f);
+    }
+    else syslog(LOG_PRIORITY, "cannot write pidfile: %s", cfg.pidfile);
 
     /* libclamav startup */
 

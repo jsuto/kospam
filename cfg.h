@@ -1,11 +1,12 @@
 /*
- * cfg.h, 2007.08.08, SJ
+ * cfg.h, 2007.08.24, SJ
  */
 
 #define MAXVAL 128
 
 struct __config {
    char hostid[MAXVAL];
+   char pidfile[MAXVAL];
 
    char listen_addr[MAXVAL];
    int listen_port;

@@ -1,5 +1,5 @@
 /*
- * session.c, 2007.08.22, SJ
+ * session.c, 2007.08.26, SJ
  */
 
 #include <stdio.h>
@@ -44,6 +44,10 @@ int inject_mail(struct session_data sdata, int msg, char *smtpaddr, int smtpport
 #ifdef HAVE_SQLITE3
    #include <sqlite3.h>
    sqlite3 *db;
+   int rc;
+#endif
+
+#ifdef HAVE_CDB
    int rc;
 #endif
 

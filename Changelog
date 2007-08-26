@@ -6,6 +6,10 @@ Even better configure and Makefile
 (configure*, Makefile.in)
 (credits: Elso Andras)
 
+CDB related fixes
+(bayes.c, bayes.h, session.c)
+(credits: Elso Andras)
+
 2007.08.24, SJ
 
 Added pid file support: clapf writes its pid to a file.

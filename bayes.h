@@ -1,5 +1,5 @@
 /*
- * bayes.h, 2007.05.16, SJ
+ * bayes.h, 2007.08.26, SJ
  */
 
 #include "parser.h"
@@ -22,6 +22,6 @@ struct _state parse_message(char *spamfile, struct __config cfg);
    double bayes_file(char *cdbfile, char *spamfile, struct _state state, struct session_data sdata, struct __config cfg);
 #endif
 
-int init_cdbs(struct __config cfg);
+int init_cdbs(char *tokensfile);
 void close_cdbs();
 

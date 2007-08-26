@@ -1,5 +1,11 @@
 0.3.30:
 
+2007.08.26, SJ
+
+Even better configure and Makefile
+(configure*, Makefile.in)
+(credits: Elso Andras)
+
 2007.08.24, SJ
 
 Added pid file support: clapf writes its pid to a file.

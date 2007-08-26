@@ -392,7 +392,7 @@ void init_child(){
                gettimeofday(&tv_scnd, &tz);
 
                if(rav == AVIR_VIRUS){
-                  syslog(LOG_PRIORITY, "%s: found %s", sdata.ttmpfile, virusinfo);
+                  syslog(LOG_PRIORITY, "%s: Virus found %s", sdata.ttmpfile, virusinfo);
 
                   /* FIXME: move quarantine here */
                }

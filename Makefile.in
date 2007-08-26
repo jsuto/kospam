@@ -4,6 +4,7 @@ prefix = @prefix@
 exec_prefix = @exec_prefix@
 bindir = @bindir@
 sbindir = @sbindir@
+srcdir = @srcdir@
 sysconfdir = @sysconfdir@
 mandir = @mandir@
 datarootdir = @datarootdir@
@@ -11,7 +12,7 @@ datarootdir = @datarootdir@
 CC = @CC@
 CFLAGS = @CFLAGS@ @CPPFLAGS@
 DEFS = @defs@
-INCDIR = @INCDIR@ @mysql_includes@
+INCDIR = -I. @INCDIR@ @mysql_includes@
 LIBDIR = @LIBDIR@ @mysql_libs@
 LIBS = @LIBS@
 LDAP_LIBS = @ldap_libs@
@@ -20,8 +21,6 @@ USER_OBJ = @user_obj@
 MYSQL_OBJS = @mysql_obj@
 
 INSTALL = @INSTALL@
-
-root =
 
 all: clapf splitmbox @cgi@ @spamdrop@ @parsembox@ @passmail@ @qcache@
 
@@ -46,16 +45,16 @@ aphash: % : %.o misc.o
 spam-fwd-train spamstat clapf_admin smapd: % : %.o $(OBJS) $(MYSQL_OBJS)
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
 
-train: train.o spam-fwd-train spamstat clapf_admin aphash
+train: % : %.o spam-fwd-train spamstat clapf_admin aphash
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ train.o $(OBJS) $(MYSQL_OBJS) $(LIBS) $(LIBDIR) @LDFLAGS@
 
 test:
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -DDEBUG -c bayes.c
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -DDEBUG -c black.c
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -DDEBUG -c hash.c
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -DDEBUG -c parser.c
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -DDEBUG -c rbl.c
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -DDEBUG -o spamtest test.c $(OBJS) $(MYSQL_OBJS) $(LIBS) $(LIBDIR) @LDFLAGS@
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -DDEBUG -c $(srcdir)/bayes.c
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -DDEBUG -c $(srcdir)/black.c
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -DDEBUG -c $(srcdir)/hash.c
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -DDEBUG -c $(srcdir)/parser.c
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -DDEBUG -c $(srcdir)/rbl.c
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -DDEBUG -o spamtest $(srcdir)/test.c $(OBJS) $(MYSQL_OBJS) $(LIBS) $(LIBDIR) @LDFLAGS@
 
 passmail: % : %.o misc.o cfg.o smtp.o $(USER_OBJ)
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
@@ -63,51 +62,55 @@ passmail: % : %.o misc.o cfg.o smtp.o $(USER_OBJ)
 qcache: qs.o misc.o cfg.o qcache.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o qs $^ $(LIBS) -lpthread $(LIBDIR)
 
-%.o: %.c
+%.o: $(srcdir)/%.c
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c $< -o $@
 
+install-clapf:
+	$(INSTALL) -d $(DESTDIR)$(bindir)
+	$(INSTALL) -m 0755 util/check_clapf.sh $(DESTDIR)$(bindir)
+	$(INSTALL) -m 0755 clapf $(DESTDIR)$(bindir)
+
 install-parsembox:
-	$(INSTALL) -m 0755 parsembox $(root)$(DESTDIR)$(bindir)
-	$(INSTALL) -m 0755 aphash $(root)$(DESTDIR)$(bindir)
-	$(INSTALL) -m 0755 spamdrop $(root)$(DESTDIR)$(bindir)
-	$(INSTALL) -m 0755 splitmbox $(root)$(DESTDIR)$(bindir)
-	$(INSTALL) -m 0755 spamtest $(root)$(DESTDIR)$(bindir)
-	$(INSTALL) -m 0755 clapf_admin $(root)$(DESTDIR)$(bindir)
-	$(INSTALL) -m 0755 stat/spamstat.pl $(root)$(DESTDIR)$(bindir)
-	$(INSTALL) -m 0755 perl/createcdb.pl $(root)$(DESTDIR)$(bindir)
-	$(INSTALL) -m 0755 perl/mysql2cdb.pl $(root)$(DESTDIR)$(bindir)
-	$(INSTALL) -m 0755 perl/prepare.pl $(root)$(DESTDIR)$(bindir)
-	$(INSTALL) -m 0755 perl/shrink.pl $(root)$(DESTDIR)$(bindir)
-	$(INSTALL) -m 0755 perl/uribl.pl $(root)$(DESTDIR)$(bindir)
-	$(INSTALL) -m 0755 util/kcdb.sh $(root)$(DESTDIR)$(bindir)
-	$(INSTALL) -m 0755 util/kcdb_mysql.sh $(root)$(DESTDIR)$(bindir)
-	$(INSTALL) -m 0755 util/mysql2cdb.sh $(root)$(DESTDIR)$(bindir)
-	$(INSTALL) -m 0755 util/user2sq.sh $(root)$(DESTDIR)$(bindir)
-	$(INSTALL) -d $(root)$(DESTDIR)$(mandir)/man1
-	$(INSTALL) -m 0644 doc/man/blackhole.1 $(root)$(DESTDIR)$(mandir)/man1
-	$(INSTALL) -m 0644 doc/man/parsembox.1 $(root)$(DESTDIR)$(mandir)/man1
-	$(INSTALL) -m 0644 doc/man/passmail.1 $(root)$(DESTDIR)$(mandir)/man1
-	$(INSTALL) -m 0644 doc/man/spamtest.1 $(root)$(DESTDIR)$(mandir)/man1
-	$(INSTALL) -m 0644 doc/man/spamdrop.1 $(root)$(DESTDIR)$(mandir)/man1
-	$(INSTALL) -m 0644 doc/man/train.1 $(root)$(DESTDIR)$(mandir)/man1
+	$(INSTALL) -m 0755 parsembox $(DESTDIR)$(bindir)
+	$(INSTALL) -m 0755 spamdrop $(DESTDIR)$(bindir)
+	$(INSTALL) -m 0755 splitmbox $(DESTDIR)$(bindir)
+	$(INSTALL) -m 0755 spamtest $(DESTDIR)$(bindir)
+	$(INSTALL) -m 0755 $(srcdir)/stat/spamstat.pl $(DESTDIR)$(bindir)
+	$(INSTALL) -m 0755 $(srcdir)/perl/createcdb.pl $(DESTDIR)$(bindir)
+	$(INSTALL) -m 0755 $(srcdir)/perl/mysql2cdb.pl $(DESTDIR)$(bindir)
+	$(INSTALL) -m 0755 $(srcdir)/perl/prepare.pl $(DESTDIR)$(bindir)
+	$(INSTALL) -m 0755 $(srcdir)/perl/shrink.pl $(DESTDIR)$(bindir)
+	$(INSTALL) -m 0755 $(srcdir)/perl/uribl.pl $(DESTDIR)$(bindir)
+	$(INSTALL) -m 0755 $(srcdir)/util/db_init_cdb.sh $(DESTDIR)$(bindir)
+	$(INSTALL) -m 0755 $(srcdir)/util/db_init_mysql.sh $(DESTDIR)$(bindir)
+	$(INSTALL) -m 0755 $(srcdir)/util/db_init_sqlite3.sh $(DESTDIR)$(bindir)
+	$(INSTALL) -m 0755 $(srcdir)/util/user2sq.sh $(DESTDIR)$(bindir)
+	$(INSTALL) -d $(DESTDIR)$(mandir)/man1
+	$(INSTALL) -m 0644 $(srcdir)/doc/man/blackhole.1 $(DESTDIR)$(mandir)/man1
+	$(INSTALL) -m 0644 $(srcdir)/doc/man/parsembox.1 $(DESTDIR)$(mandir)/man1
+	$(INSTALL) -m 0644 $(srcdir)/doc/man/spamtest.1 $(DESTDIR)$(mandir)/man1
+	$(INSTALL) -m 0644 $(srcdir)/doc/man/spamdrop.1 $(DESTDIR)$(mandir)/man1
 
 install-train:
-	$(INSTALL) -m 0755 spam-fwd-train $(root)$(DESTDIR)$(bindir)
-	$(INSTALL) -m 0755 spam-fwd-train $(root)$(DESTDIR)$(bindir)/ham-fwd-train
-	$(INSTALL) -m 0755 spamstat $(root)$(DESTDIR)$(bindir)
-	$(INSTALL) -m 0755 qs $(root)$(DESTDIR)$(bindir)
+	$(INSTALL) -m 0755 spam-fwd-train $(DESTDIR)$(bindir)
+	ln -sf $(DESTDIR)$(bindir)/spam-fwd-train $(DESTDIR)$(bindir)/ham-fwd-train
+	$(INSTALL) -m 0755 spamstat $(DESTDIR)$(bindir)
+	$(INSTALL) -m 0755 aphash $(DESTDIR)$(bindir)
+	$(INSTALL) -m 0755 clapf_admin $(DESTDIR)$(bindir)
+	$(INSTALL) -m 0644 $(srcdir)/doc/man/train.1 $(DESTDIR)$(mandir)/man1
 
-install:
-	$(INSTALL) -d $(root)$(DESTDIR)$(bindir)
-	$(INSTALL) -m 0755 util/check_clapf.sh $(root)$(DESTDIR)$(bindir)
-	$(INSTALL) -m 0755 clapf $(root)$(DESTDIR)$(bindir)
-	@passmail_install@
-	@parsembox_install@
-	@train_install@
-	$(INSTALL) -d $(root)$(DESTDIR)$(sysconfdir)
-	if [ ! -f "$(root)$(DESTDIR)$(sysconfdir)/clapf.conf" ]; then $(INSTALL) -m 0644 example.conf $(root)$(DESTDIR)$(sysconfdir)/clapf.conf; fi
-	$(INSTALL) -d $(root)$(DESTDIR)$(mandir)/man8
-	$(INSTALL) -m 0644 doc/man/clapf.8 $(root)$(DESTDIR)$(mandir)/man8
+install-qcache:
+	$(INSTALL) -m 0755 qs $(DESTDIR)$(bindir)
+
+install-passmail:
+	$(INSTALL) -m 0755 passmail $(DESTDIR)$(bindir)
+	$(INSTALL) -m 0644 $(srcdir)/doc/man/passmail.1 $(DESTDIR)$(mandir)/man1
+
+install: install-clapf @parsembox_install@ @passmail_install@ @train_install@ @qcache_install@
+	$(INSTALL) -d $(DESTDIR)$(sysconfdir)
+	if [ ! -f "$(DESTDIR)$(sysconfdir)/clapf.conf" ]; then $(INSTALL) -m 0644 $(srcdir)/example.conf $(DESTDIR)$(sysconfdir)/clapf.conf; fi
+	$(INSTALL) -d $(DESTDIR)$(mandir)/man8
+	$(INSTALL) -m 0644 $(srcdir)/doc/man/clapf.8 $(DESTDIR)$(mandir)/man8
 
 clean_db:
 	rm -f CDBFILE.* ham.tmp spam.tmp num_of_spam.tmp num_of_ham.tmp tokens*.cdb temp.*

@@ -676,6 +676,7 @@ passmail_install
 parsembox_install
 qcache
 train_install
+qcache_install
 mysql_includes
 mysql_libs
 user_obj
@@ -3690,6 +3691,7 @@ done
 
 
 
+
 have_libclamav="no"
 have_clamd="no"
 have_avg="no"
@@ -4378,6 +4380,7 @@ ac_cv_lib_m=ac_cv_lib_m_main
     antispam_libs="-lm"
 
     parsembox="parsembox"
+    parsembox_install="install-parsembox"
 
 
     # Extract the first word of "mysql_config", so it can be a program name with args.
@@ -4912,9 +4915,7 @@ if test "${with_userdb+set}" = set; then
   if test "$withval" != "no" -a "$withval" != "yes"; then
     USERDB=$withval
     passmail="passmail"
-    passmail_install='$(INSTALL) -m 0755 passmail $(root)$(DESTDIR)$(bindir)'
-    parsembox_install='make install-parsembox'
-    train_install='make install-train'
+    passmail_install='install-passmail'
   fi
 
 fi
@@ -5210,6 +5211,7 @@ ac_cv_lib_sqlite3=ac_cv_lib_sqlite3_main
 
     have_train="yes"
     parsembox="$parsembox train"
+    train_install="install-train"
 
   fi
 
@@ -5221,6 +5223,7 @@ ac_cv_lib_sqlite3=ac_cv_lib_sqlite3_main
             mysql_libs=`mysql_config --libs_r`
             have_train="yes"
             parsembox="$parsembox train"
+	    train_install="install-train"
      else
         echo "MySQL support is not found"
         exit 1;
@@ -5718,11 +5721,13 @@ if test "$QCACHE" = "tcp"; then
    defs="$defs -DHAVE_QCACHE -DHAVE_TCP"
    echo "Qcache: tcp"
    qcache="qcache"
+   qcache_install="install-qcache"
 fi
 if test "$QCACHE" = "socket"; then
    defs="$defs -DHAVE_QCACHE"
    echo "Qcache: socket"
    qcache="qcache"
+   qcache_install="install-qcache"
 fi
 
 
@@ -6432,6 +6437,7 @@ passmail_install!$passmail_install$ac_delim
 parsembox_install!$parsembox_install$ac_delim
 qcache!$qcache$ac_delim
 train_install!$train_install$ac_delim
+qcache_install!$qcache_install$ac_delim
 mysql_includes!$mysql_includes$ac_delim
 mysql_libs!$mysql_libs$ac_delim
 user_obj!$user_obj$ac_delim
@@ -6443,7 +6449,7 @@ LIBOBJS!$LIBOBJS$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 72; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 73; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5

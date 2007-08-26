@@ -24,6 +24,7 @@ AC_SUBST(passmail_install)
 AC_SUBST(parsembox_install)
 AC_SUBST(qcache)
 AC_SUBST(train_install)
+AC_SUBST(qcache_install)
 AC_SUBST(mysql_includes)
 AC_SUBST(mysql_libs)
 AC_SUBST(user_obj)
@@ -158,6 +159,7 @@ dnl  if test "$want_antispam" = "yes"; then
     antispam_libs="-lm"
 
     parsembox="parsembox"
+    parsembox_install="install-parsembox"
 
     dnl mysql database
 
@@ -235,9 +237,7 @@ AC_ARG_WITH(userdb,
   if test "$withval" != "no" -a "$withval" != "yes"; then
     USERDB=$withval
     passmail="passmail"
-    passmail_install='$(INSTALL) -m 0755 passmail $(root)$(DESTDIR)$(bindir)'
-    parsembox_install='make install-parsembox'
-    train_install='make install-train'
+    passmail_install='install-passmail'
   fi
 ])
 
@@ -263,6 +263,7 @@ AC_ARG_WITH(tokendb,
 
     have_train="yes"
     parsembox="$parsembox train"
+    train_install="install-train"
 
   fi
 
@@ -275,6 +276,7 @@ AC_ARG_WITH(tokendb,
             mysql_libs=`mysql_config --libs_r`
             have_train="yes"
             parsembox="$parsembox train"
+	    train_install="install-train"
      else
         echo "MySQL support is not found"
         exit 1;
@@ -504,11 +506,13 @@ if test "$QCACHE" = "tcp"; then
    defs="$defs -DHAVE_QCACHE -DHAVE_TCP"
    echo "Qcache: tcp"
    qcache="qcache"
+   qcache_install="install-qcache"
 fi
 if test "$QCACHE" = "socket"; then
    defs="$defs -DHAVE_QCACHE"
    echo "Qcache: socket"
    qcache="qcache"
+   qcache_install="install-qcache"
 fi
 
 

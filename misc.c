@@ -1,5 +1,5 @@
 /*
- * misc.c, 2007.08.20, SJ
+ * misc.c, 2007.08.27, SJ
  */
 
 #include <stdio.h>
@@ -572,6 +572,28 @@ int make_rnd_string(char *res){
    for(i=0; i < (RND_STR_LEN/2)-1; i++){
       sprintf(res, "%02x", buf[i]);
       res += 2;
+   }
+
+   return 1;
+}
+
+
+/*
+ * check if it's a valid ID
+ */
+
+int is_valid_id(char *p){
+
+   if(strlen(p) != 30)
+      return 0;
+
+   for(; *p; p++){
+      /* 0-9: 0x30-0x39, a-f: 0x61-0x66 */
+
+      if(! ((*p >= 0x30 && *p <= 0x39) || (*p >= 0x61 && *p <= 0x66) ) ){
+         printf("%c*\n", *p);
+         return 0;
+      }
    }
 
    return 1;

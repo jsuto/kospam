@@ -8,6 +8,7 @@ srcdir = @srcdir@
 sysconfdir = @sysconfdir@
 mandir = @mandir@
 datarootdir = @datarootdir@
+localstatedir = @localstatedir@
 
 CC = @CC@
 CFLAGS = @CFLAGS@ @CPPFLAGS@
@@ -22,7 +23,20 @@ MYSQL_OBJS = @mysql_obj@
 
 INSTALL = @INSTALL@
 
-all: clapf splitmbox @cgi@ @spamdrop@ @parsembox@ @passmail@ @qcache@
+all: clapf splitmbox @cgi@ @parsembox@ @passmail@ @train@ @qcache@ @test@
+install: install-clapf install-splitmbox @parsembox_install@ @passmail_install@ @train_install@ @qcache_install@ @db_install@
+
+clapf.conf:
+	sed -e 's%pidfile=.*%pidfile=$(localstatedir)/run/clapf.pid%' \
+	    -e 's%clamd_socket=.*%clamd_socket=$(localstatedir)/run/clamav/clamd.ctl%' \
+	    -e 's%tokensfile=.*%clamd_socket=$(localstatedir)/lib/clapf/tokens.cdb%' \
+	    -e 's%blackhole_path=.*%clamd_socket=$(localstatedir)/lib/clapf/blackhole%' \
+	    -e 's%mysqlsocket=.*%mysqlsocket=$(localstatedir)/run/mysqld/mysqld.sock%' \
+	    -e 's%sqlite3=.*%sqlite3=$(localstatedir)/lib/clapf/tokens.sdb%' \
+	    -e 's%saved_ham_path=.*%saved_ham_path=$(localstatedir)/lib/clapf/saved/ham%' \
+	    -e 's%saved_spam_path=.*%saved_spam_path=$(localstatedir)/lib/clapf/saved/spam%' \
+	    -e 's%spam_quarantine_dir=.*%spam_quarantine_dir=$(localstatedir)/lib/clapf/spamquarantine%' \
+	    -e 's%workdir=.*%workdir=/tmp%' <$(srcdir)/example.conf >$@
 
 clapf: % : %.o $(OBJS) $(MYSQL_OBJS)
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR) @LDFLAGS@
@@ -45,7 +59,7 @@ aphash: % : %.o misc.o
 spam-fwd-train spamstat clapf_admin smapd: % : %.o $(OBJS) $(MYSQL_OBJS)
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
 
-train: % : %.o spam-fwd-train spamstat clapf_admin aphash
+train: % : %.o spamdrop spam-fwd-train spamstat clapf_admin aphash
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ train.o $(OBJS) $(MYSQL_OBJS) $(LIBS) $(LIBDIR) @LDFLAGS@
 
 test:
@@ -65,15 +79,38 @@ qcache: qs.o misc.o cfg.o qcache.o
 %.o: $(srcdir)/%.c
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c $< -o $@
 
-install-clapf:
+install-mysql-new:
+	$(INSTALL) -d $(DESTDIR)$(datarootdir)/clapf
+	$(INSTALL) -m 0644 $(srcdir)/db-new.sql $(DESTDIR)$(datarootdir)/clapf/db.sql
+
+install-mysql-old:
+	$(INSTALL) -d $(DESTDIR)$(datarootdir)/clapf
+	$(INSTALL) -m 0644 $(srcdir)/db-old.sql $(DESTDIR)$(datarootdir)/clapf/db.sql
+
+install-sqlite3:
+	$(INSTALL) -d $(DESTDIR)$(datarootdir)/clapf
+	$(INSTALL) -m 0644 $(srcdir)/db-sqlite3.sql $(DESTDIR)$(datarootdir)/clapf/db.sql
+	if [ ! -f "$(DESTDIR)/opt/av/tokens.sdb" ]; then sqlite3 -batch $(DESTDIR)/opt/av/tokens.sdb <$(srcdir)/db-sqlite3.sql; fi
+
+install-clapf: clapf
 	$(INSTALL) -d $(DESTDIR)$(bindir)
 	$(INSTALL) -m 0755 util/check_clapf.sh $(DESTDIR)$(bindir)
 	$(INSTALL) -m 0755 clapf $(DESTDIR)$(bindir)
+	$(INSTALL) -d $(DESTDIR)$(sysconfdir)
+	if [ ! -f "$(DESTDIR)$(sysconfdir)/clapf.conf" ]; then $(INSTALL) -m 0644 $(srcdir)/example.conf $(DESTDIR)$(sysconfdir)/clapf.conf; fi
+	$(INSTALL) -d $(DESTDIR)$(mandir)/man8
+	$(INSTALL) -m 0644 $(srcdir)/doc/man/clapf.8 $(DESTDIR)$(mandir)/man8
+
+install-spamdrop: spamdrop
+	$(INSTALL) -m 0755 spamdrop $(DESTDIR)$(bindir)
+	$(INSTALL) -d $(DESTDIR)$(mandir)/man1
+	$(INSTALL) -m 0644 $(srcdir)/doc/man/spamdrop.1 $(DESTDIR)$(mandir)/man1
+
+install-splitmbox: splitmbox
+	$(INSTALL) -m 0755 splitmbox $(DESTDIR)$(bindir)
 
 install-parsembox:
 	$(INSTALL) -m 0755 parsembox $(DESTDIR)$(bindir)
-	$(INSTALL) -m 0755 spamdrop $(DESTDIR)$(bindir)
-	$(INSTALL) -m 0755 splitmbox $(DESTDIR)$(bindir)
 	$(INSTALL) -m 0755 spamtest $(DESTDIR)$(bindir)
 	$(INSTALL) -m 0755 $(srcdir)/stat/spamstat.pl $(DESTDIR)$(bindir)
 	$(INSTALL) -m 0755 $(srcdir)/perl/createcdb.pl $(DESTDIR)$(bindir)
@@ -89,14 +126,15 @@ install-parsembox:
 	$(INSTALL) -m 0644 $(srcdir)/doc/man/blackhole.1 $(DESTDIR)$(mandir)/man1
 	$(INSTALL) -m 0644 $(srcdir)/doc/man/parsembox.1 $(DESTDIR)$(mandir)/man1
 	$(INSTALL) -m 0644 $(srcdir)/doc/man/spamtest.1 $(DESTDIR)$(mandir)/man1
-	$(INSTALL) -m 0644 $(srcdir)/doc/man/spamdrop.1 $(DESTDIR)$(mandir)/man1
 
 install-train:
+	$(INSTALL) -m 0755 spamdrop $(DESTDIR)$(bindir)
 	$(INSTALL) -m 0755 spam-fwd-train $(DESTDIR)$(bindir)
-	ln -sf $(DESTDIR)$(bindir)/spam-fwd-train $(DESTDIR)$(bindir)/ham-fwd-train
+	ln -sf spam-fwd-train $(DESTDIR)$(bindir)/ham-fwd-train
 	$(INSTALL) -m 0755 spamstat $(DESTDIR)$(bindir)
 	$(INSTALL) -m 0755 aphash $(DESTDIR)$(bindir)
 	$(INSTALL) -m 0755 clapf_admin $(DESTDIR)$(bindir)
+	$(INSTALL) -d $(DESTDIR)$(mandir)/man1
 	$(INSTALL) -m 0644 $(srcdir)/doc/man/train.1 $(DESTDIR)$(mandir)/man1
 
 install-qcache:
@@ -106,17 +144,11 @@ install-passmail:
 	$(INSTALL) -m 0755 passmail $(DESTDIR)$(bindir)
 	$(INSTALL) -m 0644 $(srcdir)/doc/man/passmail.1 $(DESTDIR)$(mandir)/man1
 
-install: install-clapf @parsembox_install@ @passmail_install@ @train_install@ @qcache_install@
-	$(INSTALL) -d $(DESTDIR)$(sysconfdir)
-	if [ ! -f "$(DESTDIR)$(sysconfdir)/clapf.conf" ]; then $(INSTALL) -m 0644 $(srcdir)/example.conf $(DESTDIR)$(sysconfdir)/clapf.conf; fi
-	$(INSTALL) -d $(DESTDIR)$(mandir)/man8
-	$(INSTALL) -m 0644 $(srcdir)/doc/man/clapf.8 $(DESTDIR)$(mandir)/man8
-
 clean_db:
 	rm -f CDBFILE.* ham.tmp spam.tmp num_of_spam.tmp num_of_ham.tmp tokens*.cdb temp.*
 
 clean:
-	rm -f *.o *.a smapd qs db.sql clapf parsembox splitmbox spamtest spamdrop train spamcgi traincgi trainlogcgi usercgi statcgi passmail spam-fwd-train spamstat aphash clapf_admin
+	rm -f *.o *.a smapd qs db.sql clapf clapf.conf parsembox splitmbox spamtest spamdrop train spamcgi traincgi trainlogcgi usercgi statcgi passmail spam-fwd-train spamstat aphash clapf_admin
 
-dist_clean:
-	rm -f Makefile config.log config.status clapf-config.h stamp.h
+dist_clean distclean: clean
+	rm -f Makefile config.log config.status clapf-config.h stamp.h clapf.conf

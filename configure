@@ -671,17 +671,19 @@ OBJS
 parsembox
 cgi
 passmail
-spamdrop
 passmail_install
 parsembox_install
 qcache
+train
 train_install
 qcache_install
+test
 mysql_includes
 mysql_libs
 user_obj
 ldap_libs
 mysql_obj
+db_install
 MYSQL_CONFIG
 CFGDIR
 LIBOBJS
@@ -3692,6 +3694,8 @@ done
 
 
 
+
+
 have_libclamav="no"
 have_clamd="no"
 have_avg="no"
@@ -4379,9 +4383,6 @@ ac_cv_lib_m=ac_cv_lib_m_main
 
     antispam_libs="-lm"
 
-    parsembox="parsembox"
-    parsembox_install="install-parsembox"
-
 
     # Extract the first word of "mysql_config", so it can be a program name with args.
 set dummy mysql_config; ac_word=$2
@@ -4931,7 +4932,9 @@ if test "${with_tokendb+set}" = set; then
   fi
 
   have_antispam="yes"
-  spamdrop="spamdrop"
+
+  parsembox="parsembox"
+  parsembox_install="install-parsembox"
 
   if test "$withval" = "sqlite3"; then
 
@@ -5210,9 +5213,11 @@ ac_cv_lib_sqlite3=ac_cv_lib_sqlite3_main
       fi
 
     have_train="yes"
-    parsembox="$parsembox train"
+    parsembox="$parsembox"
+    train="train"
     train_install="install-train"
 
+    test="test"
   fi
 
 
@@ -5222,15 +5227,18 @@ ac_cv_lib_sqlite3=ac_cv_lib_sqlite3_main
             mysql_includes=`mysql_config --cflags`
             mysql_libs=`mysql_config --libs_r`
             have_train="yes"
-            parsembox="$parsembox train"
+            parsembox="$parsembox"
+	    train="train"
 	    train_install="install-train"
+
+            test="test"
      else
         echo "MySQL support is not found"
         exit 1;
      fi
   fi
 
-  parsembox="$parsembox test"
+  parsembox="$parsembox "
 
 
 
@@ -5552,10 +5560,6 @@ ac_cv_lib_cdb=ac_cv_lib_cdb_main
 fi
 
 if test "$TOKENDB" = "sqlite3"; then
-   if test "$have_sqlite3" = "no"; then
-      echo "please check your sqlite3 installation"
-      exit 1
-   fi
    defs="$defs -DHAVE_SQLITE3"
    sqlite3_libs="-lsqlite3"
    mysql_obj="sqlite3.o sql.o"
@@ -5686,10 +5690,10 @@ fi
 if test "$keep_old_token_format" = "yes"; then
    defs="$defs -DHAVE_NO_64_HASH"
    echo "token format: old"
-   cp db-old.sql db.sql
+   db_install="install-mysql-old"
 else
    echo "token format: hash (2^64)"
-   cp db-new.sql db.sql
+   db_install="install-mysql-new"
 fi
 
 if test "$USERDB" = "mysql" && test "$have_mysql" = "yes"; then
@@ -5708,6 +5712,10 @@ if test "$USERDB" = "ldap" && test "$have_ldap" = "yes"; then
 fi
 
 echo "token database backend: $TOKENDB"
+
+if test "$TOKENDB" = "sqlite3"; then
+   db_install="install-sqlite3"
+fi
 
 if test "$have_case" = "yes"; then
    defs="$defs -DHAVE_CASE"
@@ -6432,24 +6440,26 @@ OBJS!$OBJS$ac_delim
 parsembox!$parsembox$ac_delim
 cgi!$cgi$ac_delim
 passmail!$passmail$ac_delim
-spamdrop!$spamdrop$ac_delim
 passmail_install!$passmail_install$ac_delim
 parsembox_install!$parsembox_install$ac_delim
 qcache!$qcache$ac_delim
+train!$train$ac_delim
 train_install!$train_install$ac_delim
 qcache_install!$qcache_install$ac_delim
+test!$test$ac_delim
 mysql_includes!$mysql_includes$ac_delim
 mysql_libs!$mysql_libs$ac_delim
 user_obj!$user_obj$ac_delim
 ldap_libs!$ldap_libs$ac_delim
 mysql_obj!$mysql_obj$ac_delim
+db_install!$db_install$ac_delim
 MYSQL_CONFIG!$MYSQL_CONFIG$ac_delim
 CFGDIR!$CFGDIR$ac_delim
 LIBOBJS!$LIBOBJS$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 73; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 75; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5

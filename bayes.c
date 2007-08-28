@@ -106,9 +106,8 @@ int assign_spaminess(char *p, struct __config cfg, unsigned int uid){
 
       s = strchr(p, '+');
       if(s){
-         *(s+1) = '\0';
-         strncpy(t, p+8, MAX_TOKEN_LEN-1);
-         strncat(t, s+1+8, MAX_TOKEN_LEN-1);
+         *s = '\0';
+         snprintf(t, MAX_TOKEN_LEN-1, "%s+%s", p+8, s+1+8);
       }
       else
          strncpy(t, p+8, MAX_TOKEN_LEN-1);
@@ -344,8 +343,6 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
 
    if(cfg.use_pairs == 1)
       spaminess = sorthash(s_phrase_hash, MAX_PHRASES_TO_CHOOSE, cfg);
-
-   fprintf(stderr, "parok: %d\n", (int)n_phrases);
 
    if(cfg.use_pairs == 1 && n_phrases > cfg.min_phrase_number){
 

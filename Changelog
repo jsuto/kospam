@@ -1,5 +1,10 @@
 0.3.30:
 
+2007.08.28, SJ
+
+Improved parsing.
+(bayes.c, parser.h, parser.c)
+
 2007.08.26, SJ
 
 Even better configure and Makefile

@@ -75,6 +75,8 @@ struct __config {
    char clapf_header_field[MAXVAL];
    char clapf_spam_header_field[MAXVAL];
 
+   float max_ham_spamicity;
+
    float spam_overall_limit;
    float spaminess_oblivion_limit;
    float use_single_tokens_min_limit;
@@ -97,12 +99,10 @@ struct __config {
    int invalid_junk_limit;
    int invalid_junk_line;
    int invalid_hex_junk_limit;
-   float max_junk_spamicity;
 
    int penalize_images;
    int penalize_embed_images;
    int penalize_octet_stream;
-   float max_embed_image_spamicity;
 
    // training
 

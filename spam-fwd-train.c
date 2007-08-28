@@ -312,7 +312,7 @@ int main(int argc, char **argv){
          syslog(LOG_PRIORITY, "%s: training round %d, spaminess: %.4f", ID, i, spaminess);
 
          if(is_spam == 1 && spaminess > cfg.spam_overall_limit) break;
-         if(is_spam == 0 && spaminess < cfg.max_junk_spamicity) break;
+         if(is_spam == 0 && spaminess < cfg.max_ham_spamicity) break;
 
       }
 

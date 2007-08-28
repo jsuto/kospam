@@ -81,6 +81,7 @@ int main(int argc, char **argv){
 
    cfg = read_config(configfile);
 
+
    if(stat(PER_USER_DIR, &st) != 0){
       mkdir(PER_USER_DIR, 0700);
    }

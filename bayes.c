@@ -343,7 +343,7 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
 
    if(cfg.use_pairs == 1){
       spaminess = sorthash(s_phrase_hash, MAX_PHRASES_TO_CHOOSE, cfg);
-      if(spaminess < cfg.spam_overall_limit && spaminess > cfg.max_junk_spamicity && most_interesting_tokens(s_phrase_hash) < MAX_PHRASES_TO_CHOOSE)
+      if(spaminess < cfg.spam_overall_limit && spaminess > cfg.max_ham_spamicity && most_interesting_tokens(s_phrase_hash) < MAX_PHRASES_TO_CHOOSE)
          goto NEED_SINGLE_TOKENS;
    }
    else {
@@ -381,7 +381,7 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
          spaminess = sorthash(s_phrase_hash, MAX_TOKENS_TO_CHOOSE, cfg);
       }
 
-      if(spaminess < cfg.spam_overall_limit && spaminess > cfg.max_junk_spamicity && most_interesting_tokens(s_phrase_hash) < MAX_PHRASES_TO_CHOOSE)
+      if(spaminess < cfg.spam_overall_limit && spaminess > cfg.max_ham_spamicity && most_interesting_tokens(s_phrase_hash) < MAX_PHRASES_TO_CHOOSE)
          spaminess2 = sorthash(shash, MAX_TOKENS_TO_CHOOSE, cfg);
 
    }
@@ -402,7 +402,7 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
 
    /* junk detection before the SURBL test, 2006.11.09, SJ */
 
-   if(spaminess > cfg.max_junk_spamicity){
+   if(spaminess > cfg.max_ham_spamicity){
 
       if(cfg.invalid_junk_limit > 0 && state.c_shit > cfg.invalid_junk_limit && spaminess < cfg.spam_overall_limit){
       #ifdef DEBUG
@@ -436,7 +436,7 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
      that this message is certainly spam or ham, 2006.06.23, SJ
     */
 
-   if(n_urls > 0 && spaminess > cfg.max_junk_spamicity && spaminess < cfg.spam_overall_limit){
+   if(n_urls > 0 && spaminess > cfg.max_ham_spamicity && spaminess < cfg.spam_overall_limit){
       spaminess = spaminess2 = 0.5;
 
       for(u=0; u < MAXHASH; u++){
@@ -471,8 +471,8 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
 
       if(cfg.use_pairs == 1) spaminess = sorthash(s_phrase_hash, MAX_PHRASES_TO_CHOOSE, cfg);
 
-      if(spaminess < cfg.spam_overall_limit && spaminess > cfg.max_junk_spamicity && most_interesting_tokens(s_phrase_hash) < MAX_PHRASES_TO_CHOOSE){
-      //if(spaminess < cfg.spam_overall_limit && spaminess > cfg.max_junk_spamicity){
+      if(spaminess < cfg.spam_overall_limit && spaminess > cfg.max_ham_spamicity && most_interesting_tokens(s_phrase_hash) < MAX_PHRASES_TO_CHOOSE){
+      //if(spaminess < cfg.spam_overall_limit && spaminess > cfg.max_ham_spamicity){
          if(n_tokens < 8){
          #ifdef HAVE_MYSQL
             n_tokens += walk_hash(mysql, B_hash, cfg);
@@ -514,7 +514,7 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
     */
 
 #ifndef HAVE_CDB
-   if(cfg.training_mode == T_TUM && (QRY.uid > 0 || cfg.group_type == GROUP_SHARED) && (spaminess >= cfg.spam_overall_limit || spaminess < cfg.max_junk_spamicity)){
+   if(cfg.training_mode == T_TUM && (QRY.uid > 0 || cfg.group_type == GROUP_SHARED) && (spaminess >= cfg.spam_overall_limit || spaminess < cfg.max_ham_spamicity)){
       gettimeofday(&tv1, &tz);
 
       if(spaminess >= cfg.spam_overall_limit){
@@ -548,7 +548,7 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
 
 
 #ifdef HAVE_SURBL
-   if(spaminess > cfg.max_junk_spamicity && spaminess < cfg.spam_overall_limit && cfg.rude_surbl > 0 && surbl_match >= cfg.rude_surbl)
+   if(spaminess > cfg.max_ham_spamicity && spaminess < cfg.spam_overall_limit && cfg.rude_surbl > 0 && surbl_match >= cfg.rude_surbl)
       return cfg.spaminess_of_caught_by_surbl;
 #endif
 
@@ -758,7 +758,7 @@ double bayes_file(char *cdbfile, char *spamfile, struct _state state, struct ses
 
    /* if we shall mark the message as spam because of the embedded image */
 
-   if(spaminess < cfg.spam_overall_limit && spaminess > cfg.max_embed_image_spamicity && has_embed_image == 1){
+   if(spaminess < cfg.spam_overall_limit && spaminess > cfg.max_ham_spamicity && has_embed_image == 1){
       return cfg.spaminess_of_embed_image;
    }
 

@@ -2,6 +2,13 @@
 
 2007.08.28, SJ
 
+The max_ham_spamicity variable obsoletes the former max_junk_spamicity
+and max_embed_image_spamicity variables. Its purpose is to define a
+spam probability limit to ham messages. If a certain message has a
+greater probability than this value, some rude anti-spam mesaures
+take place. It defaults to max_ham_spamicity=0.41
+(cfg.h, cfg.c, spamdrop.c, spam-fwd-train.c, bayes.c)
+
 Improved parsing.
 (bayes.c, parser.h, parser.c)
 

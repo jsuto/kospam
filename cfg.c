@@ -107,7 +107,7 @@ struct __config read_config(char *configfile){
    cfg.invalid_junk_limit = INVALID_JUNK_LIMIT;
    cfg.invalid_junk_line = INVALID_JUNK_LINE;
    cfg.invalid_hex_junk_limit = INVALID_HEX_JUNK_LIMIT;
-   cfg.max_junk_spamicity = MAX_JUNK_SPAMICITY;
+   cfg.max_ham_spamicity = MAX_HAM_SPAMICITY;
 
    cfg.verbosity = 0;
 
@@ -366,8 +366,8 @@ struct __config read_config(char *configfile){
                   if(strcmp(key, "invalid_hex_junk_limit") == 0)
                      cfg.invalid_hex_junk_limit = atoi(val);
 
-                  if(strcmp(key, "max_junk_spamicity") == 0)
-                     cfg.max_junk_spamicity = atof(val);
+                  if(strcmp(key, "max_ham_spamicity") == 0)
+                     cfg.max_ham_spamicity = atof(val);
 
                   if(strcmp(key, "penalize_images") == 0)
                      cfg.penalize_images = atoi(val);
@@ -377,9 +377,6 @@ struct __config read_config(char *configfile){
 
                   if(strcmp(key, "penalize_octet_stream") == 0)
                      cfg.penalize_octet_stream = atoi(val);
-
-                  if(strcmp(key, "max_embed_image_spamicity") == 0)
-                     cfg.max_embed_image_spamicity = atof(val);
 
                   if(strcmp(key, "training_mode") == 0)
                      cfg.training_mode = atoi(val);

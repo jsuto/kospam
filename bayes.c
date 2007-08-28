@@ -355,6 +355,19 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
       n_tokens += walk_hash(db, B_hash, cfg);
    #endif
 
+      /* consult a blacklist about the IP connecting to us */
+
+   #ifdef HAVE_SURBL
+      if(strlen(cfg.rbl_domain) > 3 && reverse_ipv4_addr(state.ip) == 1){
+         if(rbl_check(cfg.rbl_domain, state.ip) == 1){
+            snprintf(surbl_token, MAX_TOKEN_LEN-1, "%s.%s", state.ip, cfg.rbl_domain);
+            n_phrases += addnode(s_phrase_hash, surbl_token, REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
+            n_tokens += addnode(shash, surbl_token, REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
+         }
+      }
+   #endif
+
+
       /* add single tokens to token pairs, then recalculate spamicity */
 
       if(cfg.use_pairs == 1){
@@ -372,7 +385,6 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
          spaminess2 = sorthash(shash, MAX_TOKENS_TO_CHOOSE, cfg);
 
    }
-
 
 
 #ifdef DEBUG
@@ -457,7 +469,7 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
          urlhash[u] = NULL;
       }
 
-      spaminess = sorthash(s_phrase_hash, MAX_PHRASES_TO_CHOOSE, cfg);
+      if(cfg.use_pairs == 1) spaminess = sorthash(s_phrase_hash, MAX_PHRASES_TO_CHOOSE, cfg);
 
       if(spaminess < cfg.spam_overall_limit && spaminess > cfg.max_junk_spamicity && most_interesting_tokens(s_phrase_hash) < MAX_PHRASES_TO_CHOOSE){
       //if(spaminess < cfg.spam_overall_limit && spaminess > cfg.max_junk_spamicity){

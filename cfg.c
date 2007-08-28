@@ -304,6 +304,9 @@ struct __config read_config(char *configfile){
                   if(strcmp(key, "rude_surbl") == 0)
                      cfg.rude_surbl = atoi(val);
 
+                  if(strcmp(key, "rbl_domain") == 0)
+                     memcpy(cfg.rbl_domain, val, MAXVAL-1);
+
 
                   if(strcmp(key, "clapf_header_field") == 0)
                      memcpy(cfg.clapf_header_field, val, MAXVAL-1);

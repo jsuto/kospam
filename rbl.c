@@ -1,5 +1,5 @@
 /*
- * rbl.c, 2006.04.05, SJ
+ * rbl.c, 2007.08.28, SJ
  */
 
 #include <stdio.h>
@@ -19,12 +19,25 @@ int rbl_check(char *rbldomain, char *host){
    snprintf(domainname, SMALLBUFSIZE-1, "%s.%s", host, rbldomain);
 
 #ifdef DEBUG
-   fprintf(stderr, "SURBL checking: %s\n", domainname);
+   fprintf(stderr, "(SU)RBL checking: %s\n", domainname);
 #endif
 
    h = gethostbyname(domainname);
    if(h)
       return 1;
+
+   return 0;
+}
+
+int reverse_ipv4_addr(char *ip){
+   struct in_addr addr;
+
+   if(inet_aton(ip, &addr)){
+      addr.s_addr = ntohl(addr.s_addr);
+      strcpy(ip, inet_ntoa(addr));
+
+      return 1;
+   }
 
    return 0;
 }

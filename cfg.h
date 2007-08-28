@@ -1,5 +1,5 @@
 /*
- * cfg.h, 2007.08.24, SJ
+ * cfg.h, 2007.08.28, SJ
  */
 
 #define MAXVAL 128
@@ -70,6 +70,7 @@ struct __config {
 
    char surbl_domain[MAXVAL];
    int rude_surbl;
+   char rbl_domain[MAXVAL];
 
    char clapf_header_field[MAXVAL];
    char clapf_spam_header_field[MAXVAL];

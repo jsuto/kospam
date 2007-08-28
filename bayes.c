@@ -339,21 +339,12 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
    addnode(B_hash, state.from, 0, 0);
 
 
-   /* redesigned spaminess calculation, 2007.05.21, SJ */
+   /* redesigned spaminess calculation, 2007.08.28, SJ */
 
-   if(cfg.use_pairs == 1)
+   if(cfg.use_pairs == 1){
       spaminess = sorthash(s_phrase_hash, MAX_PHRASES_TO_CHOOSE, cfg);
-
-   if(cfg.use_pairs == 1 && n_phrases > cfg.min_phrase_number){
-
-      /*
-       * if we are unsure and we have not enough truly interesting tokens, add the single tokens, too, 2007.07.15, SJ
-       */
-
-      if(spaminess < cfg.spam_overall_limit && spaminess > cfg.max_junk_spamicity && most_interesting_tokens(s_phrase_hash) < MAX_PHRASES_TO_CHOOSE){
-      //if(spaminess < cfg.spam_overall_limit && spaminess > cfg.max_junk_spamicity){
+      if(spaminess < cfg.spam_overall_limit && spaminess > cfg.max_junk_spamicity && most_interesting_tokens(s_phrase_hash) < MAX_PHRASES_TO_CHOOSE)
          goto NEED_SINGLE_TOKENS;
-      }
    }
    else {
       NEED_SINGLE_TOKENS:
@@ -364,16 +355,18 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
       n_tokens += walk_hash(db, B_hash, cfg);
    #endif
 
-      for(i=0;i<MAXHASH;i++){
-         Q = shash[i];
-         while(Q != NULL){
-            addnode(s_phrase_hash, Q->str, Q->spaminess, Q->deviation);
-            Q = Q->r;
-         }
-      }
+      /* add single tokens to token pairs, then recalculate spamicity */
 
-      /* token pairs and single tokens */
-      if(cfg.use_pairs == 1) spaminess = sorthash(s_phrase_hash, MAX_TOKENS_TO_CHOOSE, cfg);
+      if(cfg.use_pairs == 1){
+         for(i=0;i<MAXHASH;i++){
+            Q = shash[i];
+            while(Q != NULL){
+               addnode(s_phrase_hash, Q->str, Q->spaminess, Q->deviation);
+               Q = Q->r;
+            }
+         }
+         spaminess = sorthash(s_phrase_hash, MAX_TOKENS_TO_CHOOSE, cfg);
+      }
 
       if(spaminess < cfg.spam_overall_limit && spaminess > cfg.max_junk_spamicity && most_interesting_tokens(s_phrase_hash) < MAX_PHRASES_TO_CHOOSE)
          spaminess2 = sorthash(shash, MAX_TOKENS_TO_CHOOSE, cfg);

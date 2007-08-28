@@ -1,5 +1,5 @@
 /*
- * parser.c, 2007.06.26, SJ
+ * parser.c, 2007.08.28, SJ
  */
 
 #include <stdio.h>
@@ -26,8 +26,9 @@ struct _state init_state(){
    int i;
    struct _state state;
 
+   state.message_state = MSG_UNDEF;
+
    state.is_header = 1;
-   state.is_subject = 0;
    state.has_boundary = 0;
    state.has_boundary2 = 0;
 
@@ -205,41 +206,43 @@ struct _state parse(char *buf, struct _state st){
 
    state.line_num++;
 
-   state.is_from = 0;
-
-   /* this is the mail body */
-
-   if(state.is_header == 1 && (buf[0] == '\r' || buf[0] == '\n')){
-      state.is_header = 0;
-      state.is_subject = 0;
-   }
-
 
    /* header checks */
 
    if(state.is_header == 1){
 
+      /* end of header? */
+
+      if(buf[0] == '\r' || buf[0] == '\n'){
+         state.is_header = 0;
+         state.message_state = MSG_BODY;
+      }
+
       /* Subject: */
 
-      if(strncmp(buf, "Subject:", strlen("Subject:")) == 0)
-         state.is_subject = 1;
+      if(strncmp(buf, "Subject:", strlen("Subject:")) == 0){
+         state.message_state = MSG_SUBJECT;
+      }
 
       /* From: */
 
       if(strncmp(buf, "From:", strlen("From:")) == 0){
+         state.message_state = MSG_FROM;
+
          p = strchr(buf+5, ' ');
          if(p) p = buf + 6;
          else p = buf + 5;
 
          snprintf(state.from, SMALLBUFSIZE-1, "FROM*%s", p);
          trim(state.from);
-         state.is_from = 1;
       }
 
       /* Received: 2005.12.09, SJ */
 
-   #ifdef HAVE_BLACKHOLE
       if(strncmp(buf, "Received: from ", strlen("Received: from ")) == 0 && state.ipcnt < 2){
+         state.message_state = MSG_RECEIVED;
+
+      #ifdef HAVE_BLACKHOLE
          p = strchr(buf, '[');
          if(p){
             q = strchr(p, ']');
@@ -254,8 +257,9 @@ struct _state parse(char *buf, struct _state st){
                }
             }
          }
+      #endif
+
       }
-   #endif
 
 
       /* extract prefix type */
@@ -283,6 +287,8 @@ struct _state parse(char *buf, struct _state st){
    /* Content-type: checking */
 
    if(strncasecmp(buf, "Content-Type:", strlen("Content-Type:")) == 0){
+      if(state.is_header == 1) state.message_state = MSG_CONTENT_TYPE;
+
       state.textplain = 0;
       state.base64 = 0;
       state.utf8 = 0;
@@ -357,8 +363,11 @@ struct _state parse(char *buf, struct _state st){
 
    /* check for textual base64 encoded part, 2005.03.25, SJ */
 
-   if(strncasecmp(buf, "Content-Transfer-Encoding:", strlen("Content-Transfer-Encoding:")) == 0 && str_case_str(buf, "base64")){
-      state.base64 = 1;
+   if(strncasecmp(buf, "Content-Transfer-Encoding:", strlen("Content-Transfer-Encoding:")) == 0){
+      if(state.is_header == 1) state.message_state = MSG_CONTENT_TRANSFER_ENCODING;
+
+      /* check for textual base64 encoded part, 2005.03.25, SJ */
+      if(str_case_str(buf, "base64")) state.base64 = 1;
    }
 
    /* check for UTF-8 encoding */
@@ -377,9 +386,10 @@ struct _state parse(char *buf, struct _state st){
    if(strncasecmp(buf, "Content-Transfer-Encoding:", strlen("Content-Transfer-Encoding:")) == 0 && state.textplain == 0)
       goto DECOMPOSE;
 
-   if(strncasecmp(buf, "Content-Disposition:", strlen("Content-Disposition:")) == 0 && state.textplain == 0)
-      goto DECOMPOSE;
-
+   if(strncasecmp(buf, "Content-Disposition:", strlen("Content-Disposition:")) == 0){
+      if(state.is_header == 1) state.message_state = MSG_CONTENT_DISPOSITION;
+      if(state.textplain == 0) goto DECOMPOSE;
+   }
 
    /* is it a base64 encoded text? 2006.01.02, SJ */
 
@@ -436,10 +446,9 @@ struct _state parse(char *buf, struct _state st){
       }
    }
 
-
    /* skip non textual stuff */
 
-   if(state.textplain == 0)
+   if(state.is_header == 0 && state.textplain == 0)
       return state;
 
    /* base64 decode buffer, 2005.03.23, SJ */
@@ -454,13 +463,13 @@ struct _state parse(char *buf, struct _state st){
 
    /* handle qp encoded lines */
 
-   if(state.qp == 1 || (state.is_subject == 1 && str_case_str(buf, "?Q?")) )
+   if(state.qp == 1 || (state.message_state == MSG_SUBJECT && str_case_str(buf, "?Q?")) )
       qp_decode((unsigned char*)buf);
 
 
    /* handle base64 encoded subject */
 
-   if(state.is_subject == 1 && (p = str_case_str(buf, "?B?"))){
+   if(state.message_state == MSG_SUBJECT && (p = str_case_str(buf, "?B?"))){
       base64_decode(p+3, huf);
       *(p+3) = '\0';
       snprintf(tuf, MAXBUFSIZE-1, "%s%s", buf, huf);
@@ -603,11 +612,12 @@ struct _state parse(char *buf, struct _state st){
 DECOMPOSE:
    translate((unsigned char*)buf, state.qp);
 
-   p = buf;
+   if(state.is_header == 1) p = strchr(buf, ' ');
+   else p = buf;
 
 #ifdef DEBUG
    //fprintf(stderr, "%ld * %s\n", state.c_shit, p);
-   fprintf(stderr, "%s\n", p);
+   fprintf(stderr, "%s\n", buf);
 #endif
 
    do {
@@ -642,26 +652,20 @@ DECOMPOSE:
       if(is_odd_punctuations(puf) == 1 || is_month(puf) == 1 || is_weekday(puf) == 1 || is_date(puf) )
          continue;
 
-
-      if(state.is_subject == 1){
-         if(strcasecmp(puf, "Subject"))
-            snprintf(muf, MAXBUFSIZE-1, "Subject*%s", puf);
-      }
-      else if(state.is_from == 1){
-         if(strcasecmp(puf, "From"))
-            snprintf(muf, MAXBUFSIZE-1, "FROM*%s", puf);
-      }
-      else if(state.is_header == 1){
+      if(state.message_state == MSG_SUBJECT)
+         snprintf(muf, MAXBUFSIZE-1, "Subject*%s", puf);
+      else if(state.message_state == MSG_FROM)
+         snprintf(muf, MAXBUFSIZE-1, "FROM*%s", puf);
+      else if(state.is_header == 1)
          snprintf(muf, MAXBUFSIZE-1, "HEADER*%s", puf);
-      }
-      else {
+      else
          snprintf(muf, MAXBUFSIZE-1, "%s", puf);
-      }
+
 
       if(muf[0] == 0) continue;
 
       state.n_token++;
-      state.n_chain_token++;
+      if(state.message_state != MSG_RECEIVED && state.message_state != MSG_FROM) state.n_chain_token++;
 
       /* degenerate token, 2007.05.04, SJ */
 
@@ -687,12 +691,11 @@ DECOMPOSE:
 
    } while(p);
 
-   if(state.is_subject == 1) state.is_subject = 0;
 
    /* do not chain between individual headers, 2007.06.09, SJ */
    if(state.is_header == 1) state.n_chain_token = 0;
 
-   if(state.is_from == 1 && strlen(state.from) > 3){
+   if(state.message_state == MSG_FROM && strlen(state.from) > 3){
       state = insert_token(state, state.from);
    }
 

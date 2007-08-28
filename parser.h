@@ -1,8 +1,17 @@
 /*
- * parser.h, 2007.06.18, SJ
+ * parser.h, 2007.08.28, SJ
  */
 
 #include "config.h"
+
+#define MSG_UNDEF -1
+#define MSG_BODY 0
+#define MSG_RECEIVED 1
+#define MSG_FROM 2
+#define MSG_SUBJECT 3
+#define MSG_CONTENT_TYPE 4
+#define MSG_CONTENT_TRANSFER_ENCODING 5
+#define MSG_CONTENT_DISPOSITION 6
 
 struct _token {
    char str[MAX_TOKEN_LEN];
@@ -16,9 +25,8 @@ struct attachment {
 };
 
 struct _state {
+   int message_state;
    int is_header;
-   int is_subject;
-   int is_from;
    int has_boundary;
    int has_boundary2;
    int cnt_type;

@@ -1,5 +1,5 @@
 /*
- * bayes.c, 2007.08.10, SJ
+ * bayes.c, 2007.08.28, SJ
  */
 
 #include <stdio.h>
@@ -129,15 +129,13 @@ int assign_spaminess(char *p, struct __config cfg, unsigned int uid){
    /* whether to include unknown tokens, 2006.02.15, SJ */
 
    if(spaminess < DEFAULT_SPAMICITY - cfg.exclusion_radius || spaminess > DEFAULT_SPAMICITY + cfg.exclusion_radius){
-      /*
-       * add token pairs and URLs and other special tokens to s_phrase_hash, 2006.03.13, SJ
-       */
 
-      if(strchr(p, '+') || strncasecmp(p, "URL*", 4) == 0)
+      if(strchr(p, '+') || strchr(p, '*'))
          n_phrases += addnode(s_phrase_hash, p, spaminess, DEVIATION(spaminess));
 
       if(strchr(p, '+') == NULL)
          n_tokens += addnode(shash, p, spaminess, DEVIATION(spaminess));
+
    }
 
    return 0;
@@ -240,7 +238,7 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
       return DEFAULT_SPAMICITY;
 
    surbl_match = 0;
-   spaminess = spaminess2 = 0.5;
+   spaminess = spaminess2 = DEFAULT_SPAMICITY;
 
    p = state.first;
    n = 0;
@@ -279,7 +277,7 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
 
       /* 2007.06.06, SJ */
 
-      if(cfg.use_pairs == 1 && strchr(p->str, '+')){
+      if(cfg.use_pairs == 1 && (strchr(p->str, '+') || strchr(p->str, '*')) ){
       #ifdef HAVE_MYSQL
          assign_spaminess(mysql, p->str, cfg, QRY.uid);
       #endif
@@ -344,9 +342,12 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
 
    /* redesigned spaminess calculation, 2007.05.21, SJ */
 
-   spaminess = sorthash(s_phrase_hash, MAX_PHRASES_TO_CHOOSE, cfg);
+   if(cfg.use_pairs == 1)
+      spaminess = sorthash(s_phrase_hash, MAX_PHRASES_TO_CHOOSE, cfg);
 
-   if(n_phrases > cfg.min_phrase_number){
+   fprintf(stderr, "parok: %d\n", (int)n_phrases);
+
+   if(cfg.use_pairs == 1 && n_phrases > cfg.min_phrase_number){
 
       /*
        * if we are unsure and we have not enough truly interesting tokens, add the single tokens, too, 2007.07.15, SJ
@@ -359,7 +360,6 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
    }
    else {
       NEED_SINGLE_TOKENS:
-
    #ifdef HAVE_MYSQL
       n_tokens += walk_hash(mysql, B_hash, cfg);
    #endif
@@ -375,8 +375,11 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
          }
       }
 
-      spaminess = sorthash(s_phrase_hash, MAX_TOKENS_TO_CHOOSE, cfg);
-      spaminess2 = sorthash(shash, MAX_TOKENS_TO_CHOOSE, cfg);
+      /* token pairs and single tokens */
+      if(cfg.use_pairs == 1) spaminess = sorthash(s_phrase_hash, MAX_TOKENS_TO_CHOOSE, cfg);
+
+      if(spaminess < cfg.spam_overall_limit && spaminess > cfg.max_junk_spamicity && most_interesting_tokens(s_phrase_hash) < MAX_PHRASES_TO_CHOOSE)
+         spaminess2 = sorthash(shash, MAX_TOKENS_TO_CHOOSE, cfg);
 
    }
 
@@ -395,7 +398,7 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
    #endif
 
 
-/* junk detection before the SURBL test, 2006.11.09, SJ */
+   /* junk detection before the SURBL test, 2006.11.09, SJ */
 
    if(spaminess > cfg.max_junk_spamicity){
 

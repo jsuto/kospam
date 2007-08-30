@@ -1,5 +1,5 @@
 /*
- * smapd.c, 2007.08.13, SJ
+ * smapd.c, 2007.08.29, SJ
  */
 
 #include <stdio.h>
@@ -360,7 +360,7 @@ int main(int argc, char **argv){
 
    SSL_load_error_strings();
    SSLeay_add_ssl_algorithms();
-   meth = SSLv3_server_method();
+   meth = TLSv1_server_method();
 
    ctx = SSL_CTX_new(meth);
    if(ctx == NULL) smap_down();

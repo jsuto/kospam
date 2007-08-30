@@ -56,8 +56,11 @@ spamcgi usercgi traincgi trainlogcgi statcgi: % : %.o $(OBJS) $(USER_OBJ) $(MYSQ
 aphash: % : %.o misc.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^
 
-spam-fwd-train spamstat clapf_admin smapd: % : %.o $(OBJS) $(MYSQL_OBJS)
+spam-fwd-train spamstat clapf_admin: % : %.o $(OBJS) $(MYSQL_OBJS)
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
+
+smapd:	% : %.o $(OBJS) $(MYSQL_OBJS)
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR) -lssl -lcrypto -ldl
 
 train: % : %.o spamdrop spam-fwd-train spamstat clapf_admin aphash
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ train.o $(OBJS) $(MYSQL_OBJS) $(LIBS) $(LIBDIR) @LDFLAGS@

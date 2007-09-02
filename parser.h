@@ -1,5 +1,5 @@
 /*
- * parser.h, 2007.08.28, SJ
+ * parser.h, 2007.09.02, SJ
  */
 
 #include "config.h"
@@ -8,10 +8,11 @@
 #define MSG_BODY 0
 #define MSG_RECEIVED 1
 #define MSG_FROM 2
-#define MSG_SUBJECT 3
-#define MSG_CONTENT_TYPE 4
-#define MSG_CONTENT_TRANSFER_ENCODING 5
-#define MSG_CONTENT_DISPOSITION 6
+#define MSG_TO 3
+#define MSG_SUBJECT 4
+#define MSG_CONTENT_TYPE 5
+#define MSG_CONTENT_TRANSFER_ENCODING 6
+#define MSG_CONTENT_DISPOSITION 7
 
 struct _token {
    char str[MAX_TOKEN_LEN];

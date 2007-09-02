@@ -1,5 +1,5 @@
 /*
- * parser.c, 2007.08.28, SJ
+ * parser.c, 2007.09.02, SJ
  */
 
 #include <stdio.h>
@@ -235,6 +235,10 @@ struct _state parse(char *buf, struct _state st){
 
          snprintf(state.from, SMALLBUFSIZE-1, "FROM*%s", p);
          trim(state.from);
+      }
+
+      if(strncmp(buf, "To:", 3) == 0){
+         state.message_state = MSG_TO;
       }
 
       /* Received: 2005.12.09, SJ */
@@ -549,9 +553,7 @@ struct _state parse(char *buf, struct _state st){
     *  with the pre_translate() and url_decode() functions,  2007.05.22, SJ
     */
 
-   utf8_decode((unsigned char*)buf);
-
-
+   if(state.utf8 == 1) utf8_decode((unsigned char*)buf);
 
    /* handle html comments, 2007.06.07, SJ */
 
@@ -570,7 +572,6 @@ struct _state parse(char *buf, struct _state st){
       }
       //return state;
    }
-
 
 
 

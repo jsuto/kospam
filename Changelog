@@ -1,5 +1,15 @@
 0.3.30:
 
+2007.09.03, SJ
+
+spamstat.pl can handle spamdrop lines as well.
+(stat/spamstat.pl)
+
+2007.09.02, SJ
+
+UTF-8 fix.
+(parser.c, parser.h)
+
 2007.08.28, SJ
 
 The max_ham_spamicity variable obsoletes the former max_junk_spamicity

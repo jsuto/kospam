@@ -1,5 +1,5 @@
 /*
- * parser.c, 2007.09.02, SJ
+ * parser.c, 2007.09.04, SJ
  */
 
 #include <stdio.h>
@@ -382,6 +382,13 @@ struct _state parse(char *buf, struct _state st){
    if(str_case_str(buf, "charset") && str_case_str(buf, "ISO-8859-2"))
       state.iso_8859_2 = 1;
 
+   /* catch encoded stuff in the Subject|From lines, 2007.09.04, SJ */
+
+   if(state.message_state == MSG_SUBJECT || state.message_state == MSG_FROM){
+      if(str_case_str(buf, "?iso-8859-2?")) state.iso_8859_2 = 1;
+      if(str_case_str(buf, "?utf-8?")) state.utf8 = 1;
+   }
+
    /* check for quoted-printable encoding */
 
    if(strncasecmp(buf, "Content-Transfer-Encoding:", strlen("Content-Transfer-Encoding:")) == 0 && str_case_str(buf, "quoted-printable"))
@@ -467,13 +474,13 @@ struct _state parse(char *buf, struct _state st){
 
    /* handle qp encoded lines */
 
-   if(state.qp == 1 || (state.message_state == MSG_SUBJECT && str_case_str(buf, "?Q?")) )
+   if(state.qp == 1 || ( (state.message_state == MSG_SUBJECT || state.message_state == MSG_FROM) && str_case_str(buf, "?Q?")) )
       qp_decode((unsigned char*)buf);
 
 
    /* handle base64 encoded subject */
 
-   if(state.message_state == MSG_SUBJECT && (p = str_case_str(buf, "?B?"))){
+   if( (state.message_state == MSG_SUBJECT || state.message_state == MSG_FROM) && (p = str_case_str(buf, "?B?"))){
       base64_decode(p+3, huf);
       *(p+3) = '\0';
       snprintf(tuf, MAXBUFSIZE-1, "%s%s", buf, huf);
@@ -600,13 +607,19 @@ struct _state parse(char *buf, struct _state st){
    /* count invalid junk characters unless UTF-8 encoded or ISO-8859-2 part, 2007.04.04, SJ */
    if(state.utf8 == 0 && state.iso_8859_2 == 0) state.c_shit += count_invalid_junk((unsigned char*)buf);
 
-
    /* skip unless we have an URL, 2006.11.09, SJ */
 
    if(x > 0){
       state.l_shit += x;
       if(!str_case_str(buf, "http://") && !str_case_str(buf, "https://"))
          return state;
+   }
+
+   /* translate junk characters to JUNK_REPLACEMENT_CHAR, 2007.09.04, SJ */
+
+   if(state.utf8 == 0 && state.iso_8859_2 == 0){
+      for(i=0; i<strlen(buf); i++)
+         if(buf[i] < 0) buf[i] = JUNK_REPLACEMENT_CHAR;
    }
 
 

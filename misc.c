@@ -1,5 +1,5 @@
 /*
- * misc.c, 2007.08.27, SJ
+ * misc.c, 2007.09.04, SJ
  */
 
 #include <stdio.h>
@@ -126,7 +126,7 @@ int count_invalid_junk(unsigned char *p){
          *p = JUNK_REPLACEMENT_CHAR;
 
          i++;
-     }
+      }
    }
 
    return i;
@@ -705,7 +705,7 @@ int move_message_to_quarantine(char *tmpfile, char *quarantine_dir, char *mailfr
       return OK;
    }
    else {
-      syslog(LOG_PRIORITY, "failed to put %s into quarantine: %s", tmpfile, quarantine_dir);
+      syslog(LOG_PRIORITY, "failed to put %s into quarantine: %s", tmpfile, qfile);
       return ERR_MOVED;
    }
 

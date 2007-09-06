@@ -1,7 +1,7 @@
 #!/bin/sh
 ##
-## db_init_sqlite3.sh, 2007.08.10, SJ
-## create the SQLite3 tables and load ham/spam tokens from scratch
+## db_init_sqlite3.sh, 2007.09.05, SJ
+## create the SQLite3 tables and load ham/spam hashed tokens from scratch
 ##
 
 if [ $# -ne 3 ]; then echo "usage: $0 <ham> <spam> <database>"; exit 1; fi
@@ -14,31 +14,28 @@ SPAM=$2
 DB=$3
 NHAM=0
 NSPAM=0
-TEMP=`pwd`/temp.$$
 
 TS1=`date +%s`
 
 rm -f ham.tmp spam.tmp temp.* $DB num_of_ham.tmp num_of_spam.tmp
 
 import_tokens(){
-   rm -f $TEMP
-
-   sqlite3.pl ham.tmp spam.tmp $TEMP
-
    echo "Num of ham messages: $NHAM"
    echo "Num of spam messages: $NSPAM"
-   echo "Raw token file: $TEMP"
+   echo -n "Importing data . . ."
 
-   echo
+   TS1=`date +%s`
 
    if [ -f db-sqlite3.sql ]; then
       sqlite3 $DB < db-sqlite3.sql
    fi
 
+   prepare-sql ham.tmp spam.tmp | sqlite3 $DB
+
    echo "INSERT INTO t_misc (nham, nspam, uid) VALUES($NHAM, $NSPAM, 0);" | sqlite3 $DB
 
-   cat $TEMP | sqlite3 $DB
-
+   TS2=`date +%s`
+   echo `expr $TS2 - $TS1` " [sec]"
 }
 
 

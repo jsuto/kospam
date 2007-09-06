@@ -20,6 +20,7 @@ TEMP=`pwd`/temp.$$
 HASHTEMP=$TEMP.$$
 
 TS1=`date +%s`
+START_TS=$TS1
 
 rm -f ham.tmp spam.tmp temp.* tokens*.cdb num_of_ham.tmp num_of_spam.tmp
 
@@ -42,11 +43,20 @@ import_tokens(){
    echo "Num of spam messages: $NSPAM"
    echo "Raw token file: $TEMP"
 
-   echo
+   TS1=`date +%s`
 
-   echo "LOAD DATA INFILE '$TEMP' INTO TABLE t_token FIELDS TERMINATED BY ' '" | mysql --defaults-file=$MYCNF
+   echo -n "Loaded tokens in .... "
+
+   
+   echo "LOAD DATA LOCAL INFILE '$TEMP' INTO TABLE t_token FIELDS TERMINATED BY ' '" | mysql --defaults-file=$MYCNF
 
    echo "INSERT INTO t_misc (nham, nspam, uid) VALUES($NHAM, $NSPAM, 0)" | mysql --defaults-file=$MYCNF
+
+   TS2=`date +%s`
+   echo `expr $TS2 - $TS1` " [sec]"
+
+   echo "Total: " `expr $TS2 - $START_TS` " [sec]"
+
 }
 
 create_cdb_file(){

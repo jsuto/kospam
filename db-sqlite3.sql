@@ -9,7 +9,7 @@ create index t_misc_idx on t_misc(uid);
 
 create table if not exists t_token (
 	token char(20) not null,
-	uid smallint unsigned default 0,
+	uid int default 0,
 	nham int default 0,
 	nspam int default 0,
 	unique(token, uid)

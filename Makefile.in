@@ -4,6 +4,7 @@ prefix = @prefix@
 exec_prefix = @exec_prefix@
 bindir = @bindir@
 sbindir = @sbindir@
+libexecdir = @libexecdir@
 srcdir = @srcdir@
 sysconfdir = @sysconfdir@
 mandir = @mandir@
@@ -56,13 +57,16 @@ spamcgi usercgi traincgi trainlogcgi statcgi: % : %.o $(OBJS) $(USER_OBJ) $(MYSQ
 aphash: % : %.o misc.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^
 
+prepare-sql: % : %.o misc.o
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^
+
 spam-fwd-train spamstat clapf_admin: % : %.o $(OBJS) $(MYSQL_OBJS)
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
 
 smapd:	% : %.o $(OBJS) $(MYSQL_OBJS)
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR) -lssl -lcrypto -ldl
 
-train: % : %.o spamdrop spam-fwd-train spamstat clapf_admin aphash
+train: % : %.o spamdrop spam-fwd-train spamstat clapf_admin aphash prepare-sql
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ train.o $(OBJS) $(MYSQL_OBJS) $(LIBS) $(LIBDIR) @LDFLAGS@
 
 test:
@@ -97,7 +101,8 @@ install-sqlite3:
 
 install-clapf: clapf
 	$(INSTALL) -d $(DESTDIR)$(bindir)
-	$(INSTALL) -m 0755 util/check_clapf.sh $(DESTDIR)$(bindir)
+	$(INSTALL) -d $(DESTDIR)$(libexecdir)/clapf
+	$(INSTALL) -m 0755 util/check_clapf.sh $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 clapf $(DESTDIR)$(bindir)
 	$(INSTALL) -d $(DESTDIR)$(sysconfdir)
 	if [ ! -f "$(DESTDIR)$(sysconfdir)/clapf.conf" ]; then $(INSTALL) -m 0644 $(srcdir)/example.conf $(DESTDIR)$(sysconfdir)/clapf.conf; fi
@@ -115,16 +120,18 @@ install-splitmbox: splitmbox
 install-parsembox:
 	$(INSTALL) -m 0755 parsembox $(DESTDIR)$(bindir)
 	$(INSTALL) -m 0755 spamtest $(DESTDIR)$(bindir)
-	$(INSTALL) -m 0755 $(srcdir)/stat/spamstat.pl $(DESTDIR)$(bindir)
-	$(INSTALL) -m 0755 $(srcdir)/perl/createcdb.pl $(DESTDIR)$(bindir)
-	$(INSTALL) -m 0755 $(srcdir)/perl/mysql2cdb.pl $(DESTDIR)$(bindir)
-	$(INSTALL) -m 0755 $(srcdir)/perl/prepare.pl $(DESTDIR)$(bindir)
-	$(INSTALL) -m 0755 $(srcdir)/perl/shrink.pl $(DESTDIR)$(bindir)
-	$(INSTALL) -m 0755 $(srcdir)/perl/uribl.pl $(DESTDIR)$(bindir)
-	$(INSTALL) -m 0755 $(srcdir)/util/db_init_cdb.sh $(DESTDIR)$(bindir)
-	$(INSTALL) -m 0755 $(srcdir)/util/db_init_mysql.sh $(DESTDIR)$(bindir)
-	$(INSTALL) -m 0755 $(srcdir)/util/db_init_sqlite3.sh $(DESTDIR)$(bindir)
-	$(INSTALL) -m 0755 $(srcdir)/util/user2sq.sh $(DESTDIR)$(bindir)
+	$(INSTALL) -d $(DESTDIR)$(libexecdir)/clapf
+	$(INSTALL) -m 0755 $(srcdir)/prepare-sql $(DESTDIR)$(libexecdir)/clapf
+	$(INSTALL) -m 0755 $(srcdir)/stat/spamstat.pl $(DESTDIR)$(libexecdir)/clapf
+	$(INSTALL) -m 0755 $(srcdir)/perl/createcdb.pl $(DESTDIR)$(libexecdir)/clapf
+	$(INSTALL) -m 0755 $(srcdir)/perl/mysql2cdb.pl $(DESTDIR)$(libexecdir)/clapf
+	$(INSTALL) -m 0755 $(srcdir)/perl/prepare.pl $(DESTDIR)$(libexecdir)/clapf
+	$(INSTALL) -m 0755 $(srcdir)/perl/shrink.pl $(DESTDIR)$(libexecdir)/clapf
+	$(INSTALL) -m 0755 $(srcdir)/perl/uribl.pl $(DESTDIR)$(libexecdir)/clapf
+	$(INSTALL) -m 0755 $(srcdir)/util/db_init_cdb.sh $(DESTDIR)$(libexecdir)/clapf
+	$(INSTALL) -m 0755 $(srcdir)/util/db_init_mysql.sh $(DESTDIR)$(libexecdir)/clapf
+	$(INSTALL) -m 0755 $(srcdir)/util/db_init_sqlite3.sh $(DESTDIR)$(libexecdir)/clapf
+	$(INSTALL) -m 0755 $(srcdir)/util/user2sq.sh $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -d $(DESTDIR)$(mandir)/man1
 	$(INSTALL) -m 0644 $(srcdir)/doc/man/blackhole.1 $(DESTDIR)$(mandir)/man1
 	$(INSTALL) -m 0644 $(srcdir)/doc/man/parsembox.1 $(DESTDIR)$(mandir)/man1
@@ -151,7 +158,7 @@ clean_db:
 	rm -f CDBFILE.* ham.tmp spam.tmp num_of_spam.tmp num_of_ham.tmp tokens*.cdb temp.*
 
 clean:
-	rm -f *.o *.a smapd qs db.sql clapf clapf.conf parsembox splitmbox spamtest spamdrop train spamcgi traincgi trainlogcgi usercgi statcgi passmail spam-fwd-train spamstat aphash clapf_admin
+	rm -f *.o *.a smapd qs db.sql clapf clapf.conf parsembox splitmbox spamtest spamdrop train spamcgi traincgi trainlogcgi usercgi statcgi passmail spam-fwd-train spamstat aphash clapf_admin prepare-sql
 
 dist_clean distclean: clean
 	rm -f Makefile config.log config.status clapf-config.h stamp.h clapf.conf

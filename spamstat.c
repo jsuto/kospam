@@ -1,5 +1,5 @@
 /*
- * spamstat.c, 2007.08.18, SJ
+ * spamstat.c, 2007.09.05, SJ
  */
 
 #include <stdio.h>
@@ -66,7 +66,7 @@ int main(int argc, char **argv){
    while(fgets(buf, MAXBUFSIZE-1, f)){
       //email@address 5 2
 
-      nham = nspam = 0;
+      uid = nham = nspam = 0;
 
       p = strrchr(buf, ' ');
       if(p){
@@ -80,36 +80,38 @@ int main(int argc, char **argv){
          }
       }
 
+      if(atoi(buf) > 0) uid = atoi(buf);
+
       if(nham > 0 || nspam > 0){
 
-         /* get uid */
+         /* get uid if we have to */
 
-         uid = 0;
+         if(uid == 0){
+            snprintf(puf, MAXBUFSIZE-1, "SELECT uid FROM %s WHERE email='%s'", SQL_USER_TABLE, buf);
 
-         snprintf(puf, MAXBUFSIZE-1, "SELECT uid FROM %s WHERE email='%s'", SQL_USER_TABLE, buf);
+         #ifdef HAVE_MYSQL
 
-      #ifdef HAVE_MYSQL
-
-         if(mysql_real_query(&mysql, puf, strlen(puf)) == 0){
-            res = mysql_store_result(&mysql);
-            if(res != NULL){
-               row = mysql_fetch_row(res);
-               if(row)
-                  uid = atol(row[0]);
-               mysql_free_result(res);
+            if(mysql_real_query(&mysql, puf, strlen(puf)) == 0){
+               res = mysql_store_result(&mysql);
+               if(res != NULL){
+                  row = mysql_fetch_row(res);
+                  if(row)
+                     uid = atol(row[0]);
+                  mysql_free_result(res);
+               }
             }
+
+         #endif
+         #ifdef HAVE_SQLITE3
+
+            if(sqlite3_prepare_v2(db, puf, -1, &pStmt, ppzTail) == SQLITE_OK){
+               if(sqlite3_step(pStmt) == SQLITE_ROW)
+                  uid = sqlite3_column_int(pStmt, 0);
+            }
+
+            sqlite3_finalize(pStmt);
+         #endif
          }
-
-      #endif
-      #ifdef HAVE_SQLITE3
-
-         if(sqlite3_prepare_v2(db, puf, -1, &pStmt, ppzTail) == SQLITE_OK){
-            if(sqlite3_step(pStmt) == SQLITE_ROW)
-               uid = sqlite3_column_int(pStmt, 0);
-         }
-
-         sqlite3_finalize(pStmt);
-      #endif
 
          if(uid > 0){
             snprintf(puf, MAXBUFSIZE-1, "INSERT INTO %s (uid, ts, nham, nspam) VALUES(%ld, %ld, %ld, %ld)", SQL_STAT_TABLE, uid, now, nham, nspam);

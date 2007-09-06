@@ -322,7 +322,7 @@ struct _state parse(char *buf, struct _state st){
          p = strchr(buf, '/');
          q = strchr(buf, ';');
          if(p && q){
-            state.has_to_dump = 1;
+            //state.has_to_dump = 1;
 
             if(str_case_str(buf, "image"))
                state.num_of_images++;
@@ -339,7 +339,7 @@ struct _state parse(char *buf, struct _state st){
             if(q)
                *q = '\0';
 
-            state.fd = open(state.attachedfile, O_CREAT|O_RDWR, 0644);
+            //state.fd = open(state.attachedfile, O_CREAT|O_RDWR, 0644);
          }
       }
       else {
@@ -695,7 +695,7 @@ DECOMPOSE:
 
       if(state.is_header == 0) state.n_body_token++;
 
-      if(((state.is_header == 1 && state.n_chain_token > 1) || state.n_body_token > 1) && strlen(token) >= MIN_WORD_LEN){
+      if(((state.is_header == 1 && state.n_chain_token > 1) || state.n_body_token > 1) && strlen(token) >= MIN_WORD_LEN && state.message_state != MSG_CONTENT_TYPE){
          snprintf(phrase, MAX_TOKEN_LEN-1, "%s+%s", token, muf);
          state = insert_token(state, phrase);
       }

@@ -322,7 +322,6 @@ struct _state parse(char *buf, struct _state st){
          p = strchr(buf, '/');
          q = strchr(buf, ';');
          if(p && q){
-            //state.has_to_dump = 1;
 
             if(str_case_str(buf, "image"))
                state.num_of_images++;
@@ -339,7 +338,10 @@ struct _state parse(char *buf, struct _state st){
             if(q)
                *q = '\0';
 
-            //state.fd = open(state.attachedfile, O_CREAT|O_RDWR, 0644);
+            /* writing attachments is disabled at the moment, 2007.09.07, SJ */
+
+            /*state.has_to_dump = 1;
+            state.fd = open(state.attachedfile, O_CREAT|O_RDWR, 0644);*/
          }
       }
       else {

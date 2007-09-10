@@ -1,5 +1,26 @@
 0.3.30:
 
+2007.09.10, SJ
+
+Modified the training method: instead forwarding to spam+user@domain,
+forward it to user+spam@domain. And similarly: instead forwarding to
+ham+user@domain, forward it to user+ham@domain.
+This gives you the possibility to user per user SQLite3 token databases.
+
+2007.09.07, SJ
+
+Add a spammy token in case of a RTF attachment.
+(bayes.c)
+
+2007.09.06, SJ
+
+Set spamicity to 0.5 for tokens seen not more than twice.
+(sql.c)
+
+2007.09.05, SJ
+
+Minor fixes.
+
 2007.09.03, SJ
 
 spamstat.pl can handle spamdrop lines as well.

@@ -1,5 +1,5 @@
 /*
- * sql.c, 2007.08.03, SJ
+ * sql.c, 2007.09.08, SJ
  */
 
 #include <stdio.h>
@@ -59,9 +59,9 @@ float SQL_QUERY(qry QRY, char *tokentable, char *token, struct node *xhash[MAXHA
       addnode(xhash, token, 0 , 0);
 
 
-   /* if the token has occurred at least N times, 2007.06.13, SJ */
+   /* if the token has occurred at least N=2 times, 2007.06.13, SJ */
 
-   if(TE.nham + TE.nspam > 1){
+   if(TE.nham + TE.nspam > 2){
       ham_prob = TE.nham / QRY.ham_msg;
       spam_prob = TE.nspam / QRY.spam_msg;
 

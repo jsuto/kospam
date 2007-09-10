@@ -312,6 +312,7 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
    if(cfg.penalize_octet_stream == 1 && (attachment_by_type(state, "application/octet-stream") == 1 || attachment_by_type(state, "application/pdf") == 1
        || attachment_by_type(state, "application/vnd.ms-excel") == 1
        || attachment_by_type(state, "application/msword") == 1
+       || attachment_by_type(state, "application/rtf") == 1
        || attachment_by_type(state, "application/x-zip-compressed") == 1)
    ){
        spaminess = REAL_SPAM_TOKEN_PROBABILITY;

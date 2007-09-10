@@ -1,19 +1,14 @@
-## this allows you to use the 2 training addresses and
-## the rest of the users check their email with spamdrop
+## this allows you to use two training aliases
 
-if($LOGNAME =~ /^spam$/)
+if(/^To:/ && /\+spam@/)
 {
 	`/usr/local/bin/spam-fwd-train`
 	exit
 }
-if($LOGNAME =~ /^ham$/)
+if(/^To:/ && /\+ham@/)
 {
 	`/usr/local/bin/ham-fwd-train`
 	exit
 }
-else
-{
-	xfilter "/usr/local/bin/spamdrop -p"
-	to "Mailbox"
-}
 
+xfilter "/usr/local/bin/spamdrop -p"

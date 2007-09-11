@@ -1,5 +1,14 @@
 0.3.30:
 
+2007.09.11, SJ
+
+If the message is not good enough and found on a blacklist, mark it as spam.
+You may disable this feature by commenting the 'rbl_domain' option out.
+(bayes.c)
+
+We can handle more than 1 blacklist, just as with the SURBL domains.
+(rbl.h, rbl.c, bayes.c)
+
 2007.09.10, SJ
 
 Modified the training method: instead forwarding to spam+user@domain,

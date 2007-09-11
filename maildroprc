@@ -1,11 +1,11 @@
 ## this allows you to use two training aliases
 
-if(/^To:/ && /\+spam@/)
+if(/^To:/:h && /\+spam@/)
 {
 	`/usr/local/bin/spam-fwd-train`
 	exit
 }
-if(/^To:/ && /\+ham@/)
+if(/^To:/:h && /\+ham@/)
 {
 	`/usr/local/bin/ham-fwd-train`
 	exit

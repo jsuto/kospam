@@ -1,5 +1,5 @@
 /*
- * bayes.c, 2007.09.05, SJ
+ * bayes.c, 2007.09.11, SJ
  */
 
 #include <stdio.h>
@@ -228,9 +228,9 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
 #ifdef HAVE_SURBL
    struct node *urlhash[MAXHASH];
    struct node *P;
-   char *qq, surbl_token[MAX_TOKEN_LEN], rbldomain[MAX_TOKEN_LEN];
+   char surbl_token[MAX_TOKEN_LEN];
    float n_urls = 0;
-   int u;
+   int u, j, found_on_rbl=0;
 #endif
 
    if(!state.first)
@@ -357,12 +357,14 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
       n_tokens += walk_hash(db, B_hash, cfg);
    #endif
 
-      /* consult a blacklist about the IP connecting to us */
+      /* consult blacklists about the IPv4 address connecting to us */
 
    #ifdef HAVE_SURBL
       if(strlen(cfg.rbl_domain) > 3 && reverse_ipv4_addr(state.ip) == 1){
-         if(rbl_check(cfg.rbl_domain, state.ip) == 1){
-            snprintf(surbl_token, MAX_TOKEN_LEN-1, "%s.%s", state.ip, cfg.rbl_domain);
+         found_on_rbl = rbl_list_check(cfg.rbl_domain, state.ip);
+
+         for(i=0; i<found_on_rbl; i++){
+            snprintf(surbl_token, MAX_TOKEN_LEN-1, "RBL%d*%s", i, state.ip);
             n_phrases += addnode(s_phrase_hash, surbl_token, REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
             n_tokens += addnode(shash, surbl_token, REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
          }
@@ -438,7 +440,7 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
      that this message is certainly spam or ham, 2006.06.23, SJ
     */
 
-   if(n_urls > 0 && spaminess > cfg.max_ham_spamicity && spaminess < cfg.spam_overall_limit){
+   if(n_urls > 0 && spaminess > cfg.max_ham_spamicity && spaminess < cfg.spam_overall_limit && strlen(cfg.surbl_domain) > 2){
       spaminess = spaminess2 = 0.5;
 
       for(u=0; u < MAXHASH; u++){
@@ -446,22 +448,15 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
          while(Q != NULL){
             P = Q;
 
-            if(strlen(cfg.surbl_domain) > 2 && strncmp(P->str, "URL*", 4) == 0 && strchr(P->str, '+') == NULL){
-               i = 0;
-               qq = cfg.surbl_domain;
-               do {
-                  qq = split(qq, ',', rbldomain, MAX_TOKEN_LEN-1);
-                  snprintf(surbl_token, MAX_TOKEN_LEN-1, "%s%d*%s", "SURBL", i, P->str+4);
+            if(strncmp(P->str, "URL*", 4) == 0 && strchr(P->str, '+') == NULL){
+               i = rbl_list_check(cfg.surbl_domain, P->str+4);
+               surbl_match += i;
 
-                  if(rbl_check(rbldomain, P->str+4) == 1){
-                     spaminess = REAL_SPAM_TOKEN_PROBABILITY;
-                     surbl_match++;
-                     n_phrases += addnode(s_phrase_hash, surbl_token, spaminess, DEVIATION(spaminess));
-                     n_tokens += addnode(shash, surbl_token, spaminess, DEVIATION(spaminess));
-                  }
-
-                  i++;
-               } while(qq);
+               for(j=0; j<i; j++){
+                  snprintf(surbl_token, MAX_TOKEN_LEN-1, "SURBL%d*%s", j, P->str+4);
+                  n_phrases += addnode(s_phrase_hash, surbl_token, REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
+                  n_tokens += addnode(shash, surbl_token, REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
+               }
             }
 
             Q = Q->r;
@@ -551,6 +546,11 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
 
 #ifdef HAVE_SURBL
    if(spaminess > cfg.max_ham_spamicity && spaminess < cfg.spam_overall_limit && cfg.rude_surbl > 0 && surbl_match >= cfg.rude_surbl)
+      return cfg.spaminess_of_caught_by_surbl;
+
+   /* if the message is not good enough and found on a blacklist, mark it as spam, 2007.09.11, SJ */
+
+   if(spaminess > cfg.max_ham_spamicity && spaminess < cfg.spam_overall_limit && found_on_rbl > 0)
       return cfg.spaminess_of_caught_by_surbl;
 #endif
 

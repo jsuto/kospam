@@ -1,5 +1,5 @@
 /*
- * rbl.c, 2007.08.28, SJ
+ * rbl.c, 2007.09.11, SJ
  */
 
 #include <stdio.h>
@@ -10,7 +10,13 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include "misc.h"
 #include "config.h"
+
+
+/*
+ * rbl check the given host against an rbl domain
+ */
 
 int rbl_check(char *rbldomain, char *host){
    char domainname[SMALLBUFSIZE];
@@ -19,7 +25,7 @@ int rbl_check(char *rbldomain, char *host){
    snprintf(domainname, SMALLBUFSIZE-1, "%s.%s", host, rbldomain);
 
 #ifdef DEBUG
-   fprintf(stderr, "(SU)RBL checking: %s\n", domainname);
+   fprintf(stderr, "RBL checking: %s\n", domainname);
 #endif
 
    h = gethostbyname(domainname);
@@ -28,6 +34,11 @@ int rbl_check(char *rbldomain, char *host){
 
    return 0;
 }
+
+
+/*
+ * reverse the given IPv4 address
+ */
 
 int reverse_ipv4_addr(char *ip){
    struct in_addr addr;
@@ -41,3 +52,28 @@ int reverse_ipv4_addr(char *ip){
 
    return 0;
 }
+
+
+/*
+ * roll the given host through a comma separated domain list
+ */
+
+int rbl_list_check(char *domainlist, char *host){
+   int match = 0;
+   char *p, rbldomain[MAX_TOKEN_LEN];
+
+   if(strlen(domainlist) < 3) return 0;
+
+   p = domainlist;
+   do {
+      p = split(p, ',', rbldomain, MAX_TOKEN_LEN-1);
+      if(rbl_check(rbldomain, host) == 1)
+         match++;
+
+   } while(p);
+
+   return match;
+}
+
+
+

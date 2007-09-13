@@ -361,7 +361,15 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
 
    #ifdef HAVE_SURBL
       if(strlen(cfg.rbl_domain) > 3 && reverse_ipv4_addr(state.ip) == 1){
+
+         gettimeofday(&tv1, &tz);
          found_on_rbl = rbl_list_check(cfg.rbl_domain, state.ip);
+         gettimeofday(&tv2, &tz);
+      #ifdef DEBUG
+         fprintf(stderr, "rbl check took %ld ms\n", tvdiff(tv2, tv1)/1000);
+      #else
+         syslog(LOG_PRIORITY, "%s: rbl check took %ld ms", spamfile, tvdiff(tv2, tv1)/1000);
+      #endif
 
          for(i=0; i<found_on_rbl; i++){
             snprintf(surbl_token, MAX_TOKEN_LEN-1, "RBL%d*%s", i, state.ip);
@@ -449,7 +457,15 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
             P = Q;
 
             if(strncmp(P->str, "URL*", 4) == 0 && strchr(P->str, '+') == NULL){
+               gettimeofday(&tv1, &tz);
                i = rbl_list_check(cfg.surbl_domain, P->str+4);
+               gettimeofday(&tv2, &tz);
+            #ifdef DEBUG
+               fprintf(stderr, "surbl check took %ld ms\n", tvdiff(tv2, tv1)/1000);
+            #else
+               syslog(LOG_PRIORITY, "%s: surbl check took %ld ms", spamfile, tvdiff(tv2, tv1)/1000);
+            #endif
+
                surbl_match += i;
 
                for(j=0; j<i; j++){

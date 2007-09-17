@@ -57,6 +57,7 @@ struct _state {
    char attachedfile[RND_STR_LEN+SMALLBUFSIZE];
    char from[SMALLBUFSIZE];
    unsigned long n_token;
+   unsigned long n_subject_token;
    unsigned long n_body_token;
    unsigned long n_chain_token;
    struct _token *c_token;

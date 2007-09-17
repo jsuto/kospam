@@ -1,5 +1,5 @@
 /*
- * spam-fwd-train.c, 2007.08.27, SJ
+ * spam-fwd-train.c, 2007.09.14, SJ
  */
 
 #include <stdio.h>
@@ -314,6 +314,8 @@ int main(int argc, char **argv){
          if(is_spam == 1 && spaminess > cfg.spam_overall_limit) break;
          if(is_spam == 0 && spaminess < cfg.max_ham_spamicity) break;
 
+         /* only the first round can be TUM/TEFT, 2007.09.14, SJ */
+         train_mode = T_TOE;
       }
 
       /* free token list */

@@ -1,5 +1,26 @@
 0.3.30:
 
+2007.09.16, SJ
+
+Move the spaminess_of_text_and_base64 checking stuff to the 'unsure' zone.
+(bayes.c)
+
+2007.09.15, SJ
+
+If we have no valid subject tokens, let's ask the single tokens
+which means we do some rbl tests as well. This may help against
+some micro spams.
+(parser.c, parser.h, bayes.c)
+
+2007.09.14, SJ
+
+Prevent several TUM loops with iterative training.
+(spam-fwd-train.c)
+
+Modofied process_syslog.pl to recognise the spamdrop
+stuff in the mail log.
+(stat/process_syslog.pl)
+
 2007.09.11, SJ
 
 If the message is not good enough and found on a blacklist, mark it as spam.

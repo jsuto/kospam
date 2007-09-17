@@ -1,5 +1,5 @@
 /*
- * bayes.c, 2007.09.11, SJ
+ * bayes.c, 2007.09.16, SJ
  */
 
 #include <stdio.h>
@@ -347,6 +347,13 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
       spaminess = sorthash(s_phrase_hash, MAX_PHRASES_TO_CHOOSE, cfg);
       if(spaminess < cfg.spam_overall_limit && spaminess > cfg.max_ham_spamicity && most_interesting_tokens(s_phrase_hash) < MAX_PHRASES_TO_CHOOSE)
          goto NEED_SINGLE_TOKENS;
+
+      /* if we have no subject token to evaluate */
+
+      if(state.n_subject_token == 0){
+         goto NEED_SINGLE_TOKENS;
+      }
+
    }
    else {
       NEED_SINGLE_TOKENS:
@@ -415,6 +422,10 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
    /* junk detection before the SURBL test, 2006.11.09, SJ */
 
    if(spaminess > cfg.max_ham_spamicity){
+
+      if(state.base64_text == 1 && cfg.spaminess_of_text_and_base64 > 0){
+         return cfg.spaminess_of_text_and_base64;
+      }
 
       if(cfg.invalid_junk_limit > 0 && state.c_shit > cfg.invalid_junk_limit && spaminess < cfg.spam_overall_limit){
       #ifdef DEBUG
@@ -630,20 +641,10 @@ double bayes_file(char *cdbfile, char *spamfile, struct _state state, struct ses
       p = spamfile;
 
 
-   /* mark base64 encoded textual messages as spam, 2006.01.02, SJ */
-
-   if(state.base64_text == 1 && cfg.spaminess_of_text_and_base64 > 0){
-      //free_and_print_list(state.first, 0);
-      return cfg.spaminess_of_text_and_base64;
-   }
-
- 
    /* evaluate the blackhole result, 2006.10.02, SJ */
 
 #ifdef HAVE_BLACKHOLE
    if(strlen(cfg.blackhole_path) > 3 && blackness(cfg.blackhole_path, state.ip, cfg.verbosity) > 100){
-      /* free token list first */
-      //free_and_print_list(state.first, 0);
       syslog(LOG_PRIORITY, "%s: found %s on our blackhole", p, state.ip);
 
       return cfg.spaminess_of_blackholed_mail;
@@ -730,7 +731,6 @@ double bayes_file(char *cdbfile, char *spamfile, struct _state state, struct ses
    #endif
 
       if(ham_from > NUMBER_OF_GOOD_FROM && spam_from == 0){
-         //free_and_print_list(state.first, 0);
          return REAL_HAM_TOKEN_PROBABILITY;
       }
    }
@@ -768,10 +768,13 @@ double bayes_file(char *cdbfile, char *spamfile, struct _state state, struct ses
    spaminess = eval_tokens(p, cfg, state);
 #endif
 
-   //free_and_print_list(state.first, 0);
 
 #ifdef HAVE_QCACHE
    close(QRY.sockfd);
+#endif
+
+#ifdef HAVE_CDB
+   close_cdbs(tokenscdb);
 #endif
 
    /* if we shall mark the message as spam because of the embedded image */
@@ -780,9 +783,6 @@ double bayes_file(char *cdbfile, char *spamfile, struct _state state, struct ses
       return cfg.spaminess_of_embed_image;
    }
 
-#ifdef HAVE_CDB
-   close_cdbs(tokenscdb);
-#endif
 
    return spaminess;
 }

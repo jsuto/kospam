@@ -48,6 +48,7 @@ struct _state init_state(){
    state.n_token = 0;
    state.n_body_token = 0;
    state.n_chain_token = 0;
+   state.n_subject_token = 0;
 
    state.c_hex_shit = 0;
    state.c_shit = 0;
@@ -668,8 +669,10 @@ DECOMPOSE:
       if(is_odd_punctuations(puf) == 1 || is_month(puf) == 1 || is_weekday(puf) == 1 || is_date(puf) )
          continue;
 
-      if(state.message_state == MSG_SUBJECT)
+      if(state.message_state == MSG_SUBJECT){
          snprintf(muf, MAXBUFSIZE-1, "Subject*%s", puf);
+         state.n_subject_token++;
+      }
       else if(state.message_state == MSG_FROM)
          snprintf(muf, MAXBUFSIZE-1, "FROM*%s", puf);
       else if(state.is_header == 1)

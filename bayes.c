@@ -1,5 +1,5 @@
 /*
- * bayes.c, 2007.09.16, SJ
+ * bayes.c, 2007.09.18, SJ
  */
 
 #include <stdio.h>
@@ -328,6 +328,12 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
        n_tokens += addnode(shash, "IMAGE*", spaminess, DEVIATION(spaminess));
    }
 
+
+   if(state.n_subject_token == 0){
+      spaminess = REAL_SPAM_TOKEN_PROBABILITY;
+      n_phrases += addnode(s_phrase_hash, "NO_SUBJECT*", spaminess, DEVIATION(spaminess));
+      n_tokens += addnode(shash, "NO_SUBJECT*", spaminess, DEVIATION(spaminess));
+   }
 
    /* add the From line, 2007.06.16, SJ */
 

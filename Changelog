@@ -1,5 +1,13 @@
 0.3.30:
 
+2007.09.18, SJ
+
+Removed the unnecessary reference to the openssl/* header file.
+(misc.h)
+
+Issue a NO_SUBJECT spammy token if we have no valuable subject token
+(bayes.c)
+
 2007.09.16, SJ
 
 Move the spaminess_of_text_and_base64 checking stuff to the 'unsure' zone.

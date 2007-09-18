@@ -1,8 +1,7 @@
 /*
- * misc.h, 2007.08.27, SJ
+ * misc.h, 2007.09.18, SJ
  */
 
-#include <openssl/ssl.h>
 #include <sys/time.h>
 #include "config.h"
 

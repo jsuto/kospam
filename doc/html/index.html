@@ -1,33 +1,29 @@
 <html>
-<title>clapf</title>
+<title>clapf home</title>
 <link rel="stylesheet" type="text/css" href="style.css">
-<body bgcolor=white text=darkblue vlink=#AC003A>
+<body bgcolor="white" text=darkblue vlink=#AC003A>
 <blockquote>
 
 <h1><img src="logo.png"></h1>
 
-<pre>
+clapf is an <a href="LICENSE">open source</a> email content filter application. It includes a statistical
+(inverse chi-square) antispam module, interface to several <a href="av.html">anti-virus products</a>, a
+minefield (<a href="blackhole.html">blackhole</a>), spam quarantine, support for for various
+<a href="surbl.html">RBL lists</a>, training utilities and many more.<p/>
+
+clapf can be used as an <a href="http://www.postfix.org/FILTER_README.html">after
+queue content filter</a> with <a href="http://www.postfix.org/">Postfix</a> (including
+as an appliance) or via a local delivery agent (LDA), preferably <a href="http://www.courier-mta.org/maildrop/">maildrop</a>.<p/>
 
 
-</pre>
 
-clapf is a modular network filter for <a href="http://www.postfix.org/">postfix</a>.
-It includes a statistical (inverse chi-square) antispam module,
-the blackhole feature and antivirus support (<a href="http://www.clamav.net/">clamav</a>,
-<a href="http://free.grisoft.com/">AVG Linux</a>, <a href="http://www.avast.com/">avast!</a>,
-<a href="http://www.kaspersky.com/">Kaspersky</a>, and <a href="http://www.drweb.com/">Dr.Web</a>)
-preventing virus infection as well as a cgi and a command line interface to easily train the token database.
-Clapf also features an <a href="ocr.html">experimental OCR check</a> function to get rid
-of image spams.<p>
-
-Your opinion really matters and I would like you to tell me how clapf works for you.
-Please send your comments to <a href="mailto:sj@acts.hu">sj@acts.hu</a> or
-even better I encourage you to write it in the <a href="http://dev.acts.hu/drupal/">discussion forum</a>!<p>
+<table border="0">
+<tr valign="top">
+<td width="30%">
 
 <strong>Documentation</strong><p>
 
 <ul>
-<li><strong><a href="howitworks.html">How it works</a></strong>
 <li><strong><a href="install.html">Installation intructions</a></strong>
 <li><strong><a href="config.html">clapf.conf variables</a></strong>
 <li><strong><a href="antispam.html">Antispam implementation details</a></strong>
@@ -39,18 +35,25 @@ even better I encourage you to write it in the <a href="http://dev.acts.hu/drupa
 <li><strong><a href="ldap.html">LDAP/Active Directory support</a></strong>
 <li><strong><a href="spamquarantine.html">Spam quarantine</a></strong>
 <li><strong><a href="surbl.html">SURBL support</a></strong>
-<li><strong><a href="ocr.html">Image spams</a></strong>
 <li><strong><a href="stats.html">Making statistics</a></strong>
 <li><strong><a href="faq.html">FAQ</a></strong>
-<li><strong><a href="examples.html">Examples</a></strong>
+<li><strong><a href="LICENSE">LICENSE</a></strong>
 </ul>
 
-<strong>Discussion forum:</strong> <a href="http://dev.acts.hu/drupal/">clapf users</a><p>
+</td>
+<td>
 
-<strong><a href="http://clapf.acts.hu/clapf.sxi">Promotion slides (in OO.org 1.x format)</a></strong> and <strong><a href="blurb.html">a blurb</a></strong><p>
+</td>
+</tr>
+</table><p>
 
+<script src="http://www.google-analytics.com/urchin.js" type="text/javascript">
+</script>
+<script type="text/javascript">
+_uacct = "UA-1610427-1";
+urchinTracker();
+</script>
 
-<strong>Feedback:</strong> Send your comments, ideas to <a href="mailto:sj@acts.hu">sj@acts.hu</a> and please add "clapf" to the subject line<p>
 
 </blockquote>
 </body></html>

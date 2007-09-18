@@ -133,7 +133,6 @@ install-parsembox:
 	$(INSTALL) -m 0755 $(srcdir)/util/db_init_sqlite3.sh $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 $(srcdir)/util/user2sq.sh $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -d $(DESTDIR)$(mandir)/man1
-	$(INSTALL) -m 0644 $(srcdir)/doc/man/blackhole.1 $(DESTDIR)$(mandir)/man1
 	$(INSTALL) -m 0644 $(srcdir)/doc/man/parsembox.1 $(DESTDIR)$(mandir)/man1
 	$(INSTALL) -m 0644 $(srcdir)/doc/man/spamtest.1 $(DESTDIR)$(mandir)/man1
 

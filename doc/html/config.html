@@ -183,13 +183,24 @@ too, if you want to enable these notifications. I don't recommend this feature s
 virus infected messages usually contain fake email addresses.<p>
 
 
-<strong>localpostmaster</strong><p>
-syntax: localpostmaster=<i>email address</i><br>
-default: none<p>
+<strong>localpostmaster</strong><p/>
+syntax: localpostmaster=<i>email address</i><br/>
+default: none<p/>
+
 The localpostmaster directive defines the To: address of the notification sent about
 every virus infected email to the postmaster. Please set the clapfemail variable
 too, if you want to enable these notifications. I don't recommend this feature since
 virus infected messages usually contain fake email addresses.<p>
+
+
+<strong>silently_discard_infected_email</strong><p/>
+syntax: silently_discard_infected_email<i>0|1</i><br/>
+default: 1<p/>
+
+The silently_discard_infected_email directive defines whether to return 550 error
+code and let the virus infected message be bounced back (0), or send back a 250 ok
+code and drop the infected email (1).<p/>
+
 
 
 <h3>antispam stuff</h3>
@@ -305,36 +316,45 @@ value to 1.<p/>
 
 
 <strong>surbl_domain</strong><p>
-syntax: surbl_domain=<i>string</i><br>
-default: multi.surbl.org<p>
+syntax: surbl_domain=<i>string</i><br/>
+default: multi.surbl.org<p/>
+
 Name of the SURBL domain to use. Only valid if clapf was compiled with surbl support. Surbl is a kind of
 RBL list. You may check every URI in your incoming email against the SURBL database.<p>
 
 Clapf takes the last two part of the domain name, eg. aaaa.acts.hu -&gt; acts.hu joined with the <strong>surbl_domain</strong>
-variable: acts.hu.multi.surbl.org.<br> Dotted IP-addresses will be reversed: http://1.2.3.4/ -&gt; 4.3.2.1.multi.surbl.org.<p>
+variable: acts.hu.multi.surbl.org.<br/> Dotted IP-addresses will be reversed: http://1.2.3.4/ -&gt; 4.3.2.1.multi.surbl.org.<p/>
 
 If a positive match is found clapf adds a special spammy token thus the overall spamicity will be higher and possibly reach the spam
 limit. See <a href="http://www.surbl.org/">http://www.surbl.org/</a> for more details about the SURBL system or
-<a href="http://www.uribl.com/index.shtml">http://www.uribl.com/index.shtml</a> about uribl.<p>
+<a href="http://www.uribl.com/index.shtml">http://www.uribl.com/index.shtml</a> about uribl.<p/>
 
 Of course you may set up your own rbl domain to check URLs against it and query multiply RBL lists with a comma separated
-list of domains, eg. <i>surbl_domain=multi.surbl.org,multi.uribl.com,uris.yourdomain.name.here</i>.<p>
+list of domains, eg. <i>surbl_domain=multi.surbl.org,multi.uribl.com,uris.yourdomain.name.here</i>.<p/>
 
-If you want to disable the URI checks, unset this variable, eg. <i>surbl_domain=</i>
-<p>
+If you want to disable the URI checks, unset this variable, eg. <i>surbl_domain=</i><p/>
 
-<strong>rude_surbl</strong><p>
-syntax: rude_surbl=<i>number</i><br>
-default: 0<p>
+<strong>rude_surbl</strong><p/>
+syntax: rude_surbl=<i>number</i><br/>
+default: 0<p/>
 
 The rude_surbl directive defines the value of the bad URL threshold. Clapf counts how many URLs the surbl
 code catches in the current message. Each match in the surbl domain(s) counts. So if you have a bad URL
-and you have 2 surbl domains and this bad URL is on both surbl domains then it takes 2.<p>
+and you have 2 surbl domains and this bad URL is on both surbl domains then it takes 2.<p/>
 
 If this value is set (&gt;0) AND clapf gets at least this number of URL matches than this AND the spamicity
-of the message is greater than max_junk_spamicity than the message is marked as spam.
+of the message is greater than max_ham_spamicity than the message is marked as spam.<p/>
 
-<p>
+
+<strong>rbl_domain</strong><p>
+syntax: rbl_domain=<i>string</i><br>
+default: none<p/>
+
+The rbl_domain directive defines a list of comma separated RBL domains to use. If clapf is unable to determine
+whether the message is ham or spam (=unsure), it will query the given RBL lists. If the sending host is found
+on them, it will mark the message as spam.<p/>
+
+
 
 <strong>clapf_header_field</strong><p>
 syntax: clapf_header_field=<i>string</i><br>
@@ -376,22 +396,30 @@ clapf_spam_header_field=X-MSMail-Priority: Low
 For more information, see <a href="http://wiki.apache.org/spamassassin/OeFilter">http://wiki.apache.org/spamassassin/OeFilter</a><p>
 
 
-<strong>spam_subject_prefix</strong><p>
-syntax: spam_overall_limit=<i>string</i><br>
-default: none<p>
+<strong>spam_subject_prefix</strong><p/>
+syntax: spam_overall_limit=<i>string</i><br/>
+default: none<p/>
 
 The spam_subject_prefix directive defines the value of the prefix to be inserted to the beginning of
 the "Subject: " line. You may put an arbitrary string here. "[SPAM] " or "[spam] " would be a wise
-chioce (without the quotes). Please not that this field should contain a trailing space.<p>
+chioce (without the quotes). Please not that this field should contain a trailing space.<p/>
 
 
-<strong>spam_overall_limit</strong><p>
-syntax: spam_overall_limit=<i>number</i><br>
-default: 0.92<p>
+<strong>spam_overall_limit</strong><p/>
+syntax: spam_overall_limit=<i>number</i><br/>
+default: 0.92<p/>
 The spam_overall_limit directive defines the spamicity limit. The message is marked as spam if
 its overall probability is above this limit. It can be anywhere around (above) 0.9. If your
 ham-spam data is good your spamicity values are expected around 0.001 and 0.999.
-You may try even as low as 0.9.<p>
+You may try even as low as 0.9.<p/>
+
+
+<strong>max_ham_spamicity</strong><p/>
+syntax: max_ham_spamicity=<i>number</i><br/>
+default: 0.39<p/>
+
+The max_ham_spamicity directive defines the maximum spam probability of a ham message.
+It should be considered as a cut off value, lower value of the 'unsure' zone.<p/>
 
 
 <strong>spaminess_oblivion_limit</strong><p/>
@@ -470,21 +498,21 @@ The use_all_the_most_interesting_tokens directive defines whether to use (1) or 
 the most interesting tokens if we have more than MAX_SAMPLES_TO_CHOOSE.<p>
 
 
-<strong>spam_ratio_in_top10</strong><p>
-syntax: spam_ratio_in_top10=<i>number</i><br>
-default: 0.9<p>
+<strong>spam_ratio_in_top10</strong><p/>
+syntax: spam_ratio_in_top10=<i>number</i><br/>
+default: 0.9<p/>
 The spam_ratio_in_top10 directive defines the maximum ratio of the spammy / all the tokens
 in the top10. If it exceeds this limit the message is marked as spam. This is useful
 to catch such a spam containing a lot of spam tokens as well as a few ham tokens
 thus the overall spamicity score is not high enough to mark the whole message as spam.
-Set to 0 to disable this feature.<p>
+Set to 0 to disable this feature.<p/>
 
 
-<strong>blackhole_path</strong><p>
-syntax: blackhole_path=<i>string</i><br>
-default: none<p>
+<strong>blackhole_path</strong><p/>
+syntax: blackhole_path=<i>string</i><br/>
+default: none<p/>
 The blackhole_path directive defines the path of the blackhole directory holding "blackholed"
-IP addresses. If unset the blackhole feature is disabled.<p>
+IP addresses. If unset the blackhole feature is disabled.<p/>
 
 
 <strong>training_mode</strong><p/>
@@ -495,7 +523,7 @@ The training_mode directive defines the training mode that can be either
 Train On Error (0) or Train Until Mature (1).
 Users may train the token database (only) when an error occurs (=TOE). With
 TUM mode, however, clapf will automatically trains those tokens not mature
-enough (ie. having less then 25 hits in the token table). Though TUM has
+enough (ie. having less then 50 hits in the token table). Though TUM has
 a shorter learning curve, but it produces more tokens in the database, so
 it will be larger than with TOE.<p/>
 
@@ -511,6 +539,16 @@ of a global database (with uid=0) and all users may train the token database
 with their own data. Clapf will then merge these two datasets for the user
 at run time. You may achieve greater accuracy while personal data requires
 more space.<p/>
+
+
+<strong>store_metadata</strong><p/>
+syntax: store_metadata=<i>0|1</i><br/>
+default: 1<p/>
+
+The store_metadata directive defines whether to store the email with some
+metadata to the database (1) or not (0). By default we store the email for
+later training.<p/>
+
 
 
 <h3>foreign language stuff</h3>
@@ -536,14 +574,6 @@ default: 40<p>
 The invalid_hex_junk_limit directive defines the maximum number of invalid hexa characters (=xx)
 that the message may contain, otherwise it is marked as spam. Set to 0 to disable this feature.<p>
 
-
-<strong>max_junk_spamicity</strong><p>
-syntax: max_junk_spamicity=<i>number</i><br>
-default: 0.15<p>
-The max_junk_spamicity directive defines the maximum spamicity probability of the message contains
-a lot of junk characters. Long good emails in a foreign language may contain some special characters
-listed in the invalid_junk_characters (ijc.h), eg. French, Portugese, etc. so I decided let them in
-if they are definitely ham. Set this variable to 0 if you do not want this alleviation at all.<p>
 
 
 
@@ -591,100 +621,59 @@ default: 0<p>
 The clamav_archive_mem_limit directive defines whether to enable (1) or not (0) a memory limit for the bzip2 scanner.<p>
 
 
-<h3>mysql stuff</h3>
+<h3>MySQL stuff</h3>
 
 
-<strong>mysqlhost</strong><p>
-syntax: mysqlhost=<i>string</i><br>
-default: none<p>
+<strong>mysqlhost</strong><p/>
+syntax: mysqlhost=<i>string</i><br/>
+default: none<p/>
 
-The mysqlhost directive defines the IP-address where the mysql server is listening.<p>
-
-
-<strong>mysqlport</strong><p>
-syntax: mysqlport=<i>number</i><br>
-default: none<p>
-
-The mysqlport directive defines the port number where the mysql server is listening.<p>
+The mysqlhost directive defines the IP-address where the mysql server is listening.<p/>
 
 
-<strong>mysqlsocket</strong><p>
-syntax: mysqlsocket=<i>string</i><br>
-default: none<p>
+<strong>mysqlport</strong><p/>
+syntax: mysqlport=<i>number</i><br/>
+default: none<p/>
+
+The mysqlport directive defines the port number where the mysql server is listening.<p/>
+
+
+<strong>mysqlsocket</strong><p/>
+syntax: mysqlsocket=<i>string</i><br/>
+default: none<p/>
 
 The mysqlsocket directive defines the path of the unix domain socket where the mysql server is available. Please use either
-the mysqlhost and mysqlport or the mysqlsocket directive.<p>
+the mysqlhost and mysqlport or the mysqlsocket directive.<p/>
 
 
-<strong>mysqluser</strong><p>
-syntax: mysqluser=<i>string</i><br>
-default: none<p>
-
-The mysqluser directive defines the username to connect to the mysql database with.<p>
-
-
-<strong>mysqlpwd</strong><p>
-syntax: mysqlpwd=<i>string</i><br>
-default: none<p>
-
-The mysqlpwd directive defines the password to connect to the mysql database with.<p>
-
-
-<strong>mysqldb</strong><p>
-syntax: mysqldb=<i>string</i><br>
-default: none<p>
-
-The mysqldb directive defines the name of the mysql database holding token data.<p>
-
-
-<strong>mysqltokentable</strong><p>
-syntax: mysqltokentable=<i>string</i><br>
-default: none<p>
-
-The mysqltokentable directive defines the name of the mysql table holding tokens.<p>
-
-
-<strong>mysqlmisctable</strong><p>
-syntax: mysqlmisctable=<i>string</i><br>
-default: none<p>
-
-The mysqlmisctable directive defines the name of the mysql table holding some statistic data.<p>
-
-
-<strong>mysqlblackholetable</strong><p>
-syntax: mysqlblackholetable=<i>string</i><br>
-default: none<p>
-
-The mysqlblackholetable directive defines the name of the mysql table holding the blackhole entries.<p>
-
-
-<strong>mysqlusertable</strong><p/>
-syntax: mysqlusertable=<i>string</i><br/>
+<strong>mysqluser</strong><p/>
+syntax: mysqluser=<i>string</i><br/>
 default: none<p/>
 
-The mysqlusertable directive defines the name of the mysql table holding the user entries. Currently the
-spamcgi and trancgi utilities are using this table to determine the email address of a user.<p/>
+The mysqluser directive defines the username to connect to the mysql database with.<p/>
 
 
-<strong>mysqltraininglogtable</strong><p/>
-syntax: mysqltraininglogtable=<i>string</i><br/>
+<strong>mysqlpwd</strong><p/>
+syntax: mysqlpwd=<i>string</i><br/>
 default: none<p/>
 
-The mysqltraininglogtable directive defines the name of the mysql table holding entries correspondig to user training of the token database.<p/>
+The mysqlpwd directive defines the password to connect to the mysql database with.<p/>
 
 
-<strong>mysqlqueuetable</strong><p>
-syntax: mysqlqueuetable=<i>string</i><br>
-default: none<p>
+<strong>mysqldb</strong><p/>
+syntax: mysqldb=<i>string</i><br/>
+default: none<p/>
 
-The mysqlqueuetable directive defines the name of the mysql table holding the message id - user id entries.<p/>
+The mysqldb directive defines the name of the mysql database holding token data.<p/>
 
 
-<strong>mysqlstattable</strong><p>
-syntax: mysqlstattable=<i>string</i><br>
-default: none<p>
+<h3>SQLite stuff</h3>
 
-The mysqlstattable directive defines the name of the mysql table holding personal ham/spam statistics entries.<p/>
+<strong>sqlite3</strong><p/>
+syntax: sqlite3=<i>string</i><br/>
+default: none<p/>
+
+The sqlite3 directive defines the path of the SQLite database.<p/>
 
 
 
@@ -738,8 +727,6 @@ syntax: statcgi_url=<i>string</i><br>
 default: none<p>
 
 The statcgi_url directive defines the URL of the statistics cgi  utility.<p/>
-
-
 
 
 <strong>page_len</strong><p>
@@ -827,6 +814,13 @@ for extracting text from Microsoft Word documents.<p/>
 
 
 <center><a href="index.html">home</a></center><p>
+
+<script src="http://www.google-analytics.com/urchin.js" type="text/javascript">
+</script>
+<script type="text/javascript">
+_uacct = "UA-1610427-1";
+urchinTracker();
+</script>
 
 
 </blockquote>

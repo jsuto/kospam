@@ -29,28 +29,7 @@ if you have configured clapf to use the libclamav library (not clamd).<p>
 
 
 
-<a name="ss12">I see a lot of "451 Error in processing, try again later ..." messages in the maillog</a><p>
-
-<strong>Issue:</strong> you have several hundred messages in your postfix queue.
-When you issue the <b>postfix flush</b> command to flush the queue, the first
-10-20-30 messages are delivered but the rest of them are rejected with<br>
-
-<pre>
-"451 Error in processing, try again later (in reply to end of DATA command)"
-</pre>
-
-This issue was fixed in 0.3.22-rc2. I managed to flush 773 messages without
-any problem. If you still encounter this kind problem, please let me know
-and try the following workaround:<p>
-
-<strong>Workaround:</strong> flush only ~20-30 messages at a time and repeat this
-until all the messages are delivered from the queue.<p>
-
-<pre>
-for i in `mailq | grep ^[0-9A-F] | head -30 | awk '{ print $1 }'`; do postsuper -r $i; sleep 2; done
-</pre>
-
-<a name="ss13">How could I know what is really happening during message processing?</a><p>
+<a name="ss12">How could I know what is really happening during message processing?</a><p>
 
 Set verbosity level at least 3 in clapf.conf, then send a HUP signal.
 
@@ -64,10 +43,12 @@ parsing the message into tokens, etc.<p>
 
 I recommend you do not set verbosity greater than 1 unless you want to debug something.<p>
 
-<a name="ss14">Mailbox issues</a><p>
+<a name="ss13">Mailbox issues</a><p>
 
 You should run the dos2unix program to 'fix' the ^M line end issue if you took the mailbox file
 from a Dos/Windows host.<p>
+
+
 
 <a name="ss14">Problems with NUL characters inside a message</a><p>
 
@@ -81,20 +62,8 @@ buffers having the NUL character inside. I got some messages
 that clapf was not able to send back to postfix properly thus
 it remained in the queue.<p>
 
-If you had encountered this problem you have two options:<p>
-
-
-<b>A) download the 0.3.28-rc1 or newer version</b>
-that fixes this problem (<a href="http://clapf.acts.hu/clapf-0.3.28-rc1.tar.gz">
-http://clapf.acts.hu/clapf-0.3.28-rc1.tar.gz</a>)<p>
-
-If you choose to upgrade please read its example.conf some new
-variables has been added or altered (particularly the spam_smtp_addr
-and spam_smtp_port variables).<p>
-
-OR<p>
-
-<b>B) configure your MTA to reject messages having NUL characters.</b>
+Though clapf does its best to handle such a mail, you may
+<b>configure your MTA to reject messages having NUL characters.</b>
 Please note that Victor Duchovni wrote the following (2004.09.28):<p>
 
 <i>"Postfix dictionary lookup API uses NUL terminated keys. It is
@@ -144,25 +113,15 @@ RFC822-text file... et voila, you have an mbox!</i><p>
 
 
 
-<a name="ss16">Clapf failed to read raw tokens file</a><p>
-
-A similar message in the syslog means that clapf cannot read the raw token file.<p/>
-
-Clapf is a statistical filter application. It works on word (token) probabilities. It
-has to know what the spamicity value of the given token is. So you have to create the
-token database with either the kcdb.sh or the kcdb_mysql.sh utility before use clapf.<p/>
-
-If you have configured clapf with ./configure <i>--enable-hash-db</i> it would rather
-use a file called tokens.raw instead of the regular CBD file called tokens.cdb by default.<p/>
-
-The token database creator scripts (kcdb.sh or kcdb_mysql.sh) would make the tokens.raw
-file for you. When created put it to <i>/opt/av</i> (or whatever directory you configured
-in clapf.conf).<p/>
-
-Please note that clapf needs only read permissions on the tokens file (tokens.cdb or tokens.raw).<p/>
-
-
 <center><a href="index.html">home</a></center><p>
+
+<script src="http://www.google-analytics.com/urchin.js" type="text/javascript">
+</script>
+<script type="text/javascript">
+_uacct = "UA-1610427-1";
+urchinTracker();
+</script>
+
 
 </blockquote>
 </body></html>

@@ -9,92 +9,53 @@
 
 This documentation describes how to create the initial token database.<p/>
 
-Clapf supports the following database backends: CDB and MySQL. Each has its own pros and cons.<p/>
-
-<table border="1">
-   <tr>
-      <th>Backend</th>
-      <th>Pros</th>
-      <th>Cons</th>
-   </tr>
-   <tr>
-      <td>CDB</td>
-      <td>Extremly fast, smaller size</td>
-      <td>Read-only, must be recreated after each train, difficult user customisation</td>
-   </tr>
-   <tr>
-      <td>MySQL</td>
-      <td>Simple training, easy customisation for users</td>
-      <td>Slower than CDB</td>
-   </tr>
-</table><p/>
-
-
-<h3>Using the CDB backend</h3>
-
-Install the <a href="http://www.corpit.ru/mjt/tinycdb.html">tinycdb</a> package then configure
-and compile clapf with the --with-tokendb=cdb option.<p/>
-
-Issue the following command and that's all. It will create a file named tokens.cdb
-copy it where tokensfile points in your clapf.conf file, and you are done<p>
-
-<pre>
-sh util/kcdb.sh /path/to/HAM /path/to/SPAM
-</pre>
-
-HAM and SPAM are either RFC-822 (mbox) or Maildir format mailboxes containing only ham (good email)
-and spam (no need to explain) respectively. I recommend you to include at least 1000
-messages in both ham and spam corpus (or better ~2000 messages in each corpus).<p/>
-
-
 <h3>Using the MySQL backend</h3>
 
 Have a working <a href="http://www.mysql.com/">MySQL database</a>. Configure and compile clapf
 with the --with-tokendb=mysql option.<p/>
 
-Create a user account and a database dedicated to clapf and put the mysql account
-information to a file eg. my.cnf (be sure to set proper permissions on my.cnf).
-The my.cnf file should look like this:<p/>
+Create a dedicated MySQL user and database:<p/>
+
+<pre>
+mysql -u root -p
+mysql>create database clapf;
+mysql>grant all privileges on clapf.* to clapf@localhost identified by 'verystrongpassword';
+mysql>flush privileges;
+mysql>quit;
+</pre>
+
+Create a my.cnf file (eg. <i>/usr/local/share/clapf/.my.cnf</i>) :<p/>
 
 <pre>
 [mysql]
 
 database = clapf
 user = clapf
-password = someuncrackablepassword
-
+password = verystrongpassword
 </pre>
 
-Now execute the following command:<p/>
 
-<pre>
-sh util/kcdb_mysql.sh /path/to/HAM /path/to/SPAM /path/to/my.cnf
-</pre>
-
-HAM and SPAM are either RFC-822 (mbox) or Maildir format mailboxes containing only ham
-(good email) and spam (no need to explain) respectively. I recommend you to include at
-least 1000 messages in both ham and spam corpus (or better ~2000 messages in each corpus).<p/>
-
-The kcdb_mysql.sh utility creates the necessary tables, puts the tokens in and
-creates a cdb file as well if you have the cdb utility in your PATH.<p/>
-
-Set the following variables in clapf.conf:<p>
+Set the MySQL account parameters in clapf.conf:<p/>
 
 <pre>
 mysqlhost=127.0.0.1
 mysqlport=3306
 mysqluser=clapf
-mysqlpwd=yourveryheavypassword
+mysqlpwd=verystrongpassword
 mysqldb=clapf
-mysqltokentable=t_token
-mysqlmisctable=t_misc
-mysqlusertable=user
-mysqltraininglogtable=t_train_log
-mysqlqueuetable=t_queue
-mysqlstattable=t_stat
 </pre>
 
-Clapf is ready to read the tokens from the MySQL tables.<p/>
+If you want to connect via a Unix domain socket:<p/>
+
+<pre>
+mysqlsocket=/var/run/mysql/mysql.sock
+mysqluser=clapf
+mysqlpwd=verystrongpassword
+mysqldb=clapf
+</pre>
+
+Important! Do not use *both* mysqlsocket and mysqlhost + mysqlport parameters.<p/>
+
 
 I recommend you to configure the <a href="http://dev.mysql.com/doc/refman/5.0/en/query-cache-configuration.html">query cache</a>
 to allow faster lookups. Be careful with these settings and always test your configuration for the
@@ -124,9 +85,24 @@ Query OK, 0 rows affected (0.00 sec)
 
 You are also free to do other tuning to make MySQL even faster, consult the <a href="http://dev.mysql.com/doc/">MySQL documentation</a>.<p/>
 
-See the <a href="training.html">training paper</a> for how to train the token database</a>.<p/>
+
+
+<h3>Using the SQLite backend</h3>
+
+Have <a href="http://www.sqlite.org/">SQLite3</a> installed and you are done. No special prerequisites are necessary.
+Be sure to configure and compile clapf with the --with-tokendb=sqlite3 option.
+<p/>
+
+
 
 <center><a href="index.html">home</a></center><p>
+
+<script src="http://www.google-analytics.com/urchin.js" type="text/javascript">
+</script>
+<script type="text/javascript">
+_uacct = "UA-1610427-1";
+urchinTracker();
+</script>
 
 
 </body></html>

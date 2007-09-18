@@ -5,7 +5,7 @@
 train \- train the MySQL database with a single RFC-822 format message
 .SH "SYNOPSIS"
 .LP 
-train -c <configuration file> [-S <spam message> | -H <ham message>]
+train -c <configuration file> [-S <spam message> | -H <ham message>] [-u <uid>]
 .SH "DESCRIPTION"
 .LP 
 
@@ -14,6 +14,11 @@ parameters from the configuration file to know how to connect. Then it reads
 and parses the message file containing a RFC-822 formatted email and inserts
 or updates the corresponding tokens. A single message is either ham or spam
 so you cannot use the -S and -H switches together.
+
+You may specify the user id if you want to train a specific user, or it's
+the global database (uid=0).
+
+Please note that the clapf user id has nothing to do with Unix user ids.
 
 The train utility is also suitable to handle Maildir format mailboxes.
 
@@ -46,6 +51,14 @@ Train the database with a spam message:
 Train the database with a ham message:
 .TP
 \fBtrain -c /usr/local/etc/clapf.conf -H letter2
+
+
+.TP
+Train the database with a spam message for user joe who has uid=2001:
+.TP
+\fBtrain -c /usr/local/etc/clapf.conf -S letter1 -u 2001
+
+
 
 .SH "FILES"
 .LP

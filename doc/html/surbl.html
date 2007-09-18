@@ -28,7 +28,7 @@ surbl_domain=multi.surbl.org,multi.uribl.com,spamuri.yourdomain.com
 Let's say you want to create your own local uribl list. Edit perl/uribl.pl script and set the
 $dom and @dnsip variables. You need the Net::DNS Perl module to run this script.<p>
 
-After you have created the token database, run the following command:
+After you have created the token database, run the following command (spam.tmp will be created):
 
 <pre>
 grep ^URL\* spam.tmp | perl/uribl.pl > rbl.data
@@ -85,7 +85,28 @@ Zspamuri.yourdomain.com:postmaster.yourdomain.com:2006051601:28800:10800:604800:
 And of course, your spamuri zone can be private.<p>
 
 
+<h2>RBL support</h2>
+
+You may use an RBL list to determine whether the message is spam or not. If clapf
+is unable to determine whether the message is ham or spam (=unsure), and the IP-address
+of the sending host is on the RBL list, clapf will mark the message as spam.<p/>
+
+To enable this feature set the rbl_domain parameter, eg.<p/>
+
+<pre>
+rbl_domain=cbl.abuseat.org,local-rbl.domain
+</pre>
+
+
 <center><a href="index.html">home</a></center><p>
+
+<script src="http://www.google-analytics.com/urchin.js" type="text/javascript">
+</script>
+<script type="text/javascript">
+_uacct = "UA-1610427-1";
+urchinTracker();
+</script>
+
 
 </blockquote>
 </body></html>

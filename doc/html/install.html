@@ -10,106 +10,140 @@
 
 <strong>Prerequisites</strong><p/>
 
-Install postfix 2.x: <a href="http://www.postfix.org/">http://www.postfix.org/</a>.
-Clapf was originally designed to work with postfix but you may use it with any
-product capable of LMTP/SMTP communication. Clapf can be run from the maildrop LDA as
-well as with any SMTP server. Appliance mode is also possible.<p/>
-
-I strongly recommend you to install one of the supported antivirus products:<p/>
-
-<ul>
-<li>clamav-0.90+: <a href="http://www.clamav.net/">http://www.clamav.net/</a></li>
-<pre>
-     Under FreeBSD I recommend you to compile clamav with the following options:
-     --disable-cr --disable-pthreads --disable-bzip2 --enable-bigstack
-</pre>
-
-<li>AVG Linux: <a href="http://free.grisoft.com/">http://free.grisoft.com/</a></li>
-<li>avast!: <a href="http://www.avast.com/">http://www.avast.com/</a></li>
-<li>Kaspersky: <a href="http://www.kaspersky.com/">http://www.drweb.com/</a></li>
-<li>Dr.Web: <a href="http://www.drweb.com/">http://www.drweb.com/</a></li>
-</ul>
-
-If you want to use the antispam module, decide what database backend to use.
-Install the <a href="http://www.corpit.ru/mjt/tinycdb.html">tinycdb package</a>
-in case of the CDB backend or a current <a href="http://www.mysql.com/">MySQL</a>
-server.<p/>
-
-Optional packages:<p/>
-
-<ul>
-<li>GNU gsl library: <a href="http://www.gnu.org/software/gsl/">http://www.gnu.org/software/gsl/</a></li>
-<li>Maildrop: <a href="http://www.courier-mta.org/maildrop/">http://www.courier-mta.org/maildrop/</a></li>
-</ul>
-
-
-<strong>Install</strong><p>
+Mandatory:<p/>
 
 <ol>
-<li>edit parameters in config.h (if you want)</li>
+<li>You have a working database. Clapf supports <a href="http://www.mysql.com/">MySQL</a>
+and <a href="http://www.sqlite.org/">SQLite3</a>.</li>
+<li>using clapf in LDA mode, you need <a href="http://www.courier-mta.org/maildrop/">maildrop</a>.</li>
 
-<li><pre>./configure</pre></li>
+</ol>
 
-    The antispam module is turned on and no antivirus engine is selected by default.<p/>
+Recommended/optional:<p/>
 
-    --enable-libclamav: build <a href="http://www.clamav.net/">libclamav</a> antivirus support<p/>
-
-    --enable-clamd: build <a href="http://www.clamav.net/">clamd</a> antivirus support<p/>
-
-    --enable-avg: build <a href="http://free.grisoft.com/">AVG Linux</a> antivirus support<p/>
-
-    --enable-avast: build <a href="http://www.avast.com/">avast!</a> antivirus support<p/>
-
-    --enable-kav: build <a href="http://www.kaspersky.com/">Kaspersky Anti-Virus for File and Mail Servers</a> support<p/>
-
-    --enable-drweb: build <a href="http://www.drweb.com/">Dr.Web</a> antivirus support.<p/>
-
-    --enable-blackhole: build the blackhole feature<p/>
-
-    --enable-cgi: build the web interface to train the database (of course need a working web server)<p/>
-
-    --enable-hash-db: build the memory based hash database (expect a few MB extra memory per processes)<p/>
-
-    --enable-case: use case sensitive tokens<p/>
-
-    --enable-mysql: add <a href="http://www.mysql.com/">MySQL</a> support<p/>
-
-    --enable-surbl: build <a href="surbl.html">SURBL</a> support<p/>
-
-    --enable-blackhole: build the <a href="blackhole.html">blackhole</a> feature (MySQL is needed for this)<p/>
-
-    --with-userdb[=ldap|mysql]: use either LDAP or MySQL stored <a href="user.html">user preferences</a> data<p/>
-
-    --with-tokendb[=cdb|mysql]: use either CDB or MySQL backend<p/>
-
-    <pre>(note: if you have MySQL installed, the command line training utility is automatically built)</pre>
-
-    --disable-antispam: do not build the antispam feature (note: disabling *both* antivirus and antispam support makes no sense)<p/>
+<ul>
+<li>Recommended: install a supported anti-virus application. See the <a href="av.html">
+Antivirus support</a> page for the details.</li>
+<li>Optional: <a href="http://www.gnu.org/software/gsl/">GNU gsl library</a></li>
+</ul>
 
 
+<strong>Unpack and compile clapf</strong><p/>
+
+<pre>
+tar zxvf clapf-x.y.zzz.tar.gz
+cd clapf-x.y.zzz
+./configure --with-tokendb=mysql --enable-surbl --enable-blackhole
+make
+su -c 'make install'
+</pre>
+
+<ol>
+
+<li>Set up the <a href="tokendatabase.html">database backend</a></li>
+
+<li>Perform the <a href="training.html">initial training</a></li>
+
+<li>Users may train the token database using a <a href="training2.html">command line tool, a cgi form</a>
+or by forwading the email</li>
+
+<li>Configure postfix to allow the plus (+) sign as a recipient delimiter. Set the following in main.cf,
+then issue a <i>postfix reload</i> command.
+
+<pre>
+recipient_delimiter = +
+</pre>
+</li>
+
+<li>
+Add the users to the clapf database:
+
+<pre>
+clapf_admin -u joe -e joe@mail.domain.com
+</pre>
+
+You may give a specific (and unique) id with the '-i' command line switch, eg.
+
+<pre>
+clapf_admin -u joe -e joe@mail.domain.com -i 1002
+</pre>
+
+Please note that this user id has nothing to do with Unix user ids.
+</li>
+
+<li>
+Set up a periodic (ie. using a cron job) purge of the stored messages from the database:
+
+<pre>
+1 2 * * * echo "DELETE from t_queue where UNIX_TIMESTAMP() - ts > 604800" | /usr/bin/mysql --defaults-file=/usr/local/share/clapf/.my.cnf
+</pre>
+
+</li>
+
+
+<li>If you want to use clapf from an LDA refer to 'using spamdrop' otherwise see the 'using the content filter' section</li>
+
+
+</ol>
+
+<strong>Using spamdrop</strong><p/>
+
+<ol>
+
+<li>Setup the .forward file:
+
+<pre>
+|/usr/local/bin/maildrop
+</pre>
+</li>
+
+
+<li>Configure the global maildroprc file (/etc/maildroprc):
+
+<pre>
+if(/^To:/:h && /\+spam@/)
+{
+        `/usr/local/bin/spam-fwd-train`
+        exit
+}
+if(/^To:/:h && /\+ham@/)
+{
+        `/usr/local/bin/ham-fwd-train`
+        exit
+}
+
+xfilter "/usr/local/bin/spamdrop -p"
+</pre>
+
+The first two blocks let you train the token database by forwarding the email as an attachment to
+user+ham@domain and user+spam@domain respectively.
+
+The last line passes the email to spamdrop, then it reads the email the put some stuff to the email header.
+If it's a spam, spamdrop inserts the "<i>X-Clapf-spamicity: Yes</i>" header line and may mark the Subject
+line too. After downloading the email via POP3/IMAP4/... you can sort your spam to the junk folder or do
+whatever you want with it.<p/>
+
+Of course, per user maildrop configuration is also possible with the users' <i>~/.mailfilter</i> file.</li>
+
+
+</ol>
 
 
 
-    You may try to set CPPFLAGS and LDFLAGS if you have some headers/libraries on non-standard places, eg.<p/>
+<strong>Using the content filter</strong><p/>
 
-    <pre>CPPFLAGS=-I/usr/local/mysql/include LDFLAGS=-L/usr/local/mysql/lib ./configure .....</pre>
+<ol>
 
-<li><pre>make clean all</pre>
+<li>Create a dedicated and unprivileged user to run clapf</li>
 
-<li><pre>su -c 'make install'</pre>
+<pre>
+groupadd av
+useradd -g av -d /opt/av -s /bin/sh av
+usermod -L av
+</pre>
 
-This copies binaries, some shell and Perl scripts to $PREFIX/bin, example.conf to $PREFIX/etc/clapf.conf as well as the manual
-pages to $PREFIX/man. The cgi scripts must be manually copied to the cgi-bin directory.<p/>
+<li>Create the necessary directories</li>
 
-<li>create a dedicated group and user for clapf such as "av"
-
-   <pre>groupadd av; useradd -g av -d /opt/av -s /bin/sh av</pre>
-
-<li>lock the user out:
-
-   <pre>usermod -L av</pre>
-
-<li>create directories for clapf</li>
 <pre>
 mkdir -p /opt/av/quarantine
 mkdir /opt/av/spamquarantine
@@ -119,51 +153,31 @@ mkdir -p /opt/av/saved/ham
 mkdir /opt/av/saved/spam
 chown -R av:av /opt/av
 chmod 711 /opt/av
+chmod 711 /opt/av/tmp
 chmod 770 /opt/av/spamquarantine
-chgrp httpd /opt/av/spamquarantine
+chgrp www-data /opt/av/spamquarantine
 </pre>
-where 'httpd' is the group of the user running your web server.<p>
 
-If you plan to put clapf into a chroot jail make sure to create a /tmp directory there.<p>
+where 'www-data' is the group of the user running your web server.
+Skip the last line if you do not have a web server.<p/>
 
-<li>Create the token database. Read the <a href="tokendatabase.html">token database</a> paper.<p>
+If you plan to put clapf into a chroot jail make sure to create a /tmp directory there.<p/>
 
-
-<li>Now look and edit the configuration file called /usr/local/etc/clapf.conf.
-You may found the default values in it along with a short description.<p>
-
-<li>start the filter application:
+<li>Start the clapf daemon:
 
 <pre>
-su av -c 'export TMPDIR=/opt/av; /usr/local/bin/clapf -c /usr/local/etc/clapf.conf &'
+/usr/local/bin/clapf -d
 </pre>
+</li>
 
-Possible switches:
-<pre>
-      -V: show version and exit
-      -c: configuration file
-</pre>
-
-
-</ol>
-
-The util/check_clapf.sh script is planned to run regularly to check whether clapf is
-running and restart it if necessary.<p>
-
-Notice the following (or similar) messages in syslog (typically /var/log/maillog):<p>
+<li>Edit /etc/postfix/master.cf and the following lines</li>
 
 <pre>
-Oct 12 13:26:43 thorium clapf[15851]: reloaded config: /usr/local/etc/clapf.conf
-Oct 12 13:26:43 thorium clapf[15851]: clapf 0.3.xx starting
-Oct 12 13:26:45 thorium clapf[15851]: reloaded with 40544 viruses
+127.0.0.1:10026     inet  n      -      n      -      10      smtpd -o content_filter=
+					-o receive_override_options=no_address_mappings
 </pre>
-<p>
 
-
-<strong>Configure postfix</strong><p>
-
-<ol>
-<li>add the following line to main.cf:
+<li>Edit /etc/postfix/main.cf and add the following lines</li>
 
 <pre>
 content_filter = lmtp:[127.0.0.1]:10025
@@ -171,34 +185,75 @@ default_destination_concurrency_limit = 10
 smtpd_recipient_limit = 128
 </pre>
 
-<li>add the following lines to master.cf:
+<li>Issue the <i>postfix reload</i> command</li>
 
-<pre>
-127.0.0.1:10026     inet  n      -      n      -      10      smtpd -o content_filter=
-					-o receive_override_options=no_address_mappings
-</pre>
-
-<li>restart postfix
-
-<pre>
-postfix reload
-</pre>
-
-</ol>
-<p>
+<li>Further notes:<p/>
 
 Clapf can handle a finite number of recipients, 128 by default. If you want
 more recipients in a single session edit MAX_RCPT_TO in config.h then (re)compile clapf
 and adjust the <i>smtpd_recipient_limit</i> variable in main.cf. If you want
-less than 128 you should only adjust the <i>smtpd_recipient_limit</i> variable in main.cf.<p>
+less than 128 you should only adjust the <i>smtpd_recipient_limit</i> variable in main.cf.<p/>
 
-Please note that if you want to increase the concurrancy, modify the
+Please note that if you want to increase the concurrency, modify the
 <b>default_destination_concurrency_limit</b> in main.cf, the <b>127.0.0.1:10026</b>
 entry in master.cf and the <b>max_connections</b> in clapf.conf,
-then reload postfix.<p>
+then reload postfix.
 
-The <b>max_connections</b> should be greater than default_destination_concurrency_limit.<br>
-max_connections &gt;= default_destination_concurrency_limit + 1<p>
+The <b>max_connections</b> should be greater than default_destination_concurrency_limit:<p/>
+
+max_connections &gt;= default_destination_concurrency_limit + 1<p/>
+</li>
+
+</ol>
+
+
+
+
+<strong>Handling virtual users</strong><p/>
+
+Clapf is able to handle virtual users. All you have to do is to add them to the clapf database with the
+clapf_admin utility (or direct sql commands) and set up 2 training aliases for them.<p/>
+
+You may choose to have maildrop handle all incoming emails, see <a href="http://www.postfix.org/MAILDROP_README.html">
+Postfix + Maildrop Howto</a> or you may create two system accounts and setup maildrop for them as follows:
+
+
+<pre>
+groupadd ham; useradd -g ham -d /home/ham -s /bin/sh ham
+usermod -L ham
+groupadd spam; useradd -g spam -d /home/spam -s /bin/sh spam
+usermod -L spam
+
+mkdir ~ham; chown -R ham:ham ~ham
+mkdir ~spam; chown -R spam:spam ~spam
+
+# setup .forward files
+echo "|/usr/local/bin/maildrop" > ~ham/.forward
+echo "|/usr/local/bin/maildrop" > ~spam/.forward
+
+# create maildrop configuration files as follows:
+echo '`/usr/local/bin/ham-fwd-train`' > ~ham/.mailfilter
+echo '`/usr/local/bin/spam-fwd-train`' > ~spam/.mailfilter
+
+# fix owner and permissions
+chown ham:ham ~ham/.mailfilter
+chown spam:spam ~spam/.mailfilter
+chmod 600 ~ham/.mailfilter
+chmod 600 ~spam/.mailfilter
+</pre>
+
+In this case users should submit their spam to spam+user@domain and their ham to
+ham+user@domain.<p/>
+
+<p/>
+
+
+<strong>What next?</strong><p/>
+
+You may be interested in the <a href="blackhole.html">blackhole (or minefield)</a> feature,
+making some <a href="stats.html">statistics</a>, <a href="surbl.html">SURBL</a> support, or some
+of the <a href="antispam.html">anti-spam details</a>.
+<p/>
 
 If you use a language other than iso-8859-2 you should <strong>review and adjust</strong>
 the ijc.h file for junk characters and trans.h for valid characters. If you edit these files
@@ -206,6 +261,12 @@ I will include them in the source tree to make them available for others.<p/>
 
 <center><a href="index.html">home</a></center><p>
 
+<script src="http://www.google-analytics.com/urchin.js" type="text/javascript">
+</script>
+<script type="text/javascript">
+_uacct = "UA-1610427-1";
+urchinTracker();
+</script>
 
-</blockquote>
+
 </body></html>

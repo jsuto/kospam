@@ -15,7 +15,7 @@ Mandatory:<p/>
 <ol>
 <li>You have a working database. Clapf supports <a href="http://www.mysql.com/">MySQL</a>
 and <a href="http://www.sqlite.org/">SQLite3</a>.</li>
-<li>using clapf in LDA mode, you need <a href="http://www.courier-mta.org/maildrop/">maildrop</a>.</li>
+<li><a href="http://www.courier-mta.org/maildrop/">Maildrop</a></li>
 
 </ol>
 
@@ -202,6 +202,23 @@ then reload postfix.
 The <b>max_connections</b> should be greater than default_destination_concurrency_limit:<p/>
 
 max_connections &gt;= default_destination_concurrency_limit + 1<p/>
+</li>
+
+<li>Configure training with maildrop at the global maildroprc file (/etc/maildroprc):
+
+<pre>
+if(/^To:/:h && /\+spam@/)
+{
+        `/usr/local/bin/spam-fwd-train`
+        exit
+}
+if(/^To:/:h && /\+ham@/)
+{
+        `/usr/local/bin/ham-fwd-train`
+        exit
+}
+</pre>
+
 </li>
 
 </ol>

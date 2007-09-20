@@ -1,5 +1,5 @@
 /*
- * sql.c, 2007.09.08, SJ
+ * sql.c, 2007.09.20, SJ
  */
 
 #include <stdio.h>
@@ -51,12 +51,12 @@ float SQL_QUERY(qry QRY, char *tokentable, char *token, struct node *xhash[MAXHA
    TE = sqlite3_qry(QRY.db, QRY.sockfd, tokentable, token, QRY.uid);
 #endif
 
-   if(TE.nham == 0 && TE.nspam == 0) return r;
-
    /* add token to list if not mature enough, 2007.07.09, SJ */
 
    if(QRY.uid > 0 && TE.nham < TUM_LIMIT && TE.nspam < TUM_LIMIT)
       addnode(xhash, token, 0 , 0);
+
+   if(TE.nham == 0 && TE.nspam == 0) return r;
 
 
    /* if the token has occurred at least N=2 times, 2007.06.13, SJ */

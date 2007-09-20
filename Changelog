@@ -1,5 +1,11 @@
 0.3.30:
 
+2007.09.20, SJ
+
+Added an autolearning feature. Set initial_1000_learning=1 in clapf.conf
+if you do not want to perform an initial training for any reason.
+(config.h, cfg.c, cfg.h, bayes.c, example.conf)
+
 2007.09.18, SJ
 
 Removed the unnecessary reference to the openssl/* header file.
@@ -10,6 +16,9 @@ Issue a NO_SUBJECT spammy token if we have no valuable subject token
 
 Fixing HTML documentation.
 (doc/html/*)
+
+Moved the TUM training stuff to the bayes_file() function.
+(bayes.c)
 
 2007.09.16, SJ
 

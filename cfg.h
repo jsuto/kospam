@@ -1,5 +1,5 @@
 /*
- * cfg.h, 2007.08.28, SJ
+ * cfg.h, 2007.09.20, SJ
  */
 
 #define MAXVAL 128
@@ -108,6 +108,7 @@ struct __config {
 
    int training_mode;
    int group_type;
+   int initial_1000_learning;
 
    int store_metadata;
 

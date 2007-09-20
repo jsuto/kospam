@@ -219,11 +219,10 @@ double eval_tokens(sqlite3 *db, char *spamfile, struct __config cfg, struct _sta
 double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
 #endif
 
-   unsigned long n=0;
+   unsigned long n = 0;
    struct _token *p, *q;
    float spaminess, spaminess2;
    int i;
-   char buf[MAXBUFSIZE];
    struct node *Q;
 #ifdef HAVE_SURBL
    struct node *urlhash[MAXHASH];
@@ -240,7 +239,6 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
    spaminess = spaminess2 = DEFAULT_SPAMICITY;
 
    p = state.first;
-   n = 0;
 
    inithash(shash);
    inithash(s_phrase_hash);
@@ -535,46 +533,7 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
    clearhash(B_hash);
 
 
-   /*
-    * train with tokens not mature enough, if we are using TUM mode
-    * AND
-    * we are certain about the message (ie. spam or ham)
-    * AND
-    * we are using a shared group or we found the user
-    */
-
-#ifndef HAVE_CDB
-   if(cfg.training_mode == T_TUM && (QRY.uid > 0 || cfg.group_type == GROUP_SHARED) && (spaminess >= cfg.spam_overall_limit || spaminess < cfg.max_ham_spamicity)){
-      gettimeofday(&tv1, &tz);
-
-      if(spaminess >= cfg.spam_overall_limit){
-         n = my_walk_hash(QRY, 1, SQL_TOKEN_TABLE, tumhash, T_TOE);
-         snprintf(buf, MAXBUFSIZE-1, "update %s set nspam=nspam+1 WHERE uid=%ld", SQL_MISC_TABLE, QRY.uid);
-      }
-      else {
-         n = my_walk_hash(QRY, 0, SQL_TOKEN_TABLE, tumhash, T_TOE);
-         snprintf(buf, MAXBUFSIZE-1, "update %s set nham=nham+1 WHERE uid=%ld", SQL_MISC_TABLE, QRY.uid);
-      }
-
-      gettimeofday(&tv2, &tz);
-
-      syslog(LOG_PRIORITY, "%s: TUM training %ld tokens for uid: %ld %ld [ms]", spamfile, n, QRY.uid, tvdiff(tv2, tv1)/1000);
-
-   #ifdef HAVE_MYSQL
-      mysql_real_query(&mysql, buf, strlen(buf));
-   #endif
-   #ifdef HAVE_SQLITE3
-      if(sqlite3_prepare_v2(db, buf, -1, &pStmt, pzTail) == SQLITE_OK)
-         sqlite3_step(pStmt);
-
-      sqlite3_finalize(pStmt);
-   #endif
-
-      snprintf(trainbuf, SMALLBUFSIZE-1, "%sTUM\r\n", cfg.clapf_header_field);
-   }
-#endif
-
-   clearhash(tumhash);
+   /* TUM training was here ... */
 
 
 #ifdef HAVE_SURBL
@@ -586,6 +545,13 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
    if(spaminess > cfg.max_ham_spamicity && spaminess < cfg.spam_overall_limit && found_on_rbl > 0)
       return cfg.spaminess_of_caught_by_surbl;
 #endif
+
+
+   /* if we shall mark the message as spam because of the embedded image */
+
+   if(spaminess < cfg.spam_overall_limit && spaminess > cfg.max_ham_spamicity && has_embed_image == 1){
+      return cfg.spaminess_of_embed_image;
+   }
 
 
    /* fix spaminess value if we have to */
@@ -613,6 +579,7 @@ double bayes_file(char *cdbfile, char *spamfile, struct _state state, struct ses
 
    char buf[MAXBUFSIZE], *p;
    float spaminess, ham_from=0, spam_from=0;
+   unsigned long n = 0;
 
 #ifdef HAVE_MYSQL
    struct te TE;
@@ -695,8 +662,7 @@ double bayes_file(char *cdbfile, char *spamfile, struct _state state, struct ses
 #endif
 
 #ifndef HAVE_CDB
-   if(QRY.ham_msg <= 0 || QRY.spam_msg <= 0){
-      //free_and_print_list(state.first, 0);
+   if((QRY.ham_msg <= 0 || QRY.spam_msg <= 0) && cfg.initial_1000_learning == 0){
       syslog(LOG_PRIORITY, "%s: %s", p, ERR_MYSQL_DATA);
       return DEFAULT_SPAMICITY;
    }
@@ -775,6 +741,53 @@ double bayes_file(char *cdbfile, char *spamfile, struct _state state, struct ses
 #endif
 
 
+
+   /*
+    * train with tokens not mature enough, if we are using a shared group or we found the user AND
+    *
+    * we have trained <1000 messages OR we are certain about the message (ie. spam or ham) and using TUM mode
+    */
+
+#ifndef HAVE_CDB
+   if( (QRY.uid > 0 || cfg.group_type == GROUP_SHARED) && 
+       (
+         (cfg.training_mode == T_TUM && (spaminess >= cfg.spam_overall_limit || spaminess < cfg.max_ham_spamicity)) ||
+         (cfg.initial_1000_learning == 1 && (QRY.ham_msg < NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED || QRY.spam_msg < NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED))
+       )
+   ){
+
+      gettimeofday(&tv1, &tz);
+
+      if(spaminess >= cfg.spam_overall_limit){
+         n = my_walk_hash(QRY, 1, SQL_TOKEN_TABLE, tumhash, T_TOE);
+         snprintf(buf, MAXBUFSIZE-1, "update %s set nspam=nspam+1 WHERE uid=%ld", SQL_MISC_TABLE, QRY.uid);
+      }
+      else {
+         n = my_walk_hash(QRY, 0, SQL_TOKEN_TABLE, tumhash, T_TOE);
+         snprintf(buf, MAXBUFSIZE-1, "update %s set nham=nham+1 WHERE uid=%ld", SQL_MISC_TABLE, QRY.uid);
+      }
+
+      gettimeofday(&tv2, &tz);
+
+      syslog(LOG_PRIORITY, "%s: TUM training %ld tokens for uid: %ld %ld [ms]", spamfile, n, QRY.uid, tvdiff(tv2, tv1)/1000);
+
+   #ifdef HAVE_MYSQL
+      mysql_real_query(&mysql, buf, strlen(buf));
+   #endif
+   #ifdef HAVE_SQLITE3
+      if(sqlite3_prepare_v2(db, buf, -1, &pStmt, pzTail) == SQLITE_OK)
+         sqlite3_step(pStmt);
+
+      sqlite3_finalize(pStmt);
+   #endif
+
+      snprintf(trainbuf, SMALLBUFSIZE-1, "%sTUM\r\n", cfg.clapf_header_field);
+   }
+#endif
+
+   clearhash(tumhash);
+
+
 #ifdef HAVE_QCACHE
    close(QRY.sockfd);
 #endif
@@ -782,12 +795,6 @@ double bayes_file(char *cdbfile, char *spamfile, struct _state state, struct ses
 #ifdef HAVE_CDB
    close_cdbs(tokenscdb);
 #endif
-
-   /* if we shall mark the message as spam because of the embedded image */
-
-   if(spaminess < cfg.spam_overall_limit && spaminess > cfg.max_ham_spamicity && has_embed_image == 1){
-      return cfg.spaminess_of_embed_image;
-   }
 
 
    return spaminess;

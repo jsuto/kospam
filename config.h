@@ -1,5 +1,5 @@
 /*
- * config.h, 2007.08.24, SJ
+ * config.h, 2007.09.20, SJ
  */
 
 #include <syslog.h>
@@ -117,6 +117,7 @@
 #define NUMBER_OF_GOOD_FROM 10
 #define MAX_ATTACHMENTS 8
 #define MAX_ITERATIVE_TRAIN_LOOPS 5
+#define NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED 1000
 
 #define MAX_CGI_SUBJECT_LEN 50
 #define MAX_CGI_FROM_LEN 50

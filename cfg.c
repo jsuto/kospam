@@ -1,5 +1,5 @@
 /*
- * cfg.c, 2007.08.24, SJ
+ * cfg.c, 2007.09.20, SJ
  */
 
 #include <stdio.h>
@@ -383,6 +383,9 @@ struct __config read_config(char *configfile){
 
                   if(strcmp(key, "group_type") == 0)
                      cfg.group_type = atoi(val);
+
+                  if(strcmp(key, "initial_1000_learning") == 0)
+                     cfg.initial_1000_learning = atoi(val);
 
                   if(strcmp(key, "store_metadata") == 0)
                      cfg.store_metadata = atoi(val);

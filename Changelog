@@ -6,6 +6,9 @@ Added an autolearning feature. Set initial_1000_learning=1 in clapf.conf
 if you do not want to perform an initial training for any reason.
 (config.h, cfg.c, cfg.h, bayes.c, example.conf)
 
+Fixed a bug preventing clapf to learn unknown tokens.
+(sql.c)
+
 2007.09.18, SJ
 
 Removed the unnecessary reference to the openssl/* header file.

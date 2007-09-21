@@ -50,7 +50,8 @@ import_tokens(){
    
    echo "LOAD DATA LOCAL INFILE '$TEMP' INTO TABLE t_token FIELDS TERMINATED BY ' '" | mysql --defaults-file=$MYCNF
 
-   echo "INSERT INTO t_misc (nham, nspam, uid) VALUES($NHAM, $NSPAM, 0)" | mysql --defaults-file=$MYCNF
+   #echo "INSERT INTO t_misc (nham, nspam, uid) VALUES($NHAM, $NSPAM, 0)" | mysql --defaults-file=$MYCNF
+   echo "UPDATE t_misc SET nham=$NHAM, nspam=$NSPAM WHERE uid=0" | mysql --defaults-file=$MYCNF
 
    TS2=`date +%s`
    echo `expr $TS2 - $TS1` " [sec]"

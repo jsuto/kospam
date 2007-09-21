@@ -32,7 +32,8 @@ import_tokens(){
 
    prepare-sql ham.tmp spam.tmp | sqlite3 $DB
 
-   echo "INSERT INTO t_misc (nham, nspam, uid) VALUES($NHAM, $NSPAM, 0);" | sqlite3 $DB
+   #echo "INSERT INTO t_misc (nham, nspam, uid) VALUES($NHAM, $NSPAM, 0);" | sqlite3 $DB
+   echo "UPDATE t_misc SET nham=$NHAM, nspam=$NSPAM WHERE uid=0" | sqlite3 $DB
 
    TS2=`date +%s`
    echo `expr $TS2 - $TS1` " [sec]"

@@ -7,6 +7,8 @@ create table if not exists t_misc (
 
 create index t_misc_idx on t_misc(uid);
 
+INSERT INTO t_misc (nham, nspam, uid) VALUES(0, 0, 0);
+
 create table if not exists t_token (
 	token bigint unsigned not null,
 	uid smallint unsigned default 0,

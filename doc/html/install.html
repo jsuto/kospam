@@ -42,7 +42,7 @@ su -c 'make install'
 
 <li>Set up the <a href="tokendatabase.html">database backend</a></li>
 
-<li>Perform the <a href="training.html">initial training</a></li>
+<li>Perform the <a href="training.html">initial training</a>.</li>
 
 <li>Users may train the token database using a <a href="training2.html">command line tool, a cgi form</a>
 or by forwading the email</li>
@@ -68,7 +68,8 @@ You may give a specific (and unique) id with the '-i' command line switch, eg.
 clapf_admin -u joe -e joe@mail.domain.com -i 1002
 </pre>
 
-Please note that this user id has nothing to do with Unix user ids.
+Note 1: the user id has nothing to do with Unix user ids.<br/>
+Note 2: if you want a shared group set uid=0 (ie. "-i 0") for every user, and set group_type=0 in clapf.conf.<p/>
 </li>
 
 <li>

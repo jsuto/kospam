@@ -1,5 +1,10 @@
 0.3.30:
 
+2007.09.21, SJ
+
+Fixed training scripts.
+(clapf_admin.c, db-*sql, util/db_init*, doc/html/training.html)
+
 2007.09.20, SJ
 
 Added an autolearning feature. Set initial_1000_learning=1 in clapf.conf

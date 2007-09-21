@@ -1,5 +1,5 @@
 /*
- * clapf_admin.c, 2007.08.18, SJ
+ * clapf_admin.c, 2007.09.21, SJ
  */
 
 #include <stdio.h>
@@ -71,7 +71,7 @@ unsigned long next_uid(){
 
 
 int main(int argc, char **argv){
-   unsigned long uid=0;
+   unsigned long uid=-1;
    char buf[MAXBUFSIZE], *username=NULL, *email=NULL, *action="junk";
    char *configfile=CONFIG_FILE;
    int i;
@@ -98,7 +98,7 @@ int main(int argc, char **argv){
 
          case 'i' :
                     uid = atol(optarg);
-                    if(uid < 1){
+                    if(uid < 0){
                        printf("%s: %ld\n", ERR_INVALID_UID, uid);
                        return 1;
                     }
@@ -130,7 +130,7 @@ int main(int argc, char **argv){
 
    /* add user */
 
-   if(uid == 0) uid = next_uid();
+   if(uid == -1) uid = next_uid();
 
    snprintf(buf, MAXBUFSIZE-1, "INSERT INTO %s (username, email, uid, action) VALUES('%s', '%s', %ld, '%s')", SQL_USER_TABLE, username, email, uid, action);
 
@@ -153,16 +153,18 @@ int main(int argc, char **argv){
    }
 #endif
 
-   snprintf(buf, MAXBUFSIZE-1, "INSERT INTO %s (nham, nspam, uid) VALUES(0, 0, %ld)", SQL_MISC_TABLE, uid);
+   if(uid > 0){
+      snprintf(buf, MAXBUFSIZE-1, "INSERT INTO %s (nham, nspam, uid) VALUES(0, 0, %ld)", SQL_MISC_TABLE, uid);
 
-#ifdef HAVE_MYSQL
-   mysql_real_query(&mysql, buf, strlen(buf));
-#endif
-#ifdef HAVE_SQLITE3
-   sqlite3_prepare_v2(db, buf, -1, &pStmt, ppzTail);
-   sqlite3_step(pStmt);
-   sqlite3_finalize(pStmt);
-#endif
+   #ifdef HAVE_MYSQL
+      mysql_real_query(&mysql, buf, strlen(buf));
+   #endif
+   #ifdef HAVE_SQLITE3
+      sqlite3_prepare_v2(db, buf, -1, &pStmt, ppzTail);
+      sqlite3_step(pStmt);
+      sqlite3_finalize(pStmt);
+   #endif
+   }
 
 END:
 

@@ -32,6 +32,21 @@ Both of these commands creates the necessary tables, then parses the
 ham and the spam collections, breaks them down to tokens, and put them
 to the database tables.<p/>
 
+If you don't want to perform an initial training, just create the tables
+as follows and be sure to set initial_1000_learning=1 in clapf.conf:<p/>
+
+If using MySQL:
+
+<pre>
+mysql --defaults-file=/usr/local/share/clapf/.my.cnf < db-new.sql
+</pre>
+
+If using SQLite3:
+
+<pre>
+sqlite3 clapf.sdb < db-sqlite3.sql
+</pre>
+
 
 <center><a href="index.html">home</a></center><p>
 

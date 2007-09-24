@@ -1,5 +1,14 @@
 0.3.30:
 
+2007.09.24, SJ
+
+Do not perform RBL lookup + single tokens checking if the message has no
+no subject tokens unless it has <10 body tokens.
+(bayes.c)
+
+Adding some new documentation.
+(doc/html/group.html, doc/html/install.html)
+
 2007.09.21, SJ
 
 Fixed training scripts.

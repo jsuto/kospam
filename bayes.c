@@ -1,5 +1,5 @@
 /*
- * bayes.c, 2007.09.18, SJ
+ * bayes.c, 2007.09.24, SJ
  */
 
 #include <stdio.h>
@@ -354,7 +354,7 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
 
       /* if we have no subject token to evaluate */
 
-      if(state.n_subject_token == 0){
+      if(state.n_subject_token == 0 && state.n_body_token < 10){
          goto NEED_SINGLE_TOKENS;
       }
 
@@ -769,7 +769,7 @@ double bayes_file(char *cdbfile, char *spamfile, struct _state state, struct ses
 
       gettimeofday(&tv2, &tz);
 
-      syslog(LOG_PRIORITY, "%s: TUM training %ld tokens for uid: %ld %ld [ms]", spamfile, n, QRY.uid, tvdiff(tv2, tv1)/1000);
+      if(n > 0) syslog(LOG_PRIORITY, "%s: TUM training %ld tokens for uid: %ld %ld [ms]", spamfile, n, QRY.uid, tvdiff(tv2, tv1)/1000);
 
    #ifdef HAVE_MYSQL
       mysql_real_query(&mysql, buf, strlen(buf));

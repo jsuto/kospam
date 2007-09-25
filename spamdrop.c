@@ -52,7 +52,7 @@ int main(int argc, char **argv){
    struct _state state;
    struct __config cfg;
    char buf[MAXBUFSIZE], *configfile=CONFIG_FILE;
-   int i, n, x, fd, fd2, print_message=0, is_header=1, tot_len=0, put_subject_spam_prefix=0, sent_subject_spam_prefix=0;
+   int i, n, x, fd, fd2, print_message=0, is_header=1, tot_len=0, put_subject_spam_prefix=0, sent_subject_spam_prefix=0, is_spam=0;
    FILE *f;
 
    while((i = getopt(argc, argv, "c:p")) > 0){
@@ -123,8 +123,10 @@ int main(int argc, char **argv){
       if(mysql_real_connect(&mysql, cfg.mysqlhost, cfg.mysqluser, cfg.mysqlpwd, cfg.mysqldb, cfg.mysqlport, cfg.mysqlsocket, 0)){
          spaminess = bayes_file(mysql, sdata.ttmpfile, state, sdata, cfg);
 
+         if(spaminess >= cfg.spam_overall_limit && spaminess < 1.01) is_spam = 1;
+
          if(cfg.store_metadata == 1){
-            x = update_training_metadata(mysql, sdata.ttmpfile, sdata.uid, cfg);
+            x = update_training_metadata(mysql, sdata.ttmpfile, sdata.uid, cfg, is_spam);
             if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: update metadata: %d", sdata.ttmpfile, x);
          }
 
@@ -141,8 +143,10 @@ int main(int argc, char **argv){
       else {
          spaminess = bayes_file(db, sdata.ttmpfile, state, sdata, cfg);
 
+         if(spaminess >= cfg.spam_overall_limit && spaminess < 1.01) is_spam = 1;
+
          if(cfg.store_metadata == 1){
-            x = update_training_metadata(db, sdata.ttmpfile, sdata.uid, cfg);
+            x = update_training_metadata(db, sdata.ttmpfile, sdata.uid, cfg, is_spam);
             if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: update metadata: %d", sdata.ttmpfile, x);
          }
 

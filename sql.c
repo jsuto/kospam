@@ -1,5 +1,5 @@
 /*
- * sql.c, 2007.09.20, SJ
+ * sql.c, 2007.09.25, SJ
  */
 
 #include <stdio.h>
@@ -188,11 +188,11 @@ unsigned long get_uid_from_email(sqlite3 *db, char *tmpfile, char *rcptto){
  */
 
 #ifdef HAVE_MYSQL
-int update_training_metadata(MYSQL mysql, char *tmpfile, unsigned long uid, struct __config cfg){
+int update_training_metadata(MYSQL mysql, char *tmpfile, unsigned long uid, struct __config cfg, int is_spam){
    char *data=NULL;
 #endif
 #ifdef HAVE_SQLITE3
-int update_training_metadata(sqlite3 *db, char *tmpfile, unsigned long uid, struct __config cfg){
+int update_training_metadata(sqlite3 *db, char *tmpfile, unsigned long uid, struct __config cfg, int is_spam){
    sqlite3_stmt *pStmt;
    const char **pzTail=NULL;
 #endif
@@ -230,7 +230,7 @@ int update_training_metadata(sqlite3 *db, char *tmpfile, unsigned long uid, stru
       goto ENDE;
    }
 
-   snprintf(buf, MAXBUFSIZE-1, "INSERT INTO %s (id, uid, ts, data) VALUES('%s', %ld, %ld, \"", SQL_QUEUE_TABLE, tmpfile, uid, now);
+   snprintf(buf, MAXBUFSIZE-1, "INSERT INTO %s (id, uid, is_spam, ts, data) VALUES('%s', %ld, %d, %ld, \"", SQL_QUEUE_TABLE, tmpfile, uid, is_spam, now);
    snprintf(data, 2 * st.st_size + strlen(buf) + 1, "%s", buf);
    mysql_real_escape_string(&mysql, data+strlen(buf), map, st.st_size);
    strncat(data, "\")", 2 * st.st_size + strlen(buf) + 1 + 1);
@@ -239,7 +239,7 @@ int update_training_metadata(sqlite3 *db, char *tmpfile, unsigned long uid, stru
    free(data);
 #endif
 #ifdef HAVE_SQLITE3
-   snprintf(buf, MAXBUFSIZE-1, "INSERT INTO %s (id, uid, ts, data) VALUES('%s', %ld, %ld, ?)", SQL_QUEUE_TABLE, tmpfile, uid, now);
+   snprintf(buf, MAXBUFSIZE-1, "INSERT INTO %s (id, uid, ts, data) VALUES('%s', %ld, %d, %ld, ?)", SQL_QUEUE_TABLE, tmpfile, uid, is_spam, now);
    if(sqlite3_prepare_v2(db, buf, -1, &pStmt, pzTail) == SQLITE_OK){
       sqlite3_bind_blob(pStmt, 1, map, st.st_size, SQLITE_STATIC);
       sqlite3_step(pStmt);

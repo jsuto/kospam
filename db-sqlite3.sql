@@ -33,6 +33,7 @@ create table if not exists t_queue (
 	id char(32) not null,
 	uid int unsigned not null,
 	ts bigint unsigned not null,
+	is_spam integer(1) default 0,
 	data blob not null
 );
 

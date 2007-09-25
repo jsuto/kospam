@@ -38,11 +38,11 @@ struct te {
    int do_mysql_qry(MYSQL mysql, int sockfd, int ham_or_spam, char *token, char *tokentable, unsigned int uid, int train_mode);
    struct te myqry(MYSQL mysql, int sockfd, char *tokentable, char *token, unsigned int uid);
    unsigned long get_uid_from_email(MYSQL mysql, char *tmpfile, char *rcptto);
-   int update_training_metadata(MYSQL mysql, char *tmpfile, unsigned long uid, struct __config cfg);
+   int update_training_metadata(MYSQL mysql, char *tmpfile, unsigned long uid, struct __config cfg, int is_spam);
 #endif
 
 #ifdef HAVE_SQLITE3
    struct te sqlite3_qry(sqlite3 *db, int sockfd, char *tokentable, char *token, unsigned int uid);
    unsigned long get_uid_from_email(sqlite3 *db, char *tmpfile, char *rcptto);
-   int update_training_metadata(sqlite3 *db, char *tmpfile, unsigned long uid, struct __config cfg);
+   int update_training_metadata(sqlite3 *db, char *tmpfile, unsigned long uid, struct __config cfg, int is_spam);
 #endif

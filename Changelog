@@ -1,5 +1,14 @@
 0.3.30:
 
+2007.09.25, SJ
+
+Now we use a simple definition of a message start in the mbox file:
+From_ (aka FromSPACE).
+(parsembox.c, splitmbox.c)
+
+Added an extra field to determine whether a message in t_queue is
+spam or not.
+
 2007.09.24, SJ
 
 Do not perform RBL lookup + single tokens checking if the message has no

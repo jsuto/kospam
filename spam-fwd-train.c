@@ -1,5 +1,5 @@
 /*
- * spam-fwd-train.c, 2007.09.14, SJ
+ * spam-fwd-train.c, 2007.09.29, SJ
  */
 
 #include <stdio.h>
@@ -76,6 +76,13 @@ int main(int argc, char **argv){
       cfg = read_config(CONFIG_FILE);
    else
       cfg = read_config(argv[1]);
+
+
+   /* make sure training type, (su)rbl won't interfere, 2007.09.29, SJ */
+
+   cfg.training_mode = 0;
+   cfg.rbl_domain[0] = '\0';
+   cfg.surbl_domain[0] = '\0';
 
    if(strstr(argv[0], "spam-fwd-train")){
       (void) openlog("spam-fwd-train", LOG_PID, LOG_MAIL);

@@ -91,9 +91,8 @@ td.odd {
 
 th {
 	font-family: verdana, arial, helvetica, sans-serif, bold;
-	color: black;
+	color: white;
 	spacing: 4px;
 	font-size: 90%;
-	background: #bccccc;
-	//background: #ffcccc
+	background: #4292C4;
 }

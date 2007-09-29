@@ -1,5 +1,5 @@
 /*
- * smapd.c, 2007.08.29, SJ
+ * smapd.c, 2007.09.28, SJ
  */
 
 #include <stdio.h>
@@ -228,7 +228,21 @@ void *process_connection(void *ptr){
                }
             }
          #endif
+         #ifdef HAVE_SQLITE3
+            sqlite3_stmt *pStmt;
+            const char **pzTail=NULL;
 
+            if(sqlite3_prepare_v2(db, puf, -1, &pStmt, pzTail) == SQLITE_OK){
+               if(sqlite3_step(pStmt) == SQLITE_ROW){
+                  sdata.uid = sqlite3_column_int(pStmt, 0);
+                  ts = sqlite3_column_int(pStmt, 1);
+
+                  gettimeofday(&tv, &tz);
+                  if(ts >= tv.tv_sec) auth_ok = 1;
+               }
+            }
+            sqlite3_finalize(pStmt);
+         #endif
       } 
    }
 
@@ -277,7 +291,12 @@ void *process_connection(void *ptr){
 
    if(tot_len <= cfg.max_message_size_to_filter){
       state = parse_message(sdata.ttmpfile, cfg);
+   #ifdef HAVE_MYSQL
       spaminess = bayes_file(mysql, sdata.ttmpfile, state, sdata, cfg);
+   #endif
+   #ifdef HAVE_SQLITE3
+      spaminess = bayes_file(db, sdata.ttmpfile, state, sdata, cfg);
+   #endif
    }
 
    unlink(sdata.ttmpfile);

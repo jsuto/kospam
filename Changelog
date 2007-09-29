@@ -1,5 +1,11 @@
 0.3.30:
 
+2007.09.29, SJ
+
+Fixed a bug in spam-train-fwd.c to prevent training inside bayes_file(),
+and disable (su)rbl checks in order to not to interfere.
+(spam-fwd-train.c)
+
 2007.09.25, SJ
 
 Now we use a simple definition of a message start in the mbox file:

@@ -304,9 +304,9 @@ int main(){
 
    printf("<h1>%s</h1>\n", CGI_SPAM_QUARANTINE);
 
-#ifdef HAVE_USERDB
+//#ifdef HAVE_USERDB
    printf("\n\n<center>%s <a href=\"%s\">%s</a> <a href=\"%s\">%s</a> <a href=\"%s\">%s</a></center>\n\n\n", CGI_SPAM_QUARANTINE, cfg.usercgi_url, CGI_USER_PREF, cfg.statcgi_url, CGI_PERSONAL_STAT, cfg.trainlogcgi_url, CGI_TRAIN_LOG);
-#endif
+//#endif
 
    printf("<script type=\"text/javascript\">\n\nfunction mark_all(x){\n   var i;\n   var len = document.forms[0].elements.length;\n\n   for(i=0; i<len; i++)\n      document.forms[0].elements[i].checked = x;\n}\n\n</script>\n\n");
 

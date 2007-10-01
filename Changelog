@@ -1,5 +1,14 @@
 0.3.30:
 
+2007.10.01, SJ
+
+Added an option to store temporary files under ~/.clapf otherwise
+use ${prefix}/var/clapf/u/username.
+(configure*, clapf-config.h.in, config.h, spamdrop.c)
+
+Fixed a bug storing messages in sqlite database.
+(sql.c)
+
 2007.09.29, SJ
 
 Fixed a bug in spam-train-fwd.c to prevent training inside bayes_file(),

@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2007.08.10, SJ
+ * spamdrop.c, 2007.10.01, SJ
  *
  * check if a single RFC-822 formatted messages is spam or not
  */
@@ -53,6 +53,8 @@ int main(int argc, char **argv){
    struct __config cfg;
    char buf[MAXBUFSIZE], *configfile=CONFIG_FILE;
    int i, n, x, fd, fd2, print_message=0, is_header=1, tot_len=0, put_subject_spam_prefix=0, sent_subject_spam_prefix=0, is_spam=0;
+   uid_t u;
+   struct passwd *pwd;
    FILE *f;
 
    while((i = getopt(argc, argv, "c:p")) > 0){
@@ -82,10 +84,44 @@ int main(int argc, char **argv){
    cfg = read_config(configfile);
 
 
+#ifdef TEMP_FILES_IN_HOMEDIR
    if(stat(PER_USER_DIR, &st) != 0){
-      mkdir(PER_USER_DIR, 0700);
+      if(mkdir(PER_USER_DIR, 0700)){
+         syslog(LOG_PRIORITY, "cannot create %s", PER_USER_DIR);
+         return EX_TEMPFAIL;
+      }
    }
-   chdir(PER_USER_DIR);
+   if(chdir(PER_USER_DIR)){
+      syslog(LOG_PRIORITY, "cannot chdir to %s", PER_USER_DIR);
+      return EX_TEMPFAIL;
+   }
+#else
+   u = getuid();
+   pwd = getpwuid(u);
+
+   snprintf(buf, MAXBUFSIZE-1, "%s/%c", USER_DATA_DIR, pwd->pw_name[0]);
+
+   if(stat(buf, &st) != 0){
+      if(mkdir(buf, 0700)){
+         syslog(LOG_PRIORITY, "cannot create %s", buf);
+         return EX_TEMPFAIL;
+      }
+   }
+
+   snprintf(buf, MAXBUFSIZE-1, "%s/%c/%s", USER_DATA_DIR, pwd->pw_name[0], pwd->pw_name);
+
+   if(stat(buf, &st) != 0){
+      if(mkdir(buf, 0700)){
+         syslog(LOG_PRIORITY, "cannot create %s", buf);
+         return EX_TEMPFAIL;
+      }
+   }
+
+   if(chdir(buf)){
+      syslog(LOG_PRIORITY, "cannot chdir to %s", buf);
+      return EX_TEMPFAIL;
+   }
+#endif
 
    sdata.num_of_rcpt_to = 1;
    sdata.uid = getuid();
@@ -95,11 +131,15 @@ int main(int argc, char **argv){
    memset(trainbuf, 0, SMALLBUFSIZE);
 
    fd = open("/dev/stdin", O_RDONLY);
-   if(fd == -1) return EX_TEMPFAIL;
+   if(fd == -1){
+      syslog(LOG_PRIORITY, "cannot read stdin");
+      return EX_TEMPFAIL;
+   }
 
    fd2 = open(sdata.ttmpfile, O_CREAT|O_EXCL|O_RDWR|O_TRUNC, S_IRUSR|S_IWUSR);
    if(fd2 == -1){
       close(fd);
+      syslog(LOG_PRIORITY, "cannot open: %s", sdata.ttmpfile);
       return EX_TEMPFAIL;
    }
 
@@ -136,7 +176,7 @@ int main(int argc, char **argv){
          syslog(LOG_PRIORITY, "%s: %s", sdata.ttmpfile, ERR_MYSQL_CONNECT);
    #endif
    #ifdef HAVE_SQLITE3
-      rc = sqlite3_open(cfg.sqlite3, &db);
+      rc = sqlite3_open(SQLITE3_DB_FILE, &db);
       if(rc){
          syslog(LOG_PRIORITY, "%s: %s", sdata.ttmpfile, ERR_SQLITE3_OPEN);
       }
@@ -164,7 +204,10 @@ int main(int argc, char **argv){
 
    if(print_message == 1){
       f = fopen(sdata.ttmpfile, "r");
-      if(!f) return EX_TEMPFAIL;
+      if(!f){
+         syslog(LOG_PRIORITY, "cannot read: %s", sdata.ttmpfile);
+         return EX_TEMPFAIL;
+      }
 
       if(spaminess >= cfg.spam_overall_limit && spaminess < 1.01 && strlen(cfg.spam_subject_prefix) > 1) put_subject_spam_prefix = 1;
 

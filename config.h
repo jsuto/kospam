@@ -10,6 +10,8 @@
 #define HOSTID "av-engine.localhost"
 
 #define CONFIG_FILE CONFDIR "/clapf.conf"
+#define USER_DATA_DIR DATADIR "/clapf"
+#define SQLITE3_DB_FILE "clapf.sdb"
 
 #define LISTEN_ADDR "127.0.0.1"
 #define LISTEN_PORT 10025

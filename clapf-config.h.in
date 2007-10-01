@@ -1,5 +1,8 @@
 /*
- * clapf-config.h.in, 2007.08.08, SJ
+ * clapf-config.h.in, 2007.10.01, SJ
  */
 
 #define CONFDIR "/usr/local/etc"
+#define DATADIR "/usr/local/var"
+
+#undef TEMP_FILES_IN_HOMEDIR

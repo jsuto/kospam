@@ -102,6 +102,7 @@ install-sqlite3:
 install-clapf: clapf
 	$(INSTALL) -d $(DESTDIR)$(bindir)
 	$(INSTALL) -d $(DESTDIR)$(libexecdir)/clapf
+	$(INSTALL) -d $(DESTDIR)$(localstatedir)/clapf
 	$(INSTALL) -m 0755 util/check_clapf.sh $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 clapf $(DESTDIR)$(bindir)
 	$(INSTALL) -d $(DESTDIR)$(sysconfdir)

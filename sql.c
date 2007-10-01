@@ -1,5 +1,5 @@
 /*
- * sql.c, 2007.09.25, SJ
+ * sql.c, 2007.10.01, SJ
  */
 
 #include <stdio.h>
@@ -239,7 +239,7 @@ int update_training_metadata(sqlite3 *db, char *tmpfile, unsigned long uid, stru
    free(data);
 #endif
 #ifdef HAVE_SQLITE3
-   snprintf(buf, MAXBUFSIZE-1, "INSERT INTO %s (id, uid, ts, data) VALUES('%s', %ld, %d, %ld, ?)", SQL_QUEUE_TABLE, tmpfile, uid, is_spam, now);
+   snprintf(buf, MAXBUFSIZE-1, "INSERT INTO %s (id, uid, is_spam, ts, data) VALUES('%s', %ld, %d, %ld, ?)", SQL_QUEUE_TABLE, tmpfile, uid, is_spam, now);
    if(sqlite3_prepare_v2(db, buf, -1, &pStmt, pzTail) == SQLITE_OK){
       sqlite3_bind_blob(pStmt, 1, map, st.st_size, SQLITE_STATIC);
       sqlite3_step(pStmt);

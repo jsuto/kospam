@@ -686,6 +686,7 @@ mysql_obj
 db_install
 MYSQL_CONFIG
 CFGDIR
+DATADIR
 LIBOBJS
 LTLIBOBJS'
 ac_subst_files=''
@@ -1277,6 +1278,7 @@ Optional Features:
   --enable-old-format     use old token format
   --enable-blackhole      build the blackhole feature
   --enable-cgi            build the web interface to train the database
+  --enable-homedir        put temporary files under the home directory
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -5262,6 +5264,7 @@ fi
 
 
 
+
 cfg_dir=`echo $sysconfdir | grep prefix`
 
 if test -n "$cfg_dir"; then
@@ -5282,6 +5285,47 @@ cat >>confdefs.h <<_ACEOF
 #define CONFDIR "$cfg_dir"
 _ACEOF
 
+
+
+
+data_dir=`echo $localstatedir | grep prefix`
+
+if test -n "$data_dir"; then
+    if test "$prefix" = "NONE"
+    then
+        data_dir="$ac_default_prefix/var"
+    else
+        data_dir="$prefix/var"
+    fi
+else
+    data_dir="$localstatedir"
+fi
+
+DATADIR=$data_dir
+
+
+cat >>confdefs.h <<_ACEOF
+#define DATADIR "$data_dir"
+_ACEOF
+
+
+
+
+# Check whether --enable-homedir was given.
+if test "${enable_homedir+set}" = set; then
+  enableval=$enable_homedir; want_homedir=$enableval
+else
+  want_homedir="no"
+fi
+
+
+   if test "$want_homedir" = "yes"; then
+      cat >>confdefs.h <<_ACEOF
+#define TEMP_FILES_IN_HOMEDIR 1
+_ACEOF
+
+      have_homedir="yes"
+   fi
 
 
 if test "x$TOKENDB" = "x" && test "$have_antispam" = "yes"; then echo "please specify the token database with --with-tokendb"; exit 1; fi
@@ -6455,11 +6499,12 @@ mysql_obj!$mysql_obj$ac_delim
 db_install!$db_install$ac_delim
 MYSQL_CONFIG!$MYSQL_CONFIG$ac_delim
 CFGDIR!$CFGDIR$ac_delim
+DATADIR!$DATADIR$ac_delim
 LIBOBJS!$LIBOBJS$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 75; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 76; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5

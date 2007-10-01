@@ -1278,7 +1278,7 @@ Optional Features:
   --enable-old-format     use old token format
   --enable-blackhole      build the blackhole feature
   --enable-cgi            build the web interface to train the database
-  --enable-homedir        put temporary files under the home directory
+  --enable-homedir        put temporary files under the home directory, ~/.clapf
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]

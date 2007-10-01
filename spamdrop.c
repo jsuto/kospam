@@ -53,8 +53,6 @@ int main(int argc, char **argv){
    struct __config cfg;
    char buf[MAXBUFSIZE], *configfile=CONFIG_FILE;
    int i, n, x, fd, fd2, print_message=0, is_header=1, tot_len=0, put_subject_spam_prefix=0, sent_subject_spam_prefix=0, is_spam=0;
-   uid_t u;
-   struct passwd *pwd;
    FILE *f;
 
    while((i = getopt(argc, argv, "c:p")) > 0){
@@ -96,6 +94,9 @@ int main(int argc, char **argv){
       return EX_TEMPFAIL;
    }
 #else
+   uid_t u;
+   struct passwd *pwd;
+
    u = getuid();
    pwd = getpwuid(u);
 

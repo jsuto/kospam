@@ -1,5 +1,5 @@
 /*
- * sql.c, 2007.10.01, SJ
+ * sql.c, 2007.10.04, SJ
  */
 
 #include <stdio.h>
@@ -124,21 +124,23 @@ int my_walk_hash(qry QRY, int ham_or_spam, char *tokentable, struct node *xhash[
 
 
 /*
- * get uid from rcptto email address
+ * get uid and username from rcptto
  */
 
 #ifdef HAVE_MYSQL
-unsigned long get_uid_from_email(MYSQL mysql, char *tmpfile, char *rcptto){
+struct ue get_user_from_email(MYSQL mysql, char *rcptto){
    MYSQL_RES *res;
    MYSQL_ROW row;
 #endif
 #ifdef HAVE_SQLITE3
-unsigned long get_uid_from_email(sqlite3 *db, char *tmpfile, char *rcptto){
+struct ue get_user_from_email(sqlite3 *db, char *rcptto){
    sqlite3_stmt *pStmt;
    const char **pzTail=NULL;
 #endif
-   unsigned long uid = 0;
    char *p, *q, buf[MAXBUFSIZE], email[SMALLBUFSIZE];
+   struct ue UE;
+
+   memset((char *)&UE, 0, sizeof(UE));
 
    snprintf(email, SMALLBUFSIZE-1, "%s", rcptto);
    p = strchr(email, '<');
@@ -156,30 +158,34 @@ unsigned long get_uid_from_email(sqlite3 *db, char *tmpfile, char *rcptto){
       q = strchr(p, '+');
       if(q) p = q+1;
 
-      snprintf(buf, MAXBUFSIZE-1, "SELECT uid FROM %s WHERE email='%s'", SQL_USER_TABLE, p);
+      snprintf(buf, MAXBUFSIZE-1, "SELECT uid, username FROM %s WHERE email='%s'", SQL_USER_TABLE, p);
 
    #ifdef HAVE_MYSQL
       if(mysql_real_query(&mysql, buf, strlen(buf)) == 0){
          res = mysql_store_result(&mysql);
          if(res != NULL){
             row = mysql_fetch_row(res);
-            if(row)
-               uid = atol(row[0]);
+            if(row){
+               UE.uid = atol(row[0]);
+               strncpy(UE.name, (char *)row[1], SMALLBUFSIZE-1);
+            }               
             mysql_free_result(res);
          }
       }
    #endif
    #ifdef HAVE_SQLITE3
       if(sqlite3_prepare_v2(db, buf, -1, &pStmt, pzTail) == SQLITE_OK){
-         if(sqlite3_step(pStmt) == SQLITE_ROW)
-            uid = sqlite3_column_int(pStmt, 0);
+         if(sqlite3_step(pStmt) == SQLITE_ROW){
+            UE.uid = sqlite3_column_int(pStmt, 0);
+            strncpy(UE.name, (char *)sqlite3_column_blob(pStmt, 1), SMALLBUFSIZE-1);
+         }
       }
       sqlite3_finalize(pStmt);
    #endif
 
    }
 
-   return uid;
+   return UE;
 }
 
 

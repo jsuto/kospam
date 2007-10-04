@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 ##
-## black.pl, 2007.03.06, SJ
+## black.pl, 2007.10.02, SJ
 ##
 
 use Sys::Syslog;
@@ -20,7 +20,7 @@ $saveletter = 0;
 $messagefile = "/home/you/mail/trapped";
 $ipdir = "/opt/av/blackhole";
 
-@mon = qw(Jan Feb Mar Apr May Jun Jul Aug Sep Ocy Nov Dec);
+@mon = qw(Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec);
 @wday = qw(Sun Mon Tue Wed Thu Fri Sat Sun);
 
 

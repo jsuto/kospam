@@ -348,17 +348,6 @@ AC_SUBST(DATADIR)
 AC_DEFINE_UNQUOTED(DATADIR,"$data_dir",[where to look for the data files])
 
 
-dnl homedir support
-
-AC_ARG_ENABLE(homedir,
-      [  --enable-homedir        put temporary files under the home directory, ~/.clapf], want_homedir=$enableval, want_homedir="no")
-
-   if test "$want_homedir" = "yes"; then
-      AC_DEFINE_UNQUOTED(TEMP_FILES_IN_HOMEDIR)
-      have_homedir="yes"
-   fi
-
-
 if test "x$TOKENDB" = "x" && test "$have_antispam" = "yes"; then echo "please specify the token database with --with-tokendb"; exit 1; fi
 
 dnl tinycdb

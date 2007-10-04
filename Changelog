@@ -1,13 +1,25 @@
 0.3.30:
 
+2007.10.04, SJ
+
+Fixed a bug if the user id is not found in the user table.
+(bayes.c)
+(credits: Salman Husni)
+
 2007.10.01, SJ
 
 Added an option to store temporary files under ~/.clapf otherwise
-use ${prefix}/var/clapf/u/username.
+use ${prefix}/var/clapf/u/username. For now the homedir version is
+the default.
 (configure*, clapf-config.h.in, config.h, spamdrop.c)
 
 Fixed a bug storing messages in sqlite database.
 (sql.c)
+
+Reverting the storage of messages. Instead of putting them to the
+SQL table, they are stored in a per user directory. Note: the
+virtual user support must be polished and verified.
+(spamdrop.c, spam-fwd-train.c)
 
 2007.09.29, SJ
 

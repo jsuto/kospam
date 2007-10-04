@@ -1,5 +1,5 @@
 /*
- * sql.h, 2007.08.03, SJ
+ * sql.h, 2007.10.04, SJ
  */
 
 #ifdef HAVE_MYSQL
@@ -31,18 +31,22 @@ struct te {
    unsigned int nspam;
 };
 
+struct ue {
+   unsigned long uid;
+   char name[SMALLBUFSIZE];
+};
 
 #ifdef HAVE_MYSQL
    unsigned long get_uid(MYSQL mysql, char *stmt);
    struct te get_ham_spam(MYSQL mysql, char *stmt);
    int do_mysql_qry(MYSQL mysql, int sockfd, int ham_or_spam, char *token, char *tokentable, unsigned int uid, int train_mode);
    struct te myqry(MYSQL mysql, int sockfd, char *tokentable, char *token, unsigned int uid);
-   unsigned long get_uid_from_email(MYSQL mysql, char *tmpfile, char *rcptto);
+   struct ue get_user_from_email(MYSQL mysql, char *rcptto);
    int update_training_metadata(MYSQL mysql, char *tmpfile, unsigned long uid, struct __config cfg, int is_spam);
 #endif
 
 #ifdef HAVE_SQLITE3
    struct te sqlite3_qry(sqlite3 *db, int sockfd, char *tokentable, char *token, unsigned int uid);
-   unsigned long get_uid_from_email(sqlite3 *db, char *tmpfile, char *rcptto);
+   struct ue get_user_from_email(sqlite3 *db, char *rcptto);
    int update_training_metadata(sqlite3 *db, char *tmpfile, unsigned long uid, struct __config cfg, int is_spam);
 #endif

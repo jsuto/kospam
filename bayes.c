@@ -1,5 +1,5 @@
 /*
- * bayes.c, 2007.09.24, SJ
+ * bayes.c, 2007.10.04, SJ
  */
 
 #include <stdio.h>
@@ -635,8 +635,7 @@ double bayes_file(char *cdbfile, char *spamfile, struct _state state, struct ses
    /* fix sql statment if we use a merged group */
 
    if(cfg.group_type == GROUP_MERGED)
-      snprintf(buf, MAXBUFSIZE-1, "SELECT SUM(nham), SUM(nspam) FROM %s WHERE uid=0 OR uid=%ld", SQL_MISC_TABLE, QRY.uid);
-
+      snprintf(buf, MAXBUFSIZE-1, "SELECT nham, nspam FROM %s WHERE uid=0 OR uid=%ld", SQL_MISC_TABLE, QRY.uid);
 
 #ifdef DEBUG
    fprintf(stderr, "uid: %ld\n", QRY.uid);

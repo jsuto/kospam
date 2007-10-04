@@ -4,5 +4,3 @@
 
 #define CONFDIR "/usr/local/etc"
 #define DATADIR "/usr/local/var"
-
-#undef TEMP_FILES_IN_HOMEDIR

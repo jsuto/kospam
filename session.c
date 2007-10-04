@@ -1,5 +1,5 @@
 /*
- * session.c, 2007.08.26, SJ
+ * session.c, 2007.10.04, SJ
  */
 
 #include <stdio.h>
@@ -111,9 +111,10 @@ void init_child(){
 
    #ifdef HAVE_ANTISPAM
       double spaminess=DEFAULT_SPAMICITY;
-      char spamfile[MAXBUFSIZE], spaminessbuf[MAXBUFSIZE], reason[SMALLBUFSIZE];
+      char spamfile[MAXBUFSIZE], spaminessbuf[MAXBUFSIZE], reason[SMALLBUFSIZE], qpath[SMALLBUFSIZE];
       struct timeval tv_spam_start, tv_spam_stop;
       struct _state sstate;
+      struct ue UE;
       int is_spam;
    #endif
 
@@ -470,18 +471,11 @@ void init_child(){
 
                   #ifdef HAVE_MYSQL
                      if(mysql_connection == 1){
-                        sdata.uid = get_uid_from_email(mysql, sdata.ttmpfile, sdata.rcptto[i]);
+                        UE = get_user_from_email(mysql, sdata.rcptto[i]);
+                        sdata.uid = UE.uid;
+
                         spaminess = bayes_file(mysql, spamfile, sstate, sdata, cfg);
                         gettimeofday(&tv_spam_stop, &tz);
-
-                        if(cfg.store_metadata == 1){
-                           gettimeofday(&tv_meta1, &tz);
-                           if(spaminess >= cfg.spam_overall_limit) is_spam = 1;
-                           x = update_training_metadata(mysql, sdata.ttmpfile, sdata.uid, cfg, is_spam);
-                           gettimeofday(&tv_meta2, &tz);
-                           syslog(LOG_PRIORITY, "%s: storing metadata: %d %ld [ms]", sdata.ttmpfile, x, tvdiff(tv_meta2, tv_meta1)/1000);
-                        }
-
                      }
                      else {
                         gettimeofday(&tv_spam_stop, &tz);
@@ -494,18 +488,11 @@ void init_child(){
                         gettimeofday(&tv_spam_stop, &tz);
                      }
                      else {
-                        sdata.uid = get_uid_from_email(db, sdata.ttmpfile, sdata.rcptto[i]);
+                        UE = get_user_from_email(db, sdata.rcptto[i]);
+                        sdata.uid = UE.uid;
+
                         spaminess = bayes_file(db, spamfile, sstate, sdata, cfg);
                         gettimeofday(&tv_spam_stop, &tz);
-
-                        if(cfg.store_metadata == 1){
-                           gettimeofday(&tv_meta1, &tz);
-                           if(spaminess >= cfg.spam_overall_limit) is_spam = 1;
-                           x = update_training_metadata(db, sdata.ttmpfile, sdata.uid, cfg, is_spam);
-                           gettimeofday(&tv_meta2, &tz);
-                           syslog(LOG_PRIORITY, "%s: storing metadata: %d %ld [ms]", sdata.ttmpfile, x, tvdiff(tv_meta2, tv_meta1)/1000);
-                        }
-
                      }
                   #endif
                   #ifdef HAVE_CDB
@@ -516,6 +503,19 @@ void init_child(){
 
                      gettimeofday(&tv_spam_stop, &tz);
                   #endif
+
+                     /* rename file name according to its spamicity status, 2007.10.04, SJ */
+
+                     if(cfg.store_metadata == 1 && UE.name){
+                        if(spaminess >= cfg.spam_overall_limit)
+                           snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s/s.%s", USER_DATA_DIR, UE.name[0], UE.name, sdata.ttmpfile);
+                        else
+                           snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s/h.%s", USER_DATA_DIR, UE.name[0], UE.name, sdata.ttmpfile);
+
+                        link(sdata.ttmpfile, qpath);
+                        syslog(LOG_PRIORITY, "qpath: %s", qpath);
+                        chmod(qpath, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+                     }
 
 
                      syslog(LOG_PRIORITY, "%s: %.4f %d in %ld [ms]", sdata.ttmpfile, spaminess, sdata.tot_len, tvdiff(tv_spam_stop, tv_spam_start)/1000);

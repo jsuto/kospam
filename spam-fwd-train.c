@@ -44,6 +44,7 @@
 
 
 void my_walk_hash(qry QRY, int ham_or_spam, char *tokentable, struct node *xhash[MAXHASH], int train_mode);
+struct _state parse_message(char *spamfile, struct __config cfg);
 
 #ifdef HAVE_MYSQL
 double bayes_file(MYSQL mysql, char *spamfile, struct _state state, struct session_data sdata, struct __config cfg);
@@ -60,12 +61,12 @@ int main(int argc, char **argv){
    double spaminess;
    unsigned long now;
    struct session_data sdata;
+   struct passwd *pwd;
    struct __config cfg;
    struct _state state;
    struct _token *P, *Q;
    struct node *tokens[MAXHASH];
    qry QRY;
-   FILE *f;
    time_t clock;
 
    QRY.uid = 0;
@@ -187,53 +188,30 @@ int main(int argc, char **argv){
 #endif
 
 
+   pwd = getpwuid((uid_t)QRY.uid);
+
+   snprintf(buf, MAXBUFSIZE-1, "%s/%s/%c/%s", cfg.chrootdir, USER_DATA_DIR, pwd->pw_name[0], pwd->pw_name);
+
+   if(chdir(buf)){
+      syslog(LOG_PRIORITY, "cannot chdir() to %s", buf);
+      goto ENDE;
+   }
+
+
+   if(is_spam == 1)
+      snprintf(buf, MAXBUFSIZE-1, "h.%s", ID);
+   else
+      snprintf(buf, MAXBUFSIZE-1, "s.%s", ID);
+
+   syslog(LOG_PRIORITY, "reading %s", buf);
+
+   state = parse_message(buf, cfg);
+
    /* select message data */
 
    make_rnd_string(sdata.ttmpfile);
    sdata.uid = QRY.uid;
 
-   snprintf(buf, MAXBUFSIZE-1, "SELECT data FROM %s WHERE id='%s' AND uid=%ld", SQL_QUEUE_TABLE, ID, QRY.uid);
-   if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "sql: %s", buf);
-
-#ifdef HAVE_MYSQL
-   if(mysql_real_query(&mysql, buf, strlen(buf)) == 0){
-      res = mysql_store_result(&mysql);
-      if(res != NULL){
-         row = mysql_fetch_row(res);
-         if(row){
-            if(row[0]){
-               p = row[0];
-#endif
-#ifdef HAVE_SQLITE3
-   if(sqlite3_prepare_v2(db, buf, -1, &pStmt, ppzTail) == SQLITE_OK){
-            if(sqlite3_step(pStmt) == SQLITE_ROW){
-               p = (char *)sqlite3_column_blob(pStmt, 0);
-
-#endif
-
-               f = fopen(sdata.ttmpfile, "w+");
-               if(f){
-                  fprintf(f, "%s", p);
-                  fclose(f);
-               }
-
-               do {
-                  p = split(p, '\n', buf, MAXBUFSIZE-2);
-                  strncat(buf, "\n", MAXBUFSIZE-1);
-                  state = parse(buf, state);
-               } while(p);
-
-            }
-#ifdef HAVE_MYSQL
-         }
-         mysql_free_result(res);
-      }
-   }
-#endif
-#ifdef HAVE_SQLITE3
-   }
-   sqlite3_finalize(pStmt);
-#endif
 
    /* if this is a shared group, make sure the token database is trained with uid=0 */
 
@@ -331,6 +309,8 @@ int main(int argc, char **argv){
       unlink(sdata.ttmpfile);
    }
 
+
+ENDE:
 
 #ifdef HAVE_MYSQL
    mysql_close(&mysql);

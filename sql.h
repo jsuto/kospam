@@ -41,12 +41,12 @@ struct ue {
    struct te get_ham_spam(MYSQL mysql, char *stmt);
    int do_mysql_qry(MYSQL mysql, int sockfd, int ham_or_spam, char *token, char *tokentable, unsigned int uid, int train_mode);
    struct te myqry(MYSQL mysql, int sockfd, char *tokentable, char *token, unsigned int uid);
-   struct ue get_user_from_email(MYSQL mysql, char *rcptto);
+   struct ue get_user_from_email(MYSQL mysql, char *email);
    int update_training_metadata(MYSQL mysql, char *tmpfile, unsigned long uid, struct __config cfg, int is_spam);
 #endif
 
 #ifdef HAVE_SQLITE3
    struct te sqlite3_qry(sqlite3 *db, int sockfd, char *tokentable, char *token, unsigned int uid);
-   struct ue get_user_from_email(sqlite3 *db, char *rcptto);
+   struct ue get_user_from_email(sqlite3 *db, char *email);
    int update_training_metadata(sqlite3 *db, char *tmpfile, unsigned long uid, struct __config cfg, int is_spam);
 #endif

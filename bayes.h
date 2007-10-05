@@ -1,5 +1,5 @@
 /*
- * bayes.h, 2007.08.26, SJ
+ * bayes.h, 2007.10.05, SJ
  */
 
 #include "parser.h"
@@ -11,11 +11,13 @@ struct _state parse_message(char *spamfile, struct __config cfg);
 #ifdef HAVE_MYSQL
    #include <mysql.h>
    double bayes_file(MYSQL mysql, char *spamfile, struct _state state, struct session_data sdata, struct __config cfg);
+   int retraining(MYSQL mysql, struct session_data sdata, char *username, struct __config cfg);
 #endif
 
 #ifdef HAVE_SQLITE3
    #include <sqlite3.h>
    double bayes_file(sqlite3 *db, char *spamfile, struct _state state, struct session_data sdata, struct __config cfg);
+   int retraining(sqlite3 *db, struct session_data sdata, char *username, struct __config cfg);
 #endif
 
 #ifdef HAVE_CDB

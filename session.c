@@ -471,10 +471,20 @@ void init_child(){
 
                   #ifdef HAVE_MYSQL
                      if(mysql_connection == 1){
-                        UE = get_user_from_email(mysql, sdata.rcptto[i]);
+                        UE = get_user_from_email(mysql, email);
                         sdata.uid = UE.uid;
 
-                        spaminess = bayes_file(mysql, spamfile, sstate, sdata, cfg);
+                        /* if we have forwarded something for retraining */
+
+                        if(sdata.num_of_rcpt_to == 1 && (str_case_str(sdata.rcptto[0], "+spam@") || str_case_str(sdata.rcptto[0], "+ham@")) ){
+                           snprintf(acceptbuf, MAXBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata.ttmpfile, email);
+                           retraining(mysql, sdata, UE.name, cfg);
+                           goto SEND_RESULT;
+                        }
+                        else
+                           spaminess = bayes_file(mysql, spamfile, sstate, sdata, cfg);
+
+
                         gettimeofday(&tv_spam_stop, &tz);
                      }
                      else {
@@ -488,7 +498,7 @@ void init_child(){
                         gettimeofday(&tv_spam_stop, &tz);
                      }
                      else {
-                        UE = get_user_from_email(db, sdata.rcptto[i]);
+                        UE = get_user_from_email(db, email);
                         sdata.uid = UE.uid;
 
                         spaminess = bayes_file(db, spamfile, sstate, sdata, cfg);
@@ -579,7 +589,6 @@ void init_child(){
                   send(new_sd, acceptbuf, strlen(acceptbuf), 0);
 
                } /* for */
-
 
 
                /* close database backend handler */

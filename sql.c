@@ -129,62 +129,55 @@ int my_walk_hash(qry QRY, int ham_or_spam, char *tokentable, struct node *xhash[
  */
 
 #ifdef HAVE_MYSQL
-struct ue get_user_from_email(MYSQL mysql, char *rcptto){
+struct ue get_user_from_email(MYSQL mysql, char *email){
    MYSQL_RES *res;
    MYSQL_ROW row;
 #endif
 #ifdef HAVE_SQLITE3
-struct ue get_user_from_email(sqlite3 *db, char *rcptto){
+struct ue get_user_from_email(sqlite3 *db, char *email){
    sqlite3_stmt *pStmt;
    const char **pzTail=NULL;
 #endif
-   char *p, *q, buf[MAXBUFSIZE], email[SMALLBUFSIZE];
+   char *p, buf[MAXBUFSIZE];
    struct ue UE;
 
    memset((char *)&UE, 0, sizeof(UE));
 
-   snprintf(email, SMALLBUFSIZE-1, "%s", rcptto);
-   p = strchr(email, '<');
-   if(p){
-      q = strchr(p, '>');
-      if(q) *q = '\0';
-      p++;
+   if((p = str_case_str(email, "+spam"))){
+      *p = '\0';
+      snprintf(buf, MAXBUFSIZE-1, "SELECT uid, username FROM %s WHERE email='%s%s'", SQL_USER_TABLE, email, p+5);
+   }
+   else if((p = str_case_str(email, "+ham"))){
+      *p = '\0';
+      snprintf(buf, MAXBUFSIZE-1, "SELECT uid, username FROM %s WHERE email='%s%s'", SQL_USER_TABLE, email, p+4);
    }
    else
-      p = email;
+      snprintf(buf, MAXBUFSIZE-1, "SELECT uid, username FROM %s WHERE email='%s'", SQL_USER_TABLE, email);
 
-   if(p){
-      /* fix address like spam+aaa@domain.com */
 
-      q = strchr(p, '+');
-      if(q) p = q+1;
-
-      snprintf(buf, MAXBUFSIZE-1, "SELECT uid, username FROM %s WHERE email='%s'", SQL_USER_TABLE, p);
-
-   #ifdef HAVE_MYSQL
-      if(mysql_real_query(&mysql, buf, strlen(buf)) == 0){
-         res = mysql_store_result(&mysql);
-         if(res != NULL){
-            row = mysql_fetch_row(res);
-            if(row){
-               UE.uid = atol(row[0]);
-               strncpy(UE.name, (char *)row[1], SMALLBUFSIZE-1);
-            }               
-            mysql_free_result(res);
-         }
+#ifdef HAVE_MYSQL
+   if(mysql_real_query(&mysql, buf, strlen(buf)) == 0){
+      res = mysql_store_result(&mysql);
+      if(res != NULL){
+         row = mysql_fetch_row(res);
+         if(row){
+            UE.uid = atol(row[0]);
+            strncpy(UE.name, (char *)row[1], SMALLBUFSIZE-1);
+         }               
+         mysql_free_result(res);
       }
-   #endif
-   #ifdef HAVE_SQLITE3
-      if(sqlite3_prepare_v2(db, buf, -1, &pStmt, pzTail) == SQLITE_OK){
-         if(sqlite3_step(pStmt) == SQLITE_ROW){
-            UE.uid = sqlite3_column_int(pStmt, 0);
-            strncpy(UE.name, (char *)sqlite3_column_blob(pStmt, 1), SMALLBUFSIZE-1);
-         }
-      }
-      sqlite3_finalize(pStmt);
-   #endif
-
    }
+#endif
+#ifdef HAVE_SQLITE3
+   if(sqlite3_prepare_v2(db, buf, -1, &pStmt, pzTail) == SQLITE_OK){
+      if(sqlite3_step(pStmt) == SQLITE_ROW){
+         UE.uid = sqlite3_column_int(pStmt, 0);
+         strncpy(UE.name, (char *)sqlite3_column_blob(pStmt, 1), SMALLBUFSIZE-1);
+      }
+   }
+   sqlite3_finalize(pStmt);
+#endif
+
 
    return UE;
 }

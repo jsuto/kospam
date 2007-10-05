@@ -239,19 +239,19 @@ double sorthash(struct node *xhash[MAXHASH], int top10, struct __config cfg){
          #endif
          }
 
-      #ifdef DEBUG
-            #ifdef HAVE_NO_64_HASH
+   #ifdef DEBUG
+      #ifdef HAVE_NO_64_HASH
          fprintf(stderr, "%d. %s %.4f %ld\n", i, t[i]->str, t[i]->spaminess, t[i]->num);
-         #else
-            fprintf(stderr, "%d. %s (%llu) %.4f %ld\n", i, t[i]->str, APHash(t[i]->str), t[i]->spaminess, t[i]->num);
-         #endif
+      #else
+         fprintf(stderr, "%d. %s (%llu) %.4f %ld\n", i, t[i]->str, APHash(t[i]->str), t[i]->spaminess, t[i]->num);
       #endif
+   #endif
       }
    }
 
 #ifdef DEBUG
    fprintf(stderr, "number of tokens: %d, most interesting tokens: %d, used: %d\n", n_tokens, most_interesting, l);
-   fprintf(stderr, "top10: %d, truespam: %.0f, truespam/top10: %f\n", how_many_tokens_to_include, truespam, truespam/how_many_tokens_to_include);
+   if(how_many_tokens_to_include > 0) fprintf(stderr, "top10: %d, truespam: %.0f, truespam/top10: %f\n", how_many_tokens_to_include, truespam, truespam/how_many_tokens_to_include);
 #endif
 
    /* inverse chi-square distribution with ESF values, 2006.02.24, SJ */
@@ -277,16 +277,6 @@ double sorthash(struct node *xhash[MAXHASH], int top10, struct __config cfg){
 #ifdef DEBUG
    fprintf(stderr, "with esf_h: %f, esf_s: %f\n", cfg.esf_h, cfg.esf_s);
 #endif
-
-   /* if we have a lot spammy tokens in the top10 mark the message as spam, 2005.12.09, SJ */
-
-   /*if(I < cfg.spam_overall_limit && cfg.spam_ratio_in_top10 > 0 && truespam/how_many_tokens_to_include > cfg.spam_ratio_in_top10){
-   #ifdef DEBUG
-      fprintf(stderr, "original result: %f\n", I);
-   #endif
-
-      return cfg.spaminess_of_too_much_spam_in_top15;
-   }*/
 
    return I;
 }

@@ -1,5 +1,5 @@
 /*
- * sql.c, 2007.10.04, SJ
+ * sql.c, 2007.10.05, SJ
  */
 
 #include <stdio.h>
@@ -62,13 +62,16 @@ float SQL_QUERY(qry QRY, char *tokentable, char *token, struct node *xhash[MAXHA
    /* if the token has occurred at least N=2 times, 2007.06.13, SJ */
 
    if(TE.nham + TE.nspam > 2){
-      ham_prob = TE.nham / QRY.ham_msg;
-      spam_prob = TE.nspam / QRY.spam_msg;
+      if(QRY.ham_msg > 0) ham_prob = TE.nham / QRY.ham_msg;
+      else                ham_prob = 0;
+
+      if(QRY.spam_msg > 0) spam_prob = TE.nspam / QRY.spam_msg;
+      else                 spam_prob = 0;
 
       if(ham_prob > 1) ham_prob = 1;
       if(spam_prob > 1) spam_prob = 1;
 
-      r = spam_prob / (ham_prob + spam_prob);
+      if(ham_prob + spam_prob > 0) r = spam_prob / (ham_prob + spam_prob);
 
       /* deal with rare words */
 
@@ -83,8 +86,6 @@ float SQL_QUERY(qry QRY, char *tokentable, char *token, struct node *xhash[MAXHA
 
    if(r < REAL_HAM_TOKEN_PROBABILITY) r = REAL_HAM_TOKEN_PROBABILITY;
    if(r > REAL_SPAM_TOKEN_PROBABILITY) r = REAL_SPAM_TOKEN_PROBABILITY;
-
-   //fprintf(stderr, "token: %s=%.4f\n", token, r);
 
    return r;
 }
@@ -146,13 +147,13 @@ struct ue get_user_from_email(sqlite3 *db, char *rcptto){
    p = strchr(email, '<');
    if(p){
       q = strchr(p, '>');
-   }
-
-   if(p && q){
-      *q = '\0';
-
+      if(q) *q = '\0';
       p++;
+   }
+   else
+      p = email;
 
+   if(p){
       /* fix address like spam+aaa@domain.com */
 
       q = strchr(p, '+');

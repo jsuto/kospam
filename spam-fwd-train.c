@@ -1,5 +1,5 @@
 /*
- * spam-fwd-train.c, 2007.10.01, SJ
+ * spam-fwd-train.c, 2007.10.05, SJ
  */
 
 #include <stdio.h>
@@ -61,8 +61,8 @@ int main(int argc, char **argv){
    double spaminess;
    unsigned long now;
    struct session_data sdata;
-   struct passwd *pwd;
    struct __config cfg;
+   struct ue UE;
    struct _state state;
    struct _token *P, *Q;
    struct node *tokens[MAXHASH];
@@ -82,6 +82,8 @@ int main(int argc, char **argv){
    /* make sure training type and (su)rbl won't interfere, 2007.09.29, SJ */
 
    cfg.training_mode = 0;
+   cfg.initial_1000_learning=0;
+
    cfg.rbl_domain[0] = '\0';
    cfg.surbl_domain[0] = '\0';
 
@@ -161,42 +163,30 @@ int main(int argc, char **argv){
 #endif
 
 
-   /* select uid */
-
-   snprintf(buf, MAXBUFSIZE-1, "SELECT uid FROM %s WHERE email='%s'", SQL_USER_TABLE, from);
-   if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "sql: %s", buf);
+   /* select uid and username from the user table */
 
 #ifdef HAVE_MYSQL
-   if(mysql_real_query(&mysql, buf, strlen(buf)) == 0){
-      res = mysql_store_result(&mysql);
-      if(res != NULL){
-         row = mysql_fetch_row(res);
-         if(row){
-            if(row[0]) QRY.uid = atol(row[0]);
-         }
-         mysql_free_result(res);
-      }
-   }
+   UE = get_user_from_email(mysql, from);
 #endif
 #ifdef HAVE_SQLITE3
-   if(sqlite3_prepare_v2(db, buf, -1, &pStmt, ppzTail) == SQLITE_OK){
-      if(sqlite3_step(pStmt) == SQLITE_ROW)
-         QRY.uid = sqlite3_column_int(pStmt, 0);
-   }
-
-   sqlite3_finalize(pStmt);
+   UE = get_user_from_email(db, from);
 #endif
 
+   QRY.uid = UE.uid;
 
-   pwd = getpwuid((uid_t)QRY.uid);
+   if(!UE.name){
+      syslog(LOG_PRIORITY, "not found a username for %s", from);
+      goto ENDE;
+   }
 
-   snprintf(buf, MAXBUFSIZE-1, "%s/%s/%c/%s", cfg.chrootdir, USER_DATA_DIR, pwd->pw_name[0], pwd->pw_name);
+   snprintf(buf, MAXBUFSIZE-1, "%s/%s/%c/%s", cfg.chrootdir, USER_DATA_DIR, UE.name[0], UE.name);
 
    if(chdir(buf)){
       syslog(LOG_PRIORITY, "cannot chdir() to %s", buf);
       goto ENDE;
    }
 
+   if(cfg.verbosity > 3) syslog(LOG_PRIORITY, "chdir()'ed to: %s", buf);
 
    if(is_spam == 1)
       snprintf(buf, MAXBUFSIZE-1, "h.%s", ID);
@@ -252,13 +242,13 @@ int main(int argc, char **argv){
                if(train_mode == T_TUM)
                   snprintf(buf, MAXBUFSIZE-1, "UPDATE %s SET nspam=nspam+1, nham=nham-1 WHERE uid=%ld AND nham > 0", SQL_MISC_TABLE, QRY.uid);
                else
-                  snprintf(buf, MAXBUFSIZE-1, "update %s set nspam=nspam+1 WHERE uid=%ld", SQL_MISC_TABLE, QRY.uid);
+                  snprintf(buf, MAXBUFSIZE-1, "UPDATE %s SET nspam=nspam+1 WHERE uid=%ld", SQL_MISC_TABLE, QRY.uid);
             }
             else {
                if(train_mode == T_TUM)
                   snprintf(buf, MAXBUFSIZE-1, "UPDATE %s SET nham=nham+1, nspam=nspam-1 WHERE uid=%ld AND nspam > 0", SQL_MISC_TABLE, QRY.uid);
                else
-                  snprintf(buf, MAXBUFSIZE-1, "update %s set nham=nham+1 WHERE uid=%ld", SQL_MISC_TABLE, QRY.uid);
+                  snprintf(buf, MAXBUFSIZE-1, "UPDATE %s SET nham=nham+1 WHERE uid=%ld", SQL_MISC_TABLE, QRY.uid);
             }
 
          #ifdef HAVE_MYSQL   

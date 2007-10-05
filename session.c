@@ -1,5 +1,5 @@
 /*
- * session.c, 2007.10.04, SJ
+ * session.c, 2007.10.05, SJ
  */
 
 #include <stdio.h>
@@ -513,7 +513,6 @@ void init_child(){
                            snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s/h.%s", USER_DATA_DIR, UE.name[0], UE.name, sdata.ttmpfile);
 
                         link(sdata.ttmpfile, qpath);
-                        syslog(LOG_PRIORITY, "qpath: %s", qpath);
                         chmod(qpath, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
                      }
 

@@ -73,14 +73,33 @@ clapf_admin -u joe -e joe@mail.domain.com -i 1002
 </pre>
 
 Note 1: the user id has nothing to do with Unix user ids.<br/>
-Note 2: if you want a shared group set uid=0 (ie. "-i 0") for every user, and set group_type=0 in clapf.conf.<p/>
 </li>
 
 <li>
-Set up a periodic (ie. using a cron job) purge of the stored messages from the database:
+Create a directory for each user holding their data for training, eg.:
 
 <pre>
-1 2 * * * echo "DELETE from t_queue where UNIX_TIMESTAMP() - ts > 604800" | /usr/bin/mysql --defaults-file=/usr/local/share/clapf/.my.cnf
+mkdir -p /usr/local/var/clapf/data/a/alice
+mkdir -p /usr/local/var/clapf/data/b/bob
+...
+mkdir -p /usr/local/var/clapf/data/j/joe
+...
+
+
+chown alice:www-data /usr/local/var/clapf/data/a/alice
+chown bob:www-data /usr/local/var/clapf/data/b/bob
+...
+chown joe:www-data /usr/local/var/clapf/data/j/joe
+...
+</pre>
+</li>
+
+
+<li>
+Set up a periodic (ie. using a cron job) purge of the stored messages from the /usr/local/var/clapf/data directory:
+
+<pre>
+1 2 * * * find /usr/local/var/clapf/data -type f  -atime +14 -exec rm -f '{}' \;
 </pre>
 
 </li>
@@ -151,7 +170,6 @@ usermod -L av
 
 <pre>
 mkdir -p /opt/av/quarantine
-mkdir /opt/av/spamquarantine
 mkdir /opt/av/tmp
 mkdir /opt/av/queue
 mkdir -p /opt/av/saved/ham
@@ -159,8 +177,6 @@ mkdir /opt/av/saved/spam
 chown -R av:av /opt/av
 chmod 711 /opt/av
 chmod 711 /opt/av/tmp
-chmod 770 /opt/av/spamquarantine
-chgrp www-data /opt/av/spamquarantine
 </pre>
 
 where 'www-data' is the group of the user running your web server.
@@ -233,40 +249,8 @@ if(/^To:/:h && /\+ham@/)
 
 <strong>Handling virtual users</strong><p/>
 
-Clapf is able to handle virtual users. All you have to do is to add them to the clapf database with the
-clapf_admin utility (or direct sql commands) and set up 2 training aliases for them.<p/>
-
-You may choose to have maildrop handle all incoming emails, see <a href="http://www.postfix.org/MAILDROP_README.html">
-Postfix + Maildrop Howto</a> or you may create two system accounts and setup maildrop for them as follows:
-
-
-<pre>
-groupadd ham; useradd -g ham -d /home/ham -s /bin/sh ham
-usermod -L ham
-groupadd spam; useradd -g spam -d /home/spam -s /bin/sh spam
-usermod -L spam
-
-mkdir ~ham; chown -R ham:ham ~ham
-mkdir ~spam; chown -R spam:spam ~spam
-
-# setup .forward files
-echo "|/usr/local/bin/maildrop" > ~ham/.forward
-echo "|/usr/local/bin/maildrop" > ~spam/.forward
-
-# create maildrop configuration files as follows:
-echo '`/usr/local/bin/ham-fwd-train`' > ~ham/.mailfilter
-echo '`/usr/local/bin/spam-fwd-train`' > ~spam/.mailfilter
-
-# fix owner and permissions
-chown ham:ham ~ham/.mailfilter
-chown spam:spam ~spam/.mailfilter
-chmod 600 ~ham/.mailfilter
-chmod 600 ~spam/.mailfilter
-</pre>
-
-In this case users should submit their spam to spam+user@domain and their ham to
-ham+user@domain.<p/>
-
+Currently clapf is able to handle virtual users only in daemon mode. Read on how to
+<a href="virtual.html">set up virtual users</a> in clapf.
 <p/>
 
 

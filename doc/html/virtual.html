@@ -1,0 +1,95 @@
+<html>
+<title>Virtual users</title>
+<link rel="stylesheet" type="text/css" href="style.css">
+<body bgcolor=white text=darkblue vlink=#AC003A>
+<blockquote>
+
+<h1><img src="logo.png"></h1>
+
+<h2>Virtual users</h2>
+
+Clapf supports virtual users only in daemon mode currently.<p/>
+
+You have to do 3 things:
+
+<ol>
+
+<li>set up 2 training aliases:
+
+<pre>
+groupadd hamspam
+useradd -g hamspam -d /home/ham -s /bin/sh ham
+usermod -L ham
+useradd -g hamspam -d /home/spam -s /bin/sh spam
+usermod -L spam
+
+mkdir ~ham; chown -R ham:hamspam ~ham
+mkdir ~spam; chown -R spam:hamspam ~spam
+
+# setup .forward files
+echo "|/usr/local/bin/maildrop" > ~ham/.forward
+echo "|/usr/local/bin/maildrop" > ~spam/.forward
+
+# create maildrop configuration files as follows:
+echo '`/usr/local/bin/ham-fwd-train`' > ~ham/.mailfilter
+echo '`/usr/local/bin/spam-fwd-train`' > ~spam/.mailfilter
+
+# fix owner and permissions
+chown ham:hamspam ~ham/.mailfilter
+chown spam:hamspam ~spam/.mailfilter
+chmod 600 ~ham/.mailfilter
+chmod 600 ~spam/.mailfilter
+</pre>
+
+Users should submit their spam to <a href="mailto:spam+user@domain">spam+user@domain</a>
+and their ham to <a href="mailto:ham+user@domain">ham+user@domain</a>.<p/>
+
+</li>
+
+
+
+<li>add them to the clapf database with the clapf_admin utility</li>
+
+<li>set up their own data directory, eg.
+<pre>
+mkdir -p /usr/local/var/clapf/data/a/alice
+mkdir -p /usr/local/var/clapf/data/b/bob
+...
+mkdir -p /usr/local/var/clapf/data/j/joe
+...
+</pre>
+
+A) if you are using spam quarantine:
+
+<pre>
+chown av:www-data /usr/local/var/clapf/data/j/joe
+chmod 775 /usr/local/var/clapf/data/j/joe
+</pre>
+
+www-data: group of the web server<p/>
+
+B) if you are not interested in the spam quarantine:
+
+<pre>
+chown av:hamspam /usr/local/var/clapf/data/j/joe
+chmod 750 /usr/local/var/clapf/data/j/joe
+</pre>
+
+</li>
+
+
+</ol>
+
+
+<center><a href="index.html">home</a></center><p>
+
+<script src="http://www.google-analytics.com/urchin.js" type="text/javascript">
+</script>
+<script type="text/javascript">
+_uacct = "UA-1610427-1";
+urchinTracker();
+</script>
+
+
+</blockquote>
+</body></html>

@@ -1,5 +1,10 @@
 0.3.30:
 
+2007.10.05, SJ
+
+Revised training and message storage.
+(sql.h, sql.c, spam-fwd-train.c, session.c, doc/html/install.html, doc/html/virtual.html)
+
 2007.10.04, SJ
 
 Fixed a bug if the user id is not found in the user table.

@@ -1,5 +1,5 @@
 /*
- * bayes.c, 2007.10.04, SJ
+ * bayes.c, 2007.10.05, SJ
  */
 
 #include <stdio.h>
@@ -661,7 +661,7 @@ double bayes_file(char *cdbfile, char *spamfile, struct _state state, struct ses
 #endif
 
 #ifndef HAVE_CDB
-   if((QRY.ham_msg <= 0 || QRY.spam_msg <= 0) && cfg.initial_1000_learning == 0){
+   if((QRY.ham_msg + QRY.spam_msg == 0) && cfg.initial_1000_learning == 0){
       syslog(LOG_PRIORITY, "%s: %s", p, ERR_MYSQL_DATA);
       return DEFAULT_SPAMICITY;
    }

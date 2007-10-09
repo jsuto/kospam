@@ -429,7 +429,6 @@ void init_child(){
                for(i=0; i<sdata.num_of_rcpt_to; i++){
                   memset(acceptbuf, 0, MAXBUFSIZE);
                   memset(email, 0, SMALLBUFSIZE);
-                  is_spam = 0;
 
                   p = strchr(sdata.rcptto[i], '<');
                   if(p){
@@ -449,6 +448,7 @@ void init_child(){
                      goto SEND_RESULT;
                   }
                #ifdef HAVE_ANTISPAM
+                  is_spam = 0;
 
                   /* run statistical antispam check */
 

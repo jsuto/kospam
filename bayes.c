@@ -607,6 +607,9 @@ double bayes_file(char *spamfile, struct _state state, struct session_data sdata
 #ifdef HAVE_MYSQL
    struct te TE;
 #endif
+#ifdef HAVE_MYDB
+   struct mydb_node *Q;
+#endif
 
    if(spamfile == NULL){
       syslog(LOG_PRIORITY, "%s: no spamfile", sdata.ttmpfile);
@@ -726,7 +729,13 @@ double bayes_file(char *spamfile, struct _state state, struct session_data sdata
       }
       sqlite3_finalize(pStmt);
    #endif
-
+   #ifdef HAVE_MYDB
+      Q = findmydb_node(mhash, APHash(state.from));
+      if(Q){
+         ham_from = Q->nham;
+         spam_from = Q->nspam;
+      }
+   #endif
 
    #ifdef DEBUG
       fprintf(stderr, "from: %.0f, %.0f\n", ham_from, spam_from);

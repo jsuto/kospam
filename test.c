@@ -90,6 +90,7 @@ int main(int argc, char **argv){
 
 #ifdef HAVE_MYDB
    rc = init_mydb(cfg.mydbfile, mhash);
+   fprintf(stderr, "using %s...\n", cfg.mydbfile);
    if(rc == 1){
       spaminess = bayes_file(argv[2], state, sdata, cfg);
    }

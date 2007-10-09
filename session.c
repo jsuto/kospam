@@ -1,5 +1,5 @@
 /*
- * session.c, 2007.10.05, SJ
+ * session.c, 2007.10.09, SJ
  */
 
 #include <stdio.h>
@@ -494,7 +494,16 @@ void init_child(){
                         UE = get_user_from_email(db, email);
                         sdata.uid = UE.uid;
 
-                        spaminess = bayes_file(db, spamfile, sstate, sdata, cfg);
+                        /* if we have forwarded something for retraining */
+
+                        if(sdata.num_of_rcpt_to == 1 && (str_case_str(sdata.rcptto[0], "+spam@") || str_case_str(sdata.rcptto[0], "+ham@")) ){
+                           snprintf(acceptbuf, MAXBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata.ttmpfile, email);
+                           retraining(db, sdata, UE.name, cfg);
+                           goto SEND_RESULT;
+                        }
+                        else
+                           spaminess = bayes_file(db, spamfile, sstate, sdata, cfg);
+
                         gettimeofday(&tv_spam_stop, &tz);
                      }
                   #endif

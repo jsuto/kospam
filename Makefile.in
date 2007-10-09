@@ -155,7 +155,7 @@ install-passmail:
 	$(INSTALL) -m 0644 $(srcdir)/doc/man/passmail.1 $(DESTDIR)$(mandir)/man1
 
 clean_db:
-	rm -f CDBFILE.* ham.tmp spam.tmp num_of_spam.tmp num_of_ham.tmp tokens*.cdb temp.*
+	rm -f CDBFILE.* ham.tmp spam.tmp num_of_spam.tmp num_of_ham.tmp tokens*.cdb tokens.mydb temp.*
 
 clean:
 	rm -f *.o *.a smapd qs db.sql clapf clapf.conf parsembox splitmbox spamtest spamdrop train spamcgi traincgi trainlogcgi usercgi statcgi passmail spam-fwd-train spamstat aphash clapf_admin prepare-sql

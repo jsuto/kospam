@@ -1,5 +1,5 @@
 /*
- * sql.c, 2007.10.05, SJ
+ * sql.c, 2007.10.09, SJ
  */
 
 #include <stdio.h>
@@ -8,11 +8,11 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
+#include <sys/mman.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <time.h>
 #include <syslog.h>
-#include <sys/mman.h>
 #include "misc.h"
 #include "hash.h"
 #include "decoder.h"
@@ -33,13 +33,13 @@
    int do_sqlite3_qry(sqlite3 *db, int sockfd, int ham_or_spam, char *token, char *tokentable, unsigned int uid, int train_mode);
 #endif
 
+
 /*
  * query the spamicity value of a token from token database
  */
 
 float SQL_QUERY(qry QRY, char *tokentable, char *token, struct node *xhash[MAXHASH]){
-   float r = DEFAULT_SPAMICITY, ham_prob=0, spam_prob=0;
-   int n;
+   float r = DEFAULT_SPAMICITY;
    struct te TE;
 
    TE.nham = TE.nspam = 0;
@@ -58,34 +58,7 @@ float SQL_QUERY(qry QRY, char *tokentable, char *token, struct node *xhash[MAXHA
 
    if(TE.nham == 0 && TE.nspam == 0) return r;
 
-
-   /* if the token has occurred at least N=2 times, 2007.06.13, SJ */
-
-   if(TE.nham + TE.nspam > 2){
-      if(QRY.ham_msg > 0) ham_prob = TE.nham / QRY.ham_msg;
-      else                ham_prob = 0;
-
-      if(QRY.spam_msg > 0) spam_prob = TE.nspam / QRY.spam_msg;
-      else                 spam_prob = 0;
-
-      if(ham_prob > 1) ham_prob = 1;
-      if(spam_prob > 1) spam_prob = 1;
-
-      if(ham_prob + spam_prob > 0) r = spam_prob / (ham_prob + spam_prob);
-
-      /* deal with rare words */
-
-      if(TE.nham < FREQ_MIN && TE.nspam < FREQ_MIN){
-         n = TE.nham;
-         if(TE.nspam > n) n = TE.nspam;
-
-         r = (QRY.rob_s * QRY.rob_x + n * r) / (QRY.rob_s + n);
-      }
-
-   }
-
-   if(r < REAL_HAM_TOKEN_PROBABILITY) r = REAL_HAM_TOKEN_PROBABILITY;
-   if(r > REAL_SPAM_TOKEN_PROBABILITY) r = REAL_SPAM_TOKEN_PROBABILITY;
+   r = calc_spamicity(QRY.ham_msg, QRY.spam_msg, TE.nham, TE.nspam, QRY.rob_s, QRY.rob_x);
 
    return r;
 }

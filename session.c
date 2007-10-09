@@ -47,10 +47,6 @@ int inject_mail(struct session_data sdata, int msg, char *smtpaddr, int smtpport
    int rc;
 #endif
 
-#ifdef HAVE_CDB
-   int rc;
-#endif
-
 
 /*
  * kill child if it works too long or is frozen
@@ -423,9 +419,6 @@ void init_child(){
                    syslog(LOG_PRIORITY, "%s: %s", sdata.ttmpfile, ERR_SQLITE3_OPEN);
                 }
             #endif
-            #ifdef HAVE_CDB
-                rc = init_cdbs(cfg.tokensfile);
-            #endif
 
             #ifdef HAVE_ANTISPAM
                 sstate = parse_message(sdata.ttmpfile, cfg);
@@ -505,22 +498,14 @@ void init_child(){
                         gettimeofday(&tv_spam_stop, &tz);
                      }
                   #endif
-                  #ifdef HAVE_CDB
-                     if(rc == 1)
-                        spaminess = bayes_file(cfg.tokensfile, spamfile, sstate, sdata, cfg);
-                     else
-                        spaminess = DEFAULT_SPAMICITY;
-
-                     gettimeofday(&tv_spam_stop, &tz);
-                  #endif
 
                      /* rename file name according to its spamicity status, 2007.10.04, SJ */
 
                      if(cfg.store_metadata == 1 && UE.name){
                         if(spaminess >= cfg.spam_overall_limit)
-                           snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s/s.%s", USER_DATA_DIR, UE.name[0], UE.name, sdata.ttmpfile);
+                           snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s/s.%s", USER_QUEUE_DIR, UE.name[0], UE.name, sdata.ttmpfile);
                         else
-                           snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s/h.%s", USER_DATA_DIR, UE.name[0], UE.name, sdata.ttmpfile);
+                           snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s/h.%s", USER_QUEUE_DIR, UE.name[0], UE.name, sdata.ttmpfile);
 
                         link(sdata.ttmpfile, qpath);
                         chmod(qpath, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
@@ -602,9 +587,6 @@ void init_child(){
             #endif
             #ifdef HAVE_SQLITE3
                sqlite3_close(db);
-            #endif
-            #ifdef HAVE_CDB
-               close_cdbs();
             #endif
 
 

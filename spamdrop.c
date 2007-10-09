@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2007.10.05, SJ
+ * spamdrop.c, 2007.10.08, SJ
  *
  * check if a single RFC-822 formatted messages is spam or not
  */
@@ -39,6 +39,11 @@ extern int optind;
    sqlite3 *db;
    sqlite3_stmt *pStmt;
    const char **ppzTail=NULL;
+   int rc;
+#endif
+
+#ifdef HAVE_MYDB
+   #include "mydb.h"
    int rc;
 #endif
 
@@ -92,7 +97,12 @@ int main(int argc, char **argv){
       username = pwd->pw_name;
    }
 
-   snprintf(buf, MAXBUFSIZE-1, "%s/%s/%c/%s", cfg.chrootdir, USER_DATA_DIR, username[0], username);
+   snprintf(buf, MAXBUFSIZE-1, "%s/%s/%c/%s", cfg.chrootdir, USER_QUEUE_DIR, username[0], username);
+
+#ifdef HAVE_MYDB
+   if(strlen(cfg.mydbfile) < 4)
+      snprintf(cfg.mydbfile, MAXVAL-1, "%s/%s/%c/%s/%s", cfg.chrootdir, USER_DATA_DIR, username[0], username, MYDB_FILE);
+#endif
 
    if(stat(buf, &st) != 0){
       syslog(LOG_PRIORITY, "missing user directory: %s", buf);
@@ -158,6 +168,13 @@ int main(int argc, char **argv){
          spaminess = bayes_file(db, sdata.ttmpfile, state, sdata, cfg);
          sqlite3_close(db);
       }
+   #endif
+   #ifdef HAVE_MYDB
+      rc = init_mydb(cfg.mydbfile, mhash);
+      if(rc == 1){
+         spaminess = bayes_file(sdata.ttmpfile, state, sdata, cfg);
+      }
+      close_mydb(mhash);
    #endif
 
       free_and_print_list(state.first, 0);

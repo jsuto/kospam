@@ -1283,7 +1283,7 @@ Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   --with-userdb[=ldap|mysql]      use either ldap or mysql database holding user data (default: none)
-  --with-tokendb[=cdb|mysql|sqlite3]      use either cdb, mysql or sqlite3 database holding tokens (default: none)
+  --with-tokendb[=mysql|sqlite3]      use either mysql or sqlite3 database holding tokens (default: none)
   --with-qcache[=tcp|socket]      use Qcache via either a TCP or Unix domain socket (default: none)
 
 Some influential environment variables:
@@ -5239,6 +5239,17 @@ ac_cv_lib_sqlite3=ac_cv_lib_sqlite3_main
      fi
   fi
 
+
+
+  if test "$withval" = "mydb"; then
+     have_train="yes"
+     parsembox="$parsembox"
+     train="train"
+     train_install="install-train"
+     test="test"
+  fi
+
+
   parsembox="$parsembox "
 
 
@@ -5306,9 +5317,6 @@ DATADIR=$data_dir
 cat >>confdefs.h <<_ACEOF
 #define DATADIR "$data_dir"
 _ACEOF
-
-
-
 
 
 
@@ -5598,6 +5606,10 @@ if test "$TOKENDB" = "mysql"; then
    mysql_obj="mysql.o sql.o"
 fi
 
+if test "$TOKENDB" = "mydb"; then
+   defs="$defs -DHAVE_MYDB"
+   mysql_obj="mydb.o"
+fi
 
 if test "x$QCACHE" != "x"; then
    if test "$have_antispam" = "no"; then

@@ -73,6 +73,7 @@ struct session_data {
    int tot_len, num_of_rcpt_to;
 };
 
+
 struct _state init_state();
 int attachment_by_type(struct _state state, char *type);
 int extract_boundary(char *p, char *boundary, int boundary_len);

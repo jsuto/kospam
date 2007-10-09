@@ -1,5 +1,5 @@
 /*
- * messages.h.hu, 2007.06.27, SJ
+ * messages.h.hu, 2007.10.09, SJ
  * Hungarian version
  */
 
@@ -53,6 +53,8 @@
 // sqlite3
 
 #define ERR_SQLITE3_OPEN "Nem tudom megnyitni az sqlite3 adatbázist"
+
+#define ERR_MYDB_OPEN "Nem tudom megnyitni a mydb adatbázist"
 
 // spam quarantine
 

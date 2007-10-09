@@ -1,10 +1,15 @@
 /*
- * prepare-sql.c, 2007.09.05, SJ
+ * prepare-sql.c, 2007.10.09, SJ
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <time.h>
+#include <unistd.h>
 #include "misc.h"
 #include "messages.h"
 #include "config.h"
@@ -19,6 +24,12 @@ struct node {
    struct node *r;
 };
 
+unsigned long nham=0, nspam=0;
+
+#ifdef HAVE_MYDB
+   #include "mydb.h"
+   char *f;
+#endif
 
 void inithash(struct node *xhash[MAXHASH]){
    int i;
@@ -29,11 +40,24 @@ void inithash(struct node *xhash[MAXHASH]){
 
 
 void clearhash(struct node *xhash[MAXHASH]){
-   int i;
+   int i, n=0;
    struct node *p, *q;
 
 #ifdef HAVE_SQLITE3
    printf("BEGIN;\n");
+#endif
+#ifdef HAVE_MYDB
+   int fd;
+   unsigned long now;
+   struct mydb e;
+
+   fd = open(f, O_CREAT|O_WRONLY, S_IRUSR|S_IWUSR);
+   time(&now);
+
+   if(fd != -1){
+      write(fd, &nham, 4);
+      write(fd, &nspam, 4);
+   }
 #endif
 
    for(i=0;i<MAXHASH;i++){
@@ -47,6 +71,16 @@ void clearhash(struct node *xhash[MAXHASH]){
       #ifdef HAVE_SQLITE3
          printf("INSERT INTO t_token (token, uid, nham, nspam) VALUES('%llu', 0, %d, %d);\n", p->key, p->nham, p->nspam);
       #endif
+      #ifdef HAVE_MYDB
+         if(fd != -1 && p->nham + p->nspam > 2){
+            e.key = p->key;
+            e.nham = p->nham;
+            e.nspam = p->nspam;
+            e.ts = now;
+            write(fd, &e, N_SIZE);
+            n++;
+         }
+      #endif
 
          q = q->r;
          if(p)
@@ -57,6 +91,11 @@ void clearhash(struct node *xhash[MAXHASH]){
 
 #ifdef HAVE_SQLITE3
    printf("COMMIT;\n");
+#endif
+#ifdef HAVE_MYDB
+   if(fd != -1) close(fd);
+
+   fprintf(stderr, "put %d records\n", n);
 #endif
 
 }
@@ -114,6 +153,17 @@ int main(int argc, char **argv){
    struct node *tokens[MAXHASH];
    unsigned long long key;
 
+#ifdef HAVE_MYDB
+   if(argc < 6){
+      fprintf(stderr, "usage: %s <HAM> <SPAM> <nham> <nspam> <mydb file>\n", argv[0]);
+      return 1;
+   }
+
+   nham = atol(argv[3]);
+   nspam = atol(argv[4]);
+   f = argv[5];
+#endif
+
    if(argc < 3){
       fprintf(stderr, "usage: %s <HAM> <SPAM>\n", argv[0]);
       return 1;
@@ -131,15 +181,19 @@ int main(int argc, char **argv){
 
    while(fgets(buf, MAXBUFSIZE-1, fham)){
       trim(buf);
-      key = APHash(buf);
-      addnode(tokens, key, 1, 0);
+      if(strlen(buf) > 0){
+         key = APHash(buf);
+         addnode(tokens, key, 1, 0);
+      }
    }
    fclose(fham);
 
    while(fgets(buf, MAXBUFSIZE-1, fspam)){
       trim(buf);
-      key = APHash(buf);
-      addnode(tokens, key, 0, 1);
+      if(strlen(buf) > 0){
+         key = APHash(buf);
+         addnode(tokens, key, 0, 1);
+      }
    }
    fclose(fspam);
 

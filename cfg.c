@@ -431,6 +431,9 @@ struct __config read_config(char *configfile){
                   if(strcmp(key, "sqlite3") == 0)
                      memcpy(cfg.sqlite3, val, MAXVAL-1);
 
+                  if(strcmp(key, "mydbfile") == 0)
+                     memcpy(cfg.mydbfile, val, MAXVAL-1);
+
                   if(strcmp(key, "relocate_delay") == 0)
                      cfg.relocate_delay = atoi(val);
 

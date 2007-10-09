@@ -1,5 +1,5 @@
 /*
- * train.c, 2007.08.08, SJ
+ * train.c, 2007.10.09, SJ
  */
 
 #include <stdio.h>
@@ -21,6 +21,7 @@ extern int optind;
 #ifdef HAVE_MYSQL
    #include <mysql.h>
    MYSQL mysql;
+   void my_walk_hash(qry QRY, int ham_or_spam, char *tokentable, struct node *xhash[MAXHASH], int train_mode);
 #endif
 #ifdef HAVE_SQLITE3
    #include <sqlite3.h>
@@ -28,9 +29,15 @@ extern int optind;
    sqlite3_stmt *pStmt;
    const char **ppzTail=NULL;
    int rc;
+   void my_walk_hash(qry QRY, int ham_or_spam, char *tokentable, struct node *xhash[MAXHASH], int train_mode);
+#endif
+#ifdef HAVE_MYDB
+   #include "mydb.h"
+   char *mydbfile=NULL;
+   int rc;
+   int my_walk_hash(char *mydbfile, struct mydb_node *xhash[MAX_MYDB_HASH], int ham_or_spam, struct node *qhash[MAXHASH], int train_mode);
 #endif
 
-void my_walk_hash(qry QRY, int ham_or_spam, char *tokentable, struct node *xhash[MAXHASH], int train_mode);
 
 int main(int argc, char **argv){
    char buf[MAXBUFSIZE];
@@ -46,7 +53,7 @@ int main(int argc, char **argv){
 
    QRY.uid = 0;
 
-   while((i = getopt(argc, argv, "c:S:H:u:h")) > 0){
+   while((i = getopt(argc, argv, "c:S:H:u:m:h")) > 0){
        switch(i){
 
          case 'c' :
@@ -66,6 +73,10 @@ int main(int argc, char **argv){
 
          case 'u' :
                     if(atol(optarg) > 0) QRY.uid = atol(optarg);
+                    break;
+
+         case 'm' :
+                    mydbfile = optarg;
                     break;
 
          case 'h' :
@@ -118,6 +129,11 @@ int main(int argc, char **argv){
 
    QRY.db = db;   
 #endif
+#ifdef HAVE_MYDB
+   rc = init_mydb(mydbfile, mhash);
+   if(rc != 1)
+      __fatal(ERR_MYDB_OPEN);
+#endif
 
    inithash(tokens);
 
@@ -149,7 +165,11 @@ int main(int argc, char **argv){
       }
    #endif
 
+   #ifdef HAVE_MYDB
+      my_walk_hash(mydbfile, mhash, is_spam, tokens, T_TOE);
+   #else
       my_walk_hash(QRY, is_spam, SQL_TOKEN_TABLE, tokens, T_TOE);
+   #endif
 
       if(QRY.sockfd != -1) close(QRY.sockfd);
 
@@ -191,6 +211,9 @@ ENDE:
 #endif
 #ifdef HAVE_SQLITE3
    sqlite3_close(db);
+#endif
+#ifdef HAVE_MYDB
+   close_mydb(mhash);
 #endif
 
    return 0;

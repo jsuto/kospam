@@ -1,5 +1,5 @@
 /*
- * test.c, 2007.10.05, SJ
+ * test.c, 2007.10.09, SJ
  *
  * test the bayesian decision with a single message
  */
@@ -24,6 +24,10 @@
    int rc;
 #endif
 
+#ifdef HAVE_MYDB
+   #include "mydb.h"
+   int rc;
+#endif
 
 int main(int argc, char **argv){
    double spaminess=DEFAULT_SPAMICITY;
@@ -74,15 +78,22 @@ int main(int argc, char **argv){
       fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(db));
    }
    else {
+      rc = sqlite3_exec(db, "PRAGMA synchronous = FULL", 0, 0, NULL);
+      if(rc != SQLITE_OK)
+          fprintf(stderr, "error happened\n");
+
+
       spaminess = bayes_file(db, argv[2], state, sdata, cfg);
    }
    sqlite3_close(db);
 #endif
 
-#ifdef HAVE_CDB
-   init_cdbs(cfg.tokensfile);
-   spaminess = bayes_file(cfg.tokensfile, argv[2], state, sdata, cfg);
-   close_cdbs();
+#ifdef HAVE_MYDB
+   rc = init_mydb(cfg.mydbfile, mhash);
+   if(rc == 1){
+      spaminess = bayes_file(argv[2], state, sdata, cfg);
+   }
+   close_mydb(mhash);
 #endif
 
    free_and_print_list(state.first, 0);

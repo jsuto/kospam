@@ -1,5 +1,5 @@
 /*
- * config.h, 2007.09.20, SJ
+ * config.h, 2007.10.08, SJ
  */
 
 #include <syslog.h>
@@ -11,8 +11,10 @@
 
 #define CONFIG_FILE CONFDIR "/clapf.conf"
 #define USER_DATA_DIR DATADIR "/clapf/data"
+#define USER_QUEUE_DIR DATADIR "/clapf/queue"
 #define USER_QUARANTINE_DIR "/clapf/quarantine"
 #define SQLITE3_DB_FILE "clapf.sdb"
+#define MYDB_FILE "tokens.mydb"
 
 #define LISTEN_ADDR "127.0.0.1"
 #define LISTEN_PORT 10025

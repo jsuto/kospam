@@ -134,6 +134,8 @@ struct __config {
 
    char sqlite3[MAXVAL];
 
+   char mydbfile[MAXVAL];
+
    // Qcache
 
    char qcache_addr[MAXVAL];

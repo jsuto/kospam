@@ -1,5 +1,13 @@
 0.3.30:
 
+2007.10.09, SJ
+
+Removed the CDB stuff. This database is unsupported from now.
+(bayes.c, session.c, bayes.h)
+
+Added a new database type, called mydb
+(bayes.c, mydb.c, mydb.h)
+
 2007.10.05, SJ
 
 Revised training and message storage.

@@ -222,7 +222,7 @@ int main(){
    if(!p)
       errout(input, ERR_CGI_NOT_AUTHENTICATED);
 
-   snprintf(spamqdir, MAXBUFSIZE-1, "%s/%c/%s", USER_DATA_DIR, *p, p);
+   snprintf(spamqdir, MAXBUFSIZE-1, "%s/%c/%s", USER_QUEUE_DIR, *p, p);
 
 
    if(method == M_GET){

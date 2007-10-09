@@ -1,5 +1,5 @@
 /*
- * sql.h, 2007.10.04, SJ
+ * sql.h, 2007.10.09, SJ
  */
 
 #ifdef HAVE_MYSQL

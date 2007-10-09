@@ -166,7 +166,9 @@ int main(int argc, char **argv){
    #endif
    }
 
+#ifndef HAVE_MYDB
 END:
+#endif
 
 #ifdef HAVE_MYSQL
    mysql_close(&mysql);

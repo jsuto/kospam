@@ -179,7 +179,7 @@ int main(int argc, char **argv){
       goto ENDE;
    }
 
-   snprintf(buf, MAXBUFSIZE-1, "%s/%s/%c/%s", cfg.chrootdir, USER_DATA_DIR, UE.name[0], UE.name);
+   snprintf(buf, MAXBUFSIZE-1, "%s/%s/%c/%s", cfg.chrootdir, USER_QUEUE_DIR, UE.name[0], UE.name);
 
    if(chdir(buf)){
       syslog(LOG_PRIORITY, "cannot chdir() to %s", buf);

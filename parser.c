@@ -284,6 +284,8 @@ struct _state parse(char *buf, struct _state st){
          return state;
 
    }
+   else
+      state.cnt_type = 0;
 
    /* end of header checks */
 
@@ -624,7 +626,6 @@ struct _state parse(char *buf, struct _state st){
       for(i=0; i<strlen(buf); i++)
          if(buf[i] < 0) buf[i] = JUNK_REPLACEMENT_CHAR;
    }
-
 
 DECOMPOSE:
    translate((unsigned char*)buf, state.qp);

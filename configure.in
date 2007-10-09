@@ -242,7 +242,7 @@ AC_ARG_WITH(userdb,
 
 
 AC_ARG_WITH(tokendb,
-[  --with-tokendb[[=cdb|mysql|sqlite3]]      use either cdb, mysql or sqlite3 database holding tokens (default: none)],[
+[  --with-tokendb[[=mysql|sqlite3]]      use either mysql or sqlite3 database holding tokens (default: none)],[
   if test "$withval" != "no" -a "$withval" != "yes"; then
     TOKENDB=$withval
   fi
@@ -288,6 +288,17 @@ AC_ARG_WITH(tokendb,
         exit 1;
      fi
   fi
+
+
+
+  if test "$withval" = "mydb"; then
+     have_train="yes"
+     parsembox="$parsembox"
+     train="train"
+     train_install="install-train"
+     test="test"
+  fi
+
 
   parsembox="$parsembox "
 
@@ -371,6 +382,10 @@ if test "$TOKENDB" = "mysql"; then
    mysql_obj="mysql.o sql.o"
 fi
 
+if test "$TOKENDB" = "mydb"; then
+   defs="$defs -DHAVE_MYDB"
+   mysql_obj="mydb.o"
+fi
 
 if test "x$QCACHE" != "x"; then
    if test "$have_antispam" = "no"; then

@@ -1,5 +1,5 @@
 /*
- * bayes.h, 2007.10.05, SJ
+ * bayes.h, 2007.10.09, SJ
  */
 
 #include "parser.h"
@@ -20,10 +20,9 @@ struct _state parse_message(char *spamfile, struct __config cfg);
    int retraining(sqlite3 *db, struct session_data sdata, char *username, struct __config cfg);
 #endif
 
-#ifdef HAVE_CDB
-   double bayes_file(char *cdbfile, char *spamfile, struct _state state, struct session_data sdata, struct __config cfg);
+#ifdef HAVE_MYDB
+   double bayes_file(char *spamfile, struct _state state, struct session_data sdata, struct __config cfg);
+   int retraining(struct session_data sdata, char *username, struct __config cfg);
 #endif
 
-int init_cdbs(char *tokensfile);
-void close_cdbs();
 

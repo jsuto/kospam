@@ -1,5 +1,5 @@
 /*
- * messages.h, 2007.06.27, SJ
+ * messages.h, 2007.10.09, SJ
  */
 
 // cgi
@@ -52,6 +52,8 @@
 // sqlite3
 
 #define ERR_SQLITE3_OPEN "Cannot open sqlite3 database"
+
+#define ERR_MYDB_OPEN "Cannot init mydb database"
 
 // spam quarantine
 

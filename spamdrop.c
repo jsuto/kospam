@@ -160,10 +160,10 @@ int main(int argc, char **argv){
          if(buf[0] == '\r' || buf[0] == '\n') break;
 
       }
-      close(f);
+      fclose(f);
    }
 
-   if(training_request == 1){
+   /*if(training_request == 1){
 
    #ifdef HAVE_MYSQL
       UE = get_user_from_email(mysql, email);
@@ -184,7 +184,7 @@ int main(int argc, char **argv){
       retraining(sdata, UE.name, cfg);
    #endif
 
-   }
+   }*/
 
    gettimeofday(&tv_spam_start, &tz);
 
@@ -195,6 +195,7 @@ int main(int argc, char **argv){
       mysql_init(&mysql);
       if(mysql_real_connect(&mysql, cfg.mysqlhost, cfg.mysqluser, cfg.mysqlpwd, cfg.mysqldb, cfg.mysqlport, cfg.mysqlsocket, 0)){
          spaminess = bayes_file(mysql, sdata.ttmpfile, state, sdata, cfg);
+         tum_train(sdata.ttmpfile, spaminess, cfg);
          mysql_close(&mysql);
       }
       else
@@ -207,13 +208,18 @@ int main(int argc, char **argv){
       }
       else {
          spaminess = bayes_file(db, sdata.ttmpfile, state, sdata, cfg);
+         tum_train(sdata.ttmpfile, spaminess, cfg);
          sqlite3_close(db);
       }
    #endif
    #ifdef HAVE_MYDB
       rc = init_mydb(cfg.mydbfile, mhash);
       if(rc == 1){
+         /* get spamicity */
          spaminess = bayes_file(sdata.ttmpfile, state, sdata, cfg);
+
+         /* tum training tokens ... */
+         tum_train(sdata.ttmpfile, spaminess, cfg);
       }
       close_mydb(mhash);
    #endif

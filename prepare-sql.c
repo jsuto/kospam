@@ -40,14 +40,14 @@ void inithash(struct node *xhash[MAXHASH]){
 
 
 void clearhash(struct node *xhash[MAXHASH]){
-   int i, n=0;
+   int i;
    struct node *p, *q;
 
 #ifdef HAVE_SQLITE3
    printf("BEGIN;\n");
 #endif
 #ifdef HAVE_MYDB
-   int fd;
+   int fd, n=0;
    unsigned long now;
    struct mydb e;
 

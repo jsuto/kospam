@@ -564,6 +564,11 @@ if test "$QCACHE" = "socket"; then
    qcache_install="install-qcache"
 fi
 
+if test "$want_lmtp" = "yes"; then
+   echo "local delivery: LMTP"
+else
+   echo "local delivery: SMTP"
+fi
 
 if test "$have_libclamav" = "no" && test "$have_clamd" = "no" && test "$have_avg" = "no" && test "$have_avast" = "no" && test "$have_kav" = "no" && test "$have_drweb" = "no" ; then
    echo; echo

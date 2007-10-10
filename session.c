@@ -54,7 +54,7 @@ int inject_mail(struct session_data sdata, int msg, char *smtpaddr, int smtpport
 
 void kill_child(){
    syslog(LOG_PRIORITY, "%s: child is killed by force", sdata.ttmpfile);
-   unlink(sdata.ttmpfile);
+   if(unlink(sdata.ttmpfile)) syslog(LOG_PRIORITY, "%s: failed to remove", sdata.ttmpfile);
    exit(0);
 }
 
@@ -84,7 +84,6 @@ void init_child(){
    gettimeofday(&tv_start, &tz);
 
    make_rnd_string(&(sdata.ttmpfile[0]));
-
    unlink(sdata.ttmpfile);
 }
 
@@ -263,7 +262,7 @@ void init_child(){
             /* remove old queue file, 2007.07.17, SJ */
 
             syslog(LOG_PRIORITY, "%s: removed", sdata.ttmpfile);
-            unlink(sdata.ttmpfile);
+            if(unlink(sdata.ttmpfile)) syslog(LOG_PRIORITY, "%s: failed to remove", sdata.ttmpfile);
 
             init_child();
 
@@ -479,14 +478,17 @@ void init_child(){
 
                         /* if we have forwarded something for retraining */
 
-                        /*if(sdata.num_of_rcpt_to == 1 && (str_case_str(sdata.rcptto[0], "+spam@") || str_case_str(sdata.rcptto[0], "+ham@")) ){
+                        if(sdata.num_of_rcpt_to == 1 && (str_case_str(sdata.rcptto[0], "+spam@") || str_case_str(sdata.rcptto[0], "+ham@")) ){
+                           is_spam = 0;
                            snprintf(acceptbuf, MAXBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata.ttmpfile, email);
-                           retraining(mysql, sdata, UE.name, cfg);
+                           if(str_case_str(sdata.rcptto[0], "+spam@")) is_spam = 1;
+                           retraining(mysql, sdata, UE.name, is_spam, cfg);
                            goto SEND_RESULT;
                         }
-                        else*/
+                        else {
                            spaminess = bayes_file(mysql, spamfile, sstate, sdata, cfg);
-
+                           tum_train(sdata.ttmpfile, spaminess, cfg);
+                        }
 
                         gettimeofday(&tv_spam_stop, &tz);
                      }
@@ -506,13 +508,17 @@ void init_child(){
 
                         /* if we have forwarded something for retraining */
 
-                        /*if(sdata.num_of_rcpt_to == 1 && (str_case_str(sdata.rcptto[0], "+spam@") || str_case_str(sdata.rcptto[0], "+ham@")) ){
+                        if(sdata.num_of_rcpt_to == 1 && (str_case_str(sdata.rcptto[0], "+spam@") || str_case_str(sdata.rcptto[0], "+ham@")) ){
+                           is_spam = 0;
                            snprintf(acceptbuf, MAXBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata.ttmpfile, email);
-                           retraining(db, sdata, UE.name, cfg);
+                           if(str_case_str(sdata.rcptto[0], "+spam@")) is_spam = 1;
+                           //retraining(db, sdata, UE.name, is_spam, cfg);
                            goto SEND_RESULT;
                         }
-                        else*/
+                        else {
                            spaminess = bayes_file(db, spamfile, sstate, sdata, cfg);
+                           tum_train(sdata.ttmpfile, spaminess, cfg);
+                        }
 
                         gettimeofday(&tv_spam_stop, &tz);
                      }
@@ -651,7 +657,7 @@ QUITTING:
       link(sdata.ttmpfile, queuedfile);
    }
 
-   unlink(sdata.ttmpfile);
+   if(unlink(sdata.ttmpfile)) syslog(LOG_PRIORITY, "%s: failed to remove", sdata.ttmpfile);
    syslog(LOG_PRIORITY, "%s: removed", sdata.ttmpfile);
 
    _exit(0);

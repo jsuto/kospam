@@ -1,5 +1,9 @@
 0.3.30:
 
+2007.10.10, SJ
+
+Moved TUM training out of the bayes_file() function.
+
 2007.10.09, SJ
 
 Removed the CDB stuff. This database is unsupported from now.

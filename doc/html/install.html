@@ -33,7 +33,7 @@ Antivirus support</a> page for the details.</li>
 <pre>
 tar zxvf clapf-x.y.zzz.tar.gz
 cd clapf-x.y.zzz
-./configure --with-tokendb=mysql --enable-surbl --enable-blackhole
+./configure --with-tokendb=mysql --enable-surbl --enable-blackhole --enable-lmtp
 make
 su -c 'make install'
 </pre>
@@ -205,6 +205,14 @@ content_filter = lmtp:[127.0.0.1]:10025
 default_destination_concurrency_limit = 10
 smtpd_recipient_limit = 128
 </pre>
+
+If you want SMTP local delivery instead of LMTP, then omit the <i>--enable-lmtp</i>
+configure option and use the following <i>content_filter</i> reference:
+
+<pre>
+content_filter = smtp:[127.0.0.1]:10025
+</pre>
+
 
 <li>Issue the <i>postfix reload</i> command</li>
 

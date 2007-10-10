@@ -580,45 +580,57 @@ that the message may contain, otherwise it is marked as spam. Set to 0 to disabl
 <h3>libclamav stuff</h3>
 
 
-<strong>use_libclamav_block_max_feature</strong><p>
-syntax: use_libclamav_block_max_feature=<i>0|1</i><br>
-default: 1<p>
+<strong>use_libclamav_block_max_feature</strong><p/>
+syntax: use_libclamav_block_max_feature=<i>0|1</i><br/>
+default: 1<p/>
+
 The use_libclamav_block_max_feature directive defines whether to mark archives as viruses (1) or not (0)
-if the clamav_maxfile, clamav_max_archived_file_size, clamav_max_recursion_level limit is reached.<p>
+if the clamav_maxfile, clamav_max_archived_file_size, clamav_max_recursion_level limit is reached.<p/>
 
 
-<strong>clamav_maxfile</strong><p>
-syntax: clamav_maxfile=<i>number</i><br>
-default: 100<p>
+<strong>clamav_maxfile</strong><p/>
+syntax: clamav_maxfile=<i>number</i><br/>
+default: 100<p/>
+
 The clamav_maxfile directive defines the maximum number of the files in an archive. If the archive
-contains more files than this limit libclamav will not scan it.<p>
+contains more files than this limit libclamav will not scan it.<p/>
 
 
-<strong>clamav_max_archived_file_size</strong><p>
-syntax: clamav_max_archived_file_size=<i>number</i><br>
-default: 31457280<p>
+<strong>clamav_max_archived_file_size</strong><p/>
+syntax: clamav_max_archived_file_size=<i>number</i><br/>
+default: 31457280<p/>
+
 The clamav_max_archived_file_size directive defines the maximum size of the uncompressed archive file (in bytes)
-libclamav willing to scan.<p>
+libclamav willing to scan.<p/>
 
 
-<strong>clamav_max_recursion_level</strong><p>
-syntax: clamav_max_recursion_level=<i>number</i><br>
-default: 5<p>
+<strong>clamav_max_recursion_level</strong><p/>
+syntax: clamav_max_recursion_level=<i>number</i><br/>
+default: 5<p/>
+
 The clamav_max_recursion_level directive defines how many levels of recursion of the archive files
-libclamav willing to scan.<p>
+libclamav willing to scan.<p/>
 
 
-<strong>clamav_max_compress_ratio</strong><p>
-syntax: clamav_max_compress_ratio=<i>number</i><br>
-default: 200<p>
+<strong>clamav_max_compress_ratio</strong><p/>
+syntax: clamav_max_compress_ratio=<i>number</i><br/>
+default: 200<p/>
+
 The clamav_max_compress_ratio directive defines the maximum compress ratio of the archive files libclamav
-willing to scan.<p>
+willing to scan.<p/>
 
 
-<strong>clamav_archive_mem_limit</strong><p>
-syntax: clamav_archive_mem_limit=<i>0|1</i><br>
-default: 0<p>
-The clamav_archive_mem_limit directive defines whether to enable (1) or not (0) a memory limit for the bzip2 scanner.<p>
+<strong>clamav_archive_mem_limit</strong><p/>
+syntax: clamav_archive_mem_limit=<i>0|1</i><br/>
+default: 0<p/>
+
+The clamav_archive_mem_limit directive defines whether to enable (1) or not (0) a memory limit for the bzip2 scanner.<p/>
+
+<strong>clamav_block_encrypted_archives</strong><p/>
+syntax: clamav_block_encrypted_archives=<i>0|1</i><br/>
+default: 1<p/>
+
+The clamav_block_encrypted_archives directive defines whether to mark encrypted archives as viruses (1) or not (0).<p/>
 
 
 <h3>MySQL stuff</h3>

@@ -75,9 +75,11 @@ int main(int argc, char **argv){
                     if(atol(optarg) > 0) QRY.uid = atol(optarg);
                     break;
 
+      #ifdef HAVE_MYDB
          case 'm' :
                     mydbfile = optarg;
                     break;
+      #endif
 
          case 'h' :
          default  : 

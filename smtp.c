@@ -112,9 +112,11 @@ int inject_mail(struct session_data sdata, int msg, char *smtpaddr, int smtpport
 
 #ifndef HAVE_LMTP
    for(i=0; i<sdata.num_of_rcpt_to; i++){
+#else
+      i = msg;
 #endif
-      send(psd, sdata.rcptto[msg], strlen(sdata.rcptto[msg]), 0);
-      if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent in injecting: %s", sdata.ttmpfile, sdata.rcptto[msg]);
+      send(psd, sdata.rcptto[i], strlen(sdata.rcptto[i]), 0);
+      if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent in injecting: %s", sdata.ttmpfile, sdata.rcptto[i]);
 
       n = recvtimeout(psd, buf, MAXBUFSIZE, 0);
       if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: got in injecting: %s", sdata.ttmpfile, buf);
@@ -130,6 +132,7 @@ int inject_mail(struct session_data sdata, int msg, char *smtpaddr, int smtpport
 #ifndef HAVE_LMTP
    }
 #endif
+
 
    /* DATA */
 

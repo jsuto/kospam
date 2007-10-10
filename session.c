@@ -433,6 +433,8 @@ void init_child(){
 
             #ifdef HAVE_LMTP
                for(i=0; i<sdata.num_of_rcpt_to; i++){
+            #else
+               i = 0;
             #endif
 
                   memset(acceptbuf, 0, MAXBUFSIZE);

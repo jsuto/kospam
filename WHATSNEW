@@ -1,9 +1,37 @@
 0.3.30:
 -------
 
-Added a query cache to speed up the spamicity query.
+Silently discard virus infected emails.
 
-wwqAdded LMTP support.
+Removed the attachment analyse code (too costly).
+
+Added a query cache (qcache) to speed up the spamicity query
+from MySQL or SQLite3 databases.
+
+You can choose whether to use LMTP or SMTP local delivery.
+
+Removed the --disable-antispam option. The configure script will exit
+if you do not specify neither an antivirus package nor a tokendb type.
+
+Removed CDB support.
+
+Smarter cofigure script and Makefile.
+
+Added a lower cutoff value: max_ham_spamicity (it obsoletes
+the max_junk_spamicity and max_embed_image_spamicity
+variables).
+
+Added blacklist support.
+
+Added an autolearning feature. Set initial_1000_learning=1 in clapf.conf
+if you do not want to perform an initial training for any reason.
+
+Reverting the storage of messages. Instead of putting them to the
+SQL table, they are stored in a per user directory.
+
+No need to use maildrop unless using virtual users with spamdrop.
+
+Other small fixes.
 
 0.3.29:
 -------

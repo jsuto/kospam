@@ -61,7 +61,7 @@ int main(int argc, char **argv){
    char buf[MAXBUFSIZE], qpath[SMALLBUFSIZE], *configfile=CONFIG_FILE, *username, *from=NULL;
    uid_t u;
    int i, n, fd, fd2, print_message=0, is_header=1, tot_len=0, put_subject_spam_prefix=0, sent_subject_spam_prefix=0, is_spam=0;
-   int training_request = 0;
+   int training_request=0, blackhole_request=0;
    FILE *f;
 
    while((i = getopt(argc, argv, "c:p")) > 0){
@@ -87,6 +87,13 @@ int main(int argc, char **argv){
 
 
    (void) openlog("spamdrop", LOG_PID, LOG_MAIL);
+
+   /* shall we go in blackhole mode? */
+
+#ifdef HAVE_BLACKHOLE
+   if(strstr(argv[0], "blackhole")) blackhole_request = 1;
+#endif
+
 
    cfg = read_config(configfile);
 
@@ -158,11 +165,13 @@ int main(int argc, char **argv){
             training_request = 1;
             break;
          }
-         if(buf[0] == '\r' || buf[0] == '\n') break;
 
+         if(buf[0] == '\r' || buf[0] == '\n') break;
       }
       fclose(f);
    }
+
+   /* this is a training request */
 
    if(training_request == 1){
       from = getenv("FROM");
@@ -198,6 +207,8 @@ int main(int argc, char **argv){
       return 0;
    }
 
+
+
    gettimeofday(&tv_spam_start, &tz);
 
    if(tot_len <= cfg.max_message_size_to_filter){
@@ -208,7 +219,7 @@ int main(int argc, char **argv){
       if(mysql_real_connect(&mysql, cfg.mysqlhost, cfg.mysqluser, cfg.mysqlpwd, cfg.mysqldb, cfg.mysqlport, cfg.mysqlsocket, 0)){
          spaminess = bayes_file(mysql, sdata.ttmpfile, state, sdata, cfg);
          tum_train(sdata.ttmpfile, spaminess, cfg);
-         mysql_close(&mysql);
+         //mysql_close(&mysql);
       }
       else
          syslog(LOG_PRIORITY, "%s: %s", sdata.ttmpfile, ERR_MYSQL_CONNECT);
@@ -221,18 +232,54 @@ int main(int argc, char **argv){
       else {
          spaminess = bayes_file(db, sdata.ttmpfile, state, sdata, cfg);
          tum_train(sdata.ttmpfile, spaminess, cfg);
-         sqlite3_close(db);
+         //sqlite3_close(db);
       }
    #endif
    #ifdef HAVE_MYDB
       rc = init_mydb(cfg.mydbfile, mhash);
       if(rc == 1){
-         /* get spamicity */
          spaminess = bayes_file(sdata.ttmpfile, state, sdata, cfg);
-
-         /* tum training tokens ... */
          tum_train(sdata.ttmpfile, spaminess, cfg);
       }
+      //close_mydb(mhash);
+   #endif
+
+      /* if this a message to the blackhole */
+
+      if(blackhole_request == 1){
+         /* put IP address to blackhole directory */
+
+         snprintf(buf, MAXBUFSIZE-1, "%s/%s", cfg.blackhole_path, state.ip);
+         unlink(buf);
+
+         syslog(LOG_PRIORITY, "putting %s to blackhole", state.ip);
+
+         fd = open(buf, O_RDWR|O_CREAT, S_IRUSR|S_IRGRP|S_IROTH);
+         if(fd != -1) close(fd);
+
+         /* train with it if it is not recognised as spam */
+
+         if(spaminess < cfg.spam_overall_limit){
+            syslog(LOG_PRIORITY, "%s: retraining blackhole message", sdata.ttmpfile);
+         #ifdef HAVE_MYSQL
+            retraining(mysql, sdata, username, 1, cfg);
+         #endif
+         #ifdef HAVE_SQLITE3
+            retraining(db, sdata, username, 1, cfg);
+         #endif
+         #ifdef HAVE_MYDB
+            retraining(sdata, username, 1, cfg);
+         #endif
+         }
+      }
+
+   #ifdef HAVE_MYSQL
+      mysql_close(&mysql);
+   #endif
+   #ifdef HAVE_SQLITE3
+      sqlite3_close(db);
+   #endif
+   #ifdef HAVE_MYDB
       close_mydb(mhash);
    #endif
 

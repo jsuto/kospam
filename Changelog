@@ -9,6 +9,9 @@ Training by forwarding email is possible without the maildrop utility.
 
 Finally solved the virtual users problem.
 
+Blackhole (aka. minefield) is handled by spamdrop.
+(spamdrop.c)
+
 2007.10.09, SJ
 
 Removed the CDB stuff. This database is unsupported from now.

@@ -1,5 +1,5 @@
 /*
- * cfg.h, 2007.10.09, SJ
+ * cfg.h, 2007.10.10, SJ
  */
 
 #define MAXVAL 128

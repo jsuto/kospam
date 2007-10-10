@@ -112,6 +112,7 @@ install-clapf: clapf
 
 install-spamdrop: spamdrop
 	$(INSTALL) -m 0755 spamdrop $(DESTDIR)$(bindir)
+	ln -sf blackhole $(DESTDIR)$(bindir)/spamdrop
 	$(INSTALL) -d $(DESTDIR)$(mandir)/man1
 	$(INSTALL) -m 0644 $(srcdir)/doc/man/spamdrop.1 $(DESTDIR)$(mandir)/man1
 

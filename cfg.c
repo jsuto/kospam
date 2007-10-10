@@ -1,5 +1,5 @@
 /*
- * cfg.c, 2007.10.09, SJ
+ * cfg.c, 2007.10.10, SJ
  */
 
 #include <stdio.h>

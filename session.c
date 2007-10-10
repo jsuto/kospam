@@ -94,7 +94,7 @@ void init_child(){
 #endif
 
    int i, n, state, fd;
-   char *p, buf[MAXBUFSIZE], acceptbuf[MAXBUFSIZE], queuedfile[SMALLBUFSIZE], email[SMALLBUFSIZE];
+   char *p, buf[MAXBUFSIZE], acceptbuf[MAXBUFSIZE], queuedfile[SMALLBUFSIZE], email[SMALLBUFSIZE], email2[SMALLBUFSIZE];
 
    #ifdef HAVE_ANTIVIRUS
       char virusinfo[SMALLBUFSIZE];
@@ -438,11 +438,19 @@ void init_child(){
 
                   memset(acceptbuf, 0, MAXBUFSIZE);
                   memset(email, 0, SMALLBUFSIZE);
+                  memset(email2, 0, SMALLBUFSIZE);
 
                   p = strchr(sdata.rcptto[i], '<');
                   if(p){
                      snprintf(email, SMALLBUFSIZE-1, "%s", p+1);
                      p = strchr(email, '>');
+                     if(p) *p = '\0';
+                  }
+
+                  p = strchr(sdata.mailfrom, '<');
+                  if(p){
+                     snprintf(email2, SMALLBUFSIZE-1, "%s", p+1);
+                     p = strchr(email2, '>');
                      if(p) *p = '\0';
                   }
 
@@ -462,14 +470,11 @@ void init_child(){
                   /* run statistical antispam check */
 
                   if(cfg.use_antispam == 1 && (cfg.max_message_size_to_filter == 0 || sdata.tot_len < cfg.max_message_size_to_filter) ){
-                     if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: running Bayesian test", sdata.ttmpfile);
-
                      memset(trainbuf, 0, SMALLBUFSIZE);
                      memset(spamfile, 0, MAXBUFSIZE);
                      snprintf(spamfile, MAXBUFSIZE-1, "%s/%s", cfg.workdir, sdata.ttmpfile);
 
                      gettimeofday(&tv_spam_start, &tz);
-
 
                   #ifdef HAVE_MYSQL
                      if(mysql_connection == 1){
@@ -482,10 +487,15 @@ void init_child(){
                            is_spam = 0;
                            snprintf(acceptbuf, MAXBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata.ttmpfile, email);
                            if(str_case_str(sdata.rcptto[0], "+spam@")) is_spam = 1;
+
+                           UE = get_user_from_email(mysql, email2);
+                           sdata.uid = UE.uid;
+
                            retraining(mysql, sdata, UE.name, is_spam, cfg);
                            goto SEND_RESULT;
                         }
                         else {
+                           if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: running Bayesian test", sdata.ttmpfile);
                            spaminess = bayes_file(mysql, spamfile, sstate, sdata, cfg);
                            tum_train(sdata.ttmpfile, spaminess, cfg);
                         }
@@ -512,10 +522,15 @@ void init_child(){
                            is_spam = 0;
                            snprintf(acceptbuf, MAXBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata.ttmpfile, email);
                            if(str_case_str(sdata.rcptto[0], "+spam@")) is_spam = 1;
-                           //retraining(db, sdata, UE.name, is_spam, cfg);
+
+                           UE = get_user_from_email(db, email2);
+                           sdata.uid = UE.uid;
+
+                           retraining(db, sdata, UE.name, is_spam, cfg);
                            goto SEND_RESULT;
                         }
                         else {
+                           if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: running Bayesian test", sdata.ttmpfile);
                            spaminess = bayes_file(db, spamfile, sstate, sdata, cfg);
                            tum_train(sdata.ttmpfile, spaminess, cfg);
                         }

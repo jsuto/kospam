@@ -4,6 +4,11 @@
 
 Moved TUM training out of the bayes_file() function.
 
+Training by forwarding email is possible without the maildrop utility.
+(bayes.c, bayes.h, session.c, spamdrop.c)
+
+Finally solved the virtual users problem.
+
 2007.10.09, SJ
 
 Removed the CDB stuff. This database is unsupported from now.

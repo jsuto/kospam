@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2007.10.08, SJ
+ * spamdrop.c, 2007.10.10, SJ
  *
  * check if a single RFC-822 formatted messages is spam or not
  */
@@ -56,10 +56,11 @@ int main(int argc, char **argv){
    struct passwd *pwd;
    struct session_data sdata;
    struct _state state;
+   struct ue UE;
    struct __config cfg;
-   char buf[MAXBUFSIZE], qpath[SMALLBUFSIZE], *configfile=CONFIG_FILE, *username;
+   char buf[MAXBUFSIZE], qpath[SMALLBUFSIZE], *configfile=CONFIG_FILE, *username, *from=NULL;
    uid_t u;
-   int i, n, fd, fd2, print_message=0, is_header=1, tot_len=0, put_subject_spam_prefix=0, sent_subject_spam_prefix=0;
+   int i, n, fd, fd2, print_message=0, is_header=1, tot_len=0, put_subject_spam_prefix=0, sent_subject_spam_prefix=0, is_spam=0;
    int training_request = 0;
    FILE *f;
 
@@ -163,28 +164,39 @@ int main(int argc, char **argv){
       fclose(f);
    }
 
-   /*if(training_request == 1){
+   if(training_request == 1){
+      from = getenv("FROM");
+
+      if(!from) return 0;
+
+      is_spam = 0;
+      if(str_case_str(buf, "+spam@")) is_spam = 1;
 
    #ifdef HAVE_MYSQL
-      UE = get_user_from_email(mysql, email);
-      sdata.uid = UE.uid;
+      mysql_init(&mysql);
+      if(mysql_real_connect(&mysql, cfg.mysqlhost, cfg.mysqluser, cfg.mysqlpwd, cfg.mysqldb, cfg.mysqlport, cfg.mysqlsocket, 0)){
+         UE = get_user_from_email(mysql, from);
+         sdata.uid = UE.uid;
 
-      retraining(mysql, sdata, UE.name, cfg);
+         retraining(mysql, sdata, UE.name, is_spam, cfg);
+         mysql_close(&mysql);
+      }
    #endif
    #ifdef HAVE_SQLITE3
-      UE = get_user_from_email(db, email);
+      UE = get_user_from_email(db, from);
       sdata.uid = UE.uid;
 
-      retraining(db, sdata, UE.name, cfg);
+      retraining(db, sdata, UE.name, is_spam, cfg);
    #endif
    #ifdef HAVE_MYDB
       strcpy(UE.name, "aaa");
       sdata.uid = 12345;
 
-      retraining(sdata, UE.name, cfg);
+      retraining(sdata, UE.name, is_spam, cfg);
    #endif
 
-   }*/
+      return 0;
+   }
 
    gettimeofday(&tv_spam_start, &tz);
 

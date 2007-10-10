@@ -897,10 +897,6 @@ int retraining(struct session_data sdata, char *username, int is_spam, struct __
    time(&cclock);
    now = cclock;
 
-   /* training with what? */
-
-   if(str_case_str(sdata.rcptto[0], "+spam@")) is_spam = 1;
-
    fd = open(sdata.ttmpfile, O_RDONLY);
    if(fd != -1){
       while((len = read(fd, buf, 8*MAXBUFSIZE)) > 0){
@@ -1052,7 +1048,7 @@ int retraining(struct session_data sdata, char *username, int is_spam, struct __
          close(QRY.sockfd);
       #endif
 
-         syslog(LOG_PRIORITY, "%s: training round %d, spaminess: %.4f", ID, i, spaminess);
+         if(cfg.verbosity > 3) syslog(LOG_PRIORITY, "%s: training round %d, spaminess: %.4f", ID, i, spaminess);
 
          if(is_spam == 1 && spaminess > cfg.spam_overall_limit) break;
          if(is_spam == 0 && spaminess < cfg.max_ham_spamicity) break;

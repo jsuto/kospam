@@ -14,7 +14,46 @@ You have to do 3 things:
 
 <ol>
 
-<!--li>set up 2 training aliases:
+<li>add them to the clapf database with the clapf_admin utility</li>
+
+<li>set up their own queue directory, eg.
+<pre>
+mkdir -p /usr/local/var/clapf/queue/a/alice
+mkdir -p /usr/local/var/clapf/queue/b/bob
+...
+mkdir -p /usr/local/var/clapf/queue/j/joe
+...
+</pre>
+
+A) if you are using spam quarantine:
+
+<pre>
+chown av:www-data /usr/local/var/clapf/queue/j/joe
+chmod 775 /usr/local/var/clapf/queue/j/joe
+</pre>
+
+www-data: group of the web server<p/>
+
+B) if you are not interested in the spam quarantine:
+
+<pre>
+chown av:hamspam /usr/local/var/clapf/queue/j/joe
+chmod 750 /usr/local/var/clapf/queue/j/joe
+</pre>
+
+</li>
+
+
+<li>
+
+<strong>A) using the content filter (daemon mode):</strong></p>
+
+Then let the users forward every ham message to <a href="mailto:user+ham@domain">user+ham@domain</a>,
+and every spam to <a href="mailto:user+spam@domain">user+spam@domain</a>.<p/>
+
+<strong>B) using spamdrop:</strong></p>
+
+set up 2 training accounts:
 
 <pre>
 groupadd hamspam
@@ -31,54 +70,33 @@ echo "|/usr/local/bin/maildrop" > ~ham/.forward
 echo "|/usr/local/bin/maildrop" > ~spam/.forward
 
 # create maildrop configuration files as follows:
-echo '`/usr/local/bin/ham-fwd-train`' > ~ham/.mailfilter
-echo '`/usr/local/bin/spam-fwd-train`' > ~spam/.mailfilter
+echo 'xfilter "/usr/local/bin/spamdrop -p"' > ~ham/.mailfilter
+echo 'to "/dev/null"' >> ~ham/.mailfilter
+
+echo 'xfilter "/usr/local/bin/spamdrop -p"' > ~spam/.mailfilter
+echo 'to "/dev/null"' >> ~spam/.mailfilter
 
 # fix owner and permissions
 chown ham:hamspam ~ham/.mailfilter
 chown spam:hamspam ~spam/.mailfilter
 chmod 600 ~ham/.mailfilter
 chmod 600 ~spam/.mailfilter
+
+#create to queue directory
+mkdir -p /usr/local/var/clapf/queue/s/spam
+mkdir -p /usr/local/var/clapf/queue/h/ham
+
+chown spam:hamspam /usr/local/var/clapf/queue/s/spam
+chown spam:hamspam /usr/local/var/clapf/queue/h/ham
+
+chmod 770 /usr/local/var/clapf/queue/s/spam
+chmod 770 /usr/local/var/clapf/queue/h/ham
 </pre>
 
-Users should submit their spam to <a href="mailto:spam+user@domain">spam+user@domain</a>
-and their ham to <a href="mailto:ham+user@domain">ham+user@domain</a>.<p/>
-
-</li-->
+Users should submit their spam to <a href="mailto:spam+spam@yourdomain">spam+spam@yourdomain</a>
+and their ham to <a href="mailto:ham+ham@yourdomain">ham+ham@yourdomain</a>.<p/>
 
 
-
-<li>add them to the clapf database with the clapf_admin utility</li>
-
-<li>set up their own data directory, eg.
-<pre>
-mkdir -p /usr/local/var/clapf/data/a/alice
-mkdir -p /usr/local/var/clapf/data/b/bob
-...
-mkdir -p /usr/local/var/clapf/data/j/joe
-...
-</pre>
-
-A) if you are using spam quarantine:
-
-<pre>
-chown av:www-data /usr/local/var/clapf/data/j/joe
-chmod 775 /usr/local/var/clapf/data/j/joe
-</pre>
-
-www-data: group of the web server<p/>
-
-B) if you are not interested in the spam quarantine:
-
-<pre>
-chown av:hamspam /usr/local/var/clapf/data/j/joe
-chmod 750 /usr/local/var/clapf/data/j/joe
-</pre>
-
-</li>
-
-
-<li>hhe training is still under development</li>
 </ol>
 
 

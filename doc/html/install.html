@@ -44,8 +44,10 @@ su -c 'make install'
 
 <li>Perform the <a href="training.html">initial training</a>.</li>
 
-<li>Users may train the token database using a <a href="training2.html">command line tool, a cgi form</a>
-or by forwading the email</li>
+<li>Users may train the token database using a <a href="training2.html">command line tool, a cgi form</a>.
+Users may train clapf by forwading the email as an attachment to user+ham@domain (if they want to train
+with a ham message) or to user+spam@domain (if they want to train with a spam message).<p/>
+</li>
 
 <li>Configure postfix to allow the plus (+) sign as a recipient delimiter. Set the following in main.cf,
 then issue a <i>postfix reload</i> command.
@@ -79,27 +81,27 @@ Note 1: the user id has nothing to do with Unix user ids.<br/>
 Create a directory for each user holding their data for training, eg.:
 
 <pre>
-mkdir -p /usr/local/var/clapf/data/a/alice
-mkdir -p /usr/local/var/clapf/data/b/bob
+mkdir -p /usr/local/var/clapf/queue/a/alice
+mkdir -p /usr/local/var/clapf/queue/b/bob
 ...
-mkdir -p /usr/local/var/clapf/data/j/joe
+mkdir -p /usr/local/var/clapf/queue/j/joe
 ...
 
 
-chown alice:www-data /usr/local/var/clapf/data/a/alice
-chown bob:www-data /usr/local/var/clapf/data/b/bob
+chown alice:www-data /usr/local/var/clapf/queue/a/alice
+chown bob:www-data /usr/local/var/clapf/queue/b/bob
 ...
-chown joe:www-data /usr/local/var/clapf/data/j/joe
+chown joe:www-data /usr/local/var/clapf/queue/j/joe
 ...
 </pre>
 </li>
 
 
 <li>
-Set up a periodic (ie. using a cron job) purge of the stored messages from the /usr/local/var/clapf/data directory:
+Set up a periodic (ie. using a cron job) purge of the stored messages from the /usr/local/var/clapf/queue directory:
 
 <pre>
-1 2 * * * find /usr/local/var/clapf/data -type f  -atime +14 -exec rm -f '{}' \;
+1 2 * * * find /usr/local/var/clapf/queue -type f  -atime +14 -exec rm -f '{}' \;
 </pre>
 
 </li>
@@ -125,29 +127,17 @@ Set up a periodic (ie. using a cron job) purge of the stored messages from the /
 <li>Configure the global maildroprc file (/etc/maildroprc):
 
 <pre>
-if(/^To:/:h && /\+spam@/)
-{
-        `/usr/local/bin/spam-fwd-train`
-        exit
-}
-if(/^To:/:h && /\+ham@/)
-{
-        `/usr/local/bin/ham-fwd-train`
-        exit
-}
-
 xfilter "/usr/local/bin/spamdrop -p"
+to "Mailbox"
 </pre>
 
-The first two blocks let you train the token database by forwarding the email as an attachment to
-user+ham@domain and user+spam@domain respectively.
-
-The last line passes the email to spamdrop, then it reads the email the put some stuff to the email header.
+The first line passes the email to spamdrop, then it reads the email the put some stuff to the email header.
 If it's a spam, spamdrop inserts the "<i>X-Clapf-spamicity: Yes</i>" header line and may mark the Subject
 line too. After downloading the email via POP3/IMAP4/... you can sort your spam to the junk folder or do
 whatever you want with it.<p/>
 
-Of course, per user maildrop configuration is also possible with the users' <i>~/.mailfilter</i> file.</li>
+Of course, per user maildrop configuration is also possible with the users' <i>~/.mailfilter</i> file
+and you may configure using Maildir instead of Mailbox.</li>
 
 
 </ol>
@@ -231,23 +221,6 @@ then reload postfix.
 The <b>max_connections</b> should be greater than default_destination_concurrency_limit:<p/>
 
 max_connections &gt;= default_destination_concurrency_limit + 1<p/>
-</li>
-
-<li>Configure training with maildrop at the global maildroprc file (/etc/maildroprc):
-
-<pre>
-if(/^To:/:h && /\+spam@/)
-{
-        `/usr/local/bin/spam-fwd-train`
-        exit
-}
-if(/^To:/:h && /\+ham@/)
-{
-        `/usr/local/bin/ham-fwd-train`
-        exit
-}
-</pre>
-
 </li>
 
 </ol>

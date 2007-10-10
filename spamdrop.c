@@ -60,6 +60,7 @@ int main(int argc, char **argv){
    char buf[MAXBUFSIZE], qpath[SMALLBUFSIZE], *configfile=CONFIG_FILE, *username;
    uid_t u;
    int i, n, fd, fd2, print_message=0, is_header=1, tot_len=0, put_subject_spam_prefix=0, sent_subject_spam_prefix=0;
+   int training_request = 0;
    FILE *f;
 
    while((i = getopt(argc, argv, "c:p")) > 0){
@@ -144,6 +145,46 @@ int main(int argc, char **argv){
    close(fd2);
 
    if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: written %d bytes", sdata.ttmpfile, tot_len);
+
+   /* check whether this is a training request with user+spam@... or user+ham@... */
+
+   f = fopen(sdata.ttmpfile, "r");
+   if(f){
+      while(fgets(buf, MAXBUFSIZE-1, f)){
+         if(strncmp(buf, "To:", 3) == 0 && (str_case_str(buf, "+ham@") || str_case_str(buf, "+spam@")) ){
+            trim(buf);
+            syslog(LOG_PRIORITY, "training request: %s", buf);
+            training_request = 1;
+            break;
+         }
+         if(buf[0] == '\r' || buf[0] == '\n') break;
+
+      }
+      close(f);
+   }
+
+   if(training_request == 1){
+
+   #ifdef HAVE_MYSQL
+      UE = get_user_from_email(mysql, email);
+      sdata.uid = UE.uid;
+
+      retraining(mysql, sdata, UE.name, cfg);
+   #endif
+   #ifdef HAVE_SQLITE3
+      UE = get_user_from_email(db, email);
+      sdata.uid = UE.uid;
+
+      retraining(db, sdata, UE.name, cfg);
+   #endif
+   #ifdef HAVE_MYDB
+      strcpy(UE.name, "aaa");
+      sdata.uid = 12345;
+
+      retraining(sdata, UE.name, cfg);
+   #endif
+
+   }
 
    gettimeofday(&tv_spam_start, &tz);
 

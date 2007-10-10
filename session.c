@@ -1,5 +1,5 @@
 /*
- * session.c, 2007.10.09, SJ
+ * session.c, 2007.10.10, SJ
  */
 
 #include <stdio.h>
@@ -103,6 +103,7 @@ void init_child(){
 
    #ifdef HAVE_LIBCLAMAV
       const char *virname;
+      unsigned int options=0;
    #endif
 
    #ifdef HAVE_ANTISPAM
@@ -138,7 +139,12 @@ void init_child(){
 
    // send 220 LMTP banner
 
+#ifdef HAVE_LMTP
    snprintf(buf, MAXBUFSIZE-1, LMTP_RESP_220_BANNER, cfg.hostid);
+#else
+   snprintf(buf, MAXBUFSIZE-1, SMTP_RESP_220_BANNER, cfg.hostid);
+#endif
+
    send(new_sd, buf, strlen(buf), 0);
    if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent: %s", sdata.ttmpfile, buf);
 
@@ -313,16 +319,15 @@ void init_child(){
 
             #ifdef HAVE_LIBCLAMAV
 
+               options = CL_SCAN_STDOPT | CL_SCAN_ARCHIVE | CL_SCAN_MAIL | CL_SCAN_OLE2;
+
                /* whether to mark archives as viruses if maxfiles, maxfilesize, or maxreclevel limit is reached, 2006.02.16, SJ */
+               if(cfg.use_libclamav_block_max_feature == 1) options |= CL_SCAN_BLOCKMAX;
 
-               if(cfg.use_libclamav_block_max_feature == 1)
-                  ret = cl_scanfile(sdata.ttmpfile, &virname, NULL, root, &limits,
-                       CL_SCAN_STDOPT | CL_SCAN_ARCHIVE | CL_SCAN_BLOCKENCRYPTED | CL_SCAN_BLOCKMAX | CL_SCAN_MAIL | CL_SCAN_OLE2);
-               else
-                  ret = cl_scanfile(sdata.ttmpfile, &virname, NULL, root, &limits,
-                       CL_SCAN_STDOPT | CL_SCAN_ARCHIVE | CL_SCAN_BLOCKENCRYPTED | CL_SCAN_MAIL | CL_SCAN_OLE2);
+               /* whether to mark encrypted archives as viruses */
+               if(cfg.clamav_block_encrypted_archives == 1) options |= CL_SCAN_BLOCKENCRYPTED;
 
-
+               ret = cl_scanfile(sdata.ttmpfile, &virname, NULL, root, &limits, options);
 
                if(ret == CL_VIRUS){
                   memset(virusinfo, 0, SMALLBUFSIZE);
@@ -426,7 +431,10 @@ void init_child(){
 
                /* send results back to the '.' command */
 
+            #ifdef HAVE_LMTP
                for(i=0; i<sdata.num_of_rcpt_to; i++){
+            #endif
+
                   memset(acceptbuf, 0, MAXBUFSIZE);
                   memset(email, 0, SMALLBUFSIZE);
 
@@ -469,12 +477,12 @@ void init_child(){
 
                         /* if we have forwarded something for retraining */
 
-                        if(sdata.num_of_rcpt_to == 1 && (str_case_str(sdata.rcptto[0], "+spam@") || str_case_str(sdata.rcptto[0], "+ham@")) ){
+                        /*if(sdata.num_of_rcpt_to == 1 && (str_case_str(sdata.rcptto[0], "+spam@") || str_case_str(sdata.rcptto[0], "+ham@")) ){
                            snprintf(acceptbuf, MAXBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata.ttmpfile, email);
                            retraining(mysql, sdata, UE.name, cfg);
                            goto SEND_RESULT;
                         }
-                        else
+                        else*/
                            spaminess = bayes_file(mysql, spamfile, sstate, sdata, cfg);
 
 
@@ -496,12 +504,12 @@ void init_child(){
 
                         /* if we have forwarded something for retraining */
 
-                        if(sdata.num_of_rcpt_to == 1 && (str_case_str(sdata.rcptto[0], "+spam@") || str_case_str(sdata.rcptto[0], "+ham@")) ){
+                        /*if(sdata.num_of_rcpt_to == 1 && (str_case_str(sdata.rcptto[0], "+spam@") || str_case_str(sdata.rcptto[0], "+ham@")) ){
                            snprintf(acceptbuf, MAXBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata.ttmpfile, email);
                            retraining(db, sdata, UE.name, cfg);
                            goto SEND_RESULT;
                         }
-                        else
+                        else*/
                            spaminess = bayes_file(db, spamfile, sstate, sdata, cfg);
 
                         gettimeofday(&tv_spam_stop, &tz);
@@ -582,7 +590,9 @@ void init_child(){
                SEND_RESULT:
                   send(new_sd, acceptbuf, strlen(acceptbuf), 0);
 
+            #ifdef HAVE_LMTP
                } /* for */
+            #endif
 
 
                /* close database backend handler */

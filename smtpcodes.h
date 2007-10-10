@@ -1,5 +1,5 @@
 /*
- * smtpcodes.h, 2007.08.22, SJ
+ * smtpcodes.h, 2007.10.10, SJ
  */
 
 // SMTP states
@@ -51,5 +51,4 @@
 // LMTP responses
 
 #define LMTP_RESP_220_BANNER "220 %s LMTP\r\n"
-#define LMTP_RESP_250_OK "250 Ok\r\n"
 

@@ -1,5 +1,5 @@
 /*
- * cfg.h, 2007.09.20, SJ
+ * cfg.h, 2007.10.09, SJ
  */
 
 #define MAXVAL 128
@@ -120,6 +120,7 @@ struct __config {
    int clamav_max_recursion_level;
    int clamav_max_compress_ratio;
    int clamav_archive_mem_limit;
+   int clamav_block_encrypted_archives;
 
    // mysql stuff
 

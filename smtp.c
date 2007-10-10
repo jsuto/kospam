@@ -110,7 +110,9 @@ int inject_mail(struct session_data sdata, int msg, char *smtpaddr, int smtpport
 
    /* RCPT TO */
 
-   //for(i=0; i<sdata.num_of_rcpt_to; i++){
+#ifndef HAVE_LMTP
+   for(i=0; i<sdata.num_of_rcpt_to; i++){
+#endif
       send(psd, sdata.rcptto[msg], strlen(sdata.rcptto[msg]), 0);
       if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent in injecting: %s", sdata.ttmpfile, sdata.rcptto[msg]);
 
@@ -125,8 +127,9 @@ int inject_mail(struct session_data sdata, int msg, char *smtpaddr, int smtpport
          if(strncmp(buf, "550", 3) == 0) return ERR_REJECT;
          return ERR_INJECT;
       }
-   //}
-
+#ifndef HAVE_LMTP
+   }
+#endif
 
    /* DATA */
 

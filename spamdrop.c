@@ -252,10 +252,12 @@ int main(int argc, char **argv){
          snprintf(buf, MAXBUFSIZE-1, "%s/%s", cfg.blackhole_path, state.ip);
          unlink(buf);
 
-         syslog(LOG_PRIORITY, "putting %s to blackhole", state.ip);
-
          fd = open(buf, O_RDWR|O_CREAT, S_IRUSR|S_IRGRP|S_IROTH);
-         if(fd != -1) close(fd);
+         if(fd != -1){
+            syslog(LOG_PRIORITY, "putting %s to blackhole", state.ip);
+            close(fd);
+         }
+         else syslog(LOG_PRIORITY, "failed to put %s to blackhole", state.ip);
 
          /* train with it if it is not recognised as spam */
 

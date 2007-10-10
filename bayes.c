@@ -473,7 +473,7 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
       #ifdef DEBUG
          fprintf(stderr, "rbl check took %ld ms\n", tvdiff(tv2, tv1)/1000);
       #else
-         syslog(LOG_PRIORITY, "%s: rbl check took %ld ms", spamfile, tvdiff(tv2, tv1)/1000);
+         if(cfg.verbosity > 3) syslog(LOG_PRIORITY, "%s: rbl check took %ld ms", spamfile, tvdiff(tv2, tv1)/1000);
       #endif
 
          for(i=0; i<found_on_rbl; i++){
@@ -572,7 +572,7 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
             #ifdef DEBUG
                fprintf(stderr, "surbl check took %ld ms\n", tvdiff(tv2, tv1)/1000);
             #else
-               syslog(LOG_PRIORITY, "%s: surbl check took %ld ms", spamfile, tvdiff(tv2, tv1)/1000);
+               if(cfg.verbosity > 3) syslog(LOG_PRIORITY, "%s: surbl check took %ld ms", spamfile, tvdiff(tv2, tv1)/1000);
             #endif
 
                surbl_match += i;

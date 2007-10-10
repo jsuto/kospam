@@ -112,7 +112,6 @@ install-clapf: clapf
 
 install-spamdrop: spamdrop
 	$(INSTALL) -m 0755 spamdrop $(DESTDIR)$(bindir)
-	ln -sf blackhole $(DESTDIR)$(bindir)/spamdrop
 	$(INSTALL) -d $(DESTDIR)$(mandir)/man1
 	$(INSTALL) -m 0644 $(srcdir)/doc/man/spamdrop.1 $(DESTDIR)$(mandir)/man1
 
@@ -130,7 +129,7 @@ install-parsembox:
 	$(INSTALL) -m 0755 $(srcdir)/perl/prepare.pl $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 $(srcdir)/perl/shrink.pl $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 $(srcdir)/perl/uribl.pl $(DESTDIR)$(libexecdir)/clapf
-	$(INSTALL) -m 0755 $(srcdir)/util/db_init_cdb.sh $(DESTDIR)$(libexecdir)/clapf
+	$(INSTALL) -m 0755 $(srcdir)/util/db_init_mydb.sh $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 $(srcdir)/util/db_init_mysql.sh $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 $(srcdir)/util/db_init_sqlite3.sh $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 $(srcdir)/util/user2sq.sh $(DESTDIR)$(libexecdir)/clapf
@@ -140,6 +139,7 @@ install-parsembox:
 
 install-train:
 	$(INSTALL) -m 0755 spamdrop $(DESTDIR)$(bindir)
+	ln -sf spamdrop $(DESTDIR)$(bindir)/blackhole
 	$(INSTALL) -m 0755 spam-fwd-train $(DESTDIR)$(bindir)
 	ln -sf spam-fwd-train $(DESTDIR)$(bindir)/ham-fwd-train
 	$(INSTALL) -m 0755 spamstat $(DESTDIR)$(bindir)

@@ -15,7 +15,7 @@ if you do not specify neither an antivirus package nor a tokendb type.
 
 Removed CDB support.
 
-Smarter cofigure script and Makefile.
+Smarter configure script and Makefile.
 
 Added a lower cutoff value: max_ham_spamicity (it obsoletes
 the max_junk_spamicity and max_embed_image_spamicity

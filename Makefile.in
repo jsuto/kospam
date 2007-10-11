@@ -140,8 +140,8 @@ install-parsembox:
 install-train:
 	$(INSTALL) -m 0755 spamdrop $(DESTDIR)$(bindir)
 	ln -sf spamdrop $(DESTDIR)$(bindir)/blackhole
-	$(INSTALL) -m 0755 spam-fwd-train $(DESTDIR)$(bindir)
-	ln -sf spam-fwd-train $(DESTDIR)$(bindir)/ham-fwd-train
+	#$(INSTALL) -m 0755 spam-fwd-train $(DESTDIR)$(bindir)
+	#ln -sf spam-fwd-train $(DESTDIR)$(bindir)/ham-fwd-train
 	$(INSTALL) -m 0755 spamstat $(DESTDIR)$(bindir)
 	$(INSTALL) -m 0755 aphash $(DESTDIR)$(bindir)
 	$(INSTALL) -m 0755 clapf_admin $(DESTDIR)$(bindir)

@@ -42,7 +42,7 @@ int main(int argc, char **argv){
             buf[len] = '\0';
             hash = APHash(buf);
             p++;
-            printf("%llu %s", hash, p);
+            if(hash > 0) printf("%llu %s", hash, p);
          }
       }
       fclose(f);

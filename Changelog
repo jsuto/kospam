@@ -1,3 +1,13 @@
+0.3.30-rc2:
+
+2007.10.11, SJ
+
+Treat iso-8859-1 messages as iso-8859-2.
+(parser.c)
+
+Fixed a username by using mydb.
+(spamdrop.c)
+
 0.3.30-rc1:
 
 2007.10.10, SJ

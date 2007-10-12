@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2007.10.10, SJ
+ * spamdrop.c, 2007.10.11, SJ
  *
  * check if a single RFC-822 formatted messages is spam or not
  */
@@ -56,13 +56,16 @@ int main(int argc, char **argv){
    struct passwd *pwd;
    struct session_data sdata;
    struct _state state;
-   struct ue UE;
    struct __config cfg;
    char buf[MAXBUFSIZE], qpath[SMALLBUFSIZE], *configfile=CONFIG_FILE, *username, *from=NULL;
    uid_t u;
    int i, n, fd, fd2, print_message=0, is_header=1, tot_len=0, put_subject_spam_prefix=0, sent_subject_spam_prefix=0, is_spam=0;
    int training_request=0, blackhole_request=0;
    FILE *f;
+
+#ifndef HAVE_MYDB
+   struct ue UE;
+#endif
 
    while((i = getopt(argc, argv, "c:p")) > 0){
        switch(i){
@@ -198,10 +201,9 @@ int main(int argc, char **argv){
       retraining(db, sdata, UE.name, is_spam, cfg);
    #endif
    #ifdef HAVE_MYDB
-      strcpy(UE.name, "aaa");
       sdata.uid = 12345;
 
-      retraining(sdata, UE.name, is_spam, cfg);
+      retraining(sdata, username, is_spam, cfg);
    #endif
 
       return 0;

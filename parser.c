@@ -1,5 +1,5 @@
 /*
- * parser.c, 2007.09.04, SJ
+ * parser.c, 2007.10.11, SJ
  */
 
 #include <stdio.h>
@@ -384,13 +384,14 @@ struct _state parse(char *buf, struct _state st){
    if(str_case_str(buf, "charset") && str_case_str(buf, "UTF-8"))
       state.utf8 = 1;
 
-   if(str_case_str(buf, "charset") && str_case_str(buf, "ISO-8859-2"))
+   if(str_case_str(buf, "charset") && (str_case_str(buf, "ISO-8859-2") || str_case_str(buf, "ISO-8859-1"))  ){
       state.iso_8859_2 = 1;
+   }
 
    /* catch encoded stuff in the Subject|From lines, 2007.09.04, SJ */
 
    if(state.message_state == MSG_SUBJECT || state.message_state == MSG_FROM){
-      if(str_case_str(buf, "?iso-8859-2?")) state.iso_8859_2 = 1;
+      if(str_case_str(buf, "?iso-8859-2?") || str_case_str(buf, "?iso-8859-1?")) state.iso_8859_2 = 1;
       if(str_case_str(buf, "?utf-8?")) state.utf8 = 1;
    }
 

@@ -34,7 +34,7 @@ create table if not exists t_queue (
 	uid int unsigned not null,
 	ts bigint unsigned not null,
 	is_spam tinyint default 0,
-	data blob not null,
+	data blob not null
 );
 
 create index t_queue_idx on t_queue(uid, id);

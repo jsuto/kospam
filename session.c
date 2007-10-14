@@ -1,5 +1,5 @@
 /*
- * session.c, 2007.10.10, SJ
+ * session.c, 2007.10.14, SJ
  */
 
 #include <stdio.h>
@@ -26,7 +26,7 @@
 #include "sql.h"
 #include "config.h"
 
-int sd, inj, ret, rav, prevlen=0;
+int sd, fd, inj, ret, rav, prevlen=0;
 char prevbuf[MAXBUFSIZE], last2buf[2*MAXBUFSIZE+1];
 struct timezone tz;
 struct timeval tv_start, tv_rcvd, tv_scnd, tv_sent, tv_stop, tv_meta1, tv_meta2;
@@ -63,8 +63,9 @@ void kill_child(){
  * init SMTP session
  */
 
-void init_child(){
+void init_child(int new_sd, char *hostid){
    int i;
+   char buf[SMALLBUFSIZE];
 
    memset(sdata.mailfrom, 0, MAXBUFSIZE);
    memset(last2buf, 0, 2*MAXBUFSIZE+1);
@@ -85,6 +86,15 @@ void init_child(){
 
    make_rnd_string(&(sdata.ttmpfile[0]));
    unlink(sdata.ttmpfile);
+
+   fd = open(sdata.ttmpfile, O_CREAT|O_RDWR, S_IRUSR|S_IWUSR);
+   if(fd == -1){
+       syslog(LOG_PRIORITY, "%s: %s", ERR_OPEN_TMP_FILE, sdata.ttmpfile);
+       snprintf(buf, SMALLBUFSIZE-1, SMTP_RESP_421_ERR_TMP, hostid);
+       send(new_sd, buf, strlen(buf), 0);
+       _exit(0);
+   }
+
 }
 
 #ifdef HAVE_LIBCLAMAV
@@ -93,7 +103,7 @@ void init_child(){
    void postfix_to_clapf(int new_sd, struct __config cfg){
 #endif
 
-   int i, n, state, fd;
+   int i, n, state;
    char *p, buf[MAXBUFSIZE], acceptbuf[MAXBUFSIZE], queuedfile[SMALLBUFSIZE], email[SMALLBUFSIZE], email2[SMALLBUFSIZE];
 
    #ifdef HAVE_ANTIVIRUS
@@ -124,17 +134,11 @@ void init_child(){
 
    state = SMTP_STATE_INIT;
 
-   init_child();
+   init_child(new_sd, cfg.hostid);
+
 
    if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: fork()", sdata.ttmpfile);
 
-   fd = open(sdata.ttmpfile, O_CREAT|O_RDWR, S_IRUSR|S_IWUSR);
-   if(fd == -1){
-       syslog(LOG_PRIORITY, "%s: %s", ERR_OPEN_TMP_FILE, sdata.ttmpfile);
-       snprintf(buf, MAXBUFSIZE-1, SMTP_RESP_421_ERR_TMP, cfg.hostid);
-       send(new_sd, buf, strlen(buf), 0);
-       _exit(0);
-   }
 
    // send 220 LMTP banner
 
@@ -259,34 +263,23 @@ void init_child(){
          if(strncasecmp(buf, SMTP_CMD_RESET, strlen(SMTP_CMD_RESET)) == 0){
             if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: got: %s", sdata.ttmpfile, buf);
 
-            /* remove old queue file, 2007.07.17, SJ */
-
-            syslog(LOG_PRIORITY, "%s: removed", sdata.ttmpfile);
-            if(unlink(sdata.ttmpfile)) syslog(LOG_PRIORITY, "%s: failed to remove", sdata.ttmpfile);
-
-            init_child();
-
-            state = SMTP_STATE_HELO;
-
-
-            /* recreate file, 2006.01.03, SJ */
-
-            fd = open(sdata.ttmpfile, O_CREAT|O_RDWR, S_IRUSR|S_IWUSR);
-            if(fd == -1){
-               syslog(LOG_PRIORITY, "%s: %s", ERR_OPEN_TMP_FILE, sdata.ttmpfile);
-
-               snprintf(buf, MAXBUFSIZE-1, SMTP_RESP_421_ERR_TMP, cfg.hostid);
-               send(new_sd, buf, strlen(buf), 0);
-               if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent: %s", sdata.ttmpfile, buf);
-
-               _exit(0);
-            }
+            /* we must send a 250 Ok */
 
             send(new_sd, SMTP_RESP_250_OK, strlen(SMTP_RESP_250_OK), 0);
             if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent: %s", sdata.ttmpfile, SMTP_RESP_250_OK);
 
+            /* remove old queue file, 2007.07.17, SJ */
+
+            syslog(LOG_PRIORITY, "%s: removed", sdata.ttmpfile);
+            unlink(sdata.ttmpfile);
+
+            init_child(new_sd, cfg.hostid);
+
+            state = SMTP_STATE_HELO;
+
             continue;
          }
+
 
          /* accept mail data */
 
@@ -314,7 +307,6 @@ void init_child(){
                rav = AVIR_OK;
 
                gettimeofday(&tv_rcvd, &tz);
-               if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: virus scanning", sdata.ttmpfile);
 
             #ifdef HAVE_LIBCLAMAV
 
@@ -397,6 +389,8 @@ void init_child(){
 
                gettimeofday(&tv_scnd, &tz);
 
+               syslog(LOG_PRIORITY, "%s: virus scanning done in %ld [ms]", sdata.ttmpfile, tvdiff(tv_scnd, tv_rcvd)/1000);
+
                if(rav == AVIR_VIRUS){
                   syslog(LOG_PRIORITY, "%s: Virus found %s", sdata.ttmpfile, virusinfo);
 
@@ -406,27 +400,12 @@ void init_child(){
          #endif /* HAVE_ANTIVIRUS */
 
 
-               /* open database backend handler */
+               /* parse the message only once, 2007.10.14, SJ */
 
-            #ifdef HAVE_MYSQL
-               mysql_init(&mysql);
-               if(mysql_real_connect(&mysql, cfg.mysqlhost, cfg.mysqluser, cfg.mysqlpwd, cfg.mysqldb, cfg.mysqlport, cfg.mysqlsocket, 0))
-                  mysql_connection = 1;
-               else {
-                  mysql_connection = 0;
-                  syslog(LOG_PRIORITY, "%s: %s", sdata.ttmpfile, ERR_MYSQL_CONNECT);
-               }
-            #endif
-            #ifdef HAVE_SQLITE3
-                rc = sqlite3_open(cfg.sqlite3, &db);
-                if(rc){
-                   syslog(LOG_PRIORITY, "%s: %s", sdata.ttmpfile, ERR_SQLITE3_OPEN);
-                }
-            #endif
+         #ifdef HAVE_ANTISPAM
+               sstate = parse_message(sdata.ttmpfile, cfg);
+         #endif
 
-            #ifdef HAVE_ANTISPAM
-                sstate = parse_message(sdata.ttmpfile, cfg);
-            #endif
 
                /* send results back to the '.' command */
 
@@ -464,6 +443,7 @@ void init_child(){
 
                      goto SEND_RESULT;
                   }
+
                #ifdef HAVE_ANTISPAM
                   is_spam = 0;
 
@@ -475,6 +455,25 @@ void init_child(){
                      snprintf(spamfile, MAXBUFSIZE-1, "%s/%s", cfg.workdir, sdata.ttmpfile);
 
                      gettimeofday(&tv_spam_start, &tz);
+
+                     /* open database backend handler */
+
+                  #ifdef HAVE_MYSQL
+                     mysql_init(&mysql);
+                     if(mysql_real_connect(&mysql, cfg.mysqlhost, cfg.mysqluser, cfg.mysqlpwd, cfg.mysqldb, cfg.mysqlport, cfg.mysqlsocket, 0))
+                        mysql_connection = 1;
+                     else {
+                        mysql_connection = 0;
+                        syslog(LOG_PRIORITY, "%s: %s", sdata.ttmpfile, ERR_MYSQL_CONNECT);
+                     }
+                  #endif
+                  #ifdef HAVE_SQLITE3
+                      rc = sqlite3_open(cfg.sqlite3, &db);
+                      if(rc){
+                         syslog(LOG_PRIORITY, "%s: %s", sdata.ttmpfile, ERR_SQLITE3_OPEN);
+                      }
+                  #endif
+
 
                   #ifdef HAVE_MYSQL
                      if(mysql_connection == 1){
@@ -612,6 +611,7 @@ void init_child(){
 
                SEND_RESULT:
                   send(new_sd, acceptbuf, strlen(acceptbuf), 0);
+                  if(cfg.verbosity >= 3) syslog(LOG_PRIORITY, "%s: sent: %s", sdata.ttmpfile, acceptbuf);
 
             #ifdef HAVE_LMTP
                } /* for */

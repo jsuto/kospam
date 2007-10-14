@@ -1,5 +1,5 @@
 /*
- * config.h, 2007.10.08, SJ
+ * config.h, 2007.10.14, SJ
  */
 
 #include <syslog.h>
@@ -53,7 +53,7 @@
 #define TIMEOUT_USEC 500000
 #define SMAP_TIMEOUT 15
 #define SMAP_TIMEOUT_USEC 0
-#define SESSION_TIMEOUT 60
+#define SESSION_TIMEOUT 420
 #define MAXBUFSIZE 8192
 #define SMALLBUFSIZE 512
 #define RANDOM_POOL "/dev/urandom"

@@ -5,7 +5,6 @@
 #include <sys/time.h>
 #include "config.h"
 
-
 void _fatal(char *s);
 void __fatal(char *s);
 long tvdiff(struct timeval a, struct timeval b);

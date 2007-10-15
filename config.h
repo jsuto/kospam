@@ -78,7 +78,8 @@
 
 // logging levels
 
-#define _LOG_DEBUG 3
+#define _LOG_INFO 3
+#define _LOG_DEBUG 5
 
 #define MAX_RCPT_TO 128
 

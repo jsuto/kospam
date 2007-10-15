@@ -11,44 +11,44 @@
 <h3>general parameters</h3>
 
 
-<strong>verbosity</strong><p>
-syntax: verbosity=<i>number</i><br>
-default: 0<p>
+<strong>verbosity</strong><p/>
+syntax: verbosity=<i>number</i><br/>
+default: 1<p/>
 The verbosity directive defines what verbosity level clapf will use. The higher value
-means more syslog entries. If you want to see the smtp conversation between postfix
-and clapf set the verbosity level to least 3 (=debug).<p>
+means more syslog entries. 3 is the info level, and if you want to see the smtp
+conversation between postfix and clapf set the verbosity level to least 5 (=debug).<p/>
 
 
-<strong>hostid</strong><p>
-syntax: hostid=<i>string</i><br>
-default: av-engine.localhost<p>
-The hostid directive defines the value clapf uses in the HELO SMTP command.<p>
+<strong>hostid</strong><p/>
+syntax: hostid=<i>string</i><br/>
+default: av-engine.localhost<p/>
+The hostid directive defines the value clapf uses in the HELO SMTP command.<p/>
 
 
-<strong>listen_addr</strong><p>
-syntax: listen_addr=<i>IPv4 address</i><br>
-default: 127.0.0.1<p>
-The listen_addr directive defines on which IPv4 address clapf will listen.<p>
+<strong>listen_addr</strong><p/>
+syntax: listen_addr=<i>IPv4 address</i><br/>
+default: 127.0.0.1<p/>
+The listen_addr directive defines on which IPv4 address clapf will listen.<p/>
 
-<strong>listen_port</strong><p>
-syntax: listen_port=<i>number</i><br>
-default: 10025<p>
+<strong>listen_port</strong><p/>
+syntax: listen_port=<i>number</i><br/>
+default: 10025<p/>
 The listen_port directive defines on which TCP port clapf will listen.
-Since clapf should not be run as root the port number has to be higher than 1024.<p>
+Since clapf should not be run as root the port number has to be higher than 1024.<p/>
 
 
-<strong>postfix_addr</strong><p>
-syntax: postfix_addr=<i>IPv4 address</i><br>
-default: 127.0.0.1<p>
+<strong>postfix_addr</strong><p/>
+syntax: postfix_addr=<i>IPv4 address</i><br/>
+default: 127.0.0.1<p/>
 The postfix_addr directive defines the IPv4 address where postfix is waiting for us.
-Clapf will inject the message back to this IPv4 address.<p>
+Clapf will inject the message back to this IPv4 address.<p/>
 
 
-<strong>postfix_port</strong><p>
-syntax: postfix_port=<i>number</i><br>
-default: 10026<p>
+<strong>postfix_port</strong><p/>
+syntax: postfix_port=<i>number</i><br/>
+default: 10026<p/>
 The postfix_port directive defines the port number where postfix is waiting for us.
-Clapf will inject the message back to this port.<p>
+Clapf will inject the message back to this port.<p/>
 
 
 <strong>spam_smtp_addr</strong><p>
@@ -111,20 +111,24 @@ default: /tmp/clamd<p>
 The clamd_socket directive defines the socket path where clamd is waiting for us.<p>
 
 
-<strong>session_timeout</strong><p>
-syntax: session_timeout=<i>number</i><br>
-default: 60<p>
-The session_timeout directive defines how many seconds a child process is allowed to run before killed by force.<p>
+<strong>session_timeout</strong><p/>
+syntax: session_timeout=<i>number</i><br/>
+default: 420<p/>
+
+The session_timeout directive defines how many seconds a child process is allowed to run before killed by force.
+This value should be greater than lmtp_connection_reuse_time_limit (300s by default), because
+postfix will not terminate the connection, but reuse it.<p/>
 
 
-<strong>max_connections</strong><p>
-syntax: max_connections=<i>number</i><br>
-default: 30<p>
+<strong>max_connections</strong><p/>
+syntax: max_connections=<i>number</i><br/>
+default: 30<p/>
+
 The max_connections directive defines the maximum number of simoultaneous connections
 clapf accepts. This value should be greater than the max. number of connections postfix
 will open to clapf (by default 20). Please note that your antivirus scanner should be
 able to handle at least this number of simoultaneous demands, too. If you use libclamav
-you should have enough memory for all the possible maximum number of clapf processes, too.<p>
+you should have enough memory for all the possible maximum number of clapf processes, too.<p/>
 
 
 <strong>backlog</strong><p>

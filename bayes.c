@@ -261,7 +261,7 @@ int tum_train(char *spamfile, double spaminess, struct __config cfg){
 
       gettimeofday(&tv2, &tz);
 
-      if(n > 0) syslog(LOG_PRIORITY, "%s: TUM training %ld tokens for uid: %ld %ld [ms]", spamfile, n, QRY.uid, tvdiff(tv2, tv1)/1000);
+      if(n > 0 && cfg.verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: TUM training %ld tokens for uid: %ld %ld [ms]", spamfile, n, QRY.uid, tvdiff(tv2, tv1)/1000);
 
    #ifdef HAVE_MYSQL
       mysql_real_query(&mysql, buf, strlen(buf));
@@ -473,7 +473,7 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
       #ifdef DEBUG
          fprintf(stderr, "rbl check took %ld ms\n", tvdiff(tv2, tv1)/1000);
       #else
-         if(cfg.verbosity > 3) syslog(LOG_PRIORITY, "%s: rbl check took %ld ms", spamfile, tvdiff(tv2, tv1)/1000);
+         if(cfg.verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: rbl check took %ld ms", spamfile, tvdiff(tv2, tv1)/1000);
       #endif
 
          for(i=0; i<found_on_rbl; i++){
@@ -572,7 +572,7 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
             #ifdef DEBUG
                fprintf(stderr, "surbl check took %ld ms\n", tvdiff(tv2, tv1)/1000);
             #else
-               if(cfg.verbosity > 3) syslog(LOG_PRIORITY, "%s: surbl check took %ld ms", spamfile, tvdiff(tv2, tv1)/1000);
+               if(cfg.verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: surbl check took %ld ms", spamfile, tvdiff(tv2, tv1)/1000);
             #endif
 
                surbl_match += i;
@@ -877,7 +877,7 @@ int retraining(struct session_data sdata, char *username, int is_spam, struct __
    time_t cclock;
 
 
-   if(cfg.verbosity > 3) syslog(LOG_PRIORITY, "%s: trying to retrain: num of rcpt: %d, uid: %ld, username: %s", sdata.ttmpfile, sdata.num_of_rcpt_to, sdata.uid, username);
+   if(cfg.verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: trying to retrain: num of rcpt: %d, uid: %ld, username: %s", sdata.ttmpfile, sdata.num_of_rcpt_to, sdata.uid, username);
 
    /* have we got valid data? */
 
@@ -934,7 +934,7 @@ int retraining(struct session_data sdata, char *username, int is_spam, struct __
    else return 1;
 
 
-   if(cfg.verbosity > 3) syslog(LOG_PRIORITY, "%s: found id: %s, is_spam: %d", sdata.ttmpfile, ID, is_spam);
+   if(cfg.verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: found id: %s, is_spam: %d", sdata.ttmpfile, ID, is_spam);
 
    /* determine the path of the original file */
 
@@ -1032,7 +1032,7 @@ int retraining(struct session_data sdata, char *username, int is_spam, struct __
          #endif
 
 
-            syslog(LOG_PRIORITY, "%s: training, mode: %d", ID, train_mode);
+            if(cfg.verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: training, mode: %d", ID, train_mode);
          }
 
          clearhash(tokens);
@@ -1048,7 +1048,7 @@ int retraining(struct session_data sdata, char *username, int is_spam, struct __
          close(QRY.sockfd);
       #endif
 
-         if(cfg.verbosity > 3) syslog(LOG_PRIORITY, "%s: training round %d, spaminess: %.4f", ID, i, spaminess);
+         if(cfg.verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: training round %d, spaminess: %.4f", ID, i, spaminess);
 
          if(is_spam == 1 && spaminess > cfg.spam_overall_limit) break;
          if(is_spam == 0 && spaminess < cfg.max_ham_spamicity) break;

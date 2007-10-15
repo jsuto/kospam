@@ -18,14 +18,10 @@ int clamd_scan(char *clamd_socket, char *chrootdir, char *workdir, char *tmpfile
    int s, n;
    char *p, *q, buf[MAXBUFSIZE], scan_cmd[SMALLBUFSIZE];
    struct sockaddr_un server;
-   struct timezone tz;
-   struct timeval tv_start, tv_sent;
 
    memset(clamdinfo, 0, SMALLBUFSIZE);
 
    if(v >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: trying to pass to CLAMD", tmpfile);
-
-   gettimeofday(&tv_start, &tz);
 
    strcpy(server.sun_path, clamd_socket);
    server.sun_family = AF_UNIX;
@@ -56,9 +52,6 @@ int clamd_scan(char *clamd_socket, char *chrootdir, char *workdir, char *tmpfile
    n = recvtimeout(s, buf, MAXBUFSIZE, 0);
 
    close(s);
-
-   gettimeofday(&tv_sent, &tz);
-   syslog(LOG_PRIORITY, "%s: scanned %ld [ms]", tmpfile, tvdiff(tv_sent, tv_start)/1000);
 
    if(v >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: CLAMD DEBUG: %d %s", tmpfile, n, buf);
 

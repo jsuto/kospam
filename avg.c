@@ -27,14 +27,10 @@ int avg_scan(char *avg_address, int avg_port, char *workdir, char *tmpdir, char 
    char *p, buf[MAXBUFSIZE+1], scan_cmd[SMALLBUFSIZE];
    struct in_addr addr;
    struct sockaddr_in avg_addr;
-   struct timezone tz;
-   struct timeval tv_start, tv_sent;
 
    memset(avginfo, 0, SMALLBUFSIZE);
 
    if(v >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: trying to pass to AVG", tmpfile);
-
-   gettimeofday(&tv_start, &tz);
 
    if((psd = socket(AF_INET, SOCK_STREAM, 0)) == -1){
       syslog(LOG_PRIORITY, "%s: ERR: create socket", tmpfile);
@@ -75,10 +71,6 @@ int avg_scan(char *avg_address, int avg_port, char *workdir, char *tmpdir, char 
 
    n = recvtimeout(psd, buf, MAXBUFSIZE, 0);
    close(psd);
-
-   gettimeofday(&tv_sent, &tz);
-
-   syslog(LOG_PRIORITY, "%s: scanned %ld [ms]", tmpfile, tvdiff(tv_sent, tv_start)/1000);
 
 
    if(strncmp(buf, AVG_RESP_OK, 3) == 0)

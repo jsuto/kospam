@@ -25,14 +25,10 @@ int avast_scan(char *avast_address, int avast_port, char *workdir, char *tmpfile
    char *p, *q, buf[MAXBUFSIZE], puf[MAXBUFSIZE], scan_cmd[SMALLBUFSIZE];
    struct in_addr addr;
    struct sockaddr_in avast_addr;
-   struct timezone tz;
-   struct timeval tv_start, tv_sent;
 
    memset(avastinfo, 0, SMALLBUFSIZE);
 
    if(v >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: trying to pass to avast!", tmpfile);
-
-   gettimeofday(&tv_start, &tz);
 
    if((psd = socket(AF_INET, SOCK_STREAM, 0)) == -1){
       syslog(LOG_PRIORITY, "%s: ERR: create socket", tmpfile);
@@ -78,10 +74,6 @@ int avast_scan(char *avast_address, int avast_port, char *workdir, char *tmpfile
    if(v >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: AVAST DEBUG: %d %s", tmpfile, n, buf);
 
    n = recvtimeout(psd, buf, MAXBUFSIZE, 0);
-
-   gettimeofday(&tv_sent, &tz);
-
-   syslog(LOG_PRIORITY, "%s: scanned %ld [ms]", tmpfile, tvdiff(tv_sent, tv_start)/1000);
 
    /* close the connection */
 

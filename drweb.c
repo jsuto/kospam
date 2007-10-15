@@ -22,13 +22,10 @@ int drweb_scan(char *drweb_socket, char *tmpfile, int v, char *drwebinfo){
    unsigned char buf[MAXBUFSIZE];
    struct sockaddr_un server;
    struct stat st;
-   struct timezone tz;
-   struct timeval tv_start, tv_sent;
 
    memset(drwebinfo, 0, SMALLBUFSIZE);
 
    if(v >= _LOG_DEBUG) syslog(LOG_PRIORITY, "trying to pass to Dr.Web: %s", tmpfile);
-   gettimeofday(&tv_start, &tz);
 
    strcpy(server.sun_path, drweb_socket);
    server.sun_family = AF_UNIX;
@@ -81,10 +78,6 @@ int drweb_scan(char *drweb_socket, char *tmpfile, int v, char *drwebinfo){
 
    n = recv(sd, (unsigned char*)&q, 4, 0);
    close(sd);
-
-   gettimeofday(&tv_sent, &tz);
-
-   syslog(LOG_PRIORITY, "%s: scanned %ld [ms]", tmpfile, tvdiff(tv_sent, tv_start)/1000);
 
    if(ntohl(q) == DRWEB_RESP_VIRUS){
       strncpy(drwebinfo, DRWEB_VIRUS_HAS_FOUND_MESSAGE, SMALLBUFSIZE-1);

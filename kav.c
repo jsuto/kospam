@@ -17,14 +17,10 @@ int kav_scan(char *kav_socket, char *workdir, char *tmpfile, int v, char *kavinf
    int s, n;
    char *p, buf[MAXBUFSIZE], scan_cmd[SMALLBUFSIZE];
    struct sockaddr_un server;
-   struct timezone tz;
-   struct timeval tv_start, tv_sent;
 
    memset(kavinfo, 0, SMALLBUFSIZE);
 
    if(v >= _LOG_DEBUG) syslog(LOG_PRIORITY, "trying to pass to KAV: %s", tmpfile);
-
-   gettimeofday(&tv_start, &tz);
 
    strcpy(server.sun_path, kav_socket);
    server.sun_family = AF_UNIX;
@@ -77,11 +73,6 @@ int kav_scan(char *kav_socket, char *workdir, char *tmpfile, int v, char *kavinf
       if( (buf[0] == '2' || buf[0] == '5') && buf[3] == ' ')
          break;
    }
-
-
-   gettimeofday(&tv_sent, &tz);
-
-   syslog(LOG_PRIORITY, "%s: scanned %ld [ms]", tmpfile, tvdiff(tv_sent, tv_start)/1000);
 
 
    send(s, KAV_CMD_QUIT, strlen(KAV_CMD_QUIT), 0);

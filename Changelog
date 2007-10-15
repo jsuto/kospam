@@ -1,5 +1,10 @@
 0.3.30-rc2:
 
+2007.10.15, SJ
+
+Polishing log levels. 1: normal, 3: info, 5: debug
+(session.c, bayes.c, config.h)
+
 2007.10.11, SJ
 
 Treat iso-8859-1 messages as iso-8859-2.

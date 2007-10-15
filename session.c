@@ -1,5 +1,5 @@
 /*
- * session.c, 2007.10.14, SJ
+ * session.c, 2007.10.15, SJ
  */
 
 #include <stdio.h>
@@ -153,10 +153,10 @@ void init_child(int new_sd, char *hostid){
 
    while((n = recvtimeout(new_sd, buf, MAXBUFSIZE, 0)) > 0){
 
-      // HELO/EHLO
+         // HELO/EHLO
 
-      if(strncasecmp(buf, SMTP_CMD_HELO, strlen(SMTP_CMD_HELO)) == 0 || strncasecmp(buf, SMTP_CMD_EHLO, strlen(SMTP_CMD_EHLO)) == 0 || strncasecmp(buf, LMTP_CMD_LHLO, strlen(LMTP_CMD_LHLO)) == 0){
-         if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: got: %s", sdata.ttmpfile, buf);
+         if(strncasecmp(buf, SMTP_CMD_HELO, strlen(SMTP_CMD_HELO)) == 0 || strncasecmp(buf, SMTP_CMD_EHLO, strlen(SMTP_CMD_EHLO)) == 0 || strncasecmp(buf, LMTP_CMD_LHLO, strlen(LMTP_CMD_LHLO)) == 0){
+            if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: got: %s", sdata.ttmpfile, buf);
 
             if(state == SMTP_STATE_INIT) state = SMTP_STATE_HELO;
 
@@ -270,7 +270,7 @@ void init_child(int new_sd, char *hostid){
 
             /* remove old queue file, 2007.07.17, SJ */
 
-            syslog(LOG_PRIORITY, "%s: removed", sdata.ttmpfile);
+            if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: removed", sdata.ttmpfile);
             unlink(sdata.ttmpfile);
 
             init_child(new_sd, cfg.hostid);
@@ -389,12 +389,32 @@ void init_child(int new_sd, char *hostid){
 
                gettimeofday(&tv_scnd, &tz);
 
-               syslog(LOG_PRIORITY, "%s: virus scanning done in %ld [ms]", sdata.ttmpfile, tvdiff(tv_scnd, tv_rcvd)/1000);
+               if(cfg.verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: virus scanning done in %ld [ms]", sdata.ttmpfile, tvdiff(tv_scnd, tv_rcvd)/1000);
 
                if(rav == AVIR_VIRUS){
                   syslog(LOG_PRIORITY, "%s: Virus found %s", sdata.ttmpfile, virusinfo);
 
-                  /* FIXME: move quarantine here */
+                  /* move to quarantine, if we have to */
+
+                  if(strlen(cfg.quarantine_dir) > 3)
+                     move_message_to_quarantine(sdata.ttmpfile, cfg.quarantine_dir, sdata.mailfrom, sdata.rcptto, sdata.num_of_rcpt_to);
+
+                  /* send notification if cfg.localpostmaster is set, 2005.10.04, SJ */
+
+                  if(strlen(cfg.clapfemail) > 3 && strlen(cfg.localpostmaster) > 3){
+
+                     snprintf(buf, MAXBUFSIZE-1, "From: <%s>\r\nTo: <%s>\r\nSubject: %s has been infected\r\n\r\n"
+                                    "E-mail from %s to %s (id: %s) was infected\r\n\r\n.\r\n",
+                                     cfg.clapfemail, cfg.localpostmaster, sdata.ttmpfile, sdata.mailfrom, sdata.rcptto[0], sdata.ttmpfile);
+
+                     snprintf(sdata.rcptto[0], MAXBUFSIZE-1, "RCPT TO: <%s>\r\n", cfg.localpostmaster);
+                     sdata.num_of_rcpt_to = 1;
+                     ret = inject_mail(sdata, 0, cfg.postfix_addr, cfg.postfix_port, NULL, cfg, buf);
+
+                     if(ret == 0)
+                        syslog(LOG_PRIORITY, "notification about %s to %s failed", sdata.ttmpfile, cfg.localpostmaster);
+                  }
+
                }
 
          #endif /* HAVE_ANTIVIRUS */
@@ -611,7 +631,7 @@ void init_child(int new_sd, char *hostid){
 
                SEND_RESULT:
                   send(new_sd, acceptbuf, strlen(acceptbuf), 0);
-                  if(cfg.verbosity >= 3) syslog(LOG_PRIORITY, "%s: sent: %s", sdata.ttmpfile, acceptbuf);
+                  if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent: %s", sdata.ttmpfile, acceptbuf);
 
             #ifdef HAVE_LMTP
                } /* for */
@@ -673,7 +693,7 @@ QUITTING:
    }
 
    if(unlink(sdata.ttmpfile)) syslog(LOG_PRIORITY, "%s: failed to remove", sdata.ttmpfile);
-   syslog(LOG_PRIORITY, "%s: removed", sdata.ttmpfile);
+   if(cfg.verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: removed", sdata.ttmpfile);
 
    _exit(0);
 

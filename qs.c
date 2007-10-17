@@ -1,5 +1,5 @@
 /*
- * qs.c, 2007.07.20, SJ
+ * qs.c, 2007.10.17, SJ
  */
 
 #include <stdio.h>
@@ -92,10 +92,13 @@ int load_all_tokens(struct qcache *xhash[MAXHASH]){
    unsigned int nham, nspam;
    unsigned long ts;
    unsigned long long token;
+   time_t cclock;
 
    syslog(LOG_PRIORITY, "loading tokens");
 
-   time(&ts);
+   time(&cclock);
+   ts = cclock;
+
    snprintf(stmt, SMALLBUFSIZE-1, "SELECT token, nham, nspam FROM %s WHERE uid=0", SQL_TOKEN_TABLE);
 
 #ifdef HAVE_MYSQL
@@ -294,6 +297,7 @@ void *process_connection(void *ptr){
    qconn *QC = (qconn*)ptr;
    struct token_entry res;
    struct timeval tv_start, tv_stop;
+   time_t cclock;
    unsigned long long token;
    unsigned long ts;
    unsigned int uid, nham, nspam;
@@ -302,7 +306,8 @@ void *process_connection(void *ptr){
    int n;
 
    total = cache_hit = 0;
-   time(&ts);
+   time(&cclock);
+   ts = cclock;
 
 #ifdef HAVE_MYSQL
    MYSQL mysql;

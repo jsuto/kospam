@@ -1,5 +1,10 @@
 0.3.30-rc2:
 
+2007.10.17, SJ
+
+Changed qcache behaviour to be a FIFO cache.
+(qcache.c)
+ 
 2007.10.15, SJ
 
 Polishing log levels. 1: normal, 3: info, 5: debug

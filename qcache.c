@@ -1,5 +1,5 @@
 /*
- * qcache.c, 2007.07.08, SJ
+ * qcache.c, 2007.10.17, SJ
  */
 
 #include <stdio.h>
@@ -70,8 +70,7 @@ struct qcache *makenewnode(struct qcache *xhash[MAXHASH], unsigned long long tok
  */
 
 int addnode(struct qcache *xhash[MAXHASH], unsigned long long token, unsigned int uid, unsigned int nham, unsigned int nspam, unsigned long timestamp){
-   struct qcache *p=NULL, *q, *next=NULL;
-   unsigned long ts = 0;
+   struct qcache *p=NULL, *q;
    int i=0;
 
    if(xhash[hash(token)] == NULL){
@@ -83,11 +82,6 @@ int addnode(struct qcache *xhash[MAXHASH], unsigned long long token, unsigned in
          p = q;
          i++;
 
-         if(q->timestamp > ts){
-            ts = q->timestamp;
-            next = q;
-         }
-
          if(q->token == token && q->uid == uid){
             return 0;
          }
@@ -95,18 +89,19 @@ int addnode(struct qcache *xhash[MAXHASH], unsigned long long token, unsigned in
             q = q->r;
       }
 
-      /* create new entry or replace the oldest one */
+      /* append new item at the end of the list */
 
-      if(i < MAX_ENTRIES_PER_SLOT)
-         p->r = makenewnode(xhash, token, uid, nham, nspam, timestamp);
-      else {
-         next->token = token;
-         next->uid = uid;
-         next->nham = nham;
-         next->nspam = nspam;
-         next->timestamp = timestamp;
-         next->dirty = 0;
+      p->r = makenewnode(xhash, token, uid, nham, nspam, timestamp);
+
+      /* remove the first (and) oldest item */
+
+      if(i >= MAX_ENTRIES_PER_SLOT){
+         q = xhash[hash(token)];
+         xhash[hash(token)] = q->r;
+         free(q);
       }
+
+
 
    }
 

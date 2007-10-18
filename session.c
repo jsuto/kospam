@@ -75,6 +75,7 @@ void init_child(int new_sd, char *hostid){
 
    sdata.uid = 0;
    sdata.tot_len = 0;
+   sdata.skip_id_check = 0;
    prevlen = 0;
    sdata.num_of_rcpt_to = 0;
 

@@ -1,5 +1,5 @@
 /*
- * bayes.c, 2007.10.08, SJ
+ * bayes.c, 2007.10.18, SJ
  */
 
 #include <stdio.h>
@@ -627,8 +627,10 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
 
 #ifdef HAVE_MYDB
  #ifndef DEBUG
-   update_tokens(cfg.mydbfile, mhash, s_phrase_hash);
-   update_tokens(cfg.mydbfile, mhash, shash);
+   u = update_tokens(cfg.mydbfile, mhash, s_phrase_hash);
+   if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "update timestamp for %d phrases", u);
+   u = update_tokens(cfg.mydbfile, mhash, shash);
+   if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "update timestamp for %d single tokens", u);
  #endif
 #endif
 
@@ -897,6 +899,16 @@ int retraining(struct session_data sdata, char *username, int is_spam, struct __
    time(&cclock);
    now = cclock;
 
+
+   /* if we want to train with a message having no message id in it,
+      such as a blackhole message, 2007.10.18, SJ
+    */
+
+   if(sdata.skip_id_check == 1){
+      snprintf(ID, RND_STR_LEN, "%s", sdata.ttmpfile);
+      goto AFTER_ID_EXTRACT;
+   }
+
    fd = open(sdata.ttmpfile, O_RDONLY);
    if(fd != -1){
       while((len = read(fd, buf, 8*MAXBUFSIZE)) > 0){
@@ -933,6 +945,8 @@ int retraining(struct session_data sdata, char *username, int is_spam, struct __
    }
    else return 1;
 
+
+AFTER_ID_EXTRACT:
 
    if(cfg.verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: found id: %s, is_spam: %d", sdata.ttmpfile, ID, is_spam);
 
@@ -1042,6 +1056,9 @@ int retraining(struct session_data sdata, char *username, int is_spam, struct __
       #endif
       #ifdef HAVE_SQLITE3
          spaminess = bayes_file(db, sdata.ttmpfile, state, sdata, cfg);
+      #endif
+      #ifdef HAVE_MYDB
+         spaminess = bayes_file(sdata.ttmpfile, state, sdata, cfg);
       #endif
 
       #ifdef HAVE_QCACHE

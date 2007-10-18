@@ -70,7 +70,7 @@ struct _state {
 struct session_data {
    char ttmpfile[RND_STR_LEN+1], mailfrom[MAXBUFSIZE], rcptto[MAX_RCPT_TO][MAXBUFSIZE];
    unsigned long uid;
-   int tot_len, num_of_rcpt_to;
+   int tot_len, num_of_rcpt_to, skip_id_check;
 };
 
 

@@ -1,5 +1,13 @@
 0.3.30-rc2:
 
+2007.10.18, SJ
+
+Fixed a bug in spamdrop preventing forwarded messages to be trained.
+(spamdrop.c)
+
+Fixed a bug preventing missed blackhole messages to be trained.
+(parser.h, session.c, spamdrop.c, bayes.c)
+
 2007.10.17, SJ
 
 Changed qcache behaviour to be a FIFO cache.

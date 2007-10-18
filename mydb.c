@@ -234,8 +234,11 @@ int my_walk_hash(char *mydbfile, struct mydb_node *xhash[MAX_MYDB_HASH], int ham
    int i, fd, n=0;
    struct node *p, *q;
    unsigned long now, x;
+   time_t cclock;
 
-   time(&now);
+   time(&cclock);
+   now = cclock;
+
    fd = open(mydbfile, O_RDWR);
    if(fd != -1){
       if(flock(fd, LOCK_EX|LOCK_NB)){
@@ -250,7 +253,9 @@ int my_walk_hash(char *mydbfile, struct mydb_node *xhash[MAX_MYDB_HASH], int ham
       while(q != NULL){
          p = q;
 
-         if(fd != 1) add_or_update(fd, ham_or_spam, p->str, train_mode, now);
+         if(fd != 1){
+            add_or_update(fd, ham_or_spam, p->str, train_mode, now);
+         }
 
          n++;
 
@@ -292,13 +297,16 @@ int my_walk_hash(char *mydbfile, struct mydb_node *xhash[MAX_MYDB_HASH], int ham
 
 
 int update_tokens(char *mydbfile, struct mydb_node *xhash[MAX_MYDB_HASH], struct node *qhash[MAXHASH]){
-   int i, fd;
+   int i, n, fd;
    struct node *q;
    struct mydb_node *Q;
    unsigned long now;
    unsigned long long key;
+   time_t cclock;
 
-   time(&now);
+   time(&cclock);
+   now = cclock;
+
    fd = open(mydbfile, O_RDWR);
    if(fd == -1){
       syslog(LOG_PRIORITY, "cannot open mydb file %s", mydbfile);
@@ -310,6 +318,8 @@ int update_tokens(char *mydbfile, struct mydb_node *xhash[MAX_MYDB_HASH], struct
       syslog(LOG_PRIORITY, "cannot lock %s", mydbfile);
       return 0;
    }
+
+   n = 0;
 
    for(i=0; i<MAXHASH; i++){
       q = qhash[i];
@@ -323,6 +333,7 @@ int update_tokens(char *mydbfile, struct mydb_node *xhash[MAX_MYDB_HASH], struct
                //fprintf(stderr, "updating timestamp of %s %llu\n", q->str, key);
                lseek(fd, MYDB_HEADER_SIZE + (Q->pos * N_SIZE) + 12, SEEK_SET);
                write(fd, &now, 4);
+               n++;
             }
          }
 
@@ -333,5 +344,5 @@ int update_tokens(char *mydbfile, struct mydb_node *xhash[MAX_MYDB_HASH], struct
    flock(fd, LOCK_UN|LOCK_NB);
    close(fd);
 
-   return 1;
+   return n;
 }

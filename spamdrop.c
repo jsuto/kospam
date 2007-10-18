@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2007.10.11, SJ
+ * spamdrop.c, 2007.10.18, SJ
  *
  * check if a single RFC-822 formatted messages is spam or not
  */
@@ -129,6 +129,7 @@ int main(int argc, char **argv){
 
    sdata.num_of_rcpt_to = 1;
    sdata.uid = getuid();
+   sdata.skip_id_check = 0;
    memset(sdata.rcptto[0], MAXBUFSIZE, 0);
    make_rnd_string(&(sdata.ttmpfile[0]));
 
@@ -203,7 +204,9 @@ int main(int argc, char **argv){
    #ifdef HAVE_MYDB
       sdata.uid = 12345;
 
+      rc = init_mydb(cfg.mydbfile, mhash);
       retraining(sdata, username, is_spam, cfg);
+      close_mydb(mhash);
    #endif
 
       return 0;
@@ -221,7 +224,6 @@ int main(int argc, char **argv){
       if(mysql_real_connect(&mysql, cfg.mysqlhost, cfg.mysqluser, cfg.mysqlpwd, cfg.mysqldb, cfg.mysqlport, cfg.mysqlsocket, 0)){
          spaminess = bayes_file(mysql, sdata.ttmpfile, state, sdata, cfg);
          tum_train(sdata.ttmpfile, spaminess, cfg);
-         //mysql_close(&mysql);
       }
       else
          syslog(LOG_PRIORITY, "%s: %s", sdata.ttmpfile, ERR_MYSQL_CONNECT);
@@ -234,7 +236,6 @@ int main(int argc, char **argv){
       else {
          spaminess = bayes_file(db, sdata.ttmpfile, state, sdata, cfg);
          tum_train(sdata.ttmpfile, spaminess, cfg);
-         //sqlite3_close(db);
       }
    #endif
    #ifdef HAVE_MYDB
@@ -243,7 +244,6 @@ int main(int argc, char **argv){
          spaminess = bayes_file(sdata.ttmpfile, state, sdata, cfg);
          tum_train(sdata.ttmpfile, spaminess, cfg);
       }
-      //close_mydb(mhash);
    #endif
 
       /* if this a message to the blackhole */
@@ -264,6 +264,8 @@ int main(int argc, char **argv){
          /* train with it if it is not recognised as spam */
 
          if(spaminess < cfg.spam_overall_limit){
+            sdata.skip_id_check = 1;
+
             syslog(LOG_PRIORITY, "%s: retraining blackhole message", sdata.ttmpfile);
          #ifdef HAVE_MYSQL
             retraining(mysql, sdata, username, 1, cfg);

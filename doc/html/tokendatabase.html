@@ -59,7 +59,7 @@ Important! Do not use *both* mysqlsocket and mysqlhost + mysqlport parameters.<p
 
 I recommend you to configure the <a href="http://dev.mysql.com/doc/refman/5.0/en/query-cache-configuration.html">query cache</a>
 to allow faster lookups. Be careful with these settings and always test your configuration for the
-best results.<p/>
+best results. If you have lots of memory, then create a 32 MB (or even bigger) query cache.<p/>
 
 <pre class="programlisting">mysql&gt; <strong class="userinput"><code>SHOW VARIABLES LIKE 'have_query_cache';</code></strong>
 +------------------+-------+
@@ -81,6 +81,22 @@ Query OK, 0 rows affected (0.00 sec)
 | query_cache_size | 999424 | 
 +------------------+--------+
 1 row in set (0.00 sec)
+</pre>
+
+
+From 0.3.30-rc2 the InnoDB database engine is the default. If you want to stick to the old 'MyISAM'
+type, then replace the string 'InnoDB' with 'MyISAM' before creating the tables.<p/>
+
+If you have a larger installation, you may consider using a dedicated MySQL server box,
+since MySQL has a better performance if it does not have to compete with Postfix for I/O.<p/>
+
+It may be also a good idea to have MySQL create a new file for every table using the InnoDB
+engine. If you want this, then specify <i>innodb_file_per_table</i> in my.cnf at the
+[mysqld] section:<p/>
+
+<pre>
+[mysqld]
+innodb_file_per_table
 </pre>
 
 You are also free to do other tuning to make MySQL even faster, consult the <a href="http://dev.mysql.com/doc/">MySQL documentation</a>.<p/>

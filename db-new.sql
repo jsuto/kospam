@@ -3,7 +3,7 @@ create table if not exists t_misc (
 	nham int default 0,
 	nspam int default 0,
 	uid int unsigned default 0
-) Engine=InnoDB;
+);
 
 create index t_misc_idx on t_misc(uid);
 
@@ -25,7 +25,7 @@ create table if not exists user (
 	action enum ('drop', 'junk', 'quarantine') default 'junk',
 	pagelen int default 25,
         username char(32) primary key not null
-) Engine=InnoDB;
+);
 
 create index user_idx on user (username, email);
 
@@ -45,7 +45,7 @@ create table if not exists t_stat (
 	ts bigint unsigned not null,
 	nham int default 0,
 	nspam int default 0
-) Engine=InnoDB;
+);
 
 create index t_stat_idx on t_stat(uid);
 
@@ -54,7 +54,7 @@ create table if not exists t_train_log (
 	ts bigint unsigned not null,
 	msgid char(32) not null,
 	is_spam tinyint not null
-) Engine=InnoDB;
+);
 
 create index t_train_log_idx on t_train_log(uid);
 

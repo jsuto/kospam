@@ -1,5 +1,5 @@
 /*
- * cfg.c, 2007.10.10, SJ
+ * cfg.c, 2007.10.23, SJ
  */
 
 #include <stdio.h>
@@ -145,6 +145,7 @@ struct __config read_config(char *configfile){
    cfg.clamav_max_compress_ratio = MAX_COMPRESS_RATIO;
    cfg.clamav_archive_mem_limit = ARCHIVE_MEM_LIMIT;
    cfg.clamav_block_encrypted_archives = 1;
+   cfg.clamav_use_phishing_db = 1;
 
    cfg.page_len = MESSAGES_PER_ONE_PAGE;
 
@@ -412,6 +413,8 @@ struct __config read_config(char *configfile){
                   if(strcmp(key, "clamav_block_encrypted_archives") == 0)
                      cfg.clamav_block_encrypted_archives = atoi(val);
 
+                  if(strcmp(key, "clamav_use_phishing_db") == 0)
+                     cfg.clamav_use_phishing_db = atoi(val);
 
                   if(strcmp(key, "mysqlhost") == 0)
                      memcpy(cfg.mysqlhost, val, MAXVAL-1);

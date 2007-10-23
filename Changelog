@@ -1,5 +1,10 @@
 0.3.30-rc2:
 
+2007.10.23, SJ
+
+Added an option to toggle the phishing check in libclamav.
+(cfg.c, cfg.h, example.conf, session.c, clapf.c)
+
 2007.10.19, SJ
 
 Changed the t_token and t_queue table types to InnoDB.

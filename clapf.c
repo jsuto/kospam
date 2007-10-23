@@ -1,5 +1,5 @@
 /*
- * clapf.c, 2007.08.24, SJ
+ * clapf.c, 2007.10.23, SJ
  */
 
 #include <stdio.h>
@@ -40,6 +40,7 @@ void fatal(char *s);
    struct cl_limits limits;
    struct cl_engine *engine = NULL;
    const char *dbdir;
+   unsigned int options=0;
 
    void reload_clamav_db(){
       int retval;
@@ -62,7 +63,8 @@ void fatal(char *s);
          fatal(ERR_STAT_INI_DIR);
 
       /* load virus signatures from database(s) */
-      if((retval = cl_load(cl_retdbdir(), &engine, &sigs, CL_DB_STDOPT|CL_DB_PHISHING|CL_DB_PHISHING_URLS))){
+
+      if((retval = cl_load(cl_retdbdir(), &engine, &sigs, options))){
          syslog(LOG_PRIORITY, "reloading db failed: %s", cl_strerror(retval));
          clean_exit();
       }
@@ -129,6 +131,11 @@ void reload_config(){
     limits.maxreclevel = cfg.clamav_max_recursion_level;
     limits.maxratio = cfg.clamav_max_compress_ratio;
     limits.archivememlim = cfg.clamav_archive_mem_limit;
+
+    if(cfg.clamav_use_phishing_db == 1)
+       options = CL_DB_STDOPT|CL_DB_PHISHING|CL_DB_PHISHING_URLS;
+    else
+       options = 0;
 
 #endif
 

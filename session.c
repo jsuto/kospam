@@ -1,5 +1,5 @@
 /*
- * session.c, 2007.10.15, SJ
+ * session.c, 2007.10.23, SJ
  */
 
 #include <stdio.h>
@@ -318,6 +318,9 @@ void init_child(int new_sd, char *hostid){
 
                /* whether to mark encrypted archives as viruses */
                if(cfg.clamav_block_encrypted_archives == 1) options |= CL_SCAN_BLOCKENCRYPTED;
+
+               /* whether to enable phishing stuff */
+               if(cfg.clamav_use_phishing_db == 1) options |= CL_SCAN_PHISHING_DOMAINLIST;
 
                ret = cl_scanfile(sdata.ttmpfile, &virname, NULL, root, &limits, options);
 

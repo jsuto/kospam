@@ -1,5 +1,5 @@
 /*
- * mydb.c, 2007.10.09, SJ
+ * mydb.c, 2007.10.24, SJ
  */
 
 #include <stdio.h>
@@ -187,6 +187,7 @@ int add_or_update(int fd, int ham_or_spam, char *token, int train_mode, unsigned
    unsigned long long key = APHash(token);
    struct mydb_node *q;
    struct mydb e;
+   int n=0;
 
    if(fd == -1) return 0;
 
@@ -204,7 +205,7 @@ int add_or_update(int fd, int ham_or_spam, char *token, int train_mode, unsigned
       }
 
       lseek(fd, MYDB_HEADER_SIZE + q->pos * N_SIZE, SEEK_SET);
-      write(fd, q, N_SIZE);
+      n = write(fd, q, N_SIZE);
    }
 
    /* not exists ... */
@@ -223,7 +224,7 @@ int add_or_update(int fd, int ham_or_spam, char *token, int train_mode, unsigned
       }
 
       lseek(fd, 0, SEEK_END);
-      write(fd, q, N_SIZE);
+      n = write(fd, &e, N_SIZE);
    }
 
    return 0;

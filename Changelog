@@ -1,5 +1,10 @@
 0.3.30-rc2:
 
+2007.10.24, SJ
+
+Fixed a bug while retraining blackholed messages.
+(bayes.c)
+
 2007.10.23, SJ
 
 Added an option to toggle the phishing check in libclamav.

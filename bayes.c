@@ -1,5 +1,5 @@
 /*
- * bayes.c, 2007.10.18, SJ
+ * bayes.c, 2007.10.24, SJ
  */
 
 #include <stdio.h>
@@ -895,6 +895,7 @@ int retraining(struct session_data sdata, char *username, int is_spam, struct __
    cfg.rbl_domain[0] = '\0';
    cfg.surbl_domain[0] = '\0';
 
+   cfg.blackhole_path[0] = '\0';
 
    time(&cclock);
    now = cclock;
@@ -957,6 +958,9 @@ AFTER_ID_EXTRACT:
    else
       snprintf(buf, MAXBUFSIZE-1, "%s/%s/%c/%s/s.%s", cfg.chrootdir, USER_QUEUE_DIR, username[0], username, ID);
 
+   /* fix the queue file if we haven't renamed the file according to its spamicity status, 2007.10.24, SJ */
+   if(sdata.skip_id_check == 1)
+      snprintf(buf, MAXBUFSIZE-1, "%s/%s/%c/%s/%s", cfg.chrootdir, USER_QUEUE_DIR, username[0], username, ID);
 
 
 #ifdef HAVE_MYSQL

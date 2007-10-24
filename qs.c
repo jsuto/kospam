@@ -1,5 +1,5 @@
 /*
- * qs.c, 2007.10.17, SJ
+ * qs.c, 2007.10.23, SJ
  */
 
 #include <stdio.h>
@@ -529,7 +529,9 @@ int main(int argc, char **argv){
    /* load all tokens into memory */
    if(cfg.group_type == GROUP_SHARED) load_all_tokens(Q);
 
+#ifndef HAVE_TCP
    chmod(cfg.qcache_socket, 0777);
+#endif
 
    syslog(LOG_PRIORITY, "started");
  

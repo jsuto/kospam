@@ -1,5 +1,5 @@
 /*
- * qs.c, 2007.10.23, SJ
+ * qs.c, 2007.10.26, SJ
  */
 
 #include <stdio.h>
@@ -90,7 +90,7 @@ void fatal(char *s){
 int load_all_tokens(struct qcache *xhash[MAXHASH]){
    char stmt[SMALLBUFSIZE];
    unsigned int nham, nspam;
-   unsigned long ts;
+   unsigned long ts, ntokens=0;
    unsigned long long token;
    time_t cclock;
 
@@ -122,7 +122,10 @@ int load_all_tokens(struct qcache *xhash[MAXHASH]){
       nham = atoi(row[1]);
       nspam = atoi(row[2]);
 
-      if(token >= 0 && nham >=0 && nspam >= 0) addnode(xhash, token, 0, nham, nspam, ts);
+      if(token >= 0 && nham >=0 && nspam >= 0){
+         addnode(xhash, token, 0, nham, nspam, ts);
+         ntokens++;
+      }
    }
 
    mysql_free_result(res);
@@ -144,14 +147,17 @@ int load_all_tokens(struct qcache *xhash[MAXHASH]){
       nham = sqlite3_column_int(pStmt, 1);
       nspam = sqlite3_column_int(pStmt, 2);
 
-      if(token >= 0 && nham >=0 && nspam >= 0) addnode(xhash, token, 0, nham, nspam, ts);
+      if(token >= 0 && nham >=0 && nspam >= 0){
+         addnode(xhash, token, 0, nham, nspam, ts);
+         ntokens++;
+      }
 
    }
 
    sqlite3_finalize(pStmt);
 #endif
 
-   syslog(LOG_PRIORITY, "loaded tokens");
+   syslog(LOG_PRIORITY, "loaded %ld tokens", ntokens);
 
    return 0;
 }

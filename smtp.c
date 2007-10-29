@@ -116,16 +116,16 @@ int inject_mail(struct session_data sdata, int msg, char *smtpaddr, int smtpport
       i = msg;
 #endif
       send(psd, sdata.rcptto[i], strlen(sdata.rcptto[i]), 0);
-      if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent in injecting: %s", sdata.ttmpfile, sdata.rcptto[i]);
+      if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent in injecting (%d): %s", sdata.ttmpfile, i, sdata.rcptto[i]);
 
       n = recvtimeout(psd, buf, MAXBUFSIZE, 0);
-      if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: got in injecting: %s", sdata.ttmpfile, buf);
+      if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: got in injecting (%d): %s", sdata.ttmpfile, i, buf);
 
       if(strncmp(buf, "250", 3)){
          send(psd, SMTP_CMD_QUIT, strlen(SMTP_CMD_QUIT), 0);
-         if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent in injecting: %s", sdata.ttmpfile, SMTP_CMD_QUIT);
+         if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent in injecting (%d): %s", sdata.ttmpfile, i, SMTP_CMD_QUIT);
          close(psd);
-         syslog(LOG_PRIORITY, "%s: RCPT TO failed (%s)", sdata.ttmpfile, buf);
+         syslog(LOG_PRIORITY, "%s: RCPT TO (%d) failed (%s)", sdata.ttmpfile, i, buf);
          if(strncmp(buf, "550", 3) == 0) return ERR_REJECT;
          return ERR_INJECT;
       }

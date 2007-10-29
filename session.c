@@ -438,6 +438,7 @@ void init_child(int new_sd, char *hostid){
             #else
                i = 0;
             #endif
+                  if(cfg.verbosity >= _LOG_DEBUG) syslog("round %d in injection", sdata.ttmpfile, i);
 
                   memset(acceptbuf, 0, MAXBUFSIZE);
                   memset(email, 0, SMALLBUFSIZE);

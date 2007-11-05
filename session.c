@@ -1,5 +1,5 @@
 /*
- * session.c, 2007.10.23, SJ
+ * session.c, 2007.10.30, SJ
  */
 
 #include <stdio.h>
@@ -438,7 +438,7 @@ void init_child(int new_sd, char *hostid){
             #else
                i = 0;
             #endif
-                  if(cfg.verbosity >= _LOG_DEBUG) syslog("round %d in injection", sdata.ttmpfile, i);
+                  if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: round %d in injection", sdata.ttmpfile, i);
 
                   memset(acceptbuf, 0, MAXBUFSIZE);
                   memset(email, 0, SMALLBUFSIZE);

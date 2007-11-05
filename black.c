@@ -1,5 +1,5 @@
 /*
- * black.c, 2006.10.06, SJ
+ * black.c, 2006.11.04, SJ
  */
 
 #include <stdio.h>
@@ -33,8 +33,6 @@ unsigned long blackness(char *dir, char *ip, int v){
 
       gettimeofday(&tv_spam_start, &tz);
 
-      if(v >= _LOG_DEBUG) syslog(LOG_PRIORITY, "checking %s in the blackhole list", ip);
-
       snprintf(ipfile, SMALLBUFSIZE-1, "%s/%s", dir, ip);
 
       if(stat(ipfile, &st) == 0)
@@ -42,9 +40,11 @@ unsigned long blackness(char *dir, char *ip, int v){
 
       gettimeofday(&tv_spam_stop, &tz);
 
-      #ifdef DEBUG
-         fprintf(stderr, "blackhole check for %s: %ld in %ld [ms]\n", ip, blackhole_timestamp, tvdiff(tv_spam_stop, tv_spam_start)/1000);
-      #endif
+   #ifdef DEBUG
+      fprintf(stderr, "blackhole check for %s: %ld in %ld [ms]\n", ip, blackhole_timestamp, tvdiff(tv_spam_stop, tv_spam_start)/1000);
+   #else
+      if(v >= _LOG_DEBUG) syslog(LOG_PRIORITY, "checking %s in the blackhole list %ld us", ip, tvdiff(tv_spam_stop, tv_spam_start));
+   #endif
    }
 
    return blackhole_timestamp;

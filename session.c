@@ -1,5 +1,5 @@
 /*
- * session.c, 2007.10.30, SJ
+ * session.c, 2007.11.05, SJ
  */
 
 #include <stdio.h>
@@ -31,7 +31,7 @@ char prevbuf[MAXBUFSIZE], last2buf[2*MAXBUFSIZE+1];
 struct timezone tz;
 struct timeval tv_start, tv_rcvd, tv_scnd, tv_sent, tv_stop, tv_meta1, tv_meta2;
 struct session_data sdata;
-int x;
+int x, rc;
 
 int inject_mail(struct session_data sdata, int msg, char *smtpaddr, int smtpport, char *spaminessbuf, struct __config cfg, char *notify);
 
@@ -44,7 +44,6 @@ int inject_mail(struct session_data sdata, int msg, char *smtpaddr, int smtpport
 #ifdef HAVE_SQLITE3
    #include <sqlite3.h>
    sqlite3 *db;
-   int rc;
 #endif
 
 
@@ -299,7 +298,27 @@ void init_child(int new_sd, char *hostid){
                if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: got: (.)", sdata.ttmpfile);
 
                state = SMTP_STATE_PERIOD;
+
+               /* make sure we had a successful read, 2007.11.05, SJ */
+
+               rc = fsync(fd);
                close(fd);
+
+               if(rc){
+                  syslog(LOG_PRIORITY, "failed writing data: %s", sdata.ttmpfile);
+
+               #ifdef HAVE_LMTP
+                  for(i=0; i<sdata.num_of_rcpt_to; i++){
+               #endif
+
+                     send(new_sd, SMTP_RESP_421_ERR_WRITE_FAILED, strlen(SMTP_RESP_421_ERR_WRITE_FAILED), 0);
+
+               #ifdef HAVE_LMTP
+                  }
+               #endif
+
+                  goto AFTER_PERIOD;
+               }
 
 
          #ifdef HAVE_ANTIVIRUS
@@ -658,6 +677,8 @@ void init_child(int new_sd, char *hostid){
 
 
             } /* PERIOD found */
+
+         AFTER_PERIOD:
 
             memcpy(prevbuf, buf, n);
             prevlen = n;

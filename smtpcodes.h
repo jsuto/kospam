@@ -1,5 +1,5 @@
 /*
- * smtpcodes.h, 2007.11.05, SJ
+ * smtpcodes.h, 2007.11.06, SJ
  */
 
 // SMTP states
@@ -24,17 +24,20 @@
 #define SMTP_CMD_QUIT "QUIT\r\n"
 #define SMTP_CMD_RESET "RSET\r\n"
 #define SMTP_CMD_NOOP "NOOP\r\n"
+#define SMTP_CMD_XFORWARD "XFORWARD"
+#define SMTP_CMD_XCLIENT "XCLIENT"
 
 // SMTP responses
 
 #define SMTP_RESP_220_BANNER "220 %s\r\n"
 #define SMTP_RESP_221_GOODBYE "221 %s Goodbye\r\n"
 #define SMTP_RESP_250_OK "250 Ok\r\n"
+#define SMTP_RESP_250_EXTENSIONS "250-%s\r\n250 XFORWARD NAME ADDR PROTO HELO\r\n"
 
 #define SMTP_RESP_354_DATA_OK "354 Send mail data; end it with <CRLF>.<CRLF>\r\n"
 
 #define SMTP_RESP_421_ERR "421 %s Error: timed out\r\n"
-#define SMTP_RESP_421_ERR_TMP " 421 %s service not available\r\n"
+#define SMTP_RESP_421_ERR_TMP "421 %s service not available\r\n"
 #define SMTP_RESP_421_ERR_WRITE_FAILED "421 writing queue file failed\r\n"
 #define SMTP_RESP_451_ERR "451 Error in processing, try again later\r\n"
 

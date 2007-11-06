@@ -1,5 +1,5 @@
 /*
- * cfg.c, 2007.10.23, SJ
+ * cfg.c, 2007.11.06, SJ
  */
 
 #include <stdio.h>
@@ -249,6 +249,9 @@ struct __config read_config(char *configfile){
 
                   if(strcmp(key, "silently_discard_infected_email") == 0)
                      cfg.silently_discard_infected_email = atoi(val);
+
+                  if(strcmp(key, "dha_trap_address_list") == 0)
+                     memcpy(cfg.dha_trap_address_list, val, MAXVAL-1);
 
                   if(strcmp(key, "use_antispam") == 0)
                      cfg.use_antispam = atoi(val);

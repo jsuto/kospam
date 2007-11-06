@@ -1,5 +1,13 @@
 0.3.30-rc2:
 
+2007.11.06, SJ
+
+Added XFORWARD extension support.
+(parser.h, smtpcodes.h, session.c)
+
+Modified the spamicity calculation, to give token pairs a greater strength
+(mydb.c, misc.h, misc.c, sql.c)
+
 2007.11.05, SJ
 
 Added an fsync() syscall to check successful write to disk of queue/temp file

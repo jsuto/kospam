@@ -1,5 +1,5 @@
 /*
- * sql.c, 2007.10.09, SJ
+ * sql.c, 2007.11.06, SJ
  */
 
 #include <stdio.h>
@@ -41,6 +41,7 @@
 float SQL_QUERY(qry QRY, char *tokentable, char *token, struct node *xhash[MAXHASH]){
    float r = DEFAULT_SPAMICITY;
    struct te TE;
+   int freq_min = FREQ_MIN;
 
    TE.nham = TE.nspam = 0;
 
@@ -58,7 +59,9 @@ float SQL_QUERY(qry QRY, char *tokentable, char *token, struct node *xhash[MAXHA
 
    if(TE.nham == 0 && TE.nspam == 0) return r;
 
-   r = calc_spamicity(QRY.ham_msg, QRY.spam_msg, TE.nham, TE.nspam, QRY.rob_s, QRY.rob_x);
+   if(!strchr(token, '+')) freq_min = 2*FREQ_MIN;
+
+   r = calc_spamicity(QRY.ham_msg, QRY.spam_msg, TE.nham, TE.nspam, QRY.rob_s, QRY.rob_x, freq_min);
 
    return r;
 }

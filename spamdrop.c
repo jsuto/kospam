@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2007.11.04, SJ
+ * spamdrop.c, 2007.11.06, SJ
  *
  * check if a single RFC-822 formatted messages is spam or not
  */
@@ -20,6 +20,7 @@
 #include "errmsg.h"
 #include "messages.h"
 #include "sql.h"
+#include "black.h"
 #include "config.h"
 
 
@@ -52,7 +53,7 @@ int main(int argc, char **argv){
    double spaminess=DEFAULT_SPAMICITY;
    struct stat st;
    struct timezone tz;
-   struct timeval tv_spam_start, tv_spam_stop, tv1, tv2;
+   struct timeval tv_spam_start, tv_spam_stop;
    struct passwd *pwd;
    struct session_data sdata;
    struct _state state;
@@ -259,20 +260,7 @@ int main(int argc, char **argv){
       if(blackhole_request == 1){
          /* put IP address to blackhole directory */
 
-         gettimeofday(&tv1, &tz);
-
-         snprintf(buf, MAXBUFSIZE-1, "%s/%s", cfg.blackhole_path, state.ip);
-         unlink(buf);
-
-         fd = open(buf, O_RDWR|O_CREAT, S_IRUSR|S_IRGRP|S_IROTH);
-         if(fd != -1){
-            close(fd);
-            gettimeofday(&tv2, &tz);
-            syslog(LOG_PRIORITY, "putting %s to blackhole in %ld [us]", state.ip, tvdiff(tv2, tv1));
-         }
-         else syslog(LOG_PRIORITY, "failed to put %s to blackhole", state.ip);
-
-         gettimeofday(&tv2, &tz);
+         put_ip_to_dir(cfg.blackhole_path, state.ip);
 
          /* train with it if it is not recognised as spam */
 

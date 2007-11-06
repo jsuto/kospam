@@ -1,5 +1,5 @@
 /*
- * mydb.c, 2007.10.24, SJ
+ * mydb.c, 2007.11.06, SJ
  */
 
 #include <stdio.h>
@@ -166,6 +166,7 @@ float mydbqry(struct mydb_node *xhash[MAX_MYDB_HASH], char *p, float rob_s, floa
    struct mydb_node *q;
    unsigned long long key;
    float spamicity = DEFAULT_SPAMICITY;
+   int freq_min = FREQ_MIN;
 
    if(p == NULL) return spamicity;
 
@@ -177,7 +178,9 @@ float mydbqry(struct mydb_node *xhash[MAX_MYDB_HASH], char *p, float rob_s, floa
    if(q->nham < TUM_LIMIT && q->nspam < TUM_LIMIT)
       addnode(qhash, p, 0 , 0);
 
-   spamicity = calc_spamicity(Nham, Nspam, q->nham, q->nspam, rob_s, rob_x);
+   if(!strchr(p, '+')) freq_min = 2*FREQ_MIN;
+
+   spamicity = calc_spamicity(Nham, Nspam, q->nham, q->nspam, rob_s, rob_x, freq_min);
 
    return spamicity;
 }

@@ -1,5 +1,5 @@
 /*
- * session.c, 2007.11.05, SJ
+ * session.c, 2007.11.06, SJ
  */
 
 #include <stdio.h>
@@ -24,6 +24,7 @@
 #include "session.h"
 #include "messages.h"
 #include "sql.h"
+#include "black.h"
 #include "config.h"
 
 int sd, fd, inj, ret, rav, prevlen=0;
@@ -67,6 +68,8 @@ void init_child(int new_sd, char *hostid){
    char buf[SMALLBUFSIZE];
 
    memset(sdata.mailfrom, 0, MAXBUFSIZE);
+   memset(sdata.client_addr, 0, IPLEN);
+
    memset(last2buf, 0, 2*MAXBUFSIZE+1);
    memset(prevbuf, 0, MAXBUFSIZE);
 
@@ -160,16 +163,36 @@ void init_child(int new_sd, char *hostid){
 
             if(state == SMTP_STATE_INIT) state = SMTP_STATE_HELO;
 
-            send(new_sd, SMTP_RESP_250_OK, strlen(SMTP_RESP_250_OK), 0);
+            snprintf(buf, MAXBUFSIZE-1, SMTP_RESP_250_EXTENSIONS, cfg.hostid);
+            send(new_sd, buf, strlen(buf), 0);
 
+            if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent: %s", sdata.ttmpfile, buf);
 
             /* FIXME: implement the ENHANCEDSTATUSCODE and the PIPELINING extensions */
 
 
 
+            continue;
+         }
+
+         // XFORWARD
+
+         if(strncasecmp(buf, SMTP_CMD_XFORWARD, strlen(SMTP_CMD_XFORWARD)) == 0){
+            if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: got: %s", sdata.ttmpfile, buf);
+
+            /* extract client address */
+
+            trim(buf);
+            p = strstr(buf, "ADDR=");
+            if(p){
+               snprintf(sdata.client_addr, IPLEN-1, p+5);
+               if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: client address: %s", sdata.ttmpfile, sdata.client_addr);
+            }
+
+            send(new_sd, SMTP_RESP_250_OK, strlen(SMTP_RESP_250_OK), 0);
             if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent: %s", sdata.ttmpfile, SMTP_RESP_250_OK);
 
-            continue;
+            continue;            
          }
 
          // MAIL FROM
@@ -203,6 +226,19 @@ void init_child(int new_sd, char *hostid){
                }
 
                state = SMTP_STATE_RCPT_TO;
+
+               /* check against DHA trap address list, 2007.11.06, SJ */
+
+            #ifdef HAVE_BLACKHOLE
+               if(strlen(cfg.dha_trap_address_list) > 4){
+                  if(extract_email(buf, email) == 1){
+                     if(strstr(cfg.dha_trap_address_list, email)){
+                        syslog(LOG_PRIORITY, "%s: %s trapped with %s on my DHA list", sdata.ttmpfile, sdata.client_addr, email);
+                        put_ip_to_dir(cfg.blackhole_path, sdata.client_addr);
+                     }
+                  }
+               }
+            #endif
 
                send(new_sd, SMTP_RESP_250_OK, strlen(SMTP_RESP_250_OK), 0);
                if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent: %s", sdata.ttmpfile, SMTP_RESP_250_OK);
@@ -452,6 +488,9 @@ void init_child(int new_sd, char *hostid){
 
                /* send results back to the '.' command */
 
+               memset(email2, 0, SMALLBUFSIZE);
+               extract_email(sdata.mailfrom, email2);
+
             #ifdef HAVE_LMTP
                for(i=0; i<sdata.num_of_rcpt_to; i++){
             #else
@@ -461,21 +500,8 @@ void init_child(int new_sd, char *hostid){
 
                   memset(acceptbuf, 0, MAXBUFSIZE);
                   memset(email, 0, SMALLBUFSIZE);
-                  memset(email2, 0, SMALLBUFSIZE);
 
-                  p = strchr(sdata.rcptto[i], '<');
-                  if(p){
-                     snprintf(email, SMALLBUFSIZE-1, "%s", p+1);
-                     p = strchr(email, '>');
-                     if(p) *p = '\0';
-                  }
-
-                  p = strchr(sdata.mailfrom, '<');
-                  if(p){
-                     snprintf(email2, SMALLBUFSIZE-1, "%s", p+1);
-                     p = strchr(email2, '>');
-                     if(p) *p = '\0';
-                  }
+                  extract_email(sdata.rcptto[i], email);
 
                   if(rav == AVIR_VIRUS){
                      snprintf(acceptbuf, MAXBUFSIZE-1, "%s <%s>\r\n", SMTP_RESP_550_ERR_PREF, email);

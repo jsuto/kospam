@@ -1,5 +1,5 @@
 /*
- * black.c, 2006.11.04, SJ
+ * black.c, 2007.11.06, SJ
  */
 
 #include <stdio.h>
@@ -7,6 +7,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <fcntl.h>
 #include <syslog.h>
 #include <unistd.h>
 #include "misc.h"
@@ -48,5 +49,26 @@ unsigned long blackness(char *dir, char *ip, int v){
    }
 
    return blackhole_timestamp;
+}
+
+void put_ip_to_dir(char *dir, char *ip){
+   struct timeval tv1, tv2;
+   struct timezone tz;
+   char ipfile[SMALLBUFSIZE];
+   int fd;
+
+   gettimeofday(&tv1, &tz);
+
+   snprintf(ipfile, SMALLBUFSIZE-1, "%s/%s", dir, ip);
+   unlink(ipfile);
+
+   fd = open(ipfile, O_RDWR|O_CREAT, S_IRUSR|S_IRGRP|S_IROTH);
+   if(fd != -1){
+      close(fd);
+      gettimeofday(&tv2, &tz);
+      syslog(LOG_PRIORITY, "putting %s to blackhole in %ld [us]", ip, tvdiff(tv2, tv1));
+   }
+   else syslog(LOG_PRIORITY, "failed to put %s to blackhole", ip);
+
 }
 

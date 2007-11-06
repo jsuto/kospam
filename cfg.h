@@ -1,5 +1,5 @@
 /*
- * cfg.h, 2007.10.23, SJ
+ * cfg.h, 2007.11.06, SJ
  */
 
 #define MAXVAL 128
@@ -42,6 +42,8 @@ struct __config {
    char clapfemail[MAXVAL];
    char localpostmaster[MAXVAL];
    int silently_discard_infected_email;
+
+   char dha_trap_address_list[MAXVAL];
 
    int use_antispam;
 

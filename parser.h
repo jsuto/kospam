@@ -1,5 +1,5 @@
 /*
- * parser.h, 2007.09.02, SJ
+ * parser.h, 2007.11.06, SJ
  */
 
 #include "config.h"
@@ -68,7 +68,7 @@ struct _state {
 };
 
 struct session_data {
-   char ttmpfile[RND_STR_LEN+1], mailfrom[MAXBUFSIZE], rcptto[MAX_RCPT_TO][MAXBUFSIZE];
+   char ttmpfile[RND_STR_LEN+1], mailfrom[MAXBUFSIZE], rcptto[MAX_RCPT_TO][MAXBUFSIZE], client_addr[IPLEN];
    unsigned long uid;
    int tot_len, num_of_rcpt_to, skip_id_check;
 };

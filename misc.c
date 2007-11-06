@@ -1,5 +1,5 @@
 /*
- * misc.c, 2007.09.04, SJ
+ * misc.c, 2007.11.06, SJ
  */
 
 #include <stdio.h>
@@ -495,6 +495,27 @@ void replace(char *p, int what, int with){
 
 
 /*
+ * extract email
+ */
+
+int extract_email(char *rawmail, char *email){
+   char *p;
+
+   p = strchr(rawmail, '<');
+   if(p){
+      snprintf(email, SMALLBUFSIZE-1, "%s", p+1);
+      p = strchr(email, '>');
+      if(p){
+         *p = '\0';
+         return 1;
+      }
+   }
+
+   return 0;
+}
+
+
+/*
  * read random data from entropy pool
  */
 
@@ -616,7 +637,7 @@ void log_ham_spam_per_email(char *tmpfile, char *email, int ham_or_spam){
  * calculate the spamicity
  */
 
-float calc_spamicity(float NHAM, float NSPAM, unsigned int nham, unsigned int nspam, float rob_s, float rob_x){
+float calc_spamicity(float NHAM, float NSPAM, unsigned int nham, unsigned int nspam, float rob_s, float rob_x, int freq_min){
    float r = DEFAULT_SPAMICITY, ham_prob=0, spam_prob=0;
    int n;
 
@@ -632,7 +653,7 @@ float calc_spamicity(float NHAM, float NSPAM, unsigned int nham, unsigned int ns
 
       /* deal with rare words */
 
-      if(nham < FREQ_MIN && nspam < FREQ_MIN){
+      if(nham < freq_min && nspam < freq_min){
          n = nham;
          if(nspam > n) n = nspam;
 

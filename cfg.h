@@ -1,5 +1,5 @@
 /*
- * cfg.h, 2007.11.06, SJ
+ * cfg.h, 2007.11.07, SJ
  */
 
 #define MAXVAL 128
@@ -133,6 +133,7 @@ struct __config {
    char mysqluser[MAXVAL];
    char mysqlpwd[MAXVAL];
    char mysqldb[MAXVAL];
+   int mysql_connect_timeout;
 
    // sqlite3 stuff
 
@@ -146,6 +147,12 @@ struct __config {
    int qcache_port;
    char qcache_socket[MAXVAL];
    int qcache_update;
+
+   // Store
+
+   char store_addr[MAXVAL];
+   int store_port;
+   char store_secret[MAXVAL];
 
    // web interface
 

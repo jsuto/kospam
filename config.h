@@ -1,5 +1,5 @@
 /*
- * config.h, 2007.10.14, SJ
+ * config.h, 2007.11.07, SJ
  */
 
 #include <syslog.h>
@@ -41,6 +41,9 @@
 #define QCACHE_SOCKET "/tmp/qcache"
 
 #define SMAPD_PORT 28643
+
+#define STORE_ADDR "127.0.0.1"
+#define CLAPFSTORE_PORT 29771
 
 #define WORK_DIR "/opt/av"
 #define PIDFILE WORK_DIR "/clapf.pid"

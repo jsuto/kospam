@@ -1,5 +1,10 @@
 0.3.30-rc2:
 
+2007.11.07, SJ
+
+Added an option (mysql_connect_timeout) to set the MySQL connection timeout.
+(cfg.c, cfg.h, session.c, spamdrop.c, example.conf)
+
 2007.11.06, SJ
 
 Added XFORWARD extension support.

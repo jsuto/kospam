@@ -1,5 +1,5 @@
 /*
- * cfg.c, 2007.11.06, SJ
+ * cfg.c, 2007.11.07, SJ
  */
 
 #include <stdio.h>
@@ -72,6 +72,9 @@ struct __config read_config(char *configfile){
    cfg.qcache_port = QCACHE_PORT;
    strncpy(cfg.qcache_socket, QCACHE_SOCKET, MAXVAL-1);
    cfg.qcache_update = 1;
+
+   strncpy(cfg.store_addr, STORE_ADDR, MAXVAL-1);
+   cfg.store_port = CLAPFSTORE_PORT;
 
    cfg.max_connections = MAXCONN;
    cfg.backlog = BACKLOG;
@@ -147,6 +150,8 @@ struct __config read_config(char *configfile){
    cfg.clamav_block_encrypted_archives = 1;
    cfg.clamav_use_phishing_db = 1;
 
+   cfg.mysql_connect_timeout = 2;
+
    cfg.page_len = MESSAGES_PER_ONE_PAGE;
 
    strncpy(cfg.pidfile, PIDFILE, MAXVAL-1);
@@ -213,6 +218,15 @@ struct __config read_config(char *configfile){
 
                   if(strcmp(key, "qcache_update") == 0)
                      cfg.qcache_update = atoi(val);
+
+                  if(strcmp(key, "store_addr") == 0)
+                     memcpy(cfg.store_addr, val, MAXVAL-1);
+
+                  if(strcmp(key, "store_port") == 0)
+                     cfg.store_port = atoi(val);
+
+                  if(strcmp(key, "store_secret") == 0)
+                     memcpy(cfg.store_secret, val, MAXVAL-1);
 
                   if(strcmp(key, "max_connections") == 0)
                      cfg.max_connections = atoi(val);
@@ -436,6 +450,9 @@ struct __config read_config(char *configfile){
 
                   if(strcmp(key, "mysqldb") == 0)
                      memcpy(cfg.mysqldb, val, MAXVAL-1);
+
+                  if(strcmp(key, "mysql_connect_timeout") == 0)
+                     cfg.mysql_connect_timeout = atoi(val);
 
                   if(strcmp(key, "sqlite3") == 0)
                      memcpy(cfg.sqlite3, val, MAXVAL-1);

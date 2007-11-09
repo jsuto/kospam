@@ -669,6 +669,8 @@ INCDIR
 LIBDIR
 OBJS
 parsembox
+clapfstore
+clapfstore_install
 cgi
 passmail
 passmail_install
@@ -683,6 +685,7 @@ mysql_libs
 user_obj
 ldap_libs
 mysql_obj
+store_obj
 db_install
 MYSQL_CONFIG
 CFGDIR
@@ -1279,6 +1282,7 @@ Optional Features:
   --enable-blackhole      build the blackhole feature
   --enable-cgi            build the web interface to train the database
   --enable-lmtp           use LMTP local delivery (default: SMTP)
+  --enable-store          use external store to store emails for later retraining
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -3698,6 +3702,9 @@ done
 
 
 
+
+
+
 have_libclamav="no"
 have_clamd="no"
 have_avg="no"
@@ -3716,6 +3723,7 @@ have_sqlite3="no"
 have_ldap="no"
 have_surbl="no"
 have_gsl="no"
+have_store="no"
 
 antispam_libs=""
 defs=""
@@ -5287,6 +5295,23 @@ fi
     fi
 
 
+    # Check whether --enable-store was given.
+if test "${enable_store+set}" = set; then
+  enableval=$enable_store; want_store=$enableval
+else
+  want_store="no"
+fi
+
+
+    if test "$want_store" = "yes"; then
+        defs="$defs -DHAVE_STORE"
+        clapfstore="clapfstore"
+        store_obj="store.o"
+	clapfstore_install="install-clapfstore"
+        have_store="yes"
+    fi
+
+
 
 cfg_dir=`echo $sysconfdir | grep prefix`
 
@@ -5791,6 +5816,12 @@ if test "$QCACHE" = "socket"; then
    qcache_install="install-qcache"
 fi
 
+if test "$have_store" = "yes"; then
+   echo "store: clapfstore"
+else
+   echo "store: internal"
+fi
+
 if test "$want_lmtp" = "yes"; then
    echo "local delivery: LMTP"
 else
@@ -5809,7 +5840,7 @@ echo; echo
 
 CFLAGS="-O2 -Wall"
 LIBS="$libclamav $antispam_libs $gsl_libs $sqlite3_libs"
-OBJS="misc.o cfg.o smtp.o sig.o session.o decoder.o parser.o cgi.o $objs"
+OBJS="misc.o cfg.o smtp.o sig.o decoder.o parser.o cgi.o $objs"
 
 ac_config_files="$ac_config_files Makefile"
 
@@ -6496,6 +6527,8 @@ INCDIR!$INCDIR$ac_delim
 LIBDIR!$LIBDIR$ac_delim
 OBJS!$OBJS$ac_delim
 parsembox!$parsembox$ac_delim
+clapfstore!$clapfstore$ac_delim
+clapfstore_install!$clapfstore_install$ac_delim
 cgi!$cgi$ac_delim
 passmail!$passmail$ac_delim
 passmail_install!$passmail_install$ac_delim
@@ -6510,6 +6543,7 @@ mysql_libs!$mysql_libs$ac_delim
 user_obj!$user_obj$ac_delim
 ldap_libs!$ldap_libs$ac_delim
 mysql_obj!$mysql_obj$ac_delim
+store_obj!$store_obj$ac_delim
 db_install!$db_install$ac_delim
 MYSQL_CONFIG!$MYSQL_CONFIG$ac_delim
 CFGDIR!$CFGDIR$ac_delim
@@ -6518,7 +6552,7 @@ LIBOBJS!$LIBOBJS$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 76; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 79; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5

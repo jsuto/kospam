@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2007.11.07, SJ
+ * spamdrop.c, 2007.11.09, SJ
  *
  * check if a single RFC-822 formatted messages is spam or not
  */
@@ -53,7 +53,7 @@ int main(int argc, char **argv){
    double spaminess=DEFAULT_SPAMICITY;
    struct stat st;
    struct timezone tz;
-   struct timeval tv_spam_start, tv_spam_stop;
+   struct timeval tv1, tv2, tv_spam_start, tv_spam_stop;
    struct passwd *pwd;
    struct session_data sdata;
    struct _state state;
@@ -308,7 +308,6 @@ int main(int argc, char **argv){
       chmod(qpath, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
    }
 
-
    gettimeofday(&tv_spam_stop, &tz);
 
    syslog(LOG_PRIORITY, "%s: %.4f %d in %ld [ms]", sdata.ttmpfile, spaminess, tot_len, tvdiff(tv_spam_stop, tv_spam_start)/1000);
@@ -368,7 +367,7 @@ int main(int argc, char **argv){
       log_ham_spam_per_email(sdata.ttmpfile, buf, 0);
 
    if(print_message == 0 && spaminess >= cfg.spam_overall_limit && spaminess < 1.01)
-     return 1;
+      return 1;
 
    return 0;
 }

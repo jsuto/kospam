@@ -1,5 +1,5 @@
 /*
- * session.c, 2007.11.06, SJ
+ * session.c, 2007.11.08, SJ
  */
 
 #include <stdio.h>
@@ -47,6 +47,10 @@ int inject_mail(struct session_data sdata, int msg, char *smtpaddr, int smtpport
    sqlite3 *db;
 #endif
 
+#ifdef HAVE_STORE
+   #include "clapfstore.h"
+   store *SSTORE;
+#endif
 
 /*
  * kill child if it works too long or is frozen
@@ -617,8 +621,28 @@ void init_child(int new_sd, char *hostid){
                         else
                            snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s/h.%s", USER_QUEUE_DIR, UE.name[0], UE.name, sdata.ttmpfile);
 
+                     #ifdef HAVE_STORE
+                        gettimeofday(&tv_meta1, &tz);
+
+                        SSTORE = store_init(cfg.store_addr, cfg.store_port);
+                        if(SSTORE){
+                          if(SSTORE->rc == 1){
+                           if(spaminess >= cfg.spam_overall_limit)
+                              rc = store_email(SSTORE, sdata.ttmpfile, UE.name, sdata.ttmpfile, 1, cfg.store_secret);
+                           else
+                              rc = store_email(SSTORE, sdata.ttmpfile, UE.name, sdata.ttmpfile, 0, cfg.store_secret);
+                          }
+
+                          store_free(SSTORE);
+                        }
+
+                        gettimeofday(&tv_meta2, &tz);
+
+
+                     #else
                         link(sdata.ttmpfile, qpath);
                         chmod(qpath, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+                     #endif
                      }
 
 

@@ -19,13 +19,14 @@ LIBDIR = @LIBDIR@ @mysql_libs@
 LIBS = @LIBS@
 LDAP_LIBS = @ldap_libs@
 OBJS = @OBJS@
+STORE_OBJ = @store_obj@
 USER_OBJ = @user_obj@
 MYSQL_OBJS = @mysql_obj@
 
 INSTALL = @INSTALL@
 
-all: clapf splitmbox @cgi@ @parsembox@ @passmail@ @train@ @qcache@ @test@
-install: install-clapf install-splitmbox @parsembox_install@ @passmail_install@ @train_install@ @qcache_install@ @db_install@
+all: clapf @clapfstore@ splitmbox @cgi@ @parsembox@ @passmail@ @train@ @qcache@ @test@
+install: install-clapf @clapfstore_install@ install-splitmbox @parsembox_install@ @passmail_install@ @train_install@ @qcache_install@ @db_install@
 
 clapf.conf:
 	sed -e 's%pidfile=.*%pidfile=$(localstatedir)/run/clapf.pid%' \
@@ -39,7 +40,7 @@ clapf.conf:
 	    -e 's%spam_quarantine_dir=.*%spam_quarantine_dir=$(localstatedir)/lib/clapf/spamquarantine%' \
 	    -e 's%workdir=.*%workdir=/tmp%' <$(srcdir)/example.conf >$@
 
-clapf: % : %.o $(OBJS) $(MYSQL_OBJS)
+clapf: % : %.o $(OBJS) session.o $(STORE_OBJ) $(MYSQL_OBJS)
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR) @LDFLAGS@
 
 parsembox: % : %.o misc.o decoder.o parser.o
@@ -64,6 +65,9 @@ spam-fwd-train spamstat clapf_admin: % : %.o $(OBJS) $(MYSQL_OBJS)
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
 
 smapd:	% : %.o $(OBJS) $(MYSQL_OBJS)
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR) -lssl -lcrypto -ldl -lpthread
+
+clapfstore:	% : %.o cfg.o misc.o ssl_util.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR) -lssl -lcrypto -ldl -lpthread
 
 train: % : %.o spamdrop spam-fwd-train spamstat clapf_admin aphash prepare-sql
@@ -109,6 +113,10 @@ install-clapf: clapf
 	if [ ! -f "$(DESTDIR)$(sysconfdir)/clapf.conf" ]; then $(INSTALL) -m 0644 $(srcdir)/example.conf $(DESTDIR)$(sysconfdir)/clapf.conf; fi
 	$(INSTALL) -d $(DESTDIR)$(mandir)/man8
 	$(INSTALL) -m 0644 $(srcdir)/doc/man/clapf.8 $(DESTDIR)$(mandir)/man8
+
+intall-clapfstore: clapfstore
+	$(INSTALL) -d $(DESTDIR)$(libexecdir)/clapf
+	$(INSTALL) -m 0755 clapfstore $(DESTDIR)$(libexecdir)/clapf
 
 install-spamdrop: spamdrop
 	$(INSTALL) -m 0755 spamdrop $(DESTDIR)$(bindir)
@@ -159,7 +167,7 @@ clean_db:
 	rm -f CDBFILE.* ham.tmp spam.tmp num_of_spam.tmp num_of_ham.tmp tokens*.cdb tokens.mydb temp.*
 
 clean:
-	rm -f *.o *.a smapd qs db.sql clapf clapf.conf parsembox splitmbox spamtest spamdrop train spamcgi traincgi trainlogcgi usercgi statcgi passmail spam-fwd-train spamstat aphash clapf_admin prepare-sql
+	rm -f *.o *.a smapd qs db.sql clapf clapfstore clapf.conf parsembox splitmbox spamtest spamdrop train spamcgi traincgi trainlogcgi usercgi statcgi passmail spam-fwd-train spamstat aphash clapf_admin prepare-sql
 
 dist_clean distclean: clean
 	rm -f Makefile config.log config.status clapf-config.h stamp.h clapf.conf

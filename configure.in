@@ -17,6 +17,8 @@ AC_SUBST(INCDIR)
 AC_SUBST(LIBDIR)
 AC_SUBST(OBJS)
 AC_SUBST(parsembox)
+AC_SUBST(clapfstore)
+AC_SUBST(clapfstore_install)
 AC_SUBST(cgi)
 AC_SUBST(passmail)
 AC_SUBST(passmail_install)
@@ -31,6 +33,7 @@ AC_SUBST(mysql_libs)
 AC_SUBST(user_obj)
 AC_SUBST(ldap_libs)
 AC_SUBST(mysql_obj)
+AC_SUBST(store_obj)
 AC_SUBST(db_install)
 
 have_libclamav="no"
@@ -51,6 +54,7 @@ have_sqlite3="no"
 have_ldap="no"
 have_surbl="no"
 have_gsl="no"
+have_store="no"
 
 antispam_libs=""
 defs=""
@@ -326,6 +330,19 @@ dnl lmtp support
     fi
 
 
+dnl external store
+    AC_ARG_ENABLE(store,
+          [  --enable-store          use external store to store emails for later retraining], want_store=$enableval, want_store="no")
+
+    if test "$want_store" = "yes"; then
+        defs="$defs -DHAVE_STORE"
+        clapfstore="clapfstore"
+        store_obj="store.o"
+	clapfstore_install="install-clapfstore"
+        have_store="yes"
+    fi
+
+
 dnl configure config directory
 
 cfg_dir=`echo $sysconfdir | grep prefix`
@@ -564,6 +581,12 @@ if test "$QCACHE" = "socket"; then
    qcache_install="install-qcache"
 fi
 
+if test "$have_store" = "yes"; then
+   echo "store: clapfstore"
+else
+   echo "store: internal"
+fi
+
 if test "$want_lmtp" = "yes"; then
    echo "local delivery: LMTP"
 else
@@ -582,6 +605,6 @@ echo; echo
 
 CFLAGS="-O2 -Wall"
 LIBS="$libclamav $antispam_libs $gsl_libs $sqlite3_libs"
-OBJS="misc.o cfg.o smtp.o sig.o session.o decoder.o parser.o cgi.o $objs"
+OBJS="misc.o cfg.o smtp.o sig.o decoder.o parser.o cgi.o $objs"
 
 AC_OUTPUT(Makefile)

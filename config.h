@@ -1,5 +1,5 @@
 /*
- * config.h, 2007.11.07, SJ
+ * config.h, 2007.11.08, SJ
  */
 
 #include <syslog.h>

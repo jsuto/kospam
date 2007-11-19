@@ -5845,6 +5845,9 @@ fi
 
 echo "clapf user: $CLAPF_USER"
 
+id -u $CLAPF_USER 2>null 1>null
+if test $? -eq 1; then echo "the user \"$CLAPF_USER\" does not exists, please create it, first with adduser..."; exit 1; fi
+
 if test "$have_libclamav" = "no" && test "$have_clamd" = "no" && test "$have_avg" = "no" && test "$have_avast" = "no" && test "$have_kav" = "no" && test "$have_drweb" = "no" ; then
    echo; echo
    echo "You have not selected any antivirus support."

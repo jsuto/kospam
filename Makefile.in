@@ -43,10 +43,10 @@ clapf.conf.old:
 	    -e 's%workdir=.*%workdir=/tmp%' <$(srcdir)/example.conf >$@
 
 clapf.conf:
-	sed -e 's%pidfile=.*%pidfile=$(localstatedir)/clapf/clapf.pid%' \
-	-e 's%blackhole_path=.*%blackhole_path=$(localstatedir)/clapf/blackhole%' \
-	-e 's%sqlite3=.*%sqlite3=$(localstatedir)/clapf/data/tokens.sdb%' \
-	-e 's%workdir=.*%workdir=$(localstatedir)/clapf/tmp%' <$(srcdir)/example.conf >$@
+	sed -e 's%pidfile=.*%pidfile=$(localstatedir)/lib/clapf/clapf.pid%' \
+	-e 's%blackhole_path=.*%blackhole_path=$(localstatedir)/lib/clapf/blackhole%' \
+	-e 's%sqlite3=.*%sqlite3=$(localstatedir)/lib/clapf/data/tokens.sdb%' \
+	-e 's%workdir=.*%workdir=$(localstatedir)/lib/clapf/tmp%' <$(srcdir)/example.conf >$@
 
 clapf: % : %.o $(OBJS) session.o $(STORE_OBJ) $(MYSQL_OBJS)
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR) @LDFLAGS@
@@ -109,23 +109,23 @@ install-mysql-old:
 install-sqlite3:
 	$(INSTALL) -d $(DESTDIR)$(datarootdir)/clapf
 	$(INSTALL) -m 0644 $(srcdir)/db-sqlite3.sql $(DESTDIR)$(datarootdir)/clapf/db.sql
-	$(INSTALL) -d $(DESTDIR)$(localstatedir)/clapf/data
-	if [ ! -f "$(DESTDIR)/$(localstatedir)/clapf/data/tokens.sdb" ]; then sqlite3 -batch $(DESTDIR)/$(localstatedir)/clapf/data/tokens.sdb <$(srcdir)/db-sqlite3.sql; \
-		chown -R $(CLAPF_USER):$(CLAPF_GROUP) $(DESTDIR)$(localstatedir)/clapf/data/tokens.sdb; fi
+	$(INSTALL) -d $(DESTDIR)$(localstatedir)/lib/clapf/data
+	if [ ! -f "$(DESTDIR)/$(localstatedir)/lib/clapf/data/tokens.sdb" ]; then sqlite3 -batch $(DESTDIR)/$(localstatedir)/lib/clapf/data/tokens.sdb <$(srcdir)/db-sqlite3.sql; \
+		chown -R $(CLAPF_USER):$(CLAPF_GROUP) $(DESTDIR)$(localstatedir)/lib/clapf/data/tokens.sdb; fi
 
 install-clapf: clapf
 	$(INSTALL) -d $(DESTDIR)$(bindir)
 	$(INSTALL) -d $(DESTDIR)$(libexecdir)/clapf
-	$(INSTALL) -d $(DESTDIR)$(localstatedir)/clapf/data
-	$(INSTALL) -d $(DESTDIR)$(localstatedir)/clapf/queue
-	$(INSTALL) -d $(DESTDIR)$(localstatedir)/clapf/blackhole
-	$(INSTALL) -d -m 700 $(DESTDIR)$(localstatedir)/clapf/tmp
-	chown -R $(CLAPF_USER):$(CLAPF_GROUP) $(DESTDIR)$(localstatedir)/clapf
-	cat $(srcdir)/util/check_clapf.sh.in | sed -e "s%YOUR_PATH%$(bindir)%" -e "s%YOUR_QUEUE%$(localstatedir)/clapf/queue%" > $(srcdir)/util/check_clapf.sh
+	$(INSTALL) -d $(DESTDIR)$(localstatedir)/lib/clapf/data
+	$(INSTALL) -d $(DESTDIR)$(localstatedir)/lib/clapf/queue
+	$(INSTALL) -d $(DESTDIR)$(localstatedir)/lib/clapf/blackhole
+	$(INSTALL) -d -m 700 $(DESTDIR)$(localstatedir)/lib/clapf/tmp
+	chown -R $(CLAPF_USER):$(CLAPF_GROUP) $(DESTDIR)$(localstatedir)/lib/clapf
+	cat $(srcdir)/util/check_clapf.sh.in | sed -e "s%YOUR_PATH%$(bindir)%" -e "s%YOUR_QUEUE%$(localstatedir)/lib/clapf/queue%" > $(srcdir)/util/check_clapf.sh
 	$(INSTALL) -m 0755 util/check_clapf.sh $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 clapf $(DESTDIR)$(bindir)
 	$(INSTALL) -d $(DESTDIR)$(sysconfdir)
-	make clapf.conf
+	rm -f clapf.conf; make clapf.conf
 	if [ ! -f "$(DESTDIR)$(sysconfdir)/clapf.conf" ]; then $(INSTALL) -m 0644 $(srcdir)/clapf.conf $(DESTDIR)$(sysconfdir)/clapf.conf; fi
 	$(INSTALL) -d $(DESTDIR)$(mandir)/man8
 	$(INSTALL) -m 0644 $(srcdir)/doc/man/clapf.8 $(DESTDIR)$(mandir)/man8

@@ -1,11 +1,12 @@
 #!/bin/sh
 ##
-## db_init_mydb.sh, 2007.10.09, SJ
+## db_init_sqlite3.sh, 2007.11.19, SJ
+## create the SQLite3 tables and load ham/spam hashed tokens from scratch
 ##
 
 if [ $# -ne 3 ]; then echo "usage: $0 <ham> <spam> <database>"; exit 1; fi
 
-export PATH=$PATH:/usr/local/bin:.:`pwd`/perl
+export PATH=$PATH:/usr/local/bin:.:`pwd`/perl:YOUR_LIBEXECDIR
 export LC_ALL=C
 
 HAM=$1
@@ -16,16 +17,23 @@ NSPAM=0
 
 TS1=`date +%s`
 
-rm -f ham.tmp spam.tmp temp.* $DB num_of_ham.tmp num_of_spam.tmp
+rm -f ham.tmp spam.tmp temp.* num_of_ham.tmp num_of_spam.tmp
 
 import_tokens(){
    echo "Num of ham messages: $NHAM"
    echo "Num of spam messages: $NSPAM"
-   echo -n "Importing data . . ."
+   echo -n "Importing data . . . "
 
    TS1=`date +%s`
 
-   prepare-sql ham.tmp spam.tmp $NHAM $NSPAM $DB
+   if [ ! -f $DB ]; then
+      sqlite3 $DB < db-sqlite3.sql
+   fi
+
+   prepare-sql ham.tmp spam.tmp | sqlite3 $DB
+
+   #echo "INSERT INTO t_misc (nham, nspam, uid) VALUES($NHAM, $NSPAM, 0);" | sqlite3 $DB
+   echo "UPDATE t_misc SET nham=$NHAM, nspam=$NSPAM WHERE uid=0;" | sqlite3 $DB
 
    TS2=`date +%s`
    echo `expr $TS2 - $TS1` " [sec]"

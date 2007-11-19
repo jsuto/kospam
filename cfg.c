@@ -1,5 +1,5 @@
 /*
- * cfg.c, 2007.11.07, SJ
+ * cfg.c, 2007.11.19, SJ
  */
 
 #include <stdio.h>
@@ -116,8 +116,6 @@ struct __config read_config(char *configfile){
 
    cfg.use_antispam = 1;
 
-
-   strncpy(cfg.tokensfile, TOKENSCDB, MAXVAL-1);
 
    cfg.use_pairs = 1;
    cfg.use_single_tokens = 1;
@@ -281,8 +279,6 @@ struct __config read_config(char *configfile){
                   if(strcmp(key, "spam_quarantine_dir") == 0)
                      memcpy(cfg.spam_quarantine_dir, val, MAXVAL-1);
 
-                  if(strcmp(key, "tokensfile") == 0)
-                     memcpy(cfg.tokensfile, val, MAXVAL-1);
 
                   if(strcmp(key, "use_triplets") == 0)
                      cfg.use_triplets = atoi(val);

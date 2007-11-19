@@ -22,13 +22,15 @@ OBJS = @OBJS@
 STORE_OBJ = @store_obj@
 USER_OBJ = @user_obj@
 MYSQL_OBJS = @mysql_obj@
+CLAPF_USER = @CLAPF_USER@
+CLAPF_GROUP = `id -g $(CLAPF_USER)`
 
 INSTALL = @INSTALL@
 
 all: clapf @clapfstore@ splitmbox @cgi@ @parsembox@ @passmail@ @train@ @qcache@ @test@
 install: install-clapf @clapfstore_install@ install-splitmbox @parsembox_install@ @passmail_install@ @train_install@ @qcache_install@ @db_install@
 
-clapf.conf:
+clapf.conf.old:
 	sed -e 's%pidfile=.*%pidfile=$(localstatedir)/run/clapf.pid%' \
 	    -e 's%clamd_socket=.*%clamd_socket=$(localstatedir)/run/clamav/clamd.ctl%' \
 	    -e 's%tokensfile=.*%clamd_socket=$(localstatedir)/lib/clapf/tokens.cdb%' \
@@ -39,6 +41,12 @@ clapf.conf:
 	    -e 's%saved_spam_path=.*%saved_spam_path=$(localstatedir)/lib/clapf/saved/spam%' \
 	    -e 's%spam_quarantine_dir=.*%spam_quarantine_dir=$(localstatedir)/lib/clapf/spamquarantine%' \
 	    -e 's%workdir=.*%workdir=/tmp%' <$(srcdir)/example.conf >$@
+
+clapf.conf:
+	sed -e 's%pidfile=.*%pidfile=$(localstatedir)/clapf/clapf.pid%' \
+	-e 's%blackhole_path=.*%blackhole_path=$(localstatedir)/clapf/blackhole%' \
+	-e 's%sqlite3=.*%sqlite3=$(localstatedir)/clapf/data/tokens.sdb%' \
+	-e 's%workdir=.*%workdir=$(localstatedir)/clapf/tmp%' <$(srcdir)/example.conf >$@
 
 clapf: % : %.o $(OBJS) session.o $(STORE_OBJ) $(MYSQL_OBJS)
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR) @LDFLAGS@
@@ -101,16 +109,24 @@ install-mysql-old:
 install-sqlite3:
 	$(INSTALL) -d $(DESTDIR)$(datarootdir)/clapf
 	$(INSTALL) -m 0644 $(srcdir)/db-sqlite3.sql $(DESTDIR)$(datarootdir)/clapf/db.sql
-	if [ ! -f "$(DESTDIR)/opt/av/tokens.sdb" ]; then sqlite3 -batch $(DESTDIR)/opt/av/tokens.sdb <$(srcdir)/db-sqlite3.sql; fi
+	$(INSTALL) -d $(DESTDIR)$(localstatedir)/clapf/data
+	if [ ! -f "$(DESTDIR)/$(localstatedir)/clapf/data/tokens.sdb" ]; then sqlite3 -batch $(DESTDIR)/$(localstatedir)/clapf/data/tokens.sdb <$(srcdir)/db-sqlite3.sql; \
+		chown -R $(CLAPF_USER):$(CLAPF_GROUP) $(DESTDIR)$(localstatedir)/clapf/data/tokens.sdb; fi
 
 install-clapf: clapf
 	$(INSTALL) -d $(DESTDIR)$(bindir)
 	$(INSTALL) -d $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -d $(DESTDIR)$(localstatedir)/clapf/data
+	$(INSTALL) -d $(DESTDIR)$(localstatedir)/clapf/queue
+	$(INSTALL) -d $(DESTDIR)$(localstatedir)/clapf/blackhole
+	$(INSTALL) -d -m 700 $(DESTDIR)$(localstatedir)/clapf/tmp
+	chown -R $(CLAPF_USER):$(CLAPF_GROUP) $(DESTDIR)$(localstatedir)/clapf
+	cat $(srcdir)/util/check_clapf.sh.in | sed -e "s%YOUR_PATH%$(bindir)%" -e "s%YOUR_QUEUE%$(localstatedir)/clapf/queue%" > $(srcdir)/util/check_clapf.sh
 	$(INSTALL) -m 0755 util/check_clapf.sh $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 clapf $(DESTDIR)$(bindir)
 	$(INSTALL) -d $(DESTDIR)$(sysconfdir)
-	if [ ! -f "$(DESTDIR)$(sysconfdir)/clapf.conf" ]; then $(INSTALL) -m 0644 $(srcdir)/example.conf $(DESTDIR)$(sysconfdir)/clapf.conf; fi
+	make clapf.conf
+	if [ ! -f "$(DESTDIR)$(sysconfdir)/clapf.conf" ]; then $(INSTALL) -m 0644 $(srcdir)/clapf.conf $(DESTDIR)$(sysconfdir)/clapf.conf; fi
 	$(INSTALL) -d $(DESTDIR)$(mandir)/man8
 	$(INSTALL) -m 0644 $(srcdir)/doc/man/clapf.8 $(DESTDIR)$(mandir)/man8
 
@@ -132,18 +148,19 @@ install-parsembox:
 	$(INSTALL) -d $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 $(srcdir)/prepare-sql $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 $(srcdir)/stat/spamstat.pl $(DESTDIR)$(libexecdir)/clapf
-	$(INSTALL) -m 0755 $(srcdir)/perl/createcdb.pl $(DESTDIR)$(libexecdir)/clapf
-	$(INSTALL) -m 0755 $(srcdir)/perl/mysql2cdb.pl $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 $(srcdir)/perl/prepare.pl $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 $(srcdir)/perl/shrink.pl $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 $(srcdir)/perl/uribl.pl $(DESTDIR)$(libexecdir)/clapf
+	cat $(srcdir)/util/db_init_mydb.sh.in | sed -e "s%YOUR_LIBEXECDIR%$(libexecdir)/clapf%" > $(srcdir)/util/db_init_mydb.sh
+	cat $(srcdir)/util/db_init_mysql.sh.in | sed -e "s%YOUR_LIBEXECDIR%$(libexecdir)/clapf%" > $(srcdir)/util/db_init_mysql.sh
+	cat $(srcdir)/util/db_init_sqlite3.sh.in | sed -e "s%YOUR_LIBEXECDIR%$(libexecdir)/clapf%" > $(srcdir)/util/db_init_sqlite3.sh
 	$(INSTALL) -m 0755 $(srcdir)/util/db_init_mydb.sh $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 $(srcdir)/util/db_init_mysql.sh $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 $(srcdir)/util/db_init_sqlite3.sh $(DESTDIR)$(libexecdir)/clapf
-	$(INSTALL) -m 0755 $(srcdir)/util/user2sq.sh $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -d $(DESTDIR)$(mandir)/man1
 	$(INSTALL) -m 0644 $(srcdir)/doc/man/parsembox.1 $(DESTDIR)$(mandir)/man1
 	$(INSTALL) -m 0644 $(srcdir)/doc/man/spamtest.1 $(DESTDIR)$(mandir)/man1
+
 
 install-train:
 	$(INSTALL) -m 0755 spamdrop $(DESTDIR)$(bindir)
@@ -167,7 +184,7 @@ clean_db:
 	rm -f CDBFILE.* ham.tmp spam.tmp num_of_spam.tmp num_of_ham.tmp tokens*.cdb tokens.mydb temp.*
 
 clean:
-	rm -f *.o *.a smapd qs db.sql clapf clapfstore clapf.conf parsembox splitmbox spamtest spamdrop train spamcgi traincgi trainlogcgi usercgi statcgi passmail spam-fwd-train spamstat aphash clapf_admin prepare-sql
+	rm -f *.o *.a smapd qs db.sql clapf clapfstore clapf.conf parsembox splitmbox spamtest spamdrop train spamcgi traincgi trainlogcgi usercgi statcgi passmail spam-fwd-train spamstat aphash clapf_admin prepare-sql clapf.conf
 
 dist_clean distclean: clean
 	rm -f Makefile config.log config.status clapf-config.h stamp.h clapf.conf

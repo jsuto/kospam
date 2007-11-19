@@ -668,6 +668,7 @@ defs
 INCDIR
 LIBDIR
 OBJS
+CLAPF_USER
 parsembox
 clapfstore
 clapfstore_install
@@ -1290,6 +1291,7 @@ Optional Packages:
   --with-userdb[=ldap|mysql]      use either ldap or mysql database holding user data (default: none)
   --with-tokendb[=mysql|sqlite3]      use either mysql or sqlite3 database holding tokens (default: none)
   --with-qcache[=tcp|socket]      use Qcache via either a TCP or Unix domain socket (default: none)
+  --with-clapf-user=username What user the clapf daemon shall be run as
 
 Some influential environment variables:
   CC          C compiler command
@@ -3705,6 +3707,7 @@ done
 
 
 
+
 have_libclamav="no"
 have_clamd="no"
 have_avg="no"
@@ -5313,6 +5316,18 @@ fi
 
 
 
+
+# Check whether --with-clapf-user was given.
+if test "${with_clapf_user+set}" = set; then
+  withval=$with_clapf_user;  CLAPF_USER=$withval
+else
+   CLAPF_USER=clapf
+
+fi
+
+
+
+
 cfg_dir=`echo $sysconfdir | grep prefix`
 
 if test -n "$cfg_dir"; then
@@ -5827,6 +5842,8 @@ if test "$want_lmtp" = "yes"; then
 else
    echo "local delivery: SMTP"
 fi
+
+echo "clapf user: $CLAPF_USER"
 
 if test "$have_libclamav" = "no" && test "$have_clamd" = "no" && test "$have_avg" = "no" && test "$have_avast" = "no" && test "$have_kav" = "no" && test "$have_drweb" = "no" ; then
    echo; echo
@@ -6526,6 +6543,7 @@ defs!$defs$ac_delim
 INCDIR!$INCDIR$ac_delim
 LIBDIR!$LIBDIR$ac_delim
 OBJS!$OBJS$ac_delim
+CLAPF_USER!$CLAPF_USER$ac_delim
 parsembox!$parsembox$ac_delim
 clapfstore!$clapfstore$ac_delim
 clapfstore_install!$clapfstore_install$ac_delim
@@ -6552,7 +6570,7 @@ LIBOBJS!$LIBOBJS$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 79; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 80; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5

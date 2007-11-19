@@ -1,11 +1,11 @@
 /*
- * config.h, 2007.11.08, SJ
+ * config.h, 2007.11.19, SJ
  */
 
 #include <syslog.h>
 #include "clapf-config.h"
 
-#define VERSION "0.3.30-rc1"
+#define VERSION "0.3.30-rc2"
 
 #define HOSTID "av-engine.localhost"
 
@@ -13,7 +13,7 @@
 #define USER_DATA_DIR DATADIR "/clapf/data"
 #define USER_QUEUE_DIR DATADIR "/clapf/queue"
 #define USER_QUARANTINE_DIR "/clapf/quarantine"
-#define SQLITE3_DB_FILE "clapf.sdb"
+#define PER_USER_SQLITE3_DB_FILE "clapf.sdb"
 #define MYDB_FILE "tokens.mydb"
 
 #define LISTEN_ADDR "127.0.0.1"
@@ -131,11 +131,11 @@
 #define MAX_CGI_SUBJECT_LEN 50
 #define MAX_CGI_FROM_LEN 50
 
-// SURBL stuff
+/* SURBL stuff */
 
 #define SURBL_DOMAIN "multi.surbl.org"
 
-// SQL stuff
+/* SQL stuff */
 
 #define SQL_TOKEN_TABLE "t_token"
 #define SQL_MISC_TABLE "t_misc"
@@ -145,7 +145,7 @@
 #define SQL_STAT_TABLE "t_stat"
 #define SQL_SMAP_KEY_TABLE "t_smap_key"
 
-// libclamav variables
+/* libclamav variables */
 
 #define MAXFILES 100
 #define MAX_ARCHIVED_FILE_SIZE 30*1048576
@@ -153,7 +153,7 @@
 #define MAX_COMPRESS_RATIO 200
 #define ARCHIVE_MEM_LIMIT 0 //disable memory limit for bzip2 scanner
 
-// Error codes
+/* Error codes */
 
 #define OK 0
 #define ERR 1
@@ -175,7 +175,7 @@
 #define AVIR_OK 0
 #define AVIR_VIRUS 1
 
-// passmail
+/* passmail */
 
 #define JUNK_FOLDER "mail/junk"
 
@@ -187,12 +187,12 @@
 #define A_JUNK 1
 #define A_DROP 2
 
-// training modes
+/* training modes */
 
 #define T_TOE 0
 #define T_TUM 1
 
-// group types
+/* group types */
 
 #define GROUP_SHARED 0
 #define GROUP_MERGED 1

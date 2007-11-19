@@ -16,6 +16,7 @@ AC_SUBST(defs)
 AC_SUBST(INCDIR)
 AC_SUBST(LIBDIR)
 AC_SUBST(OBJS)
+AC_SUBST(CLAPF_USER)
 AC_SUBST(parsembox)
 AC_SUBST(clapfstore)
 AC_SUBST(clapfstore_install)
@@ -343,6 +344,15 @@ dnl external store
     fi
 
 
+dnl user running clapf
+
+AC_ARG_WITH(clapf-user,
+    [  --with-clapf-user=username What user the clapf daemon shall be run as],
+    [ CLAPF_USER=$withval ],
+    [ CLAPF_USER=clapf ]
+    )
+
+
 dnl configure config directory
 
 cfg_dir=`echo $sysconfdir | grep prefix`
@@ -592,6 +602,8 @@ if test "$want_lmtp" = "yes"; then
 else
    echo "local delivery: SMTP"
 fi
+
+echo "clapf user: $CLAPF_USER"
 
 if test "$have_libclamav" = "no" && test "$have_clamd" = "no" && test "$have_avg" = "no" && test "$have_avast" = "no" && test "$have_kav" = "no" && test "$have_drweb" = "no" ; then
    echo; echo

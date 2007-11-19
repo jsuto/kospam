@@ -53,7 +53,7 @@ int main(int argc, char **argv){
    double spaminess=DEFAULT_SPAMICITY;
    struct stat st;
    struct timezone tz;
-   struct timeval tv1, tv2, tv_spam_start, tv_spam_stop;
+   struct timeval tv_spam_start, tv_spam_stop;
    struct passwd *pwd;
    struct session_data sdata;
    struct _state state;
@@ -240,7 +240,7 @@ int main(int argc, char **argv){
          syslog(LOG_PRIORITY, "%s: %s", sdata.ttmpfile, ERR_MYSQL_CONNECT);
    #endif
    #ifdef HAVE_SQLITE3
-      rc = sqlite3_open(SQLITE3_DB_FILE, &db);
+      rc = sqlite3_open(PER_USER_SQLITE3_DB_FILE, &db);
       if(rc){
          syslog(LOG_PRIORITY, "%s: %s", sdata.ttmpfile, ERR_SQLITE3_OPEN);
       }

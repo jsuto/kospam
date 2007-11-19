@@ -1,5 +1,5 @@
 /*
- * cfg.h, 2007.11.07, SJ
+ * cfg.h, 2007.11.19, SJ
  */
 
 #define MAXVAL 128
@@ -50,8 +50,6 @@ struct __config {
    char userprefdb[MAXVAL];
 
    char spam_subject_prefix[MAXVAL];
-
-   char tokensfile[MAXVAL];
 
    int use_triplets;
    int use_pairs;

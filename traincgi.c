@@ -1,5 +1,5 @@
 /*
- * traincgi.c, 2007.08.22, SJ
+ * traincgi.c, 2007.11.19, SJ
  */
 
 #include <stdio.h>
@@ -61,7 +61,11 @@ int main(){
    if(!getenv("REMOTE_USER"))
       errout(NULL, ERR_CGI_NOT_AUTHENTICATED);
 
-   snprintf(spamqdir, MAXBUFSIZE-1, "%s/%s", cfg.spam_quarantine_dir, getenv("REMOTE_USER"));
+   p = getenv("REMOTE_USER");
+   if(!p)
+      errout(input, ERR_CGI_NOT_AUTHENTICATED);
+
+   snprintf(spamqdir, MAXBUFSIZE-1, "%s/%c/%s", USER_QUEUE_DIR, *p, p);
 
 
    if((p = getenv("REQUEST_METHOD"))){
@@ -158,14 +162,15 @@ int main(){
 
       p += strlen("message=");
 
-      if(cfg.save_trained_emails == 1){
+      /* disabled on 2007.11.19, SJ */
+      /*if(cfg.save_trained_emails == 1){
          if(is_spam == 0)
             create_ham_or_spam_path(cfg.saved_ham_path, savedfile, "ham");
          else
             create_ham_or_spam_path(cfg.saved_spam_path, savedfile, "spam");
 
          F = fopen(savedfile, "w+");
-      }
+      }*/
 
 
       // url decode cgi data

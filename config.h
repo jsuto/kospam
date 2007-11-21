@@ -1,5 +1,5 @@
 /*
- * config.h, 2007.11.19, SJ
+ * config.h, 2007.11.21, SJ
  */
 
 #include <syslog.h>
@@ -16,8 +16,12 @@
 #define PER_USER_SQLITE3_DB_FILE "clapf.sdb"
 #define MYDB_FILE "tokens.mydb"
 
+#define SQLITE3_PRAGMA "PRAGMA synchronous = OFF"
+
 #define LISTEN_ADDR "127.0.0.1"
 #define LISTEN_PORT 10025
+
+#define LISTEN_SSL_PORT 995
 
 #define POSTFIX_ADDR "127.0.0.1"
 #define POSTFIX_PORT 10026
@@ -76,6 +80,8 @@
 
 #define ADMINPROGNAME "clapf_admin"
 #define ADMINUSAGE "usage: " ADMINPROGNAME " [-c <config file>] -u <username> -e <email address> [-a <action>] [-i <uid>]"
+
+#define POP3_PROGNAME "clapf-pop3"
 
 #define LOG_PRIORITY LOG_INFO
 

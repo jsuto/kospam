@@ -1,5 +1,5 @@
 /*
- * bayes.c, 2007.10.24, SJ
+ * bayes.c, 2007.11.21, SJ
  */
 
 #include <stdio.h>
@@ -962,6 +962,10 @@ AFTER_ID_EXTRACT:
    if(sdata.skip_id_check == 1)
       snprintf(buf, MAXBUFSIZE-1, "%s/%s/%c/%s/%s", cfg.chrootdir, USER_QUEUE_DIR, username[0], username, ID);
 
+   /* if we use the pop3 proxy on the localhost, 2007.11.21, SJ */
+#ifdef HAVE_POP3GW
+   snprintf(buf, MAXBUFSIZE-1, "%s", ID);
+#endif
 
 #ifdef HAVE_MYSQL
    QRY.mysql = mysql;

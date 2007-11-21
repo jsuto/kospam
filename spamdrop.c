@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2007.11.09, SJ
+ * spamdrop.c, 2007.11.21, SJ
  *
  * check if a single RFC-822 formatted messages is spam or not
  */
@@ -206,10 +206,16 @@ int main(int argc, char **argv){
       }
    #endif
    #ifdef HAVE_SQLITE3
-      UE = get_user_from_email(db, from);
-      sdata.uid = UE.uid;
+      rc = sqlite3_open(PER_USER_SQLITE3_DB_FILE, &db);
+      if(rc){
+         syslog(LOG_PRIORITY, "%s: %s", sdata.ttmpfile, ERR_SQLITE3_OPEN);
+      }
+      else {
+         UE = get_user_from_email(db, from);
+         sdata.uid = UE.uid;
 
-      retraining(db, sdata, UE.name, is_spam, cfg);
+         retraining(db, sdata, UE.name, is_spam, cfg);
+      }
    #endif
    #ifdef HAVE_MYDB
       sdata.uid = 12345;

@@ -1,5 +1,5 @@
 /*
- * mydb.c, 2007.11.06, SJ
+ * mydb.c, 2007.11.21, SJ
  */
 
 #include <stdio.h>
@@ -37,6 +37,8 @@ int init_mydb(char *mydb_file, struct mydb_node *xhash[MAX_MYDB_HASH]){
    unsigned long x;
    struct mydb e;
 
+   pos = Nham = Nspam = 0;
+
    for(i=0;i<MAX_MYDB_HASH;i++)
       xhash[i] = NULL;
 
@@ -48,11 +50,12 @@ int init_mydb(char *mydb_file, struct mydb_node *xhash[MAX_MYDB_HASH]){
          write(fd, &x, 4);
          write(fd, &x, 4);
          close(fd);
+
+         return 1;
       }
       return 0;
    }
 
-   pos = Nham = Nspam = 0;
    read(fd, &x, 4);
    Nham = (float)x;
    read(fd, &x, 4);

@@ -565,7 +565,12 @@ void init_child(int new_sd, char *hostid){
                            UE = get_user_from_email(mysql, email2);
                            sdata.uid = UE.uid;
 
-                           retraining(mysql, sdata, UE.name, is_spam, cfg);
+                           if(is_spam == 1)
+                              snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s/h.%s", USER_QUEUE_DIR, UE.name[0], UE.name, sdata.ttmpfile);
+                           else
+                              snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s/s.%s", USER_QUEUE_DIR, UE.name[0], UE.name, sdata.ttmpfile);
+
+                           retraining(mysql, sdata, qpath, is_spam, cfg);
                            goto SEND_RESULT;
                         }
                         else {
@@ -600,7 +605,12 @@ void init_child(int new_sd, char *hostid){
                            UE = get_user_from_email(db, email2);
                            sdata.uid = UE.uid;
 
-                           retraining(db, sdata, UE.name, is_spam, cfg);
+                           if(is_spam == 1)
+                              snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s/h.%s", USER_QUEUE_DIR, UE.name[0], UE.name, sdata.ttmpfile);
+                           else
+                              snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s/s.%s", USER_QUEUE_DIR, UE.name[0], UE.name, sdata.ttmpfile);
+
+                           retraining(db, sdata, qpath, is_spam, cfg);
                            goto SEND_RESULT;
                         }
                         else {

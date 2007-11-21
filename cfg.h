@@ -187,6 +187,7 @@ struct __config {
 
    char ssl_cert_file[MAXVAL];
    char ssl_key_file[MAXVAL];
+   int use_ssl;
 
    // external applications
    char gocr[MAXVAL];

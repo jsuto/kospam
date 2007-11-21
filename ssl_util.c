@@ -66,3 +66,21 @@ int write1(int sd, char *buf, int use_ssl, SSL *ssl){
    return err;
 }
 
+
+void LOG_MESSAGE(char *s){
+   struct tm *t;
+   struct timezone tz;
+   struct timeval tv;
+
+   gettimeofday(&tv, &tz);
+   t = localtime(&(tv.tv_sec));
+
+#ifdef WIN32
+   printf("msg: %d.%02d.%02d. %02d:%02d:%02d %s", t->tm_year+1900, t->tm_mon+1, t->tm_mday, t->tm_hour, t->tm_min, t->tm_sec, s);
+   if(!strchr(s, '\n'))
+      printf("\n");
+#else
+   syslog(LOG_PRIORITY, "msg: %d.%02d.%02d. %02d:%02d:%02d %s", t->tm_year+1900, t->tm_mon+1, t->tm_mday, t->tm_hour, t->tm_min, t->tm_sec, s);
+#endif
+}
+

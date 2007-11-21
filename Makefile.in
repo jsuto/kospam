@@ -57,6 +57,10 @@ parsembox: % : %.o misc.o decoder.o parser.o
 spamdrop: % : %.o bayes.o $(OBJS) $(MYSQL_OBJS)
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
 
+pop3:	% : %.o bayes.o ssl_util.o pop3_session.o $(OBJS) $(MYSQL_OBJS)
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -DHAVE_POP3GW -c bayes.c
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR) -lssl -lcrypto -ldl
+
 splitmbox: % : %.o misc.o decoder.o parser.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
 

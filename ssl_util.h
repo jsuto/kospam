@@ -6,4 +6,5 @@
 
 int read1(int sd, char *buf, int use_ssl, SSL *ssl);
 int write1(int sd, char *buf, int use_ssl, SSL *ssl);
+void LOG_MESSAGE(char *s);
 

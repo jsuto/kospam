@@ -1,5 +1,5 @@
 /*
- * train.c, 2007.10.09, SJ
+ * train.c, 2007.11.21, SJ
  */
 
 #include <stdio.h>
@@ -98,6 +98,9 @@ int main(int argc, char **argv){
        __fatal(TRAINUSAGE);
 
    cfg = read_config(configfile);
+
+   if(mydbfile == NULL)
+      mydbfile = cfg.mydbfile;
 
 
    state = init_state();

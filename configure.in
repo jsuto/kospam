@@ -508,7 +508,6 @@ if test "$have_mysql" = "yes"; then
    echo "MySQL support: yes"
 else
    echo "MySQL support: no"
-   defs="$defs -DHAVE_NO_64_HASH"
 fi
 
 if test "$have_blackhole" = "yes"; then

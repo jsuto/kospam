@@ -295,6 +295,21 @@ int my_walk_hash(char *mydbfile, struct mydb_node *xhash[MAX_MYDB_HASH], int ham
 
       write(fd, &x, 4);
 
+      /* if it was a TUM request, then decrement the opposite counter, 2007.11.23, SJ */
+
+      if(train_mode == T_TUM){
+         if(ham_or_spam == 1)
+            lseek(fd, 0, SEEK_SET);
+         else
+            lseek(fd, 4, SEEK_SET);
+
+         read(fd, &x, 4);
+         if(x > 1){
+            x--;
+            write(fd, &x, 4);
+         }
+      }
+
       flock(fd, LOCK_UN|LOCK_NB);
       close(fd);
    }

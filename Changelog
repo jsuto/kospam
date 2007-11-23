@@ -1,5 +1,10 @@
 0.3.30-rc2:
 
+2007.11.23, SJ
+
+Decrement the opposite counter in case of a TUM train.
+(mydb.c)
+
 2007.11.07, SJ
 
 Added an option (mysql_connect_timeout) to set the MySQL connection timeout.

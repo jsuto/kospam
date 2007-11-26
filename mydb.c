@@ -1,5 +1,5 @@
 /*
- * mydb.c, 2007.11.21, SJ
+ * mydb.c, 2007.11.26, SJ
  */
 
 #include <stdio.h>
@@ -47,6 +47,7 @@ int init_mydb(char *mydb_file, struct mydb_node *xhash[MAX_MYDB_HASH]){
       /* try to create database */
       fd = open(mydb_file, O_CREAT|O_WRONLY, S_IRUSR|S_IWUSR);
       if(fd != -1){
+         x = 0;
          write(fd, &x, 4);
          write(fd, &x, 4);
          close(fd);
@@ -304,6 +305,12 @@ int my_walk_hash(char *mydbfile, struct mydb_node *xhash[MAX_MYDB_HASH], int ham
             lseek(fd, 4, SEEK_SET);
 
          read(fd, &x, 4);
+
+         if(ham_or_spam == 1)
+            lseek(fd, 0, SEEK_SET);
+         else
+            lseek(fd, 4, SEEK_SET);
+
          if(x > 1){
             x--;
             write(fd, &x, 4);

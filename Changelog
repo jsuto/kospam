@@ -1,5 +1,10 @@
 0.3.30-rc2:
 
+2007.11.26, SJ
+
+Minor fix in mydb creation.
+(mydb.c)
+
 2007.11.23, SJ
 
 Decrement the opposite counter in case of a TUM train.

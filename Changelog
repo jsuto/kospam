@@ -1,5 +1,17 @@
 0.3.30-rc2:
 
+2007.12.01, SJ
+
+Added a new configure option (--with-clapf-user) to specify the user who runs
+the clapf daemon. If this user (by default "clapf" does not exists, the configure
+script will exit.
+(configure.in, configure)
+
+Changed the directories in the example configuration file to more reasonable
+defaults.
+(Makefile.in, example.conf)
+(credits: Gabor Garami)
+
 2007.11.26, SJ
 
 Minor fix in mydb creation.

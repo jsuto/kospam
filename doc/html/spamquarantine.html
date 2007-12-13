@@ -12,28 +12,20 @@ Clapf is able to deliver spam into a quarantine so spam will not reach the users
 Do the following to make the spam quarantine work:<p>
 
 
-<strong>1. Create the spam quarantine directory:</strong><p>
-
-<pre>
-mkdir /opt/av/spamquarantine
-chown av:httpd /opt/av/spamquarantine
-chmod 711 /opt/av/spamquarantine
-</pre>
-
-<strong>2. Create the cgi directory:</strong><p>
+<strong>1. Create the cgi directory:</strong><p>
 
 <pre>
 mkdir -p /var/www/cgi-bin/spamquarantine
 </pre>
 
-<strong>3. Put the cgi scripts there:</strong><p>
+<strong>2. Put the cgi scripts there:</strong><p>
 
 <pre>
 cp spamcgi /var/www/cgi-bin/spamquarantine
 cp traincgi /var/www/cgi-bin/spamquarantine
 </pre>
 
-<strong>4. Put access control on the cgi directory:</strong><p>
+<strong>3. Put access control on the cgi directory:</strong><p>
 
 <pre>
 /var/www/cgi-bin/spamquarantine/.htaccess:
@@ -43,77 +35,29 @@ AuthName "Spam quarantine"
 AuthType basic
 
 require valid-user
+
+/var/www/cgi-bin/spamquarantine/.htpasswd:
+
+username:<i>&lt;encryptedpassword&gt;</i>
 </pre>
 
 
-<strong>5. Set the spam quarantine related variables in clapf.conf:</strong><p>
+<strong>4. Set the spam quarantine related variables in clapf.conf:</strong><p>
 
 <pre>
 relocate_delay=5
 relocate_url=http://www.yourdomain.com/train/index.html
 spamcgi_url=http://www.yourdomain.com/cgi-bin/quarantine/spamcgi
 traincgi_url=http://www.yourdomain.com/cgi-bin/quarantine/traincgi
-
-spam_quarantine_dir=/opt/av/spamquarantine
 </pre>
 
 
-<strong>6. (optional): Add <a href="ldap.html">LDAP</a> or <a href="mysql.html">mysql</a> support to enable users
+<strong>5. (optional): Add <a href="ldap.html">LDAP</a> or <a href="mysql.html">mysql</a> support to enable users
 to deliver their spam to their own mailbox:</strong><p>
 
-<strong>7. Add a user to the spam quarantine:</strong><p>
+That's it! Users are able to use their spam quarantine. LDAP/MySQL is optional, you can still use the spam
+quarantine for viewing, deleting and training, only the delivery (from the spam quarantine) function is disabled.<p>
 
-<pre>
-mkdir /opt/av/spamquarantine/joe
-chown joe:http /opt/av/spamquarantine/joe
-chmod 775 /opt/av/spamquarantine/joe
-</pre>
-
-and 
-
-<pre>
-/var/www/cgi-bin/spamquarantine/.htpasswd:
-
-username:<i>&lt;encryptedpassword&gt;</i>
-</pre>
-
-and (assuming you have maildrop installed)
-
-<pre>
-~joe/.mailfilter:
-
-if(/^X-Clapf-spamicity: Yes/:h)
-{
-        to "|/usr/local/bin/passmail"
-}
-</pre>
-
-That's it! User <i>joe</i> is able to use his spam quarantine. LDAP/MySQL is optional, you can still use the spam
-quarantine for viewing, deleting and training, only the delivery function is disabled.<p>
-
-If you want to deliver spam into joe's mailbox and let it go to a special folder, just edit his maildrop configuration:
-
-<pre>
-~/.mailfilter:
-
-if(/^X-Clapf-spamicity: Yes/:h)
-{
-	to "mail/junk"
-}
-
-</pre>
-<p/>
-
-Alternatively you may use the <pre>util/user2sq.sh</pre> shell script to add a user to the spam quarantine
-and to the MySQL database.</p>
-
-It is wise to create a cron job to periodically remove aged messages:<p>
-
-<pre>
-1 * * * * find /path/to/spam_quarantine_dir -type f -ctime +14 | xargs rm -f
-</pre>
-
-This will automatically remove any messages from the spam quarantine older than 2 weeks.<p>
 
 
 And some screenshots at the end:<p>
@@ -137,6 +81,12 @@ Deliver the message to the recipient(s), train it as HAM and remove it:<p>
 
 <center><a href="index.html">home</a></center><p>
 
+<script src="http://www.google-analytics.com/urchin.js" type="text/javascript">
+</script>
+<script type="text/javascript">
+_uacct = "UA-1610427-1";
+urchinTracker();
+</script>
 
 
 </blockquote>

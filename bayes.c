@@ -435,6 +435,11 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
 
    addnode(B_hash, state.from, 0, 0);
 
+   if(state.unknown_client == 1){
+      spaminess = REAL_SPAM_TOKEN_PROBABILITY;
+      n_phrases += addnode(s_phrase_hash, "UNKNOWN_CLIENT*", spaminess, DEVIATION(spaminess));
+      n_tokens += addnode(shash, "UNKNOWN_CLIENT*", spaminess, DEVIATION(spaminess));
+   }
 
    /* redesigned spaminess calculation, 2007.08.28, SJ */
 

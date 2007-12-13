@@ -1,5 +1,20 @@
 0.3.30-rc2:
 
+2007.12.13, SJ
+
+Modified the make_rnd_string() function to include the timestamp in
+the first 4 bytes.
+(misc.c)
+
+Added SQLite3 pragma. See "#define SQLITE3_PRAGMA" in config.h
+(session.c, spamdrop.c, test.c)
+
+2007.12.06, SJ
+
+Add a spammy token if the client is unknown (ie. without a valid PTR record).
+XFORWARD support must be activated for this to work.
+(session.c, bayes.c, parser.h, parser.c)
+
 2007.12.01, SJ
 
 Added a new configure option (--with-clapf-user) to specify the user who runs

@@ -31,6 +31,16 @@ SQL table, they are stored in a per user directory.
 
 No need to use maildrop unless using virtual users with spamdrop.
 
+Polished log levels.
+
+Retraining is integrated to clapf and spamdrop.
+
+The blackhole (aka. minefield) is handled by spamdrop.
+
+Added XFORWARD extension support to catch DHA attacks.
+
+Changed the token table to InnoDB to handle better paralel requests.
+
 Other small fixes.
 
 0.3.29:

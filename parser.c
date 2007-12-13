@@ -1,5 +1,5 @@
 /*
- * parser.c, 2007.10.11, SJ
+ * parser.c, 2007.12.06, SJ
  */
 
 #include <stdio.h>
@@ -41,6 +41,7 @@ struct _state init_state(){
    state.iso_8859_2 = 0;
    state.qp = 0;
 
+   state.unknown_client = 0;
    state.html_comment = 0;
 
    state.base64_text = 0;

@@ -28,12 +28,20 @@ Antivirus support</a> page for the details.</li>
 </ul>
 
 
+<strong>Create a dedicated and non-privileged user to run run clapf</strong>
+
+<pre>
+groupadd clapf
+useradd -g clapf -s /bin/sh -d /var/lib/clapf clapf
+usermod -L clapf
+</pre>
+
 <strong>Unpack and compile clapf</strong><p/>
 
 <pre>
 tar zxvf clapf-x.y.zzz.tar.gz
 cd clapf-x.y.zzz
-./configure --with-tokendb=mysql --enable-surbl --enable-blackhole --enable-lmtp
+./configure --with-tokendb=mysql --enable-surbl --enable-blackhole --enable-lmtp --with-clapf-user=clapf
 make
 su -c 'make install'
 </pre>
@@ -81,17 +89,17 @@ Note 1: the user id has nothing to do with Unix user ids.<br/>
 Create a directory for each user holding their data for training, eg.:
 
 <pre>
-mkdir -p /usr/local/var/clapf/queue/a/alice
-mkdir -p /usr/local/var/clapf/queue/b/bob
+mkdir -p /var/lib/clapf/queue/a/alice
+mkdir -p /var/lib/clapf/queue/b/bob
 ...
-mkdir -p /usr/local/var/clapf/queue/j/joe
+mkdir -p /var/lib/clapf/queue/j/joe
 ...
 
 
-chown alice:www-data /usr/local/var/clapf/queue/a/alice
-chown bob:www-data /usr/local/var/clapf/queue/b/bob
+chown alice:www-data /var/lib/clapf/queue/a/alice
+chown bob:www-data /var/lib/clapf/queue/b/bob
 ...
-chown joe:www-data /usr/local/var/clapf/queue/j/joe
+chown joe:www-data /var/lib/clapf/queue/j/joe
 ...
 </pre>
 </li>
@@ -101,7 +109,7 @@ chown joe:www-data /usr/local/var/clapf/queue/j/joe
 Set up a periodic (ie. using a cron job) purge of the stored messages from the /usr/local/var/clapf/queue directory:
 
 <pre>
-1 2 * * * find /usr/local/var/clapf/queue -type f  -atime +14 -exec rm -f '{}' \;
+1 2 * * * find /var/lib/clapf/queue -type f  -atime +14 -exec rm -f '{}' \;
 </pre>
 
 </li>
@@ -148,32 +156,6 @@ and you may configure using Maildir instead of Mailbox.</li>
 
 <ol>
 
-<li>Create a dedicated and unprivileged user to run clapf</li>
-
-<pre>
-groupadd av
-useradd -g av -d /opt/av -s /bin/sh av
-usermod -L av
-</pre>
-
-<li>Create the necessary directories</li>
-
-<pre>
-mkdir -p /opt/av/quarantine
-mkdir /opt/av/tmp
-mkdir /opt/av/queue
-mkdir -p /opt/av/saved/ham
-mkdir /opt/av/saved/spam
-chown -R av:av /opt/av
-chmod 711 /opt/av
-chmod 711 /opt/av/tmp
-</pre>
-
-where 'www-data' is the group of the user running your web server.
-Skip the last line if you do not have a web server.<p/>
-
-If you plan to put clapf into a chroot jail make sure to create a /tmp directory there.<p/>
-
 <li>Start the clapf daemon:
 
 <pre>
@@ -194,6 +176,9 @@ If you plan to put clapf into a chroot jail make sure to create a /tmp directory
 content_filter = lmtp:[127.0.0.1]:10025
 default_destination_concurrency_limit = 10
 smtpd_recipient_limit = 128
+lmtp_send_xforward_command = yes
+smtp_send_xforward_command = yes
+smtpd_authorized_xforward_hosts = 127.0.0.0/8
 </pre>
 
 If you want SMTP local delivery instead of LMTP, then omit the <i>--enable-lmtp</i>
@@ -230,8 +215,7 @@ max_connections &gt;= default_destination_concurrency_limit + 1<p/>
 
 <strong>Handling virtual users</strong><p/>
 
-Currently clapf is able to handle virtual users only in daemon mode. Read on how to
-<a href="virtual.html">set up virtual users</a> in clapf.
+Read on how to <a href="virtual.html">set up virtual users</a> in clapf.
 <p/>
 
 

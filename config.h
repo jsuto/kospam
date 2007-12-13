@@ -1,5 +1,5 @@
 /*
- * config.h, 2007.11.21, SJ
+ * config.h, 2007.12.01, SJ
  */
 
 #include <syslog.h>
@@ -150,6 +150,11 @@
 #define SQL_QUEUE_TABLE "t_queue"
 #define SQL_STAT_TABLE "t_stat"
 #define SQL_SMAP_KEY_TABLE "t_smap_key"
+
+#define _90_DAYS 90*86400
+#define _60_DAYS 60*86400
+#define _30_DAYS 30*86400
+#define _15_DAYS 15*86400
 
 /* libclamav variables */
 

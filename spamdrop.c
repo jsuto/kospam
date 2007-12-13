@@ -211,6 +211,9 @@ int main(int argc, char **argv){
          syslog(LOG_PRIORITY, "%s: %s", sdata.ttmpfile, ERR_SQLITE3_OPEN);
       }
       else {
+         rc = sqlite3_exec(db, SQLITE3_PRAGMA, 0, 0, NULL);
+         if(rc != SQLITE_OK) syslog(LOG_PRIORITY, "%s: could not set pragma", sdata.ttmpfile);
+
          UE = get_user_from_email(db, from);
          sdata.uid = UE.uid;
 
@@ -251,6 +254,9 @@ int main(int argc, char **argv){
          syslog(LOG_PRIORITY, "%s: %s", sdata.ttmpfile, ERR_SQLITE3_OPEN);
       }
       else {
+         rc = sqlite3_exec(db, SQLITE3_PRAGMA, 0, 0, NULL);
+         if(rc != SQLITE_OK) syslog(LOG_PRIORITY, "%s: could not set pragma", sdata.ttmpfile);
+
          spaminess = bayes_file(db, sdata.ttmpfile, state, sdata, cfg);
          tum_train(sdata.ttmpfile, spaminess, cfg);
       }

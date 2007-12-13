@@ -1,5 +1,5 @@
 /*
- * session.c, 2007.11.08, SJ
+ * session.c, 2007.12.06, SJ
  */
 
 #include <stdio.h>
@@ -32,7 +32,7 @@ char prevbuf[MAXBUFSIZE], last2buf[2*MAXBUFSIZE+1];
 struct timezone tz;
 struct timeval tv_start, tv_rcvd, tv_scnd, tv_sent, tv_stop, tv_meta1, tv_meta2;
 struct session_data sdata;
-int x, rc;
+int x, rc, unknown_client = 0;
 
 int inject_mail(struct session_data sdata, int msg, char *smtpaddr, int smtpport, char *spaminessbuf, struct __config cfg, char *notify);
 
@@ -84,6 +84,7 @@ void init_child(int new_sd, char *hostid){
    sdata.skip_id_check = 0;
    prevlen = 0;
    sdata.num_of_rcpt_to = 0;
+   unknown_client = 0;
 
    for(i=0; i<MAX_RCPT_TO; i++){
       memset(sdata.rcptto[i], 0, MAXBUFSIZE);
@@ -191,6 +192,19 @@ void init_child(int new_sd, char *hostid){
             if(p){
                snprintf(sdata.client_addr, IPLEN-1, p+5);
                if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: client address: %s", sdata.ttmpfile, sdata.client_addr);
+            }
+
+            /*
+             * other possible XFORWARD variables
+             *
+             * XFORWARD NAME=83-131-14-231.adsl.net.t-com.hr ADDR=83.131.14.231..
+             * XFORWARD PROTO=SMTP HELO=rhwfsvji..
+             */
+
+            /* note if the client is unknown, 2007.12.06, SJ */
+
+            if(strstr(buf, " NAME=unknown ")){
+               unknown_client = 1;
             }
 
             send(new_sd, SMTP_RESP_250_OK, strlen(SMTP_RESP_250_OK), 0);
@@ -487,6 +501,7 @@ void init_child(int new_sd, char *hostid){
 
          #ifdef HAVE_ANTISPAM
                sstate = parse_message(sdata.ttmpfile, cfg);
+               if(unknown_client == 1) sstate.unknown_client = 1;
          #endif
 
 
@@ -592,6 +607,9 @@ void init_child(int new_sd, char *hostid){
                         gettimeofday(&tv_spam_stop, &tz);
                      }
                      else {
+                        rc = sqlite3_exec(db, SQLITE3_PRAGMA, 0, 0, NULL);
+                        if(rc != SQLITE_OK) syslog(LOG_PRIORITY, "%s: could not set pragma", sdata.ttmpfile);
+
                         UE = get_user_from_email(db, email);
                         sdata.uid = UE.uid;
 

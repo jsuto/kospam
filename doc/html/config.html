@@ -198,7 +198,7 @@ virus infected messages usually contain fake email addresses.<p>
 
 
 <strong>silently_discard_infected_email</strong><p/>
-syntax: silently_discard_infected_email<i>0|1</i><br/>
+syntax: silently_discard_infected_email=<i>0|1</i><br/>
 default: 1<p/>
 
 The silently_discard_infected_email directive defines whether to return 550 error
@@ -206,6 +206,15 @@ code and let the virus infected message be bounced back (0), or send back a 250 
 code and drop the infected email (1).<p/>
 
 
+<strong>dha_trap_address_list</strong><p/>
+syntax: dha_trap_address_list=<i>comma separated email addresses</i><br/>
+default: none<p/>
+
+The dha_trap_address_list directive allows you to catch some DHA attacks by
+specifying trap email addresses. If the attacker hits these addresses his
+IP-address is recorded and his messages are treated as spam.<p/>
+
+You have to enable the XFORWARD extension in postfix for this to work.<p/>
 
 <h3>antispam stuff</h3>
 
@@ -683,6 +692,13 @@ default: none<p/>
 The mysqldb directive defines the name of the mysql database holding token data.<p/>
 
 
+<strong>mysql_connect_timeout</strong><p/>
+syntax: mysql_connect_timeout=<i>number</i><br/>
+default: 3<p/>
+
+The mysql_connect_timeout directive specifies the timeout of the mysql_real_connect() function.<p/>
+
+
 <h3>SQLite stuff</h3>
 
 <strong>sqlite3</strong><p/>
@@ -754,15 +770,6 @@ page of the spam quarantine.<p/>
 
 
 <h3>spam quarantine stuff</h3>
-
-<strong>spam_quarantine_dir</strong><p/>
-syntax: spam_quarantine_dir=<i>string</i><br/>
-default: /opt/av/spamquarantine<p/>
-
-The spam_quarantine_dir directive defines the path of the spam quarantine directory. The
-spamcgi and traincgi utilities search spam messages in this folder. If not set, the spam
-quarantine cannot be accessed from the web interface.<p/>
-
 
 <strong>spam_mail_from</strong><p>
 syntax: spam_mail_from=<i>string</i><br>

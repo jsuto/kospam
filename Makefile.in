@@ -78,8 +78,13 @@ smapd:	% : %.o $(OBJS) $(MYSQL_OBJS)
 clapfstore:	% : %.o cfg.o misc.o ssl_util.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR) -lssl -lcrypto -ldl -lpthread
 
-train: % : %.o spamdrop spam-fwd-train spamstat clapf_admin aphash prepare-sql
+train: % : %.o spamdrop spamstat clapf_admin aphash prepare-sql
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ train.o $(OBJS) $(MYSQL_OBJS) $(LIBS) $(LIBDIR) @LDFLAGS@
+
+mydb_stat:	%: %.o mydb.o misc.o hash.o chi.o
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ -lm
+
+
 
 test:
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -DDEBUG -c $(srcdir)/bayes.c
@@ -181,7 +186,7 @@ install-passmail:
 	$(INSTALL) -m 0644 $(srcdir)/doc/man/passmail.1 $(DESTDIR)$(mandir)/man1
 
 clean_db:
-	rm -f CDBFILE.* ham.tmp spam.tmp num_of_spam.tmp num_of_ham.tmp tokens*.cdb tokens.mydb temp.*
+	rm -f ham.tmp spam.tmp num_of_spam.tmp num_of_ham.tmp tokens.mydb temp.*
 
 clean:
 	rm -f *.o *.a smapd qs db.sql clapf clapfstore clapf.conf parsembox splitmbox spamtest spamdrop train spamcgi traincgi trainlogcgi usercgi statcgi passmail spam-fwd-train spamstat aphash clapf_admin prepare-sql clapf.conf

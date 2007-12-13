@@ -1,5 +1,5 @@
 /*
- * parser.h, 2007.11.06, SJ
+ * parser.h, 2007.12.06, SJ
  */
 
 #include "config.h"
@@ -44,6 +44,7 @@ struct _state {
    int fd;
    int num_of_msword;
    int num_of_images;
+   int unknown_client;
    unsigned long c_shit;
    unsigned long c_hex_shit;
    unsigned long l_shit;

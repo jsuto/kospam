@@ -1,5 +1,5 @@
 /*
- * misc.c, 2007.11.06, SJ
+ * misc.c, 2007.12.13, SJ
  */
 
 #include <stdio.h>
@@ -13,6 +13,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <sys/time.h>
+#include <time.h>
 #include <fcntl.h>
 #include <syslog.h>
 #include <unistd.h>
@@ -540,12 +541,29 @@ int readfrompool(int fd, void *_s, size_t n){
 
 int get_random_bytes(unsigned char *buf, int len){
    int random_pool;
+   unsigned char a, b;
+
+   /* the first 4 bytes are the timestamp, 2007.12.13, SJ */
+
+   time((time_t*)&buf[0]);
+
+   a = buf[0];
+   b = buf[3];
+
+   buf[0] = b;
+   buf[3] = a;
+
+   a = buf[1];
+   b = buf[2];
+
+   buf[1] = b;
+   buf[2] = a;
 
    random_pool = open(RANDOM_POOL, O_RDONLY);
    if(random_pool == -1)
        return 0;
 
-   if(readfrompool(random_pool, buf, len) != len){
+   if(readfrompool(random_pool, buf+4, len-4) != len-4){
        syslog(LOG_PRIORITY, "%s: %s", ERR_CANNOT_READ_FROM_POOL, RANDOM_POOL);
        close(random_pool);
        return 0;

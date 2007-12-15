@@ -1284,6 +1284,7 @@ Optional Features:
   --enable-cgi            build the web interface to train the database
   --enable-lmtp           use LMTP local delivery (default: SMTP)
   --enable-store          use external store to store emails for later retraining
+  --enable-outgoing-smtp  enable outgoing SMTP server mode
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -3738,6 +3739,8 @@ sqlite3_libs=""
 os=`uname -s`
 keep_old_token_format="no"
 
+want_outgoing_smtp="no"
+
 
 # Check whether --enable-libclamav was given.
 if test "${enable_libclamav+set}" = set; then
@@ -5293,10 +5296,6 @@ else
 fi
 
 
-    if test "$want_lmtp" = "yes"; then
-        defs="$defs -DHAVE_LMTP"
-    fi
-
 
     # Check whether --enable-store was given.
 if test "${enable_store+set}" = set; then
@@ -5313,6 +5312,24 @@ fi
 	clapfstore_install="install-clapfstore"
         have_store="yes"
     fi
+
+
+    # Check whether --enable-outgoing-smtp was given.
+if test "${enable_outgoing_smtp+set}" = set; then
+  enableval=$enable_outgoing_smtp; want_outgoing_smtp=$enableval
+else
+  want_outgoing_smtp="no"
+fi
+
+
+    if test "$want_outgoing_smtp" = "yes"; then
+
+cat >>confdefs.h <<_ACEOF
+#define OUTGOING_SMTP 1
+_ACEOF
+
+    fi
+
 
 
 
@@ -5836,8 +5853,9 @@ else
    echo "store: internal"
 fi
 
-if test "$want_lmtp" = "yes"; then
+if test "$want_lmtp" = "yes" && test "$want_outgoing_smtp" = "no"; then
    echo "local delivery: LMTP"
+   defs="$defs -DHAVE_LMTP"
 else
    echo "local delivery: SMTP"
 fi

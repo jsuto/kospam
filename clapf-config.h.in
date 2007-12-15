@@ -1,6 +1,10 @@
 /*
- * clapf-config.h.in, 2007.10.01, SJ
+ * clapf-config.h.in, 2007.12.15, SJ
  */
 
 #define CONFDIR "/usr/local/etc"
 #define DATADIR "/usr/local/var"
+
+
+#undef OUTGOING_SMTP
+

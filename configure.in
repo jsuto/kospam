@@ -67,6 +67,8 @@ sqlite3_libs=""
 os=`uname -s`
 keep_old_token_format="no"
 
+want_outgoing_smtp="no"
+
 dnl clamav
 
 AC_ARG_ENABLE(libclamav,
@@ -326,10 +328,6 @@ dnl lmtp support
     AC_ARG_ENABLE(lmtp,
           [  --enable-lmtp           use LMTP local delivery (default: SMTP)], want_lmtp=$enableval, want_lmtp="no")
 
-    if test "$want_lmtp" = "yes"; then
-        defs="$defs -DHAVE_LMTP"
-    fi
-
 
 dnl external store
     AC_ARG_ENABLE(store,
@@ -342,6 +340,16 @@ dnl external store
 	clapfstore_install="install-clapfstore"
         have_store="yes"
     fi
+
+
+dnl outgoing smtp support
+    AC_ARG_ENABLE(outgoing-smtp,
+          [  --enable-outgoing-smtp  enable outgoing SMTP server mode], want_outgoing_smtp=$enableval, want_outgoing_smtp="no")
+
+    if test "$want_outgoing_smtp" = "yes"; then
+       AC_DEFINE_UNQUOTED(OUTGOING_SMTP, 1, [enable outgoing smtp mode])
+    fi
+
 
 
 dnl user running clapf
@@ -596,8 +604,9 @@ else
    echo "store: internal"
 fi
 
-if test "$want_lmtp" = "yes"; then
+if test "$want_lmtp" = "yes" && test "$want_outgoing_smtp" = "no"; then
    echo "local delivery: LMTP"
+   defs="$defs -DHAVE_LMTP"
 else
    echo "local delivery: SMTP"
 fi

@@ -641,6 +641,8 @@ void init_child(int new_sd, char *hostid){
                      }
                   #endif
 
+                  #ifndef OUTGOING_SMTP
+
                      /* rename file name according to its spamicity status, 2007.10.04, SJ */
 
                      if(cfg.store_metadata == 1 && UE.name){
@@ -673,6 +675,7 @@ void init_child(int new_sd, char *hostid){
                      #endif
                      }
 
+                  #endif
 
                      syslog(LOG_PRIORITY, "%s: %.4f %d in %ld [ms]", sdata.ttmpfile, spaminess, sdata.tot_len, tvdiff(tv_spam_stop, tv_spam_start)/1000);
 

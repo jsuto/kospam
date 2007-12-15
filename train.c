@@ -1,5 +1,5 @@
 /*
- * train.c, 2007.11.21, SJ
+ * train.c, 2007.12.15, SJ
  */
 
 #include <stdio.h>
@@ -99,9 +99,10 @@ int main(int argc, char **argv){
 
    cfg = read_config(configfile);
 
+#ifdef HAVE_MYDB
    if(mydbfile == NULL)
       mydbfile = cfg.mydbfile;
-
+#endif
 
    state = init_state();
 

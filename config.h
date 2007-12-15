@@ -1,11 +1,11 @@
 /*
- * config.h, 2007.12.01, SJ
+ * config.h, 2007.12.15, SJ
  */
 
 #include <syslog.h>
 #include "clapf-config.h"
 
-#define VERSION "0.3.30-rc2"
+#define VERSION "0.3.30"
 
 #define HOSTID "av-engine.localhost"
 

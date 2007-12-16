@@ -1,5 +1,5 @@
 /*
- * misc.c, 2007.12.13, SJ
+ * misc.c, 2007.12.16, SJ
  */
 
 #include <stdio.h>
@@ -744,39 +744,46 @@ int qcache_socket(char *qcache_addr, int qcache_port, char *qcache_socket){
 
 
 /*
+ * write delivery info to file
+ */
+
+void write_delivery_info(char *tmpfile, char *dir, char *mailfrom, char rcptto[MAX_RCPT_TO][MAXBUFSIZE], int num_of_rcpt_to){
+   int i;
+   char qdelivery[SMALLBUFSIZE];
+   FILE *f;
+
+   snprintf(qdelivery, SMALLBUFSIZE-1, "%s/%s.d", dir, tmpfile);
+
+   f = fopen(qdelivery, "w+");
+   if(f){
+      fprintf(f, mailfrom);
+         for(i=0; i<num_of_rcpt_to; i++)
+            fprintf(f, rcptto[i]);
+
+      fclose(f);
+   }
+   else
+      syslog(LOG_PRIORITY, "%s: failed writing delivery info to %s", tmpfile, qdelivery);
+}
+
+
+/*
  * move message to quarantine
  */
 
 int move_message_to_quarantine(char *tmpfile, char *quarantine_dir, char *mailfrom, char rcptto[MAX_RCPT_TO][MAXBUFSIZE], int num_of_rcpt_to){
-   int i;
-   char qfile[QUARANTINELEN], qdelivery[QUARANTINELEN];
-   FILE *F;
-
-   memset(qfile, 0, QUARANTINELEN);
-   memset(qdelivery, 0, QUARANTINELEN);
+   char qfile[QUARANTINELEN];
 
    snprintf(qfile, QUARANTINELEN-1, "%s/%s", quarantine_dir, tmpfile);
-   snprintf(qdelivery, QUARANTINELEN-1, "%s/%s.d", quarantine_dir, tmpfile);
 
    /* put down delivery info, 2006.01.19, SJ */
 
    if(rename(tmpfile, qfile) == 0){
       syslog(LOG_PRIORITY, "%s saved as %s", tmpfile, qfile);
-
       chmod(qfile, 0644);
 
-      F = fopen(qdelivery, "w+");
-      if(F){
-         fprintf(F, mailfrom);
-         for(i=0; i<num_of_rcpt_to; i++)
-            fprintf(F, rcptto[i]);
+      write_delivery_info(tmpfile, quarantine_dir, mailfrom, rcptto, num_of_rcpt_to);
 
-         fclose(F);
-         syslog(LOG_PRIORITY, "writing delivery info to %s", qdelivery);
-      }
-      else 
-         syslog(LOG_PRIORITY, "writing delivery info to %s failed", qdelivery);
- 
       return OK;
    }
    else {

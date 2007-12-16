@@ -1,5 +1,5 @@
 /*
- * session.c, 2007.12.06, SJ
+ * session.c, 2007.12.16, SJ
  */
 
 #include <stdio.h>
@@ -737,7 +737,9 @@ void init_child(int new_sd, char *hostid){
 
                SEND_RESULT:
                   send(new_sd, acceptbuf, strlen(acceptbuf), 0);
-                  if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent: %s", sdata.ttmpfile, acceptbuf);
+
+                  if(inj == ERR_DROP_SPAM) syslog(LOG_PRIORITY, "%s: dropped spam", sdata.ttmpfile);
+                  else if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent: %s", sdata.ttmpfile, acceptbuf);
 
             #ifdef HAVE_LMTP
                } /* for */
@@ -797,6 +799,7 @@ QUITTING:
 
    if(strlen(cfg.queuedir) > 2){
       snprintf(queuedfile, SMALLBUFSIZE-1, "%s/%s", cfg.queuedir, sdata.ttmpfile);
+      write_delivery_info(sdata.ttmpfile, cfg.queuedir, sdata.mailfrom, sdata.rcptto, sdata.num_of_rcpt_to);
       link(sdata.ttmpfile, queuedfile);
    }
 

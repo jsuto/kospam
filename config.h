@@ -49,7 +49,7 @@
 #define STORE_ADDR "127.0.0.1"
 #define CLAPFSTORE_PORT 29771
 
-#define WORK_DIR "/opt/av"
+#define WORK_DIR DATADIR "/clapf"
 #define PIDFILE WORK_DIR "/clapf.pid"
 #define PER_USER_DIR ".clapf"
 #define QUARANTINELEN 255

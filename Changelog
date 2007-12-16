@@ -1,5 +1,13 @@
 0.3.30-rc2:
 
+2007.12.16, SJ
+
+Added an SQLite3 fix.
+(sqlite3.c)
+
+Added a configure option suitable for outgoing smtp servers.
+(session.c, misc.c, misc.h, configure.*)
+
 2007.12.13, SJ
 
 Modified the make_rnd_string() function to include the timestamp in

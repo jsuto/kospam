@@ -1,5 +1,5 @@
 /*
- * sqlite3.c, 2007.07.20, SJ
+ * sqlite3.c, 2007.12.16, SJ
  */
 
 #include <stdio.h>
@@ -88,6 +88,8 @@ int do_sqlite3_qry(sqlite3 *db, int sockfd, int ham_or_spam, char *token, char *
    unsigned long long hash = APHash(token);
    sqlite3_stmt *pStmt;
    const char **ppzTail=NULL;
+
+   memset(puf, 0, SMALLBUFSIZE);
 
    /* update token entry ... */
 

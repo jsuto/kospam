@@ -1,5 +1,10 @@
 0.3.30-rc2:
 
+2007.12.22, SJ
+
+Some (my)sql related fixes.
+(bayes.c, session.c, spamdrop.c, Makefile.in)
+
 2007.12.16, SJ
 
 Added an SQLite3 fix.

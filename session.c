@@ -672,6 +672,7 @@ void init_child(int new_sd, char *hostid){
                      #else
                         link(sdata.ttmpfile, qpath);
                         chmod(qpath, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+                        if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: try to link to %s", sdata.ttmpfile, qpath);
                      #endif
                      }
 

@@ -317,7 +317,10 @@ int main(int argc, char **argv){
          snprintf(qpath, SMALLBUFSIZE-1, "h.%s", sdata.ttmpfile);
 
       link(sdata.ttmpfile, qpath);
-      chmod(qpath, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+      if(stat(qpath, &st) == 0){
+         if(S_ISREG(st.st_mode) == 1)
+            chmod(qpath, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+      }
    }
 
    gettimeofday(&tv_spam_stop, &tz);

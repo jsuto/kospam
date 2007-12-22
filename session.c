@@ -549,7 +549,7 @@ void init_child(int new_sd, char *hostid){
 
                   #ifdef HAVE_MYSQL
                      mysql_init(&mysql);
-                     //mysql_options(&mysql, MYSQL_OPT_CONNECT_TIMEOUT, cfg.mysql_connect_timeout);
+                     mysql_options(&mysql, MYSQL_OPT_CONNECT_TIMEOUT, (const char*)&cfg.mysql_connect_timeout);
                      if(mysql_real_connect(&mysql, cfg.mysqlhost, cfg.mysqluser, cfg.mysqlpwd, cfg.mysqldb, cfg.mysqlport, cfg.mysqlsocket, 0))
                         mysql_connection = 1;
                      else {

@@ -196,7 +196,7 @@ int main(int argc, char **argv){
 
    #ifdef HAVE_MYSQL
       mysql_init(&mysql);
-      //mysql_options(&mysql, MYSQL_OPT_CONNECT_TIMEOUT, cfg.mysql_connect_timeout);
+      mysql_options(&mysql, MYSQL_OPT_CONNECT_TIMEOUT, (const char*)&cfg.mysql_connect_timeout);
       if(mysql_real_connect(&mysql, cfg.mysqlhost, cfg.mysqluser, cfg.mysqlpwd, cfg.mysqldb, cfg.mysqlport, cfg.mysqlsocket, 0)){
          UE = get_user_from_email(mysql, from);
          sdata.uid = UE.uid;
@@ -240,7 +240,7 @@ int main(int argc, char **argv){
 
    #ifdef HAVE_MYSQL
       mysql_init(&mysql);
-      //mysql_options(&mysql, MYSQL_OPT_CONNECT_TIMEOUT, cfg.mysql_connect_timeout);
+      mysql_options(&mysql, MYSQL_OPT_CONNECT_TIMEOUT, (const char*)&cfg.mysql_connect_timeout);
       if(mysql_real_connect(&mysql, cfg.mysqlhost, cfg.mysqluser, cfg.mysqlpwd, cfg.mysqldb, cfg.mysqlport, cfg.mysqlsocket, 0)){
          spaminess = bayes_file(mysql, sdata.ttmpfile, state, sdata, cfg);
          tum_train(mysql, sdata.ttmpfile, spaminess, cfg);

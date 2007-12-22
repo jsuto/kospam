@@ -1,5 +1,5 @@
 /*
- * config.h, 2007.12.15, SJ
+ * config.h, 2007.12.22, SJ
  */
 
 #include <syslog.h>
@@ -10,9 +10,9 @@
 #define HOSTID "av-engine.localhost"
 
 #define CONFIG_FILE CONFDIR "/clapf.conf"
-#define USER_DATA_DIR DATADIR "/clapf/data"
-#define USER_QUEUE_DIR DATADIR "/clapf/queue"
-#define USER_QUARANTINE_DIR "/clapf/quarantine"
+#define USER_DATA_DIR DATADIR "/lib/clapf/data"
+#define USER_QUEUE_DIR DATADIR "/lib/clapf/queue"
+#define USER_QUARANTINE_DIR "/lib/clapf/quarantine"
 #define PER_USER_SQLITE3_DB_FILE "clapf.sdb"
 #define MYDB_FILE "tokens.mydb"
 

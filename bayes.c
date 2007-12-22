@@ -1,5 +1,5 @@
 /*
- * bayes.c, 2007.11.21, SJ
+ * bayes.c, 2007.12.22, SJ
  */
 
 #include <stdio.h>
@@ -53,7 +53,6 @@ qry QRY;
    sqlite3_stmt *pStmt;
    const char **pzTail=NULL;
 
-   //int my_walk_hash(qry QRY, int ham_or_spam, struct node *xhash[MAXHASH], int train_mode);
    int my_walk_hash(qry QRY, int ham_or_spam, char *tokentable, struct node *xhash[MAXHASH], int train_mode);
 #endif
 

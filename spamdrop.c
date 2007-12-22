@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2007.11.21, SJ
+ * spamdrop.c, 2007.12.22, SJ
  *
  * check if a single RFC-822 formatted messages is spam or not
  */
@@ -196,7 +196,7 @@ int main(int argc, char **argv){
 
    #ifdef HAVE_MYSQL
       mysql_init(&mysql);
-      mysql_options(&mysql, MYSQL_OPT_CONNECT_TIMEOUT, cfg.mysql_connect_timeout);
+      //mysql_options(&mysql, MYSQL_OPT_CONNECT_TIMEOUT, cfg.mysql_connect_timeout);
       if(mysql_real_connect(&mysql, cfg.mysqlhost, cfg.mysqluser, cfg.mysqlpwd, cfg.mysqldb, cfg.mysqlport, cfg.mysqlsocket, 0)){
          UE = get_user_from_email(mysql, from);
          sdata.uid = UE.uid;
@@ -240,10 +240,10 @@ int main(int argc, char **argv){
 
    #ifdef HAVE_MYSQL
       mysql_init(&mysql);
-      mysql_options(&mysql, MYSQL_OPT_CONNECT_TIMEOUT, cfg.mysql_connect_timeout);
+      //mysql_options(&mysql, MYSQL_OPT_CONNECT_TIMEOUT, cfg.mysql_connect_timeout);
       if(mysql_real_connect(&mysql, cfg.mysqlhost, cfg.mysqluser, cfg.mysqlpwd, cfg.mysqldb, cfg.mysqlport, cfg.mysqlsocket, 0)){
          spaminess = bayes_file(mysql, sdata.ttmpfile, state, sdata, cfg);
-         tum_train(sdata.ttmpfile, spaminess, cfg);
+         tum_train(mysql, sdata.ttmpfile, spaminess, cfg);
       }
       else
          syslog(LOG_PRIORITY, "%s: %s", sdata.ttmpfile, ERR_MYSQL_CONNECT);
@@ -258,7 +258,7 @@ int main(int argc, char **argv){
          if(rc != SQLITE_OK) syslog(LOG_PRIORITY, "%s: could not set pragma", sdata.ttmpfile);
 
          spaminess = bayes_file(db, sdata.ttmpfile, state, sdata, cfg);
-         tum_train(sdata.ttmpfile, spaminess, cfg);
+         tum_train(db, sdata.ttmpfile, spaminess, cfg);
       }
    #endif
    #ifdef HAVE_MYDB

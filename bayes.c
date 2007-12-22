@@ -232,7 +232,8 @@ int tum_train(char *spamfile, double spaminess, struct __config cfg){
 #endif
 
        (
-         (cfg.training_mode == T_TUM && (spaminess >= cfg.spam_overall_limit || spaminess < cfg.max_ham_spamicity)) ||
+         //(cfg.training_mode == T_TUM && (spaminess >= cfg.spam_overall_limit || spaminess < cfg.max_ham_spamicity)) ||
+         cfg.training_mode == T_TUM ||
          (cfg.initial_1000_learning == 1 && (QRY.ham_msg < NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED || QRY.spam_msg < NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED))
        )
 #ifndef HAVE_MYDB
@@ -435,11 +436,13 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
 
    addnode(B_hash, state.from, 0, 0);
 
-   if(state.unknown_client == 1){
+#ifdef HAVE_XFORWARD
+   if(state.unknown_client == 1 && QRY.ham_msg > NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED){
       spaminess = REAL_SPAM_TOKEN_PROBABILITY;
       n_phrases += addnode(s_phrase_hash, "UNKNOWN_CLIENT*", spaminess, DEVIATION(spaminess));
       n_tokens += addnode(shash, "UNKNOWN_CLIENT*", spaminess, DEVIATION(spaminess));
    }
+#endif
 
    /* redesigned spaminess calculation, 2007.08.28, SJ */
 

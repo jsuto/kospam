@@ -1,5 +1,5 @@
 /*
- * sql.c, 2007.11.06, SJ
+ * sql.c, 2007.12.22, SJ
  */
 
 #include <stdio.h>
@@ -38,7 +38,7 @@
  * query the spamicity value of a token from token database
  */
 
-float SQL_QUERY(qry QRY, char *tokentable, char *token, struct node *xhash[MAXHASH]){
+float SQL_QUERY(qry QRY, int group_type, char *tokentable, char *token, struct node *xhash[MAXHASH]){
    float r = DEFAULT_SPAMICITY;
    struct te TE;
    int freq_min = FREQ_MIN;
@@ -54,7 +54,7 @@ float SQL_QUERY(qry QRY, char *tokentable, char *token, struct node *xhash[MAXHA
 
    /* add token to list if not mature enough, 2007.07.09, SJ */
 
-   if(QRY.uid > 0 && TE.nham < TUM_LIMIT && TE.nspam < TUM_LIMIT)
+   if((group_type == GROUP_SHARED || QRY.uid > 0) && TE.nham < TUM_LIMIT && TE.nspam < TUM_LIMIT)
       addnode(xhash, token, 0 , 0);
 
    if(TE.nham == 0 && TE.nspam == 0) return r;

@@ -1,5 +1,5 @@
 /*
- * session.c, 2007.12.16, SJ
+ * session.c, 2007.12.22, SJ
  */
 
 #include <stdio.h>
@@ -549,7 +549,7 @@ void init_child(int new_sd, char *hostid){
 
                   #ifdef HAVE_MYSQL
                      mysql_init(&mysql);
-                     mysql_options(&mysql, MYSQL_OPT_CONNECT_TIMEOUT, cfg.mysql_connect_timeout);
+                     //mysql_options(&mysql, MYSQL_OPT_CONNECT_TIMEOUT, cfg.mysql_connect_timeout);
                      if(mysql_real_connect(&mysql, cfg.mysqlhost, cfg.mysqluser, cfg.mysqlpwd, cfg.mysqldb, cfg.mysqlport, cfg.mysqlsocket, 0))
                         mysql_connection = 1;
                      else {
@@ -591,7 +591,7 @@ void init_child(int new_sd, char *hostid){
                         else {
                            if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: running Bayesian test", sdata.ttmpfile);
                            spaminess = bayes_file(mysql, spamfile, sstate, sdata, cfg);
-                           tum_train(sdata.ttmpfile, spaminess, cfg);
+                           tum_train(mysql, sdata.ttmpfile, spaminess, cfg);
                         }
 
                         gettimeofday(&tv_spam_stop, &tz);
@@ -634,7 +634,7 @@ void init_child(int new_sd, char *hostid){
                         else {
                            if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: running Bayesian test", sdata.ttmpfile);
                            spaminess = bayes_file(db, spamfile, sstate, sdata, cfg);
-                           tum_train(sdata.ttmpfile, spaminess, cfg);
+                           tum_train(db, sdata.ttmpfile, spaminess, cfg);
                         }
 
                         gettimeofday(&tv_spam_stop, &tz);

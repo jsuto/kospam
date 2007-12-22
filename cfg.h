@@ -44,6 +44,7 @@ struct __config {
    int silently_discard_infected_email;
 
    char dha_trap_address_list[MAXVAL];
+   char blackhole_email_list[MAXVAL];
 
    int use_antispam;
 

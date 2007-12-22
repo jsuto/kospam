@@ -1025,7 +1025,7 @@ AFTER_ID_EXTRACT:
 
          if(QRY.sockfd != -1) close(QRY.sockfd);
 
-         if(i == 0){
+         //if(i == 0){
 
             if(is_spam == 1){
                if(train_mode == T_TUM)
@@ -1062,7 +1062,7 @@ AFTER_ID_EXTRACT:
 
 
             if(cfg.verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: training, mode: %d", ID, train_mode);
-         }
+         //}
 
          clearhash(tokens);
 

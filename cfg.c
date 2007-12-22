@@ -265,6 +265,9 @@ struct __config read_config(char *configfile){
                   if(strcmp(key, "dha_trap_address_list") == 0)
                      memcpy(cfg.dha_trap_address_list, val, MAXVAL-1);
 
+                  if(strcmp(key, "blackhole_email_list") == 0)
+                     memcpy(cfg.blackhole_email_list, val, MAXVAL-1);
+
                   if(strcmp(key, "use_antispam") == 0)
                      cfg.use_antispam = atoi(val);
 

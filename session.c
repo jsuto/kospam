@@ -545,6 +545,15 @@ void init_child(int new_sd, char *hostid){
 
                      gettimeofday(&tv_spam_start, &tz);
 
+                     /* skip antispam stuff, if this mail was sent to the blackhole */
+
+                     if(strlen(cfg.blackhole_email_list) > 4){
+                        if(strstr(cfg.blackhole_email_list, email)){
+                           if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: blackhole mail, skipping spam test", sdata.ttmpfile);
+                           goto END_OF_SPAM_CHECK;
+                        } 
+                     }
+
                      /* open database backend handler */
 
                   #ifdef HAVE_MYSQL
@@ -707,6 +716,8 @@ void init_child(int new_sd, char *hostid){
 
                   } /* end of running spam check */
 
+
+               END_OF_SPAM_CHECK:
 
                   /* then inject message back */
 

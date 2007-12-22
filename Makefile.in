@@ -122,7 +122,7 @@ install-clapf: clapf
 	$(INSTALL) -d $(DESTDIR)$(bindir)
 	$(INSTALL) -d $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -d $(DESTDIR)$(localstatedir)/lib/clapf/data
-	$(INSTALL) -d -m 700 $(DESTDIR)$(localstatedir)/lib/clapf/queue
+	$(INSTALL) -d -m 711 $(DESTDIR)$(localstatedir)/lib/clapf/queue
 	$(INSTALL) -d $(DESTDIR)$(localstatedir)/lib/clapf/blackhole
 	$(INSTALL) -d -m 711 $(DESTDIR)$(localstatedir)/lib/clapf/tmp
 	chown -R $(CLAPF_USER):$(CLAPF_GROUP) $(DESTDIR)$(localstatedir)/lib/clapf

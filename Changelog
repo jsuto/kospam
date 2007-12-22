@@ -5,6 +5,9 @@
 Some (my)sql related fixes.
 (bayes.c, session.c, spamdrop.c, Makefile.in)
 
+Blackhole improvements
+(session.c, spamdrop.c, example.conf)
+
 2007.12.16, SJ
 
 Added an SQLite3 fix.

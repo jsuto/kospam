@@ -46,10 +46,11 @@ a longer time.<p/>
 
 4. (Re)configure clapf with the --enable-blackhole option then (re)compile clapf.<p/>
 
-5. Edit the configuration and set the <b>blackhole_path</b> parameter<p/>
+5. Edit the configuration and set the <b>blackhole_path</b> and <b>blackhole_email_list</b> parameters<p/>
 
 <pre>
 blackhole_path=/opt/av/blackhole
+blackhole_email_list=email1@address email2@address
 </pre>
 
 Then clapf checks the 2nd "Received: from " lines in the incoming message

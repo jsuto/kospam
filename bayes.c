@@ -1061,7 +1061,6 @@ AFTER_ID_EXTRACT:
          #endif
 
 
-            if(cfg.verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: training, mode: %d", ID, train_mode);
          //}
 
          clearhash(tokens);
@@ -1080,7 +1079,7 @@ AFTER_ID_EXTRACT:
          close(QRY.sockfd);
       #endif
 
-         if(cfg.verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: training round %d, spaminess: %.4f", ID, i, spaminess);
+         if(cfg.verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: training round %d, mode: %d, spaminess: %.4f", ID, i, train_mode, spaminess);
 
          if(is_spam == 1 && spaminess > cfg.spam_overall_limit) break;
          if(is_spam == 0 && spaminess < cfg.max_ham_spamicity) break;

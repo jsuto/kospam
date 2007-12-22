@@ -585,7 +585,7 @@ void init_child(int new_sd, char *hostid){
                            else
                               snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s/s.%s", USER_QUEUE_DIR, UE.name[0], UE.name, sdata.ttmpfile);
 
-                           retraining(mysql, sdata, qpath, is_spam, cfg);
+                           retraining(mysql, sdata, UE.name, is_spam, cfg);
                            goto SEND_RESULT;
                         }
                         else {
@@ -628,7 +628,7 @@ void init_child(int new_sd, char *hostid){
                            else
                               snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s/s.%s", USER_QUEUE_DIR, UE.name[0], UE.name, sdata.ttmpfile);
 
-                           retraining(db, sdata, qpath, is_spam, cfg);
+                           retraining(db, sdata, UE.name, is_spam, cfg);
                            goto SEND_RESULT;
                         }
                         else {

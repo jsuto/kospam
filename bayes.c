@@ -66,7 +66,7 @@ qry QRY;
 
 
  
-float SQL_QUERY(qry QRY, char *tokentable, char *token, struct node *xhash[MAXHASH]);
+float SQL_QUERY(qry QRY, int group_type, char *tokentable, char *token, struct node *xhash[MAXHASH]);
 
 
 
@@ -93,10 +93,10 @@ int assign_spaminess(char *p, struct __config cfg, unsigned int uid){
       return 0;
 
 #ifdef HAVE_MYSQL
-   spaminess = SQL_QUERY(QRY, SQL_TOKEN_TABLE, p, tumhash);
+   spaminess = SQL_QUERY(QRY, cfg.group_type, SQL_TOKEN_TABLE, p, tumhash);
 #endif
 #ifdef HAVE_SQLITE3
-   spaminess = SQL_QUERY(QRY, SQL_TOKEN_TABLE, p, tumhash);
+   spaminess = SQL_QUERY(QRY, cfg.group_type, SQL_TOKEN_TABLE, p, tumhash);
 #endif
 #ifdef HAVE_MYDB
    spaminess = mydbqry(mhash, p, cfg.rob_s, cfg.rob_x, tumhash);
@@ -116,10 +116,10 @@ int assign_spaminess(char *p, struct __config cfg, unsigned int uid){
          strncpy(t, p+8, MAX_TOKEN_LEN-1);
 
    #ifdef HAVE_MYSQL
-      spaminess = SQL_QUERY(QRY, SQL_TOKEN_TABLE, t, tumhash);
+      spaminess = SQL_QUERY(QRY, cfg.group_type, SQL_TOKEN_TABLE, t, tumhash);
    #endif
    #ifdef HAVE_SQLITE3
-      spaminess = SQL_QUERY(QRY, SQL_TOKEN_TABLE, t, tumhash);
+      spaminess = SQL_QUERY(QRY, cfg.group_type, SQL_TOKEN_TABLE, t, tumhash);
    #endif
    #ifdef HAVE_MYDB
       spaminess = mydbqry(mhash, t, cfg.rob_s, cfg.rob_x, tumhash);

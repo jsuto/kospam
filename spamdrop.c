@@ -308,9 +308,9 @@ int main(int argc, char **argv){
    }
 
 
-   /* rename file name according to its spamicity status, 2007.10.01, SJ */
+   /* rename file name according to its spamicity status, unless its a blackhole request, 2007.12.22, SJ */
 
-   if(cfg.store_metadata == 1 && tot_len <= cfg.max_message_size_to_filter){
+   if(cfg.store_metadata == 1 && tot_len <= cfg.max_message_size_to_filter && blackhole_request == 0){
       if(spaminess >= cfg.spam_overall_limit)
          snprintf(qpath, SMALLBUFSIZE-1, "s.%s", sdata.ttmpfile);
       else

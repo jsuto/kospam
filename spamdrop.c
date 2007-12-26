@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2007.12.22, SJ
+ * spamdrop.c, 2007.12.26, SJ
  *
  * check if a single RFC-822 formatted messages is spam or not
  */
@@ -211,7 +211,7 @@ int main(int argc, char **argv){
          syslog(LOG_PRIORITY, "%s: %s", sdata.ttmpfile, ERR_SQLITE3_OPEN);
       }
       else {
-         rc = sqlite3_exec(db, SQLITE3_PRAGMA, 0, 0, NULL);
+         rc = sqlite3_exec(db, cfg.sqlite3_pragma, 0, 0, NULL);
          if(rc != SQLITE_OK) syslog(LOG_PRIORITY, "%s: could not set pragma", sdata.ttmpfile);
 
          UE = get_user_from_email(db, from);
@@ -255,7 +255,7 @@ int main(int argc, char **argv){
          syslog(LOG_PRIORITY, "%s: %s", sdata.ttmpfile, ERR_SQLITE3_OPEN);
       }
       else {
-         rc = sqlite3_exec(db, SQLITE3_PRAGMA, 0, 0, NULL);
+         rc = sqlite3_exec(db, cfg.sqlite3_pragma, 0, 0, NULL);
          if(rc != SQLITE_OK) syslog(LOG_PRIORITY, "%s: could not set pragma", sdata.ttmpfile);
 
          spaminess = bayes_file(db, sdata.ttmpfile, state, sdata, cfg);

@@ -1,5 +1,5 @@
 /*
- * cfg.c, 2007.11.19, SJ
+ * cfg.c, 2007.12.26, SJ
  */
 
 #include <stdio.h>
@@ -455,6 +455,9 @@ struct __config read_config(char *configfile){
 
                   if(strcmp(key, "sqlite3") == 0)
                      memcpy(cfg.sqlite3, val, MAXVAL-1);
+
+                  if(strcmp(key, "sqlite3_pragma") == 0)
+                     memcpy(cfg.sqlite3_pragma, val, MAXVAL-1);
 
                   if(strcmp(key, "mydbfile") == 0)
                      memcpy(cfg.mydbfile, val, MAXVAL-1);

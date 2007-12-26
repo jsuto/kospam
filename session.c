@@ -1,5 +1,5 @@
 /*
- * session.c, 2007.12.22, SJ
+ * session.c, 2007.12.26, SJ
  */
 
 #include <stdio.h>
@@ -616,7 +616,7 @@ void init_child(int new_sd, char *hostid){
                         gettimeofday(&tv_spam_stop, &tz);
                      }
                      else {
-                        rc = sqlite3_exec(db, SQLITE3_PRAGMA, 0, 0, NULL);
+                        rc = sqlite3_exec(db, cfg.sqlite3_pragma, 0, 0, NULL);
                         if(rc != SQLITE_OK) syslog(LOG_PRIORITY, "%s: could not set pragma", sdata.ttmpfile);
 
                         UE = get_user_from_email(db, email);

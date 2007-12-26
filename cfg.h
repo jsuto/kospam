@@ -1,5 +1,5 @@
 /*
- * cfg.h, 2007.11.19, SJ
+ * cfg.h, 2007.12.26, SJ
  */
 
 #define MAXVAL 128
@@ -137,6 +137,7 @@ struct __config {
    // sqlite3 stuff
 
    char sqlite3[MAXVAL];
+   char sqlite3_pragma[MAXVAL];
 
    char mydbfile[MAXVAL];
 

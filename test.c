@@ -1,5 +1,5 @@
 /*
- * test.c, 2007.10.09, SJ
+ * test.c, 2007.12.26, SJ
  *
  * test the bayesian decision with a single message
  */
@@ -78,7 +78,7 @@ int main(int argc, char **argv){
       fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(db));
    }
    else {
-      rc = sqlite3_exec(db, "PRAGMA synchronous = FULL", 0, 0, NULL);
+      rc = sqlite3_exec(db, cfg.sqlite3_pragma, 0, 0, NULL);
       if(rc != SQLITE_OK)
           fprintf(stderr, "error happened\n");
 

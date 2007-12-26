@@ -1,5 +1,10 @@
 0.3.30-rc2:
 
+2007.12.26, SJ
+
+SQLite3 pragma can be set by configuration file
+(cfg.c, cfg.h, session.c, spamdrop.c, test.c, example.conf)
+
 2007.12.22, SJ
 
 Some (my)sql related fixes.

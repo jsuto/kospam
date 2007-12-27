@@ -655,7 +655,7 @@ void init_child(int new_sd, char *hostid){
 
                      /* rename file name according to its spamicity status, 2007.10.04, SJ */
 
-                     if(cfg.store_metadata == 1 && UE.name){
+                     if(cfg.store_metadata == 1 && strlen(UE.name) > 1){
                         if(spaminess >= cfg.spam_overall_limit)
                            snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s/s.%s", USER_QUEUE_DIR, UE.name[0], UE.name, sdata.ttmpfile);
                         else

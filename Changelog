@@ -1,5 +1,13 @@
 0.3.30-rc2:
 
+2007.12.27, SJ
+
+Added a new variable store_only_spam which enables you to
+store only the spam messages in the queue directories.
+To enable this, set store_only_spam=1 as well as store_metadata=1
+This is available in daemon mode not in spamdrop.
+(cfg.c, cfg.h, session.c, example.conf)
+
 2007.12.26, SJ
 
 SQLite3 pragma can be set by configuration file

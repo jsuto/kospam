@@ -1,5 +1,5 @@
 /*
- * prepare-sql.c, 2007.10.09, SJ
+ * prepare-sql.c, 2007.12.27, SJ
  */
 
 #include <stdio.h>
@@ -49,10 +49,13 @@ void clearhash(struct node *xhash[MAXHASH]){
 #ifdef HAVE_MYDB
    int fd, n=0;
    unsigned long now;
+   time_t cclock;
    struct mydb e;
 
    fd = open(f, O_CREAT|O_WRONLY, S_IRUSR|S_IWUSR);
-   time(&now);
+   time(&cclock);
+
+   now = cclock;
 
    if(fd != -1){
       write(fd, &nham, 4);

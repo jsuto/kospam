@@ -1,5 +1,5 @@
 /*
- * cfg.c, 2007.12.26, SJ
+ * cfg.c, 2007.12.27, SJ
  */
 
 #include <stdio.h>
@@ -407,6 +407,9 @@ struct __config read_config(char *configfile){
 
                   if(strcmp(key, "store_metadata") == 0)
                      cfg.store_metadata = atoi(val);
+
+                  if(strcmp(key, "store_only_spam") == 0)
+                     cfg.store_only_spam = atoi(val);
 
                   if(strcmp(key, "use_libclamav_block_max_feature") == 0)
                      cfg.use_libclamav_block_max_feature = atoi(val);

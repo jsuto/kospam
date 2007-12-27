@@ -1,5 +1,5 @@
 /*
- * bayes.c, 2007.12.22, SJ
+ * bayes.c, 2007.12.27, SJ
  */
 
 #include <stdio.h>
@@ -231,8 +231,8 @@ int tum_train(char *spamfile, double spaminess, struct __config cfg){
 #endif
 
        (
-         //(cfg.training_mode == T_TUM && (spaminess >= cfg.spam_overall_limit || spaminess < cfg.max_ham_spamicity)) ||
-         cfg.training_mode == T_TUM ||
+         (cfg.training_mode == T_TUM && (spaminess >= cfg.spam_overall_limit || spaminess < cfg.max_ham_spamicity)) ||
+         //cfg.training_mode == T_TUM ||
          (cfg.initial_1000_learning == 1 && (QRY.ham_msg < NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED || QRY.spam_msg < NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED))
        )
 #ifndef HAVE_MYDB

@@ -1,5 +1,5 @@
 /*
- * spamcgi.c, 2007.10.04, SJ
+ * spamcgi.c, 2007.12.27, SJ
  */
 
 #include <stdio.h>
@@ -223,7 +223,6 @@ int main(){
       errout(input, ERR_CGI_NOT_AUTHENTICATED);
 
    snprintf(spamqdir, MAXBUFSIZE-1, "%s/%c/%s", USER_QUEUE_DIR, *p, p);
-
 
    if(method == M_GET){
       p = getenv("QUERY_STRING");

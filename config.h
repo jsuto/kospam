@@ -1,5 +1,5 @@
 /*
- * config.h, 2007.12.22, SJ
+ * config.h, 2007.12.27, SJ
  */
 
 #include <syslog.h>
@@ -12,7 +12,6 @@
 #define CONFIG_FILE CONFDIR "/clapf.conf"
 #define USER_DATA_DIR DATADIR "/lib/clapf/data"
 #define USER_QUEUE_DIR DATADIR "/lib/clapf/queue"
-#define USER_QUARANTINE_DIR "/lib/clapf/quarantine"
 #define PER_USER_SQLITE3_DB_FILE "clapf.sdb"
 #define MYDB_FILE "tokens.mydb"
 

@@ -126,6 +126,7 @@ void init_child(int new_sd, char *hostid){
    #ifdef HAVE_ANTISPAM
       double spaminess=DEFAULT_SPAMICITY;
       char spamfile[MAXBUFSIZE], spaminessbuf[MAXBUFSIZE], reason[SMALLBUFSIZE], qpath[SMALLBUFSIZE];
+      struct stat st;
       struct timeval tv_spam_start, tv_spam_stop;
       struct _state sstate;
       struct ue UE;
@@ -683,8 +684,13 @@ void init_child(int new_sd, char *hostid){
                         }
                         else {
                            link(sdata.ttmpfile, qpath);
-                           chmod(qpath, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
                            if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: try to link to %s", sdata.ttmpfile, qpath);
+
+                           if(stat(qpath, &st) == 0){
+                              if(S_ISREG(st.st_mode) == 1)
+                                 chmod(qpath, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+                           }
+
                         }
                      #endif
                      }

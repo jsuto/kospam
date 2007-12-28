@@ -1,5 +1,5 @@
 /*
- * config.h, 2007.12.27, SJ
+ * config.h, 2007.12.28, SJ
  */
 
 #include <syslog.h>
@@ -64,6 +64,7 @@
 #define SMALLBUFSIZE 512
 #define RANDOM_POOL "/dev/urandom"
 #define RND_STR_LEN 32
+#define MESSAGE_ID_LEN 32
 #define BUFLEN 32
 #define IPLEN 16
 

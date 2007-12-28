@@ -230,7 +230,7 @@ int main(){
       /* show selected message ... */
 
       if(strlen(p) > 30){
-         if(strncmp(p, "id=", 3) == 0 && strlen(p) == RND_STR_LEN-2+5){
+         if(strncmp(p, "id=", 3) == 0 && strlen(p) == 3+MESSAGE_ID_LEN){
             p += 3;
 
 

@@ -1,5 +1,5 @@
 /*
- * traincgi.c, 2007.11.19, SJ
+ * traincgi.c, 2007.12.28, SJ
  */
 
 #include <stdio.h>
@@ -35,12 +35,13 @@ FILE *cgiIn, *f, *F;
 char *input;
 struct node *tokens[MAXHASH];
 
-void my_walk_hash(qry QRY, int ham_or_spam, char *tokentable, struct node *xhash[MAXHASH], int train_mode);
+int my_walk_hash(qry QRY, int ham_or_spam, char *tokentable, struct node *xhash[MAXHASH], int train_mode);
 int deliver_message(char *dir, char *message, struct __config cfg);
+struct _state parse_message(char *spamfile, struct __config cfg);
 
 int main(){
    char *p, *q, *r, *t, buf[MAXBUFSIZE], puf[SMALLBUFSIZE];
-   char spamqdir[MAXBUFSIZE], savedfile[SMALLBUFSIZE], qfile[SMALLBUFSIZE], ID[RND_STR_LEN+1]="";
+   char spamqdir[MAXBUFSIZE], qfile[SMALLBUFSIZE], ID[RND_STR_LEN+1]="";
    int i, m, clen=0, is_spam=0, method=M_UNDEF, train_mode=T_TOE;
    unsigned long cnt, now;
    time_t clock;
@@ -162,17 +163,6 @@ int main(){
 
       p += strlen("message=");
 
-      /* disabled on 2007.11.19, SJ */
-      /*if(cfg.save_trained_emails == 1){
-         if(is_spam == 0)
-            create_ham_or_spam_path(cfg.saved_ham_path, savedfile, "ham");
-         else
-            create_ham_or_spam_path(cfg.saved_spam_path, savedfile, "spam");
-
-         F = fopen(savedfile, "w+");
-      }*/
-
-
       // url decode cgi data
 
       url_decode(p);
@@ -183,25 +173,25 @@ int main(){
          if(cfg.save_trained_emails == 1 && F) fprintf(F, "%s\n", buf);
          state = parse(buf, state);
 
-               t = buf;
-               do {
-                  t = split(t, '\n', puf, SMALLBUFSIZE-1);
+         t = buf;
+         do {
+            t = split(t, '\n', puf, SMALLBUFSIZE-1);
 
-                  q = strstr(puf, cfg.clapf_header_field);
-                  if(q){
-                     r = strchr(puf, ' ');
-                     if(r){
-                        r++;
-                        if(strlen(r) >= 30){
-                           i++;
-                           if(i == 1){
-                              snprintf(ID, RND_STR_LEN, "%s", r);
-                           }
-                        }
+            q = strstr(puf, cfg.clapf_header_field);
+            if(q){
+               r = strchr(puf, ' ');
+               if(r){
+                  r++;
+                  if(strlen(r) >= 30){
+                     i++;
+                     if(i == 1){
+                        snprintf(ID, RND_STR_LEN, "%s", r);
                      }
                   }
+               }
+            }
 
-               } while(t);
+         } while(t);
 
       } while(p);
 
@@ -218,7 +208,8 @@ int main(){
 
    else if(strcmp(p, "GET") == 0){
       p = getenv("QUERY_STRING");
-      if(strncmp(p, "train=", 6) == 0 && strlen(p) == 36+DATE_STR_LEN){
+
+      if(strncmp(p, "train=", 6) == 0 && strlen(p) == 6+MESSAGE_ID_LEN){
          p += 6;
 
          /* train as HAM */
@@ -232,50 +223,15 @@ int main(){
 
          i = 0;
          snprintf(qfile, SMALLBUFSIZE-1, "%s/%s", spamqdir, p);
-         f = fopen(qfile, "r");
-         if(f){
-            while(fgets(buf, MAXBUFSIZE-1, f)){
-               state = parse(buf, state);
+         state = parse_message(qfile, cfg);
 
-               p = buf;
-               do {
-                  p = split(p, '\n', puf, SMALLBUFSIZE-1);
+         /* remove message */
+         unlink(qfile);
 
-                  q = strstr(puf, cfg.clapf_header_field);
-                  if(q){
-                     r = strchr(puf, ' ');
-                     if(r){
-                        r++;
-                        if(strlen(r) >= 30){
-                           i++;
-                           if(i == 1){
-                              snprintf(ID, RND_STR_LEN, "%s", r);
-                           }
-                        }
-                     }
-                  }
-
-                  if(strlen(ID) > 2 && strncmp(puf, cfg.clapf_header_field, strlen(cfg.clapf_header_field)) == 0){
-                     if(strncmp(puf + strlen(cfg.clapf_header_field), "TUM", 3) == 0)
-                        train_mode = T_TUM;
-                  }
-
-               } while(p);
-
-            }
-            fclose(f);
-
-            /* remove message */
-            unlink(qfile);
-
-         }
-         else
-            errout(NULL, ERR_CGI_CANNOT_OPEN);
       }
       else
          errout(NULL, ERR_CGI_INVALID_ID);
    }
-
 
    /* update tokens in database */
 

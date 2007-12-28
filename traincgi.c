@@ -216,6 +216,9 @@ int main(){
          is_spam = 0;
 
       #ifdef HAVE_USERDB
+         if(chdir(spamqdir))
+            errout(NULL, ERR_CHDIR);
+
          i = deliver_message(spamqdir, p, cfg);
          if(i != OK)
             errout(NULL, ERR_CGI_DELIVERY_FAILED);

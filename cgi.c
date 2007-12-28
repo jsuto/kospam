@@ -1,5 +1,5 @@
 /*
- * cgi.c, 2007.07.16, SJ
+ * cgi.c, 2007.12.22, SJ
  */
 
 #include <stdio.h>
@@ -22,7 +22,6 @@ void errout(char *input, char *s){
    input = NULL;
 
    printf("%s\n", s);
-
    exit(1);
 }
 

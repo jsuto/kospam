@@ -241,9 +241,9 @@ int main(){
          #endif
 
 
-         #ifdef HAVE_USER_MYSQL
+         //#ifdef HAVE_USER_MYSQL
             printf("<a href=\"%s?train=%s\">%s</a><br>\n", cfg.traincgi_url, p, ERR_CGI_DELIVER_AND_TRAIN_AS_HAM);
-         #endif
+         //#endif
 
             printf("<br>\n\n<pre>\n");
             show_message(spamqdir, p);

@@ -508,6 +508,8 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
       if(spaminess < cfg.spam_overall_limit && spaminess > cfg.max_ham_spamicity && most_interesting_tokens(s_phrase_hash) < MAX_PHRASES_TO_CHOOSE)
          spaminess2 = sorthash(shash, MAX_TOKENS_TO_CHOOSE, cfg);
 
+      if(cfg.use_pairs == 0)
+         spaminess = sorthash(shash, MAX_TOKENS_TO_CHOOSE, cfg);
    }
 
 
@@ -601,7 +603,6 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
       if(cfg.use_pairs == 1) spaminess = sorthash(s_phrase_hash, MAX_PHRASES_TO_CHOOSE, cfg);
 
       if(spaminess < cfg.spam_overall_limit && spaminess > cfg.max_ham_spamicity && most_interesting_tokens(s_phrase_hash) < MAX_PHRASES_TO_CHOOSE){
-      //if(spaminess < cfg.spam_overall_limit && spaminess > cfg.max_ham_spamicity){
          if(n_tokens < 8){
          #ifdef HAVE_MYSQL
             n_tokens += walk_hash(mysql, B_hash, cfg);
@@ -617,6 +618,8 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
          spaminess2 = sorthash(shash, MAX_TOKENS_TO_CHOOSE, cfg);
       }
 
+      if(cfg.use_pairs == 0)
+         spaminess = sorthash(shash, MAX_TOKENS_TO_CHOOSE, cfg);
 
       if(DEVIATION(spaminess) < DEVIATION(spaminess2))
          spaminess = spaminess2;

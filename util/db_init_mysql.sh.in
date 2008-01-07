@@ -81,7 +81,7 @@ process_maildir(){
 
    import_tokens;
 
-   if [ -x `which cdb 2>/dev/null` ]; then create_cdb_file; fi
+   #if [ -x `which cdb 2>/dev/null` ]; then create_cdb_file; fi
 
 }
 
@@ -106,7 +106,7 @@ process_mbox(){
 
    import_tokens;
 
-   if [ -x `which cdb 2>/dev/null` ]; then create_cdb_file; fi
+   #if [ -x `which cdb 2>/dev/null` ]; then create_cdb_file; fi
 
 }
 

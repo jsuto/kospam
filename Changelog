@@ -1,3 +1,11 @@
+0.3.30:
+
+2008.01.03, SJ
+
+Commented out the cdb making stuff in db_init_mysql.sh
+(util/db_init_mysql.sh.in)
+(credits: Zoltan Fried)
+
 0.3.30-rc2:
 
 2007.12.27, SJ

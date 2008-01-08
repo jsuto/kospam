@@ -1,5 +1,20 @@
 0.3.30:
 
+2008.01.08, SJ
+
+The spaminess_of_text_and_base64 feature is disabled by default. Enable it
+if you want to mark base64 encoded _textual_ messages as spam, by setting
+spaminess_of_text_and_base64=0.9996 in clapf.conf
+(cfg.c, example.conf)
+
+Well, the inverse chi square algorithm should use not the most interesting
+top15 tokens, but all the tokens above a certain significance. This can be
+adjusted by the exclusion_radius. If you set it to 0.375, then we will include
+all the tokens with spamicity 0...0.125 or 0.875...1.000.
+So please update your exclusion_radius parameter, and set it to somewhere 0.375.
+(hash.c, hash.h, bayes.c, cfg.c, config.h, example.conf)
+(credits: Gary Robinson)
+
 2008.01.03, SJ
 
 Commented out the cdb making stuff in db_init_mysql.sh

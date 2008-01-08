@@ -1,5 +1,5 @@
 /*
- * bayes.c, 2007.12.27, SJ
+ * bayes.c, 2008.01.08, SJ
  */
 
 #include <stdio.h>
@@ -126,10 +126,10 @@ int assign_spaminess(char *p, struct __config cfg, unsigned int uid){
    }
 
 
-   /* whether to include unknown tokens, 2006.02.15, SJ */
+   /* exclude unknown tokens, 2008.01.08, SJ */
 
-   if(spaminess < DEFAULT_SPAMICITY - cfg.exclusion_radius || spaminess > DEFAULT_SPAMICITY + cfg.exclusion_radius){
-
+   //if(spaminess < DEFAULT_SPAMICITY - cfg.exclusion_radius || spaminess > DEFAULT_SPAMICITY + cfg.exclusion_radius){
+   if(DEVIATION(spaminess) > 0.1){
       if(strchr(p, '+') || strchr(p, '*'))
          n_phrases += addnode(s_phrase_hash, p, spaminess, DEVIATION(spaminess));
 
@@ -446,7 +446,9 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
    /* redesigned spaminess calculation, 2007.08.28, SJ */
 
    if(cfg.use_pairs == 1){
-      spaminess = sorthash(s_phrase_hash, MAX_PHRASES_TO_CHOOSE, cfg);
+      //spaminess = sorthash(s_phrase_hash, MAX_PHRASES_TO_CHOOSE, cfg);
+      spaminess = calc_score_chi2(s_phrase_hash, cfg);
+
       if(spaminess < cfg.spam_overall_limit && spaminess > cfg.max_ham_spamicity && most_interesting_tokens(s_phrase_hash) < MAX_PHRASES_TO_CHOOSE)
          goto NEED_SINGLE_TOKENS;
 
@@ -502,14 +504,18 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
                Q = Q->r;
             }
          }
-         spaminess = sorthash(s_phrase_hash, MAX_TOKENS_TO_CHOOSE, cfg);
+
+         //spaminess = sorthash(s_phrase_hash, MAX_TOKENS_TO_CHOOSE, cfg);
+         spaminess = calc_score_chi2(s_phrase_hash, cfg);
       }
 
       if(spaminess < cfg.spam_overall_limit && spaminess > cfg.max_ham_spamicity && most_interesting_tokens(s_phrase_hash) < MAX_PHRASES_TO_CHOOSE)
-         spaminess2 = sorthash(shash, MAX_TOKENS_TO_CHOOSE, cfg);
+         //spaminess2 = sorthash(shash, MAX_TOKENS_TO_CHOOSE, cfg);
+         spaminess2 = calc_score_chi2(shash, cfg);
 
       if(cfg.use_pairs == 0)
-         spaminess = sorthash(shash, MAX_TOKENS_TO_CHOOSE, cfg);
+         //spaminess = sorthash(shash, MAX_TOKENS_TO_CHOOSE, cfg);
+         spaminess = calc_score_chi2(shash, cfg);
    }
 
 
@@ -600,7 +606,9 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
          urlhash[u] = NULL;
       }
 
-      if(cfg.use_pairs == 1) spaminess = sorthash(s_phrase_hash, MAX_PHRASES_TO_CHOOSE, cfg);
+      if(cfg.use_pairs == 1)
+         //spaminess = sorthash(s_phrase_hash, MAX_PHRASES_TO_CHOOSE, cfg);
+         spaminess = calc_score_chi2(s_phrase_hash, cfg);
 
       if(spaminess < cfg.spam_overall_limit && spaminess > cfg.max_ham_spamicity && most_interesting_tokens(s_phrase_hash) < MAX_PHRASES_TO_CHOOSE){
          if(n_tokens < 8){
@@ -615,11 +623,13 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
          #endif
          }
 
-         spaminess2 = sorthash(shash, MAX_TOKENS_TO_CHOOSE, cfg);
+         //spaminess2 = sorthash(shash, MAX_TOKENS_TO_CHOOSE, cfg);
+         spaminess2 = calc_score_chi2(shash, cfg);
       }
 
       if(cfg.use_pairs == 0)
-         spaminess = sorthash(shash, MAX_TOKENS_TO_CHOOSE, cfg);
+         //spaminess = sorthash(shash, MAX_TOKENS_TO_CHOOSE, cfg);
+         spaminess = calc_score_chi2(shash, cfg);
 
       if(DEVIATION(spaminess) < DEVIATION(spaminess2))
          spaminess = spaminess2;

@@ -1,5 +1,5 @@
 /*
- * config.h, 2007.12.28, SJ
+ * config.h, 2008.01.08, SJ
  */
 
 #include <syslog.h>
@@ -127,7 +127,7 @@
 #define JUNK_REPLACEMENT_CHAR 'j'
 #define DATE_STR_LEN 15
 #define MESSAGES_PER_ONE_PAGE 25
-#define EXCLUSION_RADIUS 0.1
+#define EXCLUSION_RADIUS 0.375
 #define TUM_LIMIT 50
 #define NUMBER_OF_GOOD_FROM 10
 #define MAX_ATTACHMENTS 8

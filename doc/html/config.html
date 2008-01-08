@@ -282,12 +282,14 @@ Look at the explanation at esf_h.<p>
 
 <strong>exclusion_radius</strong><p/>
 syntax: exclusion_radius=<i>number</i><br/>
-default: 0.1<p/>
+default: 0.375<p/>
 
-The exclusion_radius directive defines a radius from the neutral 0.5 probability. The
-Spambayes and Bogofilter teams have pointed out that excluding the probabilities near
-0.5 is useful. You may get rid of the neutral tokens within the exclusion radius.
-The default value (0.1) means that probabilities between 0.4-0.6 are excluded.<p/>
+The exclusion_radius directive defines a radius from the neutral 0.5 probability. 
+This radius then used to exclude tokens below a certain significance from the
+decision matrix. Eg. if the exclusion_radius is 0.375, then only tokens with
+spamicity 0 .. 0.125 and tokens with spamicity 0.875 .. 1.0000 are included.<br/>
+
+Additionally, clapf automatically discards tokens with spam probabilities between 0.4-0.6</p>.
 
 
 <strong>max_message_size_to_filter</strong><p>

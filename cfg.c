@@ -1,5 +1,5 @@
 /*
- * cfg.c, 2007.12.27, SJ
+ * cfg.c, 2008.01.08, SJ
  */
 
 #include <stdio.h>
@@ -100,7 +100,7 @@ struct __config read_config(char *configfile){
    cfg.spaminess_of_strange_language_stuff = 0.9876;
    cfg.spaminess_of_too_much_spam_in_top15 = 0.9998;
    cfg.spaminess_of_blackholed_mail = 0.9995;
-   cfg.spaminess_of_text_and_base64 = 0.9996;
+   cfg.spaminess_of_text_and_base64 = 0;
    cfg.spaminess_of_caught_by_surbl = 0.9997;
    cfg.spaminess_of_embed_image = 0.9994;
 

@@ -1,5 +1,5 @@
 /*
- * cfg.h, 2007.12.27, SJ
+ * cfg.h, 2008.01.10, SJ
  */
 
 #define MAXVAL 128
@@ -59,6 +59,8 @@ struct __config {
    int enable_auto_white_list;
 
    int min_phrase_number;
+
+   int calc_method;
 
    float rob_s;
    float rob_x;

@@ -1278,7 +1278,7 @@ Optional Features:
   --enable-kav            build Kaspersky antivirus support
   --enable-drweb          build Dr.Web antivirus support
   --enable-case           use case sensitive tokens
-  --enable-surbl          use the SURBL database
+  --enable-rbl            use the (SU)RBL database
   --enable-old-format     use old token format
   --enable-blackhole      build the blackhole feature
   --enable-cgi            build the web interface to train the database
@@ -3725,7 +3725,7 @@ have_train="no"
 have_mysql="no"
 have_sqlite3="no"
 have_ldap="no"
-have_surbl="no"
+have_rbl="no"
 have_gsl="no"
 have_store="no"
 
@@ -4714,16 +4714,16 @@ ac_cv_lib_ldap=ac_cv_lib_ldap_main
 
 
 
-    # Check whether --enable-surbl was given.
-if test "${enable_surbl+set}" = set; then
-  enableval=$enable_surbl; want_surbl=$enableval
+    # Check whether --enable-rbl was given.
+if test "${enable_rbl+set}" = set; then
+  enableval=$enable_rbl; want_rbl=$enableval
 else
-  want_surbl="no"
+  want_rbl="no"
 fi
 
 
-    if test "$want_surbl" = "yes"; then
-       have_surbl="yes"
+    if test "$want_rbl" = "yes"; then
+       have_rbl="yes"
     fi
 
 
@@ -4913,14 +4913,9 @@ fi
 
     if test "$want_cgi" = "yes"; then
 
+       have_cgi="yes"
 
-       if test "$have_mysql" = "yes" || test "$have_ldap" = "yes"; then
-          cgi="spamcgi usercgi traincgi trainlogcgi statcgi"
-          have_cgi="yes"
-       else
-          echo "you need mysql/ldap support for the cgi feature"
-          exit 1;
-       fi
+
 
     fi
 
@@ -5783,13 +5778,18 @@ fi
 
 if test "$have_cgi" = "yes"; then
    echo "CGI interface: yes"
+   if test "$TOKENDB" = "mysql" || test "$TOKENDB" = "sqlite3"; then
+      cgi="spamcgi usercgi traincgi trainlogcgi statcgi"
+   else
+      cgi="spamcgi usercgi traincgi"
+   fi
 else
    echo "CGI interface: no"
 fi
 
 
-if test "$have_surbl" = "yes"; then
-   echo "SURBL support: yes"
+if test "$have_rbl" = "yes"; then
+   echo "(SU)RBL support: yes"
    defs="$defs -DHAVE_SURBL"
    objs="$objs rbl.o"
 else

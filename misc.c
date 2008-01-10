@@ -656,29 +656,18 @@ void log_ham_spam_per_email(char *tmpfile, char *email, int ham_or_spam){
  */
 
 float calc_spamicity(float NHAM, float NSPAM, unsigned int nham, unsigned int nspam, float rob_s, float rob_x, int freq_min){
-   float r = DEFAULT_SPAMICITY, ham_prob=0, spam_prob=0;
+   float r;
    int n;
 
-   if(nham + nspam > 2){
-      if(NHAM > 0) ham_prob = nham / NHAM;
+   /* newer calculation, and apply Robinson strength to all tokens, 2008.01.09, SJ */
 
-      if(NSPAM > 0) spam_prob = nspam / NSPAM;
+   n = nham + nspam;
+   if(n == 0) return DEFAULT_SPAMICITY;
 
-      if(ham_prob > 1) ham_prob = 1;
-      if(spam_prob > 1) spam_prob = 1;
+   r = nspam * NHAM / (nspam * NHAM + nham * NSPAM);
 
-      if(ham_prob + spam_prob > 0) r = spam_prob / (ham_prob + spam_prob);
-
-      /* deal with rare words */
-
-      if(nham < freq_min && nspam < freq_min){
-         n = nham;
-         if(nspam > n) n = nspam;
-
-         r = (rob_s * rob_x + n * r) / (rob_s + n);
-      }
-
-   }
+   //if(n < freq_min)
+      r = (rob_s * rob_x + n * r) / (rob_s + n);
 
    if(r < REAL_HAM_TOKEN_PROBABILITY) r = REAL_HAM_TOKEN_PROBABILITY;
    if(r > REAL_SPAM_TOKEN_PROBABILITY) r = REAL_SPAM_TOKEN_PROBABILITY;

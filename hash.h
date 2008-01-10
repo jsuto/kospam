@@ -22,5 +22,5 @@ int addnode(struct node *xhash[MAXHASH], char *s, double spaminess, double devia
 struct node *findnode(struct node *xhash[MAXHASH], char *s);
 int most_interesting_tokens(struct node *xhash[MAXHASH]);
 double calc_score_chi2(struct node *xhash[MAXHASH], struct __config cfg);
-double sorthash(struct node *xhash[MAXHASH], int top10, struct __config cfg);
+double calc_score_bayes(struct node *xhash[MAXHASH], int top10, struct __config cfg);
 unsigned long hash(char *s);

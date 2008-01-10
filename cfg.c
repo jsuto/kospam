@@ -295,6 +295,9 @@ struct __config read_config(char *configfile){
                   if(strcmp(key, "min_phrase_number") == 0)
                      cfg.min_phrase_number = atoi(val);
 
+                  if(strcmp(key, "calc_method") == 0)
+                     cfg.calc_method = atoi(val);
+
                   if(strcmp(key, "enable_auto_white_list") == 0)
                      cfg.enable_auto_white_list = atoi(val);
 

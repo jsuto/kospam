@@ -1,5 +1,5 @@
 /*
- * bayes.c, 2008.01.08, SJ
+ * bayes.c, 2008.01.10, SJ
  */
 
 #include <stdio.h>
@@ -25,10 +25,11 @@
 #include "sql.h"
 #include "config.h"
 
-struct node *s_phrase_hash[MAXHASH], *shash[MAXHASH];
+struct node *s_phrase_hash[MAXHASH], *shash[MAXHASH], *s_mix[MAXHASH];
 struct node *B_hash[MAXHASH], *tumhash[MAXHASH];
 float n_phrases = 0;
 float n_tokens = 0;
+float n_mix = 0;
 
 int surbl_match = 0;
 int has_embed_image = 0;
@@ -68,6 +69,52 @@ qry QRY;
 float SQL_QUERY(qry QRY, int group_type, char *tokentable, char *token, struct node *xhash[MAXHASH]);
 
 
+/*
+ * apply some fixes
+ */
+
+double apply_fixes(double spaminess, int found_on_rbl, int base64_text, long c_shit, long l_shit, long c_hex_shit, struct __config cfg){
+
+   /* in case of a surbl or rbl match */
+#ifdef HAVE_SURBL
+   if(cfg.rude_surbl > 0 && surbl_match >= cfg.rude_surbl) return cfg.spaminess_of_caught_by_surbl;
+   if(found_on_rbl > 0) return cfg.spaminess_of_caught_by_surbl;
+#endif
+
+   /* if we shall mark the message as spam because of the embedded image */
+   if(spaminess > DEFAULT_SPAMICITY && has_embed_image == 1) return cfg.spaminess_of_embed_image;
+
+
+   /* check junk lines, characters */
+
+   if(cfg.invalid_junk_limit > 0 && c_shit > cfg.invalid_junk_limit && spaminess < cfg.spam_overall_limit){
+   #ifdef DEBUG
+      fprintf(stderr, "invalid junk characters: %ld (limit: %d)\n", c_shit, cfg.invalid_junk_limit);
+   #endif
+      return cfg.spaminess_of_strange_language_stuff;
+   }
+
+   if(cfg.invalid_junk_line > 0 && l_shit >= cfg.invalid_junk_line && spaminess < cfg.spam_overall_limit){
+   #ifdef DEBUG
+      fprintf(stderr, "invalid junk lines: %ld (limit: %d)\n", l_shit, cfg.invalid_junk_line);
+   #endif
+      return cfg.spaminess_of_strange_language_stuff;
+   }
+
+   if(cfg.invalid_hex_junk_limit > 0 && c_hex_shit > cfg.invalid_hex_junk_limit && spaminess < cfg.spam_overall_limit){
+   #ifdef DEBUG
+      fprintf(stderr, "invalid hex. junk characters: %ld (limit: %d)\n", c_hex_shit, cfg.invalid_hex_junk_limit);
+   #endif
+
+      return cfg.spaminess_of_strange_language_stuff;
+   }
+
+   /* if we are bored with lame base64 encoding */
+   if(base64_text == 1 && cfg.spaminess_of_text_and_base64 > 0) return cfg.spaminess_of_text_and_base64;
+
+   return spaminess;
+}
+
 
 /*
  * assign spaminess value to token
@@ -88,7 +135,7 @@ int assign_spaminess(char *p, struct __config cfg, unsigned int uid){
 
    /* if we already have this token, 2006.03.13, SJ */
 
-   if(findnode(shash, p))
+   if(findnode(s_mix, p))
       return 0;
 
 #ifdef HAVE_MYSQL
@@ -128,17 +175,30 @@ int assign_spaminess(char *p, struct __config cfg, unsigned int uid){
 
    /* exclude unknown tokens, 2008.01.08, SJ */
 
-   //if(spaminess < DEFAULT_SPAMICITY - cfg.exclusion_radius || spaminess > DEFAULT_SPAMICITY + cfg.exclusion_radius){
    if(DEVIATION(spaminess) > 0.1){
-      if(strchr(p, '+') || strchr(p, '*'))
+      if(strchr(p, '+') || strchr(p, '*')){
          n_phrases += addnode(s_phrase_hash, p, spaminess, DEVIATION(spaminess));
-
-      if(strchr(p, '+') == NULL)
+         n_mix += addnode(s_mix, p, spaminess, DEVIATION(spaminess));
+      }
+      if(strchr(p, '+') == NULL){
          n_tokens += addnode(shash, p, spaminess, DEVIATION(spaminess));
-
+         n_mix += addnode(s_mix, p, spaminess, DEVIATION(spaminess));
+      }
    }
 
    return 0;
+}
+
+
+/*
+ * calc_score
+ */
+
+double calc_score(struct node *xhash[MAXHASH], struct __config cfg){
+   if(cfg.calc_method == PROB_CALC_CHI2)
+      return calc_score_chi2(xhash, cfg);
+   else
+      return calc_score_bayes(xhash, MAX_PHRASES_TO_CHOOSE, cfg);
 }
 
 
@@ -324,6 +384,7 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
 
    inithash(shash);
    inithash(s_phrase_hash);
+   inithash(s_mix);
 
    inithash(B_hash);
    inithash(tumhash);
@@ -373,7 +434,6 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
 
       else addnode(B_hash, p->str, 0, 0);
 
-
       if(n > 0){
 
          /* we may penalize embedded images, 2007.01.03, SJ */
@@ -382,6 +442,7 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
             spaminess = REAL_SPAM_TOKEN_PROBABILITY;
             n_phrases += addnode(s_phrase_hash, "EMBED*", spaminess, DEVIATION(spaminess));
             n_tokens += addnode(shash, "EMBED*", spaminess, DEVIATION(spaminess));
+            n_mix += addnode(s_mix, "EMBED*", spaminess, DEVIATION(spaminess));
             has_embed_image = 1;
          }
 
@@ -404,6 +465,7 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
        spaminess = REAL_SPAM_TOKEN_PROBABILITY;
        n_phrases += addnode(s_phrase_hash, "OCTET_STREAM*", spaminess, DEVIATION(spaminess));
        n_tokens += addnode(shash, "OCTET_STREAM*", spaminess, DEVIATION(spaminess));
+       n_mix += addnode(s_mix, "OCTET_STREAM*", spaminess, DEVIATION(spaminess));
    }
 
    /* add penalty for images, 2007.07.02, SJ */
@@ -412,6 +474,7 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
        spaminess = REAL_SPAM_TOKEN_PROBABILITY;
        n_phrases += addnode(s_phrase_hash, "IMAGE*", spaminess, DEVIATION(spaminess));
        n_tokens += addnode(shash, "IMAGE*", spaminess, DEVIATION(spaminess));
+       n_mix += addnode(s_mix, "IMAGE*", spaminess, DEVIATION(spaminess));
    }
 
 
@@ -419,6 +482,7 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
       spaminess = REAL_SPAM_TOKEN_PROBABILITY;
       n_phrases += addnode(s_phrase_hash, "NO_SUBJECT*", spaminess, DEVIATION(spaminess));
       n_tokens += addnode(shash, "NO_SUBJECT*", spaminess, DEVIATION(spaminess));
+      n_mix += addnode(s_mix, "NO_SUBJECT*", spaminess, DEVIATION(spaminess));
    }
 
    /* add the From line, 2007.06.16, SJ */
@@ -440,27 +504,29 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
       spaminess = REAL_SPAM_TOKEN_PROBABILITY;
       n_phrases += addnode(s_phrase_hash, "UNKNOWN_CLIENT*", spaminess, DEVIATION(spaminess));
       n_tokens += addnode(shash, "UNKNOWN_CLIENT*", spaminess, DEVIATION(spaminess));
+      n_mix += addnode(s_mix, "UNKNOWN_CLIENT*", spaminess, DEVIATION(spaminess));
    }
 #endif
 
    /* redesigned spaminess calculation, 2007.08.28, SJ */
 
+   /*n_tokens += walk_hash(B_hash, cfg);
+   spaminess = calc_score(s_mix, cfg);
+   goto END_OF_EVALUATION;*/
+
    if(cfg.use_pairs == 1){
-      //spaminess = sorthash(s_phrase_hash, MAX_PHRASES_TO_CHOOSE, cfg);
-      spaminess = calc_score_chi2(s_phrase_hash, cfg);
+      spaminess = calc_score(s_phrase_hash, cfg);
 
-      if(spaminess < cfg.spam_overall_limit && spaminess > cfg.max_ham_spamicity && most_interesting_tokens(s_phrase_hash) < MAX_PHRASES_TO_CHOOSE)
-         goto NEED_SINGLE_TOKENS;
+   #ifdef DEBUG
+      fprintf(stderr, "phrase: %.4f\n", spaminess);
+   #endif
 
-      /* if we have no subject token to evaluate */
-
-      if(state.n_subject_token == 0 && state.n_body_token < 10){
-         goto NEED_SINGLE_TOKENS;
-      }
+      if(spaminess >= cfg.spam_overall_limit || spaminess <= cfg.max_ham_spamicity)
+         goto END_OF_EVALUATION;
 
    }
-   else {
-      NEED_SINGLE_TOKENS:
+
+   if(cfg.use_single_tokens == 1){
    #ifdef HAVE_MYSQL
       n_tokens += walk_hash(mysql, B_hash, cfg);
    #endif
@@ -489,93 +555,16 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
             snprintf(surbl_token, MAX_TOKEN_LEN-1, "RBL%d*%s", i, state.ip);
             n_phrases += addnode(s_phrase_hash, surbl_token, REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
             n_tokens += addnode(shash, surbl_token, REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
+            n_mix += addnode(s_mix, surbl_token, REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
          }
       }
    #endif
 
+      /* consult URL blacklists */
 
-      /* add single tokens to token pairs, then recalculate spamicity */
-
-      if(cfg.use_pairs == 1){
-         for(i=0;i<MAXHASH;i++){
-            Q = shash[i];
-            while(Q != NULL){
-               addnode(s_phrase_hash, Q->str, Q->spaminess, Q->deviation);
-               Q = Q->r;
-            }
-         }
-
-         //spaminess = sorthash(s_phrase_hash, MAX_TOKENS_TO_CHOOSE, cfg);
-         spaminess = calc_score_chi2(s_phrase_hash, cfg);
-      }
-
-      if(spaminess < cfg.spam_overall_limit && spaminess > cfg.max_ham_spamicity && most_interesting_tokens(s_phrase_hash) < MAX_PHRASES_TO_CHOOSE)
-         //spaminess2 = sorthash(shash, MAX_TOKENS_TO_CHOOSE, cfg);
-         spaminess2 = calc_score_chi2(shash, cfg);
-
-      if(cfg.use_pairs == 0)
-         //spaminess = sorthash(shash, MAX_TOKENS_TO_CHOOSE, cfg);
-         spaminess = calc_score_chi2(shash, cfg);
-   }
-
-
-#ifdef DEBUG
-   fprintf(stderr, "phrase: %.4f, single token: %.4f\n", spaminess, spaminess2);
-#endif
-
-   if(DEVIATION(spaminess) < DEVIATION(spaminess2))
-      spaminess = spaminess2;
-
-   #ifdef DEBUG
-      fprintf(stderr, "Bayesian result: %.4f\n", spaminess);
-      fprintf(stderr, "%ld %ld %ld\n", state.c_hex_shit, state.c_shit, state.l_shit);
-   #endif
-
-
-   /* junk detection before the SURBL test, 2006.11.09, SJ */
-
-   if(spaminess > cfg.max_ham_spamicity){
-
-      if(state.base64_text == 1 && cfg.spaminess_of_text_and_base64 > 0){
-         return cfg.spaminess_of_text_and_base64;
-      }
-
-      if(cfg.invalid_junk_limit > 0 && state.c_shit > cfg.invalid_junk_limit && spaminess < cfg.spam_overall_limit){
-      #ifdef DEBUG
-         fprintf(stderr, "invalid junk characters: %ld (limit: %d)\n", state.c_shit, cfg.invalid_junk_limit);
-      #endif
-
-         return cfg.spaminess_of_strange_language_stuff;
-      }
-
-      if(cfg.invalid_junk_line > 0 && state.l_shit >= cfg.invalid_junk_line && spaminess < cfg.spam_overall_limit){
-      #ifdef DEBUG
-         fprintf(stderr, "invalid junk lines: %ld (limit: %d)\n", state.l_shit, cfg.invalid_junk_line);
-      #endif
-
-         return cfg.spaminess_of_strange_language_stuff;
-      }
-
-      if(cfg.invalid_hex_junk_limit > 0 && state.c_hex_shit > cfg.invalid_hex_junk_limit && spaminess < cfg.spam_overall_limit){
-      #ifdef DEBUG
-         fprintf(stderr, "invalid hex. junk characters: %ld (limit: %d)\n", state.c_hex_shit, cfg.invalid_hex_junk_limit);
-      #endif
-
-         return cfg.spaminess_of_strange_language_stuff;
-      }
-   }
-
-#ifdef HAVE_SURBL
-
-   /*
-     check URLs against the SUBRL database and recalculate spaminess if we are not sure
-     that this message is certainly spam or ham, 2006.06.23, SJ
-    */
-
-   if(n_urls > 0 && spaminess > cfg.max_ham_spamicity && spaminess < cfg.spam_overall_limit && strlen(cfg.surbl_domain) > 2){
-      spaminess = spaminess2 = 0.5;
-
-      for(u=0; u < MAXHASH; u++){
+   #ifdef HAVE_SURBL
+      if(n_urls > 0){
+       for(u=0; u < MAXHASH; u++){
          Q = urlhash[u];
          while(Q != NULL){
             P = Q;
@@ -604,46 +593,31 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
                free(P);
          }
          urlhash[u] = NULL;
+       }
       }
-
-      if(cfg.use_pairs == 1)
-         //spaminess = sorthash(s_phrase_hash, MAX_PHRASES_TO_CHOOSE, cfg);
-         spaminess = calc_score_chi2(s_phrase_hash, cfg);
-
-      if(spaminess < cfg.spam_overall_limit && spaminess > cfg.max_ham_spamicity && most_interesting_tokens(s_phrase_hash) < MAX_PHRASES_TO_CHOOSE){
-         if(n_tokens < 8){
-         #ifdef HAVE_MYSQL
-            n_tokens += walk_hash(mysql, B_hash, cfg);
-         #endif
-         #ifdef HAVE_SQLITE3
-            n_tokens += walk_hash(db, B_hash, cfg);
-         #endif
-         #ifdef HAVE_MYDB
-            n_tokens += walk_hash(B_hash, cfg);
-         #endif
-         }
-
-         //spaminess2 = sorthash(shash, MAX_TOKENS_TO_CHOOSE, cfg);
-         spaminess2 = calc_score_chi2(shash, cfg);
-      }
-
-      if(cfg.use_pairs == 0)
-         //spaminess = sorthash(shash, MAX_TOKENS_TO_CHOOSE, cfg);
-         spaminess = calc_score_chi2(shash, cfg);
-
-      if(DEVIATION(spaminess) < DEVIATION(spaminess2))
-         spaminess = spaminess2;
-
-   #ifdef DEBUG
-      fprintf(stderr, "phrase: %.4f, single token: %.4f\n", spaminess, spaminess2);
-      fprintf(stderr, "Bayesian result after surbl test: %f\n", spaminess);
-      fprintf(stderr, "surbl matches: %d\n", surbl_match);
    #endif
+
+
+      if(cfg.use_pairs == 1){
+         spaminess = calc_score(s_mix, cfg);
+      #ifdef DEBUG
+         fprintf(stderr, "mix: %.4f\n", spaminess);
+      #endif
+
+         if(spaminess >= cfg.spam_overall_limit || spaminess <= cfg.max_ham_spamicity)
+            goto END_OF_EVALUATION;
+      }
+
+
+      /*spaminess = calc_score(shash, cfg);
+   #ifdef DEBUG
+      fprintf(stderr, "shash: %.4f\n", spaminess);
+   #endif*/
 
    }
 
-#endif
 
+END_OF_EVALUATION:
 
 #ifdef HAVE_MYDB
  #ifndef DEBUG
@@ -656,28 +630,17 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
 
    clearhash(shash);
    clearhash(s_phrase_hash);
+   clearhash(s_mix);
    clearhash(B_hash);
 
 
    /* TUM training was here ... */
 
 
-#ifdef HAVE_SURBL
-   if(spaminess > cfg.max_ham_spamicity && spaminess < cfg.spam_overall_limit && cfg.rude_surbl > 0 && surbl_match >= cfg.rude_surbl)
-      return cfg.spaminess_of_caught_by_surbl;
+   /* if the message is unsure, try to determine if it's a spam, 2008.01.09, SJ */
 
-   /* if the message is not good enough and found on a blacklist, mark it as spam, 2007.09.11, SJ */
-
-   if(spaminess > cfg.max_ham_spamicity && spaminess < cfg.spam_overall_limit && found_on_rbl > 0)
-      return cfg.spaminess_of_caught_by_surbl;
-#endif
-
-
-   /* if we shall mark the message as spam because of the embedded image */
-
-   if(spaminess < cfg.spam_overall_limit && spaminess > cfg.max_ham_spamicity && has_embed_image == 1){
-      return cfg.spaminess_of_embed_image;
-   }
+   if(spaminess > cfg.max_ham_spamicity && spaminess < cfg.spam_overall_limit)
+      spaminess = apply_fixes(spaminess, found_on_rbl, state.base64_text, state.c_shit, state.l_shit, state.c_hex_shit, cfg);
 
 
    /* fix spaminess value if we have to */

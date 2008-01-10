@@ -1,5 +1,5 @@
 /*
- * hash.c, 2007.02.26, SJ
+ * hash.c, 2008.01.10, SJ
  */
 
 #include <stdio.h>
@@ -213,8 +213,6 @@ double calc_score_chi2(struct node *xhash[MAXHASH], struct __config cfg){
 #endif
 
    return I;
-
-   return I;
 }
 
 
@@ -222,10 +220,10 @@ double calc_score_chi2(struct node *xhash[MAXHASH], struct __config cfg){
  * reverse sort the hash and calculate the spamicity value
  */
 
-double sorthash(struct node *xhash[MAXHASH], int top10, struct __config cfg){
+double calc_score_bayes(struct node *xhash[MAXHASH], int top10, struct __config cfg){
    int i, j, n_tokens, most_interesting, how_many_tokens_to_include=top10, l=0;
    struct node *p, *q, *t[MAX_NUM_OF_SAMPLES];
-   double P, Q, H, S, I, truespam=0;
+   double P, Q, truespam=0;
 
    n_tokens = 0;
    most_interesting = 0;
@@ -316,31 +314,9 @@ double sorthash(struct node *xhash[MAXHASH], int top10, struct __config cfg){
    if(how_many_tokens_to_include > 0) fprintf(stderr, "top10: %d, truespam: %.0f, truespam/top10: %f\n", how_many_tokens_to_include, truespam, truespam/how_many_tokens_to_include);
 #endif
 
-   /* inverse chi-square distribution with ESF values, 2006.02.24, SJ */
+   /* Bayesian calculation = a*b*c / ( a*b*c + (1-a)*(1-b)*(1-c) ) */
 
-   Q = pow(Q, cfg.esf_h);
-   P = pow(P, cfg.esf_s);
-
-
-#ifdef HAVE_GSL
-   H = gsl_chi2inv(-2.0 * log(Q), 2.0 * (float)l * cfg.esf_h);
-   S = gsl_chi2inv(-2.0 * log(P), 2.0 * (float)l * cfg.esf_s);
-#else
-   /*
-    * using a brand new inverse chi square implementation, 2007.02.26, SJ
-    */
-   H = chi2inv(-2.0 * log(Q), 2.0 * (float)l, cfg.esf_h);
-   S = chi2inv(-2.0 * log(P), 2.0 * (float)l, cfg.esf_h);
-#endif
-
-
-   I = (1 + H - S) / 2.0;
-
-#ifdef DEBUG
-   fprintf(stderr, "with esf_h: %f, esf_s: %f\n", cfg.esf_h, cfg.esf_s);
-#endif
-
-   return I;
+   return Q / (Q + P);
 }
 
 

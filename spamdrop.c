@@ -60,7 +60,7 @@ int main(int argc, char **argv){
    struct __config cfg;
    char buf[MAXBUFSIZE], qpath[SMALLBUFSIZE], *configfile=CONFIG_FILE, *username, *from=NULL;
    uid_t u;
-   int i, n, fd, fd2, print_message=0, is_header=1, tot_len=0, put_subject_spam_prefix=0, sent_subject_spam_prefix=0, is_spam=0;
+   int i, n, fd, fd2, print_message=0, print_summary_only=0, is_header=1, tot_len=0, put_subject_spam_prefix=0, sent_subject_spam_prefix=0, is_spam=0;
    int training_request=0, blackhole_request=0;
    FILE *f;
 
@@ -68,7 +68,7 @@ int main(int argc, char **argv){
    struct ue UE;
 #endif
 
-   while((i = getopt(argc, argv, "c:p")) > 0){
+   while((i = getopt(argc, argv, "c:ps")) > 0){
        switch(i){
 
          case 'c' :
@@ -79,13 +79,17 @@ int main(int argc, char **argv){
                     print_message = 1;
                     break;
 
+         case 's' :
+                    print_summary_only = 1;
+                    break;
+
          default  : 
                     break;
        }
    }
 
    if(argc < 2){
-      fprintf(stderr, "usage: %s [-c <config file>] [-p] < <RFC-822 formatted message>\n", argv[0]);
+      fprintf(stderr, "usage: %s [-c <config file>] [-p] [-s] < <RFC-822 formatted message>\n", argv[0]);
       return 0;
    }
 
@@ -379,10 +383,22 @@ int main(int argc, char **argv){
 
    snprintf(buf, MAXBUFSIZE-1, "%ld", sdata.uid);
 
-   if(spaminess >= cfg.spam_overall_limit)
+   if(spaminess >= cfg.spam_overall_limit){
+      if(print_summary_only == 1)
+         printf("S %.4f\n", spaminess);
+
       log_ham_spam_per_email(sdata.ttmpfile, buf, 1);
-   else
+   }
+   else {
+      if(print_summary_only == 1){
+         if(spaminess <= cfg.max_ham_spamicity)
+            printf("H %.4f\n", spaminess);
+         else
+            printf("U %.4f\n", spaminess);
+      }
+
       log_ham_spam_per_email(sdata.ttmpfile, buf, 0);
+   }
 
    if(print_message == 0 && spaminess >= cfg.spam_overall_limit && spaminess < 1.01)
       return 1;

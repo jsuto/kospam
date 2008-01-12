@@ -1,5 +1,5 @@
 /*
- * spamcgi.c, 2007.12.27, SJ
+ * spamcgi.c, 2008.01.11, SJ
  */
 
 #include <stdio.h>
@@ -139,9 +139,9 @@ int check_directory(char *dir, int page_len){
                }
 
                if(!(n_msgs % 2))
-                  printf("<tr valign=\"top\">\n<td>%d.</td><td>%s</td><td>%s</td>\n<td><a href=\"%s?id=%s\">%s</a></td>\n<td><input type=\"checkbox\" name=\"%s\"></td>\n</tr>\n", n_msgs, date, from, cfg.spamcgi_url, namelist[n]->d_name, subj, namelist[n]->d_name);
+                  printf("<tr valign=\"top\">\n<td><a href=\"%s?id=%s\">%d.</a></td><td>%s</td><td>%s</td>\n<td><a href=\"%s?id=%s\">%s</a></td>\n<td><input type=\"checkbox\" name=\"%s\"></td>\n</tr>\n", cfg.spamcgi_url, namelist[n]->d_name, n_msgs, date, from, cfg.spamcgi_url, namelist[n]->d_name, subj, namelist[n]->d_name);
                else
-                  printf("<tr valign=\"top\">\n<td class=\"odd\">%d.</td><td class=\"odd\">%s</td><td class=\"odd\">%s</td>\n<td class=\"odd\"><a href=\"%s?id=%s\">%s</a></td>\n<td class=\"odd\"><input type=\"checkbox\" name=\"%s\"></td>\n</tr>\n", n_msgs, date, from, cfg.spamcgi_url, namelist[n]->d_name, subj, namelist[n]->d_name);
+                  printf("<tr valign=\"top\">\n<td class=\"odd\"><a href=\"%s?id=%s\">%d.</a></td><td class=\"odd\">%s</td><td class=\"odd\">%s</td>\n<td class=\"odd\"><a href=\"%s?id=%s\">%s</a></td>\n<td class=\"odd\"><input type=\"checkbox\" name=\"%s\"></td>\n</tr>\n", cfg.spamcgi_url, namelist[n]->d_name, n_msgs, date, from, cfg.spamcgi_url, namelist[n]->d_name, subj, namelist[n]->d_name);
             }
          }
 

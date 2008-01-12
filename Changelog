@@ -1,13 +1,15 @@
 0.3.30:
 
+2008.01.11, SJ
+
+Messages in the spam quarantine can be reached by clicking on their
+serial number on the left side.
+(spamcgi.c)
+
 2008.01.10, SJ
 
 To enable any rbl or url bl, use --enable-rbl instead --enable-surbl.
 (configure, configure.in)
-
-Added Bayesian support. Use the "calc_method" variable to choose between
-inverse chi-square and Bayesian.
-(example.conf, hash.h, hash.c, bayes.c)
 
 2008.01.08, SJ
 

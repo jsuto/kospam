@@ -503,7 +503,7 @@ fi
 if test "$have_antispam" = "yes"; then
    echo "antispam support: yes"
    defs="$defs -DHAVE_ANTISPAM"
-   objs="$objs hash.o chi.o bayes.o"
+   objs="$objs hash.o chi.o bayes.o score.o"
 fi
 
 
@@ -550,7 +550,7 @@ if test "$have_rbl" = "yes"; then
    defs="$defs -DHAVE_SURBL"
    objs="$objs rbl.o"
 else
-   echo "SURBL support: no"
+   echo "(SU)RBL support: no"
 fi
 
 if test "$keep_old_token_format" = "yes"; then

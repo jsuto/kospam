@@ -19,6 +19,7 @@
 #include "parser.h"
 #include "errmsg.h"
 #include "messages.h"
+#include "score.h"
 #include "sql.h"
 #include "config.h"
 
@@ -41,7 +42,7 @@
 float SQL_QUERY(qry QRY, int group_type, char *tokentable, char *token, struct node *xhash[MAXHASH]){
    float r = DEFAULT_SPAMICITY;
    struct te TE;
-   int freq_min = FREQ_MIN;
+   //int freq_min = FREQ_MIN;
 
    TE.nham = TE.nspam = 0;
 
@@ -59,9 +60,9 @@ float SQL_QUERY(qry QRY, int group_type, char *tokentable, char *token, struct n
 
    if(TE.nham == 0 && TE.nspam == 0) return r;
 
-   if(!strchr(token, '+')) freq_min = 2*FREQ_MIN;
+   //if(!strchr(token, '+')) freq_min = 2*FREQ_MIN;
 
-   r = calc_spamicity(QRY.ham_msg, QRY.spam_msg, TE.nham, TE.nspam, QRY.rob_s, QRY.rob_x, freq_min);
+   r = calc_spamicity(QRY.ham_msg, QRY.spam_msg, TE.nham, TE.nspam, QRY.rob_s, QRY.rob_x);
 
    return r;
 }

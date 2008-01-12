@@ -1,5 +1,5 @@
 /*
- * misc.c, 2007.12.16, SJ
+ * misc.c, 2008.01.12, SJ
  */
 
 #include <stdio.h>
@@ -648,31 +648,6 @@ void log_ham_spam_per_email(char *tmpfile, char *email, int ham_or_spam){
       syslog(LOG_PRIORITY, "%s: %s got HAM", tmpfile, email);
    else
       syslog(LOG_PRIORITY, "%s: %s got SPAM", tmpfile, email);
-}
-
-
-/*
- * calculate the spamicity
- */
-
-float calc_spamicity(float NHAM, float NSPAM, unsigned int nham, unsigned int nspam, float rob_s, float rob_x, int freq_min){
-   float r;
-   int n;
-
-   /* newer calculation, and apply Robinson strength to all tokens, 2008.01.09, SJ */
-
-   n = nham + nspam;
-   if(n == 0) return DEFAULT_SPAMICITY;
-
-   r = nspam * NHAM / (nspam * NHAM + nham * NSPAM);
-
-   //if(n < freq_min)
-      r = (rob_s * rob_x + n * r) / (rob_s + n);
-
-   if(r < REAL_HAM_TOKEN_PROBABILITY) r = REAL_HAM_TOKEN_PROBABILITY;
-   if(r > REAL_SPAM_TOKEN_PROBABILITY) r = REAL_SPAM_TOKEN_PROBABILITY;
-
-   return r;
 }
 
 

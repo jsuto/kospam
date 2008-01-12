@@ -77,8 +77,19 @@ double apply_fixes(double spaminess, int found_on_rbl, int base64_text, long c_s
 
    /* in case of a surbl or rbl match */
 #ifdef HAVE_SURBL
-   if(cfg.rude_surbl > 0 && surbl_match >= cfg.rude_surbl) return cfg.spaminess_of_caught_by_surbl;
-   if(found_on_rbl > 0) return cfg.spaminess_of_caught_by_surbl;
+   if(cfg.rude_surbl > 0 && surbl_match >= cfg.rude_surbl){
+   #ifdef DEBUG
+      fprintf(stderr, "caught by surbl\n");
+   #endif
+      return cfg.spaminess_of_caught_by_surbl;
+   }
+
+   if(found_on_rbl > 0){
+   #ifdef DEBUG
+      fprintf(stderr, "caught by rbl\n");
+   #endif
+      return cfg.spaminess_of_caught_by_surbl;
+   }
 #endif
 
    /* if we shall mark the message as spam because of the embedded image */
@@ -364,14 +375,18 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
    unsigned long n = 0;
    struct _token *p, *q;
    float spaminess, spaminess2;
-   int i;
-   struct node *Q;
+   int found_on_rbl=0;
 #ifdef HAVE_SURBL
    struct node *urlhash[MAXHASH];
-   struct node *P;
+   struct node *P,*Q;
    char surbl_token[MAX_TOKEN_LEN];
    float n_urls = 0;
-   int u, j, found_on_rbl=0;
+   int i, u, j;
+#endif
+#ifdef HAVE_MYDB
+  #ifndef DEBUG
+   int _u;
+  #endif
 #endif
 
    if(!state.first)
@@ -621,10 +636,10 @@ END_OF_EVALUATION:
 
 #ifdef HAVE_MYDB
  #ifndef DEBUG
-   u = update_tokens(cfg.mydbfile, mhash, s_phrase_hash);
-   if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "update timestamp for %d phrases", u);
-   u = update_tokens(cfg.mydbfile, mhash, shash);
-   if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "update timestamp for %d single tokens", u);
+   _u = update_tokens(cfg.mydbfile, mhash, s_phrase_hash);
+   if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "update timestamp for %d phrases", _u);
+   _u = update_tokens(cfg.mydbfile, mhash, shash);
+   if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "update timestamp for %d single tokens", _u);
  #endif
 #endif
 

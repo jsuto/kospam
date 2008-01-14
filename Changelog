@@ -1,5 +1,11 @@
 0.3.30:
 
+2008.01.13, SJ
+
+Spamdrop does not want to bother with the queue directory if
+we don't want to store the message for later retraining.
+(spamdrop.c)
+
 2008.01.11, SJ
 
 Messages in the spam quarantine can be reached by clicking on their

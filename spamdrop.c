@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2007.12.26, SJ
+ * spamdrop.c, 2008.01.13, SJ
  *
  * check if a single RFC-822 formatted messages is spam or not
  */
@@ -121,14 +121,16 @@ int main(int argc, char **argv){
       snprintf(cfg.mydbfile, MAXVAL-1, "%s/%s/%c/%s/%s", cfg.chrootdir, USER_DATA_DIR, username[0], username, MYDB_FILE);
 #endif
 
-   if(stat(buf, &st) != 0){
-      syslog(LOG_PRIORITY, "missing user directory: %s", buf);
-      return EX_TEMPFAIL;
-   }
+   if(cfg.store_metadata == 1){
+      if(stat(buf, &st) != 0){
+         syslog(LOG_PRIORITY, "missing user directory: %s", buf);
+         return EX_TEMPFAIL;
+      }
 
-   if(chdir(buf)){
-      syslog(LOG_PRIORITY, "cannot chdir to %s", buf);
-      return EX_TEMPFAIL;
+      if(chdir(buf)){
+         syslog(LOG_PRIORITY, "cannot chdir to %s", buf);
+         return EX_TEMPFAIL;
+      }
    }
 
 

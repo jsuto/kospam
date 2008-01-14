@@ -206,10 +206,7 @@ int assign_spaminess(char *p, struct __config cfg, unsigned int uid){
  */
 
 double calc_score(struct node *xhash[MAXHASH], struct __config cfg){
-   if(cfg.calc_method == PROB_CALC_CHI2)
-      return calc_score_chi2(xhash, cfg);
-   else
-      return calc_score_bayes(xhash, MAX_PHRASES_TO_CHOOSE, cfg);
+   return calc_score_chi2(xhash, cfg);
 }
 
 
@@ -777,7 +774,7 @@ double bayes_file(char *spamfile, struct _state state, struct session_data sdata
 #endif
 
    if((QRY.ham_msg + QRY.spam_msg == 0) && cfg.initial_1000_learning == 0){
-      syslog(LOG_PRIORITY, "%s: %s", p, ERR_MYSQL_DATA);
+      syslog(LOG_PRIORITY, "%s: %s", p, ERR_SQL_DATA);
       return DEFAULT_SPAMICITY;
    }
 

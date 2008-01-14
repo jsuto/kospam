@@ -1,5 +1,5 @@
 /*
- * messages.h.hu, 2007.10.09, SJ
+ * messages.h.hu, 2008.01.13, SJ
  * Hungarian version
  */
 
@@ -47,7 +47,7 @@
 // mysql
 
 #define ERR_MYSQL_CONNECT "Nem tudok csatlakozni a mysql szerverhez"
-#define ERR_MYSQL_DATA "Ervenytelen adat a mysql tablabol"
+#define ERR_SQL_DATA "Ervenytelen adat az sql tablabol"
 #define ERR_CGI_MYSQL_NO_USER "Nem talalom a felhasznalot a user tablaban"
 
 // sqlite3

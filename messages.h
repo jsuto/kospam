@@ -1,5 +1,5 @@
 /*
- * messages.h, 2007.10.09, SJ
+ * messages.h, 2008.01.13, SJ
  */
 
 // cgi
@@ -46,7 +46,7 @@
 // mysql
 
 #define ERR_MYSQL_CONNECT "Cannot connect to mysql server"
-#define ERR_MYSQL_DATA "No valid data from mysql table"
+#define ERR_SQL_DATA "No valid data from sql table"
 #define ERR_CGI_MYSQL_NO_USER "User not found in user table"
 
 // sqlite3

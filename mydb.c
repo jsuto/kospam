@@ -1,5 +1,5 @@
 /*
- * mydb.c, 2007.11.26, SJ
+ * mydb.c, 2008.01.15, SJ
  */
 
 #include <stdio.h>
@@ -262,7 +262,7 @@ int my_walk_hash(char *mydbfile, struct mydb_node *xhash[MAX_MYDB_HASH], int ham
       while(q != NULL){
          p = q;
 
-         if(fd != 1){
+         if(fd != -1){
             add_or_update(fd, ham_or_spam, p->str, train_mode, now);
          }
 
@@ -355,7 +355,7 @@ int update_tokens(char *mydbfile, struct mydb_node *xhash[MAX_MYDB_HASH], struct
       q = qhash[i];
 
       while(q != NULL){
-         if(fd != 1){
+         //if(fd != -1){
             key = APHash(q->str);
 
             Q = findmydb_node(xhash, key);
@@ -365,7 +365,7 @@ int update_tokens(char *mydbfile, struct mydb_node *xhash[MAX_MYDB_HASH], struct
                write(fd, &now, 4);
                n++;
             }
-         }
+         //}
 
          q = q->r;
       }

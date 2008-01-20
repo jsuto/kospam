@@ -464,7 +464,7 @@ unsigned long long APHash(char *p){
       i++;
    }
 
-   return hash;
+   return hash % MAX_KEY_VAL;
 }
 
 

@@ -10,14 +10,14 @@ create index t_misc_idx on t_misc(uid);
 INSERT INTO t_misc (nham, nspam, uid) VALUES(0, 0, 0);
 
 create table if not exists t_token (
-	token char(20) not null,
-	uid int default 0,
+	token integer not null,
 	nham int default 0,
 	nspam int default 0,
-	unique(token, uid)
+	timestamp int default 0,
+	unique(token)
 );
 
-create index t_token_idx on t_token(token, uid);
+create index t_token_idx on t_token(token);
 
 create table if not exists user (
 	uid int unsigned not null,

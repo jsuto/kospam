@@ -1,5 +1,5 @@
 /*
- * sqlite3.c, 2007.12.16, SJ
+ * sqlite3.c, 2008.01.20, SJ
  */
 
 #include <stdio.h>
@@ -28,41 +28,16 @@
  * query the number of occurances from SQLite3 table
  */
 
-struct te sqlite3_qry(sqlite3 *db, int sockfd, char *tokentable, char *token, unsigned int uid){
+struct te sqlite3_qry(sqlite3 *db, char *token){
    struct te TE;
    char stmt[MAXBUFSIZE];
    unsigned long long hash = APHash(token);
-
-   TE.nham = TE.nspam = 0;
-
-#ifdef HAVE_QCACHE
-   char *p, *q;
-
-   snprintf(stmt, MAXBUFSIZE-1, "SELECT %llu %d\r\n", hash, uid);
-   send(sockfd, stmt, strlen(stmt), 0);
-   memset(stmt, 0, MAXBUFSIZE);
-   recv(sockfd, stmt, MAXBUFSIZE, 0);
-
-   /* is it a valid response (status code: 250) */
-
-   if(strncmp(stmt, "250 ", 4) == 0){
-      p = strchr(stmt, ' ');
-      if(p){
-         *p = '\0';
-         q = strchr(++p, ' ');
-         if(q){
-            *q = '\0';
-            TE.nham = atof(p);
-            TE.nspam = atof(++q);
-         }
-      }
-   }
-
-#else
    sqlite3_stmt *pStmt;
    const char **pzTail=NULL;
 
-   snprintf(stmt, MAXBUFSIZE-1, "SELECT nham, nspam FROM %s WHERE token='%llu' AND (uid=0 OR uid=%d)", tokentable, hash, uid);
+   TE.nham = TE.nspam = 0;
+
+   snprintf(stmt, MAXBUFSIZE-1, "SELECT nham, nspam FROM %s WHERE token=%llu", SQL_TOKEN_TABLE, hash);
 
    if(sqlite3_prepare_v2(db, stmt, -1, &pStmt, pzTail) != SQLITE_OK) return TE;
 
@@ -72,7 +47,6 @@ struct te sqlite3_qry(sqlite3 *db, int sockfd, char *tokentable, char *token, un
    }
 
    sqlite3_finalize(pStmt);
-#endif
 
    return TE;
 }
@@ -82,7 +56,7 @@ struct te sqlite3_qry(sqlite3 *db, int sockfd, char *tokentable, char *token, un
  * updates the counter of (or inserts) the given token in the token table
  */
 
-int do_sqlite3_qry(sqlite3 *db, int sockfd, int ham_or_spam, char *token, char *tokentable, unsigned int uid, int train_mode){
+int do_sqlite3_qry(sqlite3 *db, int ham_or_spam, char *token, int train_mode, unsigned long timestamp){
    char stmt[MAXBUFSIZE], puf[SMALLBUFSIZE];
    struct te TE;
    unsigned long long hash = APHash(token);
@@ -91,18 +65,18 @@ int do_sqlite3_qry(sqlite3 *db, int sockfd, int ham_or_spam, char *token, char *
 
    memset(puf, 0, SMALLBUFSIZE);
 
+   TE = sqlite3_qry(db, token);
+
    /* update token entry ... */
 
-   TE = sqlite3_qry(db, sockfd, tokentable, token, uid);
-
-   if(TE.nham > 0 || TE.nspam > 0){
+   if(TE.nham + TE.nspam > 0){
       if(ham_or_spam == 1){
          if(train_mode == T_TUM && TE.nham > 0) snprintf(puf, SMALLBUFSIZE-1, ", nham=nham-1");
-         snprintf(stmt, MAXBUFSIZE-1, "UPDATE %s SET nspam=nspam+1%s WHERE token='%llu' AND uid=%d", tokentable, puf, hash, uid);
+         snprintf(stmt, MAXBUFSIZE-1, "UPDATE %s SET nspam=nspam+1%s WHERE token=%llu", SQL_TOKEN_TABLE, puf, hash);
       }
       else {
          if(train_mode == T_TUM && TE.nspam > 0) snprintf(puf, SMALLBUFSIZE-1, ", nspam=nspam-1");
-         snprintf(stmt, MAXBUFSIZE-1, "UPDATE %s SET nham=nham+1%s WHERE token='%llu' AND uid=%d", tokentable, puf, hash, uid);
+         snprintf(stmt, MAXBUFSIZE-1, "UPDATE %s SET nham=nham+1%s WHERE token=%llu", SQL_TOKEN_TABLE, puf, hash);
       }
 
       sqlite3_prepare_v2(db, stmt, -1, &pStmt, ppzTail);
@@ -111,17 +85,15 @@ int do_sqlite3_qry(sqlite3 *db, int sockfd, int ham_or_spam, char *token, char *
 
    }
 
-
-
    /* ... or insert token entry */
 
-   if(TE.nham == 0 && TE.nspam == 0){
+   else {
       if(ham_or_spam == 1)
          TE.nspam = 1;
       else
          TE.nham = 1;
 
-      snprintf(stmt, MAXBUFSIZE-1, "INSERT INTO %s (token, nham, nspam, uid) VALUES('%llu', %d, %d, %d)", tokentable, hash, TE.nham, TE.nspam, uid);
+      snprintf(stmt, MAXBUFSIZE-1, "INSERT INTO %s (token, nham, nspam, timestamp) VALUES(%llu, %d, %d, %ld)", SQL_TOKEN_TABLE, hash, TE.nham, TE.nspam, timestamp);
 
       sqlite3_prepare_v2(db, stmt, -1, &pStmt, ppzTail);
       sqlite3_step(pStmt);
@@ -131,4 +103,3 @@ int do_sqlite3_qry(sqlite3 *db, int sockfd, int ham_or_spam, char *token, char *
 
    return 0;
 }
-

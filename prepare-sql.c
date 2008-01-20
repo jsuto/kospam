@@ -1,5 +1,5 @@
 /*
- * prepare-sql.c, 2007.12.27, SJ
+ * prepare-sql.c, 2008.01.20, SJ
  */
 
 #include <stdio.h>
@@ -42,26 +42,25 @@ void inithash(struct node *xhash[MAXHASH]){
 void clearhash(struct node *xhash[MAXHASH]){
    int i;
    struct node *p, *q;
-
+   time_t cclock;
+   unsigned long now;
 #ifdef HAVE_SQLITE3
    printf("BEGIN;\n");
 #endif
 #ifdef HAVE_MYDB
    int fd, n=0;
-   unsigned long now;
-   time_t cclock;
    struct mydb e;
 
    fd = open(f, O_CREAT|O_WRONLY, S_IRUSR|S_IWUSR);
-   time(&cclock);
-
-   now = cclock;
 
    if(fd != -1){
       write(fd, &nham, 4);
       write(fd, &nspam, 4);
    }
 #endif
+
+   time(&cclock);
+   now = cclock;
 
    for(i=0;i<MAXHASH;i++){
       q = xhash[i];
@@ -72,7 +71,7 @@ void clearhash(struct node *xhash[MAXHASH]){
          printf("INSERT INTO t_token (token, uid, nham, nspam) VALUES(%llu, 0, %d, %d);\n", p->key, p->nham, p->nspam);
       #endif
       #ifdef HAVE_SQLITE3
-         printf("INSERT INTO t_token (token, uid, nham, nspam) VALUES('%llu', 0, %d, %d);\n", p->key, p->nham, p->nspam);
+         printf("INSERT INTO t_token (token, nham, nspam, timestamp) VALUES(%llu, %d, %d, %ld);\n", p->key, p->nham, p->nspam, now);
       #endif
       #ifdef HAVE_MYDB
          if(fd != -1 && p->nham + p->nspam > 2){

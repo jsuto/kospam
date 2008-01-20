@@ -213,7 +213,7 @@ int load_all_tokens(struct qcache *xhash[MAXHASH]){
    sqlite3_stmt *pStmt;
    const char **pzTail=NULL;
 
-   snprintf(stmt, SMALLBUFSIZE-1, "SELECT nham, nspam FROM t_token WHERE token='%llu' AND (uid = 0 OR uid=%d)", token, uid);
+   snprintf(stmt, SMALLBUFSIZE-1, "SELECT nham, nspam FROM t_token WHERE token=%llu AND (uid = 0 OR uid=%d)", token, uid);
 
    if(sqlite3_prepare_v2(db, stmt, -1, &pStmt, pzTail) != SQLITE_OK) return res;
 
@@ -261,7 +261,7 @@ int load_all_tokens(struct qcache *xhash[MAXHASH]){
       sqlite3_stmt *pStmt;
       const char **pzTail=NULL;
 
-      snprintf(stmt, SMALLBUFSIZE-1, "UPDATE %s SET nham=%d, nspam=%d WHERE token='%llu' AND uid=%d", SQL_TOKEN_TABLE, nham, nspam, token, uid);
+      snprintf(stmt, SMALLBUFSIZE-1, "UPDATE %s SET nham=%d, nspam=%d WHERE token=%llu AND uid=%d", SQL_TOKEN_TABLE, nham, nspam, token, uid);
       sqlite3_prepare_v2(db, stmt, -1, &pStmt, pzTail);
       sqlite3_step(pStmt);
       sqlite3_finalize(pStmt);

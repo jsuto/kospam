@@ -20,6 +20,7 @@
 #include "errmsg.h"
 #include "messages.h"
 #include "score.h"
+#include "buffer.h"
 #include "sql.h"
 #include "config.h"
 
@@ -31,7 +32,7 @@
 
 #ifdef HAVE_SQLITE3
    #include <sqlite3.h>
-   int do_sqlite3_qry(sqlite3 *db, int sockfd, int ham_or_spam, char *token, char *tokentable, unsigned int uid, int train_mode);
+   int do_sqlite3_qry(sqlite3 *db, int ham_or_spam, char *token, int train_mode, unsigned long timestamp);
 #endif
 
 
@@ -50,7 +51,7 @@ float SQL_QUERY(qry QRY, int group_type, char *tokentable, char *token, struct n
    TE = myqry(QRY.mysql, QRY.sockfd, tokentable, token, QRY.uid);
 #endif
 #ifdef HAVE_SQLITE3
-   TE = sqlite3_qry(QRY.db, QRY.sockfd, tokentable, token, QRY.uid);
+   TE = sqlite3_qry(QRY.db, token);
 #endif
 
    /* add token to list if not mature enough, 2007.07.09, SJ */
@@ -75,6 +76,11 @@ float SQL_QUERY(qry QRY, int group_type, char *tokentable, char *token, struct n
 int my_walk_hash(qry QRY, int ham_or_spam, char *tokentable, struct node *xhash[MAXHASH], int train_mode){
    int i, n=0;
    struct node *p, *q;
+   time_t cclock;
+   unsigned long now;
+
+   time(&cclock);
+   now = cclock;
 
    for(i=0;i<MAXHASH;i++){
       q = xhash[i];
@@ -85,7 +91,7 @@ int my_walk_hash(qry QRY, int ham_or_spam, char *tokentable, struct node *xhash[
          do_mysql_qry(QRY.mysql, QRY.sockfd, ham_or_spam, p->str, tokentable, QRY.uid, train_mode);
       #endif
       #ifdef HAVE_SQLITE3
-         do_sqlite3_qry(QRY.db, QRY.sockfd, ham_or_spam, p->str, tokentable, QRY.uid, train_mode);
+         do_sqlite3_qry(QRY.db, ham_or_spam, p->str, train_mode, now);
       #endif
 
          n++;
@@ -96,6 +102,62 @@ int my_walk_hash(qry QRY, int ham_or_spam, char *tokentable, struct node *xhash[
       }
       xhash[i] = NULL;
    }
+
+   return n;
+}
+
+
+/*
+ * update the token timestamps
+ */
+
+#ifdef HAVE_MYSQL
+int update_tokens(MYSQL mysql, struct node *xhash[MAXHASH]){
+#endif
+#ifdef HAVE_SQLITE3
+int update_tokens(sqlite3 *db, struct node *xhash[MAXHASH]){
+   char *err=NULL;
+#endif
+   int i, n;
+   struct node *q;
+   unsigned long now;
+   time_t cclock;
+   char buf[SMALLBUFSIZE];
+   buffer *query;
+
+   time(&cclock);
+   now = cclock;
+
+   n = 0;
+
+   query = buffer_create(NULL);
+   if(!query) return n;
+
+   snprintf(buf, SMALLBUFSIZE-1, "UPDATE %s SET timestamp=%ld WHERE token in (", SQL_TOKEN_TABLE, now);
+
+   buffer_cat(query, buf);
+
+   for(i=0; i<MAXHASH; i++){
+      q = xhash[i];
+
+      while(q != NULL){
+         snprintf(buf, SMALLBUFSIZE-1, "%llu, ", APHash(q->str));
+         buffer_cat(query, buf);
+
+         q = q->r;
+      }
+   }
+
+   snprintf(buf, SMALLBUFSIZE-1, "0)");
+   buffer_cat(query, buf);
+
+#ifdef HAVE_SQLITE3
+   if((sqlite3_exec(db, query->data, NULL, NULL, &err)) != SQLITE_OK){
+      n = -1;
+   }
+#endif
+
+   buffer_destroy(query);
 
    return n;
 }

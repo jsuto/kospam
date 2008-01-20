@@ -29,7 +29,7 @@ extern int optind;
    sqlite3_stmt *pStmt;
    const char **ppzTail=NULL;
    int rc;
-   void my_walk_hash(qry QRY, int ham_or_spam, char *tokentable, struct node *xhash[MAXHASH], int train_mode);
+   int my_walk_hash(qry QRY, int ham_or_spam, char *tokentable, struct node *xhash[MAXHASH], int train_mode);
 #endif
 #ifdef HAVE_MYDB
    #include "mydb.h"
@@ -179,23 +179,17 @@ int main(int argc, char **argv){
 
       if(QRY.sockfd != -1) close(QRY.sockfd);
 
-
       /* update the t_misc table */
 
-   #ifdef HAVE_MYSQL
       if(is_spam == 1)
          snprintf(buf, MAXBUFSIZE-1, "update %s set nspam=nspam+1 WHERE uid=%ld", SQL_MISC_TABLE, QRY.uid);
       else
          snprintf(buf, MAXBUFSIZE-1, "update %s set nham=nham+1 WHERE uid=%ld", SQL_MISC_TABLE, QRY.uid);
 
+   #ifdef HAVE_MYSQL
       mysql_real_query(&mysql, buf, strlen(buf));
    #endif
    #ifdef HAVE_SQLITE3
-      if(is_spam == 1)
-         snprintf(buf, MAXBUFSIZE-1, "update %s set nspam=nspam+1 WHERE uid='%ld'", SQL_MISC_TABLE, QRY.uid);
-      else
-         snprintf(buf, MAXBUFSIZE-1, "update %s set nham=nham+1 WHERE uid='%ld'", SQL_MISC_TABLE, QRY.uid);
-
       sqlite3_prepare_v2(db, buf, -1, &pStmt, ppzTail);
       sqlite3_step(pStmt);
       sqlite3_finalize(pStmt);

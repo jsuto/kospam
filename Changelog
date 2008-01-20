@@ -1,5 +1,20 @@
 0.3.30:
 
+2008.01.20, SJ
+
+Modified the SQLite3 stuff, to handle timestamps, suitable for removing
+obsoleted tokens later. And it SQLite3 database allows only uid=0 tokens.
+So if you need multiple user ids, you need a single SQLite3 database per
+users or switch to MySQL. Please recreate your token database from scratch
+to use the new features.
+(configure.in, configure, db-sqlite3.sql, example.conf, prepare-sql.c, sql.c, sql.h, sqlite3.c, train.c, bayes.c)
+
+Modified the APHash() function to cut in half the available numeric
+address space if using SQLite3. Clapf stores the token values as
+an integer instead a text. This also means that you have to recreate
+your token database.
+(config.h, db-sqlite3.sql, misc.c, bayes.c, prepare-sql.c, sqlite3.c, qs.c)
+
 2008.01.13, SJ
 
 Spamdrop does not want to bother with the queue directory if

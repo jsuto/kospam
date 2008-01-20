@@ -46,7 +46,7 @@ struct ue {
 #endif
 
 #ifdef HAVE_SQLITE3
-   struct te sqlite3_qry(sqlite3 *db, int sockfd, char *tokentable, char *token, unsigned int uid);
+   struct te sqlite3_qry(sqlite3 *db, char *token);
    struct ue get_user_from_email(sqlite3 *db, char *email);
    int update_training_metadata(sqlite3 *db, char *tmpfile, unsigned long uid, struct __config cfg, int is_spam);
 #endif

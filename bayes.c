@@ -55,6 +55,7 @@ qry QRY;
    const char **pzTail=NULL;
 
    int my_walk_hash(qry QRY, int ham_or_spam, char *tokentable, struct node *xhash[MAXHASH], int train_mode);
+   int update_tokens(sqlite3 *db, struct node *xhash[MAXHASH]);
 #endif
 
 #ifdef HAVE_MYDB
@@ -323,7 +324,11 @@ int tum_train(char *spamfile, double spaminess, struct __config cfg){
          n = my_walk_hash(cfg.mydbfile, mhash, 0, tumhash, T_TOE);
       #else
          n = my_walk_hash(QRY, 0, SQL_TOKEN_TABLE, tumhash, T_TOE);
+        #ifdef HAVE_MYSQL 
          snprintf(buf, MAXBUFSIZE-1, "update %s set nham=nham+1 WHERE uid=%ld", SQL_MISC_TABLE, QRY.uid);
+        #else
+         snprintf(buf, MAXBUFSIZE-1, "update %s set nham=nham+1 WHERE uid=0", SQL_MISC_TABLE);
+        #endif
       #endif
       }
 
@@ -522,10 +527,6 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
 
    /* redesigned spaminess calculation, 2007.08.28, SJ */
 
-   /*n_tokens += walk_hash(B_hash, cfg);
-   spaminess = calc_score(s_mix, cfg);
-   goto END_OF_EVALUATION;*/
-
    if(cfg.use_pairs == 1){
       spaminess = calc_score(s_phrase_hash, cfg);
 
@@ -640,6 +641,10 @@ END_OF_EVALUATION:
  #endif
 #endif
 
+#ifdef HAVE_SQLITE3
+   update_tokens(QRY.db, s_mix);
+#endif
+
    clearhash(shash);
    clearhash(s_phrase_hash);
    clearhash(s_mix);
@@ -732,6 +737,9 @@ double bayes_file(char *spamfile, struct _state state, struct session_data sdata
 #ifdef HAVE_MYDB
    cfg.group_type = GROUP_SHARED;
 #endif
+#ifdef HAVE_SQLITE3
+   cfg.group_type = GROUP_SHARED;
+#endif
 
    /* fix uid and sql statement if this is a shared group */
 
@@ -740,8 +748,7 @@ double bayes_file(char *spamfile, struct _state state, struct session_data sdata
       snprintf(buf, MAXBUFSIZE-1, "SELECT nham, nspam FROM %s WHERE uid=0", SQL_MISC_TABLE);
    }
 
-   /* fix sql statment if we use a merged group */
-
+   /* fix sql statement if we use a merged group */
    if(cfg.group_type == GROUP_MERGED)
       snprintf(buf, MAXBUFSIZE-1, "SELECT nham, nspam FROM %s WHERE uid=0 OR uid=%ld", SQL_MISC_TABLE, QRY.uid);
 
@@ -791,13 +798,13 @@ double bayes_file(char *spamfile, struct _state state, struct session_data sdata
    if(cfg.enable_auto_white_list == 1){
 
    #ifdef HAVE_MYSQL
-      snprintf(buf, MAXBUFSIZE-1, "SELECT nham, nspam FROM %s WHERE token=%llu AND  (uid=0 OR uid=%ld)", SQL_TOKEN_TABLE, APHash(state.from), QRY.uid);
+      snprintf(buf, MAXBUFSIZE-1, "SELECT nham, nspam FROM %s WHERE token=%llu AND (uid=0 OR uid=%ld)", SQL_TOKEN_TABLE, APHash(state.from), QRY.uid);
       TE = get_ham_spam(mysql, buf);
       ham_from = TE.nham;
       spam_from = TE.nspam;
    #endif
    #ifdef HAVE_SQLITE3
-      snprintf(buf, MAXBUFSIZE-1, "SELECT nham, nspam FROM %s WHERE token='%llu' AND  (uid=0 OR uid=%ld)", SQL_TOKEN_TABLE, APHash(state.from), QRY.uid);
+      snprintf(buf, MAXBUFSIZE-1, "SELECT nham, nspam FROM %s WHERE token=%llu", SQL_TOKEN_TABLE, APHash(state.from));
       if(sqlite3_prepare_v2(db, buf, -1, &pStmt, pzTail) == SQLITE_OK){
          if(sqlite3_step(pStmt) == SQLITE_ROW){
             ham_from = sqlite3_column_int(pStmt, 0);
@@ -1013,43 +1020,42 @@ AFTER_ID_EXTRACT:
 
          if(QRY.sockfd != -1) close(QRY.sockfd);
 
-         //if(i == 0){
+         /* update t_misc table */
 
-            if(is_spam == 1){
+         if(is_spam == 1){
                if(train_mode == T_TUM)
                   snprintf(buf, MAXBUFSIZE-1, "UPDATE %s SET nspam=nspam+1, nham=nham-1 WHERE uid=%ld AND nham > 0", SQL_MISC_TABLE, QRY.uid);
                else
                   snprintf(buf, MAXBUFSIZE-1, "UPDATE %s SET nspam=nspam+1 WHERE uid=%ld", SQL_MISC_TABLE, QRY.uid);
-            }
-            else {
+         }
+         else {
                if(train_mode == T_TUM)
                   snprintf(buf, MAXBUFSIZE-1, "UPDATE %s SET nham=nham+1, nspam=nspam-1 WHERE uid=%ld AND nspam > 0", SQL_MISC_TABLE, QRY.uid);
                else
                   snprintf(buf, MAXBUFSIZE-1, "UPDATE %s SET nham=nham+1 WHERE uid=%ld", SQL_MISC_TABLE, QRY.uid);
-            }
+         }
 
-         #ifdef HAVE_MYSQL   
-            mysql_real_query(&mysql, buf, strlen(buf));
-         #endif
-         #ifdef HAVE_SQLITE3
-            sqlite3_prepare_v2(db, buf, -1, &pStmt, pzTail);
-            sqlite3_step(pStmt);
-            sqlite3_finalize(pStmt);
-         #endif
+      #ifdef HAVE_MYSQL   
+         mysql_real_query(&mysql, buf, strlen(buf));
+      #endif
+      #ifdef HAVE_SQLITE3
+         sqlite3_prepare_v2(db, buf, -1, &pStmt, pzTail);
+         sqlite3_step(pStmt);
+         sqlite3_finalize(pStmt);
+      #endif
 
-            snprintf(buf, MAXBUFSIZE-1, "INSERT INTO %s (uid, ts, msgid, is_spam) VALUES(%ld, %ld, '%s', %d)", SQL_TRAININGLOG_TABLE, QRY.uid, now, ID, is_spam);
+         snprintf(buf, MAXBUFSIZE-1, "INSERT INTO %s (uid, ts, msgid, is_spam) VALUES(%ld, %ld, '%s', %d)", SQL_TRAININGLOG_TABLE, QRY.uid, now, ID, is_spam);
 
-         #ifdef HAVE_MYSQL
-            mysql_real_query(&mysql, buf, strlen(buf));
-         #endif
-         #ifdef HAVE_SQLITE3
-            sqlite3_prepare_v2(db, buf, -1, &pStmt, pzTail);
-            sqlite3_step(pStmt);
-            sqlite3_finalize(pStmt);
-         #endif
+      #ifdef HAVE_MYSQL
+         mysql_real_query(&mysql, buf, strlen(buf));
+      #endif
+      #ifdef HAVE_SQLITE3
+         sqlite3_prepare_v2(db, buf, -1, &pStmt, pzTail);
+         sqlite3_step(pStmt);
+         sqlite3_finalize(pStmt);
+      #endif
 
 
-         //}
 
          clearhash(tokens);
 

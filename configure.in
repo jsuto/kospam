@@ -503,7 +503,7 @@ fi
 if test "$have_antispam" = "yes"; then
    echo "antispam support: yes"
    defs="$defs -DHAVE_ANTISPAM"
-   objs="$objs hash.o chi.o bayes.o score.o"
+   objs="$objs hash.o chi.o bayes.o score.o buffer.o"
 fi
 
 

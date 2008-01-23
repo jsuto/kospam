@@ -677,8 +677,9 @@ passmail
 passmail_install
 parsembox_install
 qcache
-train
-train_install
+spamdrop
+spamdrop_install
+preparesql
 qcache_install
 test
 mysql_includes
@@ -3709,6 +3710,7 @@ done
 
 
 
+
 have_libclamav="no"
 have_clamd="no"
 have_avg="no"
@@ -3721,7 +3723,7 @@ have_antivirus="no"
 have_antispam="no"
 have_blackhole="no"
 have_cgi="no"
-have_train="no"
+have_spamdrop="no"
 have_mysql="no"
 have_sqlite3="no"
 have_ldap="no"
@@ -4915,8 +4917,6 @@ fi
 
        have_cgi="yes"
 
-
-
     fi
 
 
@@ -5223,10 +5223,11 @@ ac_cv_lib_sqlite3=ac_cv_lib_sqlite3_main
            exit 1;
       fi
 
-    have_train="yes"
+    have_spamdrop="yes"
     parsembox="$parsembox"
-    train="train"
-    train_install="install-train"
+    preparesql="prepare-sql aphash clapf_admin"
+    spamdrop="spamdrop"
+    spamdrop_install="install-spamdrop"
 
     test="test"
   fi
@@ -5237,10 +5238,11 @@ ac_cv_lib_sqlite3=ac_cv_lib_sqlite3_main
 
             mysql_includes=`mysql_config --cflags`
             mysql_libs=`mysql_config --libs_r`
-            have_train="yes"
+            have_spamdrop="yes"
             parsembox="$parsembox"
-	    train="train"
-	    train_install="install-train"
+            preparesql="prepare-sql aphash clapf_admin"
+	    spamdrop="spamdrop"
+	    spamdrop_install="install-spamdrop"
 
             test="test"
      else
@@ -5252,10 +5254,11 @@ ac_cv_lib_sqlite3=ac_cv_lib_sqlite3_main
 
 
   if test "$withval" = "mydb"; then
-     have_train="yes"
+     have_spamdrop="yes"
      parsembox="$parsembox"
-     train="train"
-     train_install="install-train"
+     spamdrop="spamdrop"
+     preparesql="prepare-sql aphash"
+     spamdrop_install="install-spamdrop"
      test="test"
   fi
 
@@ -5770,7 +5773,7 @@ else
    echo "blackhole feature: no"
 fi
 
-if test "$have_train" = "yes"; then
+if test "$have_spamdrop" = "yes"; then
    echo "train utilities: yes"
 else
    echo "train utilities: no"
@@ -5862,7 +5865,7 @@ fi
 
 echo "clapf user: $CLAPF_USER"
 
-id -u $CLAPF_USER 2>null 1>null
+id -u $CLAPF_USER 2>/dev/null 1>/dev/null
 if test $? -eq 1; then echo "the user \"$CLAPF_USER\" does not exists, please create it, first with adduser..."; exit 1; fi
 
 if test "$have_libclamav" = "no" && test "$have_clamd" = "no" && test "$have_avg" = "no" && test "$have_avast" = "no" && test "$have_kav" = "no" && test "$have_drweb" = "no" ; then
@@ -6572,8 +6575,9 @@ passmail!$passmail$ac_delim
 passmail_install!$passmail_install$ac_delim
 parsembox_install!$parsembox_install$ac_delim
 qcache!$qcache$ac_delim
-train!$train$ac_delim
-train_install!$train_install$ac_delim
+spamdrop!$spamdrop$ac_delim
+spamdrop_install!$spamdrop_install$ac_delim
+preparesql!$preparesql$ac_delim
 qcache_install!$qcache_install$ac_delim
 test!$test$ac_delim
 mysql_includes!$mysql_includes$ac_delim
@@ -6590,7 +6594,7 @@ LIBOBJS!$LIBOBJS$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 80; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 81; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5

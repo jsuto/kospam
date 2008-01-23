@@ -1,5 +1,5 @@
 /*
- * mydb.c, 2008.01.15, SJ
+ * mydb.c, 2008.01.23, SJ
  */
 
 #include <stdio.h>
@@ -167,11 +167,10 @@ struct mydb_node *findmydb_node(struct mydb_node *xhash[MAX_MYDB_HASH], unsigned
 }
 
 
-float mydbqry(struct mydb_node *xhash[MAX_MYDB_HASH], char *p, float rob_s, float rob_x, struct node *qhash[MAXHASH]){
+float mydbqry(struct mydb_node *xhash[MAX_MYDB_HASH], char *p, float rob_s, float rob_x){
    struct mydb_node *q;
    unsigned long long key;
    float spamicity = DEFAULT_SPAMICITY;
-   //int freq_min = FREQ_MIN;
 
    if(p == NULL) return spamicity;
 
@@ -180,18 +179,13 @@ float mydbqry(struct mydb_node *xhash[MAX_MYDB_HASH], char *p, float rob_s, floa
    q = findmydb_node(xhash, key);
    if(q == NULL) return spamicity;
 
-   if(q->nham < TUM_LIMIT && q->nspam < TUM_LIMIT)
-      addnode(qhash, p, 0 , 0);
-
-   //if(!strchr(p, '+')) freq_min = 2*FREQ_MIN;
-
    spamicity = calc_spamicity(Nham, Nspam, q->nham, q->nspam, rob_s, rob_x);
 
    return spamicity;
 }
 
 
-int add_or_update(int fd, int ham_or_spam, char *token, int train_mode, unsigned long ts){
+int add_or_update(int fd, struct mydb_node *mhash[MAX_MYDB_HASH], int ham_or_spam, char *token, int train_mode, unsigned long ts){
    unsigned long long key = APHash(token);
    struct mydb_node *q;
    struct mydb e;
@@ -239,9 +233,9 @@ int add_or_update(int fd, int ham_or_spam, char *token, int train_mode, unsigned
 }
 
 
-int my_walk_hash(char *mydbfile, struct mydb_node *xhash[MAX_MYDB_HASH], int ham_or_spam, struct node *qhash[MAXHASH], int train_mode){
-   int i, fd, n=0;
-   struct node *p, *q;
+int my_walk_hash(char *mydbfile, struct mydb_node *xhash[MAX_MYDB_HASH], int ham_or_spam, struct _token *token, int train_mode){
+   int n=0, fd;
+   struct _token *p;
    unsigned long now, x;
    time_t cclock;
 
@@ -256,25 +250,15 @@ int my_walk_hash(char *mydbfile, struct mydb_node *xhash[MAX_MYDB_HASH], int ham
       }
    }
 
-   for(i=0;i<MAXHASH;i++){
-      q = qhash[i];
-
-      while(q != NULL){
-         p = q;
-
-         if(fd != -1){
-            add_or_update(fd, ham_or_spam, p->str, train_mode, now);
-         }
-
-         n++;
-
-         q = q->r;
-         if(p)
-            free(p);
-      }
-      qhash[i] = NULL;
-
+   p = token;
+   while(p != NULL){
+      add_or_update(fd, xhash, ham_or_spam, p->str, train_mode, now);
+      p = p->r;
+      n++;
    }
+
+
+   /* update ham/spam counter */
 
    if(fd != -1){
 
@@ -326,9 +310,9 @@ int my_walk_hash(char *mydbfile, struct mydb_node *xhash[MAX_MYDB_HASH], int ham
 }
 
 
-int update_tokens(char *mydbfile, struct mydb_node *xhash[MAX_MYDB_HASH], struct node *qhash[MAXHASH]){
-   int i, n, fd;
-   struct node *q;
+int update_tokens(char *mydbfile, struct mydb_node *xhash[MAX_MYDB_HASH], struct _token *token){
+   int n, fd;
+   struct _token *q;
    struct mydb_node *Q;
    unsigned long now;
    unsigned long long key;
@@ -351,24 +335,20 @@ int update_tokens(char *mydbfile, struct mydb_node *xhash[MAX_MYDB_HASH], struct
 
    n = 0;
 
-   for(i=0; i<MAXHASH; i++){
-      q = qhash[i];
+   q = token;
 
-      while(q != NULL){
-         //if(fd != -1){
-            key = APHash(q->str);
+   while(q != NULL){
 
-            Q = findmydb_node(xhash, key);
-            if(Q){
-               //fprintf(stderr, "updating timestamp of %s %llu\n", q->str, key);
-               lseek(fd, MYDB_HEADER_SIZE + (Q->pos * N_SIZE) + 12, SEEK_SET);
-               write(fd, &now, 4);
-               n++;
-            }
-         //}
-
-         q = q->r;
+      key = APHash(q->str);
+      Q = findmydb_node(xhash, key);
+      if(Q){
+         //fprintf(stderr, "updating timestamp of %s %llu\n", q->str, key);
+         lseek(fd, MYDB_HEADER_SIZE + (Q->pos * N_SIZE) + 12, SEEK_SET);
+         write(fd, &now, 4);
+         n++;
       }
+
+      q = q->r;
    }
 
    flock(fd, LOCK_UN|LOCK_NB);

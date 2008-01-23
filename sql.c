@@ -1,5 +1,5 @@
 /*
- * sql.c, 2007.12.22, SJ
+ * sql.c, 2008.01.23, SJ
  */
 
 #include <stdio.h>
@@ -27,12 +27,10 @@
 
 #ifdef HAVE_MYSQL
    #include <mysql.h>
-   int do_mysql_qry(MYSQL mysql, int sockfd, int ham_or_spam, char *token, char *tokentable, unsigned int uid, int train_mode);
 #endif
 
 #ifdef HAVE_SQLITE3
    #include <sqlite3.h>
-   int do_sqlite3_qry(sqlite3 *db, int ham_or_spam, char *token, int train_mode, unsigned long timestamp);
 #endif
 
 
@@ -40,10 +38,9 @@
  * query the spamicity value of a token from token database
  */
 
-float SQL_QUERY(qry QRY, int group_type, char *tokentable, char *token, struct node *xhash[MAXHASH]){
+float SQL_QUERY(qry QRY, int group_type, char *tokentable, char *token){
    float r = DEFAULT_SPAMICITY;
    struct te TE;
-   //int freq_min = FREQ_MIN;
 
    TE.nham = TE.nspam = 0;
 
@@ -54,14 +51,7 @@ float SQL_QUERY(qry QRY, int group_type, char *tokentable, char *token, struct n
    TE = sqlite3_qry(QRY.db, token);
 #endif
 
-   /* add token to list if not mature enough, 2007.07.09, SJ */
-
-   if((group_type == GROUP_SHARED || QRY.uid > 0) && TE.nham < TUM_LIMIT && TE.nspam < TUM_LIMIT)
-      addnode(xhash, token, 0 , 0);
-
    if(TE.nham == 0 && TE.nspam == 0) return r;
-
-   //if(!strchr(token, '+')) freq_min = 2*FREQ_MIN;
 
    r = calc_spamicity(QRY.ham_msg, QRY.spam_msg, TE.nham, TE.nspam, QRY.rob_s, QRY.rob_x);
 
@@ -73,91 +63,32 @@ float SQL_QUERY(qry QRY, int group_type, char *tokentable, char *token, struct n
  * walk through the hash table and add/update its elements in mysql table
  */
 
-int my_walk_hash(qry QRY, int ham_or_spam, char *tokentable, struct node *xhash[MAXHASH], int train_mode){
-   int i, n=0;
-   struct node *p, *q;
-   time_t cclock;
-   unsigned long now;
-
-   time(&cclock);
-   now = cclock;
-
-   for(i=0;i<MAXHASH;i++){
-      q = xhash[i];
-      while(q != NULL){
-         p = q;
-
-      #ifdef HAVE_MYSQL
-         do_mysql_qry(QRY.mysql, QRY.sockfd, ham_or_spam, p->str, tokentable, QRY.uid, train_mode);
-      #endif
-      #ifdef HAVE_SQLITE3
-         do_sqlite3_qry(QRY.db, ham_or_spam, p->str, train_mode, now);
-      #endif
-
-         n++;
-
-         q = q->r;
-         if(p)
-            free(p);
-      }
-      xhash[i] = NULL;
-   }
-
-   return n;
-}
-
-
-/*
- * update the token timestamps
- */
-
 #ifdef HAVE_MYSQL
-int update_tokens(MYSQL mysql, struct node *xhash[MAXHASH]){
+int my_walk_hash(MYSQL mysql, int sockfd, int ham_or_spam, char *tokentable, unsigned long uid, struct _token *token, int train_mode){
 #endif
 #ifdef HAVE_SQLITE3
-int update_tokens(sqlite3 *db, struct node *xhash[MAXHASH]){
-   char *err=NULL;
+int my_walk_hash(sqlite3 *db, int ham_or_spam, char *tokentable, struct _token *token, int train_mode){
 #endif
-   int i, n;
-   struct node *q;
-   unsigned long now;
+   int n=0;
+   struct _token *p;
    time_t cclock;
-   char buf[SMALLBUFSIZE];
-   buffer *query;
+   unsigned long now;
 
    time(&cclock);
    now = cclock;
 
-   n = 0;
+   p = token;
 
-   query = buffer_create(NULL);
-   if(!query) return n;
-
-   snprintf(buf, SMALLBUFSIZE-1, "UPDATE %s SET timestamp=%ld WHERE token in (", SQL_TOKEN_TABLE, now);
-
-   buffer_cat(query, buf);
-
-   for(i=0; i<MAXHASH; i++){
-      q = xhash[i];
-
-      while(q != NULL){
-         snprintf(buf, SMALLBUFSIZE-1, "%llu, ", APHash(q->str));
-         buffer_cat(query, buf);
-
-         q = q->r;
-      }
+   while(p != NULL){
+   #ifdef HAVE_MYSQL
+      do_mysql_qry(mysql, sockfd, ham_or_spam, p->str, tokentable, uid, train_mode);
+   #endif
+   #ifdef HAVE_SQLITE3
+      do_sqlite3_qry(db, ham_or_spam, p->str, train_mode, now);
+   #endif
+      p = p->r;
+      n++;
    }
-
-   snprintf(buf, SMALLBUFSIZE-1, "0)");
-   buffer_cat(query, buf);
-
-#ifdef HAVE_SQLITE3
-   if((sqlite3_exec(db, query->data, NULL, NULL, &err)) != SQLITE_OK){
-      n = -1;
-   }
-#endif
-
-   buffer_destroy(query);
 
    return n;
 }

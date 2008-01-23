@@ -1,5 +1,5 @@
 /*
- * sqlite3.c, 2008.01.20, SJ
+ * sqlite3.c, 2008.01.23, SJ
  */
 
 #include <stdio.h>
@@ -21,6 +21,7 @@
 #include "errmsg.h"
 #include "messages.h"
 #include "sql.h"
+#include "buffer.h"
 #include "config.h"
 
 
@@ -50,6 +51,54 @@ struct te sqlite3_qry(sqlite3 *db, char *token){
 
    return TE;
 }
+
+
+/*
+ * update the token timestamps
+ */
+
+int update_sqlite3_tokens(sqlite3 *db, struct _token *token){
+   int n=0;
+   unsigned long now;
+   time_t cclock;
+   char *err=NULL, buf[SMALLBUFSIZE];
+   buffer *query;
+   struct _token *p, *q;
+
+   if(token == NULL) return 0;
+
+   query = buffer_create(NULL);
+   if(!query) return n;
+
+   time(&cclock);
+   now = cclock;
+
+   snprintf(buf, SMALLBUFSIZE-1, "UPDATE %s SET timestamp=%ld WHERE token in (", SQL_TOKEN_TABLE, now);
+
+   buffer_cat(query, buf);
+
+   p = token;
+
+   while(p != NULL){
+      q = p->r;
+
+      snprintf(buf, SMALLBUFSIZE-1, "%llu, ", APHash(p->str));
+      buffer_cat(query, buf);
+
+      p = q;
+   }
+
+   snprintf(buf, SMALLBUFSIZE-1, "0)");
+   buffer_cat(query, buf);
+
+   if((sqlite3_exec(db, query->data, NULL, NULL, &err)) != SQLITE_OK)
+      n = -1;
+
+   buffer_destroy(query);
+
+   return n;
+}
+
 
 
 /*

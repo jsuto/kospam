@@ -25,8 +25,9 @@ AC_SUBST(passmail)
 AC_SUBST(passmail_install)
 AC_SUBST(parsembox_install)
 AC_SUBST(qcache)
-AC_SUBST(train)
-AC_SUBST(train_install)
+AC_SUBST(spamdrop)
+AC_SUBST(spamdrop_install)
+AC_SUBST(preparesql)
 AC_SUBST(qcache_install)
 AC_SUBST(test)
 AC_SUBST(mysql_includes)
@@ -49,7 +50,7 @@ have_antivirus="no"
 have_antispam="no"
 have_blackhole="no"
 have_cgi="no"
-have_train="no"
+have_spamdrop="no"
 have_mysql="no"
 have_sqlite3="no"
 have_ldap="no"
@@ -227,15 +228,6 @@ dnl  if test "$want_antispam" = "yes"; then
 
        have_cgi="yes"
 
-       dnl check if we have mysql/ldap support
-
-       dnl if test "$have_mysql" = "yes" || test "$have_ldap" = "yes"; then
-       dnl   have_cgi="yes"
-       dnl else
-       dnl   echo "you need mysql/ldap support for the cgi feature"
-       dnl   exit 1;
-       dnl fi
-
     fi
 
 
@@ -270,10 +262,11 @@ AC_ARG_WITH(tokendb,
            exit 1;
       fi
 
-    have_train="yes"
+    have_spamdrop="yes"
     parsembox="$parsembox"
-    train="train"
-    train_install="install-train"
+    preparesql="prepare-sql aphash clapf_admin"
+    spamdrop="spamdrop"
+    spamdrop_install="install-spamdrop"
 
     test="test"
   fi
@@ -285,10 +278,11 @@ AC_ARG_WITH(tokendb,
 
             mysql_includes=`mysql_config --cflags`
             mysql_libs=`mysql_config --libs_r`
-            have_train="yes"
+            have_spamdrop="yes"
             parsembox="$parsembox"
-	    train="train"
-	    train_install="install-train"
+            preparesql="prepare-sql aphash clapf_admin"
+	    spamdrop="spamdrop"
+	    spamdrop_install="install-spamdrop"
 
             test="test"
      else
@@ -300,10 +294,11 @@ AC_ARG_WITH(tokendb,
 
 
   if test "$withval" = "mydb"; then
-     have_train="yes"
+     have_spamdrop="yes"
      parsembox="$parsembox"
-     train="train"
-     train_install="install-train"
+     spamdrop="spamdrop"
+     preparesql="prepare-sql aphash"
+     spamdrop_install="install-spamdrop"
      test="test"
   fi
 
@@ -527,7 +522,7 @@ else
    echo "blackhole feature: no"
 fi
 
-if test "$have_train" = "yes"; then
+if test "$have_spamdrop" = "yes"; then
    echo "train utilities: yes"
 else
    echo "train utilities: no"
@@ -619,7 +614,7 @@ fi
 
 echo "clapf user: $CLAPF_USER"
 
-id -u $CLAPF_USER 2>null 1>null
+id -u $CLAPF_USER 2>/dev/null 1>/dev/null
 if test $? -eq 1; then echo "the user \"$CLAPF_USER\" does not exists, please create it, first with adduser..."; exit 1; fi
 
 if test "$have_libclamav" = "no" && test "$have_clamd" = "no" && test "$have_avg" = "no" && test "$have_avast" = "no" && test "$have_kav" = "no" && test "$have_drweb" = "no" ; then

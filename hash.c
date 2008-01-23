@@ -1,5 +1,5 @@
 /*
- * hash.c, 2008.01.10, SJ
+ * hash.c, 2008.01.23, SJ
  */
 
 #include <stdio.h>
@@ -8,8 +8,8 @@
 #include <math.h>
 #include "hash.h"
 #include "misc.h"
-#include "chi.h"
 #include "config.h"
+
 
 /*
  * reset hash
@@ -21,6 +21,7 @@ void inithash(struct node *xhash[MAXHASH]){
    for(i=0;i<MAXHASH;i++)
       xhash[i] = NULL;
 }
+
 
 /*
  * release everything in the hash and calculate the ratio of unique tokens
@@ -49,6 +50,7 @@ float clearhash(struct node *xhash[MAXHASH]){
 
    return (num_of_unique_tokens / num_of_tokens);
 }
+
 
 /*
  * create a new node
@@ -80,6 +82,7 @@ struct node *makenewnode(struct node *xhash[MAXHASH], char *s, double spaminess,
    return h;
 }
 
+
 /*
  * add a new node
  */
@@ -110,6 +113,11 @@ int addnode(struct node *xhash[MAXHASH], char *s, double spaminess, double devia
    return 1;
 }
 
+
+/*
+ * find the given node
+ */
+
 struct node *findnode(struct node *xhash[MAXHASH], char *s){
    struct node *p, *q;
 
@@ -132,191 +140,6 @@ struct node *findnode(struct node *xhash[MAXHASH], char *s){
    }
 
    return NULL;
-}
-
-
-/*
- * count the most interesting tokens
- */
-
-int most_interesting_tokens(struct node *xhash[MAXHASH]){
-   int i, most_interesting=0;
-   struct node *q;
-
-   for(i=0;i<MAXHASH;i++){
-      q = xhash[i];
-      while(q != NULL){
-         if(DEVIATION(q->spaminess) >= MOST_INTERESTING_DEVIATION)
-            most_interesting++;
-
-         q = q->r;
-      }
-   }
-
-   return most_interesting;
-}
-
-
-/*
- * calculate spam probability by the chi square algorithm
- */
-
-double calc_score_chi2(struct node *xhash[MAXHASH], struct __config cfg){
-   int i, l=0;
-   struct node *p, *q;
-   double P, Q, H, S, I;
-
-   P = 1;
-   Q = 1;
-
-   for(i=0; i<MAXHASH; i++){
-      q = xhash[i];
-      while(q != NULL){
-
-         if(DEVIATION(q->spaminess) >= cfg.exclusion_radius){
-            if(log10(P) > -300 && log10(Q) > -300){
-               Q *= q->spaminess;
-               P *= 1 - q->spaminess;
-               l++;
-
-            #ifdef DEBUG
-               fprintf(stderr, "%s (%llu) %.4f %ld\n", q->str, APHash(q->str), q->spaminess, q->num);
-            #endif
-            }
-         }
-
-         p = q;
-         q = q->r;
-
-      }
-   }
-
-   Q = pow(Q, cfg.esf_h);
-   P = pow(P, cfg.esf_s);
-
-#ifdef HAVE_GSL
-   H = gsl_chi2inv(-2.0 * log(Q), 2.0 * (float)l * cfg.esf_h);
-   S = gsl_chi2inv(-2.0 * log(P), 2.0 * (float)l * cfg.esf_s);
-#else
-   /*
-    * using a brand new inverse chi square implementation, 2007.02.26, SJ
-    */
-   H = chi2inv(-2.0 * log(Q), 2.0 * (float)l, cfg.esf_h);
-   S = chi2inv(-2.0 * log(P), 2.0 * (float)l, cfg.esf_h);
-#endif
-
-
-   I = (1 + H - S) / 2.0;
-
-#ifdef DEBUG
-   fprintf(stderr, "with esf_h: %f, esf_s: %f\n", cfg.esf_h, cfg.esf_s);
-#endif
-
-   return I;
-}
-
-
-/*
- * reverse sort the hash and calculate the spamicity value
- */
-
-double calc_score_bayes(struct node *xhash[MAXHASH], int top10, struct __config cfg){
-   int i, j, n_tokens, most_interesting, how_many_tokens_to_include=top10, l=0;
-   struct node *p, *q, *t[MAX_NUM_OF_SAMPLES];
-   double P, Q, truespam=0;
-
-   n_tokens = 0;
-   most_interesting = 0;
-
-   for(i=0; i<MAX_NUM_OF_SAMPLES; i++)
-      t[i] = NULL;
-
-   for(i=0;i<MAXHASH;i++){
-      q = xhash[i];
-      while(q != NULL && n_tokens < MAX_NUM_OF_SAMPLES){
-         t[n_tokens] = q;
-
-         if(DEVIATION(t[n_tokens]->spaminess) >= MOST_INTERESTING_DEVIATION)
-            most_interesting++;
-
-         p = q;
-         q = q->r;
-
-         n_tokens++;
-      }
-   }
-
-
-   /* reverse sort tokens according to their deviation */
-
-   for(i=1; i<n_tokens; i++){
-      q = t[i];
-      j = i - 1;
-
-      while(j >= 0 && q->deviation < t[j]->deviation){
-         t[j+1] = t[j];
-         j--;
-      }
-
-      t[j+1] = q;
-   }
-
-
-
-   /* determine how many tokens to use in the calculation */
-
-
-   /* if we have too few tokens */
-
-   if(how_many_tokens_to_include > n_tokens)
-      how_many_tokens_to_include = n_tokens;
-
-   /* if we want to include all the interesting tokens */
-
-   if(cfg.use_all_the_most_interesting_tokens == 1 && most_interesting > top10)
-      how_many_tokens_to_include = most_interesting;
-
-
-   P = 1;
-   Q = 1;
-
-   //for(i=n_tokens-1; i>=0; i--){
-   for(i=n_tokens-1; i>= n_tokens - how_many_tokens_to_include; i--){
-      if(t[i] != NULL){
-
-         if(t[i]->spaminess > 0.99)
-            truespam++;
-
-         /* to prevent underflow, 2006.02.22, SJ */
-
-         if(i >= n_tokens - how_many_tokens_to_include && log10(P) > -300 && log10(Q) > -300){
-            Q *= t[i]->spaminess;
-            P *= 1 - t[i]->spaminess;
-            l++;
-
-         #ifdef DEBUG
-            fprintf(stderr, "*");
-         #endif
-         }
-
-   #ifdef DEBUG
-      #ifdef HAVE_NO_64_HASH
-         fprintf(stderr, "%d. %s %.4f %ld\n", i, t[i]->str, t[i]->spaminess, t[i]->num);
-      #else
-         fprintf(stderr, "%d. %s (%llu) %.4f %ld\n", i, t[i]->str, APHash(t[i]->str), t[i]->spaminess, t[i]->num);
-      #endif
-   #endif
-      }
-   }
-
-#ifdef DEBUG
-   fprintf(stderr, "number of tokens: %d, most interesting tokens: %d, used: %d\n", n_tokens, most_interesting, l);
-   if(how_many_tokens_to_include > 0) fprintf(stderr, "top10: %d, truespam: %.0f, truespam/top10: %f\n", how_many_tokens_to_include, truespam, truespam/how_many_tokens_to_include);
-#endif
-
-   /* Bayesian calculation = a*b*c / ( a*b*c + (1-a)*(1-b)*(1-c) ) */
-
-   return Q / (Q + P);
 }
 
 

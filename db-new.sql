@@ -14,6 +14,7 @@ create table if not exists t_token (
 	uid smallint unsigned default 0,
 	nham int default 0,
 	nspam int default 0,
+	timestamp int unsigned default 0,
 	unique(token, uid)
 ) Engine=InnoDB;
 

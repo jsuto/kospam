@@ -1,5 +1,5 @@
 /*
- * parser.h, 2007.12.06, SJ
+ * parser.h, 2008.01.23, SJ
  */
 
 #include "config.h"
@@ -69,11 +69,16 @@ struct _state {
 };
 
 struct session_data {
-   char ttmpfile[3*RND_STR_LEN+1], mailfrom[MAXBUFSIZE], rcptto[MAX_RCPT_TO][MAXBUFSIZE], client_addr[IPLEN];
+   char ttmpfile[3*RND_STR_LEN+1], mailfrom[MAXBUFSIZE], rcptto[MAX_RCPT_TO][MAXBUFSIZE], client_addr[IPLEN], name[SMALLBUFSIZE];
    unsigned long uid;
    int tot_len, num_of_rcpt_to, skip_id_check;
 };
 
+
+struct c_res {
+   double spaminess;
+   float ham_msg, spam_msg;
+};
 
 struct _state init_state();
 int attachment_by_type(struct _state state, char *type);

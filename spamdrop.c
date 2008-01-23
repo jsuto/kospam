@@ -1,7 +1,5 @@
 /*
- * spamdrop.c, 2008.01.13, SJ
- *
- * check if a single RFC-822 formatted messages is spam or not
+ * spamdrop.c, 2008.01.23, SJ
  */
 
 #include <stdio.h>
@@ -28,11 +26,19 @@ extern char *optarg;
 extern int optind;
 
 
+struct __config cfg;
+struct session_data sdata;
+struct c_res result;
+
+
 #ifdef HAVE_MYSQL
    #include <mysql.h>
    MYSQL mysql;
    MYSQL_RES *res;
    MYSQL_ROW row;
+   struct ue UE;
+
+   int update_mysql_tokens(MYSQL mysql, struct _token *token, unsigned long uid);
 #endif
 
 #ifdef HAVE_SQLITE3
@@ -40,35 +46,73 @@ extern int optind;
    sqlite3 *db;
    sqlite3_stmt *pStmt;
    const char **ppzTail=NULL;
-   int rc;
+
+   int update_sqlite3_tokens(sqlite3 *db, struct _token *token);
 #endif
 
 #ifdef HAVE_MYDB
    #include "mydb.h"
-   int rc;
+   struct mydb_node *mhash[MAX_MYDB_HASH];
+
+   struct c_res bayes_file(struct mydb_node *mhash[MAX_MYDB_HASH], char *spamfile, struct _state state, struct session_data sdata, struct __config cfg);
+   int train_message(char *mydbfile, struct mydb_node *mhash[MAX_MYDB_HASH], struct session_data sdata, struct _state state, int rounds, int is_spam, int train_mode, struct __config cfg);
 #endif
+
+
+/* open database connection */
+
+int open_db(char *messagefile){
+#ifdef HAVE_MYSQL
+   mysql_init(&mysql);
+   mysql_options(&mysql, MYSQL_OPT_CONNECT_TIMEOUT, (const char*)&cfg.mysql_connect_timeout);
+   if(mysql_real_connect(&mysql, cfg.mysqlhost, cfg.mysqluser, cfg.mysqlpwd, cfg.mysqldb, cfg.mysqlport, cfg.mysqlsocket, 0) == 0){
+      syslog(LOG_PRIORITY, "%s: %s", sdata.ttmpfile, ERR_MYSQL_CONNECT);
+      return 0;
+   }
+#endif
+
+#ifdef HAVE_SQLITE3
+   int rc;
+
+   rc = sqlite3_open(PER_USER_SQLITE3_DB_FILE, &db);
+   if(rc){
+      syslog(LOG_PRIORITY, "%s: %s", messagefile, ERR_SQLITE3_OPEN);
+      return 0;
+   }
+   else {
+      rc = sqlite3_exec(db, cfg.sqlite3_pragma, 0, 0, NULL);
+      if(rc != SQLITE_OK) syslog(LOG_PRIORITY, "%s: could not set pragma", sdata.ttmpfile);
+   }
+#endif
+
+#ifdef HAVE_MYDB
+   int rc;
+
+   rc = init_mydb(cfg.mydbfile, mhash);
+   if(rc != 1)
+      return 0;
+#endif
+
+   return 1;
+}
 
 
 int main(int argc, char **argv){
-   double spaminess=DEFAULT_SPAMICITY;
-   struct stat st;
-   struct timezone tz;
-   struct timeval tv_spam_start, tv_spam_stop;
-   struct passwd *pwd;
-   struct session_data sdata;
-   struct _state state;
-   struct __config cfg;
-   char buf[MAXBUFSIZE], qpath[SMALLBUFSIZE], *configfile=CONFIG_FILE, *username, *from=NULL;
-   uid_t u;
-   int i, n, fd, fd2, print_message=0, print_summary_only=0, is_header=1, tot_len=0, put_subject_spam_prefix=0, sent_subject_spam_prefix=0, is_spam=0;
-   int training_request=0, blackhole_request=0;
    FILE *f;
+   int i, n, fd, fd2, tot_len=0, rc=0, is_header=1, rounds=1;
+   int print_message=0, print_summary_only=0, put_subject_spam_prefix=0, sent_subject_spam_prefix=0;
+   int is_spam=0, train_as_ham=0, train_as_spam=0, blackhole_request=0, training_request=0;
+   int train_mode=T_TOE;
+   uid_t u;
+   char buf[MAXBUFSIZE], qpath[SMALLBUFSIZE], trainbuf[SMALLBUFSIZE], ID[RND_STR_LEN+1], *configfile=CONFIG_FILE, *username, *from=NULL;
+   struct timezone tz;
+   struct timeval tv_start, tv_stop;
+   struct stat st;
+   struct passwd *pwd;
+   struct _state state;
 
-#ifndef HAVE_MYDB
-   struct ue UE;
-#endif
 
-   while((i = getopt(argc, argv, "c:ps")) > 0){
+   while((i = getopt(argc, argv, "c:SHps")) > 0){
        switch(i){
 
          case 'c' :
@@ -83,27 +127,35 @@ int main(int argc, char **argv){
                     print_summary_only = 1;
                     break;
 
+         case 'S' :
+                    train_as_spam = 1;
+                    break;
+
+         case 'H' :
+                    train_as_ham = 1;
+                    break;
+
          default  : 
                     break;
        }
    }
 
-   if(argc < 2){
-      fprintf(stderr, "usage: %s [-c <config file>] [-p] [-s] < <RFC-822 formatted message>\n", argv[0]);
-      return 0;
-   }
-
 
    (void) openlog("spamdrop", LOG_PID, LOG_MAIL);
-
-   /* shall we go in blackhole mode? */
 
 #ifdef HAVE_BLACKHOLE
    if(strstr(argv[0], "blackhole")) blackhole_request = 1;
 #endif
 
+   if(train_as_spam == 1 && train_as_ham == 1){
+      fprintf(stderr, "%s\n", ERR_TRAIN_AS_HAMSPAM);
+      return 0;
+   }
+
+   /* read config file */
 
    cfg = read_config(configfile);
+
 
    /* maildrop exports the LOGNAME environment variable */
 
@@ -133,14 +185,22 @@ int main(int argc, char **argv){
       }
    }
 
-
    sdata.num_of_rcpt_to = 1;
    sdata.uid = getuid();
-   sdata.skip_id_check = 0;
    memset(sdata.rcptto[0], MAXBUFSIZE, 0);
    make_rnd_string(&(sdata.ttmpfile[0]));
 
+   result.spaminess = DEFAULT_SPAMICITY;
+   result.ham_msg = result.spam_msg = 0;
+
+#ifdef HAVE_SQLITE3
+   sdata.uid = 0;
+#endif
+
    memset(trainbuf, 0, SMALLBUFSIZE);
+
+
+   /* read message from standard input */
 
    fd = open("/dev/stdin", O_RDONLY);
    if(fd == -1){
@@ -171,9 +231,17 @@ int main(int argc, char **argv){
 
    close(fd2);
 
-   if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: written %d bytes", sdata.ttmpfile, tot_len);
+   gettimeofday(&tv_start, &tz);
 
+
+   /* skip spamicity check if message is too long */
+   if( (print_message == 1 || print_summary_only == 1) && tot_len > cfg.max_message_size_to_filter)
+      goto ENDE_SPAMDROP;
+
+
+   /*******************************************************************************/
    /* check whether this is a training request with user+spam@... or user+ham@... */
+   /***************************************************************************** */
 
    f = fopen(sdata.ttmpfile, "r");
    if(f){
@@ -190,137 +258,165 @@ int main(int argc, char **argv){
       fclose(f);
    }
 
-   /* this is a training request */
+
+   /* open database connection */
+   if(open_db(sdata.ttmpfile) == 0)
+      goto ENDE;
+
+
+   /****************************/
+   /* handle training requests */
+   /****************************/
+
 
    if(training_request == 1){
-      from = getenv("FROM");
+      rounds = MAX_ITERATIVE_TRAIN_LOOPS;
 
-      if(!from) return 0;
+      from = getenv("FROM");
+      if(!from) goto CLOSE_DB;
 
       is_spam = 0;
       if(str_case_str(buf, "+spam@")) is_spam = 1;
 
-   #ifdef HAVE_MYSQL
-      mysql_init(&mysql);
-      mysql_options(&mysql, MYSQL_OPT_CONNECT_TIMEOUT, (const char*)&cfg.mysql_connect_timeout);
-      if(mysql_real_connect(&mysql, cfg.mysqlhost, cfg.mysqluser, cfg.mysqlpwd, cfg.mysqldb, cfg.mysqlport, cfg.mysqlsocket, 0)){
-         UE = get_user_from_email(mysql, from);
-         sdata.uid = UE.uid;
+      /* determine the queue file from the message */
+      train_mode = extract_id_from_message(sdata.ttmpfile, cfg.clapf_header_field, ID);
 
-         retraining(mysql, sdata, UE.name, is_spam, cfg);
-         mysql_close(&mysql);
-      }
+      /* determine the path of the original file */
+
+      if(is_spam == 1)
+         snprintf(buf, MAXBUFSIZE-1, "%s/%s/%c/%s/h.%s", cfg.chrootdir, USER_QUEUE_DIR, username[0], username, ID);
+      else
+         snprintf(buf, MAXBUFSIZE-1, "%s/%s/%c/%s/s.%s", cfg.chrootdir, USER_QUEUE_DIR, username[0], username, ID);
+
+
+      state = parse_message(buf, cfg);
+
+      /* ... then train with the message */
+
+   #ifdef HAVE_MYSQL
+      train_message(mysql, sdata, state, rounds, is_spam, train_mode, cfg);
    #endif
    #ifdef HAVE_SQLITE3
-      rc = sqlite3_open(PER_USER_SQLITE3_DB_FILE, &db);
-      if(rc){
-         syslog(LOG_PRIORITY, "%s: %s", sdata.ttmpfile, ERR_SQLITE3_OPEN);
-      }
-      else {
-         rc = sqlite3_exec(db, cfg.sqlite3_pragma, 0, 0, NULL);
-         if(rc != SQLITE_OK) syslog(LOG_PRIORITY, "%s: could not set pragma", sdata.ttmpfile);
-
-         UE = get_user_from_email(db, from);
-         sdata.uid = UE.uid;
-
-         retraining(db, sdata, UE.name, is_spam, cfg);
-      }
+      train_message(db, sdata, state, rounds, is_spam, train_mode, cfg);
    #endif
    #ifdef HAVE_MYDB
-      sdata.uid = 12345;
-
-      rc = init_mydb(cfg.mydbfile, mhash);
-      retraining(sdata, username, is_spam, cfg);
-      close_mydb(mhash);
+      train_message(cfg.mydbfile, mhash, sdata, state, rounds, is_spam, train_mode, cfg);
    #endif
 
-      return 0;
+      goto CLOSE_DB;
    }
 
 
+   /* parse message */
+   state = parse_message(sdata.ttmpfile, cfg);
 
-   gettimeofday(&tv_spam_start, &tz);
 
-   if(tot_len <= cfg.max_message_size_to_filter){
-      state = parse_message(sdata.ttmpfile, cfg);
+   /*******************************************************/
+   /* if this is a training request from the command line */
+   /***************************************************** */
+
+   if(train_as_ham == 1 || train_as_spam == 1){
+      if(train_as_spam == 1) is_spam = 1;
+      else is_spam = 0;
 
    #ifdef HAVE_MYSQL
-      mysql_init(&mysql);
-      mysql_options(&mysql, MYSQL_OPT_CONNECT_TIMEOUT, (const char*)&cfg.mysql_connect_timeout);
-      if(mysql_real_connect(&mysql, cfg.mysqlhost, cfg.mysqluser, cfg.mysqlpwd, cfg.mysqldb, cfg.mysqlport, cfg.mysqlsocket, 0)){
-         spaminess = bayes_file(mysql, sdata.ttmpfile, state, sdata, cfg);
-         if(blackhole_request == 0 || spaminess >= cfg.spam_overall_limit)
-            tum_train(mysql, sdata.ttmpfile, spaminess, cfg);
-      }
-      else
-         syslog(LOG_PRIORITY, "%s: %s", sdata.ttmpfile, ERR_MYSQL_CONNECT);
+      train_message(mysql, sdata, state, rounds, is_spam, train_mode, cfg);
    #endif
    #ifdef HAVE_SQLITE3
-      rc = sqlite3_open(PER_USER_SQLITE3_DB_FILE, &db);
-      if(rc){
-         syslog(LOG_PRIORITY, "%s: %s", sdata.ttmpfile, ERR_SQLITE3_OPEN);
-      }
-      else {
-         rc = sqlite3_exec(db, cfg.sqlite3_pragma, 0, 0, NULL);
-         if(rc != SQLITE_OK) syslog(LOG_PRIORITY, "%s: could not set pragma", sdata.ttmpfile);
-
-         spaminess = bayes_file(db, sdata.ttmpfile, state, sdata, cfg);
-         if(blackhole_request == 0 || spaminess >= cfg.spam_overall_limit)
-            tum_train(db, sdata.ttmpfile, spaminess, cfg);
-      }
+      train_message(db, sdata, state, rounds, is_spam, train_mode, cfg);
    #endif
    #ifdef HAVE_MYDB
-      rc = init_mydb(cfg.mydbfile, mhash);
-      if(rc == 1){
-         spaminess = bayes_file(sdata.ttmpfile, state, sdata, cfg);
-         if(blackhole_request == 0 || spaminess >= cfg.spam_overall_limit)
-            tum_train(sdata.ttmpfile, spaminess, cfg);
-      }
+      train_message(cfg.mydbfile, mhash, sdata, state, rounds, is_spam, train_mode, cfg);
+   #endif
+   }
+
+
+   /*
+    * or just calculate spamicity
+    */
+
+   else {
+   #ifdef HAVE_MYSQL
+      result = bayes_file(mysql, sdata.ttmpfile, state, sdata, cfg);
+      update_mysql_tokens(mysql, state.first, sdata.uid);
+   #endif
+   #ifdef HAVE_SQLITE3
+      result = bayes_file(db, sdata.ttmpfile, state, sdata, cfg);
+      update_sqlite3_tokens(db, state.first);
+   #endif
+   #ifdef HAVE_MYDB
+      result = bayes_file(mhash, sdata.ttmpfile, state, sdata, cfg);
+      update_tokens(cfg.mydbfile, mhash, state.first);
    #endif
 
-      /* if this a message to the blackhole */
 
-      if(blackhole_request == 1){
-         /* put IP address to blackhole directory */
+      if(
+         (cfg.training_mode == T_TUM && ( (result.spaminess >= cfg.spam_overall_limit && result.spaminess < 0.99) || (result.spaminess < cfg.max_ham_spamicity && result.spaminess > 0.1) )) ||
+         (cfg.initial_1000_learning == 1 && (result.ham_msg < NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED || result.spam_msg < NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED))
+        )
+      {
 
-         put_ip_to_dir(cfg.blackhole_path, state.ip);
+         if(result.spaminess >= cfg.spam_overall_limit) is_spam = 1;
+         else is_spam = 0;
 
-         /* train with it if it is not recognised as spam */
+         syslog(LOG_PRIORITY, "%s: TUM training", sdata.ttmpfile);
 
-         if(spaminess < cfg.spam_overall_limit){
-            sdata.skip_id_check = 1;
-
-            syslog(LOG_PRIORITY, "%s: retraining blackhole message", sdata.ttmpfile);
          #ifdef HAVE_MYSQL
-            retraining(mysql, sdata, username, 1, cfg);
+            train_message(mysql, sdata, state, 1, is_spam, train_mode, cfg);
          #endif
          #ifdef HAVE_SQLITE3
-            retraining(db, sdata, username, 1, cfg);
+            train_message(db, sdata, state, 1, is_spam, train_mode, cfg);
          #endif
          #ifdef HAVE_MYDB
-            retraining(sdata, username, 1, cfg);
+            train_message(cfg.mydbfile, mhash, sdata, state, 1, is_spam, train_mode, cfg);
          #endif
-         }
       }
 
+   }
+
+   /****************************************************************************************************/
+   /* if this is a blackhole request and spaminess < 0.99, then learn the message in an iterative loop */
+   /****************************************************************************************************/
+
+   if(blackhole_request == 1 && result.spaminess < 0.99){
+      rounds = MAX_ITERATIVE_TRAIN_LOOPS;
+
    #ifdef HAVE_MYSQL
-      mysql_close(&mysql);
+      train_message(mysql, sdata, state, rounds, 1, T_TOE, cfg);
    #endif
    #ifdef HAVE_SQLITE3
-      sqlite3_close(db);
+      train_message(db, sdata, state, rounds, 1, T_TOE, cfg);
    #endif
    #ifdef HAVE_MYDB
-      close_mydb(mhash);
+      train_message(cfg.mydbfile, mhash, sdata, state, rounds, 1, T_TOE, cfg);
    #endif
 
-      free_and_print_list(state.first, 0);
+      put_ip_to_dir(cfg.blackhole_path, state.ip);
+      syslog(LOG_PRIORITY, "%s: training on a blackhole message", sdata.ttmpfile);
    }
+
+
+   /* close db handles */
+
+CLOSE_DB:
+
+#ifdef HAVE_SQLITE3
+   sqlite3_close(db);
+#endif
+#ifdef HAVE_MYDB
+   close_mydb(mhash);
+#endif
+
+   /* free structures */
+   free_and_print_list(state.first, 0);
+
+   gettimeofday(&tv_stop, &tz);
 
 
    /* rename file name according to its spamicity status, unless its a blackhole request, 2007.12.22, SJ */
 
    if(cfg.store_metadata == 1 && tot_len <= cfg.max_message_size_to_filter && blackhole_request == 0){
-      if(spaminess >= cfg.spam_overall_limit)
+      if(result.spaminess >= cfg.spam_overall_limit)
          snprintf(qpath, SMALLBUFSIZE-1, "s.%s", sdata.ttmpfile);
       else
          snprintf(qpath, SMALLBUFSIZE-1, "h.%s", sdata.ttmpfile);
@@ -332,9 +428,14 @@ int main(int argc, char **argv){
       }
    }
 
-   gettimeofday(&tv_spam_stop, &tz);
+ENDE_SPAMDROP:
 
-   syslog(LOG_PRIORITY, "%s: %.4f %d in %ld [ms]", sdata.ttmpfile, spaminess, tot_len, tvdiff(tv_spam_stop, tv_spam_start)/1000);
+   syslog(LOG_PRIORITY, "%s: %.4f %d in %ld [ms]", sdata.ttmpfile, result.spaminess, tot_len, tvdiff(tv_stop, tv_start)/1000);
+
+
+   /***************************/
+   /* print message to stdout */
+   /***************************/
 
    if(print_message == 1){
       f = fopen(sdata.ttmpfile, "r");
@@ -343,7 +444,7 @@ int main(int argc, char **argv){
          return EX_TEMPFAIL;
       }
 
-      if(spaminess >= cfg.spam_overall_limit && spaminess < 1.01 && strlen(cfg.spam_subject_prefix) > 1) put_subject_spam_prefix = 1;
+      if(result.spaminess >= cfg.spam_overall_limit && result.spaminess < 1.01 && strlen(cfg.spam_subject_prefix) > 1) put_subject_spam_prefix = 1;
 
       while(fgets(buf, MAXBUFSIZE-1, f)){
 
@@ -360,10 +461,10 @@ int main(int argc, char **argv){
             is_header = 0;
 
             printf("%s%s\r\n", cfg.clapf_header_field, sdata.ttmpfile);
-            printf("%s%s%.4f\r\n", trainbuf, cfg.clapf_header_field, spaminess);
-            printf("%s%ld ms\r\n", cfg.clapf_header_field, tvdiff(tv_spam_stop, tv_spam_start)/1000);
-            if(spaminess > 0.9999) printf("%s%s\r\n", cfg.clapf_header_field, MSG_ABSOLUTELY_SPAM);
-            if(spaminess >= cfg.spam_overall_limit && spaminess < 1.01){
+            printf("%s%s%.4f\r\n", trainbuf, cfg.clapf_header_field, result.spaminess);
+            printf("%s%ld ms\r\n", cfg.clapf_header_field, tvdiff(tv_stop, tv_start)/1000);
+            if(result.spaminess > 0.9999) printf("%s%s\r\n", cfg.clapf_header_field, MSG_ABSOLUTELY_SPAM);
+            if(result.spaminess >= cfg.spam_overall_limit && result.spaminess < 1.01){
 
                /* if we did not find a Subject line */
 
@@ -381,29 +482,40 @@ int main(int argc, char **argv){
    }
 
 
-   unlink(sdata.ttmpfile);
-
    snprintf(buf, MAXBUFSIZE-1, "%ld", sdata.uid);
 
-   if(spaminess >= cfg.spam_overall_limit){
+   /*******************************/
+   /* print summary if we have to */
+   /*******************************/
+
+   if(result.spaminess >= cfg.spam_overall_limit){
+      rc = 1;
       if(print_summary_only == 1)
-         printf("S %.4f\n", spaminess);
+         printf("S %.4f\n", result.spaminess);
 
       log_ham_spam_per_email(sdata.ttmpfile, buf, 1);
    }
    else {
+      rc = 0;
       if(print_summary_only == 1){
-         if(spaminess <= cfg.max_ham_spamicity)
-            printf("H %.4f\n", spaminess);
+         if(result.spaminess <= cfg.max_ham_spamicity)
+            printf("H %.4f\n", result.spaminess);
          else
-            printf("U %.4f\n", spaminess);
+            printf("U %.4f\n", result.spaminess);
       }
 
       log_ham_spam_per_email(sdata.ttmpfile, buf, 0);
    }
 
-   if(print_message == 0 && spaminess >= cfg.spam_overall_limit && spaminess < 1.01)
+
+ENDE:
+
+   /* unlink temp file */
+   unlink(sdata.ttmpfile);
+
+   if(print_message == 0 && result.spaminess >= cfg.spam_overall_limit && result.spaminess < 1.01)
       return 1;
 
+   /* maildrop requires us to exit with 0 */
    return 0;
 }

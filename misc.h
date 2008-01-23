@@ -1,5 +1,5 @@
 /*
- * misc.h, 2008.01.12, SJ
+ * misc.h, 2008.01.22, SJ
  */
 
 #include <sys/time.h>
@@ -33,10 +33,7 @@ int recvtimeout(int s, char *buf, int len, int timeout);
 int make_rnd_string(char *res);
 int is_valid_id(char *p);
 void log_ham_spam_per_email(char *tmpfile, char *email, int ham_or_spam);
+int extract_id_from_message(char *messagefile, char *clapf_header_field, char *ID);
 int qcache_socket(char *qcache_addr, int qcache_port, char *qcache_socket);
 void write_delivery_info(char *tmpfile, char *dir, char *mailfrom, char rcptto[MAX_RCPT_TO][MAXBUFSIZE], int num_of_rcpt_to);
 int move_message_to_quarantine(char *tmpfile, char *quarantine_dir, char *mailfrom, char rcptto[MAX_RCPT_TO][MAXBUFSIZE], int num_of_rcpt_to);
-
-double check_bayes(char *file);
-
-char trainbuf[SMALLBUFSIZE];

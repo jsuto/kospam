@@ -1,5 +1,5 @@
 /*
- * bayes.c, 2008.01.10, SJ
+ * bayes.c, 2008.01.23, SJ
  */
 
 #include <stdio.h>
@@ -22,17 +22,15 @@
 #include "black.h"
 #include "rbl.h"
 #include "messages.h"
+#include "score.h"
 #include "sql.h"
 #include "config.h"
 
 struct node *s_phrase_hash[MAXHASH], *shash[MAXHASH], *s_mix[MAXHASH];
-struct node *B_hash[MAXHASH], *tumhash[MAXHASH];
+struct node *B_hash[MAXHASH];
 float n_phrases = 0;
 float n_tokens = 0;
 float n_mix = 0;
-
-int surbl_match = 0;
-int has_embed_image = 0;
 
 
 struct timezone tz;
@@ -46,7 +44,7 @@ qry QRY;
    MYSQL_ROW row;
    int mysql_conn = 0;
 
-   int my_walk_hash(qry QRY, int ham_or_spam, char *tokentable, struct node *xhash[MAXHASH], int train_mode);
+   int my_walk_hash(qry QRY, int ham_or_spam, char *tokentable, struct _token *token, int train_mode);
 #endif
 
 #ifdef HAVE_SQLITE3
@@ -54,78 +52,21 @@ qry QRY;
    sqlite3_stmt *pStmt;
    const char **pzTail=NULL;
 
-   int my_walk_hash(qry QRY, int ham_or_spam, char *tokentable, struct node *xhash[MAXHASH], int train_mode);
-   int update_tokens(sqlite3 *db, struct node *xhash[MAXHASH]);
+   int my_walk_hash(sqlite3 *db, int ham_or_spam, char *tokentable, struct _token *token, int train_mode);
+   int update_sqlite3_tokens(sqlite3 *db, struct node *xhash[MAXHASH]);
 #endif
 
 #ifdef HAVE_MYDB
    #include "mydb.h"
-   float mydbqry(struct mydb_node *Mhash[MAX_MYDB_HASH], char *p, float rob_s, float rob_x, struct node *qhash[MAXHASH]);
-   int my_walk_hash(char *mydbfile, struct mydb_node *xhash[MAX_MYDB_HASH], int ham_or_spam, struct node *qhash[MAXHASH], int train_mode);
-   int update_tokens(char *mydbfile, struct mydb_node *xhash[MAX_MYDB_HASH], struct node *qhash[MAXHASH]);
+   float mydbqry(struct mydb_node *Mhash[MAX_MYDB_HASH], char *p, float rob_s, float rob_x);
+   int my_walk_hash(char *mydbfile, struct mydb_node *xhash[MAX_MYDB_HASH], int ham_or_spam, struct _token *token, int train_mode);
+   int update_tokens(char *mydbfile, struct mydb_node *xhash[MAX_MYDB_HASH], struct _token *token);
 #endif
 
 
  
-float SQL_QUERY(qry QRY, int group_type, char *tokentable, char *token, struct node *xhash[MAXHASH]);
-
-
-/*
- * apply some fixes
- */
-
-double apply_fixes(double spaminess, int found_on_rbl, int base64_text, long c_shit, long l_shit, long c_hex_shit, struct __config cfg){
-
-   /* in case of a surbl or rbl match */
-#ifdef HAVE_SURBL
-   if(cfg.rude_surbl > 0 && surbl_match >= cfg.rude_surbl){
-   #ifdef DEBUG
-      fprintf(stderr, "caught by surbl\n");
-   #endif
-      return cfg.spaminess_of_caught_by_surbl;
-   }
-
-   if(found_on_rbl > 0){
-   #ifdef DEBUG
-      fprintf(stderr, "caught by rbl\n");
-   #endif
-      return cfg.spaminess_of_caught_by_surbl;
-   }
-#endif
-
-   /* if we shall mark the message as spam because of the embedded image */
-   if(spaminess > DEFAULT_SPAMICITY && has_embed_image == 1) return cfg.spaminess_of_embed_image;
-
-
-   /* check junk lines, characters */
-
-   if(cfg.invalid_junk_limit > 0 && c_shit > cfg.invalid_junk_limit && spaminess < cfg.spam_overall_limit){
-   #ifdef DEBUG
-      fprintf(stderr, "invalid junk characters: %ld (limit: %d)\n", c_shit, cfg.invalid_junk_limit);
-   #endif
-      return cfg.spaminess_of_strange_language_stuff;
-   }
-
-   if(cfg.invalid_junk_line > 0 && l_shit >= cfg.invalid_junk_line && spaminess < cfg.spam_overall_limit){
-   #ifdef DEBUG
-      fprintf(stderr, "invalid junk lines: %ld (limit: %d)\n", l_shit, cfg.invalid_junk_line);
-   #endif
-      return cfg.spaminess_of_strange_language_stuff;
-   }
-
-   if(cfg.invalid_hex_junk_limit > 0 && c_hex_shit > cfg.invalid_hex_junk_limit && spaminess < cfg.spam_overall_limit){
-   #ifdef DEBUG
-      fprintf(stderr, "invalid hex. junk characters: %ld (limit: %d)\n", c_hex_shit, cfg.invalid_hex_junk_limit);
-   #endif
-
-      return cfg.spaminess_of_strange_language_stuff;
-   }
-
-   /* if we are bored with lame base64 encoding */
-   if(base64_text == 1 && cfg.spaminess_of_text_and_base64 > 0) return cfg.spaminess_of_text_and_base64;
-
-   return spaminess;
-}
+float SQL_QUERY(qry QRY, int group_type, char *tokentable, char *token);
+double apply_fixes(double spaminess, int found_on_rbl, int surbl_match, int has_embed_image, int base64_text, long c_shit, long l_shit, long c_hex_shit, struct __config cfg);
 
 
 /*
@@ -139,7 +80,7 @@ int assign_spaminess(MYSQL mysql, char *p, struct __config cfg, unsigned int uid
 int assign_spaminess(sqlite3 *db, char *p, struct __config cfg, unsigned int uid){
 #endif
 #ifdef HAVE_MYDB
-int assign_spaminess(char *p, struct __config cfg, unsigned int uid){
+int assign_spaminess(struct mydb_node *mhash[MAX_MYDB_HASH], char *p, struct __config cfg, unsigned int uid){
 #endif
 
    float spaminess=0;
@@ -151,13 +92,13 @@ int assign_spaminess(char *p, struct __config cfg, unsigned int uid){
       return 0;
 
 #ifdef HAVE_MYSQL
-   spaminess = SQL_QUERY(QRY, cfg.group_type, SQL_TOKEN_TABLE, p, tumhash);
+   spaminess = SQL_QUERY(QRY, cfg.group_type, SQL_TOKEN_TABLE, p);
 #endif
 #ifdef HAVE_SQLITE3
-   spaminess = SQL_QUERY(QRY, cfg.group_type, SQL_TOKEN_TABLE, p, tumhash);
+   spaminess = SQL_QUERY(QRY, cfg.group_type, SQL_TOKEN_TABLE, p);
 #endif
 #ifdef HAVE_MYDB
-   spaminess = mydbqry(mhash, p, cfg.rob_s, cfg.rob_x, tumhash);
+   spaminess = mydbqry(mhash, p, cfg.rob_s, cfg.rob_x);
 #endif
 
    /* if it was at the Subject: header line, let's try it if it were not in the Subject line, 2006.05.03, SJ */
@@ -174,13 +115,13 @@ int assign_spaminess(char *p, struct __config cfg, unsigned int uid){
          strncpy(t, p+8, MAX_TOKEN_LEN-1);
 
    #ifdef HAVE_MYSQL
-      spaminess = SQL_QUERY(QRY, cfg.group_type, SQL_TOKEN_TABLE, t, tumhash);
+      spaminess = SQL_QUERY(QRY, cfg.group_type, SQL_TOKEN_TABLE, t);
    #endif
    #ifdef HAVE_SQLITE3
-      spaminess = SQL_QUERY(QRY, cfg.group_type, SQL_TOKEN_TABLE, t, tumhash);
+      spaminess = SQL_QUERY(QRY, cfg.group_type, SQL_TOKEN_TABLE, t);
    #endif
    #ifdef HAVE_MYDB
-      spaminess = mydbqry(mhash, t, cfg.rob_s, cfg.rob_x, tumhash);
+      spaminess = mydbqry(mhash, t, cfg.rob_s, cfg.rob_x);
    #endif
    }
 
@@ -218,7 +159,7 @@ int walk_hash(MYSQL mysql, struct node *xhash[MAXHASH], struct __config cfg){
 int walk_hash(sqlite3 *db, struct node *xhash[MAXHASH], struct __config cfg){
 #endif
 #ifdef HAVE_MYDB
-int walk_hash(struct node *xhash[MAXHASH], struct __config cfg){
+int walk_hash(struct mydb_node *mhash[MAX_MYDB_HASH], struct node *xhash[MAXHASH], struct __config cfg){
 #endif
 
    int i, n=0;
@@ -236,7 +177,7 @@ int walk_hash(struct node *xhash[MAXHASH], struct __config cfg){
          assign_spaminess(db, p->str, cfg, QRY.uid);
       #endif
       #ifdef HAVE_MYDB
-         assign_spaminess(p->str, cfg, QRY.uid);
+         assign_spaminess(mhash, p->str, cfg, QRY.uid);
       #endif
 
          n++;
@@ -276,91 +217,6 @@ struct _state parse_message(char *spamfile, struct __config cfg){
 
 
 /*
- * TUM training if we have to
- */
-
-#ifdef HAVE_MYSQL
-int tum_train(MYSQL mysql, char *spamfile, double spaminess, struct __config cfg){
-#endif
-#ifdef HAVE_SQLITE3
-int tum_train(sqlite3 *db, char *spamfile, double spaminess, struct __config cfg){
-#endif
-#ifdef HAVE_MYDB
-int tum_train(char *spamfile, double spaminess, struct __config cfg){
-#endif
-
-   unsigned long n;
-#ifndef HAVE_MYDB
-   char buf[MAXBUFSIZE];
-#endif
-
-   if
-#ifndef HAVE_MYDB
-   ( (QRY.uid > 0 || cfg.group_type == GROUP_SHARED) && 
-#endif
-
-       (
-         (cfg.training_mode == T_TUM && (spaminess >= cfg.spam_overall_limit || spaminess < cfg.max_ham_spamicity)) ||
-         //cfg.training_mode == T_TUM ||
-         (cfg.initial_1000_learning == 1 && (QRY.ham_msg < NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED || QRY.spam_msg < NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED))
-       )
-#ifndef HAVE_MYDB
-   )
-#endif
-   {
-
-      gettimeofday(&tv1, &tz);
-
-      if(spaminess >= cfg.spam_overall_limit){
-      #ifdef HAVE_MYDB
-         n = my_walk_hash(cfg.mydbfile, mhash, 1, tumhash, T_TOE);
-      #else
-         n = my_walk_hash(QRY, 1, SQL_TOKEN_TABLE, tumhash, T_TOE);
-         snprintf(buf, MAXBUFSIZE-1, "update %s set nspam=nspam+1 WHERE uid=%ld", SQL_MISC_TABLE, QRY.uid);
-      #endif
-      }
-      else {
-      #ifdef HAVE_MYDB
-         n = my_walk_hash(cfg.mydbfile, mhash, 0, tumhash, T_TOE);
-      #else
-         n = my_walk_hash(QRY, 0, SQL_TOKEN_TABLE, tumhash, T_TOE);
-        #ifdef HAVE_MYSQL 
-         snprintf(buf, MAXBUFSIZE-1, "update %s set nham=nham+1 WHERE uid=%ld", SQL_MISC_TABLE, QRY.uid);
-        #else
-         snprintf(buf, MAXBUFSIZE-1, "update %s set nham=nham+1 WHERE uid=0", SQL_MISC_TABLE);
-        #endif
-      #endif
-      }
-
-      gettimeofday(&tv2, &tz);
-
-      if(n > 0 && cfg.verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: TUM training %ld tokens for uid: %ld %ld [ms]", spamfile, n, QRY.uid, tvdiff(tv2, tv1)/1000);
-
-   #ifdef HAVE_MYSQL
-      mysql_real_query(&mysql, buf, strlen(buf));
-   #endif
-   #ifdef HAVE_SQLITE3
-      if(sqlite3_prepare_v2(db, buf, -1, &pStmt, pzTail) == SQLITE_OK)
-         sqlite3_step(pStmt);
-
-      sqlite3_finalize(pStmt);
-   #endif
-
-      snprintf(trainbuf, SMALLBUFSIZE-1, "%sTUM\r\n", cfg.clapf_header_field);
-   }
-
-   clearhash(tumhash);
-
-
-#ifdef HAVE_QCACHE
-   close(QRY.sockfd);
-#endif
-
-   return 1;
-}
-
-
-/*
  * evaulate tokens
  */
 
@@ -371,24 +227,19 @@ double eval_tokens(MYSQL mysql, char *spamfile, struct __config cfg, struct _sta
 double eval_tokens(sqlite3 *db, char *spamfile, struct __config cfg, struct _state state){
 #endif
 #ifdef HAVE_MYDB
-double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
+double eval_tokens(struct mydb_node *mhash[MAX_MYDB_HASH], char *spamfile, struct __config cfg, struct _state state){
 #endif
 
    unsigned long n = 0;
    struct _token *p, *q;
    float spaminess, spaminess2;
-   int found_on_rbl=0;
+   int found_on_rbl=0, has_embed_image=0, surbl_match=0;
 #ifdef HAVE_SURBL
    struct node *urlhash[MAXHASH];
    struct node *P,*Q;
    char surbl_token[MAX_TOKEN_LEN];
    float n_urls = 0;
    int i, u, j;
-#endif
-#ifdef HAVE_MYDB
-  #ifndef DEBUG
-   int _u;
-  #endif
 #endif
 
    if(!state.first)
@@ -404,7 +255,6 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
    inithash(s_mix);
 
    inithash(B_hash);
-   inithash(tumhash);
 
 #ifdef HAVE_SURBL
    inithash(urlhash);
@@ -423,7 +273,7 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
          assign_spaminess(db, p->str, cfg, QRY.uid);
       #endif
       #ifdef HAVE_MYDB
-         assign_spaminess(p->str, cfg, QRY.uid);
+         assign_spaminess(mhash, p->str, cfg, QRY.uid);
       #endif
 
          addnode(B_hash, p->str, 0, 0);
@@ -445,7 +295,7 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
          assign_spaminess(db, p->str, cfg, QRY.uid);
       #endif
       #ifdef HAVE_MYDB
-         assign_spaminess(p->str, cfg, QRY.uid);
+         assign_spaminess(mhash, p->str, cfg, QRY.uid);
       #endif
       }
 
@@ -511,7 +361,7 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
    assign_spaminess(db, state.from, cfg, QRY.uid);
 #endif
 #ifdef HAVE_MYDB
-   assign_spaminess(state.from, cfg, QRY.uid);
+   assign_spaminess(mhash, state.from, cfg, QRY.uid);
 #endif
 
    addnode(B_hash, state.from, 0, 0);
@@ -547,7 +397,7 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
       n_tokens += walk_hash(db, B_hash, cfg);
    #endif
    #ifdef HAVE_MYDB
-      n_tokens += walk_hash(B_hash, cfg);
+      n_tokens += walk_hash(mhash, B_hash, cfg);
    #endif
 
       /* consult blacklists about the IPv4 address connecting to us */
@@ -632,19 +482,6 @@ double eval_tokens(char *spamfile, struct __config cfg, struct _state state){
 
 END_OF_EVALUATION:
 
-#ifdef HAVE_MYDB
- #ifndef DEBUG
-   _u = update_tokens(cfg.mydbfile, mhash, s_phrase_hash);
-   if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "update timestamp for %d phrases", _u);
-   _u = update_tokens(cfg.mydbfile, mhash, shash);
-   if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "update timestamp for %d single tokens", _u);
- #endif
-#endif
-
-#ifdef HAVE_SQLITE3
-   update_tokens(QRY.db, s_mix);
-#endif
-
    clearhash(shash);
    clearhash(s_phrase_hash);
    clearhash(s_mix);
@@ -657,7 +494,7 @@ END_OF_EVALUATION:
    /* if the message is unsure, try to determine if it's a spam, 2008.01.09, SJ */
 
    if(spaminess > cfg.max_ham_spamicity && spaminess < cfg.spam_overall_limit)
-      spaminess = apply_fixes(spaminess, found_on_rbl, state.base64_text, state.c_shit, state.l_shit, state.c_hex_shit, cfg);
+      spaminess = apply_fixes(spaminess, found_on_rbl, surbl_match, has_embed_image, state.base64_text, state.c_shit, state.l_shit, state.c_hex_shit, cfg);
 
 
    /* fix spaminess value if we have to */
@@ -674,17 +511,18 @@ END_OF_EVALUATION:
  */
 
 #ifdef HAVE_MYSQL
-double bayes_file(MYSQL mysql, char *spamfile, struct _state state, struct session_data sdata, struct __config cfg){
+struct c_res bayes_file(MYSQL mysql, char *spamfile, struct _state state, struct session_data sdata, struct __config cfg){
 #endif
 #ifdef HAVE_SQLITE3
-double bayes_file(sqlite3 *db, char *spamfile, struct _state state, struct session_data sdata, struct __config cfg){
+struct c_res bayes_file(sqlite3 *db, char *spamfile, struct _state state, struct session_data sdata, struct __config cfg){
 #endif
 #ifdef HAVE_MYDB
-double bayes_file(char *spamfile, struct _state state, struct session_data sdata, struct __config cfg){
+struct c_res bayes_file(struct mydb_node *mhash[MAX_MYDB_HASH], char *spamfile, struct _state state, struct session_data sdata, struct __config cfg){
 #endif
 
    char buf[MAXBUFSIZE], *p;
-   float spaminess, ham_from=0, spam_from=0;
+   float ham_from=0, spam_from=0;
+   struct c_res result;
 
 #ifdef HAVE_MYSQL
    struct te TE;
@@ -693,9 +531,13 @@ double bayes_file(char *spamfile, struct _state state, struct session_data sdata
    struct mydb_node *Q;
 #endif
 
+   result.spaminess = DEFAULT_SPAMICITY;
+   result.ham_msg = 0;
+   result.spam_msg = 0;
+
    if(spamfile == NULL){
       syslog(LOG_PRIORITY, "%s: no spamfile", sdata.ttmpfile);
-      return DEFAULT_SPAMICITY;
+      return result;
    }
 
 
@@ -728,7 +570,8 @@ double bayes_file(char *spamfile, struct _state state, struct session_data sdata
    if(strlen(cfg.blackhole_path) > 3 && blackness(cfg.blackhole_path, state.ip, cfg.verbosity) > 100){
       syslog(LOG_PRIORITY, "%s: found %s on our blackhole", p, state.ip);
 
-      return cfg.spaminess_of_blackholed_mail;
+      result.spaminess = cfg.spaminess_of_blackholed_mail;
+      return result;
    }
 #endif
 
@@ -780,9 +623,12 @@ double bayes_file(char *spamfile, struct _state state, struct session_data sdata
    QRY.spam_msg = Nspam;
 #endif
 
+   result.ham_msg = QRY.ham_msg;
+   result.spam_msg = QRY.spam_msg;
+
    if((QRY.ham_msg + QRY.spam_msg == 0) && cfg.initial_1000_learning == 0){
       syslog(LOG_PRIORITY, "%s: %s", p, ERR_SQL_DATA);
-      return DEFAULT_SPAMICITY;
+      return result;
    }
 
 #ifdef DEBUG
@@ -826,7 +672,8 @@ double bayes_file(char *spamfile, struct _state state, struct session_data sdata
    #endif
 
       if(ham_from > NUMBER_OF_GOOD_FROM && spam_from == 0){
-         return REAL_HAM_TOKEN_PROBABILITY;
+         result.spaminess = REAL_HAM_TOKEN_PROBABILITY;
+         return result;
       }
    }
 
@@ -836,255 +683,85 @@ double bayes_file(char *spamfile, struct _state state, struct session_data sdata
 #ifdef HAVE_QCACHE
    QRY.sockfd = qcache_socket(cfg.qcache_addr, cfg.qcache_port, cfg.qcache_socket);
    if(QRY.sockfd == -1)
-      return DEFAULT_SPAMICITY;
+      return result;
 #endif
 
 
    /* evaluate the tokens */
 
 #ifdef HAVE_MYSQL
-   spaminess = eval_tokens(mysql, p, cfg, state);
+   result.spaminess = eval_tokens(mysql, p, cfg, state);
 #endif
 #ifdef HAVE_SQLITE3
-   spaminess = eval_tokens(db, p, cfg, state);
+   result.spaminess = eval_tokens(db, p, cfg, state);
 #endif
 #ifdef HAVE_MYDB
-   spaminess = eval_tokens(p, cfg, state);
+   result.spaminess = eval_tokens(mhash, p, cfg, state);
 #endif
 
-
-   return spaminess;
+   return result;
 }
 
 
 /*
- * retrain the message
+ * train with this message
  */
 
 #ifdef HAVE_MYSQL
-int retraining(MYSQL mysql, struct session_data sdata, char *username, int is_spam, struct __config cfg){
+int train_message(MYSQL mysql, struct session_data sdata, struct _state state, int rounds, int is_spam, int train_mode, struct __config cfg){
 #endif
 #ifdef HAVE_SQLITE3
-int retraining(sqlite3 *db, struct session_data sdata, char *username, int is_spam, struct __config cfg){
+int train_message(sqlite3 *db, struct session_data sdata, struct _state state, int rounds, int is_spam, int train_mode, struct __config cfg){
+   char *err=NULL;
 #endif
 #ifdef HAVE_MYDB
-int retraining(struct session_data sdata, char *username, int is_spam, struct __config cfg){
+int train_message(char *mydbfile, struct mydb_node *mhash[MAX_MYDB_HASH], struct session_data sdata, struct _state state, int rounds, int is_spam, int train_mode, struct __config cfg){
 #endif
+   int i, tm=train_mode;
+   char buf[SMALLBUFSIZE];
 
-   int fd, len, i=0, m, train_mode=T_TOE;
-   char *p, *q, *r, ID[RND_STR_LEN+1]="", buf[8*MAXBUFSIZE], puf[SMALLBUFSIZE];
-   unsigned long now;
-   double spaminess;
-   struct _state state;
-   struct _token *P, *Q;
-   struct node *tokens[MAXHASH];
-   time_t cclock;
+   if(state.first == NULL) return 0;
 
+   for(i=1; i<=rounds; i++){
 
-   if(cfg.verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: trying to retrain: num of rcpt: %d, uid: %ld, username: %s", sdata.ttmpfile, sdata.num_of_rcpt_to, sdata.uid, username);
+   #ifdef HAVE_SQLITE3
+      my_walk_hash(db, is_spam, SQL_TOKEN_TABLE, state.first, tm);
+   #endif
+   #ifdef HAVE_MYDB
+      my_walk_hash(mydbfile, mhash, is_spam, state.first, tm);
+   #else
 
-   /* have we got valid data? */
+      /* update the t_misc table */
 
-   if(sdata.num_of_rcpt_to != 1) return 1;
-   if(sdata.uid == 0) return 1;
-   if(username == NULL) return 1;
+      if(is_spam == 1)
+         snprintf(buf, SMALLBUFSIZE-1, "UPDATE %s SET nspam=nspam+1 WHERE uid=%ld", SQL_MISC_TABLE, sdata.uid);
+      else
+         snprintf(buf, SMALLBUFSIZE-1, "UPDATE %s SET nham=nham+1 WHERE uid=%ld", SQL_MISC_TABLE, sdata.uid);
+   #endif
 
-   /* make sure nothing interferes with us */
+   #ifdef HAVE_MYSQL
+      mysql_real_query(&mysql, buf, strlen(buf));
+   #endif
+   #ifdef HAVE_SQLITE3
+      sqlite3_exec(db, buf, NULL, NULL, &err);
+   #endif
 
-   cfg.training_mode = 0;
-   cfg.initial_1000_learning=0;
-
-   cfg.rbl_domain[0] = '\0';
-   cfg.surbl_domain[0] = '\0';
-
-   cfg.blackhole_path[0] = '\0';
-
-   time(&cclock);
-   now = cclock;
-
-
-   /* if we want to train with a message having no message id in it,
-      such as a blackhole message, 2007.10.18, SJ
-    */
-
-   if(sdata.skip_id_check == 1){
-      snprintf(ID, RND_STR_LEN, "%s", sdata.ttmpfile);
-      goto AFTER_ID_EXTRACT;
-   }
-
-   fd = open(sdata.ttmpfile, O_RDONLY);
-   if(fd != -1){
-      while((len = read(fd, buf, 8*MAXBUFSIZE)) > 0){
-         /* data should be here in the first read */
-
-         p = buf;
-         do {
-            p = split(p, '\n', puf, SMALLBUFSIZE-1);
-
-            q = strstr(puf, cfg.clapf_header_field);
-            if(q){
-               trim(puf);
-               r = strchr(puf, ' ');
-               if(r){
-                  r++;
-                  if(is_valid_id(r)){
-                     i++;
-                     if(i <= 1){
-                        snprintf(ID, RND_STR_LEN, "%s", r);
-                     }
-                  }
-               }
-            }
-
-            if(strlen(ID) > 2 && strncmp(puf, cfg.clapf_header_field, strlen(cfg.clapf_header_field)) == 0){
-               if(strncmp(puf + strlen(cfg.clapf_header_field), "TUM", 3) == 0)
-                  train_mode = T_TUM;
-            }
-         } while(p);
-            
-      }
-
-      close(fd);
-   }
-   else return 1;
-
-
-AFTER_ID_EXTRACT:
-
-   if(cfg.verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: found id: %s, is_spam: %d", sdata.ttmpfile, ID, is_spam);
-
-   /* determine the path of the original file */
-
-   if(is_spam == 1)
-      snprintf(buf, MAXBUFSIZE-1, "%s/%s/%c/%s/h.%s", cfg.chrootdir, USER_QUEUE_DIR, username[0], username, ID);
-   else
-      snprintf(buf, MAXBUFSIZE-1, "%s/%s/%c/%s/s.%s", cfg.chrootdir, USER_QUEUE_DIR, username[0], username, ID);
-
-   /* fix the queue file if we haven't renamed the file according to its spamicity status, 2007.10.24, SJ */
-   if(sdata.skip_id_check == 1)
-      snprintf(buf, MAXBUFSIZE-1, "%s/%s/%c/%s/%s", cfg.chrootdir, USER_QUEUE_DIR, username[0], username, ID);
-
-   /* if we use the pop3 proxy on the localhost, 2007.11.21, SJ */
-#ifdef HAVE_POP3GW
-   snprintf(buf, MAXBUFSIZE-1, "%s", ID);
-#endif
-
-#ifdef HAVE_MYSQL
-   QRY.mysql = mysql;
-#endif
-#ifdef HAVE_SQLITE3
-   QRY.db = db;
-#endif
-   QRY.uid = sdata.uid;
-   QRY.sockfd = -1;
-   QRY.ham_msg = 0;
-   QRY.spam_msg = 0;
-   QRY.rob_s = cfg.rob_s;
-   QRY.rob_x = cfg.rob_x;
-
-   state = parse_message(buf, cfg);
-
-
-   /* if this is a shared group, make sure the token database is trained with uid=0 */
-
-   if(cfg.group_type == GROUP_SHARED)
-      QRY.uid = 0;
-
-   if(state.first){
-     for(i=0; i<MAX_ITERATIVE_TRAIN_LOOPS; i++){
-
-         inithash(tokens);
-
-         spaminess = DEFAULT_SPAMICITY;
-         P = state.first;
-
-         while(P != NULL){
-            Q = P->r;
-            m = 1;
-
-            addnode(tokens, P->str, 0, 0);
-            P = Q;
-         }
-
-         QRY.sockfd = -1;
-
-      #ifdef HAVE_QCACHE
-         QRY.sockfd = qcache_socket(cfg.qcache_addr, cfg.qcache_port, cfg.qcache_socket);
-      #endif
-
-      #ifdef HAVE_MYDB
-         my_walk_hash(cfg.mydbfile, mhash, is_spam, tokens, train_mode);
-      #else
-         my_walk_hash(QRY, is_spam, SQL_TOKEN_TABLE, tokens, train_mode);
-      #endif
-
-         if(QRY.sockfd != -1) close(QRY.sockfd);
-
-         /* update t_misc table */
-
-         if(is_spam == 1){
-               if(train_mode == T_TUM)
-                  snprintf(buf, MAXBUFSIZE-1, "UPDATE %s SET nspam=nspam+1, nham=nham-1 WHERE uid=%ld AND nham > 0", SQL_MISC_TABLE, QRY.uid);
-               else
-                  snprintf(buf, MAXBUFSIZE-1, "UPDATE %s SET nspam=nspam+1 WHERE uid=%ld", SQL_MISC_TABLE, QRY.uid);
-         }
-         else {
-               if(train_mode == T_TUM)
-                  snprintf(buf, MAXBUFSIZE-1, "UPDATE %s SET nham=nham+1, nspam=nspam-1 WHERE uid=%ld AND nspam > 0", SQL_MISC_TABLE, QRY.uid);
-               else
-                  snprintf(buf, MAXBUFSIZE-1, "UPDATE %s SET nham=nham+1 WHERE uid=%ld", SQL_MISC_TABLE, QRY.uid);
-         }
-
-      #ifdef HAVE_MYSQL   
-         mysql_real_query(&mysql, buf, strlen(buf));
-      #endif
-      #ifdef HAVE_SQLITE3
-         sqlite3_prepare_v2(db, buf, -1, &pStmt, pzTail);
-         sqlite3_step(pStmt);
-         sqlite3_finalize(pStmt);
-      #endif
-
-         snprintf(buf, MAXBUFSIZE-1, "INSERT INTO %s (uid, ts, msgid, is_spam) VALUES(%ld, %ld, '%s', %d)", SQL_TRAININGLOG_TABLE, QRY.uid, now, ID, is_spam);
+      if(train_mode == T_TUM){
+         if(is_spam == 1)
+            snprintf(buf, SMALLBUFSIZE-1, "UPDATE %s SET nham=nham-1 WHERE uid=%ld", SQL_MISC_TABLE, sdata.uid);
+         else
+            snprintf(buf, SMALLBUFSIZE-1, "UPDATE %s SET nspam=nspam-1 WHERE uid=%ld", SQL_MISC_TABLE, sdata.uid);
 
       #ifdef HAVE_MYSQL
          mysql_real_query(&mysql, buf, strlen(buf));
       #endif
       #ifdef HAVE_SQLITE3
-         sqlite3_prepare_v2(db, buf, -1, &pStmt, pzTail);
-         sqlite3_step(pStmt);
-         sqlite3_finalize(pStmt);
+         sqlite3_exec(db, buf, NULL, NULL, &err);
       #endif
-
-
-
-         clearhash(tokens);
-
-      #ifdef HAVE_MYSQL
-         spaminess = bayes_file(mysql, sdata.ttmpfile, state, sdata, cfg);
-      #endif
-      #ifdef HAVE_SQLITE3
-         spaminess = bayes_file(db, sdata.ttmpfile, state, sdata, cfg);
-      #endif
-      #ifdef HAVE_MYDB
-         spaminess = bayes_file(sdata.ttmpfile, state, sdata, cfg);
-      #endif
-
-      #ifdef HAVE_QCACHE
-         close(QRY.sockfd);
-      #endif
-
-         if(cfg.verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: training round %d, mode: %d, spaminess: %.4f", ID, i, train_mode, spaminess);
-
-         if(is_spam == 1 && spaminess > cfg.spam_overall_limit) break;
-         if(is_spam == 0 && spaminess < cfg.max_ham_spamicity) break;
-
-         /* only the first round can be TUM/TEFT, 2007.09.14, SJ */
-         train_mode = T_TOE;
       }
 
+      tm = T_TOE;
    }
-
-   free_and_print_list(state.first, 0);
 
    return 0;
 }

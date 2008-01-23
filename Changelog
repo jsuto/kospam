@@ -1,5 +1,48 @@
 0.3.30:
 
+2008.01.23, SJ
+
+This is an extensive modification. I redesigned the spam handling blocks
+and made several changes. If you are using the mysql token databases
+update your table structure by issuing the following sql commands:
+
+alter table t_token add column timestamp int default 0;
+update t_token set timestamp=UNIX_TIMESTAMP();
+
+
+Redesigned the training process as follows: removed the train utility,
+and you can train with the spamdrop command, eg.
+
+to train with a spam message:
+spamdrop -c /usr/local/etc/clapf.conf -S < rfc822_format_message
+
+or to train with a ham message:
+spamdrop -c /usr/local/etc/clapf.conf -H < rfc822_format_message
+
+Clapf automatically learns an email if:
+- initial_1000_learning=1 is set in clapf conf and we have less then
+1000 ham or spam
+- training_mode=1 is set in clapf.conf and the message is surely spam,
+but its spaminess is under 0.99
+- training_mode=1 is set in clapf.conf and the message is surely ham,
+but its spaminess is above 0.1
+- the message came to the blackhole(aka. minefield address), but its
+spaminess is under 0.99
+ 
+Now all the token backends stores (and updates) the timestamp of
+the given token. This gives you the ability to remove any token
+which is no longer used to free storage space.
+You may use the util/purge-mysql.sql SQL script if using MySQL,
+or the util/purge-sqlite3.sh with SQLite3.
+
+These scripts remove any token if it's:
+- not used in the last 90 days
+- not used in the last 60 days and 2*nham + nspam < 5
+- not used in the last 15 days and nham+nspam = 1
+
+This helps to keep the database size in the required minimum size
+while preserving accuracy.
+
 2008.01.20, SJ
 
 Modified the SQLite3 stuff, to handle timestamps, suitable for removing

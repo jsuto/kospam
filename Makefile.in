@@ -27,8 +27,8 @@ CLAPF_GROUP = `id -g $(CLAPF_USER)`
 
 INSTALL = @INSTALL@
 
-all: clapf @clapfstore@ splitmbox @cgi@ @parsembox@ @passmail@ @train@ @qcache@ @test@
-install: install-clapf @clapfstore_install@ install-splitmbox @parsembox_install@ @passmail_install@ @train_install@ @qcache_install@ @db_install@
+all: clapf @clapfstore@ splitmbox @cgi@ @parsembox@ @passmail@ @spamdrop@ @preparesql@ @qcache@ @test@
+install: install-clapf @clapfstore_install@ install-splitmbox @parsembox_install@ @passmail_install@ @spamdrop_install@ @qcache_install@ @db_install@
 
 clapf.conf.old:
 	sed -e 's%pidfile=.*%pidfile=$(localstatedir)/run/clapf.pid%' \
@@ -60,26 +60,24 @@ spamdrop: % : %.o bayes.o $(OBJS) $(MYSQL_OBJS)
 splitmbox: % : %.o misc.o decoder.o parser.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
 
-spamcgi usercgi traincgi trainlogcgi statcgi: % : %.o $(OBJS) $(USER_OBJ) $(MYSQL_OBJS)
+spamcgi spamstat usercgi traincgi trainlogcgi statcgi: % : %.o $(OBJS) $(USER_OBJ) $(MYSQL_OBJS)
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
 
 aphash: % : %.o misc.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^
 
-prepare-sql: % : %.o misc.o
+prepare-sql : % : %.o misc.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^
 
-spam-fwd-train spamstat clapf_admin: % : %.o $(OBJS) $(MYSQL_OBJS)
+clapf_admin	: % : %.o buffer.o misc.o score.o cfg.o chi.o $(MYSQL_OBJS)
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
+
 
 smapd:	% : %.o $(OBJS) $(MYSQL_OBJS)
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR) -lssl -lcrypto -ldl -lpthread
 
 clapfstore:	% : %.o cfg.o misc.o ssl_util.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR) -lssl -lcrypto -ldl -lpthread
-
-train: % : %.o spamdrop spamstat clapf_admin aphash prepare-sql
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ train.o $(OBJS) $(MYSQL_OBJS) $(LIBS) $(LIBDIR) @LDFLAGS@
 
 mydb_stat:	%: %.o mydb.o misc.o hash.o chi.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ -lm
@@ -91,6 +89,7 @@ test:
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -DDEBUG -c $(srcdir)/black.c
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -DDEBUG -c $(srcdir)/hash.c
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -DDEBUG -c $(srcdir)/parser.c
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -DDEBUG -c $(srcdir)/score.c
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -DDEBUG -c $(srcdir)/rbl.c
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -DDEBUG -o spamtest $(srcdir)/test.c $(OBJS) $(MYSQL_OBJS) $(LIBS) $(LIBDIR) @LDFLAGS@
 
@@ -163,6 +162,7 @@ install-parsembox:
 	$(INSTALL) -m 0755 $(srcdir)/util/db_init_mydb.sh $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 $(srcdir)/util/db_init_mysql.sh $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 $(srcdir)/util/db_init_sqlite3.sh $(DESTDIR)$(libexecdir)/clapf
+	$(INSTALL) -m 0755 $(srcdir)/util/purge-sqlite3.sh $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -d $(DESTDIR)$(mandir)/man1
 	$(INSTALL) -m 0644 $(srcdir)/doc/man/parsembox.1 $(DESTDIR)$(mandir)/man1
 	$(INSTALL) -m 0644 $(srcdir)/doc/man/spamtest.1 $(DESTDIR)$(mandir)/man1
@@ -190,7 +190,7 @@ clean_db:
 	rm -f ham.tmp spam.tmp num_of_spam.tmp num_of_ham.tmp tokens.mydb temp.*
 
 clean:
-	rm -f *.o *.a smapd qs db.sql clapf clapfstore clapf.conf parsembox splitmbox spamtest spamdrop train spamcgi traincgi trainlogcgi usercgi statcgi passmail spam-fwd-train spamstat aphash clapf_admin prepare-sql clapf.conf
+	rm -f *.o *.a smapd qs db.sql clapf clapfstore clapf.conf parsembox splitmbox spamtest spamdrop spamcgi traincgi trainlogcgi usercgi statcgi passmail spamstat aphash clapf_admin prepare-sql
 
 dist_clean distclean: clean
 	rm -f Makefile config.log config.status clapf-config.h stamp.h clapf.conf

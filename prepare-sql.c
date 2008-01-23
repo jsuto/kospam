@@ -1,5 +1,5 @@
 /*
- * prepare-sql.c, 2008.01.20, SJ
+ * prepare-sql.c, 2008.01.23, SJ
  */
 
 #include <stdio.h>
@@ -12,6 +12,7 @@
 #include <unistd.h>
 #include "misc.h"
 #include "messages.h"
+#include "parser.h"
 #include "config.h"
 
 
@@ -68,7 +69,7 @@ void clearhash(struct node *xhash[MAXHASH]){
          p = q;
 
       #ifdef HAVE_MYSQL
-         printf("INSERT INTO t_token (token, uid, nham, nspam) VALUES(%llu, 0, %d, %d);\n", p->key, p->nham, p->nspam);
+         printf("INSERT INTO t_token (token, uid, nham, nspam, timestamp) VALUES(%llu, 0, %d, %d, %ld);\n", p->key, p->nham, p->nspam, now);
       #endif
       #ifdef HAVE_SQLITE3
          printf("INSERT INTO t_token (token, nham, nspam, timestamp) VALUES(%llu, %d, %d, %ld);\n", p->key, p->nham, p->nspam, now);

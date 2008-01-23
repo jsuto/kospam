@@ -1,5 +1,5 @@
 /*
- * messages.h.hu, 2008.01.13, SJ
+ * messages.h.hu, 2008.01.23, SJ
  * Hungarian version
  */
 
@@ -68,6 +68,7 @@
 #define ERR_INVALID_MODE "Érvénytelen tanítási mód"
 #define ERR_TRAIN_DONE "Tanítás sikerült"
 #define ERR_TRAINING "tanítás"
+#define ERR_TRAIN_AS_HAMSPAM "nem lehet egyszerre hamként és spamként tanítani"
 #define ERR_NO_FROM "Nincs From környezeti változó"
 
 #define CGI_TRAIN_LOG "Tanítás napló"

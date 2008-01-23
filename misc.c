@@ -1,5 +1,5 @@
 /*
- * misc.c, 2008.01.12, SJ
+ * misc.c, 2008.01.22, SJ
  */
 
 #include <stdio.h>
@@ -648,6 +648,53 @@ void log_ham_spam_per_email(char *tmpfile, char *email, int ham_or_spam){
       syslog(LOG_PRIORITY, "%s: %s got HAM", tmpfile, email);
    else
       syslog(LOG_PRIORITY, "%s: %s got SPAM", tmpfile, email);
+}
+
+
+/*
+ * extract messageid from forwarded messages
+ */
+
+int extract_id_from_message(char *messagefile, char *clapf_header_field, char *ID){
+   int i=0, fd, len, train_mode=T_TOE;
+   char *p, *q, *r, buf[8*MAXBUFSIZE], puf[SMALLBUFSIZE];
+
+   fd = open(messagefile, O_RDONLY);
+   if(fd == -1) return -1;
+
+   while((len = read(fd, buf, 8*MAXBUFSIZE)) > 0){
+      /* data should be here in the first read */
+
+      p = buf;
+      do {
+         p = split(p, '\n', puf, SMALLBUFSIZE-1);
+
+         q = strstr(puf, clapf_header_field);
+         if(q){
+            trim(puf);
+            r = strchr(puf, ' ');
+            if(r){
+               r++;
+               if(is_valid_id(r)){
+                  i++;
+                  if(i <= 1){
+                     snprintf(ID, RND_STR_LEN, "%s", r);
+                  }
+               }
+            }
+         }
+
+         if(strlen(ID) > 2 && strncmp(puf, clapf_header_field, strlen(clapf_header_field)) == 0){
+            if(strncmp(puf + strlen(clapf_header_field), "TUM", 3) == 0)
+               train_mode = T_TUM;
+         }
+      } while(p);
+
+   }
+
+   close(fd);
+
+   return train_mode;
 }
 
 

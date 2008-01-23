@@ -1,5 +1,5 @@
 /*
- * messages.h, 2008.01.13, SJ
+ * messages.h, 2008.01.23, SJ
  */
 
 // cgi
@@ -68,6 +68,7 @@
 #define ERR_TRAIN_DONE "Training has done"
 #define ERR_TRAINING "training"
 #define ERR_NO_FROM "No From environment variable"
+#define ERR_TRAIN_AS_HAMSPAM "cannot train both as spam and as ham"
 #define CGI_TRAIN_LOG "Training log"
 
 

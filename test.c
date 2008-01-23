@@ -1,5 +1,5 @@
 /*
- * test.c, 2007.12.26, SJ
+ * test.c, 2008.01.23, SJ
  *
  * test the bayesian decision with a single message
  */
@@ -27,20 +27,24 @@
 #ifdef HAVE_MYDB
    #include "mydb.h"
    int rc;
+   struct mydb_node *mhash[MAX_MYDB_HASH];
+   struct c_res bayes_file(struct mydb_node *mhash[MAX_MYDB_HASH], char *spamfile, struct _state state, struct session_data sdata, struct __config cfg);
 #endif
 
+
 int main(int argc, char **argv){
-   double spaminess=DEFAULT_SPAMICITY;
    struct timezone tz;
    struct timeval tv_spam_start, tv_spam_stop;
    struct session_data sdata;
    struct _state state;
    struct __config cfg;
+   struct c_res result;
 
    if(argc < 3){
       fprintf(stderr, "usage: %s <config file> <message> [<uid>]\n", argv[0]);
       exit(1);
    }
+
 
    cfg = read_config(argv[1]);
 
@@ -57,6 +61,9 @@ int main(int argc, char **argv){
    memset(sdata.rcptto[0], MAXBUFSIZE, 0);
    state = parse_message(argv[2], cfg);
 
+   result.spaminess = DEFAULT_SPAMICITY;
+   result.ham_msg = result.spam_msg = 0;
+
    if(argc >= 4) sdata.uid = atoi(argv[3]);
 
    gettimeofday(&tv_spam_start, &tz);
@@ -64,7 +71,7 @@ int main(int argc, char **argv){
 #ifdef HAVE_MYSQL
    mysql_init(&mysql);
    if(mysql_real_connect(&mysql, cfg.mysqlhost, cfg.mysqluser, cfg.mysqlpwd, cfg.mysqldb, cfg.mysqlport, cfg.mysqlsocket, 0)){
-      spaminess = bayes_file(mysql, argv[2], state, sdata, cfg);
+      result = bayes_file(mysql, argv[2], state, sdata, cfg);
       mysql_close(&mysql);
    }
    else {
@@ -83,7 +90,7 @@ int main(int argc, char **argv){
           fprintf(stderr, "error happened\n");
 
 
-      spaminess = bayes_file(db, argv[2], state, sdata, cfg);
+      result = bayes_file(db, argv[2], state, sdata, cfg);
    }
    sqlite3_close(db);
 #endif
@@ -92,18 +99,20 @@ int main(int argc, char **argv){
    rc = init_mydb(cfg.mydbfile, mhash);
    fprintf(stderr, "using %s...\n", cfg.mydbfile);
    if(rc == 1){
-      spaminess = bayes_file(argv[2], state, sdata, cfg);
+      printf("running bayes test\n");
+      result = bayes_file(mhash, argv[2], state, sdata, cfg);
    }
    close_mydb(mhash);
 #endif
+
 
    free_and_print_list(state.first, 0);
 
    gettimeofday(&tv_spam_stop, &tz);
 
-   fprintf(stderr, "%s: %.4f in %ld [ms]\n", argv[2], spaminess, tvdiff(tv_spam_stop, tv_spam_start)/1000);
+   fprintf(stderr, "%s: %.4f in %ld [ms]\n", argv[2], result.spaminess, tvdiff(tv_spam_stop, tv_spam_start)/1000);
 
-   if(spaminess >= cfg.spam_overall_limit)
+   if(result.spaminess >= cfg.spam_overall_limit)
       return 1;
 
    return 0;

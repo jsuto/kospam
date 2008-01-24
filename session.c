@@ -622,6 +622,7 @@ void init_child(int new_sd, char *hostid){
                               else is_spam = 0;
 
                               syslog(LOG_PRIORITY, "%s: TUM training", sdata.ttmpfile);
+                              snprintf(trainbuf, SMALLBUFSIZE-1, "%sTUM\r\n", cfg.clapf_header_field);
 
                               train_message(mysql, sdata, sstate, 1, is_spam, train_mode, cfg);
                            }
@@ -686,6 +687,8 @@ void init_child(int new_sd, char *hostid){
                               else is_spam = 0;
 
                               syslog(LOG_PRIORITY, "%s: TUM training", sdata.ttmpfile);
+                              snprintf(trainbuf, SMALLBUFSIZE-1, "%sTUM\r\n", cfg.clapf_header_field);
+
                               train_message(db, sdata, sstate, 1, is_spam, train_mode, cfg);
                            }
 

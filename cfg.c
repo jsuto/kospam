@@ -1,5 +1,5 @@
 /*
- * cfg.c, 2008.01.08, SJ
+ * cfg.c, 2008.01.23, SJ
  */
 
 #include <stdio.h>
@@ -87,7 +87,6 @@ struct __config read_config(char *configfile){
 
    strncpy(cfg.workdir, WORK_DIR, MAXVAL-1);
 
-   strncpy(cfg.surbl_domain, SURBL_DOMAIN, MAXVAL-1);
    cfg.rude_surbl = 0;
 
    strncpy(cfg.clapf_header_field, SPAMINESS_HEADER_FIELD, MAXVAL-1);

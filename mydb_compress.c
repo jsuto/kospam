@@ -1,5 +1,5 @@
 /*
- * mydb_compress.c, 2007.12.01, SJ
+ * mydb_compress.c, 2008.01.23, SJ
  */
 
 #include <stdio.h>
@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include <sys/time.h>
 #include <time.h>
+#include "parser.h"
 #include "mydb.h"
 #include "config.h"
 
@@ -24,11 +25,11 @@ struct timeval tv_start, tv_stop;
 
 int main(int argc, char **argv){
    struct stat st;
-   struct mydb_node *z;
+   struct mydb_node *z, *mhash[MAX_MYDB_HASH];
    struct mydb e;
    unsigned char *p, buf[N_SIZE*SEGMENT_SIZE], lockfile[SMALLBUFSIZE];
    unsigned int pos=0;
-   unsigned int ntokens=0, ham_hapax=0, spam_hapax=0, old_tokens=0, _15_obsoleted_tokens=0, _60_obsoleted_tokens=0;
+   unsigned int ntokens=0, old_tokens=0, _15_obsoleted_tokens=0, _60_obsoleted_tokens=0;
    unsigned long x;
    time_t cclock;
    int i=0, j=0, fd, fdl;
@@ -97,9 +98,6 @@ int main(int argc, char **argv){
    for(i=0;i<MAX_MYDB_HASH;i++){
       z = mhash[i];
       while(z != NULL){
-         if(z->nham <= 3 && z->nspam == 0) ham_hapax++;
-         if(z->nham == 0 && z->nspam <= 3) spam_hapax++;
-
          ntokens++;
 
          /* skip old or obsoleted tokens */
@@ -134,10 +132,6 @@ int main(int argc, char **argv){
    close_mydb(mhash);
 
    if(rename(lockfile, argv[1])) printf("failed to rename %s to %s\n", lockfile, argv[1]);
-
-   printf("db size: %ld bytes\nham messages: %0.f\nspam messages: %.0f\n", st.st_size, Nham, Nspam);
-   printf("number of tokens: %d\nham hapaxes: %d\nspam hapaxes: %d\nold tokens: %d\n", ntokens, ham_hapax, spam_hapax, old_tokens);
-   printf("obsolete tokens: 15: %d, 60: %d\n", _15_obsoleted_tokens, _60_obsoleted_tokens);
 
    return 0;
 }

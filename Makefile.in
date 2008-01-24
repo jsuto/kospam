@@ -79,7 +79,7 @@ smapd:	% : %.o $(OBJS) $(MYSQL_OBJS)
 clapfstore:	% : %.o cfg.o misc.o ssl_util.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR) -lssl -lcrypto -ldl -lpthread
 
-mydb_stat:	%: %.o mydb.o misc.o hash.o chi.o
+mydb_stat mydb_compress:	%: %.o mydb.o misc.o hash.o chi.o score.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ -lm
 
 
@@ -190,7 +190,7 @@ clean_db:
 	rm -f ham.tmp spam.tmp num_of_spam.tmp num_of_ham.tmp tokens.mydb temp.*
 
 clean:
-	rm -f *.o *.a smapd qs db.sql clapf clapfstore clapf.conf parsembox splitmbox spamtest spamdrop spamcgi traincgi trainlogcgi usercgi statcgi passmail spamstat aphash clapf_admin prepare-sql
+	rm -f *.o *.a smapd qs db.sql clapf clapfstore clapf.conf parsembox splitmbox spamtest spamdrop spamcgi traincgi trainlogcgi usercgi statcgi spamstat aphash clapf_admin prepare-sql mydb_stat mydb_compress
 
 dist_clean distclean: clean
 	rm -f Makefile config.log config.status clapf-config.h stamp.h clapf.conf

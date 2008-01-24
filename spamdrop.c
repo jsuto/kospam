@@ -360,6 +360,7 @@ int main(int argc, char **argv){
          else is_spam = 0;
 
          syslog(LOG_PRIORITY, "%s: TUM training", sdata.ttmpfile);
+         snprintf(trainbuf, SMALLBUFSIZE-1, "%sTUM\r\n", cfg.clapf_header_field);
 
          #ifdef HAVE_MYSQL
             train_message(mysql, sdata, state, 1, is_spam, train_mode, cfg);

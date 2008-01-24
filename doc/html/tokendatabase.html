@@ -99,6 +99,15 @@ engine. If you want this, then specify <i>innodb_file_per_table</i> in my.cnf at
 innodb_file_per_table
 </pre>
 
+Finally, you may want to increase the 'max_allowed_packet' variable to allow
+large SQL queries:<p/>
+
+<pre>
+[mysqld]
+set-variable = max_allowed_packet=8192000
+</pre>
+
+
 You are also free to do other tuning to make MySQL even faster, consult the <a href="http://dev.mysql.com/doc/">MySQL documentation</a>.<p/>
 
 

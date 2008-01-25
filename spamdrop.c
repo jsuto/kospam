@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2008.01.23, SJ
+ * spamdrop.c, 2008.01.24, SJ
  */
 
 #include <stdio.h>
@@ -356,10 +356,15 @@ int main(int argc, char **argv){
         )
       {
 
-         if(result.spaminess >= cfg.spam_overall_limit) is_spam = 1;
-         else is_spam = 0;
+         if(result.spaminess >= cfg.spam_overall_limit){
+            is_spam = 1;
+            syslog(LOG_PRIORITY, "%s: TUM training a spam", sdata.ttmpfile);
+         }
+         else {
+            is_spam = 0;
+            syslog(LOG_PRIORITY, "%s: TUM training a ham", sdata.ttmpfile);
+         }
 
-         syslog(LOG_PRIORITY, "%s: TUM training", sdata.ttmpfile);
          snprintf(trainbuf, SMALLBUFSIZE-1, "%sTUM\r\n", cfg.clapf_header_field);
 
          #ifdef HAVE_MYSQL

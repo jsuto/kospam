@@ -99,7 +99,6 @@ int main(int argc, char **argv){
    rc = init_mydb(cfg.mydbfile, mhash);
    fprintf(stderr, "using %s...\n", cfg.mydbfile);
    if(rc == 1){
-      printf("running bayes test\n");
       result = bayes_file(mhash, argv[2], state, sdata, cfg);
    }
    close_mydb(mhash);

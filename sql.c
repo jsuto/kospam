@@ -1,5 +1,5 @@
 /*
- * sql.c, 2008.01.23, SJ
+ * sql.c, 2008.01.28, SJ
  */
 
 #include <stdio.h>
@@ -150,6 +150,54 @@ struct ue get_user_from_email(sqlite3 *db, char *email){
 
 
    return UE;
+}
+
+
+/*
+ * check whether the email address is on the white list
+ */
+
+#ifdef HAVE_MYSQL
+int is_sender_on_white_list(MYSQL mysql, char *email, unsigned long uid){
+   MYSQL_RES *res;
+   MYSQL_ROW row;
+#endif
+#ifdef HAVE_SQLITE3
+int is_sender_on_white_list(sqlite3 *db, char *email, unsigned long uid){
+   sqlite3_stmt *pStmt;
+   const char **pzTail=NULL;
+#endif
+   int num=0;
+   char buf[SMALLBUFSIZE];
+
+#ifndef HAVE_WHITELIST
+   return 0;
+#endif
+
+   if(!email) return 0;
+
+   snprintf(buf, SMALLBUFSIZE-1, "SELECT COUNT(*) FROM %s WHERE email='%s' AND (uid=0 OR uid=%ld)", SQL_WHITE_LIST, email, uid);
+
+#ifdef HAVE_MYSQL
+   if(mysql_real_query(&mysql, buf, strlen(buf)) == 0){
+      res = mysql_store_result(&mysql);
+      if(res != NULL){
+         row = mysql_fetch_row(res);
+         if(row)
+            num = atoi(row[0]);
+         mysql_free_result(res);
+      }
+   }
+#endif
+#ifdef HAVE_SQLITE3
+   if(sqlite3_prepare_v2(db, buf, -1, &pStmt, pzTail) == SQLITE_OK){
+      if(sqlite3_step(pStmt) == SQLITE_ROW)
+         num = sqlite3_column_int(pStmt, 0);
+   }
+   sqlite3_finalize(pStmt);
+#endif
+
+   return num;
 }
 
 

@@ -1,5 +1,5 @@
 /*
- * smtp.c, 2007.08.22, SJ
+ * smtp.c, 2007.08.27, SJ
  */
 
 #include <stdio.h>
@@ -24,8 +24,8 @@
  */
 
 int inject_mail(struct session_data sdata, int msg, char *smtpaddr, int smtpport, char *spaminessbuf, struct __config cfg, char *notify){
-   int i, n, psd, prevlen=0;
-   char buf[MAXBUFSIZE+1], line[SMALLBUFSIZE], bigbuf[MAX_MAIL_HEADER_SIZE], prevbuf[MAX_MAIL_HEADER_SIZE], last2buf[2*MAX_MAIL_HEADER_SIZE];
+   int i, n, psd;
+   char buf[MAXBUFSIZE+1], line[SMALLBUFSIZE], bigbuf[MAX_MAIL_HEADER_SIZE];
    struct in_addr addr;
    struct sockaddr_in postfix_addr;
    struct timezone tz;
@@ -171,15 +171,7 @@ int inject_mail(struct session_data sdata, int msg, char *smtpaddr, int smtpport
         lines. 2006.08.21, SJ
       */
 
-      prevlen = 0;
-      memset(prevbuf, 0, MAX_MAIL_HEADER_SIZE);
-
       while((n = read(fd, bigbuf, MAX_MAIL_HEADER_SIZE)) > 0){
-
-         memset(last2buf, 0, 2*MAX_MAIL_HEADER_SIZE);
-         memcpy(last2buf, prevbuf, MAX_MAIL_HEADER_SIZE);
-         memcpy(last2buf+prevlen, bigbuf, MAX_MAIL_HEADER_SIZE);
-
          num_of_reads++;
 
          /* if this is the first read and it contains all the header lines */
@@ -281,15 +273,9 @@ int inject_mail(struct session_data sdata, int msg, char *smtpaddr, int smtpport
          else
             send(psd, bigbuf, n, 0);
 
-
-         memcpy(prevbuf, bigbuf, n);
-         prevlen = 0;
       }
 
       close(fd);
-
-      if(search_in_buf(last2buf, 2*MAXBUFSIZE+1, SMTP_CMD_PERIOD, 5) != 1)
-         send(psd, SMTP_CMD_PERIOD, strlen(SMTP_CMD_PERIOD), 0);
    }
    else {
       /* or send notification about the virus found */

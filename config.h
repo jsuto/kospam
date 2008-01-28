@@ -1,5 +1,5 @@
 /*
- * config.h, 2008.01.08, SJ
+ * config.h, 2008.01.28, SJ
  */
 
 #include <syslog.h>
@@ -155,6 +155,7 @@
 #define SQL_TOKEN_TABLE "t_token"
 #define SQL_MISC_TABLE "t_misc"
 #define SQL_USER_TABLE "user"
+#define SQL_WHITE_LIST "t_white_list"
 #define SQL_TRAININGLOG_TABLE "t_train_log"
 #define SQL_QUEUE_TABLE "t_queue"
 #define SQL_STAT_TABLE "t_stat"

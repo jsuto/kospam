@@ -30,6 +30,14 @@ create table if not exists user (
 
 create index user_idx on user (username, email);
 
+create table if not exists t_white_list (
+	email char(64) primary key not null,
+	uid int default 0
+);
+
+create index t_white_list_idx on t_white_list (email);
+
+
 create table if not exists t_queue (
 	id char(32) not null,
 	uid int unsigned not null,

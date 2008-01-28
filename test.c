@@ -58,7 +58,7 @@ int main(int argc, char **argv){
 
    sdata.uid = 0;
    sdata.num_of_rcpt_to = -1;
-   memset(sdata.rcptto[0], MAXBUFSIZE, 0);
+   memset(sdata.rcptto[0], 0, MAXBUFSIZE);
    state = parse_message(argv[2], cfg);
 
    result.spaminess = DEFAULT_SPAMICITY;

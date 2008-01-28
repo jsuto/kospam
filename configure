@@ -1279,6 +1279,7 @@ Optional Features:
   --enable-kav            build Kaspersky antivirus support
   --enable-drweb          build Dr.Web antivirus support
   --enable-case           use case sensitive tokens
+  --enable-whitelist      use whitelist
   --enable-rbl            use the (SU)RBL database
   --enable-old-format     use old token format
   --enable-blackhole      build the blackhole feature
@@ -3730,6 +3731,7 @@ have_ldap="no"
 have_rbl="no"
 have_gsl="no"
 have_store="no"
+have_whitelist="no"
 
 antispam_libs=""
 defs=""
@@ -4118,6 +4120,20 @@ fi
    if test "$want_case" = "yes"; then
       have_case="yes"
    fi
+
+
+# Check whether --enable-whitelist was given.
+if test "${enable_whitelist+set}" = set; then
+  enableval=$enable_whitelist; want_whitelist=$enableval
+else
+  want_whitelist="no"
+fi
+
+
+   if test "$want_whitelist" = "yes"; then
+      have_whitelist="yes"
+   fi
+
 
 
 
@@ -5855,6 +5871,14 @@ if test "$have_store" = "yes"; then
 else
    echo "store: internal"
 fi
+
+if test "$have_whitelist" = "yes"; then
+   echo "whitelist: yes"
+   defs="$defs -DHAVE_WHITELIST"
+else
+   echo "whitelist: no"
+fi
+
 
 if test "$want_lmtp" = "yes" && test "$want_outgoing_smtp" = "no"; then
    echo "local delivery: LMTP"

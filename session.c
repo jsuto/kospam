@@ -1,5 +1,5 @@
 /*
- * session.c, 2008.01.23, SJ
+ * session.c, 2008.01.28, SJ
  */
 
 #include <stdio.h>
@@ -127,7 +127,7 @@ void init_child(int new_sd, char *hostid){
 
    #ifdef HAVE_ANTISPAM
       struct c_res result;
-      char spamfile[MAXBUFSIZE], spaminessbuf[MAXBUFSIZE], reason[SMALLBUFSIZE], qpath[SMALLBUFSIZE], trainbuf[SMALLBUFSIZE], ID[RND_STR_LEN+1];
+      char spamfile[MAXBUFSIZE], spaminessbuf[MAXBUFSIZE], reason[SMALLBUFSIZE], qpath[SMALLBUFSIZE], trainbuf[SMALLBUFSIZE], whitelistbuf[SMALLBUFSIZE], ID[RND_STR_LEN+1];
       struct stat st;
       struct timeval tv_spam_start, tv_spam_stop;
       struct _state sstate;
@@ -506,6 +506,7 @@ void init_child(int new_sd, char *hostid){
                /* parse the message only once, 2007.10.14, SJ */
 
          #ifdef HAVE_ANTISPAM
+               memset(whitelistbuf, 0, SMALLBUFSIZE);
                sstate = parse_message(sdata.ttmpfile, cfg);
                if(unknown_client == 1) sstate.unknown_client = 1;
          #endif
@@ -541,6 +542,7 @@ void init_child(int new_sd, char *hostid){
 
                #ifdef HAVE_ANTISPAM
                   is_spam = 0;
+                  result.spaminess = DEFAULT_SPAMICITY;
 
                   /* run statistical antispam check */
 
@@ -608,8 +610,16 @@ void init_child(int new_sd, char *hostid){
                            goto SEND_RESULT;
                         }
                         else {
-                           if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: running Bayesian test", sdata.ttmpfile);
-                           result = bayes_file(mysql, spamfile, sstate, sdata, cfg);
+
+                           if(is_sender_on_white_list(mysql, email, sdata.uid)){
+                              syslog(LOG_PRIORITY, "%s: sender (%s) found on whitelist", sdata.ttmpfile, email);
+                              snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on white list\r\n", cfg.clapf_header_field);
+                              goto END_OF_SPAM_CHECK;
+                           }
+                           else {
+                              if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: running Bayesian test", sdata.ttmpfile);
+                              result = bayes_file(mysql, spamfile, sstate, sdata, cfg);
+                           }
                            update_mysql_tokens(mysql, sstate.first, sdata.uid);
 
                            if(
@@ -678,8 +688,16 @@ void init_child(int new_sd, char *hostid){
                            goto SEND_RESULT;
                         }
                         else {
-                           if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: running Bayesian test", sdata.ttmpfile);
-                           result = bayes_file(db, spamfile, sstate, sdata, cfg);
+
+                           if(is_sender_on_white_list(db, email, sdata.uid)){
+                              syslog(LOG_PRIORITY, "%s: sender (%s) found on whitelist", sdata.ttmpfile, email);
+                              snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on white list\r\n", cfg.clapf_header_field);
+                              goto END_OF_SPAM_CHECK;
+                           }
+                           else {
+                              if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: running Bayesian test", sdata.ttmpfile);
+                              result = bayes_file(db, spamfile, sstate, sdata, cfg);
+                           }
                            update_sqlite3_tokens(db, sstate.first);
 
                            if(
@@ -770,14 +788,14 @@ void init_child(int new_sd, char *hostid){
 
                         /* add additional headers, credits: Mariano, 2006.08.14 */
 
-                        snprintf(spaminessbuf, MAXBUFSIZE-1, "%s%.4f\r\n%s%s\r\n%s%s%s\r\n",
-                           cfg.clapf_header_field, result.spaminess, cfg.clapf_header_field, sdata.ttmpfile, reason, trainbuf, cfg.clapf_spam_header_field);
+                        snprintf(spaminessbuf, MAXBUFSIZE-1, "%s%.4f\r\n%s%s\r\n%s%s%s%s\r\n",
+                           cfg.clapf_header_field, result.spaminess, cfg.clapf_header_field, sdata.ttmpfile, reason, trainbuf, whitelistbuf, cfg.clapf_spam_header_field);
 
 
                         log_ham_spam_per_email(sdata.ttmpfile, email, 1);
                      }
                      else {
-                        snprintf(spaminessbuf, MAXBUFSIZE-1, "%s%.4f\r\n%s%s\r\n%s", cfg.clapf_header_field, result.spaminess, cfg.clapf_header_field, sdata.ttmpfile, trainbuf);
+                        snprintf(spaminessbuf, MAXBUFSIZE-1, "%s%.4f\r\n%s%s\r\n%s%s", cfg.clapf_header_field, result.spaminess, cfg.clapf_header_field, sdata.ttmpfile, trainbuf, whitelistbuf);
 
                         log_ham_spam_per_email(sdata.ttmpfile, email, 0);
                      }

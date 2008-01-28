@@ -1,5 +1,5 @@
 /*
- * sql.h, 2008.01.23, SJ
+ * sql.h, 2008.01.28, SJ
  */
 
 #ifdef HAVE_MYSQL
@@ -42,6 +42,7 @@ struct ue {
    int do_mysql_qry(MYSQL mysql, int sockfd, int ham_or_spam, char *token, char *tokentable, unsigned long uid, int train_mode);
    struct te myqry(MYSQL mysql, int sockfd, char *tokentable, char *token, unsigned long uid);
    struct ue get_user_from_email(MYSQL mysql, char *email);
+   int is_sender_on_white_list(MYSQL mysql, char *email, unsigned long uid);
    int update_training_metadata(MYSQL mysql, char *tmpfile, unsigned long uid, struct __config cfg, int is_spam);
 #endif
 
@@ -49,5 +50,6 @@ struct ue {
    int do_sqlite3_qry(sqlite3 *db, int ham_or_spam, char *token, int train_mode, unsigned long timestamp);
    struct te sqlite3_qry(sqlite3 *db, char *token);
    struct ue get_user_from_email(sqlite3 *db, char *email);
+   int is_sender_on_white_list(sqlite3 *db, char *email, unsigned long uid);
    int update_training_metadata(sqlite3 *db, char *tmpfile, unsigned long uid, struct __config cfg, int is_spam);
 #endif

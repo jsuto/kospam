@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2008.01.24, SJ
+ * spamdrop.c, 2008.01.28, SJ
  */
 
 #include <stdio.h>
@@ -19,6 +19,7 @@
 #include "messages.h"
 #include "sql.h"
 #include "black.h"
+#include "smtpcodes.h"
 #include "config.h"
 
 
@@ -104,13 +105,18 @@ int main(int argc, char **argv){
    int is_spam=0, train_as_ham=0, train_as_spam=0, blackhole_request=0, training_request=0;
    int train_mode=T_TOE;
    uid_t u;
-   char buf[MAXBUFSIZE], qpath[SMALLBUFSIZE], trainbuf[SMALLBUFSIZE], ID[RND_STR_LEN+1], *configfile=CONFIG_FILE, *username, *from=NULL;
+   char buf[MAXBUFSIZE], qpath[SMALLBUFSIZE], trainbuf[SMALLBUFSIZE], ID[RND_STR_LEN+1], whitelistbuf[SMALLBUFSIZE];
+   char *configfile=CONFIG_FILE, *username, *from=NULL;
    struct timezone tz;
    struct timeval tv_start, tv_stop;
    struct stat st;
    struct passwd *pwd;
    struct _state state;
 
+#ifdef MY_TEST
+   #include "rbl.h"
+   char rblbuf[SMALLBUFSIZE];
+#endif
 
    while((i = getopt(argc, argv, "c:SHps")) > 0){
        switch(i){
@@ -187,7 +193,8 @@ int main(int argc, char **argv){
 
    sdata.num_of_rcpt_to = 1;
    sdata.uid = getuid();
-   memset(sdata.rcptto[0], MAXBUFSIZE, 0);
+   memset(sdata.rcptto[0], 0, MAXBUFSIZE);
+   memset(whitelistbuf, 0, SMALLBUFSIZE);
    make_rnd_string(&(sdata.ttmpfile[0]));
 
    result.spaminess = DEFAULT_SPAMICITY;
@@ -259,6 +266,8 @@ int main(int argc, char **argv){
    }
 
 
+   from = getenv("FROM");
+
    /* open database connection */
    if(open_db(sdata.ttmpfile) == 0)
       goto ENDE;
@@ -272,7 +281,6 @@ int main(int argc, char **argv){
    if(training_request == 1){
       rounds = MAX_ITERATIVE_TRAIN_LOOPS;
 
-      from = getenv("FROM");
       if(!from) goto CLOSE_DB;
 
       is_spam = 0;
@@ -337,11 +345,21 @@ int main(int argc, char **argv){
 
    else {
    #ifdef HAVE_MYSQL
-      result = bayes_file(mysql, sdata.ttmpfile, state, sdata, cfg);
+      if(is_sender_on_white_list(mysql, from, sdata.uid)){
+         syslog(LOG_PRIORITY, "%s: sender (%s) found on whitelist", sdata.ttmpfile, from);
+         snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on white list\r\n", cfg.clapf_header_field);
+      } else
+         result = bayes_file(mysql, sdata.ttmpfile, state, sdata, cfg);
+
       update_mysql_tokens(mysql, state.first, sdata.uid);
    #endif
    #ifdef HAVE_SQLITE3
-      result = bayes_file(db, sdata.ttmpfile, state, sdata, cfg);
+      if(is_sender_on_white_list(db, from, sdata.uid)){
+         syslog(LOG_PRIORITY, "%s: sender (%s) found on whitelist", sdata.ttmpfile, from);
+         snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on white list\r\n", cfg.clapf_header_field);
+      } else
+         result = bayes_file(db, sdata.ttmpfile, state, sdata, cfg);
+
       update_sqlite3_tokens(db, state.first);
    #endif
    #ifdef HAVE_MYDB
@@ -452,23 +470,40 @@ ENDE_SPAMDROP:
 
       if(result.spaminess >= cfg.spam_overall_limit && result.spaminess < 1.01 && strlen(cfg.spam_subject_prefix) > 1) put_subject_spam_prefix = 1;
 
+   #ifdef MY_TEST
+      memset(rblbuf, 0, SMALLBUFSIZE);
+      reverse_ipv4_addr(state.ip);
+      if(rbl_list_check("zen.spamhaus.org", state.ip) == 1)
+         snprintf(rblbuf, SMALLBUFSIZE-1, "%sZEN=1\r\n", cfg.clapf_header_field);
+      else
+         snprintf(rblbuf, SMALLBUFSIZE-1, "%sZEN=0\r\n", cfg.clapf_header_field);
+
+   #endif
+
       while(fgets(buf, MAXBUFSIZE-1, f)){
 
          /* tag the Subject line if we have to, 2007.08.21, SJ */
 
-         if(is_header == 1 && put_subject_spam_prefix == 1 && strncmp(buf, "Subject: ", 9) == 0 && !strstr(buf, cfg.spam_subject_prefix)){ 
+         if(is_header == 1 && put_subject_spam_prefix == 1 && strncmp(buf, "Subject:", 8) == 0 && !strstr(buf, cfg.spam_subject_prefix)){ 
             printf("Subject: ");
             printf("%s", cfg.spam_subject_prefix);
             printf("%s", &buf[9]);
             sent_subject_spam_prefix = 1;
+            continue;
          }
 
          if(is_header == 1 && (buf[0] == '\n' || buf[0] == '\r')){
             is_header = 0;
 
+         #ifdef MY_TEST
+            printf("%s", rblbuf);
+         #endif
             printf("%s%s\r\n", cfg.clapf_header_field, sdata.ttmpfile);
             printf("%s%s%.4f\r\n", trainbuf, cfg.clapf_header_field, result.spaminess);
             printf("%s%ld ms\r\n", cfg.clapf_header_field, tvdiff(tv_stop, tv_start)/1000);
+         #ifdef HAVE_WHITELIST
+            printf("%s", whitelistbuf);
+         #endif
             if(result.spaminess > 0.9999) printf("%s%s\r\n", cfg.clapf_header_field, MSG_ABSOLUTELY_SPAM);
             if(result.spaminess >= cfg.spam_overall_limit && result.spaminess < 1.01){
 
@@ -518,6 +553,18 @@ ENDE:
 
    /* unlink temp file */
    unlink(sdata.ttmpfile);
+
+   /* add trailing dot to the file, 2008.01.27, SJ */
+
+   if(cfg.store_metadata == 1 && tot_len <= cfg.max_message_size_to_filter && blackhole_request == 0){
+      fd2 = open(qpath, O_EXCL|O_RDWR, S_IRUSR|S_IWUSR);
+      if(fd2 != -1){
+         lseek(fd2, 0, SEEK_END);
+         write(fd2, SMTP_CMD_PERIOD, strlen(SMTP_CMD_PERIOD));
+         close(fd2);
+      }
+   }
+
 
    if(print_message == 0 && result.spaminess >= cfg.spam_overall_limit && result.spaminess < 1.01)
       return 1;

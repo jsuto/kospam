@@ -1,5 +1,30 @@
 0.3.30:
 
+2008.01.28, SJ
+
+Added white list support. If the sender is on the list, then
+no spam check performed (except blackhole) and return spamicity=0.5.
+
+If you want to use this feature use --enable-whitelist and please
+update your SQL tables with the following sql statements:
+
+create table if not exists t_white_list (
+        email char(64) primary key not null,
+        uid int default 0
+);
+
+create index t_white_list_idx on t_white_list (email);
+
+(session.c, spamdrop.c, sql.c, sql.h, configure*)
+
+2008.01.27, SJ
+
+A strange problem may occur at a specific condition: clapf may send
+two period(.) commands while passing the message back to postfix, so
+postfix replies with a 250...500 message. Anyway the message gets
+delivered. I fixed the problem.
+(smtp.c, spamdrop.c)
+
 2008.01.23, SJ
 
 This is an extensive modification. I redesigned the spam handling blocks

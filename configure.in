@@ -57,6 +57,7 @@ have_ldap="no"
 have_rbl="no"
 have_gsl="no"
 have_store="no"
+have_whitelist="no"
 
 antispam_libs=""
 defs=""
@@ -151,6 +152,16 @@ AC_ARG_ENABLE(case,
    if test "$want_case" = "yes"; then
       have_case="yes"
    fi
+
+dnl use whitelist
+
+AC_ARG_ENABLE(whitelist,
+	[  --enable-whitelist      use whitelist], want_whitelist=$enableval, want_whitelist="no")
+
+   if test "$want_whitelist" = "yes"; then
+      have_whitelist="yes"
+   fi
+
 
 dnl antispam feature
 
@@ -604,6 +615,14 @@ if test "$have_store" = "yes"; then
 else
    echo "store: internal"
 fi
+
+if test "$have_whitelist" = "yes"; then
+   echo "whitelist: yes"
+   defs="$defs -DHAVE_WHITELIST"
+else
+   echo "whitelist: no"
+fi
+
 
 if test "$want_lmtp" = "yes" && test "$want_outgoing_smtp" = "no"; then
    echo "local delivery: LMTP"

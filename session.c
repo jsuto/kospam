@@ -1,5 +1,5 @@
 /*
- * session.c, 2008.01.28, SJ
+ * session.c, 2008.01.29, SJ
  */
 
 #include <stdio.h>
@@ -769,6 +769,14 @@ void init_child(int new_sd, char *hostid){
 
                         }
                      #endif
+
+                     #ifdef HAVE_MYSQL
+                        insert_2_queue(mysql, sdata.ttmpfile, sdata.uid, cfg, is_spam);
+                     #endif
+                     #ifdef HAVE_SQLITE3
+                        insert_2_queue(db, sdata.ttmpfile, sdata.uid, cfg, is_spam);
+                     #endif
+
                      }
 
                   #endif

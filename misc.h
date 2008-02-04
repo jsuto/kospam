@@ -1,5 +1,5 @@
 /*
- * misc.h, 2008.01.22, SJ
+ * misc.h, 2008.01.30, SJ
  */
 
 #include <sys/time.h>

@@ -52,7 +52,7 @@ struct _state {
    char ctype[MAXBUFSIZE];
    char boundary[BOUNDARY_LEN];
    char boundary2[BOUNDARY_LEN];
-   char ip[IPLEN];
+   char ip[SMALLBUFSIZE];
    char miscbuf[MAX_TOKEN_LEN];
    char qpbuf[MAX_TOKEN_LEN];
    char attachedfile[RND_STR_LEN+SMALLBUFSIZE];

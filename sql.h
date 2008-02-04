@@ -43,6 +43,7 @@ struct ue {
    struct te myqry(MYSQL mysql, int sockfd, char *tokentable, char *token, unsigned long uid);
    struct ue get_user_from_email(MYSQL mysql, char *email);
    int is_sender_on_white_list(MYSQL mysql, char *email, unsigned long uid);
+   void insert_2_queue(MYSQL mysql, char *tmpfile, unsigned long uid, struct __config cfg, int is_spam);
    int update_training_metadata(MYSQL mysql, char *tmpfile, unsigned long uid, struct __config cfg, int is_spam);
 #endif
 
@@ -51,5 +52,6 @@ struct ue {
    struct te sqlite3_qry(sqlite3 *db, char *token);
    struct ue get_user_from_email(sqlite3 *db, char *email);
    int is_sender_on_white_list(sqlite3 *db, char *email, unsigned long uid);
+   void insert_2_queue(sqlite3 *db, char *tmpfile, unsigned long uid, struct __config cfg, int is_spam);
    int update_training_metadata(sqlite3 *db, char *tmpfile, unsigned long uid, struct __config cfg, int is_spam);
 #endif

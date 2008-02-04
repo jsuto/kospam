@@ -152,3 +152,22 @@ int do_sqlite3_qry(sqlite3 *db, int ham_or_spam, char *token, int train_mode, un
 
    return 0;
 }
+
+
+/*
+ * insert email entry to queue table
+ */
+
+void insert_2_queue(sqlite3 *db, char *tmpfile, unsigned long uid, struct __config cfg, int is_spam){
+   char buf[SMALLBUFSIZE], *err=NULL;
+   unsigned long now=0;
+   time_t clock;
+
+   time(&clock);
+   now = clock;
+
+   snprintf(buf, SMALLBUFSIZE-1, "INSERT INTO %s (id, uid, is_spam, ts) VALUES('%s', %ld, %d, %ld)", SQL_QUEUE_TABLE, tmpfile, uid, is_spam, now);
+
+   sqlite3_exec(db, buf, NULL, NULL, &err);
+}
+

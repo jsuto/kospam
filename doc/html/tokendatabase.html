@@ -56,6 +56,11 @@ mysqldb=clapf
 
 Important! Do not use *both* mysqlsocket and mysqlhost + mysqlport parameters.<p/>
 
+Run a similar cron job to remove old entries:<p/>
+
+<pre class="programlisting">
+3 3 * * * mysql --defaults-file=/usr/local/share/clapf/.my.cnf < /usr/local/share/clapf/purge-mysql.sql
+</pre>
 
 I recommend you to configure the <a href="http://dev.mysql.com/doc/refman/5.0/en/query-cache-configuration.html">query cache</a>
 to allow faster lookups. Be careful with these settings and always test your configuration for the
@@ -115,7 +120,14 @@ You are also free to do other tuning to make MySQL even faster, consult the <a h
 <h3>Using the SQLite backend</h3>
 
 Have <a href="http://www.sqlite.org/">SQLite3</a> installed and you are done. No special prerequisites are necessary.
-Be sure to configure and compile clapf with the --with-tokendb=sqlite3 option.
+Be sure to configure and compile clapf with the --with-tokendb=sqlite3 option.<p/>
+
+Run a similar cron job to remove old entries:<p/>
+
+<pre class="programlisting">
+3 3 * * * /usr/local/libexec/clapf/purge-sqlite3.sh
+</pre>
+
 <p/>
 
 

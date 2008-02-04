@@ -367,6 +367,11 @@ int main(int argc, char **argv){
       update_tokens(cfg.mydbfile, mhash, state.first);
    #endif
 
+      if(result.spaminess >= cfg.spam_overall_limit)
+         is_spam = 1;
+      else
+         is_spam = 0;
+      
 
       if(
          (cfg.training_mode == T_TUM && ( (result.spaminess >= cfg.spam_overall_limit && result.spaminess < 0.99) || (result.spaminess < cfg.max_ham_spamicity && result.spaminess > 0.1) )) ||
@@ -374,14 +379,10 @@ int main(int argc, char **argv){
         )
       {
 
-         if(result.spaminess >= cfg.spam_overall_limit){
-            is_spam = 1;
+         if(is_spam == 1)
             syslog(LOG_PRIORITY, "%s: TUM training a spam", sdata.ttmpfile);
-         }
-         else {
-            is_spam = 0;
+         else
             syslog(LOG_PRIORITY, "%s: TUM training a ham", sdata.ttmpfile);
-         }
 
          snprintf(trainbuf, SMALLBUFSIZE-1, "%sTUM\r\n", cfg.clapf_header_field);
 
@@ -450,6 +451,14 @@ CLOSE_DB:
          if(S_ISREG(st.st_mode) == 1)
             chmod(qpath, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
       }
+
+   #ifdef HAVE_MYSQL
+      insert_2_queue(mysql, sdata.ttmpfile, sdata.uid, cfg, is_spam);
+   #endif
+   #ifdef HAVE_SQLITE3
+      insert_2_queue(db, sdata.ttmpfile, sdata.uid, cfg, is_spam);
+   #endif
+
    }
 
 ENDE_SPAMDROP:

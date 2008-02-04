@@ -349,17 +349,6 @@ list of domains, eg. <i>surbl_domain=multi.surbl.org,multi.uribl.com,uris.yourdo
 
 If you want to disable the URI checks, unset this variable, eg. <i>surbl_domain=</i><p/>
 
-<strong>rude_surbl</strong><p/>
-syntax: rude_surbl=<i>number</i><br/>
-default: 0<p/>
-
-The rude_surbl directive defines the value of the bad URL threshold. Clapf counts how many URLs the surbl
-code catches in the current message. Each match in the surbl domain(s) counts. So if you have a bad URL
-and you have 2 surbl domains and this bad URL is on both surbl domains then it takes 2.<p/>
-
-If this value is set (&gt;0) AND clapf gets at least this number of URL matches than this AND the spamicity
-of the message is greater than max_ham_spamicity than the message is marked as spam.<p/>
-
 
 <strong>rbl_domain</strong><p>
 syntax: rbl_domain=<i>string</i><br>

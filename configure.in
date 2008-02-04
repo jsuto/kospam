@@ -44,7 +44,6 @@ have_avg="no"
 have_avast="no"
 have_kav="no"
 have_drweb="no"
-have_case="no"
 
 have_antivirus="no"
 have_antispam="no"
@@ -55,9 +54,11 @@ have_mysql="no"
 have_sqlite3="no"
 have_ldap="no"
 have_rbl="no"
+have_all_received="no"
 have_gsl="no"
 have_store="no"
 have_whitelist="no"
+have_case="no"
 
 antispam_libs=""
 defs=""
@@ -144,15 +145,6 @@ AC_ARG_ENABLE(drweb,
     fi
 
 
-dnl use case sensitive tokens
-
-AC_ARG_ENABLE(case,
-	[  --enable-case           use case sensitive tokens], want_case=$enableval, want_case="no")
-
-   if test "$want_case" = "yes"; then
-      have_case="yes"
-   fi
-
 dnl use whitelist
 
 AC_ARG_ENABLE(whitelist,
@@ -160,6 +152,16 @@ AC_ARG_ENABLE(whitelist,
 
    if test "$want_whitelist" = "yes"; then
       have_whitelist="yes"
+   fi
+
+
+dnl use case sensitive tokens
+
+AC_ARG_ENABLE(case,
+        [  --enable-case           use case sensitive tokens], want_case=$enableval, want_case="no")
+
+   if test "$want_case" = "yes"; then
+      have_case="yes"
    fi
 
 
@@ -200,6 +202,16 @@ dnl  if test "$want_antispam" = "yes"; then
 
     if test "$want_rbl" = "yes"; then
        have_rbl="yes"
+    fi
+
+
+    dnl whether to check all "Received: from" lines having IP-addresses
+
+    AC_ARG_ENABLE(all-received,
+          [  --enable-all-received   check all the IP-addresses from "Received: from ..." lines against blacklists], want_all_received=$enableval, want_all_received="no")
+
+    if test "$want_all_received" = "yes"; then
+       have_all_received="yes"
     fi
 
 
@@ -554,6 +566,9 @@ fi
 if test "$have_rbl" = "yes"; then
    echo "(SU)RBL support: yes"
    defs="$defs -DHAVE_SURBL"
+   if test "$have_all_received" = "yes"; then
+      defs="$defs -DHAVE_PROCESS_ALL_RECEIVED_LINES"
+   fi
    objs="$objs rbl.o"
 else
    echo "(SU)RBL support: no"
@@ -589,14 +604,6 @@ if test "$TOKENDB" = "sqlite3"; then
    db_install="install-sqlite3"
 fi
 
-if test "$have_case" = "yes"; then
-   defs="$defs -DHAVE_CASE"
-   echo "tokens are case sensitive: yes"
-else
-   echo "tokens are case sensitive: no"
-fi
-
-
 if test "$QCACHE" = "tcp"; then
    defs="$defs -DHAVE_QCACHE -DHAVE_TCP"
    echo "Qcache: tcp"
@@ -623,6 +630,12 @@ else
    echo "whitelist: no"
 fi
 
+if test "$have_case" = "yes"; then
+   defs="$defs -DHAVE_CASE"
+   echo "tokens are case sensitive: yes"
+else
+   echo "tokens are case sensitive: no"
+fi
 
 if test "$want_lmtp" = "yes" && test "$want_outgoing_smtp" = "no"; then
    echo "local delivery: LMTP"

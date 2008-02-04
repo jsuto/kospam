@@ -66,7 +66,7 @@
 #define RND_STR_LEN 32
 #define MESSAGE_ID_LEN 32
 #define BUFLEN 32
-#define IPLEN 16
+#define IPLEN 16+1
 
 #define MAX_THREADS 30
 

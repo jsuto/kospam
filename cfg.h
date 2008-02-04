@@ -70,7 +70,6 @@ struct __config {
    unsigned long max_message_size_to_filter;
 
    char surbl_domain[MAXVAL];
-   int rude_surbl;
    char rbl_domain[MAXVAL];
 
    char clapf_header_field[MAXVAL];

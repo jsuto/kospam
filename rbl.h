@@ -4,5 +4,5 @@
 
 int rbl_check(char *rbldomain, char *host);
 int reverse_ipv4_addr(char *ip);
-int rbl_list_check(char *domainlist, char *host);
+int rbl_list_check(char *domainlist, char *hostlist);
 

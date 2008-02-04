@@ -1278,9 +1278,10 @@ Optional Features:
   --enable-avast          build avast! antivirus support
   --enable-kav            build Kaspersky antivirus support
   --enable-drweb          build Dr.Web antivirus support
-  --enable-case           use case sensitive tokens
   --enable-whitelist      use whitelist
+  --enable-case           use case sensitive tokens
   --enable-rbl            use the (SU)RBL database
+  --enable-all-received   check all the IP-addresses from "Received: from ..." lines against blacklists
   --enable-old-format     use old token format
   --enable-blackhole      build the blackhole feature
   --enable-cgi            build the web interface to train the database
@@ -3718,7 +3719,6 @@ have_avg="no"
 have_avast="no"
 have_kav="no"
 have_drweb="no"
-have_case="no"
 
 have_antivirus="no"
 have_antispam="no"
@@ -3729,9 +3729,11 @@ have_mysql="no"
 have_sqlite3="no"
 have_ldap="no"
 have_rbl="no"
+have_all_received="no"
 have_gsl="no"
 have_store="no"
 have_whitelist="no"
+have_case="no"
 
 antispam_libs=""
 defs=""
@@ -4109,19 +4111,6 @@ fi
 
 
 
-# Check whether --enable-case was given.
-if test "${enable_case+set}" = set; then
-  enableval=$enable_case; want_case=$enableval
-else
-  want_case="no"
-fi
-
-
-   if test "$want_case" = "yes"; then
-      have_case="yes"
-   fi
-
-
 # Check whether --enable-whitelist was given.
 if test "${enable_whitelist+set}" = set; then
   enableval=$enable_whitelist; want_whitelist=$enableval
@@ -4132,6 +4121,20 @@ fi
 
    if test "$want_whitelist" = "yes"; then
       have_whitelist="yes"
+   fi
+
+
+
+# Check whether --enable-case was given.
+if test "${enable_case+set}" = set; then
+  enableval=$enable_case; want_case=$enableval
+else
+  want_case="no"
+fi
+
+
+   if test "$want_case" = "yes"; then
+      have_case="yes"
    fi
 
 
@@ -4742,6 +4745,20 @@ fi
 
     if test "$want_rbl" = "yes"; then
        have_rbl="yes"
+    fi
+
+
+
+    # Check whether --enable-all-received was given.
+if test "${enable_all_received+set}" = set; then
+  enableval=$enable_all_received; want_all_received=$enableval
+else
+  want_all_received="no"
+fi
+
+
+    if test "$want_all_received" = "yes"; then
+       have_all_received="yes"
     fi
 
 
@@ -5810,6 +5827,9 @@ fi
 if test "$have_rbl" = "yes"; then
    echo "(SU)RBL support: yes"
    defs="$defs -DHAVE_SURBL"
+   if test "$have_all_received" = "yes"; then
+      defs="$defs -DHAVE_PROCESS_ALL_RECEIVED_LINES"
+   fi
    objs="$objs rbl.o"
 else
    echo "(SU)RBL support: no"
@@ -5845,14 +5865,6 @@ if test "$TOKENDB" = "sqlite3"; then
    db_install="install-sqlite3"
 fi
 
-if test "$have_case" = "yes"; then
-   defs="$defs -DHAVE_CASE"
-   echo "tokens are case sensitive: yes"
-else
-   echo "tokens are case sensitive: no"
-fi
-
-
 if test "$QCACHE" = "tcp"; then
    defs="$defs -DHAVE_QCACHE -DHAVE_TCP"
    echo "Qcache: tcp"
@@ -5879,6 +5891,12 @@ else
    echo "whitelist: no"
 fi
 
+if test "$have_case" = "yes"; then
+   defs="$defs -DHAVE_CASE"
+   echo "tokens are case sensitive: yes"
+else
+   echo "tokens are case sensitive: no"
+fi
 
 if test "$want_lmtp" = "yes" && test "$want_outgoing_smtp" = "no"; then
    echo "local delivery: LMTP"

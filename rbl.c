@@ -58,21 +58,29 @@ int reverse_ipv4_addr(char *ip){
  * roll the given host through a comma separated domain list
  */
 
-int rbl_list_check(char *domainlist, char *host){
-   int match = 0;
-   char *p, rbldomain[MAX_TOKEN_LEN];
+int rbl_list_check(char *domainlist, char *hostlist){
+   char *p, *q, rbldomain[MAX_TOKEN_LEN], ip[IPLEN];
 
-   if(strlen(domainlist) < 3) return 0;
+   if(strlen(domainlist) < 3 || strlen(hostlist) < 3) return 0;
+
+   hostlist[strlen(hostlist)-1] = '\0';
 
    p = domainlist;
    do {
       p = split(p, ',', rbldomain, MAX_TOKEN_LEN-1);
-      if(rbl_check(rbldomain, host) == 1)
-         match++;
+
+      q = hostlist;
+      do {
+         q = split(q, ',', ip, MAX_TOKEN_LEN-1);
+         if(reverse_ipv4_addr(ip) == 1){
+            if(rbl_check(rbldomain, ip) == 1)
+               return 1;
+         }
+      } while(q);
 
    } while(p);
 
-   return match;
+   return 0;
 }
 
 

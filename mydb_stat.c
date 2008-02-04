@@ -26,7 +26,7 @@ struct timeval tv_start, tv_stop;
 int main(int argc, char **argv){
    struct stat st;
    struct mydb_node *z, *mhash[MAX_MYDB_HASH];
-   unsigned int ntokens=0, old_tokens=0, _15_obsoleted_tokens=0, _60_obsoleted_tokens=0;
+   unsigned int ntokens=0, old_tokens=0, _15_obsoleted_tokens=0, _60_obsoleted_tokens=0, ham_hapax=0, spam_hapax=0;
    unsigned long long B=0;
    time_t cclock;
    int i=0, rc=0;
@@ -67,6 +67,9 @@ int main(int argc, char **argv){
       while(z != NULL){
          ntokens++;
 
+         if(z->nham == 1 && z->nspam == 0) ham_hapax++;
+         if(z->nham == 0 && z->nspam == 1) spam_hapax++;
+
          if(z->key < 1) goto NEXT_RECORD;
          if(z->ts < now - _90_DAYS){
             old_tokens++;
@@ -92,7 +95,7 @@ int main(int argc, char **argv){
    printf("db size: %ld bytes\nham messages: %0.f\nspam messages: %.0f\n", st.st_size, Nham, Nspam);
    printf("number of tokens: %d\n", ntokens);
    printf("obsolete tokens: 15: %d, 60: %d, 90: %d\n", _15_obsoleted_tokens, _60_obsoleted_tokens, old_tokens);
-
+   printf("ham hapaxes: %d, spam hapaxes: %d\n", ham_hapax, spam_hapax);
 ENDE:
    close_mydb(mhash);
 

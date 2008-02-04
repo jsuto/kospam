@@ -1,5 +1,16 @@
 0.3.30:
 
+2008.02.04, SJ
+
+Removed the rude_surbl directive. One hit is enough to trigger
+the spammy result.
+(cfg.h, cfg.c, score.c, example.conf)
+
+If you want to present all the IP-addresses from the "Received: from"
+lines to blacklists, then use the --enable-all-received configure
+option. The default is to check only the host passing the email to us.
+(parser.c, configure.in, configure)
+
 2008.01.28, SJ
 
 Added white list support. If the sender is on the list, then

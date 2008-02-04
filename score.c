@@ -1,5 +1,5 @@
 /*
- * score.c, 2008.01.22, SJ
+ * score.c, 2008.02.01, SJ
  */
 
 #include <stdio.h>
@@ -99,14 +99,14 @@ double apply_fixes(double spaminess, int found_on_rbl, int surbl_match, int has_
 
    /* in case of a surbl or rbl match */
 #ifdef HAVE_SURBL
-   if(cfg.rude_surbl > 0 && surbl_match >= cfg.rude_surbl){
+   if(surbl_match > 0){
    #ifdef DEBUG
       fprintf(stderr, "caught by surbl\n");
    #endif
       return cfg.spaminess_of_caught_by_surbl;
    }
 
-   if(found_on_rbl > 0){
+   if(spaminess > DEFAULT_SPAMICITY && found_on_rbl > 0){
    #ifdef DEBUG
       fprintf(stderr, "caught by rbl\n");
    #endif

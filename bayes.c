@@ -403,8 +403,7 @@ double eval_tokens(struct mydb_node *mhash[MAX_MYDB_HASH], char *spamfile, struc
       /* consult blacklists about the IPv4 address connecting to us */
 
    #ifdef HAVE_SURBL
-      if(strlen(cfg.rbl_domain) > 3 && reverse_ipv4_addr(state.ip) == 1){
-
+      if(strlen(cfg.rbl_domain) > 3){
          gettimeofday(&tv1, &tz);
          found_on_rbl = rbl_list_check(cfg.rbl_domain, state.ip);
          gettimeofday(&tv2, &tz);

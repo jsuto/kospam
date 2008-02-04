@@ -87,8 +87,6 @@ struct __config read_config(char *configfile){
 
    strncpy(cfg.workdir, WORK_DIR, MAXVAL-1);
 
-   cfg.rude_surbl = 0;
-
    strncpy(cfg.clapf_header_field, SPAMINESS_HEADER_FIELD, MAXVAL-1);
 
    cfg.spam_overall_limit = 0.92;
@@ -317,9 +315,6 @@ struct __config read_config(char *configfile){
 
                   if(strcmp(key, "surbl_domain") == 0)
                      memcpy(cfg.surbl_domain, val, MAXVAL-1);
-
-                  if(strcmp(key, "rude_surbl") == 0)
-                     cfg.rude_surbl = atoi(val);
 
                   if(strcmp(key, "rbl_domain") == 0)
                      memcpy(cfg.rbl_domain, val, MAXVAL-1);

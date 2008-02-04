@@ -62,7 +62,7 @@ struct _state init_state(){
    memset(state.boundary, 0, BOUNDARY_LEN);
    memset(state.boundary2, 0, BOUNDARY_LEN);
    memset(state.ctype, 0, MAXBUFSIZE);
-   memset(state.ip, 0, IPLEN);
+   memset(state.ip, 0, SMALLBUFSIZE);
    memset(state.miscbuf, 0, MAX_TOKEN_LEN);
    memset(state.qpbuf, 0, MAX_TOKEN_LEN);
    memset(state.from, 0, SMALLBUFSIZE);
@@ -197,7 +197,7 @@ int is_date(char *s){
  */
 
 struct _state parse(char *buf, struct _state st){
-   char *p, *q, *c, huf[MAXBUFSIZE], puf[MAXBUFSIZE], muf[MAXBUFSIZE], tuf[MAXBUFSIZE], rnd[RND_STR_LEN], u[SMALLBUFSIZE], token[MAX_TOKEN_LEN], phrase[MAX_TOKEN_LEN];
+   char *p, *q, *c, huf[MAXBUFSIZE], puf[MAXBUFSIZE], muf[MAXBUFSIZE], tuf[MAXBUFSIZE], rnd[RND_STR_LEN], u[SMALLBUFSIZE], token[MAX_TOKEN_LEN], phrase[MAX_TOKEN_LEN], ipbuf[IPLEN];
    struct _state state;
    int i, x, b64_len;
    int do_utf8, do_base64, do_qp;
@@ -245,10 +245,13 @@ struct _state parse(char *buf, struct _state st){
 
       /* Received: 2005.12.09, SJ */
 
+   #ifdef HAVE_PROCESS_ALL_RECEIVED_LINES
+      if(strncmp(buf, "Received: from ", strlen("Received: from ")) == 0){
+   #else
       if(strncmp(buf, "Received: from ", strlen("Received: from ")) == 0 && state.ipcnt < 2){
+   #endif
          state.message_state = MSG_RECEIVED;
 
-      #ifdef HAVE_BLACKHOLE
          p = strchr(buf, '[');
          if(p){
             q = strchr(p, ']');
@@ -257,13 +260,17 @@ struct _state parse(char *buf, struct _state st){
                /* we care only IPv4 addresses for now, 2005.12.23, SJ */
 
                if(q > p+6 && q-p-1 <= IPLEN-1){
-                  memset(state.ip, 0, IPLEN);
-                  memcpy(state.ip, p+1, q-p-1);
+                  memset(ipbuf, 0, IPLEN);
+                  memcpy(ipbuf, p+1, q-p-1);
+                  strncat(ipbuf, ",", IPLEN-1);
+
+                  if(strncmp(ipbuf, "127.", 4) && !strstr(state.ip, ipbuf) && strlen(state.ip) + strlen(ipbuf) < SMALLBUFSIZE-1)
+                     strncat(state.ip, ipbuf, SMALLBUFSIZE-1);
+
                   state.ipcnt++;
                }
             }
          }
-      #endif
 
       }
 

@@ -295,6 +295,6 @@ void insert_2_queue(MYSQL mysql, char *tmpfile, unsigned long uid, struct __conf
 
    snprintf(buf, SMALLBUFSIZE-1, "INSERT INTO %s (id, uid, is_spam, ts) VALUES('%s', %ld, %d, %ld)", SQL_QUEUE_TABLE, tmpfile, uid, is_spam, now);
 
-   mysql_real_query(&mysql, buf, strlen(buf);
+   mysql_real_query(&mysql, buf, strlen(buf));
 }
 

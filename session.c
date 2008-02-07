@@ -150,11 +150,7 @@ void init_child(int new_sd, char *hostid){
 
    init_child(new_sd, cfg.hostid);
 
-#ifdef HAVE_THREADED_CLAPF
-   if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: pthread_create()", sdata.ttmpfile);
-#else
    if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: fork()", sdata.ttmpfile);
-#endif
 
    // send 220 LMTP banner
 
@@ -914,8 +910,5 @@ QUITTING:
    if(unlink(sdata.ttmpfile)) syslog(LOG_PRIORITY, "%s: failed to remove", sdata.ttmpfile);
    if(cfg.verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: removed", sdata.ttmpfile);
 
-#ifndef HAVE_THREADED_CLAPF
    _exit(0);
-#endif
-
 }

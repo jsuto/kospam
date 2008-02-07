@@ -51,8 +51,7 @@ clapf.conf:
 clapf: % : %.o $(OBJS) session.o $(STORE_OBJ) $(MYSQL_OBJS)
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR) @LDFLAGS@
 
-clapfthread:	% : %.o $(OBJS) session.o $(STORE_OBJ) $(MYSQL_OBJS)
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -DHAVE_THREADED_CLAPF -c session.c
+clapfthread:	% : %.o $(OBJS) $(STORE_OBJ) $(MYSQL_OBJS)
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR) -lpthread
 
 parsembox: % : %.o misc.o decoder.o parser.o

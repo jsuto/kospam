@@ -213,7 +213,7 @@ int main(int argc, char **argv){
    FILE *f;
 
 
-   while((i = getopt(argc, argv, "c:")) > 0){
+   while((i = getopt(argc, argv, "c:dVh")) > 0){
        switch(i){
 
          case 'c' :
@@ -302,6 +302,8 @@ int main(int argc, char **argv){
    }
    else syslog(LOG_PRIORITY, "cannot write pidfile: %s", cfg.pidfile);
 
+   if(daemonise == 1) daemon(1, 0);
+
 
    /* main loop */
  
@@ -329,7 +331,7 @@ int main(int argc, char **argv){
                   fcntl(newfd, F_SETFL, O_RDWR);
                   setsockopt(newfd, SOL_SOCKET, TCP_NODELAY, &yes, sizeof(int));
 
-                  if(__num_threads >= MAX_THREADS){
+                  if(__num_threads >= cfg.max_connections){
                      send(newfd, too_many_connections, strlen(too_many_connections), 0);
                      goto DEFERRED;
                   }

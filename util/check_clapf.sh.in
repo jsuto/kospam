@@ -4,7 +4,7 @@
 ##
 ## periodicaly check clapf-related services and restart them if necessary
 
-NUM=`ps uaxw | grep clapf | grep -c ^av`
+NUM=`ps uaxw | grep clapf | grep -c ^USER`
 
-if [ $NUM -eq 0 ]; then /bin/su av -c 'export TMPDIR=YOUR_QUEUE; YOUR_PATH/clapf 2> /dev/null &' ; fi
+if [ $NUM -eq 0 ]; then /bin/su USER -c 'export TMPDIR=YOUR_QUEUE; YOUR_PATH/clapf 2> /dev/null &' ; fi
 

@@ -1,5 +1,13 @@
 0.3.30:
 
+2008.02.07, SJ
+
+Added a threaded version of clapf.
+(clapfthread.c, session.c)
+
+The util/check_clapf.sh script honors the CLAPF_USER parameter in Makefile.
+(Makefile.in, util/check_clapf.sh.in)
+
 2008.02.04, SJ
 
 Removed the rude_surbl directive. One hit is enough to trigger

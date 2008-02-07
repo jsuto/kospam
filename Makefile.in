@@ -51,7 +51,8 @@ clapf.conf:
 clapf: % : %.o $(OBJS) session.o $(STORE_OBJ) $(MYSQL_OBJS)
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR) @LDFLAGS@
 
-clapfthread:	% : $(OBJS) session.o $(STORE_OBJ) $(MYSQL_OBJS)
+clapfthread:	% : %.o $(OBJS) session.o $(STORE_OBJ) $(MYSQL_OBJS)
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -DHAVE_THREADED_CLAPF -c session.c
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR) -lpthread
 
 parsembox: % : %.o misc.o decoder.o parser.o
@@ -133,7 +134,7 @@ install-clapf: clapf
 	$(INSTALL) -d $(DESTDIR)$(localstatedir)/lib/clapf/blackhole
 	$(INSTALL) -d -m 711 $(DESTDIR)$(localstatedir)/lib/clapf/tmp
 	chown -R $(CLAPF_USER):$(CLAPF_GROUP) $(DESTDIR)$(localstatedir)/lib/clapf
-	cat $(srcdir)/util/check_clapf.sh.in | sed -e "s%YOUR_PATH%$(bindir)%" -e "s%YOUR_QUEUE%$(localstatedir)/lib/clapf/queue%" > $(srcdir)/util/check_clapf.sh
+	cat $(srcdir)/util/check_clapf.sh.in | sed -e "s%YOUR_PATH%$(bindir)%" -e "s%YOUR_QUEUE%$(localstatedir)/lib/clapf/queue%" -e "s%USER%$(CLAPF_USER)%" > $(srcdir)/util/check_clapf.sh
 	$(INSTALL) -m 0755 util/check_clapf.sh $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 clapf $(DESTDIR)$(bindir)
 	$(INSTALL) -d $(DESTDIR)$(sysconfdir)

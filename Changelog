@@ -1,5 +1,8 @@
 0.3.30:
 
+The threaded version of clapf supports only mysql database currently.
+(clapfthread.c)
+
 2008.02.07, SJ
 
 Added a threaded version of clapf.

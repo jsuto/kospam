@@ -37,10 +37,6 @@
    #include <mysql.h>
    int update_mysql_tokens(MYSQL mysql, struct _token *token, unsigned long uid);
 #endif
-#ifdef HAVE_SQLITE3
-   #include <sqlite3.h>
-   int update_sqlite3_tokens(sqlite3 *db, struct _token *token);
-#endif
 #ifdef HAVE_STORE
    #include "clapfstore.h"
 #endif
@@ -235,17 +231,11 @@ void *process_connection(void *ptr){
    struct _state sstate;
    struct ue UE;
    int is_spam, train_mode=T_TOE, db_connection=0;
-
 #endif
 
 #ifdef HAVE_MYSQL
    MYSQL mysql;
 #endif
-
-#ifdef HAVE_SQLITE3
-   sqlite3 *db;
-#endif
-
 #ifdef HAVE_STORE
    store *SSTORE;
 #endif
@@ -292,16 +282,6 @@ void *process_connection(void *ptr){
    else {
       db_connection = 0;
       syslog(LOG_PRIORITY, "%s: %s", sdata.ttmpfile, ERR_MYSQL_CONNECT);
-   }
-#endif
-#ifdef HAVE_SQLITE3
-   rc = sqlite3_open(cfg.sqlite3, &db);
-   if(rc){
-      db_connection = 0; 
-      syslog(LOG_PRIORITY, "%s: %s", sdata.ttmpfile, ERR_SQLITE3_OPEN);
-   }
-   else {
-      db_connection = 1;
    }
 #endif
 
@@ -467,6 +447,8 @@ void *process_connection(void *ptr){
             send(QC->sockfd, buf, strlen(buf), 0);
             if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent: %s", sdata.ttmpfile, buf);
 
+            unlink(sdata.ttmpfile);
+
             goto QUITTING;
          }
 
@@ -558,12 +540,12 @@ void *process_connection(void *ptr){
 
                #ifdef HAVE_LMTP
                   for(i=0; i<sdata.num_of_rcpt_to; i++){
-               #endif
-
-                     send(QC->sockfd, SMTP_RESP_421_ERR_WRITE_FAILED, strlen(SMTP_RESP_421_ERR_WRITE_FAILED), 0);
-
-               #ifdef HAVE_LMTP
+                     extract_email(sdata.rcptto[i], email);
+                     snprintf(buf, MAXBUFSIZE-1, "421 writing queue file failed %s <%s>\r\n", sdata.ttmpfile, email);
+                     send(QC->sockfd, buf, strlen(buf), 0);               
                   }
+               #else
+                  send(QC->sockfd, SMTP_RESP_421_ERR_WRITE_FAILED, strlen(SMTP_RESP_421_ERR_WRITE_FAILED), 0);
                #endif
 
                   goto AFTER_PERIOD;
@@ -822,83 +804,6 @@ void *process_connection(void *ptr){
 
                      gettimeofday(&tv_spam_stop, &tz);
                   #endif
-                  #ifdef HAVE_SQLITE3
-                        result.spaminess = DEFAULT_SPAMICITY;
-                        gettimeofday(&tv_spam_stop, &tz);
-                     }
-                     if(db_connection == 1){
-                        rc = sqlite3_exec(db, cfg.sqlite3_pragma, 0, 0, NULL);
-                        if(rc != SQLITE_OK) syslog(LOG_PRIORITY, "%s: could not set pragma", sdata.ttmpfile);
-
-                        UE = get_user_from_email(db, email);
-                        //sdata.uid = UE.uid;
-                        sdata.uid = 0;
-                        snprintf(sdata.name, SMALLBUFSIZE-1, "%s", UE.name);
-
-                        /* if we have forwarded something for retraining */
-
-                        if(sdata.num_of_rcpt_to == 1 && (str_case_str(sdata.rcptto[0], "+spam@") || str_case_str(sdata.rcptto[0], "+ham@")) ){
-                           is_spam = 0;
-                           snprintf(acceptbuf, MAXBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata.ttmpfile, email);
-                           if(str_case_str(sdata.rcptto[0], "+spam@")) is_spam = 1;
-
-                           UE = get_user_from_email(db, email2);
-                           sdata.uid = UE.uid;
-
-                           if(is_spam == 1)
-                              snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s/h.%s", USER_QUEUE_DIR, UE.name[0], UE.name, sdata.ttmpfile);
-                           else
-                              snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s/s.%s", USER_QUEUE_DIR, UE.name[0], UE.name, sdata.ttmpfile);
-
-                           train_mode = extract_id_from_message(sdata.ttmpfile, cfg.clapf_header_field, ID);
-
-                           train_message(db, sdata, sstate, MAX_ITERATIVE_TRAIN_LOOPS, is_spam, train_mode, cfg);
-                           goto SEND_RESULT;
-                        }
-                        else {
-
-                           if(is_sender_on_white_list(db, email, sdata.uid)){
-                              syslog(LOG_PRIORITY, "%s: sender (%s) found on whitelist", sdata.ttmpfile, email);
-                              snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on white list\r\n", cfg.clapf_header_field);
-                              goto END_OF_SPAM_CHECK;
-                           }
-                           else {
-                              if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: running Bayesian test", sdata.ttmpfile);
-                              result = bayes_file(db, spamfile, sstate, sdata, cfg);
-                           }
-                           update_sqlite3_tokens(db, sstate.first);
-
-                           if(
-                               (cfg.training_mode == T_TUM && ( (result.spaminess >= cfg.spam_overall_limit && result.spaminess < 0.99) || (result.spaminess < cfg.max_ham_spamicity && result.spaminess > 0.1) )) 
-                           ||
-                               (cfg.initial_1000_learning == 1 && (result.ham_msg < NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED || result.spam_msg < NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED))
-                           )
-                           {
-
-                              if(result.spaminess >= cfg.spam_overall_limit){
-                                 is_spam = 1;
-                                 syslog(LOG_PRIORITY, "%s: TUM training a spam", sdata.ttmpfile);
-                              }
-                              else {
-                                 is_spam = 0;
-                                 syslog(LOG_PRIORITY, "%s: TUM training a ham", sdata.ttmpfile);
-                              }
-
-                              snprintf(trainbuf, SMALLBUFSIZE-1, "%sTUM\r\n", cfg.clapf_header_field);
-
-                              train_message(db, sdata, sstate, 1, is_spam, train_mode, cfg);
-                           }
-
-
-                        }
-
-                     }
-                     else {
-                        result.spaminess = DEFAULT_SPAMICITY;
-                     }
-
-                     gettimeofday(&tv_spam_stop, &tz);
-                  #endif
 
                   #ifndef OUTGOING_SMTP
 
@@ -946,10 +851,6 @@ void *process_connection(void *ptr){
                      #ifdef HAVE_MYSQL
                         insert_2_queue(mysql, sdata.ttmpfile, sdata.uid, cfg, is_spam);
                      #endif
-                     #ifdef HAVE_SQLITE3
-                        insert_2_queue(db, sdata.ttmpfile, sdata.uid, cfg, is_spam);
-                     #endif
-
                      }
 
                   #endif
@@ -1031,14 +932,6 @@ void *process_connection(void *ptr){
                free_and_print_list(sstate.first, 0);
             #endif
 
-            #ifdef HAVE_MYSQL
-               mysql_close(&mysql);
-            #endif
-            #ifdef HAVE_SQLITE3
-               sqlite3_close(db);
-            #endif
-
-
             } /* PERIOD found */
 
          AFTER_PERIOD:
@@ -1067,6 +960,10 @@ void *process_connection(void *ptr){
     */
 
 QUITTING:
+
+#ifdef HAVE_MYSQL
+   mysql_close(&mysql);
+#endif
 
    close(QC->sockfd);
 
@@ -1208,6 +1105,7 @@ int main(int argc, char **argv){
 
                   if(__num_threads >= cfg.max_connections){
                      send(newfd, too_many_connections, strlen(too_many_connections), 0);
+                     syslog(LOG_PRIORITY, "too many connections: %d/%d\n", __num_threads, cfg.max_connections);
                      goto DEFERRED;
                   }
 

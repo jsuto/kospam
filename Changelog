@@ -1,5 +1,16 @@
 0.3.30:
 
+2008.02.13, SJ
+
+Added an administrator user to the spam quarantine who can access
+everybody's spam emails. To use this feature, set the admin_user
+parameter in clapf.conf.
+(example.conf, cfg.c, cfg.h, cgi.c, cgi.h, spamcgi.c)
+
+Removed the threaded version of clapf, it has some problems...
+
+2008.02.08, SJ
+
 The threaded version of clapf supports only mysql database currently.
 (clapfthread.c)
 

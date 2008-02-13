@@ -1,5 +1,5 @@
 /*
- * messages.h, 2008.01.23, SJ
+ * messages.h, 2008.02.13, SJ
  */
 
 // cgi
@@ -9,7 +9,6 @@
 #define CGI_SPAM_QUARANTINE "Spam Quarantine"
 #define ERR_CGI_DELIVER_AND_REMOVE "Deliver and remove"
 #define ERR_CGI_REMOVE "Remove"
-
 #define ERR_CGI_NUMBER_OF_SPAM_MESSAGES_IN_QUARANTINE "Total number of spam messages"
 
 #define ERR_CGI_DELIVER_AND_TRAIN_AS_HAM "Deliver, train as HAM, then remove"
@@ -23,6 +22,7 @@
 #define ERR_CGI_CANNOT_OPEN "Cannot open"
 #define ERR_CGI_DELIVERED_AND_REMOVED "Message delivered and removed"
 #define ERR_CGI_REMOVED "Message removed"
+#define ERR_CGI_FAILED_TO_REMOVE "Failed to remove"
 #define ERR_CGI_DELIVERY_FAILED "Delivery failed"
 #define ERR_CGI_INVALID_ID "Invalid message id"
 

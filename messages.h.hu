@@ -1,5 +1,5 @@
 /*
- * messages.h.hu, 2008.01.23, SJ
+ * messages.h.hu, 2008.02.13, SJ
  * Hungarian version
  */
 
@@ -24,6 +24,7 @@
 #define ERR_CGI_CANNOT_OPEN "Nem tudom megnyitni"
 #define ERR_CGI_DELIVERED_AND_REMOVED "Üzenet kézbesítve és törölve"
 #define ERR_CGI_REMOVED "Üzenet törölve"
+#define ERR_CGI_FAILED_TO_REMOVE "Nem sikerült törölni az üzenetet"
 #define ERR_CGI_DELIVERY_FAILED "Sikertelen kézbeszítés"
 #define ERR_CGI_INVALID_ID "Érvénytelen üzenet azonosító"
 

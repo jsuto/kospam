@@ -1,5 +1,5 @@
 /*
- * cfg.h, 2008.01.10, SJ
+ * cfg.h, 2008.02.13, SJ
  */
 
 #define MAXVAL 128
@@ -164,6 +164,7 @@ struct __config {
    char usercgi_url[MAXVAL];
    char statcgi_url[MAXVAL];
    int page_len;
+   char admin_user[MAXVAL];
 
    char saved_ham_path[MAXVAL];
    char saved_spam_path[MAXVAL];
@@ -190,10 +191,6 @@ struct __config {
    char ssl_cert_file[MAXVAL];
    char ssl_key_file[MAXVAL];
    int use_ssl;
-
-   // external applications
-   char gocr[MAXVAL];
-   char catdoc[MAXVAL];
 
    // phishing cdb
    char phishtankdb[MAXVAL];

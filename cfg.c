@@ -1,5 +1,5 @@
 /*
- * cfg.c, 2008.01.23, SJ
+ * cfg.c, 2008.02.13, SJ
  */
 
 #include <stdio.h>
@@ -483,6 +483,9 @@ struct __config read_config(char *configfile){
                   if(strcmp(key, "page_len") == 0)
                      cfg.page_len = atoi(val);
 
+                  if(strcmp(key, "admin_user") == 0)
+                     memcpy(cfg.admin_user, val, MAXVAL-1);
+
                   if(strcmp(key, "save_trained_emails") == 0)
                      cfg.save_trained_emails = atoi(val);
 
@@ -524,12 +527,6 @@ struct __config read_config(char *configfile){
                   if(strcmp(key, "ssl_key_file") == 0)
                      memcpy(cfg.ssl_key_file, val, MAXVAL-1);
 
-
-                  if(strcmp(key, "gocr") == 0)
-                     memcpy(cfg.gocr, val, MAXVAL-1);
-
-                  if(strcmp(key, "catdoc") == 0)
-                     memcpy(cfg.catdoc, val, MAXVAL-1);
 
 
                   if(strcmp(key, "phishtankdb") == 0)

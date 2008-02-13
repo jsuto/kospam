@@ -8,14 +8,11 @@
 #include <time.h>
 #include <unistd.h>
 #include "misc.h"
-#include "hash.h"
 #include "decoder.h"
-#include "parser.h"
 #include "errmsg.h"
 #include "messages.h"
 #include "cgi.h"
-#include "sql.h"
-#include "config.h"
+#include "bayes.h"
 
 #ifdef HAVE_MYSQL
    #include <mysql.h>

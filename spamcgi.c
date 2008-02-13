@@ -107,10 +107,11 @@ int main(){
 
             snprintf(m, SMALLBUFSIZE-1, "%s/%s", spamqdir, cgi.delivery);
             if(unlink(m) == 0) printf("%s (%s).<p>\n<a href=\"%s?user=%s\">Back.</a>\n", ERR_CGI_REMOVED, cgi.delivery, cfg.spamcgi_url, user);
-            else printf("%s (%s).<p>\n<a href=\"%s?user=%s\">Back.</a>\n", ERR_CGI_FAILED_TO_REMOVE, cgi.delivery, cfg.spamcgi_url, user)
+            else printf("%s (%s).<p>\n<a href=\"%s?user=%s\">Back.</a>\n", ERR_CGI_FAILED_TO_REMOVE, cgi.delivery, cfg.spamcgi_url, user);
          }
-         else
+         else {
             printf("%s (%s)\n", ERR_CGI_DELIVERY_FAILED, cgi.delivery);
+         }
       #else
          snprintf(m, SMALLBUFSIZE-1, "%s/%s", spamqdir, cgi.delivery);
          if(unlink(m) == 0) printf("%s (%s).<p>\n<a href=\"%s?user=%s\">Back.</a>\n", ERR_CGI_REMOVED, cgi.delivery, cfg.spamcgi_url, user);

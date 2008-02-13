@@ -137,14 +137,14 @@ int main(){
          }
 
          if(cgi.page > 0){
-            printf("<a href=\"%s?page=0\">First</a> <a href=\"%s?page=%d\">Previous</a>\n", cfg.spamcgi_url, cfg.spamcgi_url, cgi.page-1);
+            printf("<a href=\"%s?page=0&user=%s\">First</a> <a href=\"%s?page=%d&user=%s\">Previous</a>\n", cfg.spamcgi_url, user, cfg.spamcgi_url, cgi.page-1, user);
          }
 
          if(n_spam >= cfg.page_len*(cgi.page+1) && n_spam > cfg.page_len)
-            printf(" <a href=\"%s?page=%d\">Next</a>\n", cfg.spamcgi_url, cgi.page+1);
+            printf(" <a href=\"%s?page=%d&user=%s\">Next</a>\n", cfg.spamcgi_url, cgi.page+1, user);
 
          if(cgi.page < n_spam/cfg.page_len && n_spam > cfg.page_len)
-            printf(" <a href=\"%s?page=%d\">Last</a><p>\n", cfg.spamcgi_url, n_spam/cfg.page_len);
+            printf(" <a href=\"%s?page=%d&user=%s\">Last</a><p>\n", cfg.spamcgi_url, n_spam/cfg.page_len, user);
 
       }
 

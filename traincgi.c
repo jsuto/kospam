@@ -187,7 +187,7 @@ int main(){
 
       snprintf(spamqdir, MAXBUFSIZE-1, "%s/%c/%s", USER_QUEUE_DIR, user[0], user);
 
-      if(strlen(cgi.train) > 1 && strlen(cgi.id) > 1){
+      if(strlen(cgi.train) > 1){
 
          /* train as HAM */
          is_spam = 0;

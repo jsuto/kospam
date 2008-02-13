@@ -202,10 +202,12 @@ int main(){
       #endif
 
          i = 0;
-         snprintf(qfile, SMALLBUFSIZE-1, "%s/%s", spamqdir, p);
+         snprintf(qfile, SMALLBUFSIZE-1, "%s/%s", spamqdir, cgi.train);
          state = parse_message(qfile, cfg);
 
          /* remove message */
+         printf("unlinking %s<br/>\n", qfile);
+
          unlink(qfile);
 
       }

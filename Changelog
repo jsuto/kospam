@@ -1,5 +1,10 @@
 0.3.30:
 
+2008.02.14, SJ
+
+Removed the passmail stuff and fixed a possible spamcgi bug.
+(misc.c, misc.h, spamcgi.c, Makefile.in, configure*)
+
 2008.02.13, SJ
 
 Added an administrator user to the spam quarantine who can access

@@ -673,8 +673,6 @@ parsembox
 clapfstore
 clapfstore_install
 cgi
-passmail
-passmail_install
 parsembox_install
 qcache
 spamdrop
@@ -3711,8 +3709,6 @@ done
 
 
 
-
-
 have_libclamav="no"
 have_clamd="no"
 have_avg="no"
@@ -4959,8 +4955,6 @@ if test "${with_userdb+set}" = set; then
   withval=$with_userdb;
   if test "$withval" != "no" -a "$withval" != "yes"; then
     USERDB=$withval
-    passmail="passmail"
-    passmail_install='install-passmail'
   fi
 
 fi
@@ -6613,8 +6607,6 @@ parsembox!$parsembox$ac_delim
 clapfstore!$clapfstore$ac_delim
 clapfstore_install!$clapfstore_install$ac_delim
 cgi!$cgi$ac_delim
-passmail!$passmail$ac_delim
-passmail_install!$passmail_install$ac_delim
 parsembox_install!$parsembox_install$ac_delim
 qcache!$qcache$ac_delim
 spamdrop!$spamdrop$ac_delim
@@ -6636,7 +6628,7 @@ LIBOBJS!$LIBOBJS$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 81; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 79; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5

@@ -27,8 +27,8 @@ CLAPF_GROUP = `id -g $(CLAPF_USER)`
 
 INSTALL = @INSTALL@
 
-all: clapf @clapfstore@ splitmbox @cgi@ @parsembox@ @passmail@ @spamdrop@ @preparesql@ @qcache@ @test@
-install: install-clapf @clapfstore_install@ install-splitmbox @parsembox_install@ @passmail_install@ @spamdrop_install@ @qcache_install@ @db_install@
+all: clapf @clapfstore@ splitmbox @cgi@ @parsembox@ @spamdrop@ @preparesql@ @qcache@ @test@
+install: install-clapf @clapfstore_install@ install-splitmbox @parsembox_install@ @spamdrop_install@ @qcache_install@ @db_install@
 
 clapf.conf.old:
 	sed -e 's%pidfile=.*%pidfile=$(localstatedir)/run/clapf.pid%' \
@@ -95,9 +95,6 @@ test:
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -DDEBUG -c $(srcdir)/score.c
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -DDEBUG -c $(srcdir)/rbl.c
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -DDEBUG -o spamtest $(srcdir)/test.c $(OBJS) $(MYSQL_OBJS) $(LIBS) $(LIBDIR) @LDFLAGS@
-
-passmail: % : %.o misc.o cfg.o smtp.o $(USER_OBJ)
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
 
 qcache: qs.o misc.o cfg.o qcache.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o qs $^ $(LIBS) -lpthread $(LIBDIR)
@@ -188,10 +185,6 @@ install-train:
 
 install-qcache:
 	$(INSTALL) -m 0755 qs $(DESTDIR)$(bindir)
-
-install-passmail:
-	$(INSTALL) -m 0755 passmail $(DESTDIR)$(bindir)
-	$(INSTALL) -m 0644 $(srcdir)/doc/man/passmail.1 $(DESTDIR)$(mandir)/man1
 
 clean_db:
 	rm -f ham.tmp spam.tmp num_of_spam.tmp num_of_ham.tmp tokens.mydb temp.*

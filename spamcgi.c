@@ -29,7 +29,7 @@ int deliver_message(char *dir, char *message, struct __config cfg);
 
 
 int main(){
-   char *p, *q, *r, m[SMALLBUFSIZE], msg[SMALLBUFSIZE], spamqdir[MAXBUFSIZE], user[SMALLBUFSIZE];
+   char *p, *q, m[SMALLBUFSIZE], msg[SMALLBUFSIZE], spamqdir[MAXBUFSIZE], user[SMALLBUFSIZE];
    int clen=0, method=M_UNDEF, n=0, n_spam=0;
    struct cgidata cgi;
    char *input=NULL;
@@ -160,8 +160,12 @@ int main(){
       if(!input)
          errout(input, ERR_CGI_NO_MEMORY);
 
+      memset(input, 0, clen);
+
       if(((int) fread(input, 1, clen, stdin)) != clen)
          errout(input, ERR_CGI_POST_READ);
+
+      input[clen] = '\0';
 
       cgi = extract_cgi_parameters(input);
 
@@ -176,29 +180,29 @@ int main(){
 
       p = input;
 
-      do {
-         q = extract(p, '&', m, SMALLBUFSIZE-1);
-         if(q) p = q;
+      while(p){
+         memset(m, 0, SMALLBUFSIZE);
+         q = strchr(p, '&');
+         if(q){
+            if(q-p < SMALLBUFSIZE-1)
+               memcpy(m, p, q-p);
+
+            p = q+1;
+         }
          else {
-            memset(m, 0, SMALLBUFSIZE);
-            strncpy(m, p, SMALLBUFSIZE-1);
+            snprintf(m, SMALLBUFSIZE-1, "%s", p);
+            p = NULL;
          }
 
-         r = strchr(m, '=');
-         if(r){
-            *r = '\0';
-            if(strlen(m) == RND_STR_LEN-2+2){
+         if(m[0] == 's' && m[1] == '.'){
+            snprintf(msg, SMALLBUFSIZE-1, "%s/%s", spamqdir, m);
+            q = strchr(msg, '=');
+            if(q) *q = '\0';
 
-               /* unlink message and its delivery info file */
-
-               snprintf(msg, SMALLBUFSIZE-1, "%s/%s", spamqdir, m);
-               unlink(msg);
-
-               n++;
-            }
+            unlink(msg);
+            n++;
          }
-
-      } while(q);
+      }
 
       if(input)
          free(input);

@@ -755,6 +755,21 @@ int qcache_socket(char *qcache_addr, int qcache_port, char *qcache_socket){
 
 
 /*
+ * if we have this recipient in the rcptto array
+ */
+
+int is_recipient_in_array(char rcptto[MAX_RCPT_TO][MAXBUFSIZE], char *buf, int num_of_rcpt_to){
+   int i;
+
+   for(i=0; i<num_of_rcpt_to; i++){
+      if(strcmp(rcptto[i], buf) == 0) return 1;
+   }
+
+   return 0;
+}
+
+
+/*
  * write delivery info to file
  */
 

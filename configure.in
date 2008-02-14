@@ -21,8 +21,6 @@ AC_SUBST(parsembox)
 AC_SUBST(clapfstore)
 AC_SUBST(clapfstore_install)
 AC_SUBST(cgi)
-AC_SUBST(passmail)
-AC_SUBST(passmail_install)
 AC_SUBST(parsembox_install)
 AC_SUBST(qcache)
 AC_SUBST(spamdrop)
@@ -258,8 +256,6 @@ AC_ARG_WITH(userdb,
 [  --with-userdb[[=ldap|mysql]]      use either ldap or mysql database holding user data (default: none)],[
   if test "$withval" != "no" -a "$withval" != "yes"; then
     USERDB=$withval
-    passmail="passmail"
-    passmail_install='install-passmail'
   fi
 ])
 

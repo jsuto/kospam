@@ -33,7 +33,7 @@ char *input;
 int admin_user = 0;
 
 
-int deliver_message(char *dir, char *message, struct __config cfg);
+int deliver_message(char *dir, char *message, char *username, struct __config cfg);
 struct _state parse_message(char *spamfile, struct __config cfg);
 
 int main(){
@@ -196,7 +196,7 @@ int main(){
          if(chdir(spamqdir))
             errout(NULL, ERR_CHDIR);
 
-         i = deliver_message(spamqdir, cgi.train, cfg);
+         i = deliver_message(spamqdir, cgi.train, user, cfg);
          if(i != OK)
             errout(NULL, ERR_CGI_DELIVERY_FAILED);
       #endif

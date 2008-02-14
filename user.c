@@ -18,7 +18,7 @@
 
 int inject_mail(struct session_data sdata, int msg, char *smtpaddr, int smtpport, char *spaminessbuf, struct __config cfg, char *notify);
 
-int deliver_message(char *dir, char *message, struct __config cfg){
+int deliver_message(char *dir, char *message, char *username, struct __config cfg){
    char sbuf[SMALLBUFSIZE];
    int i;
    struct userpref u;
@@ -34,11 +34,11 @@ int deliver_message(char *dir, char *message, struct __config cfg){
       return ERR_INJECT;
 
 #ifdef HAVE_USER_LDAP
-   u = ldap_get_entry(cfg.ldap_host, cfg.ldap_base, cfg.ldap_user, cfg.ldap_pwd, cfg.ldap_use_tls, getenv("REMOTE_USER"));
+   u = ldap_get_entry(cfg.ldap_host, cfg.ldap_base, cfg.ldap_user, cfg.ldap_pwd, cfg.ldap_use_tls, username);
 #endif
 
 #ifdef HAVE_USER_MYSQL
-   u = mysql_get_entry(cfg.mysqlhost, cfg.mysqlport, cfg.mysqlsocket, cfg.mysqluser, cfg.mysqlpwd, cfg.mysqldb, SQL_USER_TABLE, getenv("REMOTE_USER"));
+   u = mysql_get_entry(cfg.mysqlhost, cfg.mysqlport, cfg.mysqlsocket, cfg.mysqluser, cfg.mysqlpwd, cfg.mysqldb, SQL_USER_TABLE, username);
 #endif
 
    /* we got no email address back, 2006.04.11, SJ */

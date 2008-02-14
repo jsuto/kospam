@@ -25,7 +25,7 @@ int admin_user = 0;
 
 
 char *extract(char *row, int ch, char *s, int size);
-int deliver_message(char *dir, char *message, struct __config cfg);
+int deliver_message(char *dir, char *message, char *username, struct __config cfg);
 
 
 int main(){
@@ -103,7 +103,7 @@ int main(){
       else if(strlen(cgi.delivery) > 1){
 
       #ifdef HAVE_USERDB
-         if(deliver_message(spamqdir, cgi.delivery, cfg) == OK){
+         if(deliver_message(spamqdir, cgi.delivery, user, cfg) == OK){
 
             snprintf(m, SMALLBUFSIZE-1, "%s/%s", spamqdir, cgi.delivery);
             if(unlink(m) == 0) printf("%s (%s).<p>\n<a href=\"%s?user=%s\">Back.</a>\n", ERR_CGI_REMOVED, cgi.delivery, cfg.spamcgi_url, user);

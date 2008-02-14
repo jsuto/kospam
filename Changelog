@@ -5,6 +5,10 @@
 Removed the passmail stuff and fixed a possible spamcgi bug.
 (misc.c, misc.h, spamcgi.c, Makefile.in, configure*)
 
+Fixed a bug causing to deliver a message to the admin user and
+not to the real recipient.
+(user.c, traincgi.c, spamcgi.c)
+
 2008.02.13, SJ
 
 Added an administrator user to the spam quarantine who can access

@@ -29,24 +29,17 @@ int deliver_message(char *dir, char *message, char *username, struct __config cf
 
 
 int main(){
-   char *p, *q, m[SMALLBUFSIZE], msg[SMALLBUFSIZE], spamqdir[MAXBUFSIZE], user[SMALLBUFSIZE];
+   char *p, *q, m[SMALLBUFSIZE], msg[SMALLBUFSIZE], spamqdir[MAXBUFSIZE], user[SMALLBUFSIZE], admin_menu[SMALLBUFSIZE];
    int clen=0, method=M_UNDEF, n=0, n_spam=0;
    struct cgidata cgi;
    char *input=NULL;
 
    cgiIn = stdin;
+   memset(admin_menu, 0, SMALLBUFSIZE);
 
    cfg = read_config(CONFIG_FILE);
 
    printf("Content-type: text/html\n\n");
-
-   printf("<html>\n<title>%s</title>\n<link rel=\"stylesheet\" type=\"text/css\" href=\"/style.css\">\n<body bgcolor=white text=darkblue vlink=#AC003A>\n<blockquote>\n", CGI_SPAM_QUARANTINE);
-
-   printf("<h1>%s</h1>\n", CGI_SPAM_QUARANTINE);
-
-   printf("\n\n<center>%s <a href=\"%s\">%s</a> <a href=\"%s\">%s</a> <a href=\"%s\">%s</a></center>\n\n\n", CGI_SPAM_QUARANTINE, cfg.usercgi_url, CGI_USER_PREF, cfg.statcgi_url, CGI_PERSONAL_STAT, cfg.trainlogcgi_url, CGI_TRAIN_LOG);
-
-   printf("<script type=\"text/javascript\">\n\nfunction mark_all(x){\n   var i;\n   var len = document.forms[0].elements.length;\n\n   for(i=0; i<len; i++)\n      document.forms[0].elements[i].checked = x;\n}\n\n</script>\n\n");
 
 
    /* check request method */
@@ -65,7 +58,21 @@ int main(){
 
 
    /* if you are an administrator */
-   if(strcmp(p, cfg.admin_user) == 0) admin_user = 1;
+   if(strcmp(p, cfg.admin_user) == 0){
+      admin_user = 1;
+      snprintf(admin_menu, SMALLBUFSIZE-1, "<a href=\"%s\">%s</a> ", cfg.spamcgi_url, CGI_USER_LIST);
+   }
+
+
+   printf("<html>\n<title>%s</title>\n<link rel=\"stylesheet\" type=\"text/css\" href=\"/style.css\">\n<body bgcolor=white text=darkblue vlink=#AC003A>\n<blockquote>\n", CGI_SPAM_QUARANTINE);
+
+   printf("<h1>%s</h1>\n", CGI_SPAM_QUARANTINE);
+
+   printf("\n\n<center>%s%s <a href=\"%s\">%s</a> <a href=\"%s\">%s</a> <a href=\"%s\">%s</a></center>\n\n\n", admin_menu, CGI_SPAM_QUARANTINE, cfg.usercgi_url, CGI_USER_PREF, cfg.statcgi_url, CGI_PERSONAL_STAT, cfg.trainlogcgi_url, CGI_TRAIN_LOG);
+
+   printf("<script type=\"text/javascript\">\n\nfunction mark_all(x){\n   var i;\n   var len = document.forms[0].elements.length;\n\n   for(i=0; i<len; i++)\n      document.forms[0].elements[i].checked = x;\n}\n\n</script>\n\n");
+
+
 
 
    if(method == M_GET){

@@ -1,5 +1,11 @@
 0.3.30:
 
+2008.02.15, SJ
+
+Added a "User List" menu to the administrator in the spam quarantine.
+(spamcgi.c, messages.h, messages.h.hu)
+(credits: Kevin Lewis)
+
 2008.02.14, SJ
 
 Removed the passmail stuff and fixed a possible spamcgi bug.

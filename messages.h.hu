@@ -1,5 +1,5 @@
 /*
- * messages.h.hu, 2008.02.13, SJ
+ * messages.h.hu, 2008.02.15, SJ
  * Hungarian version
  */
 
@@ -44,6 +44,7 @@
 #define CGI_USER "Felhasználó"
 #define CGI_MESSAGE "Üzenet"
 #define CGI_HAM_OR_SPAM "Ham/Spam"
+#define CGI_USER_LIST "Felhasználók Listája"
 
 // mysql
 

@@ -1,5 +1,5 @@
 /*
- * messages.h, 2008.02.13, SJ
+ * messages.h, 2008.02.15, SJ
  */
 
 // cgi
@@ -42,6 +42,7 @@
 #define CGI_USER "User"
 #define CGI_MESSAGE "Message"
 #define CGI_HAM_OR_SPAM "Ham/Spam"
+#define CGI_USER_LIST "User List"
 
 // mysql
 

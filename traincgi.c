@@ -1,5 +1,5 @@
 /*
- * traincgi.c, 2008.02.13, SJ
+ * traincgi.c, 2008.02.1999999999, SJ
  */
 
 #include <stdio.h>
@@ -153,8 +153,12 @@ int main(){
       if(strcmp(cgi.type, "spam") == 0)
          is_spam = 1;
 
-      if(strncmp(p, "message=", strlen("message=")))
+      p = strstr(input, "message=");
+      if(!p || strlen(p) < 20)
          errout(input, ERR_CGI_NO_MESSAGE);
+
+      /*if(strncmp(p, "message=", strlen("message=")))
+         errout(input, ERR_CGI_NO_MESSAGE);*/
 
       p += strlen("message=");
 

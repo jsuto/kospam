@@ -1,5 +1,16 @@
 0.3.30:
 
+2008.02.19, SJ
+
+Fixed a training bug. The traincgi utility warned about "No message found"
+message when training from the web page.
+(traincgi.c)
+
+Fixed a signedness bug in mydb_compress.c
+(mydb_compress.c)
+
+(credits: Kevin Lewis)
+
 2008.02.15, SJ
 
 Added a "User List" menu to the administrator in the spam quarantine.

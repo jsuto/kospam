@@ -1,5 +1,5 @@
 /*
- * mydb_compress.c, 2008.01.23, SJ
+ * mydb_compress.c, 2008.02.19, SJ
  */
 
 #include <stdio.h>
@@ -27,7 +27,8 @@ int main(int argc, char **argv){
    struct stat st;
    struct mydb_node *z, *mhash[MAX_MYDB_HASH];
    struct mydb e;
-   unsigned char *p, buf[N_SIZE*SEGMENT_SIZE], lockfile[SMALLBUFSIZE];
+   unsigned char buf[N_SIZE*SEGMENT_SIZE];
+   char *p, lockfile[SMALLBUFSIZE];
    unsigned int pos=0;
    unsigned int ntokens=0, old_tokens=0, _15_obsoleted_tokens=0, _60_obsoleted_tokens=0;
    unsigned long x;

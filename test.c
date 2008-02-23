@@ -8,27 +8,18 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/time.h>
-#include "misc.h"
-#include "bayes.h"
-#include "errmsg.h"
-#include "config.h"
+#include <clapf.h>
 
 #ifdef HAVE_MYSQL
-   #include <mysql.h>
    MYSQL mysql;
 #endif
-
 #ifdef HAVE_SQLITE3
-   #include <sqlite3.h>
    sqlite3 *db;
    int rc;
 #endif
-
 #ifdef HAVE_MYDB
-   #include "mydb.h"
    int rc;
    struct mydb_node *mhash[MAX_MYDB_HASH];
-   struct c_res bayes_file(struct mydb_node *mhash[MAX_MYDB_HASH], char *spamfile, struct _state state, struct session_data sdata, struct __config cfg);
 #endif
 
 

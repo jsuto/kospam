@@ -16,7 +16,7 @@ CFLAGS = @CFLAGS@ @CPPFLAGS@
 DEFS = @defs@
 INCDIR = -I. @INCDIR@ @mysql_includes@
 LIBDIR = @LIBDIR@ @mysql_libs@
-LIBS = @LIBS@
+LIBS = -L. @LIBS@
 LDAP_LIBS = @ldap_libs@
 OBJS = @OBJS@
 STORE_OBJ = @store_obj@
@@ -50,6 +50,8 @@ clapf.conf:
 
 clapf: % : %.o $(OBJS) session.o $(STORE_OBJ) $(MYSQL_OBJS)
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR) @LDFLAGS@
+	ar cr libclapf.a $(OBJS) $(MYSQL_OBJS)
+	ranlib libclapf.a
 
 clapfthread:	% : %.o $(OBJS) $(STORE_OBJ) $(MYSQL_OBJS)
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR) -lpthread
@@ -57,8 +59,8 @@ clapfthread:	% : %.o $(OBJS) $(STORE_OBJ) $(MYSQL_OBJS)
 parsembox: % : %.o misc.o decoder.o parser.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
 
-spamdrop: % : %.o bayes.o $(OBJS) $(MYSQL_OBJS)
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
+spamdrop: % : %.o
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ -lclapf $(LIBS) $(LDAP_LIBS) $(LIBDIR)
 
 splitmbox: % : %.o misc.o decoder.o parser.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)

@@ -3,7 +3,7 @@
  */
 
 #include <sys/time.h>
-#include "config.h"
+#include <config.h>
 
 void _fatal(char *s);
 void __fatal(char *s);

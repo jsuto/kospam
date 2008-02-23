@@ -135,9 +135,6 @@ install-clapf: clapf
 	$(INSTALL) -m 0644 parser.h $(DESTDIR)$(includedir)/clapf
 	$(INSTALL) -m 0644 bayes.h $(DESTDIR)$(includedir)/clapf
 	$(INSTALL) -m 0644 score.h $(DESTDIR)$(includedir)/clapf
-	$(INSTALL) -m 0644 rbl.h $(DESTDIR)$(includedir)/clapf
-	$(INSTALL) -m 0644 black.h $(DESTDIR)$(includedir)/clapf
-	$(INSTALL) -m 0644 chi.h $(DESTDIR)$(includedir)/clapf
 	$(INSTALL) -m 0644 hash.h $(DESTDIR)$(includedir)/clapf
 	$(INSTALL) -m 0644 config.h $(DESTDIR)$(includedir)/clapf
 	$(INSTALL) -m 0644 clapf-config.h $(DESTDIR)$(includedir)/clapf

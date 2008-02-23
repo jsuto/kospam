@@ -1,5 +1,9 @@
 0.3.30:
 
+2008.02.23, SJ
+
+Removed a few header files, and consolidated the anti-virus definitions.
+
 2008.02.19, SJ
 
 Fixed a training bug. The traincgi utility warned about "No message found"

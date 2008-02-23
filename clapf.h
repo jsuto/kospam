@@ -7,7 +7,6 @@
 #include <errmsg.h>
 #include <messages.h>
 #include <sql.h>
-#include <black.h>
 #include <smtpcodes.h>
 #include <config.h>
 #include <mydb.h>

@@ -1,5 +1,5 @@
 /*
- * avast.c, 2006.02.07, SJ
+ * avast.c, 2008.02.23, SJ
  *
  */
 
@@ -14,7 +14,7 @@
 #include <unistd.h>
 #include "config.h"
 #include "misc.h"
-#include "avast.h"
+#include "av.h"
 
 /*
  * connect to avast! and tell it what file to scan
@@ -32,7 +32,7 @@ int avast_scan(char *avast_address, int avast_port, char *workdir, char *tmpfile
 
    if((psd = socket(AF_INET, SOCK_STREAM, 0)) == -1){
       syslog(LOG_PRIORITY, "%s: ERR: create socket", tmpfile);
-      return AVAST_ERROR;
+      return AV_ERROR;
    }
 
    avast_addr.sin_family = AF_INET;
@@ -43,7 +43,7 @@ int avast_scan(char *avast_address, int avast_port, char *workdir, char *tmpfile
 
    if(connect(psd, (struct sockaddr *)&avast_addr, sizeof(struct sockaddr)) == -1){
       syslog(LOG_PRIORITY, "%s: AVAST ERR: connect to %s %d", tmpfile, avast_address, avast_port);
-      return AVAST_ERROR;
+      return AV_ERROR;
    }
 
    /* read AVAST banner. The last line should end with '220 Ready' */
@@ -55,7 +55,7 @@ int avast_scan(char *avast_address, int avast_port, char *workdir, char *tmpfile
       send(psd, AVAST_CMD_QUIT, strlen(AVAST_CMD_QUIT), 0);
       close(psd);
       syslog(LOG_PRIORITY, "%s: AVAST ERR: missing '220 Ready' banner", tmpfile);
-      return AVAST_ERROR;
+      return AV_ERROR;
    }
 
    /* issue the SCAN command with full path to the temporary directory */
@@ -94,11 +94,11 @@ int avast_scan(char *avast_address, int avast_port, char *workdir, char *tmpfile
          q += strlen(AVAST_RESP_INFECTED);
          strncpy(avastinfo, q+1, SMALLBUFSIZE-1);
          avastinfo[strlen(avastinfo)-1] = '\0';
-         return AVAST_VIRUS;
+         return AV_VIRUS;
       }
 
    } while(p);
 
-   return AVAST_OK;
+   return AV_OK;
 }
 

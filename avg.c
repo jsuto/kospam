@@ -16,7 +16,7 @@
 #include <unistd.h>
 #include "config.h"
 #include "misc.h"
-#include "avg.h"
+#include "av.h"
 
 /*
  * connect to AVG and tell it what directory to scan
@@ -34,7 +34,7 @@ int avg_scan(char *avg_address, int avg_port, char *workdir, char *tmpdir, char 
 
    if((psd = socket(AF_INET, SOCK_STREAM, 0)) == -1){
       syslog(LOG_PRIORITY, "%s: ERR: create socket", tmpfile);
-      return AVG_ERROR;
+      return AV_ERROR;
    }
 
    avg_addr.sin_family = AF_INET;
@@ -45,7 +45,7 @@ int avg_scan(char *avg_address, int avg_port, char *workdir, char *tmpdir, char 
 
    if(connect(psd, (struct sockaddr *)&avg_addr, sizeof(struct sockaddr)) == -1){
       syslog(LOG_PRIORITY, "%s: AVG ERR: connect to %s %d", tmpfile, avg_address, avg_port);
-      return AVG_ERROR;
+      return AV_ERROR;
    }
 
    /* read AVG banner. The last line should end with '220 Ready' */
@@ -57,7 +57,7 @@ int avg_scan(char *avg_address, int avg_port, char *workdir, char *tmpdir, char 
       send(psd, AVG_CMD_QUIT, strlen(AVG_CMD_QUIT), 0);
       close(psd);
       syslog(LOG_PRIORITY, "%s: AVG ERR: missing '220 Ready' banner", tmpfile);
-      return AVG_ERROR;
+      return AV_ERROR;
    }
 
    /* issue the SCAN command with full path to the temporary directory */
@@ -74,7 +74,7 @@ int avg_scan(char *avg_address, int avg_port, char *workdir, char *tmpdir, char 
 
 
    if(strncmp(buf, AVG_RESP_OK, 3) == 0)
-      return AVG_OK;
+      return AV_OK;
 
    if(strncmp(buf, AVG_RESP_VIRUS, 3) == 0){
       p = strstr(buf, "identified");
@@ -85,13 +85,13 @@ int avg_scan(char *avg_address, int avg_port, char *workdir, char *tmpdir, char 
 
       avginfo[strlen(avginfo)-2] = '\0';
 
-      return AVG_VIRUS;
+      return AV_VIRUS;
    }
 
    if(strncmp(buf, AVG_RESP_NOT_FOUND, 3) == 0)
       return AVG_NOT_FOUND;
 
-   return AVG_ERROR;
+   return AV_ERROR;
 
 }
 

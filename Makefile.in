@@ -4,6 +4,8 @@ prefix = @prefix@
 exec_prefix = @exec_prefix@
 bindir = @bindir@
 sbindir = @sbindir@
+includedir = @includedir@
+libdir = @libdir@
 libexecdir = @libexecdir@
 srcdir = @srcdir@
 sysconfdir = @sysconfdir@
@@ -85,7 +87,7 @@ clapfstore:	% : %.o cfg.o misc.o ssl_util.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR) -lssl -lcrypto -ldl -lpthread
 
 mydb_stat mydb_compress:	%: %.o mydb.o misc.o hash.o chi.o score.o
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ -lm
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
 
 
 
@@ -125,7 +127,28 @@ install-sqlite3:
 		chown -R $(CLAPF_USER):$(CLAPF_GROUP) $(DESTDIR)$(localstatedir)/lib/clapf/data/tokens.sdb; fi
 
 install-clapf: clapf
+	$(INSTALL) -d $(DESTDIR)$(includedir)
+	$(INSTALL) -d $(DESTDIR)$(includedir)/clapf
+	$(INSTALL) -m 0644 clapf.h $(DESTDIR)$(includedir)/clapf
+	$(INSTALL) -m 0644 cfg.h $(DESTDIR)$(includedir)/clapf
+	$(INSTALL) -m 0644 misc.h $(DESTDIR)$(includedir)/clapf
+	$(INSTALL) -m 0644 parser.h $(DESTDIR)$(includedir)/clapf
+	$(INSTALL) -m 0644 bayes.h $(DESTDIR)$(includedir)/clapf
+	$(INSTALL) -m 0644 score.h $(DESTDIR)$(includedir)/clapf
+	$(INSTALL) -m 0644 rbl.h $(DESTDIR)$(includedir)/clapf
+	$(INSTALL) -m 0644 black.h $(DESTDIR)$(includedir)/clapf
+	$(INSTALL) -m 0644 chi.h $(DESTDIR)$(includedir)/clapf
+	$(INSTALL) -m 0644 hash.h $(DESTDIR)$(includedir)/clapf
+	$(INSTALL) -m 0644 config.h $(DESTDIR)$(includedir)/clapf
+	$(INSTALL) -m 0644 clapf-config.h $(DESTDIR)$(includedir)/clapf
+	$(INSTALL) -m 0644 sql.h $(DESTDIR)$(includedir)/clapf
+	$(INSTALL) -m 0644 errmsg.h $(DESTDIR)$(includedir)/clapf
+	$(INSTALL) -m 0644 smtpcodes.h $(DESTDIR)$(includedir)/clapf
+	$(INSTALL) -m 0644 messages.h $(DESTDIR)$(includedir)/clapf
+	$(INSTALL) -m 0644 mydb.h $(DESTDIR)$(includedir)/clapf
 	$(INSTALL) -d $(DESTDIR)$(bindir)
+	$(INSTALL) -d $(DESTDIR)$(libdir)
+	$(INSTALL) -m 0644 libclapf.a $(DESTDIR)$(libdir)
 	$(INSTALL) -d $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -d $(DESTDIR)$(localstatedir)/lib/clapf/data
 	$(INSTALL) -d -m 711 $(DESTDIR)$(localstatedir)/lib/clapf/queue

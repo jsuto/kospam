@@ -94,7 +94,6 @@ int main(int argc, char **argv){
    struct _state state;
 
 #ifdef MY_TEST
-   #include "rbl.h"
    char rblbuf[SMALLBUFSIZE];
 #endif
 

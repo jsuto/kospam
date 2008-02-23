@@ -38,3 +38,15 @@ int qcache_socket(char *qcache_addr, int qcache_port, char *qcache_socket);
 int is_recipient_in_array(char rcptto[MAX_RCPT_TO][MAXBUFSIZE], char *buf, int num_of_rcpt_to);
 void write_delivery_info(char *tmpfile, char *dir, char *mailfrom, char rcptto[MAX_RCPT_TO][MAXBUFSIZE], int num_of_rcpt_to);
 int move_message_to_quarantine(char *tmpfile, char *quarantine_dir, char *mailfrom, char rcptto[MAX_RCPT_TO][MAXBUFSIZE], int num_of_rcpt_to);
+
+
+int rbl_check(char *rbldomain, char *host);
+int reverse_ipv4_addr(char *ip);
+int rbl_list_check(char *domainlist, char *hostlist);
+
+unsigned long blackness(char *dir, char *ip, int v);
+void put_ip_to_dir(char *dir, char *ip);
+
+double gsl_chi2inv(double x, double df);
+double chi2inv(double x, double df, double esf);
+

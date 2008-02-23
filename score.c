@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include <math.h>
 #include "hash.h"
-#include "chi.h"
 #include "misc.h"
 #include "config.h"
 

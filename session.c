@@ -1,5 +1,5 @@
 /*
- * session.c, 2008.02.07, SJ
+ * session.c, 2008.02.23, SJ
  */
 
 #include <stdio.h>
@@ -16,15 +16,10 @@
 #include "smtpcodes.h"
 #include "errmsg.h"
 #include "mime.h"
-#include "avg.h"
-#include "avast.h"
-#include "kav.h"
-#include "drweb.h"
-#include "clamd.h"
+#include "av.h"
 #include "session.h"
 #include "messages.h"
 #include "sql.h"
-#include "black.h"
 #include "config.h"
 
 int sd, fd, inj, ret, rav, prevlen=0;
@@ -421,7 +416,7 @@ void init_child(int new_sd, char *hostid){
 
                      /* scan directory */
 
-                     if(avg_scan(cfg.avg_addr, cfg.avg_port, cfg.workdir, Qmime.tmpdir, sdata.ttmpfile, cfg.verbosity, virusinfo) == AVG_VIRUS)
+                     if(avg_scan(cfg.avg_addr, cfg.avg_port, cfg.workdir, Qmime.tmpdir, sdata.ttmpfile, cfg.verbosity, virusinfo) == AV_VIRUS)
                         rav = AVIR_VIRUS;
 
                      /* and remove files */
@@ -447,24 +442,24 @@ void init_child(int new_sd, char *hostid){
 
 
             #ifdef HAVE_AVAST
-               if(avast_scan(cfg.avast_addr, cfg.avast_port, cfg.workdir, sdata.ttmpfile, cfg.verbosity, virusinfo) == AVAST_VIRUS)
+               if(avast_scan(cfg.avast_addr, cfg.avast_port, cfg.workdir, sdata.ttmpfile, cfg.verbosity, virusinfo) == AV_VIRUS)
                   rav = AVIR_VIRUS;
             #endif
 
 
             #ifdef HAVE_KAV
-               if(kav_scan(cfg.kav_socket, cfg.workdir, sdata.ttmpfile, cfg.verbosity, virusinfo) == KAV_VIRUS)
+               if(kav_scan(cfg.kav_socket, cfg.workdir, sdata.ttmpfile, cfg.verbosity, virusinfo) == AV_VIRUS)
                   rav = AVIR_VIRUS;
             #endif
 
             #ifdef HAVE_DRWEB
-               if(drweb_scan(cfg.drweb_socket, sdata.ttmpfile, cfg.verbosity, virusinfo) == DRWEB_VIRUS)
+               if(drweb_scan(cfg.drweb_socket, sdata.ttmpfile, cfg.verbosity, virusinfo) == AV_VIRUS)
                   rav = AVIR_VIRUS;
             #endif
 
             #ifdef HAVE_CLAMD
                chmod(sdata.ttmpfile, 0644);
-               if(clamd_scan(cfg.clamd_socket, cfg.chrootdir, cfg.workdir, sdata.ttmpfile, cfg.verbosity, virusinfo) == CLAMD_VIRUS)
+               if(clamd_scan(cfg.clamd_socket, cfg.chrootdir, cfg.workdir, sdata.ttmpfile, cfg.verbosity, virusinfo) == AV_VIRUS)
                   rav = AVIR_VIRUS;
             #endif
 

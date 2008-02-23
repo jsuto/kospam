@@ -1,5 +1,5 @@
 /*
- * drweb.c, 2006.02.28, SJ
+ * drweb.c, 2008.02.23, SJ
  */
 
 #include <stdio.h>
@@ -14,7 +14,7 @@
 #include <unistd.h>
 #include "config.h"
 #include "misc.h"
-#include "drweb.h"
+#include "av.h"
 
 int drweb_scan(char *drweb_socket, char *tmpfile, int v, char *drwebinfo){
    int sd, n, fd;
@@ -32,12 +32,12 @@ int drweb_scan(char *drweb_socket, char *tmpfile, int v, char *drwebinfo){
 
    if((sd = socket(AF_UNIX, SOCK_STREAM, 0)) == -1){
       syslog(LOG_PRIORITY, "ERR: create socket");
-      return DRWEB_ERROR;
+      return AV_ERROR;
    }
 
    if(connect(sd, (struct sockaddr *)&server, strlen(server.sun_path) + sizeof (server.sun_family)) == -1){
       syslog(LOG_PRIORITY, "DRWEB ERR: connect to %s", drweb_socket);
-      return DRWEB_ERROR;
+      return AV_ERROR;
    }
 
    size = 0;
@@ -47,13 +47,13 @@ int drweb_scan(char *drweb_socket, char *tmpfile, int v, char *drwebinfo){
 
    if(size <= 0){
       syslog(LOG_PRIORITY, "DRWEB ERR: invalid size of %s %ld", tmpfile, size); 
-      return DRWEB_ERROR;
+      return AV_ERROR;
    }
 
    fd = open(tmpfile, O_RDONLY);
    if(fd == -1){
       syslog(LOG_PRIORITY, "DRWEB ERR: cannot open %s", tmpfile);
-      return DRWEB_ERROR;
+      return AV_ERROR;
    }
 
    memset(buf, 0, MAXBUFSIZE);
@@ -81,9 +81,9 @@ int drweb_scan(char *drweb_socket, char *tmpfile, int v, char *drwebinfo){
 
    if(ntohl(q) == DRWEB_RESP_VIRUS){
       strncpy(drwebinfo, DRWEB_VIRUS_HAS_FOUND_MESSAGE, SMALLBUFSIZE-1);
-      return DRWEB_VIRUS;
+      return AV_VIRUS;
    }
 
-   return DRWEB_OK;
+   return AV_OK;
 }
 

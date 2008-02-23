@@ -19,8 +19,6 @@
 #include "hash.h"
 #include "decoder.h"
 #include "parser.h"
-#include "black.h"
-#include "rbl.h"
 #include "messages.h"
 #include "score.h"
 #include "sql.h"

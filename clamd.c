@@ -1,5 +1,5 @@
 /*
- * clamd.c, 2006.03.09, SJ
+ * clamd.c, 2008.02.23, SJ
  */
 
 #include <stdio.h>
@@ -11,7 +11,7 @@
 #include <sys/un.h>
 #include <unistd.h>
 #include "misc.h"
-#include "clamd.h"
+#include "av.h"
 #include "config.h"
 
 int clamd_scan(char *clamd_socket, char *chrootdir, char *workdir, char *tmpfile, int v, char *clamdinfo){
@@ -28,12 +28,12 @@ int clamd_scan(char *clamd_socket, char *chrootdir, char *workdir, char *tmpfile
 
    if((s = socket(AF_UNIX, SOCK_STREAM, 0)) == -1){
       syslog(LOG_PRIORITY, "ERR: create socket");
-      return CLAMD_ERROR;
+      return AV_ERROR;
    }
 
    if(connect(s, (struct sockaddr *)&server, strlen(server.sun_path) + sizeof (server.sun_family)) == -1){
       syslog(LOG_PRIORITY, "CLAMD ERR: connect to %s", clamd_socket);
-      return CLAMD_ERROR;
+      return AV_ERROR;
    }
 
 
@@ -66,8 +66,8 @@ int clamd_scan(char *clamd_socket, char *chrootdir, char *workdir, char *tmpfile
          }
       }
 
-      return CLAMD_VIRUS;
+      return AV_VIRUS;
    }
 
-   return CLAMD_OK;
+   return AV_OK;
 }

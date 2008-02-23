@@ -1,5 +1,5 @@
 /*
- * kav.c, 2006.02.21, SJ
+ * kav.c, 2008.02.23, SJ
  */
 
 #include <stdio.h>
@@ -10,7 +10,7 @@
 #include <sys/un.h>
 #include <unistd.h>
 #include "misc.h"
-#include "kav.h"
+#include "av.h"
 #include "config.h"
 
 int kav_scan(char *kav_socket, char *workdir, char *tmpfile, int v, char *kavinfo){
@@ -27,12 +27,12 @@ int kav_scan(char *kav_socket, char *workdir, char *tmpfile, int v, char *kavinf
 
    if((s = socket(AF_UNIX, SOCK_STREAM, 0)) == -1){
       syslog(LOG_PRIORITY, "ERR: create socket");
-      return KAV_ERROR;
+      return AV_ERROR;
    }
 
    if(connect(s, (struct sockaddr *)&server, strlen(server.sun_path) + sizeof (server.sun_family)) == -1){
       syslog(LOG_PRIORITY, "KAV ERR: connect to %s", kav_socket);
-      return KAV_ERROR;
+      return AV_ERROR;
    }
 
    /* read KAV banner. It should start with KAV_READY */
@@ -44,7 +44,7 @@ int kav_scan(char *kav_socket, char *workdir, char *tmpfile, int v, char *kavinf
       send(s, KAV_CMD_QUIT, strlen(KAV_CMD_QUIT), 0);
       close(s);
       syslog(LOG_PRIORITY, "KAV ERR: missing '201 Ready' banner");
-      return KAV_ERROR;
+      return AV_ERROR;
    }
 
    /* issue the SCAN command with full path to the temporary directory */
@@ -79,7 +79,7 @@ int kav_scan(char *kav_socket, char *workdir, char *tmpfile, int v, char *kavinf
    close(s);
 
    if(strncmp(buf, KAV_RESP_INFECTED, strlen(KAV_RESP_INFECTED)) == 0)
-      return KAV_VIRUS;
+      return AV_VIRUS;
 
-   return KAV_OK;
+   return AV_OK;
 }

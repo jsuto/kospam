@@ -27,10 +27,10 @@ MYSQL_OBJS = @mysql_obj@
 CLAPF_USER = @CLAPF_USER@
 CLAPF_GROUP = `id -g $(CLAPF_USER)`
 
-LC_CURRENT=0
-LC_REVISION=1
-LC_AGE=1
-LIBCLAPF_VERSION=$(LC_CURRENT).$(LC_REVISION)
+CLAPF_VERSION=0
+CLAPF_REVISION=1
+CLAPF_RELEASE=1
+LIBCLAPF_VERSION=$(CLAPF_VERSION).$(CLAPF_REVISION).$(CLAPF_RELEASE)
 
 INSTALL = @INSTALL@
 
@@ -59,9 +59,9 @@ clapf: % : %.o $(OBJS) session.o $(STORE_OBJ) $(MYSQL_OBJS)
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR) @LDFLAGS@
 	ar cr libclapf.a $(OBJS) $(MYSQL_OBJS)
 	ranlib libclapf.a
-	$(CC) -shared -Wl,-soname,libclapf.so.$(LC_CURRENT) -o libclapf.so.$(LIBCLAPF_VERSION) $(OBJS) $(MYSQL_OBJS) $(LIBS) $(LDAP_LIBS)
+	$(CC) -shared -Wl,-soname,libclapf.so.$(CLAPF_VERSION) -o libclapf.so.$(LIBCLAPF_VERSION) $(OBJS) $(MYSQL_OBJS) $(LIBS) $(LDAP_LIBS)
 	ldconfig -n .
-	ln -sf libclapf.so.$(LC_CURRENT) libclapf.so
+	ln -sf libclapf.so.$(CLAPF_VERSION) libclapf.so
 
 clapfthread:	% : %.o $(OBJS) $(STORE_OBJ) $(MYSQL_OBJS)
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR) -lpthread
@@ -156,7 +156,7 @@ install-clapf: clapf
 	$(INSTALL) -m 0644 libclapf.a $(DESTDIR)$(libdir)
 	$(INSTALL) -m 0644 libclapf.so.$(LIBCLAPF_VERSION) $(DESTDIR)$(libdir)
 	(cd $(DESTDIR)$(libdir) && ln -sf libclapf.so.$(LIBCLAPF_VERSION) libclapf.so)
-	(cd $(DESTDIR)$(libdir) && ln -sf libclapf.so.$(LIBCLAPF_VERSION) libclapf.so.$(LC_CURRENT))
+	(cd $(DESTDIR)$(libdir) && ln -sf libclapf.so.$(LIBCLAPF_VERSION) libclapf.so.$(CLAPF_VERSION))
 	$(INSTALL) -d $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -d $(DESTDIR)$(localstatedir)/lib/clapf/data
 	$(INSTALL) -d -m 711 $(DESTDIR)$(localstatedir)/lib/clapf/queue

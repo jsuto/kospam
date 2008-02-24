@@ -395,8 +395,10 @@ int main(int argc, char **argv){
       train_message(cfg.mydbfile, mhash, sdata, state, rounds, 1, T_TOE, cfg);
    #endif
 
+   #ifdef HAVE_BLACKHOLE
       put_ip_to_dir(cfg.blackhole_path, state.ip);
       syslog(LOG_PRIORITY, "%s: training on a blackhole message", sdata.ttmpfile);
+   #endif
    }
 
 

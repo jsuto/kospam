@@ -1,5 +1,10 @@
 0.3.30:
 
+2008.02.25, SJ
+
+Modified compilation. You can use both the libclapf.a and libclapf.so* files.
+(Makefile.in, configure*, spamdrop.c)
+
 2008.02.23, SJ
 
 Removed a few header files, and consolidated the anti-virus definitions.

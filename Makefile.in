@@ -17,8 +17,8 @@ CC = @CC@
 CFLAGS = @CFLAGS@ @CPPFLAGS@
 DEFS = @defs@
 INCDIR = -I. @INCDIR@ @mysql_includes@
-LIBDIR = @LIBDIR@ @mysql_libs@
-LIBS = -L. @LIBS@
+LIBDIR = -L. @LIBDIR@
+LIBS = @LIBS@ @mysql_libs@
 LDAP_LIBS = @ldap_libs@
 OBJS = @OBJS@
 STORE_OBJ = @store_obj@
@@ -26,6 +26,11 @@ USER_OBJ = @user_obj@
 MYSQL_OBJS = @mysql_obj@
 CLAPF_USER = @CLAPF_USER@
 CLAPF_GROUP = `id -g $(CLAPF_USER)`
+
+LC_CURRENT=0
+LC_REVISION=1
+LC_AGE=1
+LIBCLAPF_VERSION=$(LC_CURRENT).$(LC_REVISION)
 
 INSTALL = @INSTALL@
 
@@ -54,6 +59,9 @@ clapf: % : %.o $(OBJS) session.o $(STORE_OBJ) $(MYSQL_OBJS)
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR) @LDFLAGS@
 	ar cr libclapf.a $(OBJS) $(MYSQL_OBJS)
 	ranlib libclapf.a
+	$(CC) -shared -Wl,-soname,libclapf.so.$(LC_CURRENT) -o libclapf.so.$(LIBCLAPF_VERSION) $(OBJS) $(MYSQL_OBJS) $(LIBS) $(LDAP_LIBS)
+	ldconfig -n .
+	ln -sf libclapf.so.$(LC_CURRENT) libclapf.so
 
 clapfthread:	% : %.o $(OBJS) $(STORE_OBJ) $(MYSQL_OBJS)
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR) -lpthread
@@ -104,7 +112,7 @@ qcache: qs.o misc.o cfg.o qcache.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o qs $^ $(LIBS) -lpthread $(LIBDIR)
 
 %.o: $(srcdir)/%.c
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -c $< -o $@
+	$(CC) $(CFLAGS) -fPIC $(INCDIR) $(DEFS) -c $< -o $@
 
 install-mysql-new:
 	$(INSTALL) -d $(DESTDIR)$(datarootdir)/clapf
@@ -146,6 +154,9 @@ install-clapf: clapf
 	$(INSTALL) -d $(DESTDIR)$(bindir)
 	$(INSTALL) -d $(DESTDIR)$(libdir)
 	$(INSTALL) -m 0644 libclapf.a $(DESTDIR)$(libdir)
+	$(INSTALL) -m 0644 libclapf.so.$(LIBCLAPF_VERSION) $(DESTDIR)$(libdir)
+	(cd $(DESTDIR)$(libdir) && ln -sf libclapf.so.$(LIBCLAPF_VERSION) libclapf.so)
+	(cd $(DESTDIR)$(libdir) && ln -sf libclapf.so.$(LIBCLAPF_VERSION) libclapf.so.$(LC_CURRENT))
 	$(INSTALL) -d $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -d $(DESTDIR)$(localstatedir)/lib/clapf/data
 	$(INSTALL) -d -m 711 $(DESTDIR)$(localstatedir)/lib/clapf/queue
@@ -212,7 +223,7 @@ clean_db:
 	rm -f ham.tmp spam.tmp num_of_spam.tmp num_of_ham.tmp tokens.mydb temp.*
 
 clean:
-	rm -f *.o *.a smapd qs db.sql clapf clapfstore clapf.conf parsembox splitmbox spamtest spamdrop spamcgi traincgi trainlogcgi usercgi statcgi spamstat aphash clapf_admin prepare-sql mydb_stat mydb_compress
+	rm -f *.o *.a libclapf.so* smapd qs db.sql clapf clapfstore clapf.conf parsembox splitmbox spamtest spamdrop spamcgi traincgi trainlogcgi usercgi statcgi spamstat aphash clapf_admin prepare-sql mydb_stat mydb_compress
 
 dist_clean distclean: clean
 	rm -f Makefile config.log config.status clapf-config.h stamp.h clapf.conf

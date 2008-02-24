@@ -5914,7 +5914,7 @@ echo; echo
 
 
 
-CFLAGS="-O2 -Wall"
+CFLAGS="-O2 -Wall -g"
 LIBS="$libclamav $antispam_libs $gsl_libs $sqlite3_libs"
 OBJS="misc.o cfg.o smtp.o sig.o decoder.o parser.o cgi.o $objs"
 

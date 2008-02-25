@@ -2,19 +2,20 @@
 .TH "SPAMDROP" "1" "Januar 18, 2006" "Janos SUTO" "Clapf network filter"
 .SH "NAME"
 .LP 
-spamdrop \- check whether the given RFC-822 is spam or not
+spamdrop \- a statistical anti-spam utility for checking spam and training
 .SH "SYNOPSIS"
 .LP 
-cat <RFC-822 formatted message file> | spamdrop -c <configuration file> -p
+spamdrop [-c <configuration file>] <-p|-s|-H|-S>
 .SH "DESCRIPTION"
 .LP 
 
-spamdrop is a command line utility to determine whether the incoming message
-is spam or not. It reads its configuration and takes the message from the
-standard input. Then it returns 1 if the message is spam or 0 otherwise.
-If using the -p command line switch it will print the message to the
-standard output. Spamdrop is designed to collaborate with maildrop.
+Spamdrop is a statistical anti-spam program to determine whether the incoming
+message is spam or not. Spamdrop can be used to train the token database, and
+is able to handle blackhole (a.k.a minefield) requests as well.
 
+Spamdrop reads the message from the standard input, processes it, then produces
+an output.
+Spamdrop is designed to collaborate with maildrop.
 
 
 .SH "OPTIONS"
@@ -28,6 +29,25 @@ Use the given configuration file instead the default (/usr/local/etc/clapf.conf)
 \fB\-p\fR
 Print the given message to the standard output and inserting some extra headers.
 
+.TP
+\fB\-s\fR
+Print a summary only
+
+.TP
+\fB\-H\fR
+Train with a ham message,
+eg. spamdrop -H < messagefile
+
+.TP
+\fB\-S\fR
+Train with a spam message,
+eg. spamdrop -S < messagefile
+
+
+.SH "RETURN VALUE"
+.LP
+
+0 for ham, 1 for spam in summary mode, otherwise 0.
 
 .SH "EXAMPLE"
 .LP
@@ -35,13 +55,28 @@ Print the given message to the standard output and inserting some extra headers.
 To use spamdrop with maildrop you may use the following configuration snippet:
 
 .nf
+
+# this block handles the blackhole/minefield requests
+# and saves these kind of emails to a folder
+if(/trap@email.address/:h)
+{
+        xfilter "/usr/local/bin/blackhole -p"
+        to "mail/blackhole"
+        exit
+}
+
+# spamdrop normal mode
 xfilter "/usr/local/bin/spamdrop -p"
 
+# move spam to the junk folder ...
 if(/^X-Clapf-spamicity: Yes/:h)
 {
         to "mail/junk"
 }
+
+# otherwise to the mailbox
 to "Mailbox"
+
 
 .SH "FILES"
 .LP

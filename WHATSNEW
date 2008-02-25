@@ -39,7 +39,40 @@ The blackhole (aka. minefield) is handled by spamdrop.
 
 Added XFORWARD extension support to catch DHA attacks.
 
-Changed the token table to InnoDB to handle better paralel requests.
+Changed the t_token table to InnoDB to handle better paralel requests.
+
+Added administrative support to spam quarantine, ie. the admin user
+can review the spam quarantine of any user.
+
+Unified surbl and rbl support.
+
+Training function merged into spamdrop:
+spamdrop -S < rfc822_format_message
+spamdrop -H < rfc822_format_message
+
+Spamdrop can handle blackhole requests (with a symlink).
+
+Added whitelist support (use --enable-whitelist option with configure)
+
+Modified the t_token sql table to store a timestamp for each token.
+This can be used to purge aged, obsolete tokens, while keeping the
+useful tokens, and maintain accuracy.
+
+You may have to modify your existing t_token table as follows:
+
+alter table t_token add column timestamp int default 0;
+update t_token set timestamp=UNIX_TIMESTAMP();
+
+OR
+
+alter table t_token add column timestamp int default 0;
+update t_token set timestamp=THE_CURRENT_TIME_STAMP*
+
+*: replace with the current timestamp, eg. 1203934109
+
+Then you can purge the unused tokens with purge-mysql.sql
+or purge-sqlite3.sh scripts.
+
 
 Other small fixes.
 

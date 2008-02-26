@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2008.02.21, SJ
+ * spamdrop.c, 2008.02.26, SJ
  */
 
 #include <stdio.h>
@@ -278,6 +278,11 @@ int main(int argc, char **argv){
 
       state = parse_message(buf, cfg);
 
+      /* is it a TUM trained message? */
+
+      if(state.train_mode == T_TUM)
+         train_mode=T_TUM;
+
       /* ... then train with the message */
 
    #ifdef HAVE_MYSQL
@@ -305,6 +310,12 @@ int main(int argc, char **argv){
    if(train_as_ham == 1 || train_as_spam == 1){
       if(train_as_spam == 1) is_spam = 1;
       else is_spam = 0;
+
+      /* is it a TUM trained message? */
+
+      if(state.train_mode == T_TUM)
+         train_mode=T_TUM;
+
 
    #ifdef HAVE_MYSQL
       train_message(mysql, sdata, state, rounds, is_spam, train_mode, cfg);

@@ -1,5 +1,5 @@
 /*
- * parser.c, 2007.12.06, SJ
+ * parser.c, 2008.02.26, SJ
  */
 
 #include <stdio.h>
@@ -58,6 +58,8 @@ struct _state init_state(){
    state.line_num = 0;
 
    state.ipcnt = 0;
+
+   state.train_mode = T_TOE;
 
    memset(state.boundary, 0, BOUNDARY_LEN);
    memset(state.boundary2, 0, BOUNDARY_LEN);

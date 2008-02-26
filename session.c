@@ -1,5 +1,5 @@
 /*
- * session.c, 2008.02.23, SJ
+ * session.c, 2008.02.26, SJ
  */
 
 #include <stdio.h>
@@ -598,7 +598,7 @@ void init_child(int new_sd, char *hostid){
 
                            train_mode = extract_id_from_message(sdata.ttmpfile, cfg.clapf_header_field, ID);
 
-                           train_message(mysql, sdata, sstate, MAX_ITERATIVE_TRAIN_LOOPS, is_spam, train_mode, cfg);
+                           train_message(mysql, sdata, sstate, MAX_ITERATIVE_TRAIN_LOOPS, is_spam, sstate.train_mode, cfg);
 
                            goto SEND_RESULT;
                         }
@@ -676,7 +676,7 @@ void init_child(int new_sd, char *hostid){
 
                            train_mode = extract_id_from_message(sdata.ttmpfile, cfg.clapf_header_field, ID);
 
-                           train_message(db, sdata, sstate, MAX_ITERATIVE_TRAIN_LOOPS, is_spam, train_mode, cfg);
+                           train_message(db, sdata, sstate, MAX_ITERATIVE_TRAIN_LOOPS, is_spam, sstate.train_mode, cfg);
 
                            goto SEND_RESULT;
                         }

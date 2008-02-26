@@ -5,6 +5,10 @@
 Mydb fix.
 (mydb.c)
 
+Spamdrop now honors the TUM training while training on the
+command line.
+(parser.h, parser.c, bayes.c, spamdrop.c)
+
 Installing the man pages went to another section.
 (Makefile.in)
 

@@ -1,5 +1,5 @@
 /*
- * mydb.c, 2008.01.23, SJ
+ * mydb.c, 2008.02.26, SJ
  */
 
 #include <stdio.h>
@@ -181,6 +181,8 @@ float mydbqry(struct mydb_node *xhash[MAX_MYDB_HASH], char *p, float rob_s, floa
 
    spamicity = calc_spamicity(Nham, Nspam, q->nham, q->nspam, rob_s, rob_x);
 
+   //fprintf(stderr, "%s %d %d %.4f\n", p, q->nham, q->nspam, spamicity);
+
    return spamicity;
 }
 
@@ -245,8 +247,6 @@ int my_walk_hash(char *mydbfile, struct mydb_node *xhash[MAX_MYDB_HASH], int ham
 
    time(&cclock);
    now = cclock;
-
-   //syslog(LOG_PRIORITY, "walking...");
 
    fd = open(mydbfile, O_RDWR);
    if(fd == -1){
@@ -331,8 +331,6 @@ int update_tokens(char *mydbfile, struct mydb_node *xhash[MAX_MYDB_HASH], struct
 
    time(&cclock);
    now = cclock;
-
-   //syslog(LOG_PRIORITY, "updating...");
 
    fd = open(mydbfile, O_RDWR);
    if(fd == -1){

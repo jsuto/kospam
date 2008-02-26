@@ -208,6 +208,8 @@ int add_or_update(int fd, struct mydb_node *mhash[MAX_MYDB_HASH], int ham_or_spa
 
       lseek(fd, MYDB_HEADER_SIZE + q->pos * N_SIZE, SEEK_SET);
       n = write(fd, q, N_SIZE);
+
+      //printf("updating: %s\n", token);
    }
 
    /* not exists ... */
@@ -227,6 +229,8 @@ int add_or_update(int fd, struct mydb_node *mhash[MAX_MYDB_HASH], int ham_or_spa
 
       lseek(fd, 0, SEEK_END);
       n = write(fd, &e, N_SIZE);
+
+      //printf("inserting: %s\n", token);
    }
 
    return 0;
@@ -242,13 +246,20 @@ int my_walk_hash(char *mydbfile, struct mydb_node *xhash[MAX_MYDB_HASH], int ham
    time(&cclock);
    now = cclock;
 
+   //syslog(LOG_PRIORITY, "walking...");
+
    fd = open(mydbfile, O_RDWR);
-   if(fd != -1){
-      if(flock(fd, LOCK_EX|LOCK_NB)){
-         close(fd);
-         fd = -1;
-      }
+   if(fd == -1){
+      syslog(LOG_PRIORITY, "error opening: %s", mydbfile);
+      return 0;
    }
+
+   if(flock(fd, LOCK_EX|LOCK_NB)){
+      close(fd);
+      syslog(LOG_PRIORITY, "cannot lock: %s", mydbfile);
+      return 0;
+   }
+
 
    p = token;
    while(p != NULL){
@@ -321,9 +332,11 @@ int update_tokens(char *mydbfile, struct mydb_node *xhash[MAX_MYDB_HASH], struct
    time(&cclock);
    now = cclock;
 
+   //syslog(LOG_PRIORITY, "updating...");
+
    fd = open(mydbfile, O_RDWR);
    if(fd == -1){
-      syslog(LOG_PRIORITY, "cannot open mydb file %s", mydbfile);
+      syslog(LOG_PRIORITY, "cannot open mydb file: %s", mydbfile);
       return 0;
    }
 

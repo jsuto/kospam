@@ -2,6 +2,9 @@
 
 2008.02.26, SJ
 
+Mydb fix.
+(mydb.c)
+
 Installing the man pages went to another section.
 (Makefile.in)
 

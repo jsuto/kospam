@@ -437,7 +437,7 @@ fi
 
 if test "$TOKENDB" = "sqlite3"; then
    defs="$defs -DHAVE_SQLITE3"
-   sqlite3_libs="-lsqlite3"
+   sqlite3_libs="-lsqlite3 -lpthread"
    mysql_obj="sqlite3.o sql.o"
 fi
 

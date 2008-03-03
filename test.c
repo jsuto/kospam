@@ -95,6 +95,11 @@ int main(int argc, char **argv){
    close_mydb(mhash);
 #endif
 
+#ifdef MY_TEST
+   reverse_ipv4_addr(state.ip);
+   if(rbl_list_check("zen.spamhaus.org", state.ip) == 1)
+      printf("%s: ZEN=1\r\n", state.ip);
+#endif
 
    free_and_print_list(state.first, 0);
 

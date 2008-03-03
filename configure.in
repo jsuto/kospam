@@ -181,11 +181,11 @@ dnl  if test "$want_antispam" = "yes"; then
 
     dnl mysql database
 
-    AC_CHECK_PROG(MYSQL_CONFIG, mysql_config, yes)
+    dnl AC_CHECK_PROG(MYSQL_CONFIG, mysql_config, yes)
 
-    if test x$MYSQL_CONFIG = xyes; then
-       have_mysql="yes"
-    fi
+    dnl if test x$MYSQL_CONFIG = xyes; then
+    dnl   have_mysql="yes"
+    dnl fi
 
     dnl ldap database
 
@@ -292,6 +292,13 @@ AC_ARG_WITH(tokendb,
 
 
   if test "$withval" = "mysql"; then
+
+     AC_CHECK_PROG(MYSQL_CONFIG, mysql_config, yes)
+
+     if test x$MYSQL_CONFIG = xyes; then
+       have_mysql="yes"
+     fi
+
      if test "$have_mysql" = "yes"; then
             dnl AC_DEFINE(USE_MYSQL, 1, [MySQL database support enabled])
 
@@ -525,12 +532,6 @@ if test "$have_gsl" = "yes"; then
    echo "chi square implementation: GNU GSL"
 else
    echo "chi square implementation: internal"
-fi
-
-if test "$have_mysql" = "yes"; then
-   echo "MySQL support: yes"
-else
-   echo "MySQL support: no"
 fi
 
 if test "$have_blackhole" = "yes"; then

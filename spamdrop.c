@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2008.02.26, SJ
+ * spamdrop.c, 2008.03.01, SJ
  */
 
 #include <stdio.h>
@@ -221,9 +221,10 @@ int main(int argc, char **argv){
 
 
    /* skip spamicity check if message is too long */
-   if( (print_message == 1 || print_summary_only == 1) && tot_len > cfg.max_message_size_to_filter)
+   if( (print_message == 1 || print_summary_only == 1) && tot_len > cfg.max_message_size_to_filter){
+      gettimeofday(&tv_stop, &tz);
       goto ENDE_SPAMDROP;
-
+   }
 
    /*******************************************************************************/
    /* check whether this is a training request with user+spam@... or user+ham@... */

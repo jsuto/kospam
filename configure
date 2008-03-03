@@ -4417,47 +4417,7 @@ ac_cv_lib_m=ac_cv_lib_m_main
     antispam_libs="-lm"
 
 
-    # Extract the first word of "mysql_config", so it can be a program name with args.
-set dummy mysql_config; ac_word=$2
-{ echo "$as_me:$LINENO: checking for $ac_word" >&5
-echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6; }
-if test "${ac_cv_prog_MYSQL_CONFIG+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  if test -n "$MYSQL_CONFIG"; then
-  ac_cv_prog_MYSQL_CONFIG="$MYSQL_CONFIG" # Let the user override the test.
-else
-as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
-  for ac_exec_ext in '' $ac_executable_extensions; do
-  if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
-    ac_cv_prog_MYSQL_CONFIG="yes"
-    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-done
-IFS=$as_save_IFS
 
-fi
-fi
-MYSQL_CONFIG=$ac_cv_prog_MYSQL_CONFIG
-if test -n "$MYSQL_CONFIG"; then
-  { echo "$as_me:$LINENO: result: $MYSQL_CONFIG" >&5
-echo "${ECHO_T}$MYSQL_CONFIG" >&6; }
-else
-  { echo "$as_me:$LINENO: result: no" >&5
-echo "${ECHO_T}no" >&6; }
-fi
-
-
-
-    if test x$MYSQL_CONFIG = xyes; then
-       have_mysql="yes"
-    fi
 
 
 
@@ -5261,6 +5221,49 @@ ac_cv_lib_sqlite3=ac_cv_lib_sqlite3_main
 
 
   if test "$withval" = "mysql"; then
+
+     # Extract the first word of "mysql_config", so it can be a program name with args.
+set dummy mysql_config; ac_word=$2
+{ echo "$as_me:$LINENO: checking for $ac_word" >&5
+echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6; }
+if test "${ac_cv_prog_MYSQL_CONFIG+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  if test -n "$MYSQL_CONFIG"; then
+  ac_cv_prog_MYSQL_CONFIG="$MYSQL_CONFIG" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+  for ac_exec_ext in '' $ac_executable_extensions; do
+  if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
+    ac_cv_prog_MYSQL_CONFIG="yes"
+    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+done
+IFS=$as_save_IFS
+
+fi
+fi
+MYSQL_CONFIG=$ac_cv_prog_MYSQL_CONFIG
+if test -n "$MYSQL_CONFIG"; then
+  { echo "$as_me:$LINENO: result: $MYSQL_CONFIG" >&5
+echo "${ECHO_T}$MYSQL_CONFIG" >&6; }
+else
+  { echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6; }
+fi
+
+
+
+     if test x$MYSQL_CONFIG = xyes; then
+       have_mysql="yes"
+     fi
+
      if test "$have_mysql" = "yes"; then
 
             mysql_includes=`mysql_config --cflags`
@@ -5784,12 +5787,6 @@ if test "$have_gsl" = "yes"; then
    echo "chi square implementation: GNU GSL"
 else
    echo "chi square implementation: internal"
-fi
-
-if test "$have_mysql" = "yes"; then
-   echo "MySQL support: yes"
-else
-   echo "MySQL support: no"
 fi
 
 if test "$have_blackhole" = "yes"; then

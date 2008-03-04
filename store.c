@@ -1,5 +1,5 @@
 /*
- * store.c, 2007.11.09, SJ
+ * store.c, 2008.03.04, SJ
  */
 
 #include <stdio.h>
@@ -16,6 +16,7 @@
 #include <signal.h>
 #include "misc.h"
 #include "clapfstore.h"
+#include "ssl_util.h"
 #include "cfg.h"
 #include "config.h"
 

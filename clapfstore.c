@@ -1,5 +1,5 @@
 /*
- * clapfstore.c, 2007.11.08, SJ
+ * clapfstore.c, 2008.03.04, SJ
  */
 
 #include <stdio.h>

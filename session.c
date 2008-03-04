@@ -1,5 +1,5 @@
 /*
- * session.c, 2008.02.26, SJ
+ * session.c, 2008.03.04, SJ
  */
 
 #include <stdio.h>
@@ -123,7 +123,9 @@ void init_child(int new_sd, char *hostid){
    #ifdef HAVE_ANTISPAM
       struct c_res result;
       char spamfile[MAXBUFSIZE], spaminessbuf[MAXBUFSIZE], reason[SMALLBUFSIZE], qpath[SMALLBUFSIZE], trainbuf[SMALLBUFSIZE], whitelistbuf[SMALLBUFSIZE], ID[RND_STR_LEN+1];
+    #ifndef HAVE_STORE
       struct stat st;
+    #endif
       struct timeval tv_spam_start, tv_spam_stop;
       struct _state sstate;
       struct ue UE;

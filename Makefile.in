@@ -61,7 +61,7 @@ clapf: % : %.o $(OBJS) session.o $(STORE_OBJ) $(MYSQL_OBJS)
 clapf-lib:
 	ar cr libclapf.a $(OBJS) $(MYSQL_OBJS)
 	ranlib libclapf.a
-	$(CC) -shared -Wl,-soname,libclapf.so.$(CLAPF_VERSION) -o libclapf.so.$(LIBCLAPF_VERSION) $(OBJS) $(MYSQL_OBJS) $(LIBS) $(LDAP_LIBS)
+	$(CC) -shared -Wl,-soname,libclapf.so.$(CLAPF_VERSION) -o libclapf.so.$(LIBCLAPF_VERSION) $(OBJS) $(MYSQL_OBJS) $(LIBS) $(LDAP_LIBS) @LDFLAGS@
 	ldconfig -n .
 	ln -sf libclapf.so.$(CLAPF_VERSION) libclapf.so
 

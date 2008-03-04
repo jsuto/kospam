@@ -36,12 +36,20 @@ useradd -g clapf -s /bin/sh -d /var/lib/clapf clapf
 usermod -L clapf
 </pre>
 
+<strong>Compiling a static build</strong><p/>
+If you want a static build, then edit Makefile _after_ running the configure
+script, and add "-static" to CFLAGS, eg.
+
+<pre>
+CFLAGS = -static -O2 -Wall -g
+</pre>
+
 <strong>Unpack and compile clapf</strong><p/>
 
 <pre>
 tar zxvf clapf-x.y.zzz.tar.gz
 cd clapf-x.y.zzz
-./configure --with-tokendb=mysql --enable-surbl --enable-blackhole --enable-lmtp --with-clapf-user=clapf
+./configure --with-tokendb=mysql --enable-surbl --enable-blackhole --enable-rbl --enable-lmtp --with-clapf-user=clapf
 make
 su -c 'make install'
 </pre>
@@ -52,7 +60,7 @@ su -c 'make install'
 
 <li>Perform the <a href="training.html">initial training</a>.</li>
 
-<li>Users may train the token database using a <a href="training2.html">command line tool, a cgi form</a>.
+<li>Users may train the token database using a <a href="training2.html">command line tool, or a cgi form</a>.
 Users may train clapf by forwading the email as an attachment to user+ham@domain (if they want to train
 with a ham message) or to user+spam@domain (if they want to train with a spam message).<p/>
 </li>
@@ -142,9 +150,10 @@ to "Mailbox"
 The first line passes the email to spamdrop, then it reads the email the put some stuff to the email header.
 If it's a spam, spamdrop inserts the "<i>X-Clapf-spamicity: Yes</i>" header line and may mark the Subject
 line too. After downloading the email via POP3/IMAP4/... you can sort your spam to the junk folder or do
-whatever you want with it.<p/>
+whatever you want with it. Of course, a more complex setup is also possible with maildrop, eg. moving spam
+to a different folder, etc.<p/>
 
-Of course, per user maildrop configuration is also possible with the users' <i>~/.mailfilter</i> file
+Per user maildrop configuration is also possible with the users' <i>~/.mailfilter</i> file
 and you may configure using Maildir instead of Mailbox.</li>
 
 

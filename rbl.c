@@ -61,8 +61,6 @@ int reverse_ipv4_addr(char *ip){
 int rbl_list_check(char *domainlist, char *hostlist){
    char *p, *q, rbldomain[MAX_TOKEN_LEN], host[2*MAX_TOKEN_LEN];
 
-   printf("%s ... %s ***\n", domainlist, hostlist);
-
    if(strlen(domainlist) < 3 || strlen(hostlist) < 3) return 0;
 
    p = domainlist;

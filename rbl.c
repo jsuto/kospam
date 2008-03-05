@@ -1,5 +1,5 @@
 /*
- * rbl.c, 2007.09.11, SJ
+ * rbl.c, 2008.03.05, SJ
  */
 
 #include <stdio.h>
@@ -59,11 +59,11 @@ int reverse_ipv4_addr(char *ip){
  */
 
 int rbl_list_check(char *domainlist, char *hostlist){
-   char *p, *q, rbldomain[MAX_TOKEN_LEN], ip[IPLEN];
+   char *p, *q, rbldomain[MAX_TOKEN_LEN], host[2*MAX_TOKEN_LEN];
+
+   printf("%s ... %s ***\n", domainlist, hostlist);
 
    if(strlen(domainlist) < 3 || strlen(hostlist) < 3) return 0;
-
-   hostlist[strlen(hostlist)-1] = '\0';
 
    p = domainlist;
    do {
@@ -71,11 +71,13 @@ int rbl_list_check(char *domainlist, char *hostlist){
 
       q = hostlist;
       do {
-         q = split(q, ',', ip, MAX_TOKEN_LEN-1);
-         if(reverse_ipv4_addr(ip) == 1){
-            if(rbl_check(rbldomain, ip) == 1)
+         q = split(q, ',', host, 2*MAX_TOKEN_LEN-1);
+         if(strlen(host) > 5){
+            reverse_ipv4_addr(host);
+            if(rbl_check(rbldomain, host) == 1)
                return 1;
          }
+
       } while(q);
 
    } while(p);

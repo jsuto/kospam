@@ -1,5 +1,10 @@
 0.3.30:
 
+2008.03.05, SJ
+
+Fixed a buffer overflow bug in rbl_list_check() function.
+(rbl.c)
+
 2008.03.03, SJ
 
 Removed the "unnecessary" mysql check at configure time.

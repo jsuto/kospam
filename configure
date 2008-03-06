@@ -1270,6 +1270,7 @@ if test -n "$ac_init_help"; then
 Optional Features:
   --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
+  --enable-static-build   build statically linked executables (default: dynamically linked)
   --enable-libclamav      build libclamav antivirus support
   --enable-clamd          build clamd antivirus support
   --enable-avg            build AVG Linux antivirus support
@@ -3731,6 +3732,8 @@ have_store="no"
 have_whitelist="no"
 have_case="no"
 
+have_static_build="no"
+
 antispam_libs=""
 defs=""
 objs=""
@@ -3742,6 +3745,17 @@ os=`uname -s`
 keep_old_token_format="no"
 
 want_outgoing_smtp="no"
+
+
+
+# Check whether --enable-static-build was given.
+if test "${enable_static_build+set}" = set; then
+  enableval=$enable_static_build; have_static_build=$enableval
+else
+  have_static_build="no"
+fi
+
+
 
 
 # Check whether --enable-libclamav was given.
@@ -5898,6 +5912,14 @@ fi
 
 echo "clapf user: $CLAPF_USER"
 
+if test "$have_static_build" = "yes"; then
+   echo "link mode: static"
+   static="-static"
+else
+   echo "link mode: dynamic"
+fi
+
+
 id -u $CLAPF_USER 2>/dev/null 1>/dev/null
 if test $? -eq 1; then echo "the user \"$CLAPF_USER\" does not exists, please create it, first with adduser..."; exit 1; fi
 
@@ -5911,7 +5933,7 @@ echo; echo
 
 
 
-CFLAGS="-O2 -Wall -g"
+CFLAGS="$static -O2 -Wall -g"
 LIBS="$libclamav $antispam_libs $gsl_libs $sqlite3_libs"
 OBJS="misc.o cfg.o smtp.o sig.o decoder.o parser.o cgi.o $objs"
 

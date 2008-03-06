@@ -186,9 +186,9 @@ install-parsembox:
 	$(INSTALL) -m 0755 $(srcdir)/perl/shrink.pl $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 $(srcdir)/perl/uribl.pl $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 $(srcdir)/stat/process_syslog.pl $(DESTDIR)$(libexecdir)/clapf
-	cat $(srcdir)/util/db_init_mydb.sh.in | sed -e "s%YOUR_LIBEXECDIR%$(libexecdir)/clapf%" > $(srcdir)/util/db_init_mydb.sh
-	cat $(srcdir)/util/db_init_mysql.sh.in | sed -e "s%YOUR_LIBEXECDIR%$(libexecdir)/clapf%" > $(srcdir)/util/db_init_mysql.sh
-	cat $(srcdir)/util/db_init_sqlite3.sh.in | sed -e "s%YOUR_LIBEXECDIR%$(libexecdir)/clapf%" > $(srcdir)/util/db_init_sqlite3.sh
+	cat $(srcdir)/util/db_init_mydb.sh.in | sed -e "s%YOUR_LIBEXECDIR%$(libexecdir)/clapf%" -e "s%YOUR_BINDIR%$(bindir)%" > $(srcdir)/util/db_init_mydb.sh
+	cat $(srcdir)/util/db_init_mysql.sh.in | sed -e "s%YOUR_LIBEXECDIR%$(libexecdir)/clapf%" -e "s%YOUR_BINDIR%$(bindir)%" > $(srcdir)/util/db_init_mysql.sh
+	cat $(srcdir)/util/db_init_sqlite3.sh.in | sed -e "s%YOUR_LIBEXECDIR%$(libexecdir)/clapf%" -e "s%YOUR_BINDIR%$(bindir)%" > $(srcdir)/util/db_init_sqlite3.sh
 	$(INSTALL) -m 0755 $(srcdir)/util/db_init_mydb.sh $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 $(srcdir)/util/db_init_mysql.sh $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 $(srcdir)/util/db_init_sqlite3.sh $(DESTDIR)$(libexecdir)/clapf

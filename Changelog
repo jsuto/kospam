@@ -1,5 +1,16 @@
 0.3.30:
 
+2008.03.06, SJ
+
+Added a new configure option (--enable-static-build) to support
+easy static builds.
+
+Incorporated the ${prefix}/bin path to the training scripts.
+
+A few documentation enhancements.
+
+(credits: Pete)
+
 2008.03.05, SJ
 
 Fixed a buffer overflow bug in rbl_list_check() function.

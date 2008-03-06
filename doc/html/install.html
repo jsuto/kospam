@@ -37,12 +37,9 @@ usermod -L clapf
 </pre>
 
 <strong>Compiling a static build</strong><p/>
-If you want a static build, then edit Makefile _after_ running the configure
-script, and add "-static" to CFLAGS, eg.
+If you want a static build, then use the --enable-static-build configure option.
+<p/>
 
-<pre>
-CFLAGS = -static -O2 -Wall -g
-</pre>
 
 <strong>Unpack and compile clapf</strong><p/>
 
@@ -53,6 +50,8 @@ cd clapf-x.y.zzz
 make
 su -c 'make install'
 </pre>
+
+Please note that the configure options are saved in the config.log file.<p/>
 
 <ol>
 

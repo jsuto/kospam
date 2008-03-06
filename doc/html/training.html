@@ -14,7 +14,21 @@ the initial training.<p/>
 You should have two collections of emails: ham and spam. It's better when
 they are roughly the same size and you should have 1-2-3-5,000 messages
 per corpora. The messages can be either in RFC-822 mailbox format (eg.
-Pine and Thunderbird stores emails in this format) or Maildir format.
+Pine and Thunderbird stores emails in this format) or in 2 directories
+(one containing only ham emails, and the other only spam emails).
+Please do not confuse these 2 directories with the Maildir format, as
+it has a directory structure under the Maildir/ directory, eg.
+
+<pre>
+Maildir/
+       cur/
+       new/
+       tmp/
+       ...
+</pre> 
+
+and likely to contain both ham and spam messages, thus they are not suitable
+to pass these directories directly to the training scripts.<p/>
 
 If you have MySQL database then issue the following command:
 

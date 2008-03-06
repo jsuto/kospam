@@ -6,7 +6,7 @@
 
 if [ $# -ne 3 ]; then echo "usage: $0 <ham> <spam> <database>"; exit 1; fi
 
-export PATH=$PATH:/usr/local/bin:.:`pwd`/perl:YOUR_LIBEXECDIR
+export PATH=$PATH:/usr/local/bin:YOUR_BINDIR:.:`pwd`/perl:YOUR_LIBEXECDIR
 export LC_ALL=C
 
 HAM=$1

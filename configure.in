@@ -58,6 +58,8 @@ have_store="no"
 have_whitelist="no"
 have_case="no"
 
+have_static_build="no"
+
 antispam_libs=""
 defs=""
 objs=""
@@ -69,6 +71,13 @@ os=`uname -s`
 keep_old_token_format="no"
 
 want_outgoing_smtp="no"
+
+
+dnl static build
+
+AC_ARG_ENABLE(static-build,
+          [  --enable-static-build   build statically linked executables (default: dynamically linked)], have_static_build=$enableval, have_static_build="no")
+
 
 dnl clamav
 
@@ -643,6 +652,14 @@ fi
 
 echo "clapf user: $CLAPF_USER"
 
+if test "$have_static_build" = "yes"; then
+   echo "link mode: static"
+   static="-static"
+else
+   echo "link mode: dynamic"
+fi
+
+
 id -u $CLAPF_USER 2>/dev/null 1>/dev/null
 if test $? -eq 1; then echo "the user \"$CLAPF_USER\" does not exists, please create it, first with adduser..."; exit 1; fi
 
@@ -656,7 +673,7 @@ echo; echo
 
 
 
-CFLAGS="-O2 -Wall -g"
+CFLAGS="$static -O2 -Wall -g"
 LIBS="$libclamav $antispam_libs $gsl_libs $sqlite3_libs"
 OBJS="misc.o cfg.o smtp.o sig.o decoder.o parser.o cgi.o $objs"
 

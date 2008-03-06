@@ -7,7 +7,7 @@
 if [ $# -lt 3 ]; then echo "usage: $0 <ham> <spam> <my.cnf> [nohash]"; exit 1; fi
 #if [ $# -ne 3 ]; then echo "usage: $0 <ham> <spam> <my.cnf>"; exit 1; fi
 
-export PATH=$PATH:/usr/local/bin:.:`pwd`/perl:YOUR_LIBEXECDIR
+export PATH=$PATH:/usr/local/bin:YOUR_BINDIR:.:`pwd`/perl:YOUR_LIBEXECDIR
 export LC_ALL=C
 
 HAM=$1

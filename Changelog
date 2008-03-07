@@ -1,5 +1,13 @@
 0.3.30:
 
+2008.03.07, SJ
+
+Some clarifications about the training in the docs.
+(credits: Pete)
+
+iso-8859-2 enconding is the default format.
+(parser.c)
+
 2008.03.06, SJ
 
 Added a new configure option (--enable-static-build) to support

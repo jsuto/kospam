@@ -15,8 +15,8 @@ You should have two collections of emails: ham and spam. It's better when
 they are roughly the same size and you should have 1-2-3-5,000 messages
 per corpora. The messages can be either in RFC-822 mailbox format (eg.
 Pine and Thunderbird stores emails in this format) or in 2 directories -
- one containing only ham emails, and the other only spam emails (one email 
- per file).
+one containing only ham emails, and the other only spam emails (one email 
+per file).
 Please do not confuse these 2 directories with the "maildir" format, as
 it has a directory structure under the Maildir/ directory, eg.
 
@@ -32,8 +32,9 @@ and likely to contain both ham and spam messages, mailfolders,
 administrative files created by mailing software. Thus they are 
 not suitable to pass these directories directly to the training 
 scripts. You have to pinpoint exacly the folders on the filesystem
-holding the mails for the scripts to work, otherwise junk (=bad data) will
-be inserted to the token database.<p/>
+holding the mails for the scripts to work, otherwise junk (=bad,
+incorrect, wrong, defective or faulty data) will be inserted to
+the token database.<p/>
 
 If you have MySQL database then issue the following command:
 

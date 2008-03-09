@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2008.03.01, SJ
+ * spamdrop.c, 2008.03.09, SJ
  */
 
 #include <stdio.h>
@@ -55,9 +55,9 @@ int open_db(char *messagefile){
 #ifdef HAVE_SQLITE3
    int rc;
 
-   rc = sqlite3_open(PER_USER_SQLITE3_DB_FILE, &db);
+   rc = sqlite3_open(cfg.sqlite3, &db);
    if(rc){
-      syslog(LOG_PRIORITY, "%s: %s", messagefile, ERR_SQLITE3_OPEN);
+      syslog(LOG_PRIORITY, "%s: %s: %s", messagefile, ERR_SQLITE3_OPEN, cfg.sqlite3);
       return 0;
    }
    else {
@@ -153,6 +153,10 @@ int main(int argc, char **argv){
 
    snprintf(buf, MAXBUFSIZE-1, "%s/%s/%c/%s", cfg.chrootdir, USER_QUEUE_DIR, username[0], username);
 
+#ifdef HAVE_SQLITE3
+   if(strlen(cfg.sqlite3) < 4)
+      snprintf(cfg.sqlite3, MAXVAL-1, "%s/%s/%c/%s/%s", cfg.chrootdir, USER_DATA_DIR, username[0], username, PER_USER_SQLITE3_DB_FILE);
+#endif
 #ifdef HAVE_MYDB
    if(strlen(cfg.mydbfile) < 4)
       snprintf(cfg.mydbfile, MAXVAL-1, "%s/%s/%c/%s/%s", cfg.chrootdir, USER_DATA_DIR, username[0], username, MYDB_FILE);

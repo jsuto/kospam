@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2008.03.09, SJ
+ * spamdrop.c, 2008.03.10, SJ
  */
 
 #include <stdio.h>
@@ -97,11 +97,15 @@ int main(int argc, char **argv){
    char rblbuf[SMALLBUFSIZE];
 #endif
 
-   while((i = getopt(argc, argv, "c:SHps")) > 0){
+   while((i = getopt(argc, argv, "c:u:SHps")) > 0){
        switch(i){
 
          case 'c' :
                     configfile = optarg;
+                    break;
+
+         case 'u' :
+                    username = optarg;
                     break;
 
          case 'p' :
@@ -141,14 +145,18 @@ int main(int argc, char **argv){
 
    cfg = read_config(configfile);
 
+   /* do not query the username if we got it from the command line, 2008.03.10, SJ */
 
-   /* maildrop exports the LOGNAME environment variable */
+   if(username == NULL){
 
-   username = getenv("LOGNAME");
-   if(!username){
-      u = getuid();
-      pwd = getpwuid(u);
-      username = pwd->pw_name;
+      /* maildrop exports the LOGNAME environment variable */
+
+      username = getenv("LOGNAME");
+      if(!username){
+         u = getuid();
+         pwd = getpwuid(u);
+         username = pwd->pw_name;
+      }
    }
 
    snprintf(buf, MAXBUFSIZE-1, "%s/%s/%c/%s", cfg.chrootdir, USER_QUEUE_DIR, username[0], username);

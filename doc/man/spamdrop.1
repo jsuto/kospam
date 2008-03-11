@@ -5,7 +5,7 @@
 spamdrop \- a statistical anti-spam utility for checking spam and training
 .SH "SYNOPSIS"
 .LP 
-spamdrop [-c <configuration file>] <-p|-s|-H|-S>
+spamdrop [-c <configuration file>] [-u <username>] <|-p|-s|-H|-S>
 .SH "DESCRIPTION"
 .LP 
 
@@ -24,6 +24,11 @@ Spamdrop is designed to collaborate with maildrop.
 .TP
 \fB\-c\fR
 Use the given configuration file instead the default (/usr/local/etc/clapf.conf).
+
+.TP
+\fB\-u\fR
+Specify the username. This command line switch overrides both the LOGNAME environment
+variable and the uid of the running user.
 
 .TP
 \fB\-p\fR
@@ -67,6 +72,13 @@ if(/trap@email.address/:h)
 
 # spamdrop normal mode
 xfilter "/usr/local/bin/spamdrop -p"
+
+# get rid of the training requests
+if(/\+ham@/:h || /\+spam@/:h)
+{
+        to "/dev/null"
+}
+
 
 # move spam to the junk folder ...
 if(/^X-Clapf-spamicity: Yes/:h)

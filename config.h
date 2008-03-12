@@ -1,5 +1,5 @@
 /*
- * config.h, 2008.03.04, SJ
+ * config.h, 2008.03.12, SJ
  */
 
 #include <syslog.h>
@@ -35,6 +35,8 @@
 
 #define DRWEB_SOCKET "/var/drweb/run/.daemon"
 
+#define CLAMD_ADDR "127.0.0.1"
+#define CLAMD_PORT 3310
 #define CLAMD_SOCKET "/tmp/clamd"
 
 

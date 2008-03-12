@@ -1,5 +1,5 @@
 /*
- * av.h, 2008.02.23, SJ
+ * av.h, 2008.03.12, SJ
  */
 
 #define AV_OK 200
@@ -14,7 +14,7 @@
 #define CLAMD_RESP_ERROR "ERROR"
 
 int clamd_scan(char *clamav_socket, char *chrootdir, char *workdir, char *tmpfile, int v, char *clamdinfo);
-
+int clamd_net_scan(char *clamd_address, int clamd_port, char *chrootdir, char *workdir, char *tmpfile, int v, char *clamdinfo);
 
 // Dr.Web stuff
 

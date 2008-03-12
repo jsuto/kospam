@@ -1,5 +1,5 @@
 /*
- * cfg.h, 2008.02.13, SJ
+ * cfg.h, 2008.03.12, SJ
  */
 
 #define MAXVAL 128
@@ -24,6 +24,8 @@ struct __config {
 
    char drweb_socket[MAXVAL];
 
+   char clamd_addr[MAXVAL];
+   int clamd_port;
    char clamd_socket[MAXVAL];
 
    int max_connections;

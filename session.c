@@ -1,5 +1,5 @@
 /*
- * session.c, 2008.03.04, SJ
+ * session.c, 2008.03.12, SJ
  */
 
 #include <stdio.h>
@@ -461,8 +461,14 @@ void init_child(int new_sd, char *hostid){
 
             #ifdef HAVE_CLAMD
                chmod(sdata.ttmpfile, 0644);
-               if(clamd_scan(cfg.clamd_socket, cfg.chrootdir, cfg.workdir, sdata.ttmpfile, cfg.verbosity, virusinfo) == AV_VIRUS)
-                  rav = AVIR_VIRUS;
+               if(strlen(cfg.clamd_addr) > 3){
+                  if(clamd_net_scan(cfg.clamd_addr, cfg.clamd_port, cfg.chrootdir, cfg.workdir, sdata.ttmpfile, cfg.verbosity, virusinfo) == AV_VIRUS)
+                     rav = AVIR_VIRUS;
+               }
+               else {
+                  if(clamd_scan(cfg.clamd_socket, cfg.chrootdir, cfg.workdir, sdata.ttmpfile, cfg.verbosity, virusinfo) == AV_VIRUS)
+                     rav = AVIR_VIRUS;
+               }
             #endif
 
                gettimeofday(&tv_scnd, &tz);

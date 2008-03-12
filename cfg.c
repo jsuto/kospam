@@ -1,5 +1,5 @@
 /*
- * cfg.c, 2008.02.13, SJ
+ * cfg.c, 2008.03.12, SJ
  */
 
 #include <stdio.h>
@@ -198,6 +198,12 @@ struct __config read_config(char *configfile){
 
                   if(strcmp(key, "drweb_socket") == 0)
                      memcpy(cfg.drweb_socket, val, MAXVAL-1);
+
+                  if(strcmp(key, "clamd_addr") == 0)
+                     memcpy(cfg.clamd_addr, val, MAXVAL-1);
+
+                  if(strcmp(key, "clamd_port") == 0)
+                     cfg.clamd_port = atoi(val);
 
                   if(strcmp(key, "clamd_socket") == 0)
                      memcpy(cfg.clamd_socket, val, MAXVAL-1);

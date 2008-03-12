@@ -45,7 +45,7 @@ float SQL_QUERY(qry QRY, int group_type, char *tokentable, char *token){
    TE.nham = TE.nspam = 0;
 
 #ifdef HAVE_MYSQL
-   TE = myqry(QRY.mysql, QRY.sockfd, tokentable, token, QRY.uid);
+   TE = myqry(QRY.mysql, QRY.sockfd, token, QRY.uid);
 #endif
 #ifdef HAVE_SQLITE3
    TE = sqlite3_qry(QRY.db, token);
@@ -91,7 +91,7 @@ int my_walk_hash(sqlite3 *db, int ham_or_spam, char *tokentable, struct _token *
       q = thash[i];
       while(q != NULL){
       #ifdef HAVE_MYSQL
-         do_mysql_qry(mysql, sockfd, ham_or_spam, q->str, tokentable, uid, train_mode);
+         do_mysql_qry(mysql, sockfd, ham_or_spam, q->str, uid, train_mode, now);
       #endif
       #ifdef HAVE_SQLITE3
          do_sqlite3_qry(db, ham_or_spam, q->str, train_mode, now);

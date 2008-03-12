@@ -1,5 +1,5 @@
 /*
- * sql.h, 2008.01.28, SJ
+ * sql.h, 2008.03.12, SJ
  */
 
 #ifdef HAVE_MYSQL
@@ -39,8 +39,8 @@ struct ue {
 #ifdef HAVE_MYSQL
    unsigned long get_uid(MYSQL mysql, char *stmt);
    struct te get_ham_spam(MYSQL mysql, char *stmt);
-   int do_mysql_qry(MYSQL mysql, int sockfd, int ham_or_spam, char *token, char *tokentable, unsigned long uid, int train_mode);
-   struct te myqry(MYSQL mysql, int sockfd, char *tokentable, char *token, unsigned long uid);
+   int do_mysql_qry(MYSQL mysql, int sockfd, int ham_or_spam, char *token, unsigned long uid, int train_mode, unsigned long timestamp);
+   struct te myqry(MYSQL mysql, int sockfd, char *token, unsigned long uid);
    struct ue get_user_from_email(MYSQL mysql, char *email);
    int is_sender_on_white_list(MYSQL mysql, char *email, unsigned long uid);
    void insert_2_queue(MYSQL mysql, char *tmpfile, unsigned long uid, struct __config cfg, int is_spam);

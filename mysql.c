@@ -77,7 +77,7 @@ struct te get_ham_spam(MYSQL mysql, char *stmt){
  * updates the counter of (or inserts) the given token in the token table
  */
 
-int do_mysql_qry(MYSQL mysql, int sockfd, int ham_or_spam, char *token, char *tokentable, unsigned long uid, int train_mode){
+int do_mysql_qry(MYSQL mysql, int sockfd, int ham_or_spam, char *token, unsigned long uid, int train_mode, unsigned long timestamp){
    char stmt[MAXBUFSIZE], puf[SMALLBUFSIZE];
    struct te TE;
    unsigned long long hash = APHash(token);
@@ -86,12 +86,12 @@ int do_mysql_qry(MYSQL mysql, int sockfd, int ham_or_spam, char *token, char *to
    char buf[MAXBUFSIZE];
    if(strlen(token) < (MAXBUFSIZE/2)-1){
       mysql_real_escape_string(&mysql, buf, token, strlen(token));
-      snprintf(stmt, MAXBUFSIZE-1, "SELECT nham, nspam FROM %s WHERE token='%s' AND uid=%ld", tokentable, buf, uid);
+      snprintf(stmt, MAXBUFSIZE-1, "SELECT nham, nspam FROM %s WHERE token='%s' AND uid=%ld", SQL_TOKEN_TABLE, buf, uid);
    }
    else
       return 1;
 #else
-   snprintf(stmt, MAXBUFSIZE-1, "SELECT nham, nspam FROM %s WHERE token=%llu AND uid=%ld", tokentable, hash, uid);
+   snprintf(stmt, MAXBUFSIZE-1, "SELECT nham, nspam FROM %s WHERE token=%llu AND uid=%ld", SQL_TOKEN_TABLE, hash, uid);
 #endif
 
    memset(puf, 0, SMALLBUFSIZE);
@@ -99,7 +99,7 @@ int do_mysql_qry(MYSQL mysql, int sockfd, int ham_or_spam, char *token, char *to
    /* update token entry ... */
 
 #ifdef HAVE_QCACHE
-   TE = myqry(mysql, sockfd, tokentable, token, uid);
+   TE = myqry(mysql, sockfd, SQL_TOKEN_TABLE, token, uid);
 
    if(ham_or_spam == 1){
       if(train_mode == T_TUM && TE.nham > 0) TE.nham--;
@@ -121,17 +121,17 @@ int do_mysql_qry(MYSQL mysql, int sockfd, int ham_or_spam, char *token, char *to
       if(ham_or_spam == 1){
          if(train_mode == T_TUM && TE.nham > 0) snprintf(puf, SMALLBUFSIZE-1, ", nham=nham-1");
       #ifdef HAVE_NO_64_HASH
-         snprintf(stmt, MAXBUFSIZE-1, "UPDATE %s SET nspam=nspam+1%s WHERE token='%s' AND uid=%ld", tokentable, puf, buf, uid);
+         snprintf(stmt, MAXBUFSIZE-1, "UPDATE %s SET nspam=nspam+1%s WHERE token='%s' AND uid=%ld", SQL_TOKEN_TABLE, puf, buf, uid);
       #else
-         snprintf(stmt, MAXBUFSIZE-1, "UPDATE %s SET nspam=nspam+1%s WHERE token=%llu AND uid=%ld", tokentable, puf, hash, uid);
+         snprintf(stmt, MAXBUFSIZE-1, "UPDATE %s SET nspam=nspam+1%s WHERE token=%llu AND uid=%ld", SQL_TOKEN_TABLE, puf, hash, uid);
       #endif
       }
       else {
          if(train_mode == T_TUM && TE.nspam > 0) snprintf(puf, SMALLBUFSIZE-1, ", nspam=nspam-1");
       #ifdef HAVE_NO_64_HASH
-         snprintf(stmt, MAXBUFSIZE-1, "UPDATE %s SET nham=nham+1%s WHERE token='%s' AND uid=%ld", tokentable, puf, buf, uid);
+         snprintf(stmt, MAXBUFSIZE-1, "UPDATE %s SET nham=nham+1%s WHERE token='%s' AND uid=%ld", SQL_TOKEN_TABLE, puf, buf, uid);
       #else
-         snprintf(stmt, MAXBUFSIZE-1, "UPDATE %s SET nham=nham+1%s WHERE token=%llu AND uid=%ld", tokentable, puf, hash, uid);
+         snprintf(stmt, MAXBUFSIZE-1, "UPDATE %s SET nham=nham+1%s WHERE token=%llu AND uid=%ld", SQL_TOKEN_TABLE, puf, hash, uid);
       #endif
       }
 
@@ -150,14 +150,14 @@ int do_mysql_qry(MYSQL mysql, int sockfd, int ham_or_spam, char *token, char *to
 
    #ifdef HAVE_NO_64_HASH
       if(uid > 0)
-         snprintf(stmt, MAXBUFSIZE-1, "INSERT INTO %s (token, nham, nspam, uid) VALUES('%s', %d, %d, %ld)", tokentable, buf, TE.nham, TE.nspam, uid);
+         snprintf(stmt, MAXBUFSIZE-1, "INSERT INTO %s (token, nham, nspam, uid, timestamp) VALUES('%s', %d, %d, %ld, %ld)", SQL_TOKEN_TABLE, buf, TE.nham, TE.nspam, uid, timestamp);
       else
-         snprintf(stmt, MAXBUFSIZE-1, "INSERT INTO %s (token, nham, nspam) VALUES('%s', %d, %d)", tokentable, buf, TE.nham, TE.nspam);
+         snprintf(stmt, MAXBUFSIZE-1, "INSERT INTO %s (token, nham, nspam, timestamp) VALUES('%s', %d, %d, %ld)", SQL_TOKEN_TABLE, buf, TE.nham, TE.nspam, timestamp);
    #else
       if(uid > 0)
-         snprintf(stmt, MAXBUFSIZE-1, "INSERT INTO %s (token, nham, nspam, uid) VALUES(%llu, %d, %d, %ld)", tokentable, hash, TE.nham, TE.nspam, uid);
+         snprintf(stmt, MAXBUFSIZE-1, "INSERT INTO %s (token, nham, nspam, uid, timestamp) VALUES(%llu, %d, %d, %ld, %ld)", SQL_TOKEN_TABLE, hash, TE.nham, TE.nspam, uid, timestamp);
       else
-         snprintf(stmt, MAXBUFSIZE-1, "INSERT INTO %s (token, nham, nspam) VALUES(%llu, %d, %d)", tokentable, hash, TE.nham, TE.nspam);
+         snprintf(stmt, MAXBUFSIZE-1, "INSERT INTO %s (token, nham, nspam, timestamp) VALUES(%llu, %d, %d, %ld)", SQL_TOKEN_TABLE, hash, TE.nham, TE.nspam, timestamp);
    #endif
 
       mysql_real_query(&mysql, stmt, strlen(stmt));
@@ -173,7 +173,7 @@ int do_mysql_qry(MYSQL mysql, int sockfd, int ham_or_spam, char *token, char *to
  * query the number of occurances from MySQL table
  */
 
-struct te myqry(MYSQL mysql, int sockfd, char *tokentable, char *token, unsigned long uid){
+struct te myqry(MYSQL mysql, int sockfd, char *token, unsigned long uid){
    struct te TE;
    char stmt[MAXBUFSIZE];
 
@@ -184,13 +184,13 @@ struct te myqry(MYSQL mysql, int sockfd, char *tokentable, char *token, unsigned
    char buf[MAXBUFSIZE];
    if(strlen(token) < (MAXBUFSIZE/2)-1){
       mysql_real_escape_string(&mysql, buf, token, strlen(token));
-      snprintf(stmt, MAXBUFSIZE-1, "SELECT nham, nspam FROM %s WHERE token='%s' AND (uid=0 OR uid=%ld)", tokentable, buf, uid);
+      snprintf(stmt, MAXBUFSIZE-1, "SELECT nham, nspam FROM %s WHERE token='%s' AND (uid=0 OR uid=%ld)", SQL_TOKEN_TABLE, buf, uid);
    }
    else
       return TE;
 #else
    unsigned long long hash = APHash(token);
-   snprintf(stmt, MAXBUFSIZE-1, "SELECT nham, nspam FROM %s WHERE token=%llu AND (uid=0 OR uid=%ld)", tokentable, hash, uid);
+   snprintf(stmt, MAXBUFSIZE-1, "SELECT nham, nspam FROM %s WHERE token=%llu AND (uid=0 OR uid=%ld)", SQL_TOKEN_TABLE, hash, uid);
 #endif
 
 #ifdef HAVE_QCACHE

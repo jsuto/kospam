@@ -240,8 +240,9 @@ int add_or_update(int fd, struct mydb_node *mhash[MAX_MYDB_HASH], int ham_or_spa
 
 
 int my_walk_hash(char *mydbfile, struct mydb_node *xhash[MAX_MYDB_HASH], int ham_or_spam, struct _token *token, int train_mode){
-   int n=0, fd;
+   int i, n=0, fd;
    struct _token *p;
+   struct node *thash[MAXHASH], *q;
    unsigned long now, x;
    time_t cclock;
 
@@ -262,11 +263,22 @@ int my_walk_hash(char *mydbfile, struct mydb_node *xhash[MAX_MYDB_HASH], int ham
 
 
    p = token;
+
    while(p != NULL){
-      add_or_update(fd, xhash, ham_or_spam, p->str, train_mode, now);
       p = p->r;
-      n++;
+      addnode(thash, p->str, 1, 1);
    }
+
+   for(i=0;i<MAXHASH;i++){
+      q = thash[i];
+      while(q != NULL){
+         add_or_update(fd, xhash, ham_or_spam, q->str, train_mode, now);
+         q = q->r;
+         n++;
+      }
+   }
+
+   clearhash(thash);
 
 
    /* update ham/spam counter */

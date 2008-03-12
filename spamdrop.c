@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2008.03.10, SJ
+ * spamdrop.c, 2008.03.12, SJ
  */
 
 #include <stdio.h>
@@ -86,7 +86,7 @@ int main(int argc, char **argv){
    int train_mode=T_TOE;
    uid_t u;
    char buf[MAXBUFSIZE], qpath[SMALLBUFSIZE], trainbuf[SMALLBUFSIZE], ID[RND_STR_LEN+1], whitelistbuf[SMALLBUFSIZE];
-   char *configfile=CONFIG_FILE, *username, *from=NULL;
+   char *configfile=CONFIG_FILE, *username=NULL, *from=NULL;
    struct timezone tz;
    struct timeval tv_start, tv_stop;
    struct stat st;

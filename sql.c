@@ -1,5 +1,5 @@
 /*
- * sql.c, 2008.01.28, SJ
+ * sql.c, 2008.03.12, SJ
  */
 
 #include <stdio.h>
@@ -69,26 +69,41 @@ int my_walk_hash(MYSQL mysql, int sockfd, int ham_or_spam, char *tokentable, uns
 #ifdef HAVE_SQLITE3
 int my_walk_hash(sqlite3 *db, int ham_or_spam, char *tokentable, struct _token *token, int train_mode){
 #endif
-   int n=0;
+   int i, n=0;
    struct _token *p;
    time_t cclock;
    unsigned long now;
+   struct node *thash[MAXHASH], *q;
 
    time(&cclock);
    now = cclock;
 
+   inithash(thash);
+
    p = token;
 
    while(p != NULL){
-   #ifdef HAVE_MYSQL
-      do_mysql_qry(mysql, sockfd, ham_or_spam, p->str, tokentable, uid, train_mode);
-   #endif
-   #ifdef HAVE_SQLITE3
-      do_sqlite3_qry(db, ham_or_spam, p->str, train_mode, now);
-   #endif
       p = p->r;
-      n++;
+      addnode(thash, p->str, 1, 1);
    }
+
+   for(i=0;i<MAXHASH;i++){
+      q = thash[i];
+      while(q != NULL){
+      #ifdef HAVE_MYSQL
+         do_mysql_qry(mysql, sockfd, ham_or_spam, q->str, tokentable, uid, train_mode);
+      #endif
+      #ifdef HAVE_SQLITE3
+         do_sqlite3_qry(db, ham_or_spam, q->str, train_mode, now);
+      #endif
+
+         q = q->r;
+         n++;
+      }
+   }
+
+
+   clearhash(thash);
 
    return n;
 }

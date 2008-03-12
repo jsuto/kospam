@@ -83,7 +83,7 @@ aphash: % : %.o misc.o
 prepare-sql : % : %.o misc.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^
 
-clapf_admin	: % : %.o buffer.o misc.o score.o cfg.o chi.o $(MYSQL_OBJS)
+clapf_admin	: % : %.o buffer.o misc.o score.o cfg.o chi.o hash.o $(MYSQL_OBJS)
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
 
 

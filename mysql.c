@@ -94,10 +94,11 @@ int do_mysql_qry(MYSQL mysql, int sockfd, int ham_or_spam, char *token, char *to
    snprintf(stmt, MAXBUFSIZE-1, "SELECT nham, nspam FROM %s WHERE token=%llu AND uid=%ld", tokentable, hash, uid);
 #endif
 
+   memset(puf, 0, SMALLBUFSIZE);
+
    /* update token entry ... */
 
 #ifdef HAVE_QCACHE
-   memset(puf, 0, SMALLBUFSIZE);
    TE = myqry(mysql, sockfd, tokentable, token, uid);
 
    if(ham_or_spam == 1){

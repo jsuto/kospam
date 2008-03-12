@@ -1,5 +1,5 @@
 /*
- * hash.c, 2008.01.23, SJ
+ * hash.c, 2008.03.12, SJ
  */
 
 #include <stdio.h>
@@ -27,19 +27,14 @@ void inithash(struct node *xhash[MAXHASH]){
  * release everything in the hash and calculate the ratio of unique tokens
  */
 
-float clearhash(struct node *xhash[MAXHASH]){
+void clearhash(struct node *xhash[MAXHASH]){
    int i;
    struct node *p, *q;
-   float num_of_tokens=0, num_of_unique_tokens=0;
 
    for(i=0;i<MAXHASH;i++){
       q = xhash[i];
       while(q != NULL){
          p = q;
-
-         num_of_tokens++;
-         if(p->num == 1)
-            num_of_unique_tokens++;
 
          q = q->r;
          if(p)
@@ -48,7 +43,6 @@ float clearhash(struct node *xhash[MAXHASH]){
       xhash[i] = NULL;
    }
 
-   return (num_of_unique_tokens / num_of_tokens);
 }
 
 

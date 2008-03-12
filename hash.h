@@ -1,5 +1,5 @@
 /*
- * hash.h, 2008.01.23, SJ
+ * hash.h, 2008.03.12, SJ
  */
 
 #include "cfg.h"
@@ -16,7 +16,7 @@ struct node {
 };
 
 void inithash(struct node *xhash[MAXHASH]);
-float clearhash(struct node *xhash[MAXHASH]);
+void clearhash(struct node *xhash[MAXHASH]);
 struct node *makenewnode(struct node *xhash[MAXHASH], char *s, double spaminess, double deviation);
 int addnode(struct node *xhash[MAXHASH], char *s, double spaminess, double deviation);
 struct node *findnode(struct node *xhash[MAXHASH], char *s);

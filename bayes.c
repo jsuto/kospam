@@ -1,5 +1,5 @@
 /*
- * bayes.c, 2008.02.26, SJ
+ * bayes.c, 2008.03.12, SJ
  */
 
 #include <stdio.h>
@@ -42,7 +42,7 @@ qry QRY;
    MYSQL_ROW row;
    int mysql_conn = 0;
 
-   int my_walk_hash(qry QRY, int ham_or_spam, char *tokentable, struct _token *token, int train_mode);
+   int my_walk_hash(MYSQL mysql, int sockfd, int ham_or_spam, char *tokentable, unsigned long int uid, struct _token *token, int train_mode);
 #endif
 
 #ifdef HAVE_SQLITE3
@@ -729,6 +729,9 @@ int train_message(char *mydbfile, struct mydb_node *mhash[MAX_MYDB_HASH], struct
 
    for(i=1; i<=rounds; i++){
 
+   #ifdef HAVE_MYSQL
+      my_walk_hash(mysql, -1, is_spam, SQL_TOKEN_TABLE, sdata.uid, state.first, tm);
+   #endif
    #ifdef HAVE_SQLITE3
       my_walk_hash(db, is_spam, SQL_TOKEN_TABLE, state.first, tm);
    #endif

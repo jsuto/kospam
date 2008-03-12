@@ -1,5 +1,5 @@
 /*
- * mysql.c, 2008.01.23, SJ
+ * mysql.c, 2008.03.12, SJ
  */
 
 #include <stdio.h>
@@ -263,7 +263,11 @@ int update_mysql_tokens(MYSQL mysql, struct _token *token, unsigned long uid){
    while(p != NULL){
       q = p->r;
 
+   #ifdef HAVE_NO_64_HASH
+      snprintf(buf, SMALLBUFSIZE-1, "'%s', ", p->str);
+   #else
       snprintf(buf, SMALLBUFSIZE-1, "%llu, ", APHash(p->str));
+   #endif
       buffer_cat(query, buf);
 
       p = q;

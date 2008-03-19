@@ -1,5 +1,10 @@
 0.3.31-rc1:
 
+2008.03.18, SJ
+
+Added an experimental language detection.
+(lang.c, lang.h, spamdrop.c, test.c, clapf.h)
+
 2008.03.12, SJ
 
 Missed the mysql part of the training.

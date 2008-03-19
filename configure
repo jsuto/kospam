@@ -1285,6 +1285,7 @@ Optional Features:
   --enable-blackhole      build the blackhole feature
   --enable-cgi            build the web interface to train the database
   --enable-lmtp           use LMTP local delivery (default: SMTP)
+  --enable-language-detection use the language detection feature (experimental)
   --enable-store          use external store to store emails for later retraining
   --enable-outgoing-smtp  enable outgoing SMTP server mode
 
@@ -3745,6 +3746,7 @@ os=`uname -s`
 keep_old_token_format="no"
 
 want_outgoing_smtp="no"
+want_language_detection="no"
 
 
 
@@ -5338,6 +5340,14 @@ else
 fi
 
 
+    # Check whether --enable-language-detection was given.
+if test "${enable_language_detection+set}" = set; then
+  enableval=$enable_language_detection; want_language_detection=$enableval
+else
+  want_language_detection="no"
+fi
+
+
 
     # Check whether --enable-store was given.
 if test "${enable_store+set}" = set; then
@@ -5908,6 +5918,14 @@ if test "$want_lmtp" = "yes" && test "$want_outgoing_smtp" = "no"; then
    defs="$defs -DHAVE_LMTP"
 else
    echo "local delivery: SMTP"
+fi
+
+if test "$want_language_detection" = "yes"; then
+   echo "language detection: enabled"
+   defs="$defs -DHAVE_LANG_DETECT"
+   objs="$objs lang.o"
+else
+   echo "language detection: no"
 fi
 
 echo "clapf user: $CLAPF_USER"

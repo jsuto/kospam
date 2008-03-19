@@ -1,5 +1,5 @@
 /*
- * clapf.h, 2008.02.22, SJ
+ * clapf.h, 2008.03.18, SJ
  */
 
 #include <misc.h>
@@ -25,4 +25,6 @@
    struct c_res bayes_file(struct mydb_node *mhash[MAX_MYDB_HASH], char *spamfile, struct _state state, struct session_data sdata, struct __config cfg);
    int train_message(char *mydbfile, struct mydb_node *mhash[MAX_MYDB_HASH], struct session_data sdata, struct _state state, int rounds, int is_spam, int train_mode, struct __config cfg);
 #endif
+
+char *check_lang(struct _token *t);
 

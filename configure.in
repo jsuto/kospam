@@ -71,6 +71,7 @@ os=`uname -s`
 keep_old_token_format="no"
 
 want_outgoing_smtp="no"
+want_language_detection="no"
 
 
 dnl static build
@@ -358,6 +359,10 @@ AC_ARG_WITH(qcache,
 dnl lmtp support
     AC_ARG_ENABLE(lmtp,
           [  --enable-lmtp           use LMTP local delivery (default: SMTP)], want_lmtp=$enableval, want_lmtp="no")
+
+dnl language detection
+    AC_ARG_ENABLE(language-detection,
+          [  --enable-language-detection use the language detection feature (experimental)], want_language_detection=$enableval, want_language_detection="no")
 
 
 dnl external store
@@ -648,6 +653,14 @@ if test "$want_lmtp" = "yes" && test "$want_outgoing_smtp" = "no"; then
    defs="$defs -DHAVE_LMTP"
 else
    echo "local delivery: SMTP"
+fi
+
+if test "$want_language_detection" = "yes"; then
+   echo "language detection: enabled"
+   defs="$defs -DHAVE_LANG_DETECT"
+   objs="$objs lang.o"
+else
+   echo "language detection: no"
 fi
 
 echo "clapf user: $CLAPF_USER"

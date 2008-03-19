@@ -83,8 +83,8 @@ int my_walk_hash(sqlite3 *db, int ham_or_spam, char *tokentable, struct _token *
    p = token;
 
    while(p != NULL){
-      p = p->r;
       addnode(thash, p->str, 1, 1);
+      p = p->r;
    }
 
    for(i=0;i<MAXHASH;i++){

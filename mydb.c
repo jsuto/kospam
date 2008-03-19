@@ -1,5 +1,5 @@
 /*
- * mydb.c, 2008.02.26, SJ
+ * mydb.c, 2008.03.19, SJ
  */
 
 #include <stdio.h>
@@ -261,12 +261,13 @@ int my_walk_hash(char *mydbfile, struct mydb_node *xhash[MAX_MYDB_HASH], int ham
       return 0;
    }
 
+   inithash(thash);
 
    p = token;
 
    while(p != NULL){
-      p = p->r;
       addnode(thash, p->str, 1, 1);
+      p = p->r;
    }
 
    for(i=0;i<MAXHASH;i++){

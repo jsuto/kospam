@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2008.03.12, SJ
+ * spamdrop.c, 2008.03.19, SJ
  */
 
 #include <stdio.h>
@@ -95,6 +95,9 @@ int main(int argc, char **argv){
 
 #ifdef MY_TEST
    char rblbuf[SMALLBUFSIZE];
+#endif
+#ifdef HAVE_LANG_DETECT
+   char *lang=NULL;
 #endif
 
    while((i = getopt(argc, argv, "c:u:SHps")) > 0){
@@ -370,6 +373,10 @@ int main(int argc, char **argv){
       update_tokens(cfg.mydbfile, mhash, state.first);
    #endif
 
+   #ifdef HAVE_LANG_DETECT
+      lang = check_lang(state.first);
+   #endif
+
       if(result.spaminess >= cfg.spam_overall_limit)
          is_spam = 1;
       else
@@ -514,6 +521,9 @@ ENDE_SPAMDROP:
          #endif
             printf("%s%s\r\n", cfg.clapf_header_field, sdata.ttmpfile);
             printf("%s%s%.4f\r\n", trainbuf, cfg.clapf_header_field, result.spaminess);
+         #ifdef HAVE_LANG_DETECT
+            printf("%s%s\r\n", cfg.clapf_header_field, lang);
+         #endif
             printf("%s%ld ms\r\n", cfg.clapf_header_field, tvdiff(tv_stop, tv_start)/1000);
          #ifdef HAVE_WHITELIST
             printf("%s", whitelistbuf);

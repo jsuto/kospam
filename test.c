@@ -1,5 +1,5 @@
 /*
- * test.c, 2008.01.23, SJ
+ * test.c, 2008.03.18, SJ
  *
  * test the bayesian decision with a single message
  */
@@ -99,6 +99,10 @@ int main(int argc, char **argv){
    reverse_ipv4_addr(state.ip);
    if(rbl_list_check("zen.spamhaus.org", state.ip) == 1)
       printf("%s: ZEN=1\r\n", state.ip);
+#endif
+
+#ifdef HAVE_LANG_DETECT
+   fprintf(stderr, "lang detected: %s\n", check_lang(state.first));
 #endif
 
    free_and_print_list(state.first, 0);

@@ -1,5 +1,5 @@
 /*
- * bayes.c, 2008.03.12, SJ
+ * bayes.c, 2008.04.05, SJ
  */
 
 #include <stdio.h>
@@ -41,32 +41,20 @@ qry QRY;
    MYSQL_RES *res;
    MYSQL_ROW row;
    int mysql_conn = 0;
-
-   int my_walk_hash(MYSQL mysql, int sockfd, int ham_or_spam, char *tokentable, unsigned long int uid, struct _token *token, int train_mode);
 #endif
 
 #ifdef HAVE_SQLITE3
    #include <sqlite3.h>
    sqlite3_stmt *pStmt;
    const char **pzTail=NULL;
-
-   int my_walk_hash(sqlite3 *db, int ham_or_spam, char *tokentable, struct _token *token, int train_mode);
-   int update_sqlite3_tokens(sqlite3 *db, struct node *xhash[MAXHASH]);
 #endif
 
 #ifdef HAVE_MYDB
    #include "mydb.h"
-   float mydbqry(struct mydb_node *Mhash[MAX_MYDB_HASH], char *p, float rob_s, float rob_x);
-   int my_walk_hash(char *mydbfile, struct mydb_node *xhash[MAX_MYDB_HASH], int ham_or_spam, struct _token *token, int train_mode);
-   int update_tokens(char *mydbfile, struct mydb_node *xhash[MAX_MYDB_HASH], struct _token *token);
 #endif
 
 
  
-float SQL_QUERY(qry QRY, int group_type, char *tokentable, char *token);
-double apply_fixes(double spaminess, int found_on_rbl, int surbl_match, int has_embed_image, int base64_text, long c_shit, long l_shit, long c_hex_shit, struct __config cfg);
-
-
 /*
  * assign spaminess value to token
  */

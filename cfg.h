@@ -1,6 +1,9 @@
 /*
- * cfg.h, 2008.03.12, SJ
+ * cfg.h, 2008.04.05, SJ
  */
+
+#ifndef _CFG_H
+ #define _CFG_H
 
 #define MAXVAL 128
 
@@ -200,3 +203,4 @@ struct __config {
 
 struct __config read_config(char *configfile);
 
+#endif /* _CFG_H */

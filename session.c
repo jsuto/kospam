@@ -1,5 +1,5 @@
 /*
- * session.c, 2008.03.12, SJ
+ * session.c, 2008.04.05, SJ
  */
 
 #include <stdio.h>
@@ -35,13 +35,11 @@ int inject_mail(struct session_data sdata, int msg, char *smtpaddr, int smtpport
    #include <mysql.h>
    MYSQL mysql;
    int mysql_connection=0;
-   int update_mysql_tokens(MYSQL mysql, struct _token *token, unsigned long uid);
 #endif
 
 #ifdef HAVE_SQLITE3
    #include <sqlite3.h>
    sqlite3 *db;
-   int update_sqlite3_tokens(sqlite3 *db, struct _token *token);
 #endif
 
 #ifdef HAVE_STORE

@@ -1,6 +1,9 @@
 /*
- * parser.h, 2008.02.26, SJ
+ * parser.h, 2008.04.05, SJ
  */
+
+#ifndef _PARSER_H
+ #define _PARSER_H
 
 #include "config.h"
 
@@ -88,3 +91,5 @@ struct _state parse(char *buf, struct _state st);
 struct _state insert_token(struct _state state, char *p);
 struct _token *new_token(char *s);
 void free_and_print_list(struct _token *t, int print);
+
+#endif /* _PARSER_H */

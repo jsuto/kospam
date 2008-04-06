@@ -1,6 +1,9 @@
 /*
- * config.h, 2008.03.12, SJ
+ * config.h, 2008.04.05, SJ
  */
+
+#ifndef _CONFIG_H
+ #define _CONFIG_H
 
 #include <syslog.h>
 #include "clapf-config.h"
@@ -129,7 +132,6 @@
 #define MAX_WORD_LEN 25
 #define MAX_TOKEN_LEN 8*MAX_WORD_LEN
 #define DELIMITER ' '
-#define TOKENSCDB WORK_DIR "/tokens.cdb"
 #define SPAMINESS_HEADER_FIELD "X-Clapf-spamicity: "
 #define BOUNDARY_LEN 255
 #define MAX_NUM_OF_SAMPLES 65535
@@ -188,8 +190,6 @@
 #define ERR_VIRUS 24
 #define ERR_DROP_SPAM 27
 
-/*#define ERR_BAYES_NO_SPAM_FILE 22
-#define ERR_BAYES_NO_TOKEN_FILE 25*/
 #define ERR_BAYES_OPEN_SPAM_FILE 26
 #define ERR_STAT_SPAM_FILE 28
 #define ERR_BAYES_MMAP 29
@@ -199,17 +199,7 @@
 #define AVIR_OK 0
 #define AVIR_VIRUS 1
 
-/* passmail */
 
-#define JUNK_FOLDER "mail/junk"
-
-#define ACTION_QUARANTINE "quarantine"
-#define ACTION_JUNK "junk"
-#define ACTION_DROP "drop"
-
-#define A_QUARANTINE 0
-#define A_JUNK 1
-#define A_DROP 2
 
 /* training modes */
 
@@ -220,3 +210,7 @@
 
 #define GROUP_SHARED 0
 #define GROUP_MERGED 1
+
+
+#endif /* _CONFIG_H */
+

@@ -1,6 +1,9 @@
 /*
- * errmsg.h, 2006.09.04, SJ
+ * errmsg.h, 2008.04.05, SJ
  */
+
+#ifndef _ERRMSG_H
+ #define _ERRMSG_H
 
 // Error messages
 
@@ -26,3 +29,4 @@
 #define ERR_BUILD_TRIE "ERR: building trie"
 #define ERR_STATCHKDIR "ERR: halt because of cl_statchkdir()"
 
+#endif /* _ERRMSG_H */

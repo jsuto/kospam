@@ -1,6 +1,9 @@
 /*
- * mydb.h, 2008.01.23, SJ
+ * mydb.h, 2008.04.05, SJ
  */
+
+#ifndef _MYDB_H
+ #define _MYDB_H
 
 struct mydb {
    unsigned long long key;
@@ -33,3 +36,9 @@ int addmydb_node(struct mydb_node *xhash[MAX_MYDB_HASH], unsigned long long key,
 struct mydb_node *findmydb_node(struct mydb_node *xhash[MAX_MYDB_HASH], unsigned long long key);
 int add_or_update(int fd, struct mydb_node *mhash[MAX_MYDB_HASH], int ham_or_spam, char *token, int train_mode, unsigned long ts);
 int update_tokens(char *mydbfile, struct mydb_node *xhash[MAX_MYDB_HASH], struct _token *token);
+
+float mydbqry(struct mydb_node *Mhash[MAX_MYDB_HASH], char *p, float rob_s, float rob_x);
+int my_walk_hash(char *mydbfile, struct mydb_node *xhash[MAX_MYDB_HASH], int ham_or_spam, struct _token *token, int train_mode);
+int update_tokens(char *mydbfile, struct mydb_node *xhash[MAX_MYDB_HASH], struct _token *token);
+
+#endif /* _MYDB_H */

@@ -1,6 +1,9 @@
 /*
- * decoder.h, 2007.06.07, SJ
+ * decoder.h, 2008.04.05, SJ
  */
+
+#ifndef _DECODER_H
+ #define _DECODER_H
 
 void url_decode(char *p);
 void sanitiseBase64(char *s);
@@ -9,3 +12,4 @@ void utf8_decode(unsigned char *p);
 void qp_decode(unsigned char *p);
 void html_decode(char *p);
 
+#endif /* _DECODER_H */

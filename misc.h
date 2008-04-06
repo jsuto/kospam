@@ -1,6 +1,9 @@
 /*
- * misc.h, 2008.01.30, SJ
+ * misc.h, 2008.04.05, SJ
  */
+
+#ifndef _MISC_H
+ #define _MISC_H
 
 #include <sys/time.h>
 #include <config.h>
@@ -50,3 +53,4 @@ void put_ip_to_dir(char *dir, char *ip);
 double gsl_chi2inv(double x, double df);
 double chi2inv(double x, double df, double esf);
 
+#endif /* _MISC_H */

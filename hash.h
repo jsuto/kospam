@@ -1,6 +1,9 @@
 /*
- * hash.h, 2008.03.12, SJ
+ * hash.h, 2008.04.05, SJ
  */
+
+#ifndef _HASH_H
+ #define _HASH_H
 
 #include "cfg.h"
 
@@ -21,3 +24,5 @@ struct node *makenewnode(struct node *xhash[MAXHASH], char *s, double spaminess,
 int addnode(struct node *xhash[MAXHASH], char *s, double spaminess, double deviation);
 struct node *findnode(struct node *xhash[MAXHASH], char *s);
 unsigned long hash(char *s);
+
+#endif /* _HASH_H */

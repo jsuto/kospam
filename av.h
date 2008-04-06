@@ -1,6 +1,9 @@
 /*
- * av.h, 2008.03.12, SJ
+ * av.h, 2008.04.05, SJ
  */
+
+#ifndef _AV_H
+ #define _AV_H
 
 #define AV_OK 200
 #define AV_VIRUS 403
@@ -65,3 +68,5 @@ int kav_scan(char *kav_socket, char *workdir, char *tmpfile, int v, char *kavinf
 
 int avg_scan(char *avg_address, int avg_port, char *workdir, char *tmpdir, char *tmpfile, int v, char *avginfo);
 
+
+#endif /* _AV_H */

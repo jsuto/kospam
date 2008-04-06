@@ -1,6 +1,9 @@
 /*
- * cgi.h, 2008.02.13, SJ
+ * cgi.h, 2008.04.05, SJ
  */
+
+#ifndef _CGI_H
+ #define _CGI_H
 
 #include "config.h"
 
@@ -25,3 +28,5 @@ void show_users(char *queuedir, char *spamcgi_url);
 void scan_message(char *dir, char *message, char *from, char *subj);
 int check_directory(char *dir, char *username, int page, int page_len, char *spamcgi_url);
 void show_message(char *dir, char *message);
+
+#endif /* _CGI_H */

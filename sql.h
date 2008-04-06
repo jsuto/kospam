@@ -1,6 +1,9 @@
 /*
- * sql.h, 2008.03.12, SJ
+ * sql.h, 2008.04.05, SJ
  */
+
+#ifndef _SQL_H
+ #define _SQL_H
 
 #ifdef HAVE_MYSQL
    #include <mysql.h>
@@ -45,6 +48,7 @@ struct ue {
    int is_sender_on_white_list(MYSQL mysql, char *email, unsigned long uid);
    void insert_2_queue(MYSQL mysql, char *tmpfile, unsigned long uid, struct __config cfg, int is_spam);
    int update_training_metadata(MYSQL mysql, char *tmpfile, unsigned long uid, struct __config cfg, int is_spam);
+   int my_walk_hash(MYSQL mysql, int sockfd, int ham_or_spam, char *tokentable, unsigned long uid, struct _token *token, int train_mode);
 #endif
 
 #ifdef HAVE_SQLITE3
@@ -54,4 +58,9 @@ struct ue {
    int is_sender_on_white_list(sqlite3 *db, char *email, unsigned long uid);
    void insert_2_queue(sqlite3 *db, char *tmpfile, unsigned long uid, struct __config cfg, int is_spam);
    int update_training_metadata(sqlite3 *db, char *tmpfile, unsigned long uid, struct __config cfg, int is_spam);
+   int my_walk_hash(sqlite3 *db, int ham_or_spam, char *tokentable, struct _token *token, int train_mode);
 #endif
+
+float SQL_QUERY(qry QRY, int group_type, char *tokentable, char *token);
+
+#endif /* _SQL_H */

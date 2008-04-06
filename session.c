@@ -12,15 +12,9 @@
 #include <unistd.h>
 #include <signal.h>
 #include <syslog.h>
-#include "misc.h"
-#include "smtpcodes.h"
-#include "errmsg.h"
 #include "mime.h"
 #include "av.h"
-#include "session.h"
-#include "messages.h"
-#include "sql.h"
-#include "config.h"
+#include <clapf.h>
 
 int sd, fd, inj, ret, rav, prevlen=0;
 char prevbuf[MAXBUFSIZE], last2buf[2*MAXBUFSIZE+1];

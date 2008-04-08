@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2008.03.19, SJ
+ * spamdrop.c, 2008.04.08, SJ
  */
 
 #include <stdio.h>
@@ -97,7 +97,7 @@ int main(int argc, char **argv){
    char rblbuf[SMALLBUFSIZE];
 #endif
 #ifdef HAVE_LANG_DETECT
-   char *lang=NULL;
+   char *lang="unknown";
 #endif
 
    while((i = getopt(argc, argv, "c:u:SHps")) > 0){

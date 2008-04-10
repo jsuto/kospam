@@ -1,5 +1,11 @@
 0.3.31-rc1:
 
+2008.04.10, SJ
+
+Added info and scripts about the language detection
+to the contrib directory.
+(lang.h, contrib/i18n/)
+
 2008.03.18, SJ
 
 Added an experimental language detection.

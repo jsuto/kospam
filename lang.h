@@ -1,11 +1,11 @@
 /*
- * lang.h, 2008.03.18, SJ
+ * lang.h, 2008.04.10, SJ
  */
 
 #define MAX_NGRAM 300
 #define NUM_LANG 5
 
-char lang_detected[][5] = { "hu", "hu", "en", "de", "junk" };
+char lang_detected[][NUM_LANG] = { "hu", "hu", "en", "de", "junk" };
 
 
 

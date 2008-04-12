@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2008.04.08, SJ
+ * spamdrop.c, 2008.04.12, SJ
  */
 
 #include <stdio.h>
@@ -78,7 +78,7 @@ int open_db(char *messagefile){
 }
 
 
-int main(int argc, char **argv){
+int main(int argc, char **argv, char **envp){
    FILE *f;
    int i, n, fd, fd2, tot_len=0, rc=0, is_header=1, rounds=1;
    int print_message=0, print_summary_only=0, put_subject_spam_prefix=0, sent_subject_spam_prefix=0;
@@ -98,6 +98,9 @@ int main(int argc, char **argv){
 #endif
 #ifdef HAVE_LANG_DETECT
    char *lang="unknown";
+#endif
+#ifdef HAVE_SPAMDROP_HELPER
+   char envvar[SMALLBUFSIZE];
 #endif
 
    while((i = getopt(argc, argv, "c:u:SHps")) > 0){
@@ -173,12 +176,28 @@ int main(int argc, char **argv){
       snprintf(cfg.mydbfile, MAXVAL-1, "%s/%s/%c/%s/%s", cfg.chrootdir, USER_DATA_DIR, username[0], username, MYDB_FILE);
 #endif
 
-   if(cfg.store_metadata == 1){
+
+   /* check for the queue directory, and run the helper script, if we have to, 2008.04.12, SJ */
+
+#ifdef HAVE_SPAMDROP_HELPER
+   if(stat(buf, &st) != 0){
+
+      syslog(LOG_PRIORITY, "running spamdrop helper script: %s, for user: %s", SPAMDROP_HELPER_PROGRAM, username);
+
+      snprintf(envvar, SMALLBUFSIZE-1, "YOURUSERNAME=%s", username);
+      putenv(envvar);
+
+      execv(SPAMDROP_HELPER_PROGRAM, argv);
+
       if(stat(buf, &st) != 0){
          syslog(LOG_PRIORITY, "missing user directory: %s", buf);
          return EX_TEMPFAIL;
       }
+   }
+#endif
 
+
+   if(cfg.store_metadata == 1){
       if(chdir(buf)){
          syslog(LOG_PRIORITY, "cannot chdir to %s", buf);
          return EX_TEMPFAIL;

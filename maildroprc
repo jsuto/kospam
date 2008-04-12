@@ -1,14 +1,1 @@
-## this allows you to use two training aliases
-
-if(/^To:/:h && /\+spam@/)
-{
-	`/usr/local/bin/spam-fwd-train`
-	exit
-}
-if(/^To:/:h && /\+ham@/)
-{
-	`/usr/local/bin/ham-fwd-train`
-	exit
-}
-
 xfilter "/usr/local/bin/spamdrop -p"

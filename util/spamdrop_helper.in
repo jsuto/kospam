@@ -1,0 +1,19 @@
+#!/bin/sh
+##
+## spamdrop_helper, 2008.04.12, SJ
+##
+## this helper script allows you to let spamdrop create
+## the necessary per user data, and queue directories
+## as well as other thing, eg. copying a default token
+## database for the user, etc.
+## You are encouraged to customise this script
+
+if [ $# -ne 1 ]; then echo "usage: $0 <username>"; exit 1; fi
+
+YOURUSERNAME=$1
+
+mkdir -p YOUR_STATE_DIR/lib/clapf/queue/${YOURUSERNAME:0:1}/$YOURUSERNAME
+mkdir -p YOUR_STATE_DIR/lib/clapf/data/${YOURUSERNAME:0:1}/$YOURUSERNAME
+
+#cp /usr/local/etc/defaults/clapf.sdb YOUR_STATE_DIR/lib/clapf/data/${YOURUSERNAME:0:1}/$YOURUSERNAME
+

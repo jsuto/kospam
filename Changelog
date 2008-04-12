@@ -1,5 +1,19 @@
 0.3.31-rc1:
 
+2008.04.12, SJ
+
+Added a spamdrop helper program. This enables spamdrop to
+create the necessary per user data- and queue directories
+if necessary. To enable this feature, use the --enable-spamdrop-helper
+configure option.
+If using this feature, make sure that the user running
+spamdrop actually has proper permissions to create those
+directories.
+You may customise the util/spamdrop_helper.in script, eg.
+to copy a default token database for the new user, etc.
+
+(credits: Peter)
+
 2008.04.10, SJ
 
 Added info and scripts about the language detection

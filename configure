@@ -1288,6 +1288,7 @@ Optional Features:
   --enable-language-detection use the language detection feature (experimental)
   --enable-store          use external store to store emails for later retraining
   --enable-outgoing-smtp  enable outgoing SMTP server mode
+  --enable-spamdrop-helper use external spamdrop helper program
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -5403,8 +5404,10 @@ if test -n "$cfg_dir"; then
     if test "$prefix" = "NONE"
     then
         cfg_dir="$ac_default_prefix/etc"
+        my_prefix=$ac_default_prefix
     else
         cfg_dir="$prefix/etc"
+        my_prefix=$prefix
     fi
 else
     cfg_dir="$sysconfdir"
@@ -5439,6 +5442,27 @@ DATADIR=$data_dir
 cat >>confdefs.h <<_ACEOF
 #define DATADIR "$data_dir"
 _ACEOF
+
+
+
+    # Check whether --enable-spamdrop-helper was given.
+if test "${enable_spamdrop_helper+set}" = set; then
+  enableval=$enable_spamdrop_helper; want_spamdrop_helper=$enableval
+else
+  want_spamdrop_helper="no"
+fi
+
+
+    if test "$want_spamdrop_helper" = "yes"; then
+        defs="$defs -DHAVE_SPAMDROP_HELPER"
+    fi
+
+
+cat >>confdefs.h <<_ACEOF
+#define SPAMDROP_HELPER_PROGRAM "$my_prefix/libexec/clapf/spamdrop_helper"
+_ACEOF
+
+
 
 
 

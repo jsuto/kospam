@@ -405,8 +405,10 @@ if test -n "$cfg_dir"; then
     if test "$prefix" = "NONE"
     then
         cfg_dir="$ac_default_prefix/etc"
+        my_prefix=$ac_default_prefix
     else
         cfg_dir="$prefix/etc"
+        my_prefix=$prefix
     fi
 else
     cfg_dir="$sysconfdir"
@@ -435,6 +437,19 @@ fi
 DATADIR=$data_dir
 AC_SUBST(DATADIR)
 AC_DEFINE_UNQUOTED(DATADIR,"$data_dir",[where to look for the data files])
+
+dnl spamdrop helper program
+
+    AC_ARG_ENABLE(spamdrop-helper,
+          [  --enable-spamdrop-helper use external spamdrop helper program], want_spamdrop_helper=$enableval, want_spamdrop_helper="no")
+
+    if test "$want_spamdrop_helper" = "yes"; then
+        defs="$defs -DHAVE_SPAMDROP_HELPER"
+    fi
+
+    AC_DEFINE_UNQUOTED(SPAMDROP_HELPER_PROGRAM,"$my_prefix/libexec/clapf/spamdrop_helper",[where to look for the spamdrop helper file])
+
+
 
 
 if test "x$TOKENDB" = "x" && test "$have_antispam" = "yes"; then echo "please specify the token database with --with-tokendb"; exit 1; fi

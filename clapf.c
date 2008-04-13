@@ -1,5 +1,5 @@
 /*
- * clapf.c, 2007.10.23, SJ
+ * clapf.c, 2008.04.13, SJ
  */
 
 #include <stdio.h>
@@ -220,15 +220,6 @@ int main(int argc, char **argv){
 
     syslog(LOG_PRIORITY, "%s %s starting", PROGNAME, VERSION);
 
-    /* write pid file, 2007.08.24, SJ */
-
-    f = fopen(cfg.pidfile, "w");
-    if(f){
-       fprintf(f, "%d", getpid());
-       fclose(f);
-    }
-    else syslog(LOG_PRIORITY, "cannot write pidfile: %s", cfg.pidfile);
-
     /* libclamav startup */
 
     #ifdef HAVE_LIBCLAMAV
@@ -241,6 +232,14 @@ int main(int argc, char **argv){
     /* go to the background, 2007.06.01, SJ */
     if(daemonise == 1) daemon(1, 0);
 
+    /* write pid file, 2007.08.24, SJ */
+
+    f = fopen(cfg.pidfile, "w");
+    if(f){
+       fprintf(f, "%d", getpid());
+       fclose(f);
+    }
+    else syslog(LOG_PRIORITY, "cannot write pidfile: %s", cfg.pidfile);
 
     /* main accept loop */
 

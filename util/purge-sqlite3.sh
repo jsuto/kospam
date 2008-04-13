@@ -1,6 +1,6 @@
 #!/bin/sh
 ##
-## purge-sqlite3.sh, 2008.02.04, SJ
+## purge-sqlite3.sh, 2008.04.13, SJ
 ##
 
 if [ $# -ne 1 ]; then echo "usage: $0 <SQLite3 database>"; exit 1; fi
@@ -20,6 +20,6 @@ echo "DELETE FROM t_token WHERE (2*nham)+nspam < 5 AND timestamp < $_60_DAYS;" |
 echo "DELETE FROM t_token WHERE timestamp < $_90_DAYS;" | $SQLITE3 $DB
 
 # clean aged queue entries from the database 
-echo "DELETE FROM t_queue WHERE timestamp < $_7_DAYS;" | $SQLITE3 $DB
+echo "DELETE FROM t_queue WHERE ts < $_7_DAYS;" | $SQLITE3 $DB
 
 echo "VACUUM;" | $SQLITE3 $DB

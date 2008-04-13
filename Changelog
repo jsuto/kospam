@@ -1,5 +1,11 @@
 0.3.31-rc1:
 
+2008.04.13, SJ
+
+Pid file fix in clapf.c, Purge script fixes around the t_queue table.
+
+(credits: Gabor Adorjani)
+
 2008.04.12, SJ
 
 Added a spamdrop helper program. This enables spamdrop to
@@ -11,6 +17,8 @@ spamdrop actually has proper permissions to create those
 directories.
 You may customise the util/spamdrop_helper.in script, eg.
 to copy a default token database for the new user, etc.
+It's importatnt that this script should produce no (error)
+messages!
 
 (credits: Peter)
 

@@ -1,5 +1,11 @@
 0.3.31-rc1:
 
+2008.04.14, SJ
+
+Add a default clapf header to the email if its size is above the
+max_message_size limit.
+(session.c)
+
 2008.04.13, SJ
 
 Pid file fix in clapf.c, Purge script fixes around the t_queue table.

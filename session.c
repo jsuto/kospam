@@ -1,5 +1,5 @@
 /*
- * session.c, 2008.04.05, SJ
+ * session.c, 2008.04.14, SJ
  */
 
 #include <stdio.h>
@@ -802,6 +802,13 @@ void init_child(int new_sd, char *hostid){
                      }
 
                   } /* end of running spam check */
+
+                  /* set a reasonable clapf header if no spam check has happened, 2008.04.14, SJ */
+
+                  else {
+                     snprintf(spaminessbuf, MAXBUFSIZE-1, "%s%.4f\r\n%s%s\r\n",
+                              cfg.clapf_header_field, result.spaminess, cfg.clapf_header_field, sdata.ttmpfile);
+                  }
 
 
                END_OF_SPAM_CHECK:

@@ -187,7 +187,7 @@ int main(int argc, char **argv, char **envp){
 
       snprintf(envvar, SMALLBUFSIZE-1, "YOURUSERNAME=%s", username);
       putenv(envvar);
-      eeenv[0] = &envvar;
+      eeenv[0] = &envvar[0];
 
       execl(SPAMDROP_HELPER_PROGRAM, envvar, (char*)0);
 

@@ -1,5 +1,5 @@
 /*
- * decoder.c, 2007.06.07, SJ
+ * decoder.c, 2008.04.17, SJ
  */
 
 #include <stdio.h>
@@ -94,7 +94,7 @@ void sanitiseBase64(char *s){
 
 int base64_decode(char *p, char *r){
    int i, j, n[4], k1, k2, len=0;
-   char s[4], s2[3];
+   char s[5], s2[3];
 
    if(strlen(p) < 4 || strlen(p) > MAXBUFSIZE/2)
       return 0;

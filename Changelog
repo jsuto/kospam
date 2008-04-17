@@ -1,5 +1,13 @@
 0.3.31-rc1:
 
+2008.04.17, SJ
+
+Fixed the spamdrop_helper feature.
+(spamdrop.c, util/spamdrop_helper.in)
+
+Increased the size of "s" buffer in base64_decode().
+(decoder.c)
+
 2008.04.14, SJ
 
 Add a default clapf header to the email if its size is above the

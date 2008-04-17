@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2008.04.12, SJ
+ * spamdrop.c, 2008.04.17, SJ
  */
 
 #include <stdio.h>
@@ -101,6 +101,7 @@ int main(int argc, char **argv, char **envp){
 #endif
 #ifdef HAVE_SPAMDROP_HELPER
    char envvar[SMALLBUFSIZE];
+   char *eeenv[] = { NULL, (char *) 0 };
 #endif
 
    while((i = getopt(argc, argv, "c:u:SHps")) > 0){
@@ -186,8 +187,9 @@ int main(int argc, char **argv, char **envp){
 
       snprintf(envvar, SMALLBUFSIZE-1, "YOURUSERNAME=%s", username);
       putenv(envvar);
+      eeenv[0] = &envvar;
 
-      execv(SPAMDROP_HELPER_PROGRAM, argv);
+      execl(SPAMDROP_HELPER_PROGRAM, envvar, (char*)0);
 
       if(stat(buf, &st) != 0){
          syslog(LOG_PRIORITY, "missing user directory: %s", buf);

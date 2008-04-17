@@ -1,6 +1,6 @@
 #!/bin/sh
 ##
-## spamdrop_helper, 2008.04.12, SJ
+## spamdrop_helper, 2008.04.17, SJ
 ##
 ## this helper script allows you to let spamdrop create
 ## the necessary per user data, and queue directories
@@ -8,9 +8,7 @@
 ## database for the user, etc.
 ## You are encouraged to customise this script
 
-if [ $# -ne 1 ]; then echo "usage: $0 <username>"; exit 1; fi
-
-YOURUSERNAME=$1
+if [ "$YOURUSERNAME" = "" ]; then echo "please set the YOURUSERNAME environmnet variable"; exit 1; fi
 
 mkdir -p YOUR_STATE_DIR/lib/clapf/queue/${YOURUSERNAME:0:1}/$YOURUSERNAME
 mkdir -p YOUR_STATE_DIR/lib/clapf/data/${YOURUSERNAME:0:1}/$YOURUSERNAME

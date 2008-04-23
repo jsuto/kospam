@@ -113,11 +113,11 @@ int main(int argc, char **argv){
             old_tokens++;
             goto NEXT_RECORD;
          }
-         if(z->nham + z->nspam <= 1 && z->ts < now - _15_DAYS){
+         if((2*z->nham + z->nspam <= 1) && (z->ts < now - _15_DAYS)){
             _15_obsoleted_tokens++;
             goto NEXT_RECORD;
          }
-         if(z->nham + z->nspam < 5 && z->ts < now - _60_DAYS){
+         if((z->nham + z->nspam < 5) && (z->ts < now - _60_DAYS)){
             _60_obsoleted_tokens++;
             goto NEXT_RECORD;
          }

@@ -1,5 +1,5 @@
 /*
- * mydb_compress.c, 2008.02.19, SJ
+ * mydb_compress.c, 2008.04.23, SJ
  */
 
 #include <stdio.h>
@@ -40,6 +40,16 @@ int main(int argc, char **argv){
       return 1;
    }
 
+   if(stat(argv[1], &st)){
+      printf("cannot stat %s\n", argv[1]);
+      return 1;
+   }
+
+   if(st.st_size < MYDB_MIN_SIZE){
+      printf("token db size is only %d bytes\n", st.st_size);
+      return 1;
+   }
+
    p = strrchr(argv[1], '/');
    if(!p)
       snprintf(lockfile, SMALLBUFSIZE-1, ".%s", argv[1]);
@@ -64,11 +74,6 @@ int main(int argc, char **argv){
       mhash[i] = NULL;
 
    gettimeofday(&tv_start, &tz);
-
-   if(stat(argv[1], &st)){
-      printf("cannot stat %s\n", argv[1]);
-      return 1;
-   }
 
    fd = open(argv[1], O_RDONLY);
    if(fd == -1){

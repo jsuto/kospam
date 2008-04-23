@@ -1,5 +1,12 @@
 0.3.31-rc1:
 
+2008.04.23, SJ
+
+Modified the mydb compression tool to leave alone the token database
+if it's size is under a certain limit (look MYDB_MIN_SIZE in config.h,
+by default 1 MB).
+(mydb_compress.c, config.h)
+
 2008.04.17, SJ
 
 Fixed the spamdrop_helper feature.

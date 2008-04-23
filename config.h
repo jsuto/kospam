@@ -1,5 +1,5 @@
 /*
- * config.h, 2008.04.05, SJ
+ * config.h, 2008.04.23, SJ
  */
 
 #ifndef _CONFIG_H
@@ -8,7 +8,7 @@
 #include <syslog.h>
 #include "clapf-config.h"
 
-#define VERSION "0.3.30"
+#define VERSION "0.3.31-rc1"
 
 #define HOSTID "av-engine.localhost"
 
@@ -73,6 +73,8 @@
 #define MESSAGE_ID_LEN 32
 #define BUFLEN 32
 #define IPLEN 16+1
+
+#define MYDB_MIN_SIZE 1000000
 
 #define MAX_THREADS 30
 

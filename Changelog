@@ -7,6 +7,10 @@ backscatter spam emails. Set the our_signo parameter in clapf.conf
 to enable this feature.
 (cfg.c, cfg.h, smtp.c, example.conf)
 
+Fixed a bug around whitelisting
+(session.c)
+(credits: Zoltan Fried)
+
 2008.04.23, SJ
 
 Modified the mydb compression tool to leave alone the token database

@@ -1,5 +1,5 @@
 /*
- * cfg.c, 2008.03.12, SJ
+ * cfg.c, 2008.04.25, SJ
  */
 
 #include <stdio.h>
@@ -250,6 +250,9 @@ struct __config read_config(char *configfile){
                   if(strcmp(key, "blackhole_path") == 0)
                      memcpy(cfg.blackhole_path, val, MAXVAL-1);
 
+                  if(strcmp(key, "our_signo") == 0)
+                     memcpy(cfg.our_signo, val, MAXVAL-1);
+ 
                   if(strcmp(key, "verbosity") == 0)
                      cfg.verbosity = atoi(val);
 

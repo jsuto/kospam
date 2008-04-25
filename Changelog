@@ -1,5 +1,12 @@
 0.3.31-rc1:
 
+2008.04.25, SJ
+
+Added an option to place an extra header field to help us figthing
+backscatter spam emails. Set the our_signo parameter in clapf.conf
+to enable this feature.
+(cfg.c, cfg.h, smtp.c, example.conf)
+
 2008.04.23, SJ
 
 Modified the mydb compression tool to leave alone the token database

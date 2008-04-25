@@ -1,5 +1,5 @@
 /*
- * cfg.h, 2008.04.05, SJ
+ * cfg.h, 2008.04.25, SJ
  */
 
 #ifndef _CFG_H
@@ -39,6 +39,8 @@ struct __config {
    char queuedir[MAXVAL];
    char quarantine_dir[MAXVAL];
    char blackhole_path[MAXVAL];
+
+   char our_signo[MAXVAL];
 
    int verbosity;
 

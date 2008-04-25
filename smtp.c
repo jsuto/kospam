@@ -1,5 +1,5 @@
 /*
- * smtp.c, 2007.08.27, SJ
+ * smtp.c, 2008.04.25, SJ
  */
 
 #include <stdio.h>
@@ -25,7 +25,7 @@
 
 int inject_mail(struct session_data sdata, int msg, char *smtpaddr, int smtpport, char *spaminessbuf, struct __config cfg, char *notify){
    int i, n, psd;
-   char buf[MAXBUFSIZE+1], line[SMALLBUFSIZE], bigbuf[MAX_MAIL_HEADER_SIZE];
+   char buf[MAXBUFSIZE+1], line[SMALLBUFSIZE], bigbuf[MAX_MAIL_HEADER_SIZE], oursigno[SMALLBUFSIZE];
    struct in_addr addr;
    struct sockaddr_in postfix_addr;
    struct timezone tz;
@@ -39,6 +39,12 @@ int inject_mail(struct session_data sdata, int msg, char *smtpaddr, int smtpport
    if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: trying to inject back", sdata.ttmpfile);
 
    gettimeofday(&tv_start, &tz);
+
+
+   memset(oursigno, 0, SMALLBUFSIZE);
+   if(strlen(cfg.our_signo) > 3)
+      snprintf(oursigno, SMALLBUFSIZE-1, "%s\r\n", cfg.our_signo);
+
 
    if(smtpaddr == NULL || smtpport == 0){
       syslog(LOG_PRIORITY, "%s: ERR: invalid smtp address or port", sdata.ttmpfile);
@@ -251,6 +257,9 @@ int inject_mail(struct session_data sdata, int msg, char *smtpaddr, int smtpport
 
                /* send spaminessbuf and the rest */
 
+               if(strlen(oursigno) > 3)
+                  send(psd, oursigno, strlen(oursigno), 0);
+
                if(spaminessbuf)
                   send(psd, spaminessbuf, strlen(spaminessbuf), 0);
 
@@ -259,6 +268,10 @@ int inject_mail(struct session_data sdata, int msg, char *smtpaddr, int smtpport
             }
             else {
                /* or send stuff as we can as a last resort */
+
+               if(strlen(oursigno) > 3)
+                  send(psd, oursigno, strlen(oursigno), 0);
+
                if(spaminessbuf)
                   send(psd, spaminessbuf, strlen(spaminessbuf), 0);
 

@@ -1,5 +1,5 @@
 /*
- * session.c, 2008.04.14, SJ
+ * session.c, 2008.04.25, SJ
  */
 
 #include <stdio.h>
@@ -604,7 +604,7 @@ void init_child(int new_sd, char *hostid){
                         }
                         else {
 
-                           if(is_sender_on_white_list(mysql, email, sdata.uid)){
+                           if(is_sender_on_white_list(mysql, email2, sdata.uid)){
                               syslog(LOG_PRIORITY, "%s: sender (%s) found on whitelist", sdata.ttmpfile, email);
                               snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on white list\r\n", cfg.clapf_header_field);
                               goto END_OF_SPAM_CHECK;
@@ -682,7 +682,7 @@ void init_child(int new_sd, char *hostid){
                         }
                         else {
 
-                           if(is_sender_on_white_list(db, email, sdata.uid)){
+                           if(is_sender_on_white_list(db, email2, sdata.uid)){
                               syslog(LOG_PRIORITY, "%s: sender (%s) found on whitelist", sdata.ttmpfile, email);
                               snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on white list\r\n", cfg.clapf_header_field);
                               goto END_OF_SPAM_CHECK;

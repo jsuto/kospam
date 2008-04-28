@@ -1,9 +1,12 @@
 /*
- * misc.h, 2008.04.05, SJ
+ * misc.h, 2008.04.28, SJ
  */
 
 #ifndef _MISC_H
  #define _MISC_H
+
+#define FLAG_IGNORE_WHITESPACE 1
+#define FLAG_IGNORE_HEADERS 2
 
 #include <sys/time.h>
 #include <config.h>
@@ -52,5 +55,8 @@ void put_ip_to_dir(char *dir, char *ip);
 
 double gsl_chi2inv(double x, double df);
 double chi2inv(double x, double df, double esf);
+
+unsigned int spamsum_match_db(const char *fname, const char *sum, unsigned int threshold);
+char *spamsum_file(const char *fname, unsigned int flags, unsigned int block_size);
 
 #endif /* _MISC_H */

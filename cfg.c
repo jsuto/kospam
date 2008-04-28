@@ -532,6 +532,9 @@ struct __config read_config(char *configfile){
                   if(strcmp(key, "phishtankdb") == 0)
                      memcpy(cfg.phishtankdb, val, MAXVAL-1);
 
+                  if(strcmp(key, "sig_db") == 0)
+                     memcpy(cfg.sig_db, val, MAXVAL-1);
+
                   if(strcmp(key, "pidfile") == 0)
                      memcpy(cfg.pidfile, val, MAXVAL-1);
 

@@ -103,6 +103,11 @@ int main(int argc, char **argv, char **envp){
    char envvar[SMALLBUFSIZE];
    char *eeenv[] = { NULL, (char *) 0 };
 #endif
+#ifdef HAVE_SPAMSUM
+   char *sum, spamsum_buf[SMALLBUFSIZE];
+   unsigned int flags = 0;
+#endif
+
 
    while((i = getopt(argc, argv, "c:u:SHps")) > 0){
        switch(i){
@@ -540,6 +545,14 @@ ENDE_SPAMDROP:
          #ifdef MY_TEST
             printf("%s", rblbuf);
          #endif
+         #ifdef HAVE_SPAMSUM
+            flags |= FLAG_IGNORE_HEADERS;
+            sum = spamsum_file(sdata.ttmpfile, flags, 0);
+            snprintf(spamsum_buf, SMALLBUFSIZE-1, "%sspamsum=%d\r\n", cfg.clapf_header_field, spamsum_match_db(cfg.sig_db, sum, 55));
+            free(sum);
+            printf("%s", spamsum_buf);
+         #endif
+
             printf("%s%s\r\n", cfg.clapf_header_field, sdata.ttmpfile);
             printf("%s%s%.4f\r\n", trainbuf, cfg.clapf_header_field, result.spaminess);
          #ifdef HAVE_LANG_DETECT

@@ -56,6 +56,7 @@ clapf.conf:
 	-e 's%workdir=.*%workdir=$(localstatedir)/lib/clapf/tmp%' <$(srcdir)/example.conf >$@
 
 clapf: % : %.o $(OBJS) session.o $(STORE_OBJ) $(MYSQL_OBJS)
+	make spamsum
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR) @LDFLAGS@
 
 clapf-lib:
@@ -94,6 +95,8 @@ mydb_stat mydb_compress:	%: %.o mydb.o misc.o hash.o chi.o score.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
 
 
+spamsum:
+	(cd $(srcdir)/contrib/spamsum; make spamsum)
 
 test:
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -DDEBUG -c $(srcdir)/bayes.c
@@ -220,6 +223,8 @@ clean_db:
 
 clean:
 	rm -f *.o *.a libclapf.so* qs db.sql clapf clapfstore clapf.conf parsembox splitmbox spamtest spamdrop spamcgi traincgi trainlogcgi usercgi statcgi spamstat aphash clapf_admin prepare-sql mydb_stat mydb_compress
+	(cd $(srcdir)/contrib/spamsum; make clean)
+
 
 dist_clean distclean: clean
 	rm -f Makefile config.log config.status clapf-config.h stamp.h clapf.conf

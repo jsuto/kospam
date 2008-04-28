@@ -1,5 +1,5 @@
 /*
- * mydb_compress.c, 2008.04.23, SJ
+ * mydb_compress.c, 2008.04.28, SJ
  */
 
 #include <stdio.h>
@@ -46,7 +46,7 @@ int main(int argc, char **argv){
    }
 
    if(st.st_size < MYDB_MIN_SIZE){
-      printf("token db size is only %d bytes\n", st.st_size);
+      printf("token db size is only %ld bytes\n", st.st_size);
       return 1;
    }
 

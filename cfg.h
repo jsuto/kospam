@@ -197,6 +197,10 @@ struct __config {
 
    // phishing cdb
    char phishtankdb[MAXVAL];
+
+   // spamsum
+   char sig_db[MAXVAL];
+
 };
 
 struct __config read_config(char *configfile);

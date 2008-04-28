@@ -1,5 +1,5 @@
 /*
- * misc.c, 2008.01.30, SJ
+ * misc.c, 2008.04.28, SJ
  */
 
 #include <stdio.h>
@@ -804,7 +804,10 @@ int move_message_to_quarantine(char *tmpfile, char *quarantine_dir, char *mailfr
 
    /* put down delivery info, 2006.01.19, SJ */
 
-   if(rename(tmpfile, qfile) == 0){
+   /* if we would use rename, we cannot unlink this file later, producing an
+      error message to syslog */
+
+   if(link(tmpfile, qfile) == 0){
       syslog(LOG_PRIORITY, "%s saved as %s", tmpfile, qfile);
       chmod(qfile, 0644);
 

@@ -1,5 +1,5 @@
 /*
- * cfg.c, 2008.04.25, SJ
+ * cfg.c, 2008.04.28, SJ
  */
 
 #include <stdio.h>
@@ -494,15 +494,6 @@ struct __config read_config(char *configfile){
 
                   if(strcmp(key, "admin_user") == 0)
                      memcpy(cfg.admin_user, val, MAXVAL-1);
-
-                  if(strcmp(key, "save_trained_emails") == 0)
-                     cfg.save_trained_emails = atoi(val);
-
-                  if(strcmp(key, "saved_ham_path") == 0)
-                     memcpy(cfg.saved_ham_path, val, MAXVAL-1);
-
-                  if(strcmp(key, "saved_spam_path") == 0)
-                     memcpy(cfg.saved_spam_path, val, MAXVAL-1);
 
                   if(strcmp(key, "spam_mail_from") == 0)
                      memcpy(cfg.spam_mail_from, val, MAXVAL-1);

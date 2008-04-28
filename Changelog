@@ -1,5 +1,12 @@
 0.3.31-rc1:
 
+2008.04.28, SJ
+
+Changed the move_message_to_quarantine() function to use link()
+instead of rename(), thus we get no more failed to remove syslog
+messages.
+(misc.c)
+
 2008.04.25, SJ
 
 Added an option to place an extra header field to help us figthing

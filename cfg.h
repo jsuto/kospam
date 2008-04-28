@@ -1,5 +1,5 @@
 /*
- * cfg.h, 2008.04.25, SJ
+ * cfg.h, 2008.04.28, SJ
  */
 
 #ifndef _CFG_H
@@ -172,10 +172,6 @@ struct __config {
    char statcgi_url[MAXVAL];
    int page_len;
    char admin_user[MAXVAL];
-
-   char saved_ham_path[MAXVAL];
-   char saved_spam_path[MAXVAL];
-   int save_trained_emails;
 
    // spam quarantine
 

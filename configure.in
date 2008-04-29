@@ -35,6 +35,8 @@ AC_SUBST(ldap_libs)
 AC_SUBST(mysql_obj)
 AC_SUBST(store_obj)
 AC_SUBST(db_install)
+AC_SUBST(spamsum_libs)
+AC_SUBST(spamsum)
 
 have_libclamav="no"
 have_clamd="no"
@@ -67,6 +69,7 @@ user_obj=""
 mysql_obj=""
 ldap_libs=""
 sqlite3_libs=""
+spamsum_libs=""
 os=`uname -s`
 keep_old_token_format="no"
 
@@ -387,6 +390,17 @@ dnl outgoing smtp support
     fi
 
 
+dnl enable spamsum support
+
+    AC_ARG_ENABLE(spamsum,
+          [  --enable-spamsum        enable spamsum support (experimental)], want_spamsum=$enableval, want_spamsum="no")
+
+    if test "$want_spamsum" = "yes"; then
+       spamsum="spamsum"
+       defs="$defs -DHAVE_SPAMSUM"
+       spamsum_libs="-lspamsum"
+    fi
+
 
 dnl user running clapf
 
@@ -647,6 +661,12 @@ if test "$have_store" = "yes"; then
    echo "store: clapfstore"
 else
    echo "store: internal"
+fi
+
+if test "$want_spamsum" = "yes"; then
+   echo "spamsum: yes"
+else
+   echo "spamsum: no"
 fi
 
 if test "$have_whitelist" = "yes"; then

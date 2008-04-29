@@ -105,7 +105,7 @@ int main(int argc, char **argv, char **envp){
 #endif
 #ifdef HAVE_SPAMSUM
    char *sum, spamsum_buf[SMALLBUFSIZE];
-   unsigned int flags = 0;
+   unsigned int flags=0, spamsum_score=0;
 #endif
 
 
@@ -403,6 +403,19 @@ int main(int argc, char **argv, char **envp){
       lang = check_lang(state.first);
    #endif
 
+   #ifdef HAVE_SPAMSUM
+      /* if we are uncertain, try the spamsum module, 2008.04.28, SJ */
+
+      if(result.spaminess > cfg.max_ham_spamicity && result.spaminess < cfg.spam_overall_limit){
+         flags |= FLAG_IGNORE_HEADERS;
+         sum = spamsum_file(sdata.ttmpfile, flags, 0);
+         spamsum_score = spamsum_match_db(cfg.sig_db, sum, 55);
+         if(spamsum_score >= 50) result.spaminess = 0.9988;
+         snprintf(spamsum_buf, SMALLBUFSIZE-1, "%sspamsum=%d\r\n", cfg.clapf_header_field, spamsum_score);
+         free(sum);
+      }
+   #endif
+
       if(result.spaminess >= cfg.spam_overall_limit)
          is_spam = 1;
       else
@@ -546,10 +559,6 @@ ENDE_SPAMDROP:
             printf("%s", rblbuf);
          #endif
          #ifdef HAVE_SPAMSUM
-            flags |= FLAG_IGNORE_HEADERS;
-            sum = spamsum_file(sdata.ttmpfile, flags, 0);
-            snprintf(spamsum_buf, SMALLBUFSIZE-1, "%sspamsum=%d\r\n", cfg.clapf_header_field, spamsum_match_db(cfg.sig_db, sum, 55));
-            free(sum);
             printf("%s", spamsum_buf);
          #endif
 

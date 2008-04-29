@@ -1,5 +1,5 @@
 /*
- * clapf_admin.c, 2007.09.21, SJ
+ * clapf_admin.c, 2008.04.28, SJ
  */
 
 #include <stdio.h>
@@ -13,6 +13,7 @@
 #include "errmsg.h"
 #include "messages.h"
 #include "config.h"
+#include "sql.h"
 
 #ifdef HAVE_MYSQL
    #include <mysql.h>

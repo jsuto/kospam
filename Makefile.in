@@ -17,7 +17,7 @@ CC = @CC@
 CFLAGS = @CFLAGS@ @CPPFLAGS@
 DEFS = @defs@
 INCDIR = -I. @INCDIR@ @mysql_includes@
-LIBDIR = -L. @LIBDIR@ @LDFLAGS@
+LIBDIR = -L. -L$(srcdir)/contrib/spamsum @LIBDIR@ @LDFLAGS@
 LIBS = @LIBS@ @mysql_libs@
 LDAP_LIBS = @ldap_libs@
 OBJS = @OBJS@
@@ -34,7 +34,7 @@ LIBCLAPF_VERSION=$(CLAPF_VERSION).$(CLAPF_REVISION).$(CLAPF_RELEASE)
 
 INSTALL = @INSTALL@
 
-all: clapf clapf-lib @clapfstore@ splitmbox @cgi@ @parsembox@ @spamdrop@ @preparesql@ @qcache@ @test@
+all: clapf clapf-lib @spamsum@ @clapfstore@ splitmbox @cgi@ @parsembox@ @spamdrop@ @preparesql@ @qcache@ @test@
 install: install-clapf @clapfstore_install@ install-splitmbox install-man @parsembox_install@ @spamdrop_install@ @qcache_install@ @db_install@
 
 clapf.conf.old:
@@ -56,7 +56,6 @@ clapf.conf:
 	-e 's%workdir=.*%workdir=$(localstatedir)/lib/clapf/tmp%' <$(srcdir)/example.conf >$@
 
 clapf: % : %.o $(OBJS) session.o $(STORE_OBJ) $(MYSQL_OBJS)
-	make spamsum
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR) @LDFLAGS@
 
 clapf-lib:
@@ -70,7 +69,7 @@ parsembox: % : %.o misc.o decoder.o parser.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
 
 spamdrop: % : %.o
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ -lclapf $(LIBS) $(LDAP_LIBS) $(LIBDIR)
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ -lclapf @spamsum_libs@ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
 
 splitmbox: % : %.o misc.o decoder.o parser.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
@@ -96,7 +95,7 @@ mydb_stat mydb_compress:	%: %.o mydb.o misc.o hash.o chi.o score.o
 
 
 spamsum:
-	(cd $(srcdir)/contrib/spamsum; make spamsum)
+	(cd $(srcdir)/contrib/spamsum; make all)
 
 test:
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -DDEBUG -c $(srcdir)/bayes.c
@@ -105,7 +104,7 @@ test:
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -DDEBUG -c $(srcdir)/parser.c
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -DDEBUG -c $(srcdir)/score.c
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -DDEBUG -c $(srcdir)/rbl.c
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -DDEBUG -o spamtest $(srcdir)/test.c $(OBJS) $(MYSQL_OBJS) $(LIBS) $(LIBDIR) @LDFLAGS@
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -DDEBUG -o spamtest $(srcdir)/test.c $(OBJS) $(MYSQL_OBJS) $(LIBS) @spamsum_libs@ $(LIBDIR) @LDFLAGS@
 
 qcache: qs.o misc.o cfg.o qcache.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o qs $^ $(LIBS) -lpthread $(LIBDIR)
@@ -154,6 +153,7 @@ install-clapf: clapf
 	$(INSTALL) -d $(DESTDIR)$(libdir)
 	$(INSTALL) -m 0644 libclapf.a $(DESTDIR)$(libdir)
 	$(INSTALL) -m 0644 libclapf.so.$(LIBCLAPF_VERSION) $(DESTDIR)$(libdir)
+	(cd contrib/spamsum; make install)
 	(cd $(DESTDIR)$(libdir) && ln -sf libclapf.so.$(LIBCLAPF_VERSION) libclapf.so)
 	(cd $(DESTDIR)$(libdir) && ln -sf libclapf.so.$(LIBCLAPF_VERSION) libclapf.so.$(CLAPF_VERSION))
 	$(INSTALL) -d $(DESTDIR)$(libexecdir)/clapf

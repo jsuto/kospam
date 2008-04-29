@@ -1,5 +1,18 @@
 0.3.31-rc1:
 
+2008.04.29, SJ
+
+Incorporated the spamsum project (http://www.samba.org/ftp/unpacked/junkcode/spamsum/)
+to help the decision if the statistical module is uncertain. The status of the plugin
+is experimental, but working.
+You may use the $(libexecdir)/clapf/spamsum utility to create the spam sums, eg.
+$(libexecdir)/clapf/spamsum messagefile1 messagefile2 ... messagefileN
+
+To use the signatures, set the sig_db parameter in clapf.conf
+
+Please note that the spamsum project is the work of Andrew Tridgell.
+(spamdrop.c, contrib/spamsum/*)
+
 2008.04.28, SJ
 
 Changed the move_message_to_quarantine() function to use link()

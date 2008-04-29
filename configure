@@ -687,6 +687,8 @@ ldap_libs
 mysql_obj
 store_obj
 db_install
+spamsum_libs
+spamsum
 MYSQL_CONFIG
 CFGDIR
 DATADIR
@@ -1288,6 +1290,7 @@ Optional Features:
   --enable-language-detection use the language detection feature (experimental)
   --enable-store          use external store to store emails for later retraining
   --enable-outgoing-smtp  enable outgoing SMTP server mode
+  --enable-spamsum        enable spamsum support (experimental)
   --enable-spamdrop-helper use external spamdrop helper program
 
 Optional Packages:
@@ -3712,6 +3715,8 @@ done
 
 
 
+
+
 have_libclamav="no"
 have_clamd="no"
 have_avg="no"
@@ -3743,6 +3748,7 @@ user_obj=""
 mysql_obj=""
 ldap_libs=""
 sqlite3_libs=""
+spamsum_libs=""
 os=`uname -s`
 keep_old_token_format="no"
 
@@ -5385,6 +5391,21 @@ _ACEOF
 
 
 
+    # Check whether --enable-spamsum was given.
+if test "${enable_spamsum+set}" = set; then
+  enableval=$enable_spamsum; want_spamsum=$enableval
+else
+  want_spamsum="no"
+fi
+
+
+    if test "$want_spamsum" = "yes"; then
+       spamsum="spamsum"
+       defs="$defs -DHAVE_SPAMSUM"
+       spamsum_libs="-lspamsum"
+    fi
+
+
 
 
 # Check whether --with-clapf-user was given.
@@ -5921,6 +5942,12 @@ if test "$have_store" = "yes"; then
    echo "store: clapfstore"
 else
    echo "store: internal"
+fi
+
+if test "$want_spamsum" = "yes"; then
+   echo "spamsum: yes"
+else
+   echo "spamsum: no"
 fi
 
 if test "$have_whitelist" = "yes"; then
@@ -6682,6 +6709,8 @@ ldap_libs!$ldap_libs$ac_delim
 mysql_obj!$mysql_obj$ac_delim
 store_obj!$store_obj$ac_delim
 db_install!$db_install$ac_delim
+spamsum_libs!$spamsum_libs$ac_delim
+spamsum!$spamsum$ac_delim
 MYSQL_CONFIG!$MYSQL_CONFIG$ac_delim
 CFGDIR!$CFGDIR$ac_delim
 DATADIR!$DATADIR$ac_delim
@@ -6689,7 +6718,7 @@ LIBOBJS!$LIBOBJS$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 79; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 81; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5
@@ -7829,6 +7858,8 @@ ldap_libs!$ldap_libs$ac_delim
 mysql_obj!$mysql_obj$ac_delim
 store_obj!$store_obj$ac_delim
 db_install!$db_install$ac_delim
+spamsum_libs!$spamsum_libs$ac_delim
+spamsum!$spamsum$ac_delim
 MYSQL_CONFIG!$MYSQL_CONFIG$ac_delim
 CFGDIR!$CFGDIR$ac_delim
 DATADIR!$DATADIR$ac_delim
@@ -7836,7 +7867,7 @@ LIBOBJS!$LIBOBJS$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 79; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 81; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5

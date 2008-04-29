@@ -106,14 +106,24 @@ char *spamsum(const uchar *in, size_t length, u32 flags, u32 bsize)
 	u32 j, n, i, k;
 	u32 block_size;
 	uchar ret2[SPAMSUM_LENGTH/2 + 1];
+        const uchar *s;
 
 	/* if we are ignoring email headers then skip past them now */
 	if (flags & FLAG_IGNORE_HEADERS) {
-		const uchar *s = strstr(in, "\n\n");
-		if (s) {
+		s = strstr((char*)in, "\n\n");
+		if(s){
 			length -= (s+2 - in);
 			in = s+2;
 		}
+
+                /* a few messages have \r\n\r\n at the end of the mail header, SJ */
+                else {
+                   s = strstr((char *)in, "\n\r\n");
+                   if(s){
+                      length -= (s+3 - in);
+                      in = s+3;
+                   }
+                }
 	}
 
 	if (flags & FLAG_IGNORE_WHITESPACE) {

@@ -1,5 +1,5 @@
 /*
- * parser.c, 2008.03.07, SJ
+ * parser.c, 2008.05.01, SJ
  */
 
 #include <stdio.h>
@@ -22,73 +22,71 @@
  * initialise parser state
  */
 
-struct _state init_state(){
+void init_state(struct _state *state){
    int i;
-   struct _state state;
 
-   state.message_state = MSG_UNDEF;
+   state->message_state = MSG_UNDEF;
 
-   state.is_header = 1;
-   state.has_boundary = 0;
-   state.has_boundary2 = 0;
+   state->is_header = 1;
+   state->has_boundary = 0;
+   state->has_boundary2 = 0;
 
    /* by default we are a text/plain message */
 
-   state.textplain = 1;
+   state->textplain = 1;
 
-   state.base64 = 0;
-   state.utf8 = 0;
+   state->base64 = 0;
+   state->utf8 = 0;
 
    /* changed to 0->1, 2008.03.07, SJ */
-   state.iso_8859_2 = 1;
-   state.qp = 0;
+   state->iso_8859_2 = 1;
+   state->qp = 0;
 
-   state.unknown_client = 0;
-   state.html_comment = 0;
+   state->unknown_client = 0;
+   state->html_comment = 0;
 
-   state.base64_text = 0;
+   state->base64_text = 0;
 
-   state.n_token = 0;
-   state.n_body_token = 0;
-   state.n_chain_token = 0;
-   state.n_subject_token = 0;
+   state->n_token = 0;
+   state->n_body_token = 0;
+   state->n_chain_token = 0;
+   state->n_subject_token = 0;
 
-   state.c_hex_shit = 0;
-   state.c_shit = 0;
-   state.l_shit = 0;
+   state->c_hex_shit = 0;
+   state->c_shit = 0;
+   state->l_shit = 0;
 
-   state.line_num = 0;
+   state->line_num = 0;
 
-   state.ipcnt = 0;
+   state->ipcnt = 0;
 
-   state.train_mode = T_TOE;
+   state->train_mode = T_TOE;
 
-   memset(state.boundary, 0, BOUNDARY_LEN);
-   memset(state.boundary2, 0, BOUNDARY_LEN);
-   memset(state.ctype, 0, MAXBUFSIZE);
-   memset(state.ip, 0, SMALLBUFSIZE);
-   memset(state.miscbuf, 0, MAX_TOKEN_LEN);
-   memset(state.qpbuf, 0, MAX_TOKEN_LEN);
-   memset(state.from, 0, SMALLBUFSIZE);
+   memset(state->boundary, 0, BOUNDARY_LEN);
+   memset(state->boundary2, 0, BOUNDARY_LEN);
+   memset(state->ctype, 0, MAXBUFSIZE);
+   memset(state->ip, 0, SMALLBUFSIZE);
+   memset(state->miscbuf, 0, MAX_TOKEN_LEN);
+   memset(state->qpbuf, 0, MAX_TOKEN_LEN);
+   memset(state->from, 0, SMALLBUFSIZE);
 
-   state.c_token = NULL;
-   state.first = NULL;
+   state->c_token = NULL;
+   state->first = NULL;
 
-   state.check_attachment = 0;
-   state.has_to_dump = 0;
-   state.fd = 0;
-   state.num_of_images = 0;
-   state.num_of_msword = 0;
+   state->check_attachment = 0;
+   state->has_to_dump = 0;
+   state->fd = 0;
+   state->num_of_images = 0;
+   state->num_of_msword = 0;
 
-   state.n_attachments = 0;
-   memset(state.attachedfile, 0, SMALLBUFSIZE);
+   state->n_attachments = 0;
+   memset(state->attachedfile, 0, SMALLBUFSIZE);
 
    for(i=0; i<MAX_ATTACHMENTS; i++){
-      state.attachments[i].size = 0;
-      memset(state.attachments[i].type, 0, SMALLBUFSIZE);
+      state->attachments[i].size = 0;
+      memset(state->attachments[i].type, 0, SMALLBUFSIZE);
    }
 
-   return state;
 }
 
 
@@ -200,51 +198,48 @@ int is_date(char *s){
  * parse buffer
  */
 
-struct _state parse(char *buf, struct _state st){
+int parse(char *buf, struct _state *state){
    char *p, *q, *c, huf[MAXBUFSIZE], puf[MAXBUFSIZE], muf[MAXBUFSIZE], tuf[MAXBUFSIZE], rnd[RND_STR_LEN], u[SMALLBUFSIZE], token[MAX_TOKEN_LEN], phrase[MAX_TOKEN_LEN], ipbuf[IPLEN];
-   struct _state state;
    int i, x, b64_len;
    int do_utf8, do_base64, do_qp;
 
    do_utf8 = do_base64 = do_qp = 0;
 
-   state = st;
-
-   state.line_num++;
+   state->line_num++;
 
 
    /* header checks */
 
-   if(state.is_header == 1){
+   if(state->is_header == 1){
 
       /* end of header? */
 
       if(buf[0] == '\r' || buf[0] == '\n'){
-         state.is_header = 0;
-         state.message_state = MSG_BODY;
+         state->is_header = 0;
+         state->message_state = MSG_BODY;
       }
 
       /* Subject: */
 
       if(strncmp(buf, "Subject:", strlen("Subject:")) == 0){
-         state.message_state = MSG_SUBJECT;
+         state->message_state = MSG_SUBJECT;
       }
 
       /* From: */
 
       if(strncmp(buf, "From:", strlen("From:")) == 0){
-         state.message_state = MSG_FROM;
+         state->message_state = MSG_FROM;
 
          p = strchr(buf+5, ' ');
          if(p) p = buf + 6;
          else p = buf + 5;
 
-         snprintf(state.from, SMALLBUFSIZE-1, "FROM*%s", p);
-         trim(state.from);
+         snprintf(state->from, SMALLBUFSIZE-1, "FROM*%s", p);
+         trim(state->from);
       }
 
       if(strncmp(buf, "To:", 3) == 0){
-         state.message_state = MSG_TO;
+         state->message_state = MSG_TO;
       }
 
       /* Received: 2005.12.09, SJ */
@@ -252,9 +247,9 @@ struct _state parse(char *buf, struct _state st){
    #ifdef HAVE_PROCESS_ALL_RECEIVED_LINES
       if(strncmp(buf, "Received: from ", strlen("Received: from ")) == 0){
    #else
-      if(strncmp(buf, "Received: from ", strlen("Received: from ")) == 0 && state.ipcnt < 2){
+      if(strncmp(buf, "Received: from ", strlen("Received: from ")) == 0 && state->ipcnt < 2){
    #endif
-         state.message_state = MSG_RECEIVED;
+         state->message_state = MSG_RECEIVED;
 
          p = strchr(buf, '[');
          if(p){
@@ -268,10 +263,10 @@ struct _state parse(char *buf, struct _state st){
                   memcpy(ipbuf, p+1, q-p-1);
                   strncat(ipbuf, ",", IPLEN-1);
 
-                  if(strncmp(ipbuf, "127.", 4) && !strstr(state.ip, ipbuf) && strlen(state.ip) + strlen(ipbuf) < SMALLBUFSIZE-1)
-                     strncat(state.ip, ipbuf, SMALLBUFSIZE-1);
+                  if(strncmp(ipbuf, "127.", 4) && !strstr(state->ip, ipbuf) && strlen(state->ip) + strlen(ipbuf) < SMALLBUFSIZE-1)
+                     strncat(state->ip, ipbuf, SMALLBUFSIZE-1);
 
-                  state.ipcnt++;
+                  state->ipcnt++;
                }
             }
          }
@@ -293,11 +288,12 @@ struct _state parse(char *buf, struct _state st){
 
       if(strlen(puf) >= 2 && strcasecmp(puf, "Received") && strcasecmp(puf, "From") && strcasecmp(puf, "To") && strcasecmp(puf, "Subject") &&
            strcasecmp(puf, "Content-Type") && strcasecmp(puf, "Content-Transfer-Encoding") && strcasecmp(puf, "Content-Disposition") )
-         return state;
+         return 0;
+
 
    }
    else
-      state.cnt_type = 0;
+      state->cnt_type = 0;
 
    /* end of header checks */
 
@@ -306,15 +302,15 @@ struct _state parse(char *buf, struct _state st){
    /* Content-type: checking */
 
    if(strncasecmp(buf, "Content-Type:", strlen("Content-Type:")) == 0){
-      if(state.is_header == 1) state.message_state = MSG_CONTENT_TYPE;
+      if(state->is_header == 1) state->message_state = MSG_CONTENT_TYPE;
 
-      state.textplain = 0;
-      state.base64 = 0;
-      state.utf8 = 0;
-      state.iso_8859_2 = 0;
+      state->textplain = 0;
+      state->base64 = 0;
+      state->utf8 = 0;
+      state->iso_8859_2 = 0;
 
-      if(state.n_attachments < MAX_ATTACHMENTS-1 && state.attachments[state.n_attachments].size > 0)
-         state.n_attachments++;
+      if(state->n_attachments < MAX_ATTACHMENTS-1 && state->attachments[state->n_attachments].size > 0)
+         state->n_attachments++;
 
       /* extract Content type */
 
@@ -322,47 +318,47 @@ struct _state parse(char *buf, struct _state st){
       if(p){
          p++;
          if(*p == ' ' || *p == '\t') p++;
-         snprintf(state.attachments[state.n_attachments].type, SMALLBUFSIZE-1, "%s", p);
-         trim(state.attachments[state.n_attachments].type);
-         p = strchr(state.attachments[state.n_attachments].type, ';');
+         snprintf(state->attachments[state->n_attachments].type, SMALLBUFSIZE-1, "%s", p);
+         trim(state->attachments[state->n_attachments].type);
+         p = strchr(state->attachments[state->n_attachments].type, ';');
          if(p) *p = '\0';
 
       }
 
-      state.cnt_type = 1;
+      state->cnt_type = 1;
 
       /* check only the first attachment of this type */
 
-      if( (state.check_attachment == 1 && str_case_str(buf, "image") && state.num_of_images == 0) || (str_case_str(buf, "msword") && state.num_of_msword == 0) ){
+      if( (state->check_attachment == 1 && str_case_str(buf, "image") && state->num_of_images == 0) || (str_case_str(buf, "msword") && state->num_of_msword == 0) ){
          p = strchr(buf, '/');
          q = strchr(buf, ';');
          if(p && q){
 
             if(str_case_str(buf, "image"))
-               state.num_of_images++;
+               state->num_of_images++;
 
             if(str_case_str(buf, "msword"))
-               state.num_of_msword++;
+               state->num_of_msword++;
 
             make_rnd_string(rnd);
 
-            snprintf(state.attachedfile, SMALLBUFSIZE-1, "%s.%s", rnd, p+1);
+            snprintf(state->attachedfile, SMALLBUFSIZE-1, "%s.%s", rnd, p+1);
 
             // get rid of the semicolon (;)
-            q = strchr(state.attachedfile, ';');
+            q = strchr(state->attachedfile, ';');
             if(q)
                *q = '\0';
 
             /* writing attachments is disabled at the moment, 2007.09.07, SJ */
 
-            /*state.has_to_dump = 1;
-            state.fd = open(state.attachedfile, O_CREAT|O_RDWR, 0644);*/
+            /*state->has_to_dump = 1;
+            state->fd = open(state->attachedfile, O_CREAT|O_RDWR, 0644);*/
          }
       }
       else {
-         state.has_to_dump = 0;
-         if(state.fd)
-            close(state.fd);
+         state->has_to_dump = 0;
+         if(state->fd)
+            close(state->fd);
       }
 
       /* 2007.04.19, SJ */
@@ -375,7 +371,7 @@ struct _state parse(char *buf, struct _state st){
          str_case_str(buf, "text/rfc822-headers")
       ){
 
-             state.textplain = 1;
+             state->textplain = 1;
       }
       else
          goto DECOMPOSE;
@@ -385,104 +381,104 @@ struct _state parse(char *buf, struct _state st){
    /* check for textual base64 encoded part, 2005.03.25, SJ */
 
    if(strncasecmp(buf, "Content-Transfer-Encoding:", strlen("Content-Transfer-Encoding:")) == 0){
-      if(state.is_header == 1) state.message_state = MSG_CONTENT_TRANSFER_ENCODING;
+      if(state->is_header == 1) state->message_state = MSG_CONTENT_TRANSFER_ENCODING;
 
       /* check for textual base64 encoded part, 2005.03.25, SJ */
-      if(str_case_str(buf, "base64")) state.base64 = 1;
+      if(str_case_str(buf, "base64")) state->base64 = 1;
    }
 
    /* check for UTF-8 encoding */
 
    if(str_case_str(buf, "charset") && str_case_str(buf, "UTF-8"))
-      state.utf8 = 1;
+      state->utf8 = 1;
 
    if(str_case_str(buf, "charset") && (str_case_str(buf, "ISO-8859-2") || str_case_str(buf, "ISO-8859-1"))  ){
-      state.iso_8859_2 = 1;
+      state->iso_8859_2 = 1;
    }
 
    /* catch encoded stuff in the Subject|From lines, 2007.09.04, SJ */
 
-   if(state.message_state == MSG_SUBJECT || state.message_state == MSG_FROM){
-      if(str_case_str(buf, "?iso-8859-2?") || str_case_str(buf, "?iso-8859-1?")) state.iso_8859_2 = 1;
-      if(str_case_str(buf, "?utf-8?")) state.utf8 = 1;
+   if(state->message_state == MSG_SUBJECT || state->message_state == MSG_FROM){
+      if(str_case_str(buf, "?iso-8859-2?") || str_case_str(buf, "?iso-8859-1?")) state->iso_8859_2 = 1;
+      if(str_case_str(buf, "?utf-8?")) state->utf8 = 1;
    }
 
    /* check for quoted-printable encoding */
 
    if(strncasecmp(buf, "Content-Transfer-Encoding:", strlen("Content-Transfer-Encoding:")) == 0 && str_case_str(buf, "quoted-printable"))
-      state.qp = 1;
+      state->qp = 1;
 
-   if(strncasecmp(buf, "Content-Transfer-Encoding:", strlen("Content-Transfer-Encoding:")) == 0 && state.textplain == 0)
+   if(strncasecmp(buf, "Content-Transfer-Encoding:", strlen("Content-Transfer-Encoding:")) == 0 && state->textplain == 0)
       goto DECOMPOSE;
 
    if(strncasecmp(buf, "Content-Disposition:", strlen("Content-Disposition:")) == 0){
-      if(state.is_header == 1) state.message_state = MSG_CONTENT_DISPOSITION;
-      if(state.textplain == 0) goto DECOMPOSE;
+      if(state->is_header == 1) state->message_state = MSG_CONTENT_DISPOSITION;
+      if(state->textplain == 0) goto DECOMPOSE;
    }
 
    /* is it a base64 encoded text? 2006.01.02, SJ */
 
-   if(state.base64_text == 0 && state.textplain == 1 && state.base64 == 1)
-      state.base64_text = 1;
+   if(state->base64_text == 0 && state->textplain == 1 && state->base64 == 1)
+      state->base64_text = 1;
 
 
    /* boundary checks */
 
-   if(state.has_boundary == 1 && state.cnt_type == 1 && (p = str_case_str(buf, "boundary"))){
-      x = extract_boundary(p, state.boundary2, BOUNDARY_LEN-1);
-      if(x == 1) state.has_boundary2 = 1;
-      state.base64 = 0; state.textplain = 0; // state.qp = 0;
+   if(state->has_boundary == 1 && state->cnt_type == 1 && (p = str_case_str(buf, "boundary"))){
+      x = extract_boundary(p, state->boundary2, BOUNDARY_LEN-1);
+      if(x == 1) state->has_boundary2 = 1;
+      state->base64 = 0; state->textplain = 0; // state->qp = 0;
    }
 
-   if(state.cnt_type == 1 && state.has_boundary2 == 0 && (p = str_case_str(buf, "boundary"))){
-      x = extract_boundary(p, state.boundary, BOUNDARY_LEN-1);
-      if(x == 1) state.has_boundary = 1;
+   if(state->cnt_type == 1 && state->has_boundary2 == 0 && (p = str_case_str(buf, "boundary"))){
+      x = extract_boundary(p, state->boundary, BOUNDARY_LEN-1);
+      if(x == 1) state->has_boundary = 1;
 
       /* do not let the boundary definition reset the Content-* variables if we are in the header, 2006.03.13, SJ */
 
-      if(state.is_header == 1 && strncasecmp(buf, "Content-Type:", strlen("Content-Type:")) == 0){
-         state.base64 = 0; // state.qp = 0;
+      if(state->is_header == 1 && strncasecmp(buf, "Content-Type:", strlen("Content-Type:")) == 0){
+         state->base64 = 0; // state->qp = 0;
       }
       else {
-         state.base64 = 0; state.textplain = 0; // state.qp = 0;
+         state->base64 = 0; state->textplain = 0; // state->qp = 0;
       }
 
    }
 
    /* skip the boundary itself */
 
-   if(state.has_boundary == 1 && !str_case_str(buf, "boundary") && strstr(buf, state.boundary)){
-      return state;
+   if(state->has_boundary == 1 && !str_case_str(buf, "boundary") && strstr(buf, state->boundary)){
+      return 0;
    }
 
-   if(state.has_boundary2 == 1 && !str_case_str(buf, "boundary") && strstr(buf, state.boundary2))
-      return state;
+   if(state->has_boundary2 == 1 && !str_case_str(buf, "boundary") && strstr(buf, state->boundary2))
+      return 0;
 
    /* end of boundary check */
 
 
    /* dump attachment, 2007.07.03, SJ */
 
-   if(!strchr(buf, '\t') && buf[0] != '\n' && buf[0] != '\r' && state.fd != -1){
-      if(state.base64 == 1 && !strchr(buf, ' ')){
+   if(!strchr(buf, '\t') && buf[0] != '\n' && buf[0] != '\r' && state->fd != -1){
+      if(state->base64 == 1 && !strchr(buf, ' ')){
          b64_len = base64_decode(buf, puf);
-         state.attachments[state.n_attachments].size += b64_len;
-         if(state.has_to_dump == 1)
-            write(state.fd, puf, b64_len);
+         state->attachments[state->n_attachments].size += b64_len;
+         if(state->has_to_dump == 1)
+            write(state->fd, puf, b64_len);
       }
-      else if(state.is_header == 0){
-         state.attachments[state.n_attachments].size += strlen(buf);
+      else if(state->is_header == 0){
+         state->attachments[state->n_attachments].size += strlen(buf);
       }
    }
 
    /* skip non textual stuff */
 
-   if(state.is_header == 0 && state.textplain == 0)
-      return state;
+   if(state->is_header == 0 && state->textplain == 0)
+      return 0;
 
    /* base64 decode buffer, 2005.03.23, SJ */
 
-   if(state.base64 == 1 && state.is_header == 0 && strncmp(buf, "Content-", strlen("Content-")) != 0){
+   if(state->base64 == 1 && state->is_header == 0 && strncmp(buf, "Content-", strlen("Content-")) != 0){
       memset(huf, 0, MAXBUFSIZE);
       b64_len = base64_decode(buf, huf);
       if(b64_len > 0)
@@ -492,13 +488,13 @@ struct _state parse(char *buf, struct _state st){
 
    /* handle qp encoded lines */
 
-   if(state.qp == 1 || ( (state.message_state == MSG_SUBJECT || state.message_state == MSG_FROM) && str_case_str(buf, "?Q?")) )
+   if(state->qp == 1 || ( (state->message_state == MSG_SUBJECT || state->message_state == MSG_FROM) && str_case_str(buf, "?Q?")) )
       qp_decode((unsigned char*)buf);
 
 
    /* handle base64 encoded subject */
 
-   if( (state.message_state == MSG_SUBJECT || state.message_state == MSG_FROM) && (p = str_case_str(buf, "?B?"))){
+   if( (state->message_state == MSG_SUBJECT || state->message_state == MSG_FROM) && (p = str_case_str(buf, "?B?"))){
       base64_decode(p+3, huf);
       *(p+3) = '\0';
       snprintf(tuf, MAXBUFSIZE-1, "%s%s", buf, huf);
@@ -518,56 +514,56 @@ struct _state parse(char *buf, struct _state st){
 
    for(i=0; i<(sizeof(skip_headers) / sizeof(p)); i++){
       if(strncasecmp(buf, skip_headers[i], strlen(skip_headers[i])) == 0)
-         return state;
+         return 0;
    }
 
    /* skip the first line too, if it's a "From <email address> date" format */
 
-   if(state.line_num == 1 && buf[0] == 'F' && buf[1] == 'r' && buf[2] == 'o' && buf[3] == 'm' && buf[4] == ' ')
-      return state;
+   if(state->line_num == 1 && buf[0] == 'F' && buf[1] == 'r' && buf[2] == 'o' && buf[3] == 'm' && buf[4] == ' ')
+      return 0;
 
 
    /* fix soft breaks with quoted-printable decoded stuff, 2006.03.01, SJ */
 
-   if(state.qp == 1 && strlen(state.qpbuf) > 0){
+   if(state->qp == 1 && strlen(state->qpbuf) > 0){
       memset(tuf, 0, MAXBUFSIZE);
-      strncpy(tuf, state.qpbuf, MAXBUFSIZE-1);
+      strncpy(tuf, state->qpbuf, MAXBUFSIZE-1);
       strncat(tuf, buf, MAXBUFSIZE-1);
 
       memset(buf, 0, MAXBUFSIZE);
       memcpy(buf, tuf, MAXBUFSIZE);
 
-      memset(state.qpbuf, 0, MAX_TOKEN_LEN);
+      memset(state->qpbuf, 0, MAX_TOKEN_LEN);
    }
 
-   if(state.qp == 1 && buf[strlen(buf)-2] == '='){
+   if(state->qp == 1 && buf[strlen(buf)-2] == '='){
       q = strrchr(buf, ' ');
       if(q){
          *q = '\0';
          q++;
-         memset(state.qpbuf, 0, MAX_TOKEN_LEN);
+         memset(state->qpbuf, 0, MAX_TOKEN_LEN);
          if(strlen(q)-2 < MAX_TOKEN_LEN-1)
-            strncpy(state.qpbuf, q, strlen(q)-2);
+            strncpy(state->qpbuf, q, strlen(q)-2);
       }
    }
 
    /* fix base64 stuff if the line does not end with a line break, 2006.03.01, SJ */
 
-   if(state.base64 == 1 && strlen(state.miscbuf) > 0){
+   if(state->base64 == 1 && strlen(state->miscbuf) > 0){
       memset(tuf, 0, MAXBUFSIZE);
-      strncpy(tuf, state.miscbuf, MAXBUFSIZE-1);
+      strncpy(tuf, state->miscbuf, MAXBUFSIZE-1);
       strncat(tuf, buf, MAXBUFSIZE-1);
 
       memset(buf, 0, MAXBUFSIZE);
       memcpy(buf, tuf, MAXBUFSIZE);
 
-      memset(state.miscbuf, 0, MAX_TOKEN_LEN);
+      memset(state->miscbuf, 0, MAX_TOKEN_LEN);
    }
 
-   if(state.base64 == 1 && buf[strlen(buf)-1] != '\n'){
+   if(state->base64 == 1 && buf[strlen(buf)-1] != '\n'){
       q = strrchr(buf, ' ');
       if(q){
-         strncpy(state.miscbuf, q+1, MAX_TOKEN_LEN-1);
+         strncpy(state->miscbuf, q+1, MAX_TOKEN_LEN-1);
          *q = '\0';
       }
    }
@@ -578,15 +574,15 @@ struct _state parse(char *buf, struct _state st){
     *  with the pre_translate() and url_decode() functions,  2007.05.22, SJ
     */
 
-   if(state.utf8 == 1) utf8_decode((unsigned char*)buf);
+   if(state->utf8 == 1) utf8_decode((unsigned char*)buf);
 
    /* handle html comments, 2007.06.07, SJ */
 
-   if(state.html_comment == 1 && strchr(buf, '>')) state.html_comment = 0;
+   if(state->html_comment == 1 && strchr(buf, '>')) state->html_comment = 0;
 
-   if(state.is_header == 0 && strstr(buf, "<!")) state.html_comment = 1;
+   if(state->is_header == 0 && strstr(buf, "<!")) state->html_comment = 1;
 
-   if(state.html_comment == 1){
+   if(state->html_comment == 1){
       q = strstr(buf, "<!");
       if(q){
          *q = '\0';
@@ -595,7 +591,7 @@ struct _state parse(char *buf, struct _state st){
          fprintf(stderr, "DISCARDED HTML: %s", ++q);
       #endif
       }
-      //return state;
+      //return 0;
    }
 
 
@@ -620,34 +616,34 @@ struct _state parse(char *buf, struct _state st){
 
    /* count the number of hexa and junk characters, 2006.11.09, SJ */
 
-   state.c_hex_shit += count_invalid_hexa_stuff((unsigned char*)buf);
+   state->c_hex_shit += count_invalid_hexa_stuff((unsigned char*)buf);
 
    /* count invalid junk characters unless UTF-8 encoded or ISO-8859-2 part, 2007.04.04, SJ */
-   if(state.utf8 == 0 && state.iso_8859_2 == 0) state.c_shit += count_invalid_junk((unsigned char*)buf);
+   if(state->utf8 == 0 && state->iso_8859_2 == 0) state->c_shit += count_invalid_junk((unsigned char*)buf);
 
    /* skip unless we have an URL, 2006.11.09, SJ */
 
    if(x > 0){
-      state.l_shit += x;
+      state->l_shit += x;
       if(!str_case_str(buf, "http://") && !str_case_str(buf, "https://"))
-         return state;
+         return 0;
    }
 
    /* translate junk characters to JUNK_REPLACEMENT_CHAR, 2007.09.04, SJ */
 
-   if(state.utf8 == 0 && state.iso_8859_2 == 0){
+   if(state->utf8 == 0 && state->iso_8859_2 == 0){
       for(i=0; i<strlen(buf); i++)
          if(buf[i] < 0) buf[i] = JUNK_REPLACEMENT_CHAR;
    }
 
 DECOMPOSE:
-   translate((unsigned char*)buf, state.qp);
+   translate((unsigned char*)buf, state->qp);
 
-   if(state.is_header == 1) p = strchr(buf, ' ');
+   if(state->is_header == 1) p = strchr(buf, ' ');
    else p = buf;
 
 #ifdef DEBUG
-   //fprintf(stderr, "%ld * %s\n", state.c_shit, p);
+   //fprintf(stderr, "%ld * %s\n", state->c_shit, p);
    fprintf(stderr, "%s\n", buf);
 #endif
 
@@ -665,9 +661,9 @@ DECOMPOSE:
 
                fix_url(muf);
 
-               state = insert_token(state, muf);
+               insert_token(state, muf);
 
-               state.n_token++;
+               state->n_token++;
             }
          } while(q);
 
@@ -683,13 +679,13 @@ DECOMPOSE:
       if(is_odd_punctuations(puf) == 1 || is_month(puf) == 1 || is_weekday(puf) == 1 || is_date(puf) )
          continue;
 
-      if(state.message_state == MSG_SUBJECT){
+      if(state->message_state == MSG_SUBJECT){
          snprintf(muf, MAXBUFSIZE-1, "Subject*%s", puf);
-         state.n_subject_token++;
+         state->n_subject_token++;
       }
-      else if(state.message_state == MSG_FROM)
+      else if(state->message_state == MSG_FROM)
          snprintf(muf, MAXBUFSIZE-1, "FROM*%s", puf);
-      else if(state.is_header == 1)
+      else if(state->is_header == 1)
          snprintf(muf, MAXBUFSIZE-1, "HEADER*%s", puf);
       else
          snprintf(muf, MAXBUFSIZE-1, "%s", puf);
@@ -697,8 +693,8 @@ DECOMPOSE:
 
       if(muf[0] == 0) continue;
 
-      state.n_token++;
-      if(state.message_state != MSG_RECEIVED && state.message_state != MSG_FROM) state.n_chain_token++;
+      state->n_token++;
+      if(state->message_state != MSG_RECEIVED && state->message_state != MSG_FROM) state->n_chain_token++;
 
       /* degenerate token, 2007.05.04, SJ */
 
@@ -707,16 +703,16 @@ DECOMPOSE:
 
       /* add single token to list */
 
-      state = insert_token(state, muf);
+      insert_token(state, muf);
 
 
       /* create token pairs, 2007.06.06, SJ */
 
-      if(state.is_header == 0) state.n_body_token++;
+      if(state->is_header == 0) state->n_body_token++;
 
-      if(((state.is_header == 1 && state.n_chain_token > 1) || state.n_body_token > 1) && strlen(token) >= MIN_WORD_LEN && state.message_state != MSG_CONTENT_TYPE){
+      if(((state->is_header == 1 && state->n_chain_token > 1) || state->n_body_token > 1) && strlen(token) >= MIN_WORD_LEN && state->message_state != MSG_CONTENT_TYPE){
          snprintf(phrase, MAX_TOKEN_LEN-1, "%s+%s", token, muf);
-         state = insert_token(state, phrase);
+         insert_token(state, phrase);
       }
       snprintf(token, MAX_TOKEN_LEN-1, "%s", muf);
 
@@ -726,13 +722,13 @@ DECOMPOSE:
 
 
    /* do not chain between individual headers, 2007.06.09, SJ */
-   if(state.is_header == 1) state.n_chain_token = 0;
+   if(state->is_header == 1) state->n_chain_token = 0;
 
-   if(state.message_state == MSG_FROM && strlen(state.from) > 3){
-      state = insert_token(state, state.from);
+   if(state->message_state == MSG_FROM && strlen(state->from) > 3){
+      insert_token(state, state->from);
    }
 
-   return state;
+   return 0;
 }
 
 
@@ -740,23 +736,22 @@ DECOMPOSE:
  * inserts a token to list
  */
 
-struct _state insert_token(struct _state state, char *p){
-   struct _state st = state;
+void insert_token(struct _state *state, char *p){
    struct _token *t;
 
    t = new_token(p);
 
    if(t){
-      if(st.first == NULL)
-         st.first = t;
+      if(state->first == NULL)
+         state->first = t;
       else
-         st.c_token->r = t;
+         state->c_token->r = t;
 
-      st.c_token = t;
+      state->c_token = t;
    }
 
-   return st;
 }
+
 
 /*
  * allocate a token

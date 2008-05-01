@@ -1,5 +1,5 @@
 /*
- * parsembox.c, 2007.09.25, SJ
+ * parsembox.c, 2008.05.01, SJ
  */
 
 #include <stdio.h>
@@ -13,7 +13,7 @@
 #include "config.h"
 
 int main(int argc, char **argv){
-   struct _state state;
+   struct _state state, *st;
    int is_match, tot_msgs = 0;
    char buf[MAXBUFSIZE], ifile[SMALLBUFSIZE];
    FILE *F;
@@ -26,7 +26,8 @@ int main(int argc, char **argv){
    if(!F)
       __fatal("open");
 
-   state = init_state();
+   st = &state;
+   init_state(st);
 
    while(fgets(buf, MAXBUFSIZE-1, F)){
       is_match = 0;
@@ -51,13 +52,14 @@ int main(int argc, char **argv){
             free_and_print_list(state.first, 1);
          }
 
-         state = init_state();
+         st = &state;
+         init_state(st);
 
          printf("*** NEW_MSG_STARTS_HERE %d ***\n", tot_msgs);
          continue;
       }
 
-      state = parse(buf, state);
+      parse(buf, st);
 
    }
 

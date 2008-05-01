@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2008.04.17, SJ
+ * spamdrop.c, 2008.05.01, SJ
  */
 
 #include <stdio.h>
@@ -409,10 +409,12 @@ int main(int argc, char **argv, char **envp){
       if(result.spaminess > cfg.max_ham_spamicity && result.spaminess < cfg.spam_overall_limit){
          flags |= FLAG_IGNORE_HEADERS;
          sum = spamsum_file(sdata.ttmpfile, flags, 0);
-         spamsum_score = spamsum_match_db(cfg.sig_db, sum, 55);
-         if(spamsum_score >= 50) result.spaminess = 0.9988;
-         snprintf(spamsum_buf, SMALLBUFSIZE-1, "%sspamsum=%d\r\n", cfg.clapf_header_field, spamsum_score);
-         free(sum);
+         if(sum){
+            spamsum_score = spamsum_match_db(cfg.sig_db, sum, 55);
+            if(spamsum_score >= 50) result.spaminess = 0.9988;
+            snprintf(spamsum_buf, SMALLBUFSIZE-1, "%sspamsum=%d\r\n", cfg.clapf_header_field, spamsum_score);
+            free(sum);
+         }
       }
    #endif
 

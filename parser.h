@@ -1,5 +1,5 @@
 /*
- * parser.h, 2008.04.05, SJ
+ * parser.h, 2008.05.01, SJ
  */
 
 #ifndef _PARSER_H
@@ -84,11 +84,11 @@ struct c_res {
    float ham_msg, spam_msg;
 };
 
-struct _state init_state();
+void init_state(struct _state *state);
 int attachment_by_type(struct _state state, char *type);
 int extract_boundary(char *p, char *boundary, int boundary_len);
-struct _state parse(char *buf, struct _state st);
-struct _state insert_token(struct _state state, char *p);
+int parse(char *buf, struct _state *state);
+void insert_token(struct _state *state, char *p);
 struct _token *new_token(char *s);
 void free_and_print_list(struct _token *t, int print);
 

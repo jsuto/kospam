@@ -1,5 +1,5 @@
 /*
- * traincgi.c, 2008.02.1999999999, SJ
+ * traincgi.c, 2008.05.01, SJ
  */
 
 #include <stdio.h>
@@ -41,7 +41,7 @@ int main(){
    int i, clen=0, is_spam=0, method=M_UNDEF, train_mode=T_TOE, rounds=1;
    unsigned long now;
    time_t clock;
-   struct _state state;
+   struct _state state, *st;
    struct __config cfg;
    struct cgidata cgi;
    struct session_data sdata;
@@ -144,7 +144,8 @@ int main(){
    time(&clock);
    now = clock;
 
-   state = init_state();
+   st = &state;
+   init_state(st);
 
    if(method == M_POST){
 
@@ -169,7 +170,7 @@ int main(){
 
       do {
          p = split(p, '\n', buf, MAXBUFSIZE-1);
-         state = parse(buf, state);
+         parse(buf, st);
 
       } while(p);
 

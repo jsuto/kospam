@@ -1,5 +1,5 @@
 /*
- * test.c, 2008.03.18, SJ
+ * test.c, 2008.05.01, SJ
  *
  * test the bayesian decision with a single message
  */
@@ -8,6 +8,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/time.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <clapf.h>
 
 #ifdef HAVE_MYSQL
@@ -30,6 +32,7 @@ int main(int argc, char **argv){
    struct _state state;
    struct __config cfg;
    struct c_res result;
+   struct stat st;
 #ifdef HAVE_SPAMSUM
    char *sum, spamsum_buf[SMALLBUFSIZE];
    unsigned int flags = 0;
@@ -38,6 +41,11 @@ int main(int argc, char **argv){
    if(argc < 3){
       fprintf(stderr, "usage: %s <config file> <message> [<uid>]\n", argv[0]);
       exit(1);
+   }
+
+   if(stat(argv[2], &st) != 0){
+      fprintf(stderr, "%s is not found\n", argv[2]);
+      return 0;
    }
 
 
@@ -119,10 +127,12 @@ int main(int argc, char **argv){
    gettimeofday(&tv_spam_start, &tz);
    flags |= FLAG_IGNORE_HEADERS;
    sum = spamsum_file(argv[2], flags, 0);
-   snprintf(spamsum_buf, SMALLBUFSIZE-1, "spamsum=%d\n", spamsum_match_db(cfg.sig_db, sum, 55));
-   free(sum);
-   gettimeofday(&tv_spam_stop, &tz);
-   fprintf(stderr, "%s in %ld [ms]", spamsum_buf, tvdiff(tv_spam_stop, tv_spam_start)/1000);
+   if(sum){
+      snprintf(spamsum_buf, SMALLBUFSIZE-1, "spamsum=%d\n", spamsum_match_db(cfg.sig_db, sum, 55));
+      free(sum);
+      gettimeofday(&tv_spam_stop, &tz);
+      fprintf(stderr, "%s in %ld [ms]", spamsum_buf, tvdiff(tv_spam_stop, tv_spam_start)/1000);
+   }
 #endif
 
    if(result.spaminess >= cfg.spam_overall_limit)

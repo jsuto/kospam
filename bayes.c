@@ -1,5 +1,5 @@
 /*
- * bayes.c, 2008.04.05, SJ
+ * bayes.c, 2008.05.01, SJ
  */
 
 #include <stdio.h>
@@ -183,9 +183,10 @@ int walk_hash(struct mydb_node *mhash[MAX_MYDB_HASH], struct node *xhash[MAXHASH
 struct _state parse_message(char *spamfile, struct __config cfg){
    FILE *f;
    char buf[MAXBUFSIZE], tumbuf[SMALLBUFSIZE];
-   struct _state state;
+   struct _state state, *st;
 
-   state = init_state();
+   st = &state;
+   init_state(st);
 
    f = fopen(spamfile, "r");
    if(!f){
@@ -196,7 +197,8 @@ struct _state parse_message(char *spamfile, struct __config cfg){
    snprintf(tumbuf, SMALLBUFSIZE-1, "%sTUM", cfg.clapf_header_field);
 
    while(fgets(buf, MAXBUFSIZE-1, f)){
-      state = parse(buf, state);
+      parse(buf, st);
+
       //if(state.message_state != MSG_BODY && strncmp(buf, tumbuf, strlen(tumbuf)) == 0){
       if(strncmp(buf, tumbuf, strlen(tumbuf)) == 0){
          //printf("tum trained message\n");

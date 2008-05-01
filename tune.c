@@ -92,14 +92,15 @@ int read_mbox(char *mailbox, int is_spam){
    FILE *f;
    char buf[MAXBUFSIZE];
    int is_match, tot_msgs=0;
-   struct _state state;
+   struct _state state, *st;
 
    printf("reading %s...\n", mailbox);
 
    f = fopen(mailbox, "r");
    if(!f) return -1;
 
-   state = init_state();
+   st = &state;
+   init_state(st);
 
    while(fgets(buf, MAXBUFSIZE-1, f)){
       is_match = 0;
@@ -113,12 +114,12 @@ int read_mbox(char *mailbox, int is_spam){
             free_and_print_list(state.first, 0);
          }
 
-         state = init_state();
+         init_state(st);
 
          continue;
       }
 
-      state = parse(buf, state);
+      parse(buf, state);
 
    }
 

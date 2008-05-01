@@ -1,5 +1,10 @@
 0.3.31-rc1:
 
+2008.05.01, SJ
+
+Modified the parser routine to update the state variable using the "->" operator.
+(parser.c, parser.h, bayes.c, parsembox.c)
+
 2008.04.29, SJ
 
 Incorporated the spamsum project (http://www.samba.org/ftp/unpacked/junkcode/spamsum/)

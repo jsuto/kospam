@@ -1,5 +1,18 @@
 0.3.31-rc1:
 
+2008.05.05, SJ
+
+Added the mydomains parameter. The clapf daemon will not insert the
+anti backscatter header (our_signo in clapf.conf) if the recipient
+is in mydomains.
+
+So to use the anti-backscatter help feature, set the following in clapf.conf:
+
+mydomains=yourdomain1,yourdomain2,...
+our_signo=X-Anti-Backscatter: abcde123
+
+(smtp.c, misc.c, misc.h, cfg.c, cfg.h)
+
 2008.05.01, SJ
 
 Modified the parser routine to update the state variable using the "->" operator.

@@ -1,5 +1,5 @@
 /*
- * cfg.c, 2008.04.28, SJ
+ * cfg.c, 2008.05.05, SJ
  */
 
 #include <stdio.h>
@@ -252,6 +252,9 @@ struct __config read_config(char *configfile){
 
                   if(strcmp(key, "our_signo") == 0)
                      memcpy(cfg.our_signo, val, MAXVAL-1);
+
+                  if(strcmp(key, "mydomains") == 0)
+                     memcpy(cfg.mydomains, val, MAXVAL-1);
  
                   if(strcmp(key, "verbosity") == 0)
                      cfg.verbosity = atoi(val);

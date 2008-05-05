@@ -1,5 +1,5 @@
 /*
- * cfg.h, 2008.04.28, SJ
+ * cfg.h, 2008.05.05, SJ
  */
 
 #ifndef _CFG_H
@@ -41,6 +41,7 @@ struct __config {
    char blackhole_path[MAXVAL];
 
    char our_signo[MAXVAL];
+   char mydomains[MAXVAL];
 
    int verbosity;
 

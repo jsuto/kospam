@@ -1,5 +1,5 @@
 /*
- * misc.c, 2008.04.28, SJ
+ * misc.c, 2008.05.05, SJ
  */
 
 #include <stdio.h>
@@ -820,4 +820,24 @@ int move_message_to_quarantine(char *tmpfile, char *quarantine_dir, char *mailfr
       return ERR_MOVED;
    }
 
+}
+
+
+/*
+ * is the email address in our domains?
+ */
+
+int is_recipient_in_our_domains(char *rawmail, struct __config cfg){
+   char *p, email[SMALLBUFSIZE];
+
+   if(extract_email(rawmail, email) == 0) return 0;
+
+   p = strchr(email, '@');
+   if(!p) return 0;
+
+   //syslog(LOG_PRIORITY, "%s in %s", p+1, cfg.mydomains);
+
+   if(strstr(cfg.mydomains, p+1)) return 1;
+
+   return 0;
 }

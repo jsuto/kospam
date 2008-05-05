@@ -1,5 +1,5 @@
 /*
- * smtp.c, 2008.04.25, SJ
+ * smtp.c, 2008.05.05, SJ
  */
 
 #include <stdio.h>
@@ -34,7 +34,7 @@ int inject_mail(struct session_data sdata, int msg, char *smtpaddr, int smtpport
    int is_header=1, len=0, num_of_reads=0;
    int hdr_field_name_len, remove_hdr=0, remove_folded_hdr=0;
    int put_subject_spam_prefix =0, sent_subject_spam_prefix = 0;
-   char *hdr_ptr, *p, *q;
+   char *hdr_ptr, *p, *q, *recipient=NULL;
 
    if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: trying to inject back", sdata.ttmpfile);
 
@@ -121,6 +121,8 @@ int inject_mail(struct session_data sdata, int msg, char *smtpaddr, int smtpport
 #else
       i = msg;
 #endif
+      recipient = sdata.rcptto[i];
+
       send(psd, sdata.rcptto[i], strlen(sdata.rcptto[i]), 0);
       if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent in injecting (%d): %s", sdata.ttmpfile, i, sdata.rcptto[i]);
 
@@ -257,7 +259,7 @@ int inject_mail(struct session_data sdata, int msg, char *smtpaddr, int smtpport
 
                /* send spaminessbuf and the rest */
 
-               if(strlen(oursigno) > 3)
+               if(strlen(oursigno) > 3 && is_recipient_in_our_domains(recipient, cfg) == 0)
                   send(psd, oursigno, strlen(oursigno), 0);
 
                if(spaminessbuf)
@@ -269,7 +271,7 @@ int inject_mail(struct session_data sdata, int msg, char *smtpaddr, int smtpport
             else {
                /* or send stuff as we can as a last resort */
 
-               if(strlen(oursigno) > 3)
+               if(strlen(oursigno) > 3 && is_recipient_in_our_domains(recipient, cfg) == 0)
                   send(psd, oursigno, strlen(oursigno), 0);
 
                if(spaminessbuf)

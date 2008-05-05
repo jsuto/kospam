@@ -1,5 +1,5 @@
 /*
- * misc.h, 2008.04.28, SJ
+ * misc.h, 2008.05.05, SJ
  */
 
 #ifndef _MISC_H
@@ -9,6 +9,7 @@
 #define FLAG_IGNORE_HEADERS 2
 
 #include <sys/time.h>
+#include <cfg.h>
 #include <config.h>
 
 void _fatal(char *s);
@@ -44,7 +45,7 @@ int qcache_socket(char *qcache_addr, int qcache_port, char *qcache_socket);
 int is_recipient_in_array(char rcptto[MAX_RCPT_TO][MAXBUFSIZE], char *buf, int num_of_rcpt_to);
 void write_delivery_info(char *tmpfile, char *dir, char *mailfrom, char rcptto[MAX_RCPT_TO][MAXBUFSIZE], int num_of_rcpt_to);
 int move_message_to_quarantine(char *tmpfile, char *quarantine_dir, char *mailfrom, char rcptto[MAX_RCPT_TO][MAXBUFSIZE], int num_of_rcpt_to);
-
+int is_recipient_in_our_domains(char *rawmail,  struct __config cfg);
 
 int rbl_check(char *rbldomain, char *host);
 int reverse_ipv4_addr(char *ip);

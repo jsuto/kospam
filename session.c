@@ -1,5 +1,5 @@
 /*
- * session.c, 2008.04.25, SJ
+ * session.c, 2008.05.07, SJ
  */
 
 #include <stdio.h>
@@ -499,9 +499,23 @@ void init_child(int new_sd, char *hostid){
                /* parse the message only once, 2007.10.14, SJ */
 
          #ifdef HAVE_ANTISPAM
+
+               if((strstr(sdata.mailfrom, "MAILER-DAEMON") || strstr(sdata.mailfrom, "<>")) && strlen(cfg.our_signo) > 3){
+                  if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "from: %s, we should really see our signo", sdata.mailfrom);
+                  sdata.need_signo_check = 1;
+               }
+
                memset(whitelistbuf, 0, SMALLBUFSIZE);
-               sstate = parse_message(sdata.ttmpfile, cfg);
+               sstate = parse_message(sdata.ttmpfile, sdata, cfg);
                if(unknown_client == 1) sstate.unknown_client = 1;
+
+               if(sdata.need_signo_check == 1){
+                  if(sstate.found_our_signo == 1)
+                     syslog(LOG_PRIORITY, "%s: found our signo, this should be a real bounce message", sdata.ttmpfile);
+                  else
+                     syslog(LOG_PRIORITY, "%s: looks like a bounce, but our signo is missing", sdata.ttmpfile);
+               }
+
          #endif
 
 

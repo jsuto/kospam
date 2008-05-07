@@ -1,10 +1,11 @@
 /*
- * parser.h, 2008.05.01, SJ
+ * parser.h, 2008.05.07, SJ
  */
 
 #ifndef _PARSER_H
  #define _PARSER_H
 
+#include "cfg.h"
 #include "config.h"
 
 #define MSG_UNDEF -1
@@ -68,6 +69,8 @@ struct _state {
    struct _token *c_token;
    struct _token *first;
 
+   int found_our_signo;
+
    int n_attachments;
    struct attachment attachments[MAX_ATTACHMENTS];
 };
@@ -75,7 +78,7 @@ struct _state {
 struct session_data {
    char ttmpfile[3*RND_STR_LEN+1], mailfrom[MAXBUFSIZE], rcptto[MAX_RCPT_TO][MAXBUFSIZE], client_addr[IPLEN], name[SMALLBUFSIZE];
    unsigned long uid;
-   int tot_len, num_of_rcpt_to, skip_id_check;
+   int tot_len, num_of_rcpt_to, skip_id_check, need_signo_check;
 };
 
 
@@ -87,7 +90,7 @@ struct c_res {
 void init_state(struct _state *state);
 int attachment_by_type(struct _state state, char *type);
 int extract_boundary(char *p, char *boundary, int boundary_len);
-int parse(char *buf, struct _state *state);
+int parse(char *buf, struct _state *state, struct session_data *sdata, struct __config cfg);
 void insert_token(struct _state *state, char *p);
 struct _token *new_token(char *s);
 void free_and_print_list(struct _token *t, int print);

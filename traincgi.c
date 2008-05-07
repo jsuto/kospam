@@ -1,5 +1,5 @@
 /*
- * traincgi.c, 2008.05.01, SJ
+ * traincgi.c, 2008.05.07, SJ
  */
 
 #include <stdio.h>
@@ -13,6 +13,7 @@
 #include "messages.h"
 #include "cgi.h"
 #include "bayes.h"
+#include "parser.h"
 
 #ifdef HAVE_MYSQL
    #include <mysql.h>
@@ -34,14 +35,13 @@ int admin_user = 0;
 
 
 int deliver_message(char *dir, char *message, char *username, struct __config cfg);
-struct _state parse_message(char *spamfile, struct __config cfg);
 
 int main(){
    char *p, buf[MAXBUFSIZE], spamqdir[MAXBUFSIZE], qfile[SMALLBUFSIZE], user[SMALLBUFSIZE];
    int i, clen=0, is_spam=0, method=M_UNDEF, train_mode=T_TOE, rounds=1;
    unsigned long now;
    time_t clock;
-   struct _state state, *st;
+   struct _state state;
    struct __config cfg;
    struct cgidata cgi;
    struct session_data sdata;
@@ -144,8 +144,7 @@ int main(){
    time(&clock);
    now = clock;
 
-   st = &state;
-   init_state(st);
+   init_state(&state);
 
    if(method == M_POST){
 
@@ -170,7 +169,7 @@ int main(){
 
       do {
          p = split(p, '\n', buf, MAXBUFSIZE-1);
-         parse(buf, st);
+         parse(buf, &state, &sdata, cfg);
 
       } while(p);
 
@@ -208,7 +207,7 @@ int main(){
 
          i = 0;
          snprintf(qfile, SMALLBUFSIZE-1, "%s/%s", spamqdir, cgi.train);
-         state = parse_message(qfile, cfg);
+         state = parse_message(qfile, sdata, cfg);
 
          /* remove message */
          printf("unlinking %s<br/>\n", qfile);

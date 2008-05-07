@@ -1,5 +1,5 @@
 /*
- * bayes.c, 2008.05.01, SJ
+ * bayes.c, 2008.05.07, SJ
  */
 
 #include <stdio.h>
@@ -180,13 +180,12 @@ int walk_hash(struct mydb_node *mhash[MAX_MYDB_HASH], struct node *xhash[MAXHASH
  * parse the message into tokens and return the pointer
  */
 
-struct _state parse_message(char *spamfile, struct __config cfg){
+struct _state parse_message(char *spamfile, struct session_data sdata, struct __config cfg){
    FILE *f;
    char buf[MAXBUFSIZE], tumbuf[SMALLBUFSIZE];
-   struct _state state, *st;
+   struct _state state;
 
-   st = &state;
-   init_state(st);
+   init_state(&state);
 
    f = fopen(spamfile, "r");
    if(!f){
@@ -197,7 +196,7 @@ struct _state parse_message(char *spamfile, struct __config cfg){
    snprintf(tumbuf, SMALLBUFSIZE-1, "%sTUM", cfg.clapf_header_field);
 
    while(fgets(buf, MAXBUFSIZE-1, f)){
-      parse(buf, st);
+      parse(buf, &state, &sdata, cfg);
 
       //if(state.message_state != MSG_BODY && strncmp(buf, tumbuf, strlen(tumbuf)) == 0){
       if(strncmp(buf, tumbuf, strlen(tumbuf)) == 0){

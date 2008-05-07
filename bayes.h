@@ -1,5 +1,5 @@
 /*
- * bayes.h, 2008.04.05, SJ
+ * bayes.h, 2008.05.07, SJ
  */
 
 #ifndef _BAYES_H
@@ -9,7 +9,7 @@
 #include "cfg.h"
 
 double spamicity(char *spamfile, struct __config cfg);
-struct _state parse_message(char *spamfile, struct __config cfg);
+struct _state parse_message(char *spamfile, struct session_data sdata, struct __config cfg);
 
 #ifdef HAVE_MYSQL
    #include <mysql.h>

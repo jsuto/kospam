@@ -1,5 +1,11 @@
 0.3.31-rc1:
 
+2008.05.07, SJ
+
+Now both the clapf daemon and the spamdrop utility is able to detect
+backscatter spam emails. This feature is still experimental.
+(spamdrop.c, parser.h. parser.c, bayes.h, bayes.c)
+
 2008.05.05, SJ
 
 Added the mydomains parameter. The clapf daemon will not insert the

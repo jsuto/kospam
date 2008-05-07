@@ -1,5 +1,5 @@
 /*
- * parser.c, 2008.05.01, SJ
+ * parser.c, 2008.05.07, SJ
  */
 
 #include <stdio.h>
@@ -72,6 +72,8 @@ void init_state(struct _state *state){
 
    state->c_token = NULL;
    state->first = NULL;
+
+   state->found_our_signo = 0;
 
    state->check_attachment = 0;
    state->has_to_dump = 0;
@@ -198,7 +200,7 @@ int is_date(char *s){
  * parse buffer
  */
 
-int parse(char *buf, struct _state *state){
+int parse(char *buf, struct _state *state, struct session_data *sdata, struct __config cfg){
    char *p, *q, *c, huf[MAXBUFSIZE], puf[MAXBUFSIZE], muf[MAXBUFSIZE], tuf[MAXBUFSIZE], rnd[RND_STR_LEN], u[SMALLBUFSIZE], token[MAX_TOKEN_LEN], phrase[MAX_TOKEN_LEN], ipbuf[IPLEN];
    int i, x, b64_len;
    int do_utf8, do_base64, do_qp;
@@ -207,6 +209,13 @@ int parse(char *buf, struct _state *state){
 
    state->line_num++;
 
+
+   /* check for our anti backscatter signo, SJ */
+
+   if(sdata->need_signo_check == 1){
+      if(strncmp(buf, cfg.our_signo, strlen(cfg.our_signo)) == 0)
+         state->found_our_signo = 1;
+   }
 
    /* header checks */
 

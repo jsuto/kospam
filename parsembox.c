@@ -1,5 +1,5 @@
 /*
- * parsembox.c, 2008.05.01, SJ
+ * parsembox.c, 2008.05.07, SJ
  */
 
 #include <stdio.h>
@@ -10,13 +10,18 @@
 #include "misc.h"
 #include "decoder.h"
 #include "parser.h"
+#include "cfg.h"
 #include "config.h"
 
 int main(int argc, char **argv){
-   struct _state state, *st;
+   struct _state state;
+   struct session_data sdata;
+   struct __config cfg;
    int is_match, tot_msgs = 0;
    char buf[MAXBUFSIZE], ifile[SMALLBUFSIZE];
    FILE *F;
+
+   cfg = read_config(NULL);
 
    if(argc < 2)
       __fatal("usage: <mbox file>");
@@ -26,8 +31,7 @@ int main(int argc, char **argv){
    if(!F)
       __fatal("open");
 
-   st = &state;
-   init_state(st);
+   init_state(&state);
 
    while(fgets(buf, MAXBUFSIZE-1, F)){
       is_match = 0;
@@ -52,14 +56,13 @@ int main(int argc, char **argv){
             free_and_print_list(state.first, 1);
          }
 
-         st = &state;
-         init_state(st);
+         init_state(&state);
 
          printf("*** NEW_MSG_STARTS_HERE %d ***\n", tot_msgs);
          continue;
       }
 
-      parse(buf, st);
+      parse(buf, &state, &sdata, cfg);
 
    }
 

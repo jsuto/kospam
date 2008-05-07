@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2008.05.01, SJ
+ * spamdrop.c, 2008.05.07, SJ
  */
 
 #include <stdio.h>
@@ -211,14 +211,22 @@ int main(int argc, char **argv, char **envp){
       }
    }
 
+   from = getenv("FROM");
+
    sdata.num_of_rcpt_to = 1;
    sdata.uid = getuid();
+   snprintf(sdata.mailfrom, MAXBUFSIZE-1, "%s", from);
    memset(sdata.rcptto[0], 0, MAXBUFSIZE);
    memset(whitelistbuf, 0, SMALLBUFSIZE);
    make_rnd_string(&(sdata.ttmpfile[0]));
 
    result.spaminess = DEFAULT_SPAMICITY;
    result.ham_msg = result.spam_msg = 0;
+
+   if((strcasecmp(from, "MAILER-DAEMON") == 0 || strcmp(from, "<>") == 0) && strlen(cfg.our_signo) > 3){
+      if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "from: %s, we should really see our signo", from);
+      sdata.need_signo_check = 1;
+   }
 
 #ifdef HAVE_SQLITE3
    sdata.uid = 0;
@@ -287,8 +295,6 @@ int main(int argc, char **argv, char **envp){
    }
 
 
-   from = getenv("FROM");
-
    /* open database connection */
    if(open_db(sdata.ttmpfile) == 0)
       goto ENDE;
@@ -318,7 +324,7 @@ int main(int argc, char **argv, char **envp){
          snprintf(buf, MAXBUFSIZE-1, "%s/%s/%c/%s/s.%s", cfg.chrootdir, USER_QUEUE_DIR, username[0], username, ID);
 
 
-      state = parse_message(buf, cfg);
+      state = parse_message(buf, sdata, cfg);
 
       /* is it a TUM trained message? */
 
@@ -342,7 +348,7 @@ int main(int argc, char **argv, char **envp){
 
 
    /* parse message */
-   state = parse_message(sdata.ttmpfile, cfg);
+   state = parse_message(sdata.ttmpfile, sdata, cfg);
 
 
    /*******************************************************/
@@ -417,6 +423,13 @@ int main(int argc, char **argv, char **envp){
          }
       }
    #endif
+
+      if(sdata.need_signo_check == 1){
+         if(state.found_our_signo == 1)
+            syslog(LOG_PRIORITY, "found our signo, this should be a real bounce message");
+         else
+            syslog(LOG_PRIORITY, "looks like a bounce, but our signo is missing");
+      }
 
       if(result.spaminess >= cfg.spam_overall_limit)
          is_spam = 1;

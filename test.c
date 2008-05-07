@@ -1,5 +1,5 @@
 /*
- * test.c, 2008.05.01, SJ
+ * test.c, 2008.05.07, SJ
  *
  * test the bayesian decision with a single message
  */
@@ -62,7 +62,7 @@ int main(int argc, char **argv){
    sdata.uid = 0;
    sdata.num_of_rcpt_to = -1;
    memset(sdata.rcptto[0], 0, MAXBUFSIZE);
-   state = parse_message(argv[2], cfg);
+   state = parse_message(argv[2], sdata, cfg);
 
    result.spaminess = DEFAULT_SPAMICITY;
    result.ham_msg = result.spam_msg = 0;

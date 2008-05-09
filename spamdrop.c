@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2008.05.07, SJ
+ * spamdrop.c, 2008.05.09, SJ
  */
 
 #include <stdio.h>
@@ -215,7 +215,7 @@ int main(int argc, char **argv, char **envp){
 
    sdata.num_of_rcpt_to = 1;
    sdata.uid = getuid();
-   snprintf(sdata.mailfrom, MAXBUFSIZE-1, "%s", from);
+   if(from) snprintf(sdata.mailfrom, MAXBUFSIZE-1, "%s", from);
    memset(sdata.rcptto[0], 0, MAXBUFSIZE);
    memset(whitelistbuf, 0, SMALLBUFSIZE);
    make_rnd_string(&(sdata.ttmpfile[0]));
@@ -223,7 +223,7 @@ int main(int argc, char **argv, char **envp){
    result.spaminess = DEFAULT_SPAMICITY;
    result.ham_msg = result.spam_msg = 0;
 
-   if((strcasecmp(from, "MAILER-DAEMON") == 0 || strcmp(from, "<>") == 0) && strlen(cfg.our_signo) > 3){
+   if(from && (strcasecmp(from, "MAILER-DAEMON") == 0 || strcmp(from, "<>") == 0) && strlen(cfg.our_signo) > 3){
       if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "from: %s, we should really see our signo", from);
       sdata.need_signo_check = 1;
    }

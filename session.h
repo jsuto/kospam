@@ -1,5 +1,5 @@
 /*
- * session.h, 2006.02.14, SJ
+ * session.h, 2008.05.11, SJ
  */
 
 #include "bayes.h"
@@ -13,4 +13,6 @@ void init_child();
 #else
    void postfix_to_clapf(int new_sd, struct __config cfg);
 #endif
+
+int inject_mail(struct session_data sdata, int msg, char *smtpaddr, int smtpport, char *spaminessbuf, struct __config cfg, char *notify);
 

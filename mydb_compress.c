@@ -1,5 +1,5 @@
 /*
- * mydb_compress.c, 2008.04.28, SJ
+ * mydb_compress.c, 2008.05.11, SJ
  */
 
 #include <stdio.h>
@@ -32,6 +32,7 @@ int main(int argc, char **argv){
    unsigned int pos=0;
    unsigned int ntokens=0, old_tokens=0, _15_obsoleted_tokens=0, _60_obsoleted_tokens=0;
    unsigned long x;
+   float Nham, Nspam;
    time_t cclock;
    int i=0, j=0, fd, fdl;
 

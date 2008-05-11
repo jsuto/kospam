@@ -1,5 +1,5 @@
 /*
- * tune.c, 2008.02.15, SJ
+ * tune.c, 2008.05.11, SJ
  */
 
 #include <stdio.h>
@@ -138,7 +138,7 @@ int read_mbox(char *mailbox, int is_spam){
 int main(int argc, char **argv){
    int i, fp, fn, j, k, l, x, y;
    char *configfile=CONFIG_FILE, *hamtest=NULL, *spamtest=NULL;
-
+   float Nham, Nspam;
 
    while((i = getopt(argc, argv, "c:H:S:")) > 0){
        switch(i){
@@ -168,7 +168,7 @@ int main(int argc, char **argv){
    cfg = read_config(configfile);
 
 
-   if(init_mydb(cfg.mydbfile, mhash) != 1){
+   if(init_mydb(cfg.mydbfile, mhash, &Nham, &Nspam) != 1){
       fprintf(stderr, "cannot open: %s\n", cfg.mydbfile);
       return -1;
    }

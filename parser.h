@@ -1,5 +1,5 @@
 /*
- * parser.h, 2008.05.07, SJ
+ * parser.h, 2008.05.11, SJ
  */
 
 #ifndef _PARSER_H
@@ -79,6 +79,7 @@ struct session_data {
    char ttmpfile[3*RND_STR_LEN+1], mailfrom[MAXBUFSIZE], rcptto[MAX_RCPT_TO][MAXBUFSIZE], client_addr[IPLEN], name[SMALLBUFSIZE];
    unsigned long uid;
    int tot_len, num_of_rcpt_to, skip_id_check, need_signo_check;
+   float Nham, Nspam;
 };
 
 

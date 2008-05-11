@@ -1,5 +1,5 @@
 /*
- * session.c, 2008.05.07, SJ
+ * session.c, 2008.05.11, SJ
  */
 
 #include <stdio.h>
@@ -23,7 +23,6 @@ struct timeval tv_start, tv_rcvd, tv_scnd, tv_sent, tv_stop, tv_meta1, tv_meta2;
 struct session_data sdata;
 int x, rc, unknown_client = 0;
 
-int inject_mail(struct session_data sdata, int msg, char *smtpaddr, int smtpport, char *spaminessbuf, struct __config cfg, char *notify);
 
 #ifdef HAVE_MYSQL
    #include <mysql.h>

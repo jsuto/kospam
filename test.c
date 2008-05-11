@@ -1,5 +1,5 @@
 /*
- * test.c, 2008.05.07, SJ
+ * test.c, 2008.05.11, SJ
  *
  * test the bayesian decision with a single message
  */
@@ -99,8 +99,8 @@ int main(int argc, char **argv){
 #endif
 
 #ifdef HAVE_MYDB
-   rc = init_mydb(cfg.mydbfile, mhash);
-   fprintf(stderr, "using %s...\n", cfg.mydbfile);
+   rc = init_mydb(cfg.mydbfile, mhash, &sdata);
+   fprintf(stderr, "using %s. %.0f, %0.f ...\n", cfg.mydbfile, sdata.Nham, sdata.Nspam);
    if(rc == 1){
       result = bayes_file(mhash, argv[2], state, sdata, cfg);
    }

@@ -1,5 +1,5 @@
 /*
- * bayes.c, 2008.05.07, SJ
+ * bayes.c, 2008.05.11, SJ
  */
 
 #include <stdio.h>
@@ -66,7 +66,7 @@ int assign_spaminess(MYSQL mysql, char *p, struct __config cfg, unsigned int uid
 int assign_spaminess(sqlite3 *db, char *p, struct __config cfg, unsigned int uid){
 #endif
 #ifdef HAVE_MYDB
-int assign_spaminess(struct mydb_node *mhash[MAX_MYDB_HASH], char *p, struct __config cfg, unsigned int uid){
+int assign_spaminess(struct mydb_node *mhash[MAX_MYDB_HASH], char *p, struct session_data *sdata, struct __config cfg, unsigned int uid){
 #endif
 
    float spaminess=0;
@@ -84,7 +84,7 @@ int assign_spaminess(struct mydb_node *mhash[MAX_MYDB_HASH], char *p, struct __c
    spaminess = SQL_QUERY(QRY, cfg.group_type, SQL_TOKEN_TABLE, p);
 #endif
 #ifdef HAVE_MYDB
-   spaminess = mydbqry(mhash, p, cfg.rob_s, cfg.rob_x);
+   spaminess = mydbqry(mhash, p, sdata, cfg.rob_s, cfg.rob_x);
 #endif
 
    /* if it was at the Subject: header line, let's try it if it were not in the Subject line, 2006.05.03, SJ */
@@ -107,7 +107,7 @@ int assign_spaminess(struct mydb_node *mhash[MAX_MYDB_HASH], char *p, struct __c
       spaminess = SQL_QUERY(QRY, cfg.group_type, SQL_TOKEN_TABLE, t);
    #endif
    #ifdef HAVE_MYDB
-      spaminess = mydbqry(mhash, t, cfg.rob_s, cfg.rob_x);
+      spaminess = mydbqry(mhash, t, sdata, cfg.rob_s, cfg.rob_x);
    #endif
    }
 
@@ -145,7 +145,7 @@ int walk_hash(MYSQL mysql, struct node *xhash[MAXHASH], struct __config cfg){
 int walk_hash(sqlite3 *db, struct node *xhash[MAXHASH], struct __config cfg){
 #endif
 #ifdef HAVE_MYDB
-int walk_hash(struct mydb_node *mhash[MAX_MYDB_HASH], struct node *xhash[MAXHASH], struct __config cfg){
+int walk_hash(struct mydb_node *mhash[MAX_MYDB_HASH], struct node *xhash[MAXHASH], struct session_data *sdata, struct __config cfg){
 #endif
 
    int i, n=0;
@@ -163,7 +163,7 @@ int walk_hash(struct mydb_node *mhash[MAX_MYDB_HASH], struct node *xhash[MAXHASH
          assign_spaminess(db, p->str, cfg, QRY.uid);
       #endif
       #ifdef HAVE_MYDB
-         assign_spaminess(mhash, p->str, cfg, QRY.uid);
+         assign_spaminess(mhash, p->str, sdata, cfg, QRY.uid);
       #endif
 
          n++;
@@ -222,7 +222,7 @@ double eval_tokens(MYSQL mysql, char *spamfile, struct __config cfg, struct _sta
 double eval_tokens(sqlite3 *db, char *spamfile, struct __config cfg, struct _state state){
 #endif
 #ifdef HAVE_MYDB
-double eval_tokens(struct mydb_node *mhash[MAX_MYDB_HASH], char *spamfile, struct __config cfg, struct _state state){
+double eval_tokens(struct mydb_node *mhash[MAX_MYDB_HASH], char *spamfile, struct session_data *sdata, struct __config cfg, struct _state state){
 #endif
 
    unsigned long n = 0;
@@ -268,7 +268,7 @@ double eval_tokens(struct mydb_node *mhash[MAX_MYDB_HASH], char *spamfile, struc
          assign_spaminess(db, p->str, cfg, QRY.uid);
       #endif
       #ifdef HAVE_MYDB
-         assign_spaminess(mhash, p->str, cfg, QRY.uid);
+         assign_spaminess(mhash, p->str, sdata, cfg, QRY.uid);
       #endif
 
          addnode(B_hash, p->str, 0, 0);
@@ -290,7 +290,7 @@ double eval_tokens(struct mydb_node *mhash[MAX_MYDB_HASH], char *spamfile, struc
          assign_spaminess(db, p->str, cfg, QRY.uid);
       #endif
       #ifdef HAVE_MYDB
-         assign_spaminess(mhash, p->str, cfg, QRY.uid);
+         assign_spaminess(mhash, p->str, sdata, cfg, QRY.uid);
       #endif
       }
 
@@ -356,7 +356,7 @@ double eval_tokens(struct mydb_node *mhash[MAX_MYDB_HASH], char *spamfile, struc
    assign_spaminess(db, state.from, cfg, QRY.uid);
 #endif
 #ifdef HAVE_MYDB
-   assign_spaminess(mhash, state.from, cfg, QRY.uid);
+   assign_spaminess(mhash, state.from, sdata, cfg, QRY.uid);
 #endif
 
    addnode(B_hash, state.from, 0, 0);
@@ -392,7 +392,7 @@ double eval_tokens(struct mydb_node *mhash[MAX_MYDB_HASH], char *spamfile, struc
       n_tokens += walk_hash(db, B_hash, cfg);
    #endif
    #ifdef HAVE_MYDB
-      n_tokens += walk_hash(mhash, B_hash, cfg);
+      n_tokens += walk_hash(mhash, B_hash, sdata, cfg);
    #endif
 
       /* consult blacklists about the IPv4 address connecting to us */
@@ -613,8 +613,8 @@ struct c_res bayes_file(struct mydb_node *mhash[MAX_MYDB_HASH], char *spamfile, 
 #endif
 
 #ifdef HAVE_MYDB
-   QRY.ham_msg = Nham;
-   QRY.spam_msg = Nspam;
+   QRY.ham_msg = sdata.Nham;
+   QRY.spam_msg = sdata.Nspam;
 #endif
 
    result.ham_msg = QRY.ham_msg;
@@ -690,7 +690,7 @@ struct c_res bayes_file(struct mydb_node *mhash[MAX_MYDB_HASH], char *spamfile, 
    result.spaminess = eval_tokens(db, p, cfg, state);
 #endif
 #ifdef HAVE_MYDB
-   result.spaminess = eval_tokens(mhash, p, cfg, state);
+   result.spaminess = eval_tokens(mhash, p, &sdata, cfg, state);
 #endif
 
    return result;

@@ -1,5 +1,5 @@
 /*
- * mydb.c, 2008.03.19, SJ
+ * mydb.c, 2008.05.11, SJ
  */
 
 #include <stdio.h>
@@ -32,13 +32,13 @@ struct te {
    unsigned int nspam;
 };
 
-int init_mydb(char *mydb_file, struct mydb_node *xhash[MAX_MYDB_HASH]){
+int init_mydb(char *mydb_file, struct mydb_node *xhash[MAX_MYDB_HASH], struct session_data *sdata){
    int i, n, fd, pos;
    unsigned char buf[N_SIZE*SEGMENT_SIZE];
    unsigned long x;
    struct mydb e;
 
-   pos = Nham = Nspam = 0;
+   pos = sdata->Nham = sdata->Nspam = 0;
 
    for(i=0;i<MAX_MYDB_HASH;i++)
       xhash[i] = NULL;
@@ -59,9 +59,9 @@ int init_mydb(char *mydb_file, struct mydb_node *xhash[MAX_MYDB_HASH]){
    }
 
    read(fd, &x, 4);
-   Nham = (float)x;
+   sdata->Nham = (float)x;
    read(fd, &x, 4);
-   Nspam = (float)x;
+   sdata->Nspam = (float)x;
 
    while((n = read(fd, buf, N_SIZE*SEGMENT_SIZE))){
       for(i=0; i<n/N_SIZE; i++){
@@ -167,7 +167,7 @@ struct mydb_node *findmydb_node(struct mydb_node *xhash[MAX_MYDB_HASH], unsigned
 }
 
 
-float mydbqry(struct mydb_node *xhash[MAX_MYDB_HASH], char *p, float rob_s, float rob_x){
+float mydbqry(struct mydb_node *xhash[MAX_MYDB_HASH], char *p, struct session_data *sdata, float rob_s, float rob_x){
    struct mydb_node *q;
    unsigned long long key;
    float spamicity = DEFAULT_SPAMICITY;
@@ -179,7 +179,7 @@ float mydbqry(struct mydb_node *xhash[MAX_MYDB_HASH], char *p, float rob_s, floa
    q = findmydb_node(xhash, key);
    if(q == NULL) return spamicity;
 
-   spamicity = calc_spamicity(Nham, Nspam, q->nham, q->nspam, rob_s, rob_x);
+   spamicity = calc_spamicity(sdata->Nham, sdata->Nspam, q->nham, q->nspam, rob_s, rob_x);
 
    //fprintf(stderr, "%s %d %d %.4f\n", p, q->nham, q->nspam, spamicity);
 

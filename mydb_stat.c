@@ -1,5 +1,5 @@
 /*
- * mydb_stat.c, 2008.04.23, SJ
+ * mydb_stat.c, 2008.05.11, SJ
  */
 
 #include <stdio.h>
@@ -26,6 +26,7 @@ struct timeval tv_start, tv_stop;
 int main(int argc, char **argv){
    struct stat st;
    struct mydb_node *z, *mhash[MAX_MYDB_HASH];
+   struct session_data sdata;
    unsigned int ntokens=0, old_tokens=0, _15_obsoleted_tokens=0, _60_obsoleted_tokens=0, ham_hapax=0, spam_hapax=0;
    unsigned long long B=0;
    time_t cclock;
@@ -48,7 +49,7 @@ int main(int argc, char **argv){
       return 1;
    }
 
-   rc = init_mydb(argv[1], mhash);
+   rc = init_mydb(argv[1], mhash, &sdata);
    if(rc != 1){
       printf("cannot open %s\n", argv[1]);
       return 0;
@@ -92,7 +93,7 @@ int main(int argc, char **argv){
    close_mydb(mhash);
 
 
-   printf("db size: %ld bytes\nham messages: %0.f\nspam messages: %.0f\n", st.st_size, Nham, Nspam);
+   printf("db size: %ld bytes\nham messages: %0.f\nspam messages: %.0f\n", st.st_size, sdata.Nham, sdata.Nspam);
    printf("number of tokens: %d\n", ntokens);
    printf("obsolete tokens: 15: %d, 60: %d, 90: %d\n", _15_obsoleted_tokens, _60_obsoleted_tokens, old_tokens);
    printf("ham hapaxes: %d, spam hapaxes: %d\n", ham_hapax, spam_hapax);

@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2008.05.09, SJ
+ * spamdrop.c, 2008.05.11, SJ
  */
 
 #include <stdio.h>
@@ -69,7 +69,7 @@ int open_db(char *messagefile){
 #ifdef HAVE_MYDB
    int rc;
 
-   rc = init_mydb(cfg.mydbfile, mhash);
+   rc = init_mydb(cfg.mydbfile, mhash, &sdata);
    if(rc != 1)
       return 0;
 #endif

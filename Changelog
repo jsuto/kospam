@@ -1,3 +1,10 @@
+0.3.31-rc2:
+
+2008.05.11, SJ
+
+Return the number of ham/spam emails while using mydb storage.
+(parser.h, bayes.c, bayes.h, spamdrop.c, mydb.c, mydb.h, mydb_stat.c)
+
 0.3.31-rc1:
 
 2008.05.07, SJ

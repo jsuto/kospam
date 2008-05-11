@@ -789,6 +789,20 @@ void init_child(int new_sd, char *hostid){
 
                      syslog(LOG_PRIORITY, "%s: %.4f %d in %ld [ms]", sdata.ttmpfile, result.spaminess, sdata.tot_len, tvdiff(tv_spam_stop, tv_spam_start)/1000);
 
+
+                     if(sdata.need_signo_check == 1){
+                        if(!sstate.found_our_signo){
+                           syslog(LOG_PRIORITY, "%s: looks like a bounce, but our signo is missing", sdata.ttmpfile);
+                           if(result.spaminess < cfg.spam_overall_limit){
+                              result.spaminess = cfg.spam_overall_limit;
+                              syslog(LOG_PRIORITY, "%s: raising spamicity", sdata.ttmpfile);
+                           }
+                        }
+                        else
+                           syslog(LOG_PRIORITY, "found our signo, this should be a real bounce message");
+                     }
+
+
                      if(result.spaminess >= cfg.spam_overall_limit){
                         memset(reason, 0, SMALLBUFSIZE);
 

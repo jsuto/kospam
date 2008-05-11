@@ -5,6 +5,9 @@
 Return the number of ham/spam emails while using mydb storage.
 (parser.h, bayes.c, bayes.h, spamdrop.c, mydb.c, mydb.h, mydb_stat.c)
 
+Mark fake bounces (backscatter) as spam if our signature is enabled.
+(spamdrop.c)
+
 0.3.31-rc1:
 
 2008.05.07, SJ

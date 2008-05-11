@@ -224,7 +224,7 @@ int main(int argc, char **argv, char **envp){
    result.ham_msg = result.spam_msg = 0;
 
    if(from && (strcasecmp(from, "MAILER-DAEMON") == 0 || strcmp(from, "<>") == 0) && strlen(cfg.our_signo) > 3){
-      if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "from: %s, we should really see our signo", from);
+      if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: from: %s, we should really see our signo", sdata.ttmpfile, from);
       sdata.need_signo_check = 1;
    }
 
@@ -423,19 +423,24 @@ int main(int argc, char **argv, char **envp){
          }
       }
    #endif
-
       if(sdata.need_signo_check == 1){
-         if(state.found_our_signo == 1)
-            syslog(LOG_PRIORITY, "found our signo, this should be a real bounce message");
+         if(!state.found_our_signo){
+            syslog(LOG_PRIORITY, "%s: looks like a bounce, but our signo is missing", sdata.ttmpfile);
+            if(result.spaminess < cfg.spam_overall_limit){
+               result.spaminess = cfg.spam_overall_limit;
+               syslog(LOG_PRIORITY, "%s: raising spamicity", sdata.ttmpfile);
+            }
+         }
          else
-            syslog(LOG_PRIORITY, "looks like a bounce, but our signo is missing");
+            syslog(LOG_PRIORITY, "found our signo, this should be a real bounce message");
       }
+
 
       if(result.spaminess >= cfg.spam_overall_limit)
          is_spam = 1;
       else
          is_spam = 0;
-      
+
 
       if(
          (cfg.training_mode == T_TUM && ( (result.spaminess >= cfg.spam_overall_limit && result.spaminess < 0.99) || (result.spaminess < cfg.max_ham_spamicity && result.spaminess > 0.1) )) ||

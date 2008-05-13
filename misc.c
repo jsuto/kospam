@@ -835,9 +835,9 @@ int is_recipient_in_our_domains(char *rawmail, struct __config cfg){
    p = strchr(email, '@');
    if(!p) return 0;
 
-   //syslog(LOG_PRIORITY, "%s in %s", p+1, cfg.mydomains);
+   //syslog(LOG_PRIORITY, "%s in %s", p, cfg.mydomains);
 
-   if(strstr(cfg.mydomains, p+1)) return 1;
+   if(strstr(cfg.mydomains, p)) return 1;
 
    return 0;
 }

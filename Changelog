@@ -1,5 +1,11 @@
 0.3.31-rc2:
 
+2008.05.12, SJ
+
+Fixed the is_recipient_in_our_domains() function to include
+the '@' sign.
+(misc.c)
+
 2008.05.11, SJ
 
 Return the number of ham/spam emails while using mydb storage.
@@ -24,7 +30,7 @@ is in mydomains.
 
 So to use the anti-backscatter help feature, set the following in clapf.conf:
 
-mydomains=yourdomain1,yourdomain2,...
+mydomains=@yourdomain1,@yourdomain2,...
 our_signo=X-Anti-Backscatter: abcde123
 
 (smtp.c, misc.c, misc.h, cfg.c, cfg.h)

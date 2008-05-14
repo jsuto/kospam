@@ -1,5 +1,5 @@
 /*
- * cgi.h, 2008.04.05, SJ
+ * cgi.h, 2008.05.14, SJ
  */
 
 #ifndef _CGI_H
@@ -18,6 +18,8 @@ struct cgidata {
    char train[SMALLBUFSIZE];
    char user[SMALLBUFSIZE];
    char type[SMALLBUFSIZE];
+   char from[SMALLBUFSIZE];
+   char subject[SMALLBUFSIZE];
    int page;
 };
 
@@ -26,7 +28,7 @@ void errout(char *input, char *s);
 struct cgidata extract_cgi_parameters(char *data);
 void show_users(char *queuedir, char *spamcgi_url);
 void scan_message(char *dir, char *message, char *from, char *subj);
-int check_directory(char *dir, char *username, int page, int page_len, char *spamcgi_url);
+int check_directory(char *dir, char *username, int page, int page_len, char *spamcgi_url, char *mailfrom, char *subject);
 void show_message(char *dir, char *message);
 
 #endif /* _CGI_H */

@@ -1,5 +1,5 @@
 /*
- * cgi.c, 2008.02.13, SJ
+ * cgi.c, 2008.05.14, SJ
  */
 
 #include <stdio.h>
@@ -70,12 +70,34 @@ struct cgidata extract_cgi_parameters(char *data){
       if(p) *p = '\0';
    }
 
+   if((p = strstr(data, "from="))){
+      snprintf(cgi.from, SMALLBUFSIZE-1, "%s", p+5);
+      p = strchr(cgi.from, '&');
+      if(p) *p = '\0';
+   }
+
+   if((p = strstr(data, "subject="))){
+      snprintf(cgi.subject, SMALLBUFSIZE-1, "%s", p+8);
+      p = strchr(cgi.subject, '&');
+      if(p) *p = '\0';
+   }
+
    if((p = strstr(data, "page="))){
       if((q = strchr(p+5, '&'))) *q = '\0';
       cgi.page = atoi(p+5);
    }
 
    return cgi;
+}
+
+
+int is_it_in(char *in, char *what){
+   if(!in) return 0;
+
+   if(!what) return 1;
+
+   if(str_case_str(in, what)) return 1;
+   else return 0;
 }
 
 
@@ -160,7 +182,7 @@ void scan_message(char *dir, char *message, char *from, char *subj){
 }
 
 
-int check_directory(char *dir, char *username, int page, int page_len, char *spamcgi_url){
+int check_directory(char *dir, char *username, int page, int page_len, char *spamcgi_url, char *mailfrom, char *subject){
    int n=0, n_msgs=0, n_spam=0;
    DIR *dh;
    struct dirent **namelist;
@@ -168,7 +190,7 @@ int check_directory(char *dir, char *username, int page, int page_len, char *spa
    struct tm *t;
    char from[SMALLBUFSIZE], subj[SMALLBUFSIZE], date[SMALLBUFSIZE];
    float spam_total_size = 0;
-   
+
    if(dir == NULL)
       return 0;
 
@@ -199,18 +221,21 @@ int check_directory(char *dir, char *username, int page, int page_len, char *spa
    n_msgs = 0;
 
    printf("%s: %d (%.0f bytes)<p>\n", ERR_CGI_NUMBER_OF_SPAM_MESSAGES_IN_QUARANTINE, n_spam, spam_total_size);
-      
+
    printf("<table border=\"0\">\n");
    printf("<tr align=\"middle\"><th>&nbsp;</th><th>%s</th><th>%s</th><th>%s</th><th>&nbsp;</th></tr>\n", CGI_DATE, CGI_FROM, CGI_SUBJECT);
 
    while(n--){
-      if(strlen(namelist[n]->d_name) == RND_STR_LEN-2+2 && namelist[n]->d_name[0] == 's' && namelist[n]->d_name[1] == '.'){
-         memset(subj, 0, SMALLBUFSIZE);
-         memset(from, 0, SMALLBUFSIZE);
+      memset(subj, 0, SMALLBUFSIZE); memset(from, 0, SMALLBUFSIZE);
+      scan_message(dir, namelist[n]->d_name, from, subj);
+
+      if(strlen(namelist[n]->d_name) == RND_STR_LEN-2+2 && namelist[n]->d_name[0] == 's' && namelist[n]->d_name[1] == '.' && is_it_in(subj, subject) && is_it_in(from, mailfrom)){
+         //memset(subj, 0, SMALLBUFSIZE);
+         //memset(from, 0, SMALLBUFSIZE);
 
          n_msgs++;
 
-         scan_message(dir, namelist[n]->d_name, from, subj);
+         //scan_message(dir, namelist[n]->d_name, from, subj);
 
          if(n_msgs > page_len*page && n_msgs <= page_len*(page+1)){
             if(stat(namelist[n]->d_name, &st) == 0){
@@ -243,6 +268,9 @@ int check_directory(char *dir, char *username, int page, int page_len, char *spa
    closedir(dh);
 
    printf("</table><p>\n");
+
+   /* fix the number to return */
+   if(subject) n_spam = n_msgs;
 
    return n_spam;
 }

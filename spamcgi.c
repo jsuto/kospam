@@ -1,5 +1,5 @@
 /*
- * spamcgi.c, 2008.02.13, SJ
+ * spamcgi.c, 2008.05.14, SJ
  */
 
 #include <stdio.h>
@@ -29,7 +29,7 @@ int deliver_message(char *dir, char *message, char *username, struct __config cf
 
 
 int main(){
-   char *p, *q, m[SMALLBUFSIZE], msg[SMALLBUFSIZE], spamqdir[MAXBUFSIZE], user[SMALLBUFSIZE], admin_menu[SMALLBUFSIZE];
+   char *p, *q, m[SMALLBUFSIZE], msg[SMALLBUFSIZE], spamqdir[MAXBUFSIZE], user[SMALLBUFSIZE], admin_menu[SMALLBUFSIZE], mailfrom[SMALLBUFSIZE], subject[SMALLBUFSIZE];
    int clen=0, method=M_UNDEF, n=0, n_spam=0;
    struct cgidata cgi;
    char *input=NULL;
@@ -86,6 +86,9 @@ int main(){
 
       snprintf(spamqdir, MAXBUFSIZE-1, "%s/%c/%s", USER_QUEUE_DIR, user[0], user);
 
+      snprintf(mailfrom, SMALLBUFSIZE-1, "%s", cgi.from);
+      snprintf(subject, SMALLBUFSIZE-1, "%s", cgi.subject);
+
 
       /* show selected message ... */
 
@@ -134,24 +137,37 @@ int main(){
          if(admin_user == 1 && strlen(cgi.user) < 1)
             show_users(USER_QUEUE_DIR, cfg.spamcgi_url);
          else {
+            url_decode(cgi.from);
+            url_decode(cgi.subject);
+
+            printf("<form action=\"%s\" name=\"aaa0\" method=\"gett\">\n", cfg.spamcgi_url);
+            //printf("<input type=\"hidden\" name=\"page\" value=\"%d\">\n", cgi.page);
+            printf("<input type=\"hidden\" name=\"user\" value=\"%s\">\n", cgi.user);
+            printf("<table border=\"0\">\n");
+            printf("<tr><td>%s:</td><td><input type=\"text\" name=\"from\" value=\"%s\"></td></tr>\n", CGI_FROM, cgi.from);
+            printf("<tr><td>%s:</td><td><input type=\"text\" name=\"subject\" value=\"%s\"></td></tr>\n", CGI_SUBJECT, cgi.subject);
+            printf("<tr colspan=\"2\"><td><input type=\"submit\" value=\"OK\"></td></tr>\n");
+            printf("</table>\n");
+            printf("</form>\n\n");
+
             printf("<form action=\"%s\" name=\"aaa1\" method=\"post\">\n", cfg.spamcgi_url);
             printf("<input type=\"hidden\" name=\"topurge\" value=\"1\">\n");
             printf("<input type=\"hidden\" name=\"user\" value=\"%s\">\n", user);
 
-            n_spam = check_directory(spamqdir, user, cgi.page, cfg.page_len, cfg.spamcgi_url);
+            n_spam = check_directory(spamqdir, user, cgi.page, cfg.page_len, cfg.spamcgi_url, cgi.from, cgi.subject);
 
             printf("<input type=\"submit\" value=\"%s\"> <input type=\"reset\" value=\"%s\">\n<input type=\"button\" value=\"%s\" onClick=\"mark_all(true)\"></form><p>\n", ERR_CGI_PURGE_SELECTED, ERR_CGI_CANCEL, ERR_CGI_SELECT_ALL);
          }
 
          if(cgi.page > 0){
-            printf("<a href=\"%s?page=0&user=%s\">First</a> <a href=\"%s?page=%d&user=%s\">Previous</a>\n", cfg.spamcgi_url, user, cfg.spamcgi_url, cgi.page-1, user);
+            printf("<a href=\"%s?page=0&user=%s&from=%s&subject=%s\">First</a> <a href=\"%s?page=%d&user=%s&from=%s&subject=%s\">Previous</a>\n", cfg.spamcgi_url, user, mailfrom, subject, cfg.spamcgi_url, cgi.page-1, user, mailfrom, subject);
          }
 
          if(n_spam >= cfg.page_len*(cgi.page+1) && n_spam > cfg.page_len)
-            printf(" <a href=\"%s?page=%d&user=%s\">Next</a>\n", cfg.spamcgi_url, cgi.page+1, user);
+            printf(" <a href=\"%s?page=%d&user=%s&from=%s&subject=%s\">Next</a>\n", cfg.spamcgi_url, cgi.page+1, user, mailfrom, subject);
 
          if(cgi.page < n_spam/cfg.page_len && n_spam > cfg.page_len)
-            printf(" <a href=\"%s?page=%d&user=%s\">Last</a><p>\n", cfg.spamcgi_url, n_spam/cfg.page_len, user);
+            printf(" <a href=\"%s?page=%d&user=%s&from=%s&subject=%s\">Last</a><p>\n", cfg.spamcgi_url, n_spam/cfg.page_len, user, mailfrom, subject);
 
       }
 

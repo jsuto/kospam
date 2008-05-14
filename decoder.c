@@ -1,5 +1,5 @@
 /*
- * decoder.c, 2008.04.17, SJ
+ * decoder.c, 2008.05.14, SJ
  */
 
 #include <stdio.h>
@@ -41,6 +41,8 @@ void url_decode(char *p){
    int i, c, k=0;
    char ch[3];
 
+   if(p == NULL) return;
+
    for(i=0; i<strlen(p); i++){
       switch(p[i]){
          case '+':
@@ -79,6 +81,8 @@ void url_decode(char *p){
 
 void sanitiseBase64(char *s){
    char *p1;
+
+   if(s == NULL) return;
 
    for(; *s; s++){
       if(b64[(unsigned int)(*s & 0xFF)] == 255){
@@ -153,6 +157,8 @@ void utf8_decode(unsigned char *p){
    unsigned char c, c1, c2;
    char ch[3];
 
+   if(p == NULL) return;
+
    for(i=0; i<strlen((char*)p); i++){
       c = p[i];
 
@@ -200,6 +206,8 @@ void qp_decode(unsigned char *p){
    unsigned char c;
    char ch[3];
 
+   if(p == NULL) return;
+
    for(i=0; i<strlen((char*)p); i++){
       c = p[i];
 
@@ -227,6 +235,8 @@ void qp_decode(unsigned char *p){
 void html_decode(char *p){
    char *q;
    int i, c, k=0;
+
+   if(p == NULL) return;
 
    for(i=0; i<strlen(p); i++){
       c = p[i];

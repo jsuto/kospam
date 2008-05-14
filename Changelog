@@ -1,5 +1,11 @@
 0.3.31-rc2:
 
+2008.05.14, SJ
+
+Searchable spam quarantine. You can search for sender name/address and
+subject.
+(spamcgi.c, cgi.c, cgi.h)
+
 2008.05.12, SJ
 
 Fixed the is_recipient_in_our_domains() function to include

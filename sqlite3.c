@@ -1,5 +1,5 @@
 /*
- * sqlite3.c, 2008.01.23, SJ
+ * sqlite3.c, 2008.05.14, SJ
  */
 
 #include <stdio.h>
@@ -158,7 +158,7 @@ int do_sqlite3_qry(sqlite3 *db, int ham_or_spam, char *token, int train_mode, un
  * insert email entry to queue table
  */
 
-void insert_2_queue(sqlite3 *db, char *tmpfile, unsigned long uid, struct __config cfg, int is_spam){
+void insert_2_queue(sqlite3 *db, struct session_data *sdata, struct __config cfg, int is_spam){
    char buf[SMALLBUFSIZE], *err=NULL;
    unsigned long now=0;
    time_t clock;
@@ -166,7 +166,7 @@ void insert_2_queue(sqlite3 *db, char *tmpfile, unsigned long uid, struct __conf
    time(&clock);
    now = clock;
 
-   snprintf(buf, SMALLBUFSIZE-1, "INSERT INTO %s (id, uid, is_spam, ts) VALUES('%s', %ld, %d, %ld)", SQL_QUEUE_TABLE, tmpfile, uid, is_spam, now);
+   snprintf(buf, SMALLBUFSIZE-1, "INSERT INTO %s (id, uid, is_spam, ts) VALUES('%s', %ld, %d, %ld)", SQL_QUEUE_TABLE, sdata->ttmpfile, sdata->uid, is_spam, now);
 
    sqlite3_exec(db, buf, NULL, NULL, &err);
 }

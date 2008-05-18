@@ -1,5 +1,17 @@
 0.3.31-rc2:
 
+2008.05.18, SJ
+
+Simplified DATA-state related initialisation stuff.
+
+(session.c, parser.c, parser.h, bayes.c)
+
+Assign 0.99 as spamicity if we cannot see our signo in a bounce.
+This should eliminate auto-learn. Please note that some appliances
+may remove our signo from a bounce email.
+
+(session.c, spamdrop.c)
+
 2008.05.14, SJ
 
 Searchable spam quarantine. You can search for sender name/address and

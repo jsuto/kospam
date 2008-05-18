@@ -1,5 +1,5 @@
 /*
- * parser.h, 2008.05.11, SJ
+ * parser.h, 2008.05.18, SJ
  */
 
 #ifndef _PARSER_H
@@ -48,7 +48,6 @@ struct _state {
    int fd;
    int num_of_msword;
    int num_of_images;
-   int unknown_client;
    int train_mode;
    unsigned long c_shit;
    unsigned long c_hex_shit;
@@ -78,7 +77,7 @@ struct _state {
 struct session_data {
    char ttmpfile[3*RND_STR_LEN+1], mailfrom[MAXBUFSIZE], rcptto[MAX_RCPT_TO][MAXBUFSIZE], client_addr[IPLEN], name[SMALLBUFSIZE];
    unsigned long uid;
-   int tot_len, num_of_rcpt_to, skip_id_check, need_signo_check;
+   int fd, tot_len, num_of_rcpt_to, skip_id_check, need_signo_check, unknown_client;
    float Nham, Nspam;
 };
 

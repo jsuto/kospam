@@ -1,5 +1,5 @@
 /*
- * session.c, 2008.05.11, SJ
+ * session.c, 2008.05.18, SJ
  */
 
 #include <stdio.h>
@@ -16,12 +16,10 @@
 #include "av.h"
 #include <clapf.h>
 
-int sd, fd, inj, ret, rav, prevlen=0;
-char prevbuf[MAXBUFSIZE], last2buf[2*MAXBUFSIZE+1];
 struct timezone tz;
 struct timeval tv_start, tv_rcvd, tv_scnd, tv_sent, tv_stop, tv_meta1, tv_meta2;
 struct session_data sdata;
-int x, rc, unknown_client = 0;
+int x, rc;
 
 
 #ifdef HAVE_MYSQL
@@ -40,6 +38,7 @@ int x, rc, unknown_client = 0;
    store *SSTORE;
 #endif
 
+
 /*
  * kill child if it works too long or is frozen
  */
@@ -55,43 +54,31 @@ void kill_child(){
  * init SMTP session
  */
 
-void init_child(int new_sd, char *hostid){
+void init_session_data(struct session_data *sdata){
    int i;
-   char buf[SMALLBUFSIZE];
-
-   memset(sdata.mailfrom, 0, MAXBUFSIZE);
-   memset(sdata.client_addr, 0, IPLEN);
-
-   memset(last2buf, 0, 2*MAXBUFSIZE+1);
-   memset(prevbuf, 0, MAXBUFSIZE);
-
-   inj = ERR_REJECT;
-
-   sdata.uid = 0;
-   sdata.tot_len = 0;
-   sdata.skip_id_check = 0;
-   prevlen = 0;
-   sdata.num_of_rcpt_to = 0;
-   unknown_client = 0;
-
-   for(i=0; i<MAX_RCPT_TO; i++){
-      memset(sdata.rcptto[i], 0, MAXBUFSIZE);
-   }
 
    gettimeofday(&tv_start, &tz);
 
-   make_rnd_string(&(sdata.ttmpfile[0]));
-   unlink(sdata.ttmpfile);
+   sdata->fd = -1;
 
-   fd = open(sdata.ttmpfile, O_CREAT|O_RDWR, S_IRUSR|S_IWUSR);
-   if(fd == -1){
-       syslog(LOG_PRIORITY, "%s: %s", ERR_OPEN_TMP_FILE, sdata.ttmpfile);
-       snprintf(buf, SMALLBUFSIZE-1, SMTP_RESP_421_ERR_TMP, hostid);
-       send(new_sd, buf, strlen(buf), 0);
-       _exit(0);
+   make_rnd_string(&(sdata->ttmpfile[0]));
+   unlink(sdata->ttmpfile);
+
+   memset(sdata->mailfrom, 0, MAXBUFSIZE);
+   memset(sdata->client_addr, 0, IPLEN);
+
+   sdata->uid = 0;
+   sdata->tot_len = 0;
+   sdata->skip_id_check = 0;
+   sdata->num_of_rcpt_to = 0;
+   sdata->unknown_client = 0;
+
+   for(i=0; i<MAX_RCPT_TO; i++){
+      memset(sdata->rcptto[i], 0, MAXBUFSIZE);
    }
 
 }
+
 
 #ifdef HAVE_LIBCLAMAV
    void postfix_to_clapf(int new_sd, struct __config cfg, struct cl_limits limits, struct cl_node *root){
@@ -99,10 +86,12 @@ void init_child(int new_sd, char *hostid){
    void postfix_to_clapf(int new_sd, struct __config cfg){
 #endif
 
-   int i, n, state;
-   char *p, buf[MAXBUFSIZE], acceptbuf[MAXBUFSIZE], queuedfile[SMALLBUFSIZE], email[SMALLBUFSIZE], email2[SMALLBUFSIZE];
+   int i, n, rav=AVIR_OK, inj=ERR_REJECT, state, prevlen=0;
+   char *p, buf[MAXBUFSIZE], prevbuf[MAXBUFSIZE], last2buf[2*MAXBUFSIZE+1], acceptbuf[MAXBUFSIZE];
+   char queuedfile[SMALLBUFSIZE], email[SMALLBUFSIZE], email2[SMALLBUFSIZE];
 
    #ifdef HAVE_ANTIVIRUS
+      int ret;
       char virusinfo[SMALLBUFSIZE];
    #endif
 
@@ -136,11 +125,11 @@ void init_child(int new_sd, char *hostid){
 
    state = SMTP_STATE_INIT;
 
-   init_child(new_sd, cfg.hostid);
+   init_session_data(&sdata);
 
    if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: fork()", sdata.ttmpfile);
 
-   // send 220 LMTP banner
+   /* send 220 SMTP/LMTP banner */
 
 #ifdef HAVE_LMTP
    snprintf(buf, MAXBUFSIZE-1, LMTP_RESP_220_BANNER, cfg.hostid);
@@ -196,7 +185,7 @@ void init_child(int new_sd, char *hostid){
             /* note if the client is unknown, 2007.12.06, SJ */
 
             if(strstr(buf, " NAME=unknown ")){
-               unknown_client = 1;
+               sdata.unknown_client = 1;
             }
 
             send(new_sd, SMTP_RESP_250_OK, strlen(SMTP_RESP_250_OK), 0);
@@ -266,14 +255,28 @@ void init_child(int new_sd, char *hostid){
          if(strncasecmp(buf, SMTP_CMD_DATA, strlen(SMTP_CMD_DATA)) == 0){
             if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: got: %s", sdata.ttmpfile, buf);
 
+
+            memset(last2buf, 0, 2*MAXBUFSIZE+1);
+            memset(prevbuf, 0, MAXBUFSIZE);
+            inj = ERR_REJECT;
+            prevlen = 0;
+
             if(state != SMTP_STATE_RCPT_TO){
                send(new_sd, SMTP_RESP_503_ERR, strlen(SMTP_RESP_503_ERR), 0);
                if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent: %s", sdata.ttmpfile, SMTP_RESP_503_ERR);
             }
             else {
-               state = SMTP_STATE_DATA;
-               send(new_sd, SMTP_RESP_354_DATA_OK, strlen(SMTP_RESP_354_DATA_OK), 0);
-               if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent: %s", sdata.ttmpfile, SMTP_RESP_354_DATA_OK);
+               sdata.fd = open(sdata.ttmpfile, O_CREAT|O_RDWR, S_IRUSR|S_IWUSR);
+               if(sdata.fd == -1){
+                  syslog(LOG_PRIORITY, "%s: %s", ERR_OPEN_TMP_FILE, sdata.ttmpfile);
+                  send(new_sd, SMTP_RESP_451_ERR, strlen(SMTP_RESP_451_ERR), 0);
+               }
+               else {
+                  state = SMTP_STATE_DATA;
+                  send(new_sd, SMTP_RESP_354_DATA_OK, strlen(SMTP_RESP_354_DATA_OK), 0);
+                  if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent: %s", sdata.ttmpfile, SMTP_RESP_354_DATA_OK);
+               }
+
             }
 
             continue;
@@ -319,7 +322,7 @@ void init_child(int new_sd, char *hostid){
             if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: removed", sdata.ttmpfile);
             unlink(sdata.ttmpfile);
 
-            init_child(new_sd, cfg.hostid);
+            init_session_data(&sdata);
 
             state = SMTP_STATE_HELO;
 
@@ -330,7 +333,7 @@ void init_child(int new_sd, char *hostid){
          /* accept mail data */
 
          if(state == SMTP_STATE_DATA){
-            write(fd, buf, n);
+            write(sdata.fd, buf, n);
             sdata.tot_len += n;
 
             /* join the last 2 buffer, 2004.08.30, SJ */
@@ -347,8 +350,8 @@ void init_child(int new_sd, char *hostid){
 
                /* make sure we had a successful read, 2007.11.05, SJ */
 
-               rc = fsync(fd);
-               close(fd);
+               rc = fsync(sdata.fd);
+               close(sdata.fd);
 
                if(rc){
                   syslog(LOG_PRIORITY, "failed writing data: %s", sdata.ttmpfile);
@@ -506,7 +509,6 @@ void init_child(int new_sd, char *hostid){
 
                memset(whitelistbuf, 0, SMALLBUFSIZE);
                sstate = parse_message(sdata.ttmpfile, sdata, cfg);
-               if(unknown_client == 1) sstate.unknown_client = 1;
 
                if(sdata.need_signo_check == 1){
                   if(sstate.found_our_signo == 1)
@@ -794,7 +796,7 @@ void init_child(int new_sd, char *hostid){
                         if(!sstate.found_our_signo){
                            syslog(LOG_PRIORITY, "%s: looks like a bounce, but our signo is missing", sdata.ttmpfile);
                            if(result.spaminess < cfg.spam_overall_limit){
-                              result.spaminess = cfg.spam_overall_limit;
+                              result.spaminess = 0.99;
                               syslog(LOG_PRIORITY, "%s: raising spamicity", sdata.ttmpfile);
                            }
                         }
@@ -928,7 +930,7 @@ void init_child(int new_sd, char *hostid){
 
 QUITTING:
 
-   close(fd);
+   close(sdata.fd);
 
    if(strlen(cfg.queuedir) > 2){
       snprintf(queuedfile, SMALLBUFSIZE-1, "%s/%s", cfg.queuedir, sdata.ttmpfile);

@@ -1,5 +1,5 @@
 /*
- * bayes.c, 2008.05.11, SJ
+ * bayes.c, 2008.05.18, SJ
  */
 
 #include <stdio.h>
@@ -216,10 +216,10 @@ struct _state parse_message(char *spamfile, struct session_data sdata, struct __
  */
 
 #ifdef HAVE_MYSQL
-double eval_tokens(MYSQL mysql, char *spamfile, struct __config cfg, struct _state state){
+double eval_tokens(MYSQL mysql, char *spamfile, struct session_data *sdata, struct __config cfg, struct _state state){
 #endif
 #ifdef HAVE_SQLITE3
-double eval_tokens(sqlite3 *db, char *spamfile, struct __config cfg, struct _state state){
+double eval_tokens(sqlite3 *db, char *spamfile, struct session_data *sdata, struct __config cfg, struct _state state){
 #endif
 #ifdef HAVE_MYDB
 double eval_tokens(struct mydb_node *mhash[MAX_MYDB_HASH], char *spamfile, struct session_data *sdata, struct __config cfg, struct _state state){
@@ -362,7 +362,7 @@ double eval_tokens(struct mydb_node *mhash[MAX_MYDB_HASH], char *spamfile, struc
    addnode(B_hash, state.from, 0, 0);
 
 #ifdef HAVE_XFORWARD
-   if(state.unknown_client == 1 && QRY.ham_msg > NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED){
+   if(sdata->unknown_client == 1 && QRY.ham_msg > NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED){
       spaminess = REAL_SPAM_TOKEN_PROBABILITY;
       n_phrases += addnode(s_phrase_hash, "UNKNOWN_CLIENT*", spaminess, DEVIATION(spaminess));
       n_tokens += addnode(shash, "UNKNOWN_CLIENT*", spaminess, DEVIATION(spaminess));
@@ -684,10 +684,10 @@ struct c_res bayes_file(struct mydb_node *mhash[MAX_MYDB_HASH], char *spamfile, 
    /* evaluate the tokens */
 
 #ifdef HAVE_MYSQL
-   result.spaminess = eval_tokens(mysql, p, cfg, state);
+   result.spaminess = eval_tokens(mysql, p, &sdata, cfg, state);
 #endif
 #ifdef HAVE_SQLITE3
-   result.spaminess = eval_tokens(db, p, cfg, state);
+   result.spaminess = eval_tokens(db, p, &sdata, cfg, state);
 #endif
 #ifdef HAVE_MYDB
    result.spaminess = eval_tokens(mhash, p, &sdata, cfg, state);

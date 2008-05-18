@@ -42,7 +42,6 @@ void init_state(struct _state *state){
    state->iso_8859_2 = 1;
    state->qp = 0;
 
-   state->unknown_client = 0;
    state->html_comment = 0;
 
    state->base64_text = 0;

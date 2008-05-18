@@ -1,5 +1,5 @@
 /*
- * config.h, 2008.04.23, SJ
+ * config.h, 2008.05.18, SJ
  */
 
 #ifndef _CONFIG_H
@@ -8,7 +8,7 @@
 #include <syslog.h>
 #include "clapf-config.h"
 
-#define VERSION "0.3.31-rc1"
+#define VERSION "0.3.31-rc2"
 
 #define HOSTID "av-engine.localhost"
 
@@ -130,7 +130,6 @@
 #define INVALID_HEX_JUNK_LIMIT 40
 #define MAX_HAM_SPAMICITY 0.39
 #define MIN_WORD_LEN 3
-/*#define MAX_WORD_LEN 19*/
 #define MAX_WORD_LEN 25
 #define MAX_TOKEN_LEN 8*MAX_WORD_LEN
 #define DELIMITER ' '

@@ -1,5 +1,5 @@
 /*
- * clapf.c, 2008.04.13, SJ
+ * clapf.c, 2008.05.18, SJ
  */
 
 #include <stdio.h>
@@ -101,6 +101,7 @@ void clean_exit(){
    exit(1);
 }
 
+
 /*
  * exit with an error string
  */
@@ -109,6 +110,7 @@ void fatal(char *s){
    syslog(LOG_PRIORITY, "%s\n", s);
    clean_exit();
 }
+
 
 /*
  * reload configuration
@@ -141,6 +143,7 @@ void reload_config(){
 
    syslog(LOG_PRIORITY, "reloaded config: %s", configfile);
 }
+
 
 /*
  * child handler
@@ -229,10 +232,10 @@ int main(int argc, char **argv){
 
     clen = sizeof(client_addr);
 
-    /* go to the background, 2007.06.01, SJ */
+    /* go to the background */
     if(daemonise == 1) daemon(1, 0);
 
-    /* write pid file, 2007.08.24, SJ */
+    /* write pid file */
 
     f = fopen(cfg.pidfile, "w");
     if(f){
@@ -245,7 +248,7 @@ int main(int argc, char **argv){
 
     for(;;){
 
-       /* let new connections wait if we are too busy now, 2006.01.13, SJ */
+       /* let new connections wait if we are too busy now */
 
        if(nconn >= cfg.max_connections) sig_pause();
 
@@ -272,7 +275,8 @@ int main(int argc, char **argv){
            sig_uncatch(SIGCHLD);
            sig_unblock(SIGCHLD);
 
-           /* handle session, 2006.02.11, SJ */
+           /* handle session */
+
            #ifdef HAVE_LIBCLAMAV
               postfix_to_clapf(new_sd, cfg, limits, engine);
            #else

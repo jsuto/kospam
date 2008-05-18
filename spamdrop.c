@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2008.05.11, SJ
+ * spamdrop.c, 2008.05.18, SJ
  */
 
 #include <stdio.h>
@@ -427,7 +427,7 @@ int main(int argc, char **argv, char **envp){
          if(!state.found_our_signo){
             syslog(LOG_PRIORITY, "%s: looks like a bounce, but our signo is missing", sdata.ttmpfile);
             if(result.spaminess < cfg.spam_overall_limit){
-               result.spaminess = cfg.spam_overall_limit;
+               result.spaminess = 0.99;
                syslog(LOG_PRIORITY, "%s: raising spamicity", sdata.ttmpfile);
             }
          }

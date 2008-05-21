@@ -1,5 +1,5 @@
 /*
- * ooop.c, 2008.05.20, SJ
+ * ooop.c, 2008.05.21, SJ
  */
 
 #include <stdio.h>
@@ -67,8 +67,8 @@ void fatal(char *s){
 void reload_config(){
    cfg = read_config(configfile);
 
-   /*if(chdir(cfg.workdir))
-      fatal(ERR_CHDIR);*/
+   if(chdir(cfg.workdir))
+      fatal(ERR_CHDIR);
 
    syslog(LOG_PRIORITY, "reloaded config: %s", configfile);
 }
@@ -211,7 +211,7 @@ int main(int argc, char **argv){
       if(strcmp(inet_ntoa(client_addr.sin_addr), "127.0.0.1") == 0) use_ssl = 1;
       else use_ssl = 0;
 
-      syslog(LOG_PRIORITY, "connection from client: %s, ssl: %d", inet_ntoa(client_addr.sin_addr), use_ssl);
+      //syslog(LOG_PRIORITY, "connection from client: %s, ssl: %d", inet_ntoa(client_addr.sin_addr), use_ssl);
 
       nconn++;
 
@@ -224,6 +224,7 @@ int main(int argc, char **argv){
          }
       }
       else {
+         syslog(LOG_PRIORITY, "connection from client: %s, ssl: %d", inet_ntoa(client_addr.sin_addr), use_ssl);
 
          sig_uncatch(SIGCHLD);
          sig_unblock(SIGCHLD);

@@ -1,5 +1,5 @@
 /*
- * cfg.c, 2008.05.05, SJ
+ * cfg.c, 2008.05.21, SJ
  */
 
 #include <stdio.h>
@@ -335,6 +335,8 @@ struct __config read_config(char *configfile){
                   if(strcmp(key, "rbl_domain") == 0)
                      memcpy(cfg.rbl_domain, val, MAXVAL-1);
 
+                  if(strcmp(key, "rbl_condemns_the_message") == 0)
+                     cfg.rbl_condemns_the_message = atoi(val);
 
                   if(strcmp(key, "clapf_header_field") == 0)
                      memcpy(cfg.clapf_header_field, val, MAXVAL-1);

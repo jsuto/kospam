@@ -1,5 +1,5 @@
 /*
- * session.c, 2008.05.18, SJ
+ * session.c, 2008.05.21, SJ
  */
 
 #include <stdio.h>
@@ -30,10 +30,13 @@
    int allow_severity = LOG_DEBUG;
    struct request_info req;
 #endif
+#ifdef HAVE_MYDB
+   struct mydb_node *mhash[MAX_MYDB_HASH];
+#endif
 
 
 unsigned long n_msgs, top_lines;
-int sd, inj, ret, prevlen=0, state;
+int sd, inj, ret, prevlen=0, state, dbh;
 char prevbuf[MAXBUFSIZE], last2buf[2*MAXBUFSIZE+1], username[SMALLBUFSIZE], password[SMALLBUFSIZE];
 SSL_CTX *ctx2 = NULL;
 SSL *ssl2 = NULL;
@@ -206,10 +209,14 @@ void ooop(int new_sd, int use_ssl, SSL *ssl, struct __config cfg){
    unsigned long message_size;
    char *p, cmdbuf[MAXBUFSIZE], buf[2*MAXBUFSIZE];
    char errmsg[SMALLBUFSIZE], messagefile[3*RND_STR_LEN+1];
+   struct session_data sdata;
+   struct _state sstate;
+   struct c_res result;
 
 
    init_child();
    state = POP3_STATE_INIT;
+   dbh = 0;
 
 #ifdef HAVE_LIBWRAP
    request_init(&req, RQ_DAEMON, PROGNAME, RQ_FILE, new_sd, 0);
@@ -313,6 +320,20 @@ void ooop(int new_sd, int use_ssl, SSL *ssl, struct __config cfg){
          write1(new_sd, errmsg, 0, ssl);
 
          if(ret == 0) goto QUITTING;
+
+
+         /* load user profile now... */
+
+         cfg.training_mode = 0;
+         cfg.initial_1000_learning=0;
+
+         sdata.uid = 0;
+         sdata.num_of_rcpt_to = -1;
+         memset(sdata.rcptto[0], 0, MAXBUFSIZE);
+
+         /* open database */
+
+         dbh = init_mydb(cfg.mydbfile, mhash, &sdata);
 
          state = POP3_STATE_PASS;
 
@@ -423,8 +444,36 @@ void ooop(int new_sd, int use_ssl, SSL *ssl, struct __config cfg){
                close(fd);
                syslog(LOG_PRIORITY, "processing message");
 
-               if(process_message(messagefile, cfg) >= cfg.spam_overall_limit)
+               sstate = parse_message(messagefile, sdata, cfg);
+
+               /*
+                * TODO: whitelist check
+                */
+
+
+
+
+               /* rbl first, if it can condemn the message */
+
+               if(cfg.rbl_condemns_the_message == 1){
+                  reverse_ipv4_addr(sstate.ip);
+                  if(rbl_list_check(cfg.rbl_domain, sstate.ip) == 1){
+                     is_spam = 1;
+                     syslog(LOG_PRIORITY, "found on rbl: %s", sstate.ip); 
+                     goto END_OF_SPAMCHECK;
+                  }
+               }
+
+               /* statistical check */
+
+               result = bayes_file(mhash, messagefile, sstate, sdata, cfg);
+
+               if(result.spaminess >= cfg.spam_overall_limit)
                   is_spam = 1;
+
+            END_OF_SPAMCHECK:
+
+               free_and_print_list(sstate.first, 0);
 
                /*
                   we sending everything to the client via cleartext, and stunnel
@@ -538,6 +587,10 @@ INVALID_CMD:
 QUITTING:
 
    close(sd);
+
+#ifdef HAVE_MYDB
+   close_mydb(mhash);
+#endif
 
    if(use_ssl == 1){
       SSL_free(ssl2);

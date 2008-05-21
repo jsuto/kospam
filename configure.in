@@ -727,4 +727,4 @@ OBJS="misc.o cfg.o smtp.o sig.o decoder.o parser.o cgi.o $objs"
 
 AC_OUTPUT(Makefile)
 AC_OUTPUT(contrib/spamsum/Makefile)
-
+AC_OUTPUT(contrib/ooop/Makefile)

@@ -1,5 +1,5 @@
 /*
- * config.h, 2008.05.18, SJ
+ * config.h, 2008.05.20, SJ
  */
 
 #ifndef _CONFIG_H
@@ -7,6 +7,9 @@
 
 #include <syslog.h>
 #include "clapf-config.h"
+
+#define PROGNAME "clapf"
+#define OOOPNAME "ooop"
 
 #define VERSION "0.3.31-rc2"
 
@@ -23,7 +26,8 @@
 #define LISTEN_ADDR "127.0.0.1"
 #define LISTEN_PORT 10025
 
-#define LISTEN_SSL_PORT 995
+#define POP3_LISTEN_PORT 110
+#define POP3_LISTEN_SSL_PORT 995
 
 #define POSTFIX_ADDR "127.0.0.1"
 #define POSTFIX_PORT 10026
@@ -57,7 +61,6 @@
 #define PIDFILE WORK_DIR "/clapf.pid"
 #define PER_USER_DIR ".clapf"
 #define QUARANTINELEN 255
-#define PROGNAME "clapf"
 #define BACKLOG 20
 #define MAXCONN 30
 #define TIMEOUT 60

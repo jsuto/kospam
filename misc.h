@@ -60,4 +60,6 @@ double chi2inv(double x, double df, double esf);
 unsigned int spamsum_match_db(const char *fname, const char *sum, unsigned int threshold);
 char *spamsum_file(const char *fname, unsigned int flags, unsigned int block_size);
 
+unsigned long resolve_host(char *h);
+
 #endif /* _MISC_H */

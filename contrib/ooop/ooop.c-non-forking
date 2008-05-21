@@ -1,0 +1,301 @@
+/*
+ * ooop.c, 2008.05.19, SJ
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <sys/time.h>
+#include <sys/wait.h>
+#include <sys/stat.h>
+#include <openssl/ssl.h>
+#include <fcntl.h>
+#include <signal.h>
+#include <syslog.h>
+#include <time.h>
+#include <unistd.h>
+#include <errno.h>
+#include <clapf.h>
+#include "sig.h"
+#include "cfg.h"
+#include "ooop-util.h"
+
+
+extern char *optarg;
+extern int optind;
+
+int sd, sd_ssl;
+int nconn = 0;
+char *configfile = CONFIG_FILE;
+struct __config cfg;
+
+
+void ooop(int new_sd, int use_ssl, SSL *ssl, struct __config cfg);
+
+
+/*
+ * release everything before we exit
+ */
+
+void clean_exit(){
+   if(sd != -1)
+      close(sd);
+
+   if(sd_ssl != -1)
+      close(sd_ssl);
+
+   syslog(LOG_PRIORITY, "%s has been terminated", PROGNAME);
+   exit(1);
+}
+
+
+/*
+ * exit with an error string
+ */
+
+void fatal(char *s){
+   syslog(LOG_PRIORITY, "%s\n", s);
+   clean_exit();
+}
+
+
+/*
+ * reload configuration
+ */
+
+void reload_config(){
+   cfg = read_config(configfile);
+
+   /*if(chdir(cfg.workdir))
+      fatal(ERR_CHDIR);*/
+
+   syslog(LOG_PRIORITY, "reloaded config: %s", configfile);
+}
+
+
+/*
+ * child handler
+ */
+
+void sigchld(){
+   int wstat;
+   int pid;
+
+   while((pid = wait_nohang(&wstat)) > 0){
+      if(nconn > 0) nconn--;
+   }
+}
+
+
+int main(int argc, char **argv){
+   int i, j, new_sd, new_sd_ssl, yes=1, pid, daemonise=0;
+   int uid=0, gid=0;
+   unsigned int clen;
+   struct sockaddr_in client_addr, serv_addr, serv_addr_ssl;
+   struct in_addr addr;
+   fd_set master;
+   fd_set read_fds;
+   int fdmax;
+   SSL_CTX *ctx = NULL;
+   SSL *ssl = NULL;
+   SSL_METHOD *meth = NULL;
+
+   while((i = getopt(argc, argv, "c:u:g:dVh")) > 0){
+       switch(i){
+
+         case 'c' :
+                    configfile = optarg;
+                    break;
+
+         case 'u' :
+                    uid = atoi(optarg);
+                    break;
+
+
+         case 'g' :
+                    gid = atoi(optarg);
+                    break;
+
+
+         case 'd' :
+                    daemonise = 1;
+                    break;
+
+         case 'V' :
+                    __fatal(PROGNAME " " VERSION);
+                    break;
+
+         case 'h' :
+         default  : 
+                    __fatal("usage: " PROGNAME " -c <config file> -u <uid> -g <gid> -d");
+       }
+   }
+
+   (void) openlog(PROGNAME, LOG_PID, LOG_MAIL);
+
+   signal(SIGINT, clean_exit);
+   signal(SIGQUIT, clean_exit);
+   signal(SIGKILL, clean_exit);
+   signal(SIGTERM, clean_exit);
+   signal(SIGHUP, reload_config);
+
+   sig_block(SIGCHLD);
+   sig_catch(SIGCHLD, sigchld);
+
+   reload_config();
+
+   if((sd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
+      fatal(ERR_OPEN_SOCKET);
+
+   if((sd_ssl = socket(AF_INET, SOCK_STREAM, 0)) == -1)
+      fatal(ERR_OPEN_SOCKET);
+
+   SSL_load_error_strings();
+   SSLeay_add_ssl_algorithms();
+   meth = SSLv23_server_method();
+
+   ctx = SSL_CTX_new(meth);
+   if(ctx == NULL) fatal("ctx error");
+
+   if(SSL_CTX_use_certificate_file(ctx, cfg.ssl_cert_file, SSL_FILETYPE_PEM) <= 0)
+      _fatal("cannot read certificate file");
+
+   if(SSL_CTX_use_PrivateKey_file(ctx, cfg.ssl_key_file, SSL_FILETYPE_PEM) <= 0)
+      _fatal("cannot read private key file");
+
+   if(!SSL_CTX_check_private_key(ctx))
+      _fatal("Private key does not match the certificate public key");
+
+
+   serv_addr.sin_family = AF_INET;
+   serv_addr.sin_port = htons(cfg.listen_port);
+   inet_aton(cfg.listen_addr, &addr);
+   serv_addr.sin_addr.s_addr = addr.s_addr;
+   bzero(&(serv_addr.sin_zero), 8);
+
+   if(setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1)
+       fatal(ERR_SET_SOCK_OPT);
+
+   if(bind(sd, (struct sockaddr *)&serv_addr, sizeof(struct sockaddr)) == -1)
+       fatal(ERR_BIND_TO_PORT);
+
+   if(listen(sd, cfg.backlog) == -1)
+       fatal(ERR_LISTEN);
+
+
+
+   serv_addr_ssl.sin_family = AF_INET;
+   serv_addr_ssl.sin_port = htons(cfg.listen_ssl_port);
+   inet_aton(cfg.listen_addr, &addr);
+   serv_addr_ssl.sin_addr.s_addr = addr.s_addr;
+   bzero(&(serv_addr_ssl.sin_zero), 8);
+
+   if(setsockopt(sd_ssl, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1)
+       fatal(ERR_SET_SOCK_OPT);
+
+   if(bind(sd_ssl, (struct sockaddr *)&serv_addr_ssl, sizeof(struct sockaddr)) == -1)
+       fatal(ERR_BIND_TO_PORT);
+
+   if(listen(sd_ssl, cfg.backlog) == -1)
+       fatal(ERR_LISTEN);
+
+
+   /* we do not need root privs any longer */
+   drop_root(uid, gid);
+
+
+   syslog(LOG_PRIORITY, "%s %s starting", PROGNAME, VERSION);
+
+
+   clen = sizeof(client_addr);
+
+   /* go to the background */
+   if(daemonise == 1) daemon(1, 0);
+
+   FD_ZERO(&master);
+   FD_ZERO(&read_fds);
+
+   FD_SET(sd, &master);
+   FD_SET(sd_ssl, &master);
+
+   fdmax = sd;
+   if(sd_ssl > sd) fdmax = sd_ssl;
+
+   /* main accept loop */
+
+   int nbytes;
+   char buf[256];
+
+   for(;;){
+      read_fds = master; // copy it
+      if(select(fdmax+1, &read_fds, NULL, NULL, NULL) == -1){
+         perror("select");
+         exit(1);
+      }
+
+
+      /* run through the existing connections looking for data to read */
+
+      for(i=0; i <= fdmax; i++){
+         if(FD_ISSET(i, &read_fds)){ // we got one!!
+
+            /* handle new connections */
+
+            if(i == sd){
+               if((new_sd = accept(sd, (struct sockaddr *)&client_addr, &clen)) != -1){
+                  FD_SET(new_sd, &master);
+                  if(new_sd > fdmax) fdmax = new_sd;
+
+                  printf("selectserver: new connection from %s on socket %d\n", inet_ntoa(client_addr.sin_addr), new_sd);
+
+                  send(new_sd, "+OK\r\n", 5, 0);
+               }
+            }
+
+            else if(i == sd_ssl){
+               if((new_sd_ssl = accept(sd_ssl, (struct sockaddr *)&client_addr, &clen)) != -1){
+                  FD_SET(new_sd_ssl, &master);
+                  if(new_sd_ssl > fdmax) fdmax = new_sd_ssl;
+
+                  printf("selectserver: new SSL connection from %s on socket %d\n", inet_ntoa(client_addr.sin_addr), new_sd);
+
+                  send(new_sd, "+OK SSL\r\n", 9, 0);
+               }
+            }
+
+            else{
+               /* handle data from a client */
+
+               if((nbytes = recv(i, buf, sizeof buf, 0)) <= 0){
+
+                  /* let's close the connection */
+
+                  if(nbytes == 0){
+                     printf("selectserver: socket %d hung up\n", i);
+                  }
+                  close(i);
+                  FD_CLR(i, &master);
+
+                  if(i == new_sd) new_sd = -1;
+                  if(i == new_sd_ssl) new_sd_ssl = -1;
+
+               } else {
+                  /* we got some data from a client */
+
+                  printf("we got (new_sd: %d, new_sd_ssl: %d, i: %d): %s", new_sd, new_sd_ssl, i, buf);
+               }
+
+            }
+
+
+         }
+      }
+
+   }
+
+   return 0;
+}

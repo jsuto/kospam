@@ -13,6 +13,7 @@ struct __config {
 
    char listen_addr[MAXVAL];
    int listen_port;
+   int listen_ssl_port;
 
    char postfix_addr[MAXVAL];
    int postfix_port;

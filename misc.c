@@ -841,3 +841,24 @@ int is_recipient_in_our_domains(char *rawmail, struct __config cfg){
 
    return 0;
 }
+
+
+/*
+ * resolve a hostname or dotted IPv4 address
+ */
+
+unsigned long resolve_host(char *h){
+   struct hostent *host;
+   struct in_addr addr;
+
+   if(!h) return 0;
+
+   if((addr.s_addr = inet_addr(h)) == -1){
+       if((host = gethostbyname(h)) == NULL){
+          return 0;
+       }
+       else return *(unsigned long*)host->h_addr;
+   }
+   else return addr.s_addr;
+}
+

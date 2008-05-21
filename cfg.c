@@ -49,6 +49,7 @@ struct __config read_config(char *configfile){
 
    strncpy(cfg.listen_addr, LISTEN_ADDR, MAXVAL-1);
    cfg.listen_port = LISTEN_PORT;
+   cfg.listen_ssl_port = POP3_LISTEN_SSL_PORT;
 
    strncpy(cfg.postfix_addr, POSTFIX_ADDR, MAXVAL-1);
    cfg.postfix_port = POSTFIX_PORT;
@@ -174,6 +175,9 @@ struct __config read_config(char *configfile){
 
                   if(strcmp(key, "listen_port") == 0)
                      cfg.listen_port = atoi(val);
+
+                  if(strcmp(key, "listen_ssl_port") == 0)
+                     cfg.listen_ssl_port = atoi(val);
 
                   if(strcmp(key, "postfix_addr") == 0)
                      memcpy(cfg.postfix_addr, val, MAXVAL-1);

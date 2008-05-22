@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2008.05.18, SJ
+ * spamdrop.c, 2008.05.22, SJ
  */
 
 #include <stdio.h>
@@ -472,8 +472,11 @@ int main(int argc, char **argv, char **envp){
    /* if this is a blackhole request and spaminess < 0.99, then learn the message in an iterative loop */
    /****************************************************************************************************/
 
+#ifdef HAVE_BLACKHOLE
    if(blackhole_request == 1 && result.spaminess < 0.99){
       rounds = MAX_ITERATIVE_TRAIN_LOOPS;
+
+      syslog(LOG_PRIORITY, "%s: training on a blackhole message", sdata.ttmpfile);
 
    #ifdef HAVE_MYSQL
       train_message(mysql, sdata, state, rounds, 1, T_TOE, cfg);
@@ -485,12 +488,9 @@ int main(int argc, char **argv, char **envp){
       train_message(cfg.mydbfile, mhash, sdata, state, rounds, 1, T_TOE, cfg);
    #endif
 
-   #ifdef HAVE_BLACKHOLE
       put_ip_to_dir(cfg.blackhole_path, state.ip);
-      syslog(LOG_PRIORITY, "%s: training on a blackhole message", sdata.ttmpfile);
-   #endif
    }
-
+#endif
 
    /* close db handles */
 

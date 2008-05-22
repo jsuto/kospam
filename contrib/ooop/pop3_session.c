@@ -1,5 +1,5 @@
 /*
- * session.c, 2008.05.21, SJ
+ * pop3_session.c, 2008.05.22, SJ
  */
 
 #include <stdio.h>
@@ -144,12 +144,12 @@ int send_message_to_client(int sd, int use_ssl, SSL *ssl, char *messagefile, int
    }
 
    if(is_spam == 1){
-      snprintf(spaminessbuf, SMALLBUFSIZE-1, "\r\n%s\r\n\r\n", cfg.clapf_spam_header_field);
+      snprintf(spaminessbuf, SMALLBUFSIZE-1, "\r\n%s%s\r\n%s\r\n\r\n", cfg.clapf_header_field, messagefile, cfg.clapf_spam_header_field);
       if(strlen(cfg.spam_subject_prefix) > 1)
          put_subject_spam_prefix = 1;
    }
    else
-      snprintf(spaminessbuf, SMALLBUFSIZE-1, "\r\n%sOK\r\n\r\n", cfg.clapf_header_field);
+      snprintf(spaminessbuf, SMALLBUFSIZE-1, "\r\n%s%s\r\n%sOK\r\n\r\n", cfg.clapf_header_field, messagefile, cfg.clapf_header_field);
 
    while((n = read(fd, bigbuf, MAX_MAIL_HEADER_SIZE)) > 0){
       num_of_reads++;
@@ -217,6 +217,7 @@ void ooop(int new_sd, int use_ssl, SSL *ssl, struct __config cfg){
    init_child();
    state = POP3_STATE_INIT;
    dbh = 0;
+   prevlen = 0;
 
 #ifdef HAVE_LIBWRAP
    request_init(&req, RQ_DAEMON, PROGNAME, RQ_FILE, new_sd, 0);
@@ -235,27 +236,32 @@ void ooop(int new_sd, int use_ssl, SSL *ssl, struct __config cfg){
 
    while((n = recvtimeoutssl(new_sd, cmdbuf, MAXBUFSIZE-1, TIMEOUT, 0, ssl)) > 0){
 
-      //syslog(LOG_PRIORITY, "got command: %s", cmdbuf);
+      //syslog(LOG_PRIORITY, "got command: %s (%d)", cmdbuf, n);
 
-      /* read command */
+      /* buffer command until we get \r\n */
 
-      if(prevlen == 0) memset(buf, 0, 2*MAXBUFSIZE);
+      if(n >= 2){
+         memset(buf, 0, 2*MAXBUFSIZE);
+         prevlen = 0;
+      }
 
-      memcpy(&buf[0]+prevlen, cmdbuf, n);
+      /* copy or append */
+
+      memcpy(buf+prevlen, cmdbuf, n);
       prevlen += n;
 
-      if(prevlen < 3) continue;
+      if(search_in_buf(buf, 2*MAXBUFSIZE, "\r\n", 2) == 0){
 
-      if(buf[prevlen-2] != '\r' || buf[prevlen-1] != '\n'){
-         if(prevlen > MAXBUFSIZE){
-            write1(new_sd, POP3_RESP_INVALID_CMD, 0, ssl);
-            prevlen = 0;
-         }
+         /* don't let the client bother us any longer if he will not want to send
+            the trailing \r\n sequence */
+
+         if(prevlen >= MAXBUFSIZE) goto QUITTING;
 
          continue;
       }
 
-      prevlen = 0;
+
+
 
 
       /* QUIT command */
@@ -422,8 +428,6 @@ void ooop(int new_sd, int use_ssl, SSL *ssl, struct __config cfg){
                message_size = atol(++p);
             }
 
-            syslog(LOG_PRIORITY, "message size: %ld", message_size);
-
             strncpy(buf, "RETR", 4);
 
             write1(sd, buf, use_ssl, ssl2);
@@ -436,13 +440,13 @@ void ooop(int new_sd, int use_ssl, SSL *ssl, struct __config cfg){
                fd = open(messagefile, O_CREAT|O_EXCL|O_RDWR|O_TRUNC, S_IRUSR|S_IWUSR);
             }
 
-            syslog(LOG_PRIORITY, "reading message from remote pop3 server");
+            syslog(LOG_PRIORITY, "%s: reading message from remote pop3 server", messagefile);
             read_until_period(new_sd, ssl, sd, ssl2, use_ssl, fd);
-            syslog(LOG_PRIORITY, "reading %ld bytes is done", message_size);
+            syslog(LOG_PRIORITY, "%s: reading %ld bytes is done", messagefile, message_size);
 
             if(fd != -1){
                close(fd);
-               syslog(LOG_PRIORITY, "processing message");
+               syslog(LOG_PRIORITY, "%s: processing message", messagefile);
 
                sstate = parse_message(messagefile, sdata, cfg);
 
@@ -459,7 +463,7 @@ void ooop(int new_sd, int use_ssl, SSL *ssl, struct __config cfg){
                   reverse_ipv4_addr(sstate.ip);
                   if(rbl_list_check(cfg.rbl_domain, sstate.ip) == 1){
                      is_spam = 1;
-                     syslog(LOG_PRIORITY, "found on rbl: %s", sstate.ip); 
+                     syslog(LOG_PRIORITY, "%s: found on rbl: %s", messagefile, sstate.ip); 
                      goto END_OF_SPAMCHECK;
                   }
                }
@@ -480,7 +484,7 @@ void ooop(int new_sd, int use_ssl, SSL *ssl, struct __config cfg){
                   will encrypt it if the client really wants so
                */
 
-               syslog(LOG_PRIORITY, "sending message back to client (spam: %d)", is_spam);
+               syslog(LOG_PRIORITY, "%s: sending message back to client (spam: %d)", messagefile, is_spam);
                send_message_to_client(new_sd, 0, ssl, messagefile, is_spam, cfg);
 
                unlink(messagefile);

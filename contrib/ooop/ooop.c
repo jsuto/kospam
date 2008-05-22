@@ -185,7 +185,7 @@ int main(int argc, char **argv){
    drop_root(uid, gid);
 
 
-   syslog(LOG_PRIORITY, "%s %s starting", OOOPNAME, VERSION);
+   syslog(LOG_PRIORITY, "%s %s starting", OOOPNAME, OOOPVERSION);
 
 
    clen = sizeof(client_addr);

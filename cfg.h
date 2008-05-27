@@ -1,5 +1,5 @@
 /*
- * cfg.h, 2008.05.21, SJ
+ * cfg.h, 2008.05.27, SJ
  */
 
 #ifndef _CFG_H
@@ -81,6 +81,7 @@ struct __config {
    char surbl_domain[MAXVAL];
    char rbl_domain[MAXVAL];
    int rbl_condemns_the_message;
+   int surbl_condemns_the_message;
 
    char clapf_header_field[MAXVAL];
    char clapf_spam_header_field[MAXVAL];

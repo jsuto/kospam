@@ -1,5 +1,5 @@
 /*
- * tune.c, 2008.05.11, SJ
+ * tune.c, 2008.05.26, SJ
  */
 
 #include <stdio.h>
@@ -112,6 +112,7 @@ int read_mbox(char *mailbox, int is_spam){
             run_tests(state, is_spam);
             progressbar(tot_msgs, 2200);
             free_and_print_list(state.first, 0);
+            free_url_list(state.urls);
          }
 
          init_state(st);
@@ -128,6 +129,7 @@ int read_mbox(char *mailbox, int is_spam){
    if(state.first){
       run_tests(state, is_spam);
       free_and_print_list(state.first, 0);
+      free_url_list(state.urls);
    }
 
    fclose(f);

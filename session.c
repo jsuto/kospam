@@ -885,6 +885,7 @@ void init_session_data(struct session_data *sdata){
 
             #ifdef HAVE_ANTISPAM
                free_and_print_list(sstate.first, 0);
+               free_url_list(sstate.urls);
             #endif
 
             #ifdef HAVE_MYSQL

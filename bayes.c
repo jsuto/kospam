@@ -230,11 +230,9 @@ double eval_tokens(struct mydb_node *mhash[MAX_MYDB_HASH], char *spamfile, struc
    float spaminess, spaminess2;
    int found_on_rbl=0, has_embed_image=0, surbl_match=0;
 #ifdef HAVE_SURBL
-   struct node *urlhash[MAXHASH];
-   struct node *P,*Q;
+   struct url *url;
    char surbl_token[MAX_TOKEN_LEN];
-   float n_urls = 0;
-   int i, u, j;
+   int i, j;
 #endif
 
    if(!state.first)
@@ -250,10 +248,6 @@ double eval_tokens(struct mydb_node *mhash[MAX_MYDB_HASH], char *spamfile, struc
    inithash(s_mix);
 
    inithash(B_hash);
-
-#ifdef HAVE_SURBL
-   inithash(urlhash);
-#endif
 
    while(p != NULL){
       q = p->r;
@@ -272,12 +266,6 @@ double eval_tokens(struct mydb_node *mhash[MAX_MYDB_HASH], char *spamfile, struc
       #endif
 
          addnode(B_hash, p->str, 0, 0);
-
-      #ifdef HAVE_SURBL
-         if(strncmp(p->str, "URL*", 4) == 0)
-            n_urls += addnode(urlhash, p->str, 1, 1);
-      #endif
-
       }
 
       /* 2007.06.06, SJ */
@@ -420,37 +408,29 @@ double eval_tokens(struct mydb_node *mhash[MAX_MYDB_HASH], char *spamfile, struc
       /* consult URL blacklists */
 
    #ifdef HAVE_SURBL
-      if(n_urls > 0){
-       for(u=0; u < MAXHASH; u++){
-         Q = urlhash[u];
-         while(Q != NULL){
-            P = Q;
+      if(state.urls){
+         url = state.urls;
 
-            if(strncmp(P->str, "URL*", 4) == 0 && strchr(P->str, '+') == NULL){
-               gettimeofday(&tv1, &tz);
-               i = rbl_list_check(cfg.surbl_domain, P->str+4);
-               gettimeofday(&tv2, &tz);
-            #ifdef DEBUG
-               fprintf(stderr, "surbl check took %ld ms\n", tvdiff(tv2, tv1)/1000);
-            #else
-               if(cfg.verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: surbl check took %ld ms", spamfile, tvdiff(tv2, tv1)/1000);
-            #endif
+         while(url){
+            gettimeofday(&tv1, &tz);
+            i = rbl_list_check(cfg.surbl_domain, url->url_str+4);
+            gettimeofday(&tv2, &tz);
+         #ifdef DEBUG
+            fprintf(stderr, "surbl check for %s (%d) took %ld ms\n", url->url_str+4, i, tvdiff(tv2, tv1)/1000);
+         #else
+            if(cfg.verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: surbl check took %ld ms", spamfile, tvdiff(tv2, tv1)/1000);
+         #endif
+            surbl_match += i;
 
-               surbl_match += i;
-
-               for(j=0; j<i; j++){
-                  snprintf(surbl_token, MAX_TOKEN_LEN-1, "SURBL%d*%s", j, P->str+4);
-                  n_phrases += addnode(s_phrase_hash, surbl_token, REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
-                  n_tokens += addnode(shash, surbl_token, REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
-               }
+            for(j=0; j<i; j++){
+               snprintf(surbl_token, MAX_TOKEN_LEN-1, "SURBL%d*%s", j, url->url_str+4);
+               n_phrases += addnode(s_phrase_hash, surbl_token, REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
+               n_tokens += addnode(shash, surbl_token, REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
+               n_mix += addnode(s_mix, surbl_token, REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
             }
 
-            Q = Q->r;
-            if(P)
-               free(P);
+            url = url->r;
          }
-         urlhash[u] = NULL;
-       }
       }
    #endif
 
@@ -466,11 +446,6 @@ double eval_tokens(struct mydb_node *mhash[MAX_MYDB_HASH], char *spamfile, struc
       }
 
 
-      /*spaminess = calc_score(shash, cfg);
-   #ifdef DEBUG
-      fprintf(stderr, "shash: %.4f\n", spaminess);
-   #endif*/
-
    }
 
 
@@ -481,8 +456,6 @@ END_OF_EVALUATION:
    clearhash(s_mix);
    clearhash(B_hash);
 
-
-   /* TUM training was here ... */
 
 
    /* if the message is unsure, try to determine if it's a spam, 2008.01.09, SJ */

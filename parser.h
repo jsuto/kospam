@@ -1,5 +1,5 @@
 /*
- * parser.h, 2008.05.18, SJ
+ * parser.h, 2008.05.26, SJ
  */
 
 #ifndef _PARSER_H
@@ -27,6 +27,11 @@ struct _token {
 struct attachment {
    int size;
    char type[SMALLBUFSIZE];
+};
+
+struct url {
+   char url_str[URL_LEN];
+   struct url *r;
 };
 
 struct _state {
@@ -67,6 +72,7 @@ struct _state {
    unsigned long n_chain_token;
    struct _token *c_token;
    struct _token *first;
+   struct url *urls;
 
    int found_our_signo;
 
@@ -91,8 +97,5 @@ void init_state(struct _state *state);
 int attachment_by_type(struct _state state, char *type);
 int extract_boundary(char *p, char *boundary, int boundary_len);
 int parse(char *buf, struct _state *state, struct session_data *sdata, struct __config cfg);
-void insert_token(struct _state *state, char *p);
-struct _token *new_token(char *s);
-void free_and_print_list(struct _token *t, int print);
 
 #endif /* _PARSER_H */

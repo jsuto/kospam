@@ -1,5 +1,5 @@
 /*
- * parsembox.c, 2008.05.07, SJ
+ * parsembox.c, 2008.05.26, SJ
  */
 
 #include <stdio.h>
@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include "misc.h"
 #include "decoder.h"
+#include "list.h"
 #include "parser.h"
 #include "cfg.h"
 #include "config.h"
@@ -54,6 +55,7 @@ int main(int argc, char **argv){
                unlink(ifile);
             }
             free_and_print_list(state.first, 1);
+            free_url_list(state.urls);
          }
 
          init_state(&state);
@@ -75,6 +77,7 @@ int main(int argc, char **argv){
       }
 
       free_and_print_list(state.first, 1);
+      free_url_list(state.urls);
    }
 
    fclose(F);

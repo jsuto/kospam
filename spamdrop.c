@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2008.05.22, SJ
+ * spamdrop.c, 2008.05.26, SJ
  */
 
 #include <stdio.h>
@@ -144,9 +144,7 @@ int main(int argc, char **argv, char **envp){
 
    (void) openlog("spamdrop", LOG_PID, LOG_MAIL);
 
-#ifdef HAVE_BLACKHOLE
    if(strstr(argv[0], "blackhole")) blackhole_request = 1;
-#endif
 
    if(train_as_spam == 1 && train_as_ham == 1){
       fprintf(stderr, "%s\n", ERR_TRAIN_AS_HAMSPAM);
@@ -472,7 +470,6 @@ int main(int argc, char **argv, char **envp){
    /* if this is a blackhole request and spaminess < 0.99, then learn the message in an iterative loop */
    /****************************************************************************************************/
 
-#ifdef HAVE_BLACKHOLE
    if(blackhole_request == 1 && result.spaminess < 0.99){
       rounds = MAX_ITERATIVE_TRAIN_LOOPS;
 
@@ -488,9 +485,10 @@ int main(int argc, char **argv, char **envp){
       train_message(cfg.mydbfile, mhash, sdata, state, rounds, 1, T_TOE, cfg);
    #endif
 
+   #ifdef HAVE_BLACKHOLE
       put_ip_to_dir(cfg.blackhole_path, state.ip);
+   #endif
    }
-#endif
 
    /* close db handles */
 
@@ -505,6 +503,7 @@ CLOSE_DB:
 
    /* free structures */
    free_and_print_list(state.first, 0);
+   free_url_list(state.urls);
 
    gettimeofday(&tv_stop, &tz);
 

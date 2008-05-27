@@ -23,3 +23,5 @@ TIMEOUTconnect = 5
 III. New directives in ooop.conf:
 
 rbl_condemns_the_message=1
+surbl_condemns_the_message=1
+

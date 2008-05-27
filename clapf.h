@@ -3,6 +3,7 @@
  */
 
 #include <misc.h>
+#include <list.h>
 #include <bayes.h>
 #include <errmsg.h>
 #include <messages.h>

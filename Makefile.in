@@ -65,13 +65,13 @@ clapf-lib:
 	ldconfig -n .
 	ln -sf libclapf.so.$(CLAPF_VERSION) libclapf.so
 
-parsembox: % : %.o misc.o decoder.o parser.o cfg.o
+parsembox: % : %.o misc.o decoder.o list.o parser.o cfg.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
 
 spamdrop: % : %.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ -lclapf @spamsum_libs@ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
 
-splitmbox: % : %.o misc.o decoder.o parser.o
+splitmbox: % : %.o misc.o decoder.o list.o parser.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
 
 spamcgi spamstat usercgi traincgi trainlogcgi statcgi: % : %.o $(OBJS) $(USER_OBJ) $(MYSQL_OBJS)

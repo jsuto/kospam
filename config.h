@@ -136,6 +136,7 @@
 #define MIN_WORD_LEN 3
 #define MAX_WORD_LEN 25
 #define MAX_TOKEN_LEN 8*MAX_WORD_LEN
+#define URL_LEN 48
 #define DELIMITER ' '
 #define SPAMINESS_HEADER_FIELD "X-Clapf-spamicity: "
 #define BOUNDARY_LEN 255

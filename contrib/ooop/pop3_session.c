@@ -1,5 +1,5 @@
 /*
- * pop3_session.c, 2008.05.22, SJ
+ * pop3_session.c, 2008.05.27, SJ
  */
 
 #include <stdio.h>
@@ -209,10 +209,12 @@ void ooop(int new_sd, int use_ssl, SSL *ssl, struct __config cfg){
    unsigned long message_size;
    char *p, cmdbuf[MAXBUFSIZE], buf[2*MAXBUFSIZE];
    char errmsg[SMALLBUFSIZE], messagefile[3*RND_STR_LEN+1];
+   struct timezone tz;
+   struct timeval tv1, tv2;
    struct session_data sdata;
    struct _state sstate;
    struct c_res result;
-
+   struct url *url;
 
    init_child();
    state = POP3_STATE_INIT;
@@ -468,6 +470,29 @@ void ooop(int new_sd, int use_ssl, SSL *ssl, struct __config cfg){
                   }
                }
 
+
+               /* spam URL check, if it can condemn the message */
+
+               if(sstate.urls && cfg.surbl_condemns_the_message == 1 && strlen(cfg.surbl_domain) > 3){
+                  url = sstate.urls;
+
+                  while(url){
+                     gettimeofday(&tv1, &tz);
+                     ret = rbl_list_check(cfg.surbl_domain, url->url_str+4);
+                     gettimeofday(&tv2, &tz);
+                     if(cfg.verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: surbl check took %ld ms", messagefile, tvdiff(tv2, tv1)/1000);
+
+                     if(ret > 0){
+                        is_spam = 1;
+                        syslog(LOG_PRIORITY, "%s: found on surbl: %s", messagefile, url->url_str+4);
+                        goto END_OF_SPAMCHECK;
+                     }
+
+                      url = url->r;
+                  }
+               }
+
+
                /* statistical check */
 
                result = bayes_file(mhash, messagefile, sstate, sdata, cfg);
@@ -476,11 +501,13 @@ void ooop(int new_sd, int use_ssl, SSL *ssl, struct __config cfg){
                   is_spam = 1;
 
             END_OF_SPAMCHECK:
+               update_tokens(cfg.mydbfile, mhash, sstate.first);
 
                free_and_print_list(sstate.first, 0);
+               free_url_list(sstate.urls);
 
                /*
-                  we sending everything to the client via cleartext, and stunnel
+                  we send everything to the client via cleartext, and stunnel
                   will encrypt it if the client really wants so
                */
 

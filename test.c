@@ -1,5 +1,5 @@
 /*
- * test.c, 2008.05.11, SJ
+ * test.c, 2008.05.26, SJ
  *
  * test the bayesian decision with a single message
  */
@@ -118,6 +118,7 @@ int main(int argc, char **argv){
 #endif
 
    free_and_print_list(state.first, 0);
+   free_url_list(state.urls);
 
    gettimeofday(&tv_spam_stop, &tz);
 

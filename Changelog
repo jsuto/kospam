@@ -1,5 +1,19 @@
 0.3.31-rc2:
 
+2008.05.26, SJ
+
+Modified the spamdrop utility to let it handle blackhole training
+requests even if no blackhole support was enable at compile time.
+Thus only putting/checking IP-addresses in blackhole directory is
+enabled by using --enable-blackhole
+
+(spamdrop.c)
+
+Modified the message parser to create a chained list from URLs.
+We can use this instead the urlhash[] hash array.
+
+(parser.c, parser.h, list.c, list.h, bayes.c, spamdrop.c, session.c, test.c, Makefile.in, configure*)
+
 2008.05.18, SJ
 
 Simplified DATA-state related initialisation stuff.

@@ -1,5 +1,5 @@
 /*
- * pop3_session.c, 2008.05.27, SJ
+ * pop3_session.c, 2008.05.29, SJ
  */
 
 #include <stdio.h>
@@ -205,7 +205,7 @@ int send_message_to_client(int sd, int use_ssl, SSL *ssl, char *messagefile, int
  */
 
 void ooop(int new_sd, int use_ssl, SSL *ssl, struct __config cfg){
-   int n, state, fd, is_spam;
+   int n, state, fd, is_spam, n_ham=0, n_spam=0;
    unsigned long message_size;
    char *p, cmdbuf[MAXBUFSIZE], buf[2*MAXBUFSIZE];
    char errmsg[SMALLBUFSIZE], messagefile[3*RND_STR_LEN+1];
@@ -505,6 +505,11 @@ void ooop(int new_sd, int use_ssl, SSL *ssl, struct __config cfg){
 
                free_and_print_list(sstate.first, 0);
                free_url_list(sstate.urls);
+
+               if(is_spam == 1)
+                  n_spam++;
+               else
+                  n_ham++;
 
                /*
                   we send everything to the client via cleartext, and stunnel

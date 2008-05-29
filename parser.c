@@ -1,5 +1,5 @@
 /*
- * parser.c, 2008.05.26, SJ
+ * parser.c, 2008.05.28, SJ
  */
 
 #include <stdio.h>
@@ -211,7 +211,6 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
 
    state->line_num++;
 
-
    /* check for our anti backscatter signo, SJ */
 
    if(sdata->need_signo_check == 1){
@@ -379,7 +378,8 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
          str_case_str(buf, "multipart/mixed") ||
          str_case_str(buf, "multipart/alternative") ||
          str_case_str(buf, "message/delivery-status") ||
-         str_case_str(buf, "text/rfc822-headers")
+         str_case_str(buf, "text/rfc822-headers") ||
+         str_case_str(buf, "application/ms-tnef")
       ){
 
              state->textplain = 1;

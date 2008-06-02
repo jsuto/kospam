@@ -208,7 +208,7 @@ void ooop(int new_sd, int use_ssl, SSL *ssl, struct __config cfg){
    int n, state, fd, is_spam, n_ham=0, n_spam=0;
    unsigned long message_size;
    char *p, cmdbuf[MAXBUFSIZE], buf[2*MAXBUFSIZE];
-   char errmsg[SMALLBUFSIZE], messagefile[3*RND_STR_LEN+1];
+   char errmsg[SMALLBUFSIZE];
    struct timezone tz;
    struct timeval tv1, tv2;
    struct session_data sdata;
@@ -338,6 +338,7 @@ void ooop(int new_sd, int use_ssl, SSL *ssl, struct __config cfg){
          sdata.uid = 0;
          sdata.num_of_rcpt_to = -1;
          memset(sdata.rcptto[0], 0, MAXBUFSIZE);
+         memset(sdata.ttmpfile, 0, SMALLBUFSIZE);
 
          /* open database */
 
@@ -438,19 +439,19 @@ void ooop(int new_sd, int use_ssl, SSL *ssl, struct __config cfg){
             /* we have to filter this message */
 
             if(message_size > 30 && message_size < cfg.max_message_size_to_filter){
-               make_rnd_string(messagefile);
-               fd = open(messagefile, O_CREAT|O_EXCL|O_RDWR|O_TRUNC, S_IRUSR|S_IWUSR);
+               make_rnd_string(sdata.ttmpfile);
+               fd = open(sdata.ttmpfile, O_CREAT|O_EXCL|O_RDWR|O_TRUNC, S_IRUSR|S_IWUSR);
             }
 
-            syslog(LOG_PRIORITY, "%s: reading message from remote pop3 server", messagefile);
+            syslog(LOG_PRIORITY, "%s: reading message from remote pop3 server", sdata.ttmpfile);
             read_until_period(new_sd, ssl, sd, ssl2, use_ssl, fd);
-            syslog(LOG_PRIORITY, "%s: reading %ld bytes is done", messagefile, message_size);
+            syslog(LOG_PRIORITY, "%s: reading %ld bytes is done", sdata.ttmpfile, message_size);
 
             if(fd != -1){
                close(fd);
-               syslog(LOG_PRIORITY, "%s: processing message", messagefile);
+               syslog(LOG_PRIORITY, "%s: processing message", sdata.ttmpfile);
 
-               sstate = parse_message(messagefile, sdata, cfg);
+               sstate = parse_message(sdata.ttmpfile, sdata, cfg);
 
                /*
                 * TODO: whitelist check
@@ -465,7 +466,7 @@ void ooop(int new_sd, int use_ssl, SSL *ssl, struct __config cfg){
                   reverse_ipv4_addr(sstate.ip);
                   if(rbl_list_check(cfg.rbl_domain, sstate.ip) == 1){
                      is_spam = 1;
-                     syslog(LOG_PRIORITY, "%s: found on rbl: %s", messagefile, sstate.ip); 
+                     syslog(LOG_PRIORITY, "%s: found on rbl: %s", sdata.ttmpfile, sstate.ip); 
                      goto END_OF_SPAMCHECK;
                   }
                }
@@ -480,11 +481,11 @@ void ooop(int new_sd, int use_ssl, SSL *ssl, struct __config cfg){
                      gettimeofday(&tv1, &tz);
                      ret = rbl_list_check(cfg.surbl_domain, url->url_str+4);
                      gettimeofday(&tv2, &tz);
-                     if(cfg.verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: surbl check took %ld ms", messagefile, tvdiff(tv2, tv1)/1000);
+                     if(cfg.verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: surbl check took %ld ms", sdata.ttmpfile, tvdiff(tv2, tv1)/1000);
 
                      if(ret > 0){
                         is_spam = 1;
-                        syslog(LOG_PRIORITY, "%s: found on surbl: %s", messagefile, url->url_str+4);
+                        syslog(LOG_PRIORITY, "%s: found on surbl: %s", sdata.ttmpfile, url->url_str+4);
                         goto END_OF_SPAMCHECK;
                      }
 
@@ -495,7 +496,7 @@ void ooop(int new_sd, int use_ssl, SSL *ssl, struct __config cfg){
 
                /* statistical check */
 
-               result = bayes_file(mhash, messagefile, sstate, sdata, cfg);
+               result = bayes_file(mhash, sstate, sdata, cfg);
 
                if(result.spaminess >= cfg.spam_overall_limit)
                   is_spam = 1;
@@ -516,10 +517,10 @@ void ooop(int new_sd, int use_ssl, SSL *ssl, struct __config cfg){
                   will encrypt it if the client really wants so
                */
 
-               syslog(LOG_PRIORITY, "%s: sending message back to client (spam: %d)", messagefile, is_spam);
-               send_message_to_client(new_sd, 0, ssl, messagefile, is_spam, cfg);
+               syslog(LOG_PRIORITY, "%s: sending message back to client (spam: %d)", sdata.ttmpfile, is_spam);
+               send_message_to_client(new_sd, 0, ssl, sdata.ttmpfile, is_spam, cfg);
 
-               unlink(messagefile);
+               unlink(sdata.ttmpfile);
             }
 
          }

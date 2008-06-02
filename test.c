@@ -1,5 +1,5 @@
 /*
- * test.c, 2008.05.26, SJ
+ * test.c, 2008.06.02, SJ
  *
  * test the bayesian decision with a single message
  */
@@ -48,7 +48,6 @@ int main(int argc, char **argv){
       return 0;
    }
 
-
    cfg = read_config(argv[1]);
 
    /*
@@ -62,6 +61,7 @@ int main(int argc, char **argv){
    sdata.uid = 0;
    sdata.num_of_rcpt_to = -1;
    memset(sdata.rcptto[0], 0, MAXBUFSIZE);
+   snprintf(sdata.ttmpfile, SMALLBUFSIZE-1, "%s", argv[2]);
    state = parse_message(argv[2], sdata, cfg);
 
    result.spaminess = DEFAULT_SPAMICITY;
@@ -74,7 +74,7 @@ int main(int argc, char **argv){
 #ifdef HAVE_MYSQL
    mysql_init(&mysql);
    if(mysql_real_connect(&mysql, cfg.mysqlhost, cfg.mysqluser, cfg.mysqlpwd, cfg.mysqldb, cfg.mysqlport, cfg.mysqlsocket, 0)){
-      result = bayes_file(mysql, argv[2], state, sdata, cfg);
+      result = bayes_file(mysql, state, sdata, cfg);
       mysql_close(&mysql);
    }
    else {
@@ -93,7 +93,7 @@ int main(int argc, char **argv){
           fprintf(stderr, "error happened\n");
 
 
-      result = bayes_file(db, argv[2], state, sdata, cfg);
+      result = bayes_file(db, state, sdata, cfg);
    }
    sqlite3_close(db);
 #endif
@@ -102,7 +102,7 @@ int main(int argc, char **argv){
    rc = init_mydb(cfg.mydbfile, mhash, &sdata);
    fprintf(stderr, "using %s. %.0f, %0.f ...\n", cfg.mydbfile, sdata.Nham, sdata.Nspam);
    if(rc == 1){
-      result = bayes_file(mhash, argv[2], state, sdata, cfg);
+      result = bayes_file(mhash, state, sdata, cfg);
    }
    close_mydb(mhash);
 #endif

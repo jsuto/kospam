@@ -216,13 +216,13 @@ struct _state parse_message(char *spamfile, struct session_data sdata, struct __
  */
 
 #ifdef HAVE_MYSQL
-double eval_tokens(MYSQL mysql, char *spamfile, struct session_data *sdata, struct __config cfg, struct _state state){
+double eval_tokens(MYSQL mysql, struct session_data *sdata, struct __config cfg, struct _state state){
 #endif
 #ifdef HAVE_SQLITE3
-double eval_tokens(sqlite3 *db, char *spamfile, struct session_data *sdata, struct __config cfg, struct _state state){
+double eval_tokens(sqlite3 *db, struct session_data *sdata, struct __config cfg, struct _state state){
 #endif
 #ifdef HAVE_MYDB
-double eval_tokens(struct mydb_node *mhash[MAX_MYDB_HASH], char *spamfile, struct session_data *sdata, struct __config cfg, struct _state state){
+double eval_tokens(struct mydb_node *mhash[MAX_MYDB_HASH], struct session_data *sdata, struct __config cfg, struct _state state){
 #endif
 
    unsigned long n = 0;
@@ -393,7 +393,7 @@ double eval_tokens(struct mydb_node *mhash[MAX_MYDB_HASH], char *spamfile, struc
       #ifdef DEBUG
          fprintf(stderr, "rbl check took %ld ms\n", tvdiff(tv2, tv1)/1000);
       #else
-         if(cfg.verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: rbl check took %ld ms", spamfile, tvdiff(tv2, tv1)/1000);
+         if(cfg.verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: rbl check took %ld ms", sdata->ttmpfile, tvdiff(tv2, tv1)/1000);
       #endif
 
          for(i=0; i<found_on_rbl; i++){
@@ -418,7 +418,7 @@ double eval_tokens(struct mydb_node *mhash[MAX_MYDB_HASH], char *spamfile, struc
          #ifdef DEBUG
             fprintf(stderr, "surbl check for %s (%d) took %ld ms\n", url->url_str+4, i, tvdiff(tv2, tv1)/1000);
          #else
-            if(cfg.verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: surbl check took %ld ms", spamfile, tvdiff(tv2, tv1)/1000);
+            if(cfg.verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: surbl check took %ld ms", sdata->ttmpfile, tvdiff(tv2, tv1)/1000);
          #endif
             surbl_match += i;
 
@@ -478,13 +478,13 @@ END_OF_EVALUATION:
  */
 
 #ifdef HAVE_MYSQL
-struct c_res bayes_file(MYSQL mysql, char *spamfile, struct _state state, struct session_data sdata, struct __config cfg){
+struct c_res bayes_file(MYSQL mysql, struct _state state, struct session_data sdata, struct __config cfg){
 #endif
 #ifdef HAVE_SQLITE3
-struct c_res bayes_file(sqlite3 *db, char *spamfile, struct _state state, struct session_data sdata, struct __config cfg){
+struct c_res bayes_file(sqlite3 *db, struct _state state, struct session_data sdata, struct __config cfg){
 #endif
 #ifdef HAVE_MYDB
-struct c_res bayes_file(struct mydb_node *mhash[MAX_MYDB_HASH], char *spamfile, struct _state state, struct session_data sdata, struct __config cfg){
+struct c_res bayes_file(struct mydb_node *mhash[MAX_MYDB_HASH], struct _state state, struct session_data sdata, struct __config cfg){
 #endif
 
    char buf[MAXBUFSIZE], *p;
@@ -501,11 +501,6 @@ struct c_res bayes_file(struct mydb_node *mhash[MAX_MYDB_HASH], char *spamfile, 
    result.spaminess = DEFAULT_SPAMICITY;
    result.ham_msg = 0;
    result.spam_msg = 0;
-
-   if(spamfile == NULL){
-      syslog(LOG_PRIORITY, "%s: no spamfile", sdata.ttmpfile);
-      return result;
-   }
 
 
    /* init query structure */
@@ -524,11 +519,11 @@ struct c_res bayes_file(struct mydb_node *mhash[MAX_MYDB_HASH], char *spamfile, 
    QRY.rob_x = cfg.rob_x;
 
 
-   p = strrchr(spamfile, '/');
+   p = strrchr(sdata.ttmpfile, '/');
    if(p)
       p++;
    else
-      p = spamfile;
+      p = sdata.ttmpfile;
 
 
    /* evaluate the blackhole result, 2006.10.02, SJ */
@@ -657,13 +652,13 @@ struct c_res bayes_file(struct mydb_node *mhash[MAX_MYDB_HASH], char *spamfile, 
    /* evaluate the tokens */
 
 #ifdef HAVE_MYSQL
-   result.spaminess = eval_tokens(mysql, p, &sdata, cfg, state);
+   result.spaminess = eval_tokens(mysql, &sdata, cfg, state);
 #endif
 #ifdef HAVE_SQLITE3
-   result.spaminess = eval_tokens(db, p, &sdata, cfg, state);
+   result.spaminess = eval_tokens(db, &sdata, cfg, state);
 #endif
 #ifdef HAVE_MYDB
-   result.spaminess = eval_tokens(mhash, p, &sdata, cfg, state);
+   result.spaminess = eval_tokens(mhash, &sdata, cfg, state);
 #endif
 
    return result;

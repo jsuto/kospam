@@ -81,7 +81,7 @@ struct _state {
 };
 
 struct session_data {
-   char ttmpfile[3*RND_STR_LEN+1], mailfrom[MAXBUFSIZE], rcptto[MAX_RCPT_TO][MAXBUFSIZE], client_addr[IPLEN], name[SMALLBUFSIZE];
+   char ttmpfile[SMALLBUFSIZE], mailfrom[MAXBUFSIZE], rcptto[MAX_RCPT_TO][MAXBUFSIZE], client_addr[IPLEN], name[SMALLBUFSIZE];
    unsigned long uid;
    int fd, tot_len, num_of_rcpt_to, skip_id_check, need_signo_check, unknown_client;
    float Nham, Nspam;

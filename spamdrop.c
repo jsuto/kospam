@@ -216,6 +216,7 @@ int main(int argc, char **argv, char **envp){
    if(from) snprintf(sdata.mailfrom, MAXBUFSIZE-1, "%s", from);
    memset(sdata.rcptto[0], 0, MAXBUFSIZE);
    memset(whitelistbuf, 0, SMALLBUFSIZE);
+   memset(sdata.ttmpfile, 0, SMALLBUFSIZE);
    make_rnd_string(&(sdata.ttmpfile[0]));
 
    result.spaminess = DEFAULT_SPAMICITY;
@@ -385,7 +386,7 @@ int main(int argc, char **argv, char **envp){
          syslog(LOG_PRIORITY, "%s: sender (%s) found on whitelist", sdata.ttmpfile, from);
          snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on white list\r\n", cfg.clapf_header_field);
       } else
-         result = bayes_file(mysql, sdata.ttmpfile, state, sdata, cfg);
+         result = bayes_file(mysql, state, sdata, cfg);
 
       update_mysql_tokens(mysql, state.first, sdata.uid);
    #endif
@@ -394,12 +395,12 @@ int main(int argc, char **argv, char **envp){
          syslog(LOG_PRIORITY, "%s: sender (%s) found on whitelist", sdata.ttmpfile, from);
          snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on white list\r\n", cfg.clapf_header_field);
       } else
-         result = bayes_file(db, sdata.ttmpfile, state, sdata, cfg);
+         result = bayes_file(db, state, sdata, cfg);
 
       update_sqlite3_tokens(db, state.first);
    #endif
    #ifdef HAVE_MYDB
-      result = bayes_file(mhash, sdata.ttmpfile, state, sdata, cfg);
+      result = bayes_file(mhash, state, sdata, cfg);
       update_tokens(cfg.mydbfile, mhash, state.first);
    #endif
 

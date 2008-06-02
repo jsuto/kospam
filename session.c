@@ -1,5 +1,5 @@
 /*
- * session.c, 2008.05.18, SJ
+ * session.c, 2008.06.02, SJ
  */
 
 #include <stdio.h>
@@ -61,6 +61,7 @@ void init_session_data(struct session_data *sdata){
 
    sdata->fd = -1;
 
+   memset(sdata->ttmpfile, 0, SMALLBUFSIZE);
    make_rnd_string(&(sdata->ttmpfile[0]));
    unlink(sdata->ttmpfile);
 
@@ -102,7 +103,7 @@ void init_session_data(struct session_data *sdata){
 
    #ifdef HAVE_ANTISPAM
       struct c_res result;
-      char spamfile[MAXBUFSIZE], spaminessbuf[MAXBUFSIZE], reason[SMALLBUFSIZE], qpath[SMALLBUFSIZE], trainbuf[SMALLBUFSIZE], whitelistbuf[SMALLBUFSIZE], ID[RND_STR_LEN+1];
+      char spaminessbuf[MAXBUFSIZE], reason[SMALLBUFSIZE], qpath[SMALLBUFSIZE], trainbuf[SMALLBUFSIZE], whitelistbuf[SMALLBUFSIZE], ID[RND_STR_LEN+1];
     #ifndef HAVE_STORE
       struct stat st;
     #endif
@@ -556,8 +557,6 @@ void init_session_data(struct session_data *sdata){
 
                   if(cfg.use_antispam == 1 && (cfg.max_message_size_to_filter == 0 || sdata.tot_len < cfg.max_message_size_to_filter) ){
                      memset(trainbuf, 0, SMALLBUFSIZE);
-                     memset(spamfile, 0, MAXBUFSIZE);
-                     snprintf(spamfile, MAXBUFSIZE-1, "%s/%s", cfg.workdir, sdata.ttmpfile);
 
                      gettimeofday(&tv_spam_start, &tz);
 
@@ -626,7 +625,7 @@ void init_session_data(struct session_data *sdata){
                            }
                            else {
                               if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: running Bayesian test", sdata.ttmpfile);
-                              result = bayes_file(mysql, spamfile, sstate, sdata, cfg);
+                              result = bayes_file(mysql, sstate, sdata, cfg);
                            }
                            update_mysql_tokens(mysql, sstate.first, sdata.uid);
 
@@ -704,7 +703,7 @@ void init_session_data(struct session_data *sdata){
                            }
                            else {
                               if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: running Bayesian test", sdata.ttmpfile);
-                              result = bayes_file(db, spamfile, sstate, sdata, cfg);
+                              result = bayes_file(db, sstate, sdata, cfg);
                            }
                            update_sqlite3_tokens(db, sstate.first);
 

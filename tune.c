@@ -27,7 +27,7 @@
 #include "mydb.h"
 
 struct mydb_node *mhash[MAX_MYDB_HASH];
-struct c_res bayes_file(struct mydb_node *mhash[MAX_MYDB_HASH], char *spamfile, struct _state state, struct session_data sdata, struct __config cfg);
+struct c_res bayes_file(struct mydb_node *mhash[MAX_MYDB_HASH], struct _state state, struct session_data sdata, struct __config cfg);
 
 extern char *optarg;
 extern int optind;
@@ -73,7 +73,7 @@ void run_tests(struct _state state, int is_spam){
          cfg.esf_h = 1;
          cfg.esf_s = 1;
 
-         result = bayes_file(mhash, sdata.ttmpfile, state, sdata, cfg);
+         result = bayes_file(mhash, state, sdata, cfg);
 
          //printf("radius: %.2f, robs: %.2f, spaminess: %.4f, is_spam: %d\n", exclusion_radius[i], robs[j], result.spaminess, is_spam);
          //printf("radius: %.2f, robs: %.2f, spaminess: %.4f, is_spam: %d\n", e[k].radius, e[k].robs, result.spaminess, is_spam);

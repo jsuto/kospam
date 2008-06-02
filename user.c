@@ -1,5 +1,5 @@
 /*
- * user.c, 2007.12.28, SJ
+ * user.c, 2008.06.02, SJ
  */
 
 #include <stdio.h>
@@ -51,7 +51,7 @@ int deliver_message(char *dir, char *message, char *username, struct __config cf
 
    snprintf(sbuf, SMALLBUFSIZE-1, "%sdelivered from spam quarantine\r\n", cfg.clapf_header_field);
 
-   snprintf(sdata.ttmpfile, 3*RND_STR_LEN-1, "%s", message);
+   snprintf(sdata.ttmpfile, SMALLBUFSIZE-1, "%s", message);
 
    i = inject_mail(sdata, 0, cfg.spam_smtp_addr, cfg.spam_smtp_port, sbuf, cfg, NULL);
 

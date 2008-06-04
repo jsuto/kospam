@@ -61,3 +61,35 @@ void drop_root(int uid, int gid){
       setuid(uid);
 }
 
+
+unsigned int djb_hash(char *str){
+   unsigned long hash = 5381;
+   int i;
+
+   for(i=0; i<strlen(str); i++){
+      hash = ((hash << 5) + hash) + str[i];
+   }
+
+   return (hash % 59999);
+}
+
+
+void get_path_by_name(char *s, char **path){
+   unsigned int h;
+   int i, plus1, plus1b;
+
+   h = djb_hash(s);
+
+   i = h % 10000;
+   if(i > 0) plus1 = 1;
+   else plus1 = 0;
+
+   i = h % 100;
+   if(i > 0) plus1b = 1;
+   else plus1b = 0;
+ 
+   snprintf(*path, SMALLBUFSIZE-1, "%s/%d/%d/%s", USER_DATA_DIR, 10000 * ((h / 10000) + plus1), 100 * ((h / 100) + plus1b), s);
+}
+
+
+

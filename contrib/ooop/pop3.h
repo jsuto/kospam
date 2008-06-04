@@ -1,5 +1,5 @@
 /*
- * pop3.h, 2008.05.18, SJ
+ * pop3.h, 2008.06.04, SJ
  */
 
 // POP3 states
@@ -36,6 +36,7 @@
 #define POP3_RESP_CAPA "+OK Capability list follows\r\nTOP\r\nUIDL\r\n.\r\n"
 #define POP3_RESP_QUIT "+OK POP3 server connection closed\r\n"
 #define POP3_RESP_OK "+OK\r\n"
+#define POP3_RESP_ERR "-ERR\r\n"
 
 #define POP3_RESP_INVALID_AUTH_TYPE "-ERR Unrecognized authentication type\r\n"
 #define POP3_RESP_INVALID_PWD "-ERR Incorrect password or account name\r\n"
@@ -44,4 +45,5 @@
 #define POP3_RESP_INVALID_RETR_ARG "-ERR Invalid argument with RETR\r\n"
 #define POP3_RESP_INTERNAL_ERROR "-ERR Internal error\r\n"
 #define POP3_RESP_NO_SUCH_MESSAGE "-ERR no such message\r\n"
+#define POP3_RESP_NOT_ACTIVATED "-ERR You have not activated your account\r\n"
 

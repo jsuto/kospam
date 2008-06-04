@@ -1,5 +1,5 @@
 /*
- * ooop.c, 2008.05.21, SJ
+ * ooop.c, 2008.06.03, SJ
  */
 
 #include <stdio.h>
@@ -12,7 +12,6 @@
 #include <sys/time.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
-#include <openssl/ssl.h>
 #include <fcntl.h>
 #include <signal.h>
 #include <syslog.h>
@@ -95,9 +94,6 @@ int main(int argc, char **argv){
    struct sockaddr_in client_addr, server_addr;
    struct in_addr addr;
 
-   /*SSL_CTX *ctx = NULL;
-   SSL *ssl = NULL;
-   SSL_METHOD *meth = NULL;*/
 
    while((i = getopt(argc, argv, "c:u:g:dVh")) > 0){
        switch(i){
@@ -145,23 +141,6 @@ int main(int argc, char **argv){
 
    if((sd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
       fatal(ERR_OPEN_SOCKET);
-
-
-   /*SSL_load_error_strings();
-   SSLeay_add_ssl_algorithms();
-   meth = SSLv23_server_method();
-
-   ctx = SSL_CTX_new(meth);
-   if(ctx == NULL) fatal("ctx error");
-
-   if(SSL_CTX_use_certificate_file(ctx, cfg.ssl_cert_file, SSL_FILETYPE_PEM) <= 0)
-      _fatal("cannot read certificate file");
-
-   if(SSL_CTX_use_PrivateKey_file(ctx, cfg.ssl_key_file, SSL_FILETYPE_PEM) <= 0)
-      _fatal("cannot read private key file");
-
-   if(!SSL_CTX_check_private_key(ctx))
-      _fatal("Private key does not match the certificate public key");*/
 
 
    server_addr.sin_family = AF_INET;

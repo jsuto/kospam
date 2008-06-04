@@ -18,9 +18,9 @@ CFLAGS = @CFLAGS@ @CPPFLAGS@
 DEFS = @defs@
 INCDIR = -I. -I../.. @INCDIR@ @mysql_includes@
 LIBDIR = -L../.. @LIBDIR@ @LDFLAGS@
-LIBS = @LIBS@ @mysql_libs@
+LIBS = @LIBS@ @mysql_libs@ -lsqlite3 -lpthread
 LDAP_LIBS = @ldap_libs@
-OBJS = ooop-util.o remote_auth.o pop3_session.o
+OBJS = ooop-util.o prefs.o remote_auth.o pop3_session.o
 
 all: ooop
 

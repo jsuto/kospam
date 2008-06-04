@@ -78,8 +78,9 @@ struct __config {
 
    unsigned long max_message_size_to_filter;
 
-   char surbl_domain[MAXVAL];
    char rbl_domain[MAXVAL];
+   char surbl_domain[MAXVAL];
+
    int rbl_condemns_the_message;
    int surbl_condemns_the_message;
 
@@ -204,6 +205,10 @@ struct __config {
 
    // spamsum
    char sig_db[MAXVAL];
+
+
+   // pop3 stuff
+   int has_personal_db;
 
 };
 

@@ -1,5 +1,5 @@
 /*
- * pop3_session.c, 2008.05.29, SJ
+ * pop3_session.c, 2008.06.04, SJ
  */
 
 #include <stdio.h>
@@ -19,6 +19,7 @@
 #include "messages.h"
 #include "pop3.h"
 #include "ooop-util.h"
+#include "prefs.h"
 #include "cfg.h"
 #include "config.h"
 #include <clapf.h>
@@ -34,6 +35,7 @@
    struct mydb_node *mhash[MAX_MYDB_HASH];
 #endif
 
+#define POP3_USER_DB USER_DATA_DIR "/users.sdb"
 
 unsigned long n_msgs, top_lines;
 int sd, inj, ret, prevlen=0, state, dbh;
@@ -206,9 +208,9 @@ int send_message_to_client(int sd, int use_ssl, SSL *ssl, char *messagefile, int
 
 void ooop(int new_sd, int use_ssl, SSL *ssl, struct __config cfg){
    int n, state, fd, is_spam, n_ham=0, n_spam=0;
-   unsigned long message_size;
+   unsigned long message_size, activation_date=0;
    char *p, cmdbuf[MAXBUFSIZE], buf[2*MAXBUFSIZE];
-   char errmsg[SMALLBUFSIZE];
+   char errmsg[SMALLBUFSIZE], path[SMALLBUFSIZE], tokendb[SMALLBUFSIZE], w[SMALLBUFSIZE], whitelist[MAXBUFSIZE];
    struct timezone tz;
    struct timeval tv1, tv2;
    struct session_data sdata;
@@ -237,8 +239,6 @@ void ooop(int new_sd, int use_ssl, SSL *ssl, struct __config cfg){
    write1(new_sd, POP3_RESP_BANNER, 0, ssl);
 
    while((n = recvtimeoutssl(new_sd, cmdbuf, MAXBUFSIZE-1, TIMEOUT, 0, ssl)) > 0){
-
-      //syslog(LOG_PRIORITY, "got command: %s (%d)", cmdbuf, n);
 
       /* buffer command until we get \r\n */
 
@@ -275,6 +275,12 @@ void ooop(int new_sd, int use_ssl, SSL *ssl, struct __config cfg){
 
          write1(new_sd, cmdbuf, 0, ssl);
 
+         /*
+          * TODO: update ham/spam counters
+          */
+
+
+
          state = POP3_STATE_FINISHED;
 
          goto QUITTING;
@@ -295,9 +301,16 @@ void ooop(int new_sd, int use_ssl, SSL *ssl, struct __config cfg){
             strncpy(username, p, SMALLBUFSIZE-1);
 
             /* USER username:pop3_server_name */
+
+            if(strlen(username) > 5){
+               write1(new_sd, POP3_RESP_SEND_PASS, 0, ssl);
+               continue;
+            }
+
          }
 
-         write1(new_sd, POP3_RESP_SEND_PASS, 0, ssl);
+         write1(new_sd, POP3_RESP_ERR, 0, ssl);
+            
          continue;
       }
 
@@ -325,12 +338,39 @@ void ooop(int new_sd, int use_ssl, SSL *ssl, struct __config cfg){
          create_socket_and_ssl_handler(&sd, &ssl2, &ctx2, use_ssl);
 
          ret = remote_auth(username, password, &sd, &ssl2, use_ssl, &errmsg[0]);
-         write1(new_sd, errmsg, 0, ssl);
-
-         if(ret == 0) goto QUITTING;
-
+         if(ret == 0){
+            write1(new_sd, errmsg, 0, ssl);
+            goto QUITTING;
+         }
 
          /* load user profile now... */
+
+         p = &whitelist[0];
+         get_user_preferences(username, POP3_USER_DB, &cfg, &activation_date, &p);
+
+
+         /* check if he had activated his account */
+
+         if(activation_date == 0){
+            write1(new_sd, POP3_RESP_NOT_ACTIVATED, 0, ssl);
+            goto QUITTING;
+         }
+
+         write1(new_sd, errmsg, 0, ssl);
+
+         /* determine token db to use */
+
+         if(cfg.has_personal_db == 1){
+            p = &path[0];
+            get_path_by_name(username, &p);
+
+            snprintf(tokendb, SMALLBUFSIZE-1, "%s/%s", path, MYDB_FILE);
+         }
+         else
+            snprintf(tokendb, SMALLBUFSIZE-1, "%s", cfg.mydbfile);
+
+         syslog(LOG_PRIORITY, "token db path: %s", tokendb);
+
 
          cfg.training_mode = 0;
          cfg.initial_1000_learning=0;
@@ -342,7 +382,9 @@ void ooop(int new_sd, int use_ssl, SSL *ssl, struct __config cfg){
 
          /* open database */
 
-         dbh = init_mydb(cfg.mydbfile, mhash, &sdata);
+      #ifdef HAVE_MYDB
+         dbh = init_mydb(tokendb, mhash, &sdata);
+      #endif
 
          state = POP3_STATE_PASS;
 
@@ -451,16 +493,33 @@ void ooop(int new_sd, int use_ssl, SSL *ssl, struct __config cfg){
                close(fd);
                syslog(LOG_PRIORITY, "%s: processing message", sdata.ttmpfile);
 
+               result.spaminess = DEFAULT_SPAMICITY;
+
                sstate = parse_message(sdata.ttmpfile, sdata, cfg);
 
+
                /*
-                * TODO: whitelist check
+                * whitelist check
                 */
 
+               p = whitelist;
+
+               do {
+                  p = split(p, '\n', w, SMALLBUFSIZE-1);
+
+                  if(cfg.verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "matching %s on %s", w, sstate.from);
+
+                  if(str_case_str(sstate.from, w)){
+                     syslog(LOG_PRIORITY, "found on whitelist: %s matches %s", sstate.from, w);
+                     goto END_OF_SPAMCHECK;
+                  }
+               } while(p);
 
 
 
-               /* rbl first, if it can condemn the message */
+               /*
+                * rbl check, if it can condemn the message
+                */
 
                if(cfg.rbl_condemns_the_message == 1){
                   reverse_ipv4_addr(sstate.ip);
@@ -472,7 +531,9 @@ void ooop(int new_sd, int use_ssl, SSL *ssl, struct __config cfg){
                }
 
 
-               /* spam URL check, if it can condemn the message */
+               /*
+                * spam URL check, if it can condemn the message
+                */
 
                if(sstate.urls && cfg.surbl_condemns_the_message == 1 && strlen(cfg.surbl_domain) > 3){
                   url = sstate.urls;
@@ -481,7 +542,7 @@ void ooop(int new_sd, int use_ssl, SSL *ssl, struct __config cfg){
                      gettimeofday(&tv1, &tz);
                      ret = rbl_list_check(cfg.surbl_domain, url->url_str+4);
                      gettimeofday(&tv2, &tz);
-                     if(cfg.verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: surbl check took %ld ms", sdata.ttmpfile, tvdiff(tv2, tv1)/1000);
+                     if(cfg.verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: surbl check took %ld ms for %s", sdata.ttmpfile, tvdiff(tv2, tv1)/1000, url->url_str+4);
 
                      if(ret > 0){
                         is_spam = 1;
@@ -502,7 +563,10 @@ void ooop(int new_sd, int use_ssl, SSL *ssl, struct __config cfg){
                   is_spam = 1;
 
             END_OF_SPAMCHECK:
-               update_tokens(cfg.mydbfile, mhash, sstate.first);
+
+            #ifdef HAVE_MYDB
+               update_tokens(tokendb, mhash, sstate.first);
+            #endif
 
                free_and_print_list(sstate.first, 0);
                free_url_list(sstate.urls);

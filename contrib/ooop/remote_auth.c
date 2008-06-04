@@ -1,5 +1,5 @@
 /*
- * remote_auth.c, 2008.05.18, SJ
+ * remote_auth.c, 2008.06.03, SJ
  */
 
 #include <stdio.h>
@@ -95,6 +95,8 @@ int remote_auth(char *username, char *password, int *sd, SSL **ssl, int use_ssl,
    snprintf(msg, SMALLBUFSIZE-1, "%s", buf);
 
    if(strncmp(buf, "+OK", 3) == 0) ret = 1;
+
+   *(--p) = ':';
 
 ENDE:
 

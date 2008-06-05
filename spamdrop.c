@@ -363,6 +363,8 @@ int main(int argc, char **argv, char **envp){
       if(state.train_mode == T_TUM)
          train_mode=T_TUM;
 
+      if(group_type == GROUP_SHARED)
+         sdata.uid = 0;
 
    #ifdef HAVE_MYSQL
       train_message(mysql, sdata, state, rounds, is_spam, train_mode, cfg);

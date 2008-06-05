@@ -531,6 +531,7 @@ void ooop(int new_sd, int use_ssl, SSL *ssl, struct __config cfg){
                }
 
 
+
                /*
                 * spam URL check, if it can condemn the message
                 */
@@ -555,7 +556,10 @@ void ooop(int new_sd, int use_ssl, SSL *ssl, struct __config cfg){
                }
 
 
-               /* statistical check */
+
+               /*
+                * statistical check
+                */
 
                result = bayes_file(mhash, sstate, sdata, cfg);
 

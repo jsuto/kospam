@@ -1,5 +1,5 @@
 /*
- * bayes.c, 2008.05.18, SJ
+ * bayes.c, 2008.06.05, SJ
  */
 
 #include <stdio.h>

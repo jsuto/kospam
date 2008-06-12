@@ -18,6 +18,7 @@
 #include "misc.h"
 #include "messages.h"
 #include "pop3.h"
+#include "pop3_messages.h"
 #include "ooop-util.h"
 #include "prefs.h"
 #include "cfg.h"
@@ -134,7 +135,7 @@ int read_until_period(int sd, SSL *ssl, int sd2, SSL *ssl2, int use_ssl, int fd)
  * send message from remote pop3 server to the client
  */
 
-int send_message_to_client(int sd, int use_ssl, SSL *ssl, char *messagefile, int is_spam, struct __config cfg){
+int send_message_to_client(int sd, int use_ssl, SSL *ssl, char *messagefile, int is_spam, char *spaminfo, struct __config cfg){
    int fd, n, is_header=1, num_of_reads=0, put_subject_spam_prefix=0;
    char *p, *q, bigbuf[MAX_MAIL_HEADER_SIZE], spaminessbuf[SMALLBUFSIZE];
 
@@ -146,7 +147,7 @@ int send_message_to_client(int sd, int use_ssl, SSL *ssl, char *messagefile, int
    }
 
    if(is_spam == 1){
-      snprintf(spaminessbuf, SMALLBUFSIZE-1, "\r\n%s%s\r\n%s\r\n\r\n", cfg.clapf_header_field, messagefile, cfg.clapf_spam_header_field);
+      snprintf(spaminessbuf, SMALLBUFSIZE-1, "\r\n%s%s\r\n%s\r\n%s%s\r\n\r\n", cfg.clapf_header_field, messagefile, cfg.clapf_spam_header_field, cfg.clapf_header_field, spaminfo);
       if(strlen(cfg.spam_subject_prefix) > 1)
          put_subject_spam_prefix = 1;
    }
@@ -210,7 +211,7 @@ void ooop(int new_sd, int use_ssl, SSL *ssl, struct __config cfg){
    int n, state, fd, is_spam, n_ham=0, n_spam=0;
    unsigned long message_size, activation_date=0;
    char *p, cmdbuf[MAXBUFSIZE], buf[2*MAXBUFSIZE];
-   char errmsg[SMALLBUFSIZE], path[SMALLBUFSIZE], tokendb[SMALLBUFSIZE], w[SMALLBUFSIZE], whitelist[MAXBUFSIZE];
+   char errmsg[SMALLBUFSIZE], path[SMALLBUFSIZE], tokendb[SMALLBUFSIZE], w[SMALLBUFSIZE], whitelist[MAXBUFSIZE], spaminfo[SMALLBUFSIZE];
    struct timezone tz;
    struct timeval tv1, tv2;
    struct session_data sdata;
@@ -489,6 +490,8 @@ void ooop(int new_sd, int use_ssl, SSL *ssl, struct __config cfg){
             read_until_period(new_sd, ssl, sd, ssl2, use_ssl, fd);
             syslog(LOG_PRIORITY, "%s: reading %ld bytes is done", sdata.ttmpfile, message_size);
 
+            memset(spaminfo, 0, SMALLBUFSIZE);
+
             if(fd != -1){
                close(fd);
                syslog(LOG_PRIORITY, "%s: processing message", sdata.ttmpfile);
@@ -511,6 +514,7 @@ void ooop(int new_sd, int use_ssl, SSL *ssl, struct __config cfg){
 
                   if(str_case_str(sstate.from, w)){
                      syslog(LOG_PRIORITY, "found on whitelist: %s matches %s", sstate.from, w);
+                     snprintf(spaminfo, SMALLBUFSIZE-1, "%s", INFO_HAM_FOUND_ON_WHITELIST);
                      goto END_OF_SPAMCHECK;
                   }
                } while(p);
@@ -526,6 +530,7 @@ void ooop(int new_sd, int use_ssl, SSL *ssl, struct __config cfg){
                   if(rbl_list_check(cfg.rbl_domain, sstate.ip) == 1){
                      is_spam = 1;
                      syslog(LOG_PRIORITY, "%s: found on rbl: %s", sdata.ttmpfile, sstate.ip); 
+                     snprintf(spaminfo, SMALLBUFSIZE-1, "%s", INFO_SPAM_FOUND_ON_BLACKLIST);
                      goto END_OF_SPAMCHECK;
                   }
                }
@@ -548,6 +553,7 @@ void ooop(int new_sd, int use_ssl, SSL *ssl, struct __config cfg){
                      if(ret > 0){
                         is_spam = 1;
                         syslog(LOG_PRIORITY, "%s: found on surbl: %s", sdata.ttmpfile, url->url_str+4);
+                        snprintf(spaminfo, SMALLBUFSIZE-1, "%s", INFO_SPAM_FOUND_ON_URL_BLACKLIST);
                         goto END_OF_SPAMCHECK;
                      }
 
@@ -563,8 +569,10 @@ void ooop(int new_sd, int use_ssl, SSL *ssl, struct __config cfg){
 
                result = bayes_file(mhash, sstate, sdata, cfg);
 
-               if(result.spaminess >= cfg.spam_overall_limit)
+               if(result.spaminess >= cfg.spam_overall_limit){
+                  snprintf(spaminfo, SMALLBUFSIZE-1, "%s", INFO_SPAM_BAYES);
                   is_spam = 1;
+               }
 
             END_OF_SPAMCHECK:
 
@@ -586,7 +594,7 @@ void ooop(int new_sd, int use_ssl, SSL *ssl, struct __config cfg){
                */
 
                syslog(LOG_PRIORITY, "%s: sending message back to client (spam: %d)", sdata.ttmpfile, is_spam);
-               send_message_to_client(new_sd, 0, ssl, sdata.ttmpfile, is_spam, cfg);
+               send_message_to_client(new_sd, 0, ssl, sdata.ttmpfile, is_spam, spaminfo, cfg);
 
                unlink(sdata.ttmpfile);
             }

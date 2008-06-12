@@ -1,5 +1,5 @@
 /*
- * parser.c, 2008.05.28, SJ
+ * parser.c, 2008.06.11, SJ
  */
 
 #include <stdio.h>
@@ -456,6 +456,14 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
 
    }
 
+   /* if this is an empty new line, then reset some state variables, 2008.06.11, SJ */
+
+   if(buf[0] == '\r' || buf[0] == '\n'){
+      state->base64 = 0;
+      state->base64_text = 0;
+      state->textplain = 1;
+   }
+ 
    /* skip the boundary itself */
 
    if(state->has_boundary == 1 && !str_case_str(buf, "boundary") && strstr(buf, state->boundary)){
@@ -654,7 +662,7 @@ DECOMPOSE:
    else p = buf;
 
 #ifdef DEBUG
-   //fprintf(stderr, "%ld * %s\n", state->c_shit, p);
+   //fprintf(stderr, "b64: %d %ld * %s\n", state->base64, state->c_shit, p);
    fprintf(stderr, "%s\n", buf);
 #endif
 

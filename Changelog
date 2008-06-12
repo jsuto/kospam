@@ -1,5 +1,11 @@
 0.3.31-rc2:
 
+2008.06.11, SJ
+
+After mime attachment reset some state variables when we encounter
+an empty line, ie. attachment is over.
+(parser.c)
+
 2008.06.05, SJ
 
 Set sdata.uid=0 if group_type=0.

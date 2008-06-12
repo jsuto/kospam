@@ -13,6 +13,7 @@ create table if not exists pop3_gw_users (
 
    rbl_condemns_a_message int default 1,
    surbl_condemns_a_message int default 1,
+   use_bayes_check int default 1,
 
    has_personal_db int default 0,
 

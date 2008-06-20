@@ -1,5 +1,11 @@
 0.3.31-rc2:
 
+2008.06.13, SJ
+
+If the message looks as a legitimate bounce, then set its spamicity
+to 0.5.
+(session.c, spamdrop.c)
+
 2008.06.11, SJ
 
 After mime attachment reset some state variables when we encounter

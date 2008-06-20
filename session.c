@@ -1,5 +1,5 @@
 /*
- * session.c, 2008.06.02, SJ
+ * session.c, 2008.06.13, SJ
  */
 
 #include <stdio.h>
@@ -799,8 +799,10 @@ void init_session_data(struct session_data *sdata){
                               syslog(LOG_PRIORITY, "%s: raising spamicity", sdata.ttmpfile);
                            }
                         }
-                        else
+                        else {
                            syslog(LOG_PRIORITY, "found our signo, this should be a real bounce message");
+                           result.spaminess = DEFAULT_SPAMICITY;
+                        }
                      }
 
 

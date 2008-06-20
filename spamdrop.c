@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2008.05.26, SJ
+ * spamdrop.c, 2008.06.13, SJ
  */
 
 #include <stdio.h>
@@ -424,6 +424,7 @@ int main(int argc, char **argv, char **envp){
          }
       }
    #endif
+
       if(sdata.need_signo_check == 1){
          if(!state.found_our_signo){
             syslog(LOG_PRIORITY, "%s: looks like a bounce, but our signo is missing", sdata.ttmpfile);
@@ -432,8 +433,10 @@ int main(int argc, char **argv, char **envp){
                syslog(LOG_PRIORITY, "%s: raising spamicity", sdata.ttmpfile);
             }
          }
-         else
+         else {
             syslog(LOG_PRIORITY, "found our signo, this should be a real bounce message");
+            result.spaminess = DEFAULT_SPAMICITY;
+         }
       }
 
 

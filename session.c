@@ -108,7 +108,7 @@ void init_session_data(struct session_data *sdata){
       struct stat st;
     #endif
       struct timeval tv_spam_start, tv_spam_stop;
-      struct _state sstate;
+      struct _state sstate, sstate2;
       struct ue UE;
       int is_spam, train_mode=T_TOE;
 
@@ -605,14 +605,30 @@ void init_session_data(struct session_data *sdata){
                            sdata.uid = UE.uid;
                            snprintf(sdata.name, SMALLBUFSIZE-1, "%s", UE.name);
 
-                           if(is_spam == 1)
+                           /*if(is_spam == 1)
                               snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s/h.%s", USER_QUEUE_DIR, UE.name[0], UE.name, sdata.ttmpfile);
                            else
-                              snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s/s.%s", USER_QUEUE_DIR, UE.name[0], UE.name, sdata.ttmpfile);
+                              snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s/s.%s", USER_QUEUE_DIR, UE.name[0], UE.name, sdata.ttmpfile);*/
 
                            train_mode = extract_id_from_message(sdata.ttmpfile, cfg.clapf_header_field, ID);
 
-                           train_message(mysql, sdata, sstate, MAX_ITERATIVE_TRAIN_LOOPS, is_spam, sstate.train_mode, cfg);
+                           if(is_spam == 1)
+                              snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s/h.%s", USER_QUEUE_DIR, UE.name[0], UE.name, ID);
+                           else
+                              snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s/s.%s", USER_QUEUE_DIR, UE.name[0], UE.name, ID);
+
+                           syslog(LOG_PRIORITY, "trying to train on %s for %ld", qpath, UE.uid);
+
+                           sstate2 = parse_message(qpath, sdata, cfg);
+
+                           train_message(mysql, sdata, sstate2, MAX_ITERATIVE_TRAIN_LOOPS, is_spam, train_mode, cfg);
+
+                           syslog(LOG_PRIORITY, "trained on %s for %ld", qpath, UE.uid);
+
+                           free_and_print_list(sstate2.first, 0);
+                           free_url_list(sstate2.urls);
+
+                           syslog(LOG_PRIORITY, "freed sstate2 after training");
 
                            goto SEND_RESULT;
                         }

@@ -1,5 +1,12 @@
 0.3.31-rc2:
 
+2008.06.25, SJ
+
+Fixed a bug in the clapf daemon (the spamdrop utility is not
+affected) which prevented training on the forwarded emails.
+(session.c)
+(credits: efpe)
+
 2008.06.13, SJ
 
 If the message looks as a legitimate bounce, then set its spamicity

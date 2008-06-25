@@ -177,6 +177,8 @@ intall-clapfstore: clapfstore
 
 install-spamdrop: spamdrop
 	$(INSTALL) -m 0755 spamdrop $(DESTDIR)$(bindir)
+	$(INSTALL) -m 0755 aphash $(DESTDIR)$(bindir)
+	if [ -f $(srcdir)/clapf_admin ]; then $(INSTALL) -m 0755 clapf_admin $(DESTDIR)$(bindir); fi
 
 install-splitmbox: splitmbox
 	$(INSTALL) -m 0755 splitmbox $(DESTDIR)$(bindir)
@@ -191,9 +193,9 @@ install-parsembox:
 	$(INSTALL) -m 0755 $(srcdir)/perl/shrink.pl $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 $(srcdir)/perl/uribl.pl $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 $(srcdir)/stat/process_syslog.pl $(DESTDIR)$(libexecdir)/clapf
-	cat $(srcdir)/util/db_init_mydb.sh.in | sed -e "s%YOUR_LIBEXECDIR%$(libexecdir)/clapf%" -e "s%YOUR_BINDIR%$(bindir)%" > $(srcdir)/util/db_init_mydb.sh
-	cat $(srcdir)/util/db_init_mysql.sh.in | sed -e "s%YOUR_LIBEXECDIR%$(libexecdir)/clapf%" -e "s%YOUR_BINDIR%$(bindir)%" > $(srcdir)/util/db_init_mysql.sh
-	cat $(srcdir)/util/db_init_sqlite3.sh.in | sed -e "s%YOUR_LIBEXECDIR%$(libexecdir)/clapf%" -e "s%YOUR_BINDIR%$(bindir)%" > $(srcdir)/util/db_init_sqlite3.sh
+	cat $(srcdir)/util/db_init_mydb.sh.in | sed -e "s%YOUR_LIBEXECDIR%$(libexecdir)/clapf%" -e "s%YOUR_BINDIR%$(bindir)%" -e "s%YOUR_SHAREDIR%$(datarootdir)/clapf%" > $(srcdir)/util/db_init_mydb.sh
+	cat $(srcdir)/util/db_init_mysql.sh.in | sed -e "s%YOUR_LIBEXECDIR%$(libexecdir)/clapf%" -e "s%YOUR_BINDIR%$(bindir)%" -e "s%YOUR_SHAREDIR%$(datarootdir)/clapf%" > $(srcdir)/util/db_init_mysql.sh
+	cat $(srcdir)/util/db_init_sqlite3.sh.in | sed -e "s%YOUR_LIBEXECDIR%$(libexecdir)/clapf%" -e "s%YOUR_BINDIR%$(bindir)%" -e "s%YOUR_SHAREDIR%$(datarootdir)/clapf%" > $(srcdir)/util/db_init_sqlite3.sh
 	$(INSTALL) -m 0755 $(srcdir)/util/db_init_mydb.sh $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 $(srcdir)/util/db_init_mysql.sh $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 $(srcdir)/util/db_init_sqlite3.sh $(DESTDIR)$(libexecdir)/clapf
@@ -207,13 +209,6 @@ install-man:
 	$(INSTALL) -d $(DESTDIR)$(mandir)/man8
 	$(INSTALL) -m 0644 $(srcdir)/doc/man/clapf.8 $(DESTDIR)$(mandir)/man8
 
-
-install-train:
-	$(INSTALL) -m 0755 spamdrop $(DESTDIR)$(bindir)
-	ln -sf spamdrop $(DESTDIR)$(bindir)/blackhole
-	$(INSTALL) -m 0755 spamstat $(DESTDIR)$(bindir)
-	$(INSTALL) -m 0755 aphash $(DESTDIR)$(bindir)
-	$(INSTALL) -m 0755 clapf_admin $(DESTDIR)$(bindir)
 
 install-qcache:
 	$(INSTALL) -m 0755 qs $(DESTDIR)$(bindir)

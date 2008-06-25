@@ -32,11 +32,11 @@ import_tokens(){
    if test "$HASHED" = "nohash";
    then
       echo "not using hashed tokens..."
-      mysql --defaults-file=$MYCNF < db-old.sql
+      mysql --defaults-file=$MYCNF < YOUR_SHAREDIR/db.sql
    else
       aphash < $TEMP > $HASHTEMP
       TEMP=$HASHTEMP
-      mysql --defaults-file=$MYCNF < db-new.sql
+      mysql --defaults-file=$MYCNF < YOUR_SHAREDIR/db.sql
    fi
 
    echo "Num of ham messages: $NHAM"

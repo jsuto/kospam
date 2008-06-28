@@ -1,5 +1,5 @@
 /*
- * parser.c, 2008.06.11, SJ
+ * parser.c, 2008.06.28, SJ
  */
 
 #include <stdio.h>
@@ -317,7 +317,7 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
       state->textplain = 0;
       state->base64 = 0;
       state->utf8 = 0;
-      state->iso_8859_2 = 0;
+      state->iso_8859_2 = 1; /* changed 0->1, 2008.06.28, SJ */
 
       if(state->n_attachments < MAX_ATTACHMENTS-1 && state->attachments[state->n_attachments].size > 0)
          state->n_attachments++;

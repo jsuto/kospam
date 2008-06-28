@@ -1,5 +1,5 @@
 /*
- * bayes.c, 2008.06.05, SJ
+ * bayes.c, 2008.06.28, SJ
  */
 
 #include <stdio.h>
@@ -678,14 +678,25 @@ int train_message(sqlite3 *db, struct session_data sdata, struct _state state, i
 #endif
 #ifdef HAVE_MYDB
 int train_message(char *mydbfile, struct mydb_node *mhash[MAX_MYDB_HASH], struct session_data sdata, struct _state state, int rounds, int is_spam, int train_mode, struct __config cfg){
+   int rc;
+   struct mydb_node *mhash2[MAX_MYDB_HASH];
 #endif
    int i, tm=train_mode;
    char buf[SMALLBUFSIZE];
+   struct c_res result;
 
    if(state.first == NULL) return 0;
 
-   for(i=1; i<=rounds; i++){
+   /* disable some configuration settings, 2008.06.28, SJ */
 
+   memset(cfg.rbl_domain, 0, MAXVAL);
+   memset(cfg.surbl_domain, 0, MAXVAL);
+   cfg.penalize_images = 0;
+   cfg.penalize_embed_images = 0;
+   cfg.penalize_octet_stream = 0;
+
+
+   for(i=1; i<=rounds; i++){
    #ifdef HAVE_MYSQL
       my_walk_hash(mysql, -1, is_spam, SQL_TOKEN_TABLE, sdata.uid, state.first, tm);
    #endif
@@ -719,11 +730,29 @@ int train_message(char *mydbfile, struct mydb_node *mhash[MAX_MYDB_HASH], struct
 
       #ifdef HAVE_MYSQL
          mysql_real_query(&mysql, buf, strlen(buf));
+
+         result = bayes_file(mysql, state, sdata, cfg);
       #endif
       #ifdef HAVE_SQLITE3
          sqlite3_exec(db, buf, NULL, NULL, &err);
+
+         result = bayes_file(db, state, sdata, cfg);
       #endif
       }
+
+   #ifdef HAVE_MYDB
+      rc = init_mydb(cfg.mydbfile, mhash2, &sdata);
+      if(rc == 1){
+         result = bayes_file(mhash2, state, sdata, cfg);
+      }
+      close_mydb(mhash2);
+   #endif
+
+      if(cfg.verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "training round: %d, spaminess: %0.4f", i, result.spaminess);
+
+      if(is_spam == 1 && result.spaminess > 0.99) return i;
+      if(is_spam == 0 && result.spaminess < 0.1) return i;
+
 
       tm = T_TOE;
    }

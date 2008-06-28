@@ -1,5 +1,13 @@
 0.3.31-rc2:
 
+2008.06.28, SJ
+
+Enhanced the iterative training by stop further training if the message
+is correctly identified as ham (or spam).
+
+The default character encoding (if it's not specified) is now set to iso-8859-2.
+(parser.c)
+
 2008.06.25, SJ
 
 Fixed a bug in the clapf daemon (the spamdrop utility is not

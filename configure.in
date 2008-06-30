@@ -513,6 +513,10 @@ if test "$os" = "FreeBSD"; then
    defs="$defs -DFREEBSD"
 fi
 
+if test "$os" = "Linux"; then
+   defs="$defs -D_GNU_SOURCE"
+fi
+
 dnl whether we have antivirus support
 
 if test "$have_libclamav" = "yes" || test "$have_clamd" = "yes" || test "$have_avg" = "yes" || test "$have_avast" = "yes" || test "$have_kav" = "yes"  || test "$have_drweb" = "yes" ; then

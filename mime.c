@@ -74,7 +74,7 @@ struct rfc822_attachment extract_from_rfc822(char *message){
       /* search for bondary in the header */
 
       if(is_header == 1){
-         p = str_case_str(buf, "boundary");
+         p = strcasestr(buf, "boundary");
          if(p){
             x = extract_boundary(p, boundary, BOUNDARY_LEN-1);
             if(x == 1) has_boundary = 1;
@@ -87,7 +87,7 @@ struct rfc822_attachment extract_from_rfc822(char *message){
 
          /* search new boundary in the body */
 
-         if(search_new_boundary == 1 && (p = str_case_str(buf, "boundary")) ){
+         if(search_new_boundary == 1 && (p = strcasestr(buf, "boundary")) ){
             x = extract_boundary(p, boundary2, BOUNDARY_LEN-1);
             if(x == 1) search_new_boundary = 0;
          }

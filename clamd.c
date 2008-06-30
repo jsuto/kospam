@@ -59,7 +59,7 @@ int clamd_scan(char *clamd_socket, char *chrootdir, char *workdir, char *tmpfile
 
    if(v >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: CLAMD DEBUG: %d %s", tmpfile, n, buf);
 
-   if(str_case_str(buf, CLAMD_RESP_INFECTED)){
+   if(strcasestr(buf, CLAMD_RESP_INFECTED)){
       p = strchr(buf, ' ');
       if(p){
          q = strrchr(p, ' ');
@@ -115,7 +115,7 @@ int clamd_net_scan(char *clamd_address, int clamd_port, char *chrootdir, char *w
 
    if(v >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: CLAMD DEBUG: %d %s", tmpfile, n, buf);
 
-   if(str_case_str(buf, CLAMD_RESP_INFECTED)){
+   if(strcasestr(buf, CLAMD_RESP_INFECTED)){
       p = strchr(buf, ' ');
       if(p){
          q = strrchr(p, ' ');

@@ -512,7 +512,7 @@ void ooop(int new_sd, int use_ssl, SSL *ssl, struct __config cfg){
 
                   if(cfg.verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "matching %s on %s", w, sstate.from);
 
-                  if(str_case_str(sstate.from, w)){
+                  if(strcasestr(sstate.from, w)){
                      syslog(LOG_PRIORITY, "found on whitelist: %s matches %s", sstate.from, w);
                      snprintf(spaminfo, SMALLBUFSIZE-1, "%s", INFO_HAM_FOUND_ON_WHITELIST);
                      goto END_OF_SPAMCHECK;

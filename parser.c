@@ -18,7 +18,6 @@
 #include "config.h"
 
 
-
 /*
  * initialise parser state
  */
@@ -339,15 +338,15 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
 
       /* check only the first attachment of this type */
 
-      if( (state->check_attachment == 1 && str_case_str(buf, "image") && state->num_of_images == 0) || (str_case_str(buf, "msword") && state->num_of_msword == 0) ){
+      if( (state->check_attachment == 1 && strcasestr(buf, "image") && state->num_of_images == 0) || (strcasestr(buf, "msword") && state->num_of_msword == 0) ){
          p = strchr(buf, '/');
          q = strchr(buf, ';');
          if(p && q){
 
-            if(str_case_str(buf, "image"))
+            if(strcasestr(buf, "image"))
                state->num_of_images++;
 
-            if(str_case_str(buf, "msword"))
+            if(strcasestr(buf, "msword"))
                state->num_of_msword++;
 
             make_rnd_string(rnd);
@@ -373,13 +372,13 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
 
       /* 2007.04.19, SJ */
 
-      if(str_case_str(buf, "text/plain") ||
-         str_case_str(buf, "text/html") ||
-         str_case_str(buf, "multipart/mixed") ||
-         str_case_str(buf, "multipart/alternative") ||
-         str_case_str(buf, "message/delivery-status") ||
-         str_case_str(buf, "text/rfc822-headers") ||
-         str_case_str(buf, "application/ms-tnef")
+      if(strcasestr(buf, "text/plain") ||
+         strcasestr(buf, "text/html") ||
+         strcasestr(buf, "multipart/mixed") ||
+         strcasestr(buf, "multipart/alternative") ||
+         strcasestr(buf, "message/delivery-status") ||
+         strcasestr(buf, "text/rfc822-headers") ||
+         strcasestr(buf, "application/ms-tnef")
       ){
 
              state->textplain = 1;
@@ -395,28 +394,28 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
       if(state->is_header == 1) state->message_state = MSG_CONTENT_TRANSFER_ENCODING;
 
       /* check for textual base64 encoded part, 2005.03.25, SJ */
-      if(str_case_str(buf, "base64")) state->base64 = 1;
+      if(strcasestr(buf, "base64")) state->base64 = 1;
    }
 
    /* check for UTF-8 encoding */
 
-   if(str_case_str(buf, "charset") && str_case_str(buf, "UTF-8"))
+   if(strcasestr(buf, "charset") && strcasestr(buf, "UTF-8"))
       state->utf8 = 1;
 
-   if(str_case_str(buf, "charset") && (str_case_str(buf, "ISO-8859-2") || str_case_str(buf, "ISO-8859-1"))  ){
+   if(strcasestr(buf, "charset") && (strcasestr(buf, "ISO-8859-2") || strcasestr(buf, "ISO-8859-1"))  ){
       state->iso_8859_2 = 1;
    }
 
    /* catch encoded stuff in the Subject|From lines, 2007.09.04, SJ */
 
    if(state->message_state == MSG_SUBJECT || state->message_state == MSG_FROM){
-      if(str_case_str(buf, "?iso-8859-2?") || str_case_str(buf, "?iso-8859-1?")) state->iso_8859_2 = 1;
-      if(str_case_str(buf, "?utf-8?")) state->utf8 = 1;
+      if(strcasestr(buf, "?iso-8859-2?") || strcasestr(buf, "?iso-8859-1?")) state->iso_8859_2 = 1;
+      if(strcasestr(buf, "?utf-8?")) state->utf8 = 1;
    }
 
    /* check for quoted-printable encoding */
 
-   if(strncasecmp(buf, "Content-Transfer-Encoding:", strlen("Content-Transfer-Encoding:")) == 0 && str_case_str(buf, "quoted-printable"))
+   if(strncasecmp(buf, "Content-Transfer-Encoding:", strlen("Content-Transfer-Encoding:")) == 0 && strcasestr(buf, "quoted-printable"))
       state->qp = 1;
 
    if(strncasecmp(buf, "Content-Transfer-Encoding:", strlen("Content-Transfer-Encoding:")) == 0 && state->textplain == 0)
@@ -435,13 +434,13 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
 
    /* boundary checks */
 
-   if(state->has_boundary == 1 && state->cnt_type == 1 && (p = str_case_str(buf, "boundary"))){
+   if(state->has_boundary == 1 && state->cnt_type == 1 && (p = strcasestr(buf, "boundary"))){
       x = extract_boundary(p, state->boundary2, BOUNDARY_LEN-1);
       if(x == 1) state->has_boundary2 = 1;
       state->base64 = 0; state->textplain = 0; // state->qp = 0;
    }
 
-   if(state->cnt_type == 1 && state->has_boundary2 == 0 && (p = str_case_str(buf, "boundary"))){
+   if(state->cnt_type == 1 && state->has_boundary2 == 0 && (p = strcasestr(buf, "boundary"))){
       x = extract_boundary(p, state->boundary, BOUNDARY_LEN-1);
       if(x == 1) state->has_boundary = 1;
 
@@ -466,11 +465,11 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
  
    /* skip the boundary itself */
 
-   if(state->has_boundary == 1 && !str_case_str(buf, "boundary") && strstr(buf, state->boundary)){
+   if(state->has_boundary == 1 && !strcasestr(buf, "boundary") && strstr(buf, state->boundary)){
       return 0;
    }
 
-   if(state->has_boundary2 == 1 && !str_case_str(buf, "boundary") && strstr(buf, state->boundary2))
+   if(state->has_boundary2 == 1 && !strcasestr(buf, "boundary") && strstr(buf, state->boundary2))
       return 0;
 
    /* end of boundary check */
@@ -507,13 +506,13 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
 
    /* handle qp encoded lines */
 
-   if(state->qp == 1 || ( (state->message_state == MSG_SUBJECT || state->message_state == MSG_FROM) && str_case_str(buf, "?Q?")) )
+   if(state->qp == 1 || ( (state->message_state == MSG_SUBJECT || state->message_state == MSG_FROM) && strcasestr(buf, "?Q?")) )
       qp_decode((unsigned char*)buf);
 
 
    /* handle base64 encoded subject */
 
-   if( (state->message_state == MSG_SUBJECT || state->message_state == MSG_FROM) && (p = str_case_str(buf, "?B?"))){
+   if( (state->message_state == MSG_SUBJECT || state->message_state == MSG_FROM) && (p = strcasestr(buf, "?B?"))){
       base64_decode(p+3, huf);
       *(p+3) = '\0';
       snprintf(tuf, MAXBUFSIZE-1, "%s%s", buf, huf);
@@ -644,7 +643,7 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
 
    if(x > 0){
       state->l_shit += x;
-      if(!str_case_str(buf, "http://") && !str_case_str(buf, "https://"))
+      if(!strcasestr(buf, "http://") && !strcasestr(buf, "https://"))
          return 0;
    }
 

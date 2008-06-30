@@ -281,7 +281,7 @@ int main(int argc, char **argv, char **envp){
    f = fopen(sdata.ttmpfile, "r");
    if(f){
       while(fgets(buf, MAXBUFSIZE-1, f)){
-         if(strncmp(buf, "To:", 3) == 0 && (str_case_str(buf, "+ham@") || str_case_str(buf, "+spam@")) ){
+         if(strncmp(buf, "To:", 3) == 0 && (strcasestr(buf, "+ham@") || strcasestr(buf, "+spam@")) ){
             trim(buf);
             syslog(LOG_PRIORITY, "training request: %s", buf);
             training_request = 1;
@@ -310,7 +310,7 @@ int main(int argc, char **argv, char **envp){
       if(!from) goto CLOSE_DB;
 
       is_spam = 0;
-      if(str_case_str(buf, "+spam@")) is_spam = 1;
+      if(strcasestr(buf, "+spam@")) is_spam = 1;
 
       /* determine the queue file from the message */
       train_mode = extract_id_from_message(sdata.ttmpfile, cfg.clapf_header_field, ID);

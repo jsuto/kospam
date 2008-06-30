@@ -353,35 +353,6 @@ void fix_url(char *url){
 
 
 /*
- * case insensitive strstr
- */
-
-char *str_case_str(char *s, char *what){
-   int i, k, slen=strlen(s), whatlen = strlen(what), yes;
-
-   if(s == NULL || what == NULL)
-      return NULL;
-
-   if(slen < whatlen)
-      return NULL;
-
-   for(i=0; i<slen-whatlen; i++){
-      yes = 1;
-      for(k=0; k<whatlen; k++){
-         if(s[i+k] != what[k] && s[i+k] != tolower(what[k]) && s[i+k] != toupper(what[k])){
-            yes = 0;
-            break;
-         }
-      }
-      if(yes == 1)
-         return &s[i];
-   }
-
-   return NULL;
-}
-
-
-/*
  * split a string by a character as delimiter
  */
 

@@ -695,6 +695,7 @@ int train_message(char *mydbfile, struct mydb_node *mhash[MAX_MYDB_HASH], struct
    cfg.penalize_embed_images = 0;
    cfg.penalize_octet_stream = 0;
 
+   result.spaminess = DEFAULT_SPAMICITY;
 
    for(i=1; i<=rounds; i++){
    #ifdef HAVE_MYSQL

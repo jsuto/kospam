@@ -1,5 +1,17 @@
 0.3.31-rc2:
 
+2008.06.30, SJ
+
+Removed my version of case insensitive strstr() and replaced with its
+GNU version, strcasestr(). Under Linux, it's necessary to include the
+-D_GNU_SOURCE macro.
+(misc.c, misc.h, session.c, parser.c, spamdrop.c, clamd.c, mime.c)
+
+Extended the whitelist feature. It lets you to define "wildcards",
+such as @google.com, xxx@google.com, .google.com, etc.
+Unfortunately we have to do a full table scan.
+(sql.c)
+
 2008.06.28, SJ
 
 Enhanced the iterative training by stop further training if the message

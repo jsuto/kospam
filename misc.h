@@ -27,7 +27,6 @@ int search_in_buf(char *s, int len1, char *what, int len2);
 int count_char_in_buffer(char *p, char c);
 void degenerate(unsigned char *p);
 void fix_url(char *url);
-char *str_case_str(char *s, char *what);
 char *split(char *row, int ch, char *s, int size);
 char *split_str(char *row, char *what, char *s, int size);
 unsigned long long APHash(char *p);

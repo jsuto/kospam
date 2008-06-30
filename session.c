@@ -596,10 +596,10 @@ void init_session_data(struct session_data *sdata){
 
                         /* if we have forwarded something for retraining */
 
-                        if(sdata.num_of_rcpt_to == 1 && (str_case_str(sdata.rcptto[0], "+spam@") || str_case_str(sdata.rcptto[0], "+ham@")) ){
+                        if(sdata.num_of_rcpt_to == 1 && (strcasestr(sdata.rcptto[0], "+spam@") || strcasestr(sdata.rcptto[0], "+ham@")) ){
                            is_spam = 0;
                            snprintf(acceptbuf, MAXBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata.ttmpfile, email);
-                           if(str_case_str(sdata.rcptto[0], "+spam@")) is_spam = 1;
+                           if(strcasestr(sdata.rcptto[0], "+spam@")) is_spam = 1;
 
                            UE = get_user_from_email(mysql, email2);
                            sdata.uid = UE.uid;
@@ -682,10 +682,10 @@ void init_session_data(struct session_data *sdata){
 
                         /* if we have forwarded something for retraining */
 
-                        if(sdata.num_of_rcpt_to == 1 && (str_case_str(sdata.rcptto[0], "+spam@") || str_case_str(sdata.rcptto[0], "+ham@")) ){
+                        if(sdata.num_of_rcpt_to == 1 && (strcasestr(sdata.rcptto[0], "+spam@") || strcasestr(sdata.rcptto[0], "+ham@")) ){
                            is_spam = 0;
                            snprintf(acceptbuf, MAXBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata.ttmpfile, email);
-                           if(str_case_str(sdata.rcptto[0], "+spam@")) is_spam = 1;
+                           if(strcasestr(sdata.rcptto[0], "+spam@")) is_spam = 1;
 
                            UE = get_user_from_email(db, email2);
                            sdata.uid = UE.uid;

@@ -96,7 +96,7 @@ int is_it_in(char *in, char *what){
 
    if(!what) return 1;
 
-   if(str_case_str(in, what)) return 1;
+   if(strcasestr(in, what)) return 1;
    else return 0;
 }
 

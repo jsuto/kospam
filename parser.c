@@ -506,9 +506,10 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
 
    /* handle qp encoded lines */
 
-   if(state->qp == 1 || ( (state->message_state == MSG_SUBJECT || state->message_state == MSG_FROM) && strcasestr(buf, "?Q?")) )
+   if(state->qp == 1 || ( (state->message_state == MSG_SUBJECT || state->message_state == MSG_FROM) && strcasestr(buf, "?Q?")) ){
+      //fprintf(stderr, "qp decoding: %s", buf);
       qp_decode((unsigned char*)buf);
-
+   }
 
    /* handle base64 encoded subject */
 

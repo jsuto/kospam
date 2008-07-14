@@ -1,5 +1,11 @@
 0.3.31-rc2:
 
+2008.07.14, SJ
+
+Modified the qp_decode() function to replace a non-printable character
+only if it's not in the translation table.
+(decoder.c)
+
 2008.07.12, SJ
 
 The qp_decode() function replaces every non-printable charater with

@@ -1,6 +1,9 @@
 /*
- * messages.h, 2008.02.15, SJ
+ * messages.h, 2008.07.14, SJ
  */
+
+#ifndef _MESSAGES_H
+ #define _MESSAGES_H
 
 // cgi
 
@@ -32,17 +35,31 @@
 #define ERR_CGI_PURGED_MESSAGES "Purged messages"
 #define ERR_CGI_BACK "Back"
 
+#define ERR_CGI_YOU_NOT_ADMIN "You are not admin"
+
 #define ERR_CGI_I_TAUGHT "Thanks! I taught the token database"
 #define ERR_CGI_DELIVERED_REMOVED_AND_TRAINED_AS_HAM "Message delivered, trained as HAM and removed"
 #define ERR_CGI_REMOVED_AND_TRAINED_AS_HAM "Message trained as HAM and removed"
+
+#define ERR_CGI_EXISTING_USER "Already existing user"
+#define ERR_CGI_NEW_USER_SUCCESSFULLY_ADDED "Added new user successfully"
+#define ERR_CGI_CANNOT_REMOVE "Cannot remove"
+#define ERR_CGI_USER_SUCCESSFULLY_REMOVED "Removed successfully"
+#define ERR_CGI_CANNOT_MODIFY "Cannot modify user"
+#define ERR_CGI_NEW_USER_SUCCESSFULLY_MODIFIED "User successfully modified"
+
+#define CGI_USER_MANAGEMENT "User management"
 
 #define CGI_DATE "Date"
 #define CGI_FROM "From"
 #define CGI_SUBJECT "Subject"
 #define CGI_USER "User"
+#define CGI_EMAIL "Email address"
+#define CGI_USERID "User id"
 #define CGI_MESSAGE "Message"
 #define CGI_HAM_OR_SPAM "Ham/Spam"
-#define CGI_USER_LIST "User List"
+#define CGI_USER_LIST "Users' Spam Quarantine List"
+#define CGI_ADD_NEW_USER "Add new user"
 
 // mysql
 
@@ -97,3 +114,7 @@
 #define MSG_TEXT_AND_BASE64 "messages is text but base64 encoded"
 #define MSG_EMBED_IMAGE "message has embedded image"
 #define MSG_ABSOLUTELY_SPAM "message is absolutely spam"
+
+
+#endif /* _MESSGAES_H */
+

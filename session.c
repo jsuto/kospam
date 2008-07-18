@@ -755,10 +755,6 @@ void init_session_data(struct session_data *sdata){
                      /* rename file name according to its spamicity status, 2007.10.04, SJ */
 
                      if(cfg.store_metadata == 1 && strlen(UE.name) > 1){
-                        if(result.spaminess >= cfg.spam_overall_limit)
-                           snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s/s.%s", USER_QUEUE_DIR, UE.name[0], UE.name, sdata.ttmpfile);
-                        else
-                           snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s/h.%s", USER_QUEUE_DIR, UE.name[0], UE.name, sdata.ttmpfile);
 
                      #ifdef HAVE_STORE
                         gettimeofday(&tv_meta1, &tz);
@@ -782,6 +778,19 @@ void init_session_data(struct session_data *sdata){
                         if(cfg.store_only_spam == 1 && result.spaminess < cfg.spam_overall_limit){
                         }
                         else {
+                           snprintf(qpath, SMALLBUFSIZE-1, "%s/%c", USER_QUEUE_DIR, UE.name[0]);
+                           if(stat(qpath, &st))
+                              mkdir(qpath, 0775);
+
+                           snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s", USER_QUEUE_DIR, UE.name[0], UE.name);
+                           if(stat(qpath, &st))
+                              mkdir(qpath, 0775);
+
+                           if(result.spaminess >= cfg.spam_overall_limit)
+                              snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s/s.%s", USER_QUEUE_DIR, UE.name[0], UE.name, sdata.ttmpfile);
+                           else
+                              snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s/h.%s", USER_QUEUE_DIR, UE.name[0], UE.name, sdata.ttmpfile);
+
                            link(sdata.ttmpfile, qpath);
                            if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: try to link to %s", sdata.ttmpfile, qpath);
 

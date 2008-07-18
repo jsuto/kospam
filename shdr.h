@@ -1,8 +1,8 @@
 /*
- * shdr.h, 2007.04.24, SJ
+ * shdr.h, 2008.07.16, SJ
  */
 
-static char *skip_headers[] = {
+/*static char *skip_headers[] = {
    "Date:",
    "Resent-Date:",
    "X-Clapf-spamicity:",
@@ -18,7 +18,7 @@ static char *skip_headers[] = {
    "X-Keywords:",
    "In-Reply-To:",
    "MIME-Version:",
-};
+};*/
 
 static char *weekdays[] = { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" };
 static char *months[] = { "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December",

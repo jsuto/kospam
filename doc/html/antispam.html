@@ -14,9 +14,7 @@ indicating what score the email has. If the probability is above a certain limit
 adds the "X-Clapf-spamicity: Yes" flag to the message header. This second header is
 just for the easy spam recognition.<p>
 
-*: I thought clapf was a Bayesian filter, but later I realised that it was not. It is
-a statistical filter, and it uses the inverse chi-square algorithm instead of the
-Bayesian chain rule.<p>
+*: inverse chi-square<p/>
 
 You may use the following snippet in ~/.mailfilter with maildrop to put spam to your
 junk folder:<p>
@@ -45,10 +43,10 @@ You may test the antispam decision mechanism with a single RFC-822 format messag
 existing configuration file as 1.conf and adjust pathes if necessary, then run:<p>
 
 <pre>
-./spamtest /usr/local/etc/clapf.conf messagefile
+spamtest /usr/local/etc/clapf.conf messagefile
 </pre>
 
-test.c was compiled with the DEBUG option to see verbose messages.<p>
+It was compiled with the DEBUG option to see verbose messages.<p>
 
 <strong>Statistical internals</strong><p>
 
@@ -123,7 +121,7 @@ character, eg. both "Free!!!!!" and "FrEE!!" become "free!"<p/>
 
 You should put clapf's directory to a separate (lightly loaded) disk.
 If you want even better performance put your whole queue directory
-(/opt/av/tmp by default) to memory filesystem.
+to a memory filesystem.
 
 You need at least max_message_size * (max_paralel_delivery + 1).
 Eg. 8M * (10+1) = 88M<p>

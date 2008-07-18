@@ -22,6 +22,7 @@ FILE *cgiIn;
 char *input=NULL;
 static char *actions[] = { "quarantine", "junk", "drop" };
 struct __config cfg;
+int admin_user = 0;
 
 char *extract(char *row, int ch, char *s, int size);
 
@@ -35,11 +36,20 @@ int main(){
 
    cfg = read_config(CONFIG_FILE);
 
+   p = getenv("REMOTE_USER");
+   if(!p)
+      errout(input, ERR_CGI_NOT_AUTHENTICATED);
+
+   /* if you are an administrator */
+   if(strcmp(p, cfg.admin_user) == 0){
+      admin_user = 1;
+   }
+
    printf("Content-type: text/html\n\n");
 
    printf("<html>\n<title>%s</title>\n<link rel=\"stylesheet\" type=\"text/css\" href=\"/style.css\">\n<body bgcolor=white text=darkblue vlink=#AC003A>\n<blockquote>\n<h1>%s</h1>\n", CGI_USER_PREF, CGI_USER_PREF);
 
-   printf("\n\n<center><a href=\"%s\">%s</a> %s <a href=\"%s\">%s</a> <a href=\"%s\">%s</a></center>\n\n\n", cfg.spamcgi_url, CGI_SPAM_QUARANTINE, CGI_USER_PREF, cfg.statcgi_url, CGI_PERSONAL_STAT, cfg.trainlogcgi_url, CGI_TRAIN_LOG);
+   show_cgi_menu(cfg, admin_user, CGI_USER_PREF);
 
    /* check request method */
 
@@ -50,9 +60,6 @@ int main(){
       if(strcmp(p, "POST") == 0)
          method = M_POST;
    }
-
-   if(!getenv("REMOTE_USER"))
-      errout(input, ERR_CGI_NOT_AUTHENTICATED);
 
 
    printf("You are: %s<p>\n", getenv("REMOTE_USER"));

@@ -1,5 +1,5 @@
 /*
- * cfg.h, 2008.05.27, SJ
+ * cfg.h, 2008.07.16, SJ
  */
 
 #ifndef _CFG_H
@@ -105,9 +105,6 @@ struct __config {
 
    float spam_ratio_in_top10;
 
-   char skip_headers[MAXVAL];
-   int num_of_skip_headers;
-
    int invalid_junk_limit;
    int invalid_junk_line;
    int invalid_hex_junk_limit;
@@ -175,6 +172,7 @@ struct __config {
    char trainlogcgi_url[MAXVAL];
    char usercgi_url[MAXVAL];
    char statcgi_url[MAXVAL];
+   char clapfadmincgi_url[MAXVAL];
    int page_len;
    char admin_user[MAXVAL];
 

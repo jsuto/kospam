@@ -1,5 +1,5 @@
 /*
- * decoder.c, 2008.07.14, SJ
+ * decoder.c, 2008.07.17, SJ
  */
 
 #include <stdio.h>
@@ -221,7 +221,7 @@ void qp_decode(unsigned char *p){
          i += 2;
 
          /* replace character if it's not printable */
-         if(!isprint(c) && translated_characters[c] == ' ') c = JUNK_REPLACEMENT_CHAR;
+         if(!isprint(c) && translated_characters[c] == ' ' && c != '\r' && c != '\n') c = JUNK_REPLACEMENT_CHAR;
       }
 
       p[k] = c;

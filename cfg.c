@@ -1,5 +1,5 @@
 /*
- * cfg.c, 2008.05.27, SJ
+ * cfg.c, 2008.07.16, SJ
  */
 
 #include <stdio.h>
@@ -132,8 +132,6 @@ struct __config read_config(char *configfile){
    cfg.exclusion_radius = EXCLUSION_RADIUS;
 
    cfg.max_message_size_to_filter = 0;
-
-   cfg.num_of_skip_headers = 0;
 
    cfg.relocate_delay = 5;
 
@@ -363,9 +361,6 @@ struct __config read_config(char *configfile){
                   if(strcmp(key, "min_deviation_to_use_single_tokens") == 0)
                      cfg.min_deviation_to_use_single_tokens = atof(val);
 
-                  if(strcmp(key, "skip_headers") == 0)
-                     memcpy(cfg.skip_headers, val, MAXVAL-1);
-
                   if(strcmp(key, "spaminess_of_strange_language_stuff") == 0)
                      cfg.spaminess_of_strange_language_stuff = atof(val);
 
@@ -500,6 +495,10 @@ struct __config read_config(char *configfile){
 
                   if(strcmp(key, "statcgi_url") == 0)
                      memcpy(cfg.statcgi_url, val, MAXVAL-1);
+
+                  if(strcmp(key, "clapfadmincgi_url") == 0)
+                     memcpy(cfg.clapfadmincgi_url, val, MAXVAL-1);
+
 
                   if(strcmp(key, "page_len") == 0)
                      cfg.page_len = atoi(val);

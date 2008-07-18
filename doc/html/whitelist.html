@@ -9,20 +9,21 @@
 <h2>White list support</h2>
 
 Clapf does maintain an internal (and dymanic) whitelist. If you have a partner
-sends you lots of good emails, then his email address will be in the ham dictinary,
+sending you lots of good emails, then his email address will be in the ham dictinary,
 ie. his email address is associated with good emails. Then if he starts sending spam
-later, then his email address will be on the good side no longer.<p/>
+later, then his email address will be no longer on the good side, thus dropped from
+the whitelist.<p/>
 
 Additionally, if someone has sent you at least 10 good emails and 0 spam, and you have
 enabled the enable_auto_white_list feature, then his email is automatically considered
-as ham.
+as ham without further processing.<p/>
 
 <pre>
 enable_auto_white_list=1
 </pre>
 
-However clapf also supports a less intelligent whitelist. If the sender is on the
-t_white_list table, then no spam check is performed (except blackhole/minefield),
+However clapf also supports another (and less intelligent) whitelist. If the sender is
+on the t_white_list table, then no spam check is performed (except blackhole/minefield),
 and clapf will return 0.5 as the spamicity value.<p/>
 
 If you want to use this feature, then apply the --enable-whitelist configure option:
@@ -31,15 +32,22 @@ If you want to use this feature, then apply the --enable-whitelist configure opt
 --enable-whitelist
 </pre>
 
-Then put the email addresses of your most critical partners to the t_white_list
-sql table, eg.
+Then put the email addresses and/or patterns (such as @google.com, .domain.com, ...)
+of your most critical partners to the t_white_list sql table, eg.
 
 <pre>
-INSERT INTO t_white_list (email, uid) VALUES('aaa@domain.kom', 0);
+INSERT INTO t_white_list (email, uid) VALUES('aaa@an.exact.email.address', 0);
+INSERT INTO t_white_list (email, uid) VALUES('@google.com', 0);
+INSERT INTO t_white_list (email, uid) VALUES('yourpartner.com', 0);
+....
 </pre>
 
-If you specify 0 as the userid, then the given email is whitelisted for every user,
-otherwise only for the given user.<p/>
+If you specify 0 as the userid, then the given email address or domain is whitelisted
+for every user, otherwise only for the given user.<p/>
+
+Please note that using this latter whitelist clapf needs to check sequentially for
+all the possible matches for the given user.<p/>
+
 
 <center><a href="index.html">home</a></center><p>
 

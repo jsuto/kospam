@@ -74,7 +74,7 @@ spamdrop: % : %.o
 splitmbox: % : %.o misc.o decoder.o list.o parser.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
 
-spamcgi spamstat usercgi traincgi trainlogcgi statcgi: % : %.o $(OBJS) $(USER_OBJ) $(MYSQL_OBJS)
+spamcgi spamstat usercgi traincgi trainlogcgi statcgi clapfadmincgi: % : %.o $(OBJS) $(USER_OBJ) $(MYSQL_OBJS)
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
 
 aphash: % : %.o misc.o

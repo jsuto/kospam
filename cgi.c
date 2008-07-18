@@ -1,5 +1,5 @@
 /*
- * cgi.c, 2008.05.14, SJ
+ * cgi.c, 2008.07.14, SJ
  */
 
 #include <stdio.h>
@@ -67,6 +67,18 @@ struct cgidata extract_cgi_parameters(char *data){
    if((p = strstr(data, "type="))){
       snprintf(cgi.type, SMALLBUFSIZE-1, "%s", p+5);
       p = strchr(cgi.type, '&');
+      if(p) *p = '\0';
+   }
+
+   if((p = strstr(data, "email="))){
+      snprintf(cgi.email, SMALLBUFSIZE-1, "%s", p+6);
+      p = strchr(cgi.email, '&');
+      if(p) *p = '\0';
+   }
+
+   if((p = strstr(data, "userid="))){
+      snprintf(cgi.userid, SMALLBUFSIZE-1, "%s", p+7);
+      p = strchr(cgi.userid, '&');
       if(p) *p = '\0';
    }
 
@@ -309,5 +321,34 @@ void show_message(char *dir, char *message){
       }
    }
 
+}
+
+
+/*
+ * show cgi menu
+ */
+
+void show_cgi_menu(struct __config cfg, int admin, char *current){
+   int i;
+   char *p;
+   static char *cgimenu[] = { CGI_USER_MANAGEMENT, CGI_SPAM_QUARANTINE, CGI_USER_PREF, CGI_PERSONAL_STAT, CGI_TRAIN_LOG };
+
+   printf("\n\n<center>");
+
+   for(i=0; i<(sizeof(cgimenu) / sizeof(p)); i++){
+      if(admin == 0 && i <= 0) continue;
+
+      if(strcmp(current, cgimenu[i])){
+         if(i == 0) printf("<a href=\"%s\">%s</a> ", cfg.clapfadmincgi_url, cgimenu[i]);
+         if(i == 1) printf("<a href=\"%s\">%s</a> ", cfg.spamcgi_url, cgimenu[i]);
+         if(i == 2) printf("<a href=\"%s\">%s</a> ", cfg.usercgi_url, cgimenu[i]);
+         if(i == 3) printf("<a href=\"%s\">%s</a> ", cfg.statcgi_url, cgimenu[i]);
+         if(i == 4) printf("<a href=\"%s\">%s</a> ", cfg.trainlogcgi_url, cgimenu[i]);
+      }
+      else
+         printf("%s ", cgimenu[i]);
+   }
+
+   printf("</center>\n\n");
 }
 

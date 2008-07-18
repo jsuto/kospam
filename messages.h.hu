@@ -1,7 +1,10 @@
 /*
- * messages.h.hu, 2008.02.15, SJ
+ * messages.h.hu, 2008.07.14, SJ
  * Hungarian version
  */
+
+#ifndef _MESSAGES_H
+ #define _MESSAGES_H
 
 // cgi
 
@@ -34,17 +37,31 @@
 #define ERR_CGI_PURGED_MESSAGES "Üzenetek törölve"
 #define ERR_CGI_BACK "Vissza"
 
+#define ERR_CGI_YOU_NOT_ADMIN "Ön nem adminisztrátor"
+
 #define ERR_CGI_I_TAUGHT "Köszönöm! Megtanultam a levelet"
 #define ERR_CGI_DELIVERED_REMOVED_AND_TRAINED_AS_HAM "Kézbesítettem a levelet, megtanultam HAM üzenetként, majd töröltem"
 #define ERR_CGI_REMOVED_AND_TRAINED_AS_HAM "HAM üzenetként megtanultam a levelet, majd töröltem"
+
+#define ERR_CGI_EXISTING_USER "Már létezõ felhasználói fiók"
+#define ERR_CGI_NEW_USER_SUCCESSFULLY_ADDED "Új felhasználó sikeresen felvéve"
+#define ERR_CGI_CANNOT_REMOVE "Nem tudom törölni"
+#define ERR_CGI_USER_SUCCESSFULLY_REMOVED "Sikeresen töröltem"
+#define ERR_CGI_CANNOT_MODIFY "Nem tudom módosítani"
+#define ERR_CGI_NEW_USER_SUCCESSFULLY_MODIFIED "Felhasználó sikeresen módosítva"
+
+#define CGI_USER_MANAGEMENT "Felhasználók menedzselése"
 
 #define CGI_DATE "Dátum"
 #define CGI_FROM "Feladó"
 #define CGI_SUBJECT "Tárgy"
 #define CGI_USER "Felhasználó"
+#define CGI_EMAIL "Email cím"
+#define CGI_USERID "Felhasználói azonosító szám"
 #define CGI_MESSAGE "Üzenet"
 #define CGI_HAM_OR_SPAM "Ham/Spam"
-#define CGI_USER_LIST "Felhasználók Listája"
+#define CGI_USER_LIST "Felhasználók karanténjainak listája"
+#define CGI_ADD_NEW_USER "Új felhasználó hozzáadása"
 
 // mysql
 
@@ -99,3 +116,7 @@
 #define MSG_TEXT_AND_BASE64 "az uzenet szoveges, megis base64 kodolva kuldtek"
 #define MSG_EMBED_IMAGE "az uzenetben beagyazaott kep van"
 #define MSG_ABSOLUTELY_SPAM "az uzenet biztosan spam"
+
+
+#endif /* _MESSGAES_H */
+

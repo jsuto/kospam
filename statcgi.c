@@ -1,5 +1,5 @@
 /*
- * statcgi.c, 2007.08.22, SJ
+ * statcgi.c, 2008.07.14, SJ
  */
 
 #include <stdio.h>
@@ -30,6 +30,8 @@
 
 FILE *cgiIn, *f, *F;
 char *input;
+int admin_user = 0;
+
 
 int main(){
    int method=M_UNDEF, timespan=0;
@@ -46,8 +48,15 @@ int main(){
 
    cfg = read_config(CONFIG_FILE);
 
-   if(!getenv("REMOTE_USER"))
-      errout(NULL, ERR_CGI_NOT_AUTHENTICATED);
+   p = getenv("REMOTE_USER");
+   if(!p)
+      errout(input, ERR_CGI_NOT_AUTHENTICATED);
+
+   /* if you are an administrator */
+   if(strcmp(p, cfg.admin_user) == 0){
+      admin_user = 1;
+   }
+
 
 #ifdef HAVE_MYSQL
    mysql_init(&mysql);
@@ -85,7 +94,7 @@ int main(){
 
    printf("<h1>%s</h1>\n", CGI_PERSONAL_STAT);
 
-   printf("\n\n<center><a href=\"%s\">%s</a> <a href=\"%s\">%s</a> %s <a href=\"%s\">%s</a></center><p>\n\n\n", cfg.spamcgi_url, CGI_SPAM_QUARANTINE, cfg.usercgi_url, CGI_USER_PREF, CGI_PERSONAL_STAT, cfg.trainlogcgi_url, CGI_TRAIN_LOG);
+   show_cgi_menu(cfg, admin_user, CGI_PERSONAL_STAT);
 
 
    /* determine uid in stat table */

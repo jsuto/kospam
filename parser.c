@@ -1,5 +1,5 @@
 /*
- * parser.c, 2008.06.28, SJ
+ * parser.c, 2008.07.16, SJ
  */
 
 #include <stdio.h>
@@ -210,6 +210,21 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
 
    state->line_num++;
 
+   /* skip empty lines */
+
+   if(buf[0] == '\r' || buf[0] == '\n'){
+      if(state->is_header == 1){
+         state->is_header = 0;
+         state->message_state = MSG_BODY;
+      }
+
+   #ifdef DEBUG
+      fprintf(stderr, "\n");
+   #endif
+
+      return 0;
+   }
+
    /* check for our anti backscatter signo, SJ */
 
    if(sdata->need_signo_check == 1){
@@ -220,13 +235,6 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
    /* header checks */
 
    if(state->is_header == 1){
-
-      /* end of header? */
-
-      if(buf[0] == '\r' || buf[0] == '\n'){
-         state->is_header = 0;
-         state->message_state = MSG_BODY;
-      }
 
       /* Subject: */
 
@@ -315,6 +323,7 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
 
       state->textplain = 0;
       state->base64 = 0;
+      state->base64_text = 0;
       state->utf8 = 0;
       state->iso_8859_2 = 1; /* changed 0->1, 2008.06.28, SJ */
 
@@ -455,13 +464,6 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
 
    }
 
-   /* if this is an empty new line, then reset some state variables, 2008.06.11, SJ */
-
-   if(buf[0] == '\r' || buf[0] == '\n'){
-      state->base64 = 0;
-      state->base64_text = 0;
-      state->textplain = 1;
-   }
  
    /* skip the boundary itself */
 
@@ -525,16 +527,6 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
 
    html_decode(buf);
 
-
-   /* 
-    * skip message headers we don't want. Look shdr.h and modify/update the header lines
-    * you want to skip, 2006.02.20, SJ
-    */
-
-   for(i=0; i<(sizeof(skip_headers) / sizeof(p)); i++){
-      if(strncasecmp(buf, skip_headers[i], strlen(skip_headers[i])) == 0)
-         return 0;
-   }
 
    /* skip the first line too, if it's a "From <email address> date" format */
 

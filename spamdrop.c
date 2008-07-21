@@ -609,28 +609,22 @@ ENDE_SPAMDROP:
             printf("%s", &buf[9]);
             sent_subject_spam_prefix = 1;
 
-            printf("%s", clapf_info);
-            sent_clapf_info = 1;
-
             continue;
          }
 
          if(is_header == 1 && (buf[0] == '\n' || buf[0] == '\r')){
             is_header = 0;
 
-            if(result.spaminess >= cfg.spam_overall_limit && result.spaminess < 1.01){
+            /* if we did not find a Subject line, add one - if we have to */
 
-               /* if we did not find a Subject line, add one - if we have to */
+            if(sent_subject_spam_prefix == 0 && put_subject_spam_prefix == 1 && result.spaminess >= cfg.spam_overall_limit && result.spaminess < 1.01)
+               printf("Subject: %s\r\n", cfg.spam_subject_prefix);
 
-               if(sent_subject_spam_prefix == 0 && put_subject_spam_prefix == 1)
-                  printf("Subject: %s\r\n", cfg.spam_subject_prefix);
-
-               if(sent_clapf_info == 0){
-                  printf("%s", clapf_info);
-                  sent_clapf_info = 1;
-               }
-
+            if(sent_clapf_info == 0){
+               printf("%s", clapf_info);
+               sent_clapf_info = 1;
             }
+
          }
 
          if(strncmp(buf, cfg.clapf_header_field, strlen(cfg.clapf_header_field)))

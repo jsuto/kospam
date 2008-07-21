@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2008.06.13, SJ
+ * spamdrop.c, 2008.07.21, SJ
  */
 
 #include <stdio.h>
@@ -81,11 +81,11 @@ int open_db(char *messagefile){
 int main(int argc, char **argv, char **envp){
    FILE *f;
    int i, n, fd, fd2, tot_len=0, rc=0, is_header=1, rounds=1;
-   int print_message=0, print_summary_only=0, put_subject_spam_prefix=0, sent_subject_spam_prefix=0;
+   int print_message=0, print_summary_only=0, put_subject_spam_prefix=0, sent_subject_spam_prefix=0, sent_clapf_info=0;
    int is_spam=0, train_as_ham=0, train_as_spam=0, blackhole_request=0, training_request=0;
    int train_mode=T_TOE;
    uid_t u;
-   char buf[MAXBUFSIZE], qpath[SMALLBUFSIZE], trainbuf[SMALLBUFSIZE], ID[RND_STR_LEN+1], whitelistbuf[SMALLBUFSIZE];
+   char buf[MAXBUFSIZE], qpath[SMALLBUFSIZE], trainbuf[SMALLBUFSIZE], ID[RND_STR_LEN+1], whitelistbuf[SMALLBUFSIZE], clapf_info[MAXBUFSIZE];
    char *configfile=CONFIG_FILE, *username=NULL, *from=NULL;
    struct timezone tz;
    struct timeval tv_start, tv_stop;
@@ -565,51 +565,81 @@ ENDE_SPAMDROP:
 
    #endif
 
+      /* assemble clapf header info */
+
+      memset(clapf_info, 0, MAXBUFSIZE);
+
+      snprintf(clapf_info, MAXBUFSIZE-1, "%s%s\r\n%s%s%.4f\r\n%s%ld ms\r\n",
+              cfg.clapf_header_field, sdata.ttmpfile, trainbuf, cfg.clapf_header_field, result.spaminess, cfg.clapf_header_field, tvdiff(tv_stop, tv_start)/1000);
+
+      if(result.spaminess > 0.9999){
+         strncat(clapf_info, cfg.clapf_header_field, MAXBUFSIZE-1);
+         strncat(clapf_info, MSG_ABSOLUTELY_SPAM, MAXBUFSIZE-1);
+         strncat(clapf_info, "\r\n", MAXBUFSIZE-1);
+      }
+
+      if(result.spaminess >= cfg.spam_overall_limit && result.spaminess < 1.01){
+         strncat(clapf_info, cfg.clapf_header_field, MAXBUFSIZE-1);
+         strncat(clapf_info, "Yes\r\n", MAXBUFSIZE-1);
+      }
+
+   #ifdef MY_TEST
+      strncat(clapf_info, rblbuf, MAXBUFSIZE-1);
+   #endif
+   #ifdef HAVE_SPAMSUM
+      strncat(clapf_info, spamsum_buf, MAXBUFSIZE-1);
+   #endif
+   #ifdef HAVE_LANG_DETECT
+      strncat(clapf_info, cfg.clapf_header_field, MAXBUFSIZE-1);
+      strncat(clapf_info, lang, MAXBUFSIZE-1);
+      strncat(clapf_info, "\r\n", MAXBUFSIZE-1);
+   #endif
+   #ifdef HAVE_WHITELIST
+      strncat(clapf_info, whitelistbuf, MAXBUFSIZE-1);
+   #endif
+
+
       while(fgets(buf, MAXBUFSIZE-1, f)){
 
          /* tag the Subject line if we have to, 2007.08.21, SJ */
 
-         if(is_header == 1 && put_subject_spam_prefix == 1 && strncmp(buf, "Subject:", 8) == 0 && !strstr(buf, cfg.spam_subject_prefix)){ 
+         if(is_header == 1 && put_subject_spam_prefix == 1 && strncmp(buf, "Subject:", 8) == 0 && !strstr(buf, cfg.spam_subject_prefix)){
             printf("Subject: ");
             printf("%s", cfg.spam_subject_prefix);
             printf("%s", &buf[9]);
             sent_subject_spam_prefix = 1;
+
+            printf("%s", clapf_info);
+            sent_clapf_info = 1;
+
             continue;
          }
 
          if(is_header == 1 && (buf[0] == '\n' || buf[0] == '\r')){
             is_header = 0;
 
-         #ifdef MY_TEST
-            printf("%s", rblbuf);
-         #endif
-         #ifdef HAVE_SPAMSUM
-            printf("%s", spamsum_buf);
-         #endif
-
-            printf("%s%s\r\n", cfg.clapf_header_field, sdata.ttmpfile);
-            printf("%s%s%.4f\r\n", trainbuf, cfg.clapf_header_field, result.spaminess);
-         #ifdef HAVE_LANG_DETECT
-            printf("%s%s\r\n", cfg.clapf_header_field, lang);
-         #endif
-            printf("%s%ld ms\r\n", cfg.clapf_header_field, tvdiff(tv_stop, tv_start)/1000);
-         #ifdef HAVE_WHITELIST
-            printf("%s", whitelistbuf);
-         #endif
-            if(result.spaminess > 0.9999) printf("%s%s\r\n", cfg.clapf_header_field, MSG_ABSOLUTELY_SPAM);
             if(result.spaminess >= cfg.spam_overall_limit && result.spaminess < 1.01){
 
-               /* if we did not find a Subject line */
+               /* if we did not find a Subject line, add one - if we have to */
 
                if(sent_subject_spam_prefix == 0 && put_subject_spam_prefix == 1)
                   printf("Subject: %s\r\n", cfg.spam_subject_prefix);
 
-               printf("%sYes\r\n", cfg.clapf_header_field);
+               if(sent_clapf_info == 0){
+                  printf("%s", clapf_info);
+                  sent_clapf_info = 1;
+               }
+
             }
          }
 
          if(strncmp(buf, cfg.clapf_header_field, strlen(cfg.clapf_header_field)))
             printf("%s", buf);
+      }
+
+      if(sent_clapf_info == 0){
+         printf("%s\r\n", clapf_info);
+         sent_clapf_info = 1;
       }
 
    }

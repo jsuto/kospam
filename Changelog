@@ -1,5 +1,11 @@
 0.3.31-rc2:
 
+2008.07.21, SJ
+
+Fixed a bug preventing spamdrop to print its extra header info
+in case of a message without subject line and without body.
+(spamdrop.c)
+
 2008.07.17, SJ
 
 Unified spam quarantine cgi menu. QP decoder fix.

@@ -1,5 +1,5 @@
 /*
- * misc.c, 2008.05.05, SJ
+ * misc.c, 2008.07.22, SJ
  */
 
 #include <stdio.h>
@@ -349,6 +349,41 @@ void fix_url(char *url){
       }
    }
 
+}
+
+
+/*
+ * fix a long FQDN
+ */
+
+void fix_fqdn(char *fqdn){
+   char *p, *q, m[MAX_TOKEN_LEN], fixed_fqdn[MAXBUFSIZE];
+   int i, dots=0;
+
+   /* chop trailing dot */
+
+   if(fqdn[strlen(fqdn)-1] == '.')
+      fqdn[strlen(fqdn)-1] = '\0';
+
+   memset(fixed_fqdn, 0, MAXBUFSIZE);
+
+   p = fqdn;
+
+   dots = count_char_in_buffer(p, '.');
+   if(dots < 1)
+      return;
+
+   for(i=0; i<=dots; i++){
+      q = split(p, '.', m, MAX_TOKEN_LEN-1);
+      if(i>dots-2){
+         strncat(fixed_fqdn, m, MAXBUFSIZE-1);
+         if(i < dots)
+             strncat(fixed_fqdn, ".", MAXBUFSIZE-1);
+      }
+      p = q;
+   }
+
+   strcpy(fqdn, fixed_fqdn);
 }
 
 

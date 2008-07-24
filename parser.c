@@ -1,5 +1,5 @@
 /*
- * parser.c, 2008.07.16, SJ
+ * parser.c, 2008.07.22, SJ
  */
 
 #include <stdio.h>
@@ -683,6 +683,10 @@ DECOMPOSE:
          continue;
       }
 
+      /* if we have a long string in the Received: lines, let's trucate it, 
+         and it may be a domain name, 2008.07.22 */
+      if(state->message_state == MSG_RECEIVED && strlen(puf) > MAX_WORD_LEN)
+         fix_fqdn(puf);
 
       /* skip too short or long or numeric only tokens */
       if(strlen(puf) < MIN_WORD_LEN || strlen(puf) > MAX_WORD_LEN || is_hex_number(puf))

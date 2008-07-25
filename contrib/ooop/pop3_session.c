@@ -1,5 +1,5 @@
 /*
- * pop3_session.c, 2008.06.04, SJ
+ * pop3_session.c, 2008.07.25, SJ
  */
 
 #include <stdio.h>
@@ -31,6 +31,12 @@
    int deny_severity = LOG_WARNING;
    int allow_severity = LOG_DEBUG;
    struct request_info req;
+#endif
+#ifdef HAVE_MYSQL
+   MYSQL mysql;
+   MYSQL_RES *res;
+   MYSQL_ROW row;
+   struct ue UE;
 #endif
 #ifdef HAVE_MYDB
    struct mydb_node *mhash[MAX_MYDB_HASH];
@@ -383,6 +389,16 @@ void ooop(int new_sd, int use_ssl, SSL *ssl, struct __config cfg){
 
          /* open database */
 
+      #ifdef HAVE_MYSQL
+         mysql_init(&mysql);
+         mysql_options(&mysql, MYSQL_OPT_CONNECT_TIMEOUT, (const char*)&cfg.mysql_connect_timeout);
+         mysql_options(&mysql, MYSQL_OPT_RECONNECT, (const char*)&cfg.mysql_enable_autoreconnect);
+
+         if(mysql_real_connect(&mysql, cfg.mysqlhost, cfg.mysqluser, cfg.mysqlpwd, cfg.mysqldb, cfg.mysqlport, cfg.mysqlsocket, 0)
+            dbh = 1;
+         else
+            syslog(LOG_PRIORITY, "%s", ERR_MYSQL_CONNECT);
+      #endif
       #ifdef HAVE_MYDB
          dbh = init_mydb(tokendb, mhash, &sdata);
       #endif
@@ -567,7 +583,13 @@ void ooop(int new_sd, int use_ssl, SSL *ssl, struct __config cfg){
                 * statistical check
                 */
 
+            #ifdef HAVE_MYSQL
+               if(dbh == 1)
+                  result = bayes_file(mysql, state, sdata, cfg);
+            #endif
+            #ifdef MYDB
                result = bayes_file(mhash, sstate, sdata, cfg);
+            #endif
 
                if(result.spaminess >= cfg.spam_overall_limit){
                   snprintf(spaminfo, SMALLBUFSIZE-1, "%s", INFO_SPAM_BAYES);
@@ -701,6 +723,9 @@ QUITTING:
 
    close(sd);
 
+#ifdef HAVE_MYSQL
+   mysql_close(&mysql);
+#endif
 #ifdef HAVE_MYDB
    close_mydb(mhash);
 #endif

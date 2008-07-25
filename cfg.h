@@ -1,5 +1,5 @@
 /*
- * cfg.h, 2008.07.16, SJ
+ * cfg.h, 2008.07.25, SJ
  */
 
 #ifndef _CFG_H
@@ -142,6 +142,7 @@ struct __config {
    char mysqlpwd[MAXVAL];
    char mysqldb[MAXVAL];
    int mysql_connect_timeout;
+   int mysql_enable_autoreconnect;
 
    // sqlite3 stuff
 

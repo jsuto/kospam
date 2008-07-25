@@ -1,5 +1,5 @@
 /*
- * mysql.c, 2008.05.14, SJ
+ * mysql.c, 2008.07.25, SJ
  */
 
 #include <stdio.h>
@@ -274,7 +274,11 @@ int update_mysql_tokens(MYSQL mysql, struct _token *token, unsigned long uid){
       p = q;
    }
 
-   snprintf(buf, SMALLBUFSIZE-1, "0) AND (uid=0 OR uid=%ld)", uid);
+   if(uid > 0)
+      snprintf(buf, SMALLBUFSIZE-1, "0) AND (uid=0 OR uid=%ld)", uid);
+   else
+      snprintf(buf, SMALLBUFSIZE-1, "0) AND uid=0");
+
    buffer_cat(query, buf);
 
    if(mysql_real_query(&mysql, query->data, strlen(query->data)) != 0)

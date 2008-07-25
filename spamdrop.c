@@ -500,6 +500,9 @@ int main(int argc, char **argv, char **envp){
 
 CLOSE_DB:
 
+#ifdef HAVE_MYSQL
+   mysql_close(&mysql);
+#endif
 #ifdef HAVE_SQLITE3
    sqlite3_close(db);
 #endif

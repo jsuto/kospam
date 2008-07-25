@@ -1,5 +1,5 @@
 /*
- * cfg.c, 2008.07.16, SJ
+ * cfg.c, 2008.07.25, SJ
  */
 
 #include <stdio.h>
@@ -145,6 +145,7 @@ struct __config read_config(char *configfile){
    cfg.clamav_use_phishing_db = 1;
 
    cfg.mysql_connect_timeout = 2;
+   cfg.mysql_enable_autoreconnect = 0;
 
    cfg.page_len = MESSAGES_PER_ONE_PAGE;
 
@@ -465,6 +466,9 @@ struct __config read_config(char *configfile){
 
                   if(strcmp(key, "mysql_connect_timeout") == 0)
                      cfg.mysql_connect_timeout = atoi(val);
+
+                  if(strcmp(key, "mysql_enable_autoreconnect") == 0)
+                     cfg.mysql_enable_autoreconnect = atoi(val);
 
                   if(strcmp(key, "sqlite3") == 0)
                      memcpy(cfg.sqlite3, val, MAXVAL-1);

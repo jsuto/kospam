@@ -63,7 +63,7 @@ $ts1 = time();
 
 foreach $w (keys %T){
    ($nham, $nspam) = split(/:/, $T{$w});
-   if($nham + $nspam >= 2){ print TEMP "$w 0 $nham $nspam\n"; }
+   if($nham + $nspam >= 2){ print TEMP "$w 0 $nham $nspam $ts1\n"; }
 }
 
 close TEMP;

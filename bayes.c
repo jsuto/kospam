@@ -229,7 +229,7 @@ double eval_tokens(struct mydb_node *mhash[MAX_MYDB_HASH], struct session_data *
    struct _token *p, *q;
    float spaminess, spaminess2;
    int found_on_rbl=0, has_embed_image=0, surbl_match=0;
-#ifdef HAVE_SURBL
+#ifdef HAVE_RBL
    struct url *url;
    char surbl_token[MAX_TOKEN_LEN];
    int i, j;
@@ -385,7 +385,7 @@ double eval_tokens(struct mydb_node *mhash[MAX_MYDB_HASH], struct session_data *
 
       /* consult blacklists about the IPv4 address connecting to us */
 
-   #ifdef HAVE_SURBL
+   #ifdef HAVE_RBL
       if(strlen(cfg.rbl_domain) > 3){
          gettimeofday(&tv1, &tz);
          found_on_rbl = rbl_list_check(cfg.rbl_domain, state.ip);
@@ -407,7 +407,7 @@ double eval_tokens(struct mydb_node *mhash[MAX_MYDB_HASH], struct session_data *
 
       /* consult URL blacklists */
 
-   #ifdef HAVE_SURBL
+   #ifdef HAVE_RBL
       if(state.urls){
          url = state.urls;
 

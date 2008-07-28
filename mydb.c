@@ -95,7 +95,7 @@ void close_mydb(struct mydb_node *xhash[MAX_MYDB_HASH]){
 
 
 unsigned long long mydb_hash(unsigned long long key){
-    return key % MAX_MYDB_HASH;
+   return key % MAX_MYDB_HASH;
 }
 
 struct mydb_node *makenewmydb_node(struct mydb_node *xhash[MAX_MYDB_HASH], unsigned long long key, unsigned int nham, unsigned int nspam, unsigned long ts, unsigned int pos){

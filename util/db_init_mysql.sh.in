@@ -27,7 +27,7 @@ rm -f ham.tmp spam.tmp temp.* tokens*.cdb num_of_ham.tmp num_of_spam.tmp
 import_tokens(){
    rm -f $TEMP
 
-   prepare.pl ham.tmp spam.tmp $TEMP
+   prepare.pl ham.tmp spam.tmp `date +%s` $TEMP
 
    if test "$HASHED" = "nohash";
    then

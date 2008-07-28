@@ -609,7 +609,7 @@ fi
 
 if test "$have_rbl" = "yes"; then
    echo "(SU)RBL support: yes"
-   defs="$defs -DHAVE_SURBL"
+   defs="$defs -DHAVE_RBL"
    if test "$have_all_received" = "yes"; then
       defs="$defs -DHAVE_PROCESS_ALL_RECEIVED_LINES"
    fi
@@ -731,4 +731,3 @@ OBJS="misc.o cfg.o smtp.o sig.o decoder.o list.o parser.o cgi.o $objs"
 
 AC_OUTPUT(Makefile)
 AC_OUTPUT(contrib/spamsum/Makefile)
-AC_OUTPUT(contrib/ooop/Makefile)

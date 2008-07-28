@@ -97,7 +97,7 @@ double calc_score_chi2(struct node *xhash[MAXHASH], struct __config cfg){
 double apply_fixes(double spaminess, int found_on_rbl, int surbl_match, int has_embed_image, int base64_text, long c_shit, long l_shit, long c_hex_shit, struct __config cfg){
 
    /* in case of a surbl or rbl match */
-#ifdef HAVE_SURBL
+#ifdef HAVE_RBL
    if(surbl_match > 0){
    #ifdef DEBUG
       fprintf(stderr, "caught by surbl\n");

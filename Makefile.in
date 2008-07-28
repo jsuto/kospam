@@ -149,6 +149,10 @@ install-clapf: clapf
 	$(INSTALL) -m 0644 smtpcodes.h $(DESTDIR)$(includedir)/clapf
 	$(INSTALL) -m 0644 messages.h $(DESTDIR)$(includedir)/clapf
 	$(INSTALL) -m 0644 mydb.h $(DESTDIR)$(includedir)/clapf
+	$(INSTALL) -m 0644 list.h $(DESTDIR)$(includedir)/clapf
+	$(INSTALL) -m 0644 session.h $(DESTDIR)$(includedir)/clapf
+	$(INSTALL) -m 0644 sig.h $(DESTDIR)$(includedir)/clapf
+	$(INSTALL) -m 0644 av.h $(DESTDIR)$(includedir)/clapf
 	$(INSTALL) -d $(DESTDIR)$(bindir)
 	$(INSTALL) -d $(DESTDIR)$(libdir)
 	$(INSTALL) -m 0644 libclapf.a $(DESTDIR)$(libdir)

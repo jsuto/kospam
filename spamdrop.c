@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2008.07.21, SJ
+ * spamdrop.c, 2008.07.30, SJ
  */
 
 #include <stdio.h>
@@ -446,8 +446,10 @@ int main(int argc, char **argv, char **envp){
          is_spam = 0;
 
 
+      /* don't TUM train if this is a blackhole message */
+
       if(
-         (cfg.training_mode == T_TUM && ( (result.spaminess >= cfg.spam_overall_limit && result.spaminess < 0.99) || (result.spaminess < cfg.max_ham_spamicity && result.spaminess > 0.1) )) ||
+         (blackhole_request == 0 && cfg.training_mode == T_TUM && ( (result.spaminess >= cfg.spam_overall_limit && result.spaminess < 0.99) || (result.spaminess < cfg.max_ham_spamicity && result.spaminess > 0.1) )) ||
          (cfg.initial_1000_learning == 1 && (result.ham_msg < NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED || result.spam_msg < NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED))
         )
       {

@@ -1,5 +1,5 @@
 /*
- * mydb.c, 2008.05.11, SJ
+ * mydb.c, 2008.07.30, SJ
  */
 
 #include <stdio.h>
@@ -32,6 +32,15 @@ struct te {
    unsigned int nspam;
 };
 
+
+void init_my_hash(struct mydb_node *xhash[MAX_MYDB_HASH]){
+   int i;
+
+   for(i=0;i<MAX_MYDB_HASH;i++)
+      xhash[i] = NULL;
+}
+
+
 int init_mydb(char *mydb_file, struct mydb_node *xhash[MAX_MYDB_HASH], struct session_data *sdata){
    int i, n, fd, pos;
    unsigned char buf[N_SIZE*SEGMENT_SIZE];
@@ -40,8 +49,7 @@ int init_mydb(char *mydb_file, struct mydb_node *xhash[MAX_MYDB_HASH], struct se
 
    pos = sdata->Nham = sdata->Nspam = 0;
 
-   for(i=0;i<MAX_MYDB_HASH;i++)
-      xhash[i] = NULL;
+   init_my_hash(xhash);
 
    fd = open(mydb_file, O_RDONLY);
    if(fd == -1){
@@ -379,4 +387,36 @@ int update_tokens(char *mydbfile, struct mydb_node *xhash[MAX_MYDB_HASH], struct
    close(fd);
 
    return n;
+}
+
+
+void hash_2_to_1(struct mydb_node *xhash[MAX_MYDB_HASH], struct mydb_node *xhash2[MAX_MYDB_HASH], struct mydb_node *xhash3[MAX_MYDB_HASH]){
+   int i;
+   struct mydb_node *p, *q;
+
+   /* initialise the final hash */
+
+   for(i=0;i<MAX_MYDB_HASH;i++)
+      xhash[i] = NULL;
+
+   /* walk through the first hash */
+
+   for(i=0;i<MAX_MYDB_HASH;i++){
+      q = xhash2[i];
+      while(q != NULL){
+         addmydb_node(xhash, q->key, q->nham, q->nspam, 0, 0);
+         q = q->r;
+      }
+   }
+
+
+   /* ... and the second one */
+
+   for(i=0;i<MAX_MYDB_HASH;i++){
+      q = xhash3[i];
+      while(q != NULL){
+         addmydb_node(xhash, q->key, q->nham, q->nspam, 0, 0);
+         q = q->r;
+      }
+   }
 }

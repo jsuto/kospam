@@ -392,7 +392,7 @@ int update_tokens(char *mydbfile, struct mydb_node *xhash[MAX_MYDB_HASH], struct
 
 void hash_2_to_1(struct mydb_node *xhash[MAX_MYDB_HASH], struct mydb_node *xhash2[MAX_MYDB_HASH], struct mydb_node *xhash3[MAX_MYDB_HASH]){
    int i;
-   struct mydb_node *p, *q;
+   struct mydb_node *q;
 
    /* initialise the final hash */
 

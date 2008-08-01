@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2008.07.30, SJ
+ * spamdrop.c, 2008.08.01, SJ
  */
 
 #include <stdio.h>
@@ -482,6 +482,7 @@ int main(int argc, char **argv, char **envp){
       rounds = MAX_ITERATIVE_TRAIN_LOOPS;
 
       syslog(LOG_PRIORITY, "%s: training on a blackhole message", sdata.ttmpfile);
+      snprintf(trainbuf, SMALLBUFSIZE-1, "%sTUM on blackhole\r\n", cfg.clapf_header_field);
 
    #ifdef HAVE_MYSQL
       train_message(mysql, sdata, state, rounds, 1, T_TOE, cfg);

@@ -1,5 +1,10 @@
 0.3.31-rc2:
 
+2008.08.01, SJ
+
+Add a 'TUM' header entry in case of blackhole training.
+(spamdrop.c)
+
 2008.07.30, SJ
 
 Do not TUM train if it's a blackhole message.

@@ -10,6 +10,7 @@
 #include <sql.h>
 #include <smtpcodes.h>
 #include <session.h>
+#include <buffer.h>
 #include <config.h>
 
 #ifdef HAVE_MYSQL

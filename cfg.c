@@ -105,6 +105,7 @@ struct __config read_config(char *configfile){
    cfg.use_all_the_most_interesting_tokens = 1;
    cfg.spam_ratio_in_top10 = 0.9;
 
+   cfg.replace_junk_characters = 1;
    cfg.invalid_junk_limit = INVALID_JUNK_LIMIT;
    cfg.invalid_junk_line = INVALID_JUNK_LINE;
    cfg.invalid_hex_junk_limit = INVALID_HEX_JUNK_LIMIT;
@@ -385,6 +386,9 @@ struct __config read_config(char *configfile){
 
                   if(strcmp(key, "spam_ratio_in_top10") == 0)
                      cfg.spam_ratio_in_top10 = atof(val);
+
+                  if(strcmp(key, "replace_junk_characters") == 0)
+                     cfg.replace_junk_characters = atoi(val);
 
                   if(strcmp(key, "invalid_junk_limit") == 0)
                      cfg.invalid_junk_limit = atoi(val);

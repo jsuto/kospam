@@ -1,5 +1,5 @@
 /*
- * parser.h, 2008.05.26, SJ
+ * parser.h, 2008.08.18, SJ
  */
 
 #ifndef _PARSER_H
@@ -41,6 +41,7 @@ struct _state {
    int has_boundary2;
    int cnt_type;
    int textplain;
+   int texthtml;
    int base64;
    int utf8;
    int iso_8859_2;

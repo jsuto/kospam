@@ -1,5 +1,5 @@
 /*
- * config.h, 2008.06.04, SJ
+ * config.h, 2008.08.18, SJ
  */
 
 #ifndef _CONFIG_H
@@ -12,7 +12,6 @@
 #define OOOPNAME "ooop"
 
 #define VERSION "0.3.31-rc2"
-#define OOOPVERSION "0.3.1"
 
 #define HOSTID "av-engine.localhost"
 

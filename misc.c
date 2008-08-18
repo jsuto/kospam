@@ -113,6 +113,54 @@ int translate(unsigned char *p, int qp){
       return 0;
 }
 
+int translate2(unsigned char *p, int qp, int replace_junk){
+   int url=0, clear=0;
+   unsigned char *q=NULL, *P=p;
+
+   for(; *p; p++){
+
+      if(replace_junk == 1 && !isprint(*p) && translated_characters[(unsigned int)*p] == ' ' && *p != '\r' && *p != '\n'){
+         *p = JUNK_REPLACEMENT_CHAR;
+         continue;
+      }
+
+      /* save position of '=', 2006.01.05, SJ */
+
+      if(qp == 1 && *p == '='){
+         q = p;
+      }
+
+
+      if(strncasecmp((char *)p, "http://", 7) == 0){ p += 7; url = 1; continue; }
+      if(strncasecmp((char *)p, "https://", 8) == 0){ p += 8; url = 1; continue; }
+
+      if(url == 1 && (*p == '?' || *p == '/')) clear = 1;
+
+      /* clear the rest of the url, eg. http://aaa.fu/ahah.cgi?aa=bb => http://aaa.fu */
+
+      if(isspace(*p)) clear = 0;
+      if(clear == 1){
+         *p = ' ';
+         continue;
+      }
+
+      if(delimiter_characters[(unsigned int)*p] != ' ')
+         *p = ' ';
+      else {
+      #ifndef HAVE_CASE
+         *p = tolower(*p);
+      #endif
+      }
+   }
+
+   /* restore the soft break in quoted-printable parts, 2006.01.05, SJ */
+
+   if(qp == 1 && q && (q > P + strlen((char*)P) - 3))
+     *q = '=';
+
+   return 0;
+}
+
 
 /*
  * count the invalid characters (ie. garbage on your display) in the buffer
@@ -123,9 +171,6 @@ int count_invalid_junk(unsigned char *p){
 
    for(; *p; p++){
       if(invalid_junk_characters[(unsigned int)*p] != ' '){
-         /* 2006.05.09, SJ */
-         *p = JUNK_REPLACEMENT_CHAR;
-
          i++;
       }
    }

@@ -105,6 +105,7 @@ struct __config {
 
    float spam_ratio_in_top10;
 
+   int replace_junk_characters;
    int invalid_junk_limit;
    int invalid_junk_line;
    int invalid_hex_junk_limit;

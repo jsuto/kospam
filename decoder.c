@@ -1,5 +1,5 @@
 /*
- * decoder.c, 2008.07.17, SJ
+ * decoder.c, 2008.08.18, SJ
  */
 
 #include <stdio.h>
@@ -7,7 +7,6 @@
 #include <string.h>
 #include <ctype.h>
 #include "decoder.h"
-#include "trans.h"
 #include "config.h"
 
 static int b64[] = {
@@ -219,9 +218,6 @@ void qp_decode(unsigned char *p){
 
          c = strtol(ch, NULL, 16) % 255;
          i += 2;
-
-         /* replace character if it's not printable */
-         if(!isprint(c) && translated_characters[c] == ' ' && c != '\r' && c != '\n') c = JUNK_REPLACEMENT_CHAR;
       }
 
       p[k] = c;

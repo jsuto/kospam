@@ -1,5 +1,5 @@
 /*
- * parser.c, 2008.07.22, SJ
+ * parser.c, 2008.08.18, SJ
  */
 
 #include <stdio.h>
@@ -34,6 +34,7 @@ void init_state(struct _state *state){
    /* by default we are a text/plain message */
 
    state->textplain = 1;
+   state->texthtml = 0;
 
    state->base64 = 0;
    state->utf8 = 0;
@@ -204,15 +205,15 @@ int is_date(char *s){
 int parse(char *buf, struct _state *state, struct session_data *sdata, struct __config cfg){
    char *p, *q, *c, huf[MAXBUFSIZE], puf[MAXBUFSIZE], muf[MAXBUFSIZE], tuf[MAXBUFSIZE], rnd[RND_STR_LEN], u[SMALLBUFSIZE], token[MAX_TOKEN_LEN], phrase[MAX_TOKEN_LEN], ipbuf[IPLEN];
    int i, x, b64_len;
-   int do_utf8, do_base64, do_qp;
 
-   do_utf8 = do_base64 = do_qp = 0;
 
    state->line_num++;
 
    /* skip empty lines */
 
    if(buf[0] == '\r' || buf[0] == '\n'){
+      state->base64 = 0;
+
       if(state->is_header == 1){
          state->is_header = 0;
          state->message_state = MSG_BODY;
@@ -322,6 +323,8 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
       if(state->is_header == 1) state->message_state = MSG_CONTENT_TYPE;
 
       state->textplain = 0;
+      state->texthtml = 0;
+      state->html_comment = 0;
       state->base64 = 0;
       state->base64_text = 0;
       state->utf8 = 0;
@@ -382,16 +385,18 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
       /* 2007.04.19, SJ */
 
       if(strcasestr(buf, "text/plain") ||
-         strcasestr(buf, "text/html") ||
          strcasestr(buf, "multipart/mixed") ||
          strcasestr(buf, "multipart/alternative") ||
          strcasestr(buf, "message/delivery-status") ||
          strcasestr(buf, "text/rfc822-headers") ||
+         strcasestr(buf, "message/rfc822") ||
          strcasestr(buf, "application/ms-tnef")
       ){
 
              state->textplain = 1;
       }
+      else if(strcasestr(buf, "text/html"))
+             state->texthtml = 1;
       else
          goto DECOMPOSE;
    }
@@ -427,17 +432,17 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
    if(strncasecmp(buf, "Content-Transfer-Encoding:", strlen("Content-Transfer-Encoding:")) == 0 && strcasestr(buf, "quoted-printable"))
       state->qp = 1;
 
-   if(strncasecmp(buf, "Content-Transfer-Encoding:", strlen("Content-Transfer-Encoding:")) == 0 && state->textplain == 0)
+   if(strncasecmp(buf, "Content-Transfer-Encoding:", strlen("Content-Transfer-Encoding:")) == 0 && state->textplain == 0 && state->texthtml == 0)
       goto DECOMPOSE;
 
    if(strncasecmp(buf, "Content-Disposition:", strlen("Content-Disposition:")) == 0){
       if(state->is_header == 1) state->message_state = MSG_CONTENT_DISPOSITION;
-      if(state->textplain == 0) goto DECOMPOSE;
+      if(state->textplain == 0 && state->texthtml == 0) goto DECOMPOSE;
    }
 
    /* is it a base64 encoded text? 2006.01.02, SJ */
 
-   if(state->base64_text == 0 && state->textplain == 1 && state->base64 == 1)
+   if(state->base64_text == 0 && (state->textplain == 1 || state->texthtml == 1) && state->base64 == 1)
       state->base64_text = 1;
 
 
@@ -446,7 +451,7 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
    if(state->has_boundary == 1 && state->cnt_type == 1 && (p = strcasestr(buf, "boundary"))){
       x = extract_boundary(p, state->boundary2, BOUNDARY_LEN-1);
       if(x == 1) state->has_boundary2 = 1;
-      state->base64 = 0; state->textplain = 0; // state->qp = 0;
+      state->base64 = 0; state->textplain = 0; state->texthtml = 0; // state->qp = 0;
    }
 
    if(state->cnt_type == 1 && state->has_boundary2 == 0 && (p = strcasestr(buf, "boundary"))){
@@ -459,7 +464,7 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
          state->base64 = 0; // state->qp = 0;
       }
       else {
-         state->base64 = 0; state->textplain = 0; // state->qp = 0;
+         state->base64 = 0; state->textplain = 0; state->texthtml = 0; // state->qp = 0;
       }
 
    }
@@ -493,7 +498,7 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
 
    /* skip non textual stuff */
 
-   if(state->is_header == 0 && state->textplain == 0)
+   if(state->is_header == 0 && state->textplain == 0 && state->texthtml == 0)
       return 0;
 
    /* base64 decode buffer, 2005.03.23, SJ */
@@ -589,31 +594,27 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
 
    /* handle html comments, 2007.06.07, SJ */
 
-   if(state->html_comment == 1 && strchr(buf, '>')) state->html_comment = 0;
+   if(state->texthtml == 1){
+      if(state->html_comment == 1 && strchr(buf, '>')) state->html_comment = 0;
 
-   if(state->is_header == 0 && strstr(buf, "<!")) state->html_comment = 1;
+      if(state->is_header == 0 && strstr(buf, "<!")) state->html_comment = 1;
 
-   if(state->html_comment == 1){
-      q = strstr(buf, "<!");
-      if(q){
-         *q = '\0';
+      if(state->html_comment == 1){
+         q = strstr(buf, "<!");
+         if(q){
+            *q = '\0';
 
-      #ifdef DEBUG
-         fprintf(stderr, "DISCARDED HTML: %s", ++q);
-      #endif
+         #ifdef DEBUG
+            fprintf(stderr, "DISCARDED HTML: %s", ++q);
+         #endif
+         }
       }
-      //return 0;
    }
 
 
-
-   pre_translate(buf);
    url_decode(buf);
 
-   /*
-    * try to detect Chinese, Korean, .... (sorry guys) text, like  ^[$B.......^[(B
-    * I think these should not occur in ordinary European languages, 2006.02.02, SJ
-    */
+   /* Chinese, Japan, Korean, ... language detection here */
 
    x = 0;
 
@@ -636,8 +637,10 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
 
    if(x > 0){
       state->l_shit += x;
-      if(!strcasestr(buf, "http://") && !strcasestr(buf, "https://"))
-         return 0;
+
+      /* commented out, 2008.08.18, SJ */
+      /*if(!strcasestr(buf, "http://") && !strcasestr(buf, "https://"))
+         return 0;*/
    }
 
    /* translate junk characters to JUNK_REPLACEMENT_CHAR, 2007.09.04, SJ */
@@ -647,23 +650,25 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
          if(buf[i] < 0) buf[i] = JUNK_REPLACEMENT_CHAR;
    }
 
+
 DECOMPOSE:
-   translate((unsigned char*)buf, state->qp);
+   translate2((unsigned char*)buf, state->qp, cfg.replace_junk_characters);
 
    if(state->is_header == 1) p = strchr(buf, ' ');
    else p = buf;
 
 #ifdef DEBUG
-   //fprintf(stderr, "b64: %d %ld * %s\n", state->base64, state->c_shit, p);
+   //fprintf(stderr, "*b64: %d %ld * %s\n", state->base64, state->c_shit, p);
    fprintf(stderr, "%s\n", buf);
 #endif
 
    do {
       p = split(p, DELIMITER, puf, MAXBUFSIZE-1);
 
-      /* handle URLs, 2006.12.11, SJ */
+      /* 2008.08.18, SJ */
 
-      if(strncasecmp(puf, "http://", 7) == 0 || strncasecmp(puf, "https://", 8) == 0){
+      //if(strncasecmp(puf, "http://", 7) == 0 || strncasecmp(puf, "https://", 8) == 0){
+      if(strcasestr(puf, "http://") || strcasestr(puf, "https://")){
          q = puf;
          do {
             q = split_str(q, "http://", u, SMALLBUFSIZE-1);

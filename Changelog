@@ -1,5 +1,12 @@
 0.3.31-rc2:
 
+2008.08.18, SJ
+
+Modified the parser to use a delimiter character set table. You may
+decide whether you want "junk" characters to be transformed to 'j'
+by setting the replace_junk_characters configuration variable.
+(parser.c, misc.c, misc.h, decoder.c, trans.h, cfg.c, cfg.h, example.conf)
+
 2008.08.01, SJ
 
 Add a 'TUM' header entry in case of blackhole training.

@@ -1,5 +1,5 @@
 /*
- * sql.c, 2008.03.12, SJ
+ * sql.c, 2008.08.20, SJ
  */
 
 #include <stdio.h>
@@ -200,7 +200,7 @@ int is_sender_on_white_list(sqlite3 *db, char *email, unsigned long uid){
          while((row = mysql_fetch_row(res))){
             if(strcasestr(email, row[0])){
                r = 1;
-               goto WHITE_END;
+               break;
             }
          }
          mysql_free_result(res);
@@ -209,13 +209,16 @@ int is_sender_on_white_list(sqlite3 *db, char *email, unsigned long uid){
 #endif
 #ifdef HAVE_SQLITE3
    if(sqlite3_prepare_v2(db, buf, -1, &pStmt, pzTail) == SQLITE_OK){
-      if(sqlite3_step(pStmt) == SQLITE_ROW)
-         num = sqlite3_column_int(pStmt, 0);
+      while(sqlite3_step(pStmt) == SQLITE_ROW){
+         if(strcasestr(email, (char *)sqlite3_column_blob(pStmt, 0))){
+            r = 1;
+            break;
+         }
+      }
    }
    sqlite3_finalize(pStmt);
 #endif
 
-WHITE_END:
    return r;
 }
 

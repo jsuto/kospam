@@ -1,5 +1,10 @@
 0.3.31-rc2:
 
+2008.08.20, SJ
+
+Fixed the sqlite3 part of the is_sender_on_whitelist() function.
+(sql.c)
+
 2008.08.18, SJ
 
 Modified the parser to use a delimiter character set table. You may

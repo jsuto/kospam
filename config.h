@@ -11,7 +11,7 @@
 #define PROGNAME "clapf"
 #define OOOPNAME "ooop"
 
-#define VERSION "0.3.31-rc2"
+#define VERSION "0.3.31-rc3"
 
 #define HOSTID "av-engine.localhost"
 

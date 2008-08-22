@@ -1,5 +1,16 @@
 0.3.31-rc2:
 
+2008.08.22, SJ
+
+Removed the -DDEBUG flag from the Makefile, and added
+the "debug" configure option. If you set it to "1", it will print
+a lots of debug info to the stderr. Turn it only if using the spamtest
+utility, all the other utilities (clapf, spamdrop, ...) needs it
+turned off (set to "0").
+
+(cfg.c, cfg.h, example.c, bayes.c, score.c, chi.c, parser.c, rbl.c, black.c, Makefile.in)
+(creadits: Christoph Wilke)
+
 2008.08.20, SJ
 
 Fixed the sqlite3 part of the is_sender_on_whitelist() function.

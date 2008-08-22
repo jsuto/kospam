@@ -1,5 +1,5 @@
 /*
- * test.c, 2008.06.02, SJ
+ * test.c, 2008.07.03, SJ
  *
  * test the bayesian decision with a single message
  */
@@ -21,7 +21,7 @@
 #endif
 #ifdef HAVE_MYDB
    int rc;
-   struct mydb_node *mhash[MAX_MYDB_HASH];
+   struct mydb_node *mhash[MAX_MYDB_HASH], *mhash2[MAX_MYDB_HASH], *mhash3[MAX_MYDB_HASH];
 #endif
 
 
@@ -103,13 +103,22 @@ int main(int argc, char **argv){
    fprintf(stderr, "using %s. %.0f, %0.f ...\n", cfg.mydbfile, sdata.Nham, sdata.Nspam);
    if(rc == 1){
       result = bayes_file(mhash, state, sdata, cfg);
+
+      /*struct session_data sdata2;
+      init_mydb("/home/sj/temp/aaa.mydb", mhash2, &sdata2);
+      hash_2_to_1(mhash3, mhash, mhash2);
+      sdata.Nham += sdata2.Nham;
+      sdata.Nspam += sdata2.Nspam;
+      result = bayes_file(mhash3, state, sdata, cfg);
+      close_mydb(mhash2);
+      close_mydb(mhash3);*/
    }
    close_mydb(mhash);
 #endif
 
 #ifdef MY_TEST
    reverse_ipv4_addr(state.ip);
-   if(rbl_list_check("zen.spamhaus.org", state.ip) == 1)
+   if(rbl_list_check("zen.spamhaus.org", state.ip, cfg.verbosity) == 1)
       printf("%s: ZEN=1\r\n", state.ip);
 #endif
 

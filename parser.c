@@ -1,5 +1,5 @@
 /*
- * parser.c, 2008.08.18, SJ
+ * parser.c, 2008.08.22, SJ
  */
 
 #include <stdio.h>
@@ -219,9 +219,7 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
          state->message_state = MSG_BODY;
       }
 
-   #ifdef DEBUG
-      fprintf(stderr, "\n");
-   #endif
+      if(cfg.debug == 1) fprintf(stderr, "\n");
 
       return 0;
    }
@@ -604,9 +602,8 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
          if(q){
             *q = '\0';
 
-         #ifdef DEBUG
-            fprintf(stderr, "DISCARDED HTML: %s", ++q);
-         #endif
+            if(cfg.debug == 1)
+               fprintf(stderr, "DISCARDED HTML: %s", ++q);
          }
       }
    }
@@ -657,10 +654,7 @@ DECOMPOSE:
    if(state->is_header == 1) p = strchr(buf, ' ');
    else p = buf;
 
-#ifdef DEBUG
-   //fprintf(stderr, "*b64: %d %ld * %s\n", state->base64, state->c_shit, p);
-   fprintf(stderr, "%s\n", buf);
-#endif
+   if(cfg.debug == 1) fprintf(stderr, "%s\n", buf);
 
    do {
       p = split(p, DELIMITER, puf, MAXBUFSIZE-1);

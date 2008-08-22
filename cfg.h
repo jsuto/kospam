@@ -1,5 +1,5 @@
 /*
- * cfg.h, 2008.07.25, SJ
+ * cfg.h, 2008.08.22, SJ
  */
 
 #ifndef _CFG_H
@@ -45,6 +45,7 @@ struct __config {
    char mydomains[MAXVAL];
 
    int verbosity;
+   int debug;
 
    int session_timeout;
 

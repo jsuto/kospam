@@ -363,9 +363,8 @@ double eval_tokens(struct mydb_node *mhash[MAX_MYDB_HASH], struct session_data *
    if(cfg.use_pairs == 1){
       spaminess = calc_score(s_phrase_hash, cfg);
 
-   #ifdef DEBUG
-      fprintf(stderr, "phrase: %.4f\n", spaminess);
-   #endif
+      if(cfg.debug == 1)
+         fprintf(stderr, "phrase: %.4f\n", spaminess);
 
       if(spaminess >= cfg.spam_overall_limit || spaminess <= cfg.max_ham_spamicity)
          goto END_OF_EVALUATION;
@@ -388,13 +387,11 @@ double eval_tokens(struct mydb_node *mhash[MAX_MYDB_HASH], struct session_data *
    #ifdef HAVE_RBL
       if(strlen(cfg.rbl_domain) > 3){
          gettimeofday(&tv1, &tz);
-         found_on_rbl = rbl_list_check(cfg.rbl_domain, state.ip);
+         found_on_rbl = rbl_list_check(cfg.rbl_domain, state.ip, cfg.verbosity);
          gettimeofday(&tv2, &tz);
-      #ifdef DEBUG
-         fprintf(stderr, "rbl check took %ld ms\n", tvdiff(tv2, tv1)/1000);
-      #else
+
+         if(cfg.debug == 1) fprintf(stderr, "rbl check took %ld ms\n", tvdiff(tv2, tv1)/1000);
          if(cfg.verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: rbl check took %ld ms", sdata->ttmpfile, tvdiff(tv2, tv1)/1000);
-      #endif
 
          for(i=0; i<found_on_rbl; i++){
             snprintf(surbl_token, MAX_TOKEN_LEN-1, "RBL%d*%s", i, state.ip);
@@ -413,13 +410,12 @@ double eval_tokens(struct mydb_node *mhash[MAX_MYDB_HASH], struct session_data *
 
          while(url){
             gettimeofday(&tv1, &tz);
-            i = rbl_list_check(cfg.surbl_domain, url->url_str+4);
+            i = rbl_list_check(cfg.surbl_domain, url->url_str+4, cfg.verbosity);
             gettimeofday(&tv2, &tz);
-         #ifdef DEBUG
-            fprintf(stderr, "surbl check for %s (%d) took %ld ms\n", url->url_str+4, i, tvdiff(tv2, tv1)/1000);
-         #else
+
+            if(cfg.debug == 1) fprintf(stderr, "surbl check for %s (%d) took %ld ms\n", url->url_str+4, i, tvdiff(tv2, tv1)/1000);
             if(cfg.verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: surbl check took %ld ms", sdata->ttmpfile, tvdiff(tv2, tv1)/1000);
-         #endif
+
             surbl_match += i;
 
             for(j=0; j<i; j++){
@@ -437,9 +433,8 @@ double eval_tokens(struct mydb_node *mhash[MAX_MYDB_HASH], struct session_data *
 
       if(cfg.use_pairs == 1){
          spaminess = calc_score(s_mix, cfg);
-      #ifdef DEBUG
-         fprintf(stderr, "mix: %.4f\n", spaminess);
-      #endif
+         if(cfg.debug == 1)
+            fprintf(stderr, "mix: %.4f\n", spaminess);
 
          if(spaminess >= cfg.spam_overall_limit || spaminess <= cfg.max_ham_spamicity)
             goto END_OF_EVALUATION;
@@ -529,7 +524,7 @@ struct c_res bayes_file(struct mydb_node *mhash[MAX_MYDB_HASH], struct _state st
    /* evaluate the blackhole result, 2006.10.02, SJ */
 
 #ifdef HAVE_BLACKHOLE
-   if(strlen(cfg.blackhole_path) > 3 && blackness(cfg.blackhole_path, state.ip, cfg.verbosity) > 100){
+   if(strlen(cfg.blackhole_path) > 3 && blackness(cfg.blackhole_path, state.ip, cfg) > 100){
       syslog(LOG_PRIORITY, "%s: found %s on our blackhole", p, state.ip);
 
       result.spaminess = cfg.spaminess_of_blackholed_mail;
@@ -557,9 +552,8 @@ struct c_res bayes_file(struct mydb_node *mhash[MAX_MYDB_HASH], struct _state st
    if(cfg.group_type == GROUP_MERGED)
       snprintf(buf, MAXBUFSIZE-1, "SELECT nham, nspam FROM %s WHERE uid=0 OR uid=%ld", SQL_MISC_TABLE, QRY.uid);
 
-#ifdef DEBUG
-   fprintf(stderr, "uid: %ld\n", QRY.uid);
-#endif
+   if(cfg.debug == 1)
+      fprintf(stderr, "uid: %ld\n", QRY.uid);
 
    /*
     * select the number of ham and spam messages, and return error if less than 1
@@ -593,9 +587,8 @@ struct c_res bayes_file(struct mydb_node *mhash[MAX_MYDB_HASH], struct _state st
       return result;
    }
 
-#ifdef DEBUG
-   fprintf(stderr, "nham: %.0f, nspam: %.0f\n", QRY.ham_msg, QRY.spam_msg);
-#endif
+   if(cfg.debug == 1)
+      fprintf(stderr, "nham: %.0f, nspam: %.0f\n", QRY.ham_msg, QRY.spam_msg);
 
    /*
     * auto whitelist test, 2007.06.21, SJ
@@ -629,9 +622,8 @@ struct c_res bayes_file(struct mydb_node *mhash[MAX_MYDB_HASH], struct _state st
       }
    #endif
 
-   #ifdef DEBUG
-      fprintf(stderr, "from: %.0f, %.0f\n", ham_from, spam_from);
-   #endif
+      if(cfg.debug == 1)
+         fprintf(stderr, "from: %.0f, %.0f\n", ham_from, spam_from);
 
       if(ham_from > NUMBER_OF_GOOD_FROM && spam_from == 0){
          result.spaminess = REAL_HAM_TOKEN_PROBABILITY;

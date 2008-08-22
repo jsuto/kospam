@@ -1,5 +1,5 @@
 /*
- * cfg.c, 2008.07.25, SJ
+ * cfg.c, 2008.08.22, SJ
  */
 
 #include <stdio.h>
@@ -112,6 +112,7 @@ struct __config read_config(char *configfile){
    cfg.max_ham_spamicity = MAX_HAM_SPAMICITY;
 
    cfg.verbosity = 0;
+   cfg.debug = 0;
 
    cfg.use_antispam = 1;
 
@@ -262,6 +263,9 @@ struct __config read_config(char *configfile){
  
                   if(strcmp(key, "verbosity") == 0)
                      cfg.verbosity = atoi(val);
+
+                  if(strcmp(key, "debug") == 0)
+                     cfg.debug = atoi(val);
 
                   if(strcmp(key, "session_timeout") == 0)
                      cfg.session_timeout = atoi(val);

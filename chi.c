@@ -1,5 +1,5 @@
 /*
- * chi.c, 2007.02.26, SJ
+ * chi.c, 2008.08.22, SJ
  */
 
 #include <stdio.h>
@@ -17,9 +17,7 @@ double gsl_chi2inv(double x, double df){
 
    R = gsl_cdf_chisq_Q(x, df);
 
-#ifdef DEBUG
-   fprintf(stderr, "x=%f, df=%f, R=%f\n", x, df, R);
-#endif
+   /*fprintf(stderr, "x=%f, df=%f, R=%f\n", x, df, R);*/
 
    if(R < DBL_EPSILON)
       return 0.0;
@@ -166,9 +164,7 @@ double chi2inv_old(double x, int df, double esf){
       sum += term;
    }
 
-#ifdef DEBUG
-   fprintf(stderr, "x=%f, df=%d, R=%f\n", x, v, sum);
-#endif
+   /*fprintf(stderr, "x=%f, df=%d, R=%f\n", x, v, sum);*/
 
    if(sum < 1)
       return sum;

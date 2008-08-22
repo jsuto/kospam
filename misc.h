@@ -1,5 +1,5 @@
 /*
- * misc.h, 2008.07.22, SJ
+ * misc.h, 2008.08.22, SJ
  */
 
 #ifndef _MISC_H
@@ -48,11 +48,11 @@ void write_delivery_info(char *tmpfile, char *dir, char *mailfrom, char rcptto[M
 int move_message_to_quarantine(char *tmpfile, char *quarantine_dir, char *mailfrom, char rcptto[MAX_RCPT_TO][MAXBUFSIZE], int num_of_rcpt_to);
 int is_recipient_in_our_domains(char *rawmail,  struct __config cfg);
 
-int rbl_check(char *rbldomain, char *host);
+int rbl_check(char *rbldomain, char *host, int debug);
 int reverse_ipv4_addr(char *ip);
-int rbl_list_check(char *domainlist, char *hostlist);
+int rbl_list_check(char *domainlist, char *hostlist, int debug);
 
-unsigned long blackness(char *dir, char *ip, int v);
+unsigned long blackness(char *dir, char *ip, struct __config cfg);
 void put_ip_to_dir(char *dir, char *ip);
 
 double gsl_chi2inv(double x, double df);

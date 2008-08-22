@@ -564,7 +564,7 @@ ENDE_SPAMDROP:
    #ifdef MY_TEST
       memset(rblbuf, 0, SMALLBUFSIZE);
       reverse_ipv4_addr(state.ip);
-      if(rbl_list_check("zen.spamhaus.org", state.ip) == 1)
+      if(rbl_list_check("zen.spamhaus.org", state.ip, cfg.verbosity) == 1)
          snprintf(rblbuf, SMALLBUFSIZE-1, "%sZEN=1\r\n", cfg.clapf_header_field);
       else
          snprintf(rblbuf, SMALLBUFSIZE-1, "%sZEN=0\r\n", cfg.clapf_header_field);

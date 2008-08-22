@@ -1,5 +1,5 @@
 /*
- * rbl.c, 2008.03.05, SJ
+ * rbl.c, 2008.08.22, SJ
  */
 
 #include <stdio.h>
@@ -18,15 +18,14 @@
  * rbl check the given host against an rbl domain
  */
 
-int rbl_check(char *rbldomain, char *host){
+int rbl_check(char *rbldomain, char *host, int debug){
    char domainname[SMALLBUFSIZE];
    struct hostent *h;
 
    snprintf(domainname, SMALLBUFSIZE-1, "%s.%s", host, rbldomain);
 
-#ifdef DEBUG
-   fprintf(stderr, "RBL checking: %s\n", domainname);
-#endif
+   if(debug == 1)
+      fprintf(stderr, "RBL checking: %s\n", domainname);
 
    h = gethostbyname(domainname);
    if(h)
@@ -58,7 +57,7 @@ int reverse_ipv4_addr(char *ip){
  * roll the given host through a comma separated domain list
  */
 
-int rbl_list_check(char *domainlist, char *hostlist){
+int rbl_list_check(char *domainlist, char *hostlist, int debug){
    char *p, *q, rbldomain[MAX_TOKEN_LEN], host[2*MAX_TOKEN_LEN];
 
    if(strlen(domainlist) < 3 || strlen(hostlist) < 3) return 0;
@@ -72,7 +71,7 @@ int rbl_list_check(char *domainlist, char *hostlist){
          q = split(q, ',', host, 2*MAX_TOKEN_LEN-1);
          if(strlen(host) > 5){
             reverse_ipv4_addr(host);
-            if(rbl_check(rbldomain, host) == 1)
+            if(rbl_check(rbldomain, host, debug) == 1)
                return 1;
          }
 

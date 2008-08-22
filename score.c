@@ -1,5 +1,5 @@
 /*
- * score.c, 2008.02.01, SJ
+ * score.c, 2008.08.22, SJ
  */
 
 #include <stdio.h>
@@ -53,9 +53,8 @@ double calc_score_chi2(struct node *xhash[MAXHASH], struct __config cfg){
                P *= 1 - q->spaminess;
                l++;
 
-            #ifdef DEBUG
-               fprintf(stderr, "%s (%llu) %.4f %ld\n", q->str, APHash(q->str), q->spaminess, q->num);
-            #endif
+               if(cfg.debug == 1)
+                  fprintf(stderr, "%s (%llu) %.4f %ld\n", q->str, APHash(q->str), q->spaminess, q->num);
             }
          }
 
@@ -82,9 +81,8 @@ double calc_score_chi2(struct node *xhash[MAXHASH], struct __config cfg){
 
    I = (1 + H - S) / 2.0;
 
-#ifdef DEBUG
-   fprintf(stderr, "with esf_h: %f, esf_s: %f\n", cfg.esf_h, cfg.esf_s);
-#endif
+   if(cfg.debug == 1)
+      fprintf(stderr, "with esf_h: %f, esf_s: %f\n", cfg.esf_h, cfg.esf_s);
 
    return I;
 }
@@ -99,16 +97,16 @@ double apply_fixes(double spaminess, int found_on_rbl, int surbl_match, int has_
    /* in case of a surbl or rbl match */
 #ifdef HAVE_RBL
    if(surbl_match > 0){
-   #ifdef DEBUG
-      fprintf(stderr, "caught by surbl\n");
-   #endif
+      if(cfg.debug == 1)
+         fprintf(stderr, "caught by surbl\n");
+
       return cfg.spaminess_of_caught_by_surbl;
    }
 
    if(spaminess > DEFAULT_SPAMICITY && found_on_rbl > 0){
-   #ifdef DEBUG
-      fprintf(stderr, "caught by rbl\n");
-   #endif
+      if(cfg.debug == 1)
+         fprintf(stderr, "caught by rbl\n");
+
       return cfg.spaminess_of_caught_by_surbl;
    }
 #endif
@@ -120,23 +118,22 @@ double apply_fixes(double spaminess, int found_on_rbl, int surbl_match, int has_
    /* check junk lines, characters */
 
    if(cfg.invalid_junk_limit > 0 && c_shit > cfg.invalid_junk_limit && spaminess < cfg.spam_overall_limit){
-   #ifdef DEBUG
-      fprintf(stderr, "invalid junk characters: %ld (limit: %d)\n", c_shit, cfg.invalid_junk_limit);
-   #endif
+      if(cfg.debug == 1)
+         fprintf(stderr, "invalid junk characters: %ld (limit: %d)\n", c_shit, cfg.invalid_junk_limit);
+
       return cfg.spaminess_of_strange_language_stuff;
    }
 
    if(cfg.invalid_junk_line > 0 && l_shit >= cfg.invalid_junk_line && spaminess < cfg.spam_overall_limit){
-   #ifdef DEBUG
-      fprintf(stderr, "invalid junk lines: %ld (limit: %d)\n", l_shit, cfg.invalid_junk_line);
-   #endif
+      if(cfg.debug == 1)
+         fprintf(stderr, "invalid junk lines: %ld (limit: %d)\n", l_shit, cfg.invalid_junk_line);
+
       return cfg.spaminess_of_strange_language_stuff;
    }
 
    if(cfg.invalid_hex_junk_limit > 0 && c_hex_shit > cfg.invalid_hex_junk_limit && spaminess < cfg.spam_overall_limit){
-   #ifdef DEBUG
-      fprintf(stderr, "invalid hex. junk characters: %ld (limit: %d)\n", c_hex_shit, cfg.invalid_hex_junk_limit);
-   #endif
+      if(cfg.debug == 1)
+         fprintf(stderr, "invalid hex. junk characters: %ld (limit: %d)\n", c_hex_shit, cfg.invalid_hex_junk_limit);
 
       return cfg.spaminess_of_strange_language_stuff;
    }

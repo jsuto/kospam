@@ -98,13 +98,7 @@ spamsum:
 	(cd $(srcdir)/contrib/spamsum; make all)
 
 test:
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -DDEBUG -c $(srcdir)/bayes.c
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -DDEBUG -c $(srcdir)/black.c
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -DDEBUG -c $(srcdir)/hash.c
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -DDEBUG -c $(srcdir)/parser.c
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -DDEBUG -c $(srcdir)/score.c
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -DDEBUG -c $(srcdir)/rbl.c
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -DDEBUG -o spamtest $(srcdir)/test.c $(OBJS) $(MYSQL_OBJS) $(LIBS) @spamsum_libs@ $(LIBDIR) @LDFLAGS@
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o spamtest $(srcdir)/test.c $(OBJS) $(MYSQL_OBJS) $(LIBS) @spamsum_libs@ $(LIBDIR) @LDFLAGS@
 
 qcache: qs.o misc.o cfg.o qcache.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o qs $^ $(LIBS) -lpthread $(LIBDIR)

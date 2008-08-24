@@ -2,7 +2,7 @@
 
 2008.08.24, SJ
 
-Updated the libclamav related stuff to match the latest 0.93.3 release of clapf.
+Updated the libclamav related stuff to match the latest 0.93.3 release of clamav.
 (clapf.c, session.c)
 
 2008.08.22, SJ

@@ -20,6 +20,7 @@ INCDIR = -I. @INCDIR@ @mysql_includes@
 LIBDIR = -L. -L$(srcdir)/contrib/spamsum @LIBDIR@ @LDFLAGS@
 LIBS = @LIBS@ @mysql_libs@
 LDAP_LIBS = @ldap_libs@
+CLAMAV_EXTRA_LIBS = -lclamunrar_iface -lclamunrar
 OBJS = @OBJS@
 STORE_OBJ = @store_obj@
 USER_OBJ = @user_obj@
@@ -34,7 +35,7 @@ LIBCLAPF_VERSION=$(CLAPF_VERSION).$(CLAPF_REVISION).$(CLAPF_RELEASE)
 
 INSTALL = @INSTALL@
 
-all: clapf clapf-lib @spamsum@ @clapfstore@ splitmbox @cgi@ @parsembox@ @spamdrop@ @preparesql@ @qcache@ @test@
+all: clapf-lib clapf @spamsum@ @clapfstore@ splitmbox @cgi@ @parsembox@ @spamdrop@ @preparesql@ @qcache@ @test@
 install: install-clapf @clapfstore_install@ install-splitmbox install-man @parsembox_install@ @spamdrop_install@ @qcache_install@ @db_install@
 
 clapf.conf.old:
@@ -55,10 +56,10 @@ clapf.conf:
 	-e 's%sqlite3=.*%sqlite3=$(localstatedir)/lib/clapf/data/tokens.sdb%' \
 	-e 's%workdir=.*%workdir=$(localstatedir)/lib/clapf/tmp%' <$(srcdir)/example.conf >$@
 
-clapf: % : %.o $(OBJS) session.o $(STORE_OBJ) $(MYSQL_OBJS)
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR) @LDFLAGS@
+clapf: % : %.o
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ -lclapf $(LIBS) $(LDAP_LIBS) $(LIBDIR) @LDFLAGS@
 
-clapf-lib:
+clapf-lib:	$(OBJS) $(STORE_OBJ) $(MYSQL_OBJS)
 	ar cr libclapf.a $(OBJS) $(MYSQL_OBJS)
 	ranlib libclapf.a
 	$(CC) -shared -Wl,-soname,libclapf.so.$(CLAPF_VERSION) -o libclapf.so.$(LIBCLAPF_VERSION) $(OBJS) $(MYSQL_OBJS) $(LIBS) $(LDAP_LIBS) @LDFLAGS@
@@ -98,7 +99,7 @@ spamsum:
 	(cd $(srcdir)/contrib/spamsum; make all)
 
 test:
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o spamtest $(srcdir)/test.c $(OBJS) $(MYSQL_OBJS) $(LIBS) @spamsum_libs@ $(LIBDIR) @LDFLAGS@
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o spamtest $(srcdir)/test.c -lclapf $(LIBS) @spamsum_libs@ $(LIBDIR) @LDFLAGS@
 
 qcache: qs.o misc.o cfg.o qcache.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o qs $^ $(LIBS) -lpthread $(LIBDIR)

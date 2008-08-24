@@ -389,7 +389,8 @@ void init_session_data(struct session_data *sdata){
                if(cfg.clamav_block_encrypted_archives == 1) options |= CL_SCAN_BLOCKENCRYPTED;
 
                /* whether to enable phishing stuff */
-               if(cfg.clamav_use_phishing_db == 1) options |= CL_SCAN_PHISHING_DOMAINLIST;
+               //if(cfg.clamav_use_phishing_db == 1) options |= CL_SCAN_PHISHING_DOMAINLIST;
+
 
                ret = cl_scanfile(sdata.ttmpfile, &virname, NULL, root, &limits, options);
 

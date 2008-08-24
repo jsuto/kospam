@@ -1,5 +1,5 @@
 /*
- * clapf.c, 2008.05.18, SJ
+ * clapf.c, 2008.08.24, SJ
  */
 
 #include <stdio.h>
@@ -128,11 +128,13 @@ void reload_config(){
 
     memset(&limits, 0, sizeof(struct cl_limits));
 
-    limits.maxfiles = cfg.clamav_maxfile;
-    limits.maxfilesize = cfg.clamav_max_archived_file_size;
-    limits.maxreclevel = cfg.clamav_max_recursion_level;
-    limits.maxratio = cfg.clamav_max_compress_ratio;
-    limits.archivememlim = cfg.clamav_archive_mem_limit;
+    limits.maxfiles = cfg.clamav_maxfile;                   /* maximum number of files to be scanned
+                                                               within a single archive */
+    limits.maxfilesize = cfg.clamav_max_archived_file_size; /* compressed files will only be decompressed
+                                                               and scanned up to this size */
+    limits.maxreclevel = cfg.clamav_max_recursion_level;    /* maximum recursion level for archives */
+    limits.archivememlim = cfg.clamav_archive_mem_limit;    /* limit memory usage for some unpackers */
+
 
     if(cfg.clamav_use_phishing_db == 1)
        options = CL_DB_STDOPT|CL_DB_PHISHING|CL_DB_PHISHING_URLS;

@@ -1,5 +1,5 @@
 /*
- * lang.c, 2008.03.18, SJ
+ * lang.c, 2008.08.26, SJ
  */
 
 #include <stdio.h>
@@ -119,7 +119,7 @@ char *check_lang(struct _token *T){
 
    lang_detected_num[0] = get_distance_text(t, n, lang_hu1);
    lang_detected_num[2] = get_distance_text(t, n, lang_en);
-   //lang_detected_num[3] = get_distance_text(t, n, lang_de);
+   lang_detected_num[3] = get_distance_text(t, n, lang_de);
    lang_detected_num[4] = get_distance_text(t, n, lang_junk);
 
    r = -1;

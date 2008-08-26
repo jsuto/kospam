@@ -1,5 +1,11 @@
 0.3.31-rc3:
 
+2008.08.26, SJ
+
+Various bug fixes by Chris.
+(spamdrop.c, lang.c)
+(creadits: Christoph Wilke)
+
 2008.08.24, SJ
 
 Updated the libclamav related stuff to match the latest 0.93.3 release of clamav.

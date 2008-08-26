@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2008.08.01, SJ
+ * spamdrop.c, 2008.08.26, SJ
  */
 
 #include <stdio.h>
@@ -525,7 +525,7 @@ CLOSE_DB:
    if(cfg.store_metadata == 1 && tot_len <= cfg.max_message_size_to_filter && blackhole_request == 0){
       if(result.spaminess >= cfg.spam_overall_limit)
          snprintf(qpath, SMALLBUFSIZE-1, "s.%s", sdata.ttmpfile);
-      else
+      else if(cfg.store_only_spam == 0)
          snprintf(qpath, SMALLBUFSIZE-1, "h.%s", sdata.ttmpfile);
 
       link(sdata.ttmpfile, qpath);

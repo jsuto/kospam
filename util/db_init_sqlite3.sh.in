@@ -1,6 +1,6 @@
 #!/bin/sh
 ##
-## db_init_sqlite3.sh, 2007.11.19, SJ
+## db_init_sqlite3.sh, 2008.08.27, SJ
 ## create the SQLite3 tables and load ham/spam hashed tokens from scratch
 ##
 
@@ -42,7 +42,7 @@ import_tokens(){
 
 process_maildir(){
    echo -n "parsing HAM directory. . . "
-   for i in `\ls $HAM`; do (echo "*** NEW_MSG_STARTS_HERE $NHAM ***"; parsembox $HAM/$i ) | shrink.pl; NHAM=`expr $NHAM + 1`; done > ham.tmp
+   for i in `\ls $HAM`; do (echo "*** NEW_MSG_STARTS_HERE $NHAM ***"; parsembox $HAM/$i ) | shrink.pl; NHAM=`expr $NHAM + 1`; done > ham.tmp 2>/dev/null
 
    TS2=`date +%s`
    echo `expr $TS2 - $TS1` " [sec]"
@@ -50,7 +50,7 @@ process_maildir(){
    TS1=$TS2
 
    echo -n "parsing SPAM directory. . . "
-   for i in `\ls $SPAM`; do (echo "*** NEW_MSG_STARTS_HERE $NSPAM ***"; parsembox $SPAM/$i ) | shrink.pl; NSPAM=`expr $NSPAM + 1`; done > spam.tmp
+   for i in `\ls $SPAM`; do (echo "*** NEW_MSG_STARTS_HERE $NSPAM ***"; parsembox $SPAM/$i ) | shrink.pl; NSPAM=`expr $NSPAM + 1`; done > spam.tmp 2>/dev/null
 
    TS2=`date +%s`
    echo `expr $TS2 - $TS1` " [sec]"

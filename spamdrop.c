@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2008.08.26, SJ
+ * spamdrop.c, 2008.08.28, SJ
  */
 
 #include <stdio.h>
@@ -169,7 +169,6 @@ int main(int argc, char **argv, char **envp){
       }
    }
 
-   snprintf(buf, MAXBUFSIZE-1, "%s/%s/%c/%s", cfg.chrootdir, USER_QUEUE_DIR, username[0], username);
 
 #ifdef HAVE_SQLITE3
    if(strlen(cfg.sqlite3) < 4)
@@ -182,6 +181,8 @@ int main(int argc, char **argv, char **envp){
 
 
    /* check for the queue directory, and run the helper script, if we have to, 2008.04.12, SJ */
+
+   snprintf(buf, MAXBUFSIZE-1, "%s/%s/%c/%s", cfg.chrootdir, USER_QUEUE_DIR, username[0], username);
 
 #ifdef HAVE_SPAMDROP_HELPER
    if(stat(buf, &st) != 0){
@@ -532,6 +533,17 @@ CLOSE_DB:
       if(stat(qpath, &st) == 0){
          if(S_ISREG(st.st_mode) == 1)
             chmod(qpath, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+
+         /* add trailing dot to the file, 2008.08.27, SJ */
+
+         fd2 = open(qpath, O_EXCL|O_RDWR, S_IRUSR|S_IWUSR);
+         if(fd2 != -1){
+            lseek(fd2, 0, SEEK_END);
+            write(fd2, SMTP_CMD_PERIOD, strlen(SMTP_CMD_PERIOD));
+            close(fd2);
+         }
+
+
       }
 
    #ifdef HAVE_MYSQL
@@ -676,16 +688,6 @@ ENDE:
    /* unlink temp file */
    unlink(sdata.ttmpfile);
 
-   /* add trailing dot to the file, 2008.01.27, SJ */
-
-   if(cfg.store_metadata == 1 && tot_len <= cfg.max_message_size_to_filter && blackhole_request == 0){
-      fd2 = open(qpath, O_EXCL|O_RDWR, S_IRUSR|S_IWUSR);
-      if(fd2 != -1){
-         lseek(fd2, 0, SEEK_END);
-         write(fd2, SMTP_CMD_PERIOD, strlen(SMTP_CMD_PERIOD));
-         close(fd2);
-      }
-   }
 
 
    if(print_message == 0 && result.spaminess >= cfg.spam_overall_limit && result.spaminess < 1.01)

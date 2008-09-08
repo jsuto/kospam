@@ -1,5 +1,5 @@
 /*
- * parser.c, 2008.08.22, SJ
+ * parser.c, 2008.09.08, SJ
  */
 
 #include <stdio.h>
@@ -611,6 +611,7 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
 
    url_decode(buf);
 
+
    /* Chinese, Japan, Korean, ... language detection here */
 
    x = 0;
@@ -623,21 +624,19 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
       }
    }
 
-   /* count the number of hexa and junk characters, 2006.11.09, SJ */
 
-   state->c_hex_shit += count_invalid_hexa_stuff((unsigned char*)buf);
 
    /* count invalid junk characters unless UTF-8 encoded or ISO-8859-2 part, 2007.04.04, SJ */
-   if(state->utf8 == 0 && state->iso_8859_2 == 0) state->c_shit += count_invalid_junk((unsigned char*)buf);
+   //if(state->utf8 == 0 && state->iso_8859_2 == 0) state->c_shit += count_invalid_junk(buf);
+
+   /* count invalid junk characters specified in the ijc.h file, 2008.09.08 */
+   state->c_shit += count_invalid_junk(buf);
+
 
    /* skip unless we have an URL, 2006.11.09, SJ */
 
    if(x > 0){
       state->l_shit += x;
-
-      /* commented out, 2008.08.18, SJ */
-      /*if(!strcasestr(buf, "http://") && !strcasestr(buf, "https://"))
-         return 0;*/
    }
 
    /* translate junk characters to JUNK_REPLACEMENT_CHAR, 2007.09.04, SJ */

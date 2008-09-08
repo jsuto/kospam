@@ -1,5 +1,10 @@
 0.3.31-rc3:
 
+2008.09.08, SJ
+
+Fixed a bug in the parser preventing it to detect junk characters.
+(misc.c, misc.h, parser.c)
+
 2008.08.27, SJ
 
 More fixes from Chris.

@@ -1,5 +1,5 @@
 /*
- * misc.h, 2008.08.22, SJ
+ * misc.h, 2008.09.08, SJ
  */
 
 #ifndef _MISC_H
@@ -18,8 +18,8 @@ long tvdiff(struct timeval a, struct timeval b);
 void pre_translate(char *p);
 int translate(unsigned char *p, int qp);
 int translate2(unsigned char *p, int qp, int replace_junk);
-int count_invalid_junk(unsigned char *p);
-int count_invalid_hexa_stuff(unsigned char *p);
+int count_invalid_junk(char *p);
+int count_invalid_hexa_stuff(char *p);
 int is_odd_punctuations(char *p);
 int is_number(char *p);
 int is_hex_number(char *p);

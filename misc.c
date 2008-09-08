@@ -1,5 +1,5 @@
 /*
- * misc.c, 2008.07.22, SJ
+ * misc.c, 2008.09.08, SJ
  */
 
 #include <stdio.h>
@@ -24,6 +24,7 @@
 #include "smtpcodes.h"
 #include "errmsg.h"
 #include "config.h"
+
 
 /*
  * fatal functions for quitting
@@ -166,11 +167,12 @@ int translate2(unsigned char *p, int qp, int replace_junk){
  * count the invalid characters (ie. garbage on your display) in the buffer
  */
 
-int count_invalid_junk(unsigned char *p){
+int count_invalid_junk(char *p){
    int i=0;
 
    for(; *p; p++){
-      if(invalid_junk_characters[(unsigned int)*p] != ' '){
+      //if(invalid_junk_characters[(unsigned int)*p] != ' '){
+      if(invalid_junk_characters[(unsigned int)*p] == *p){
          i++;
       }
    }
@@ -183,7 +185,7 @@ int count_invalid_junk(unsigned char *p){
  * invalid junk chars in the form of =xx 
  */
 
-int count_invalid_hexa_stuff(unsigned char *p){
+int count_invalid_hexa_stuff(char *p){
    unsigned char c;
    int i, c_hex_shit=0;
    char ch[3];

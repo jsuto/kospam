@@ -533,17 +533,6 @@ CLOSE_DB:
       if(stat(qpath, &st) == 0){
          if(S_ISREG(st.st_mode) == 1)
             chmod(qpath, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
-
-         /* add trailing dot to the file, 2008.08.27, SJ */
-
-         fd2 = open(qpath, O_EXCL|O_RDWR, S_IRUSR|S_IWUSR);
-         if(fd2 != -1){
-            lseek(fd2, 0, SEEK_END);
-            write(fd2, SMTP_CMD_PERIOD, strlen(SMTP_CMD_PERIOD));
-            close(fd2);
-         }
-
-
       }
 
    #ifdef HAVE_MYSQL
@@ -688,6 +677,15 @@ ENDE:
    /* unlink temp file */
    unlink(sdata.ttmpfile);
 
+
+   /* add trailing dot to the file, 2008.09.08, SJ */
+
+   fd2 = open(qpath, O_EXCL|O_RDWR, S_IRUSR|S_IWUSR);
+   if(fd2 != -1){
+      lseek(fd2, 0, SEEK_END);
+      write(fd2, SMTP_CMD_PERIOD, strlen(SMTP_CMD_PERIOD));
+      close(fd2);
+   }
 
 
    if(print_message == 0 && result.spaminess >= cfg.spam_overall_limit && result.spaminess < 1.01)

@@ -114,16 +114,11 @@ int translate(unsigned char *p, int qp){
       return 0;
 }
 
-int translate2(unsigned char *p, int qp, int replace_junk){
+int translate2(unsigned char *p, int qp){
    int url=0, clear=0;
    unsigned char *q=NULL, *P=p;
 
    for(; *p; p++){
-
-      if(replace_junk == 1 && !isprint(*p) && translated_characters[(unsigned int)*p] == ' ' && *p != '\r' && *p != '\n'){
-         *p = JUNK_REPLACEMENT_CHAR;
-         continue;
-      }
 
       /* save position of '=', 2006.01.05, SJ */
 
@@ -167,46 +162,17 @@ int translate2(unsigned char *p, int qp, int replace_junk){
  * count the invalid characters (ie. garbage on your display) in the buffer
  */
 
-int count_invalid_junk(char *p){
+int count_invalid_junk(char *p, int replace_junk){
    int i=0;
 
    for(; *p; p++){
-      //if(invalid_junk_characters[(unsigned int)*p] != ' '){
-      if(invalid_junk_characters[(unsigned int)*p] == *p){
+      if(invalid_junk_characters[(unsigned char)*p] == *p){
          i++;
+         if(replace_junk == 1) *p = JUNK_REPLACEMENT_CHAR;
       }
    }
 
    return i;
-}
-
-
-/*
- * invalid junk chars in the form of =xx 
- */
-
-int count_invalid_hexa_stuff(char *p){
-   unsigned char c;
-   int i, c_hex_shit=0;
-   char ch[3];
-
-   for(i=0; i<strlen((char*)p); i++){
-      if(p[i] == '=' && isxdigit(p[i+1]) && isxdigit(p[i+2])){
-         ch[0] = '0';
-         ch[1] = p[i+1];
-         ch[2] = p[i+2];
-         c = strtol(ch, NULL, 16) % 255;
-
-         if(invalid_junk_characters[c] != ' '){
-            c_hex_shit++;
-         }
-
-         i += 2;
-      }
-   }
-
-
-   return c_hex_shit;
 }
 
 

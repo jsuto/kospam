@@ -56,7 +56,6 @@ struct _state {
    int num_of_images;
    int train_mode;
    unsigned long c_shit;
-   unsigned long c_hex_shit;
    unsigned long l_shit;
    unsigned long line_num;
    char ctype[MAXBUFSIZE];

@@ -52,7 +52,6 @@ void init_state(struct _state *state){
    state->n_chain_token = 0;
    state->n_subject_token = 0;
 
-   state->c_hex_shit = 0;
    state->c_shit = 0;
    state->l_shit = 0;
 
@@ -204,7 +203,7 @@ int is_date(char *s){
 
 int parse(char *buf, struct _state *state, struct session_data *sdata, struct __config cfg){
    char *p, *q, *c, huf[MAXBUFSIZE], puf[MAXBUFSIZE], muf[MAXBUFSIZE], tuf[MAXBUFSIZE], rnd[RND_STR_LEN], u[SMALLBUFSIZE], token[MAX_TOKEN_LEN], phrase[MAX_TOKEN_LEN], ipbuf[IPLEN];
-   int i, x, b64_len;
+   int x, b64_len;
 
 
    state->line_num++;
@@ -630,8 +629,8 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
    //if(state->utf8 == 0 && state->iso_8859_2 == 0) state->c_shit += count_invalid_junk(buf);
 
    /* count invalid junk characters specified in the ijc.h file, 2008.09.08 */
-   state->c_shit += count_invalid_junk(buf);
-
+   state->c_shit += count_invalid_junk(buf, cfg.replace_junk_characters);
+   //fprintf(stderr, "%ld %s", state->c_shit, buf);
 
    /* skip unless we have an URL, 2006.11.09, SJ */
 
@@ -641,14 +640,14 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
 
    /* translate junk characters to JUNK_REPLACEMENT_CHAR, 2007.09.04, SJ */
 
-   if(state->utf8 == 0 && state->iso_8859_2 == 0){
+   /*if(state->utf8 == 0 && state->iso_8859_2 == 0){
       for(i=0; i<strlen(buf); i++)
          if(buf[i] < 0) buf[i] = JUNK_REPLACEMENT_CHAR;
-   }
+   }*/
 
 
 DECOMPOSE:
-   translate2((unsigned char*)buf, state->qp, cfg.replace_junk_characters);
+   translate2((unsigned char*)buf, state->qp);
 
    if(state->is_header == 1) p = strchr(buf, ' ');
    else p = buf;

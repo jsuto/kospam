@@ -133,6 +133,8 @@ int main(int argc, char **argv){
 
    fprintf(stderr, "%s: %.4f in %ld [ms]\n", argv[2], result.spaminess, tvdiff(tv_spam_stop, tv_spam_start)/1000);
 
+   fprintf(stderr, "%ld %ld\n", state.c_shit, state.l_shit);
+
 #ifdef HAVE_SPAMSUM
    gettimeofday(&tv_spam_start, &tz);
    flags |= FLAG_IGNORE_HEADERS;

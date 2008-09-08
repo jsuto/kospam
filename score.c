@@ -1,5 +1,5 @@
 /*
- * score.c, 2008.08.22, SJ
+ * score.c, 2008.09.08, SJ
  */
 
 #include <stdio.h>
@@ -92,7 +92,7 @@ double calc_score_chi2(struct node *xhash[MAXHASH], struct __config cfg){
  * apply some fixes
  */
 
-double apply_fixes(double spaminess, int found_on_rbl, int surbl_match, int has_embed_image, int base64_text, long c_shit, long l_shit, long c_hex_shit, struct __config cfg){
+double apply_fixes(double spaminess, int found_on_rbl, int surbl_match, int has_embed_image, int base64_text, long c_shit, long l_shit, struct __config cfg){
 
    /* in case of a surbl or rbl match */
 #ifdef HAVE_RBL
@@ -131,12 +131,6 @@ double apply_fixes(double spaminess, int found_on_rbl, int surbl_match, int has_
       return cfg.spaminess_of_strange_language_stuff;
    }
 
-   if(cfg.invalid_hex_junk_limit > 0 && c_hex_shit > cfg.invalid_hex_junk_limit && spaminess < cfg.spam_overall_limit){
-      if(cfg.debug == 1)
-         fprintf(stderr, "invalid hex. junk characters: %ld (limit: %d)\n", c_hex_shit, cfg.invalid_hex_junk_limit);
-
-      return cfg.spaminess_of_strange_language_stuff;
-   }
 
    /* if we are bored with lame base64 encoding */
    if(base64_text == 1 && cfg.spaminess_of_text_and_base64 > 0) return cfg.spaminess_of_text_and_base64;

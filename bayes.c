@@ -1,5 +1,5 @@
 /*
- * bayes.c, 2008.06.28, SJ
+ * bayes.c, 2008.09.12, SJ
  */
 
 #include <stdio.h>
@@ -387,7 +387,7 @@ double eval_tokens(struct mydb_node *mhash[MAX_MYDB_HASH], struct session_data *
    #ifdef HAVE_RBL
       if(strlen(cfg.rbl_domain) > 3){
          gettimeofday(&tv1, &tz);
-         found_on_rbl = rbl_list_check(cfg.rbl_domain, state.ip, cfg.verbosity);
+         found_on_rbl = rbl_list_check(cfg.rbl_domain, state.ip, cfg.debug);
          gettimeofday(&tv2, &tz);
 
          if(cfg.debug == 1) fprintf(stderr, "rbl check took %ld ms\n", tvdiff(tv2, tv1)/1000);
@@ -410,7 +410,7 @@ double eval_tokens(struct mydb_node *mhash[MAX_MYDB_HASH], struct session_data *
 
          while(url){
             gettimeofday(&tv1, &tz);
-            i = rbl_list_check(cfg.surbl_domain, url->url_str+4, cfg.verbosity);
+            i = rbl_list_check(cfg.surbl_domain, url->url_str+4, cfg.debug);
             gettimeofday(&tv2, &tz);
 
             if(cfg.debug == 1) fprintf(stderr, "surbl check for %s (%d) took %ld ms\n", url->url_str+4, i, tvdiff(tv2, tv1)/1000);

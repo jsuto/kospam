@@ -1,3 +1,8 @@
+0.3.31:
+
+Fixed a bug using the rbl_list_check() function.
+(bayes.c)
+
 0.3.31-rc3:
 
 2008.09.08, SJ

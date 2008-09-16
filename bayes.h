@@ -1,5 +1,5 @@
 /*
- * bayes.h, 2008.05.07, SJ
+ * bayes.h, 2008.09.15, SJ
  */
 
 #ifndef _BAYES_H
@@ -25,8 +25,8 @@ struct _state parse_message(char *spamfile, struct session_data sdata, struct __
 
 #ifdef HAVE_MYDB
    #include "mydb.h"
-   struct c_res bayes_file(struct mydb_node *mhash[MAX_MYDB_HASH], struct _state state, struct session_data sdata, struct __config cfg);
-   int train_message(char *mydbfile, struct mydb_node *mhash[MAX_MYDB_HASH], struct session_data sdata, struct _state state, int rounds, int is_spam, int train_mode, struct __config cfg);
+   struct c_res bayes_file(struct mydb_node *mhash[], struct _state state, struct session_data sdata, struct __config cfg);
+   int train_message(char *mydbfile, struct mydb_node *mhash[], struct session_data sdata, struct _state state, int rounds, int is_spam, int train_mode, struct __config cfg);
 #endif
 
 #endif /* _BAYES_H */

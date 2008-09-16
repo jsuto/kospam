@@ -1,5 +1,5 @@
 /*
- * hash.h, 2008.04.05, SJ
+ * hash.h, 2008.09.15, SJ
  */
 
 #ifndef _HASH_H
@@ -18,11 +18,11 @@ struct node {
    struct node *r;
 };
 
-void inithash(struct node *xhash[MAXHASH]);
-void clearhash(struct node *xhash[MAXHASH]);
-struct node *makenewnode(struct node *xhash[MAXHASH], char *s, double spaminess, double deviation);
-int addnode(struct node *xhash[MAXHASH], char *s, double spaminess, double deviation);
-struct node *findnode(struct node *xhash[MAXHASH], char *s);
+void inithash(struct node *xhash[]);
+void clearhash(struct node *xhash[]);
+struct node *makenewnode(struct node *xhash[], char *s, double spaminess, double deviation);
+int addnode(struct node *xhash[], char *s, double spaminess, double deviation);
+struct node *findnode(struct node *xhash[], char *s);
 unsigned long hash(char *s);
 
 #endif /* _HASH_H */

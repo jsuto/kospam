@@ -1,5 +1,5 @@
 /*
- * bayes.c, 2008.09.12, SJ
+ * bayes.c, 2008.09.15, SJ
  */
 
 #include <stdio.h>
@@ -66,7 +66,7 @@ int assign_spaminess(MYSQL mysql, char *p, struct __config cfg, unsigned int uid
 int assign_spaminess(sqlite3 *db, char *p, struct __config cfg, unsigned int uid){
 #endif
 #ifdef HAVE_MYDB
-int assign_spaminess(struct mydb_node *mhash[MAX_MYDB_HASH], char *p, struct session_data *sdata, struct __config cfg, unsigned int uid){
+int assign_spaminess(struct mydb_node *mhash[], char *p, struct session_data *sdata, struct __config cfg, unsigned int uid){
 #endif
 
    float spaminess=0;
@@ -133,19 +133,19 @@ int assign_spaminess(struct mydb_node *mhash[MAX_MYDB_HASH], char *p, struct ses
  * calc_score
  */
 
-double calc_score(struct node *xhash[MAXHASH], struct __config cfg){
+double calc_score(struct node *xhash[], struct __config cfg){
    return calc_score_chi2(xhash, cfg);
 }
 
 
 #ifdef HAVE_MYSQL
-int walk_hash(MYSQL mysql, struct node *xhash[MAXHASH], struct __config cfg){
+int walk_hash(MYSQL mysql, struct node *xhash[], struct __config cfg){
 #endif
 #ifdef HAVE_SQLITE3
-int walk_hash(sqlite3 *db, struct node *xhash[MAXHASH], struct __config cfg){
+int walk_hash(sqlite3 *db, struct node *xhash[], struct __config cfg){
 #endif
 #ifdef HAVE_MYDB
-int walk_hash(struct mydb_node *mhash[MAX_MYDB_HASH], struct node *xhash[MAXHASH], struct session_data *sdata, struct __config cfg){
+int walk_hash(struct mydb_node *mhash[], struct node *xhash[], struct session_data *sdata, struct __config cfg){
 #endif
 
    int i, n=0;
@@ -222,7 +222,7 @@ double eval_tokens(MYSQL mysql, struct session_data *sdata, struct __config cfg,
 double eval_tokens(sqlite3 *db, struct session_data *sdata, struct __config cfg, struct _state state){
 #endif
 #ifdef HAVE_MYDB
-double eval_tokens(struct mydb_node *mhash[MAX_MYDB_HASH], struct session_data *sdata, struct __config cfg, struct _state state){
+double eval_tokens(struct mydb_node *mhash[], struct session_data *sdata, struct __config cfg, struct _state state){
 #endif
 
    unsigned long n = 0;
@@ -479,7 +479,7 @@ struct c_res bayes_file(MYSQL mysql, struct _state state, struct session_data sd
 struct c_res bayes_file(sqlite3 *db, struct _state state, struct session_data sdata, struct __config cfg){
 #endif
 #ifdef HAVE_MYDB
-struct c_res bayes_file(struct mydb_node *mhash[MAX_MYDB_HASH], struct _state state, struct session_data sdata, struct __config cfg){
+struct c_res bayes_file(struct mydb_node *mhash[], struct _state state, struct session_data sdata, struct __config cfg){
 #endif
 
    char buf[MAXBUFSIZE], *p;
@@ -669,7 +669,7 @@ int train_message(sqlite3 *db, struct session_data sdata, struct _state state, i
    char *err=NULL;
 #endif
 #ifdef HAVE_MYDB
-int train_message(char *mydbfile, struct mydb_node *mhash[MAX_MYDB_HASH], struct session_data sdata, struct _state state, int rounds, int is_spam, int train_mode, struct __config cfg){
+int train_message(char *mydbfile, struct mydb_node *mhash[], struct session_data sdata, struct _state state, int rounds, int is_spam, int train_mode, struct __config cfg){
    int rc;
    struct mydb_node *mhash2[MAX_MYDB_HASH];
 #endif

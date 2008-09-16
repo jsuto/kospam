@@ -1,5 +1,5 @@
 /*
- * hash.c, 2008.03.12, SJ
+ * hash.c, 2008.09.15, SJ
  */
 
 #include <stdio.h>
@@ -15,7 +15,7 @@
  * reset hash
  */
 
-void inithash(struct node *xhash[MAXHASH]){
+void inithash(struct node *xhash[]){
    int i;
 
    for(i=0;i<MAXHASH;i++)
@@ -27,7 +27,7 @@ void inithash(struct node *xhash[MAXHASH]){
  * release everything in the hash and calculate the ratio of unique tokens
  */
 
-void clearhash(struct node *xhash[MAXHASH]){
+void clearhash(struct node *xhash[]){
    int i;
    struct node *p, *q;
 
@@ -50,7 +50,7 @@ void clearhash(struct node *xhash[MAXHASH]){
  * create a new node
  */
 
-struct node *makenewnode(struct node *xhash[MAXHASH], char *s, double spaminess, double deviation){
+struct node *makenewnode(struct node *xhash[], char *s, double spaminess, double deviation){
    struct node *h;
    int len;
 
@@ -81,7 +81,7 @@ struct node *makenewnode(struct node *xhash[MAXHASH], char *s, double spaminess,
  * add a new node
  */
 
-int addnode(struct node *xhash[MAXHASH], char *s, double spaminess, double deviation){
+int addnode(struct node *xhash[], char *s, double spaminess, double deviation){
    struct node *p=NULL, *q;
 
    if(s == NULL)
@@ -112,7 +112,7 @@ int addnode(struct node *xhash[MAXHASH], char *s, double spaminess, double devia
  * find the given node
  */
 
-struct node *findnode(struct node *xhash[MAXHASH], char *s){
+struct node *findnode(struct node *xhash[], char *s){
    struct node *p, *q;
 
    if(s == NULL)

@@ -1,5 +1,5 @@
 /*
- * mydb.c, 2008.07.30, SJ
+ * mydb.c, 2008.09.15, SJ
  */
 
 #include <stdio.h>
@@ -21,10 +21,6 @@
 #include "config.h"
 
 
-unsigned long long mydb_hash(unsigned long long key);
-struct mydb_node *makenewmydb_node(struct mydb_node *xhash[MAX_MYDB_HASH], unsigned long long key, unsigned int nham, unsigned int nspam, unsigned long ts, unsigned int pos);
-int addmydb_node(struct mydb_node *xhash[MAX_MYDB_HASH], unsigned long long key, unsigned int nham, unsigned int nspam, unsigned long ts, unsigned int pos);
-struct mydb_node *findmydb_node(struct mydb_node *xhash[MAX_MYDB_HASH], unsigned long long key);
 
 
 struct te {
@@ -33,7 +29,7 @@ struct te {
 };
 
 
-void init_my_hash(struct mydb_node *xhash[MAX_MYDB_HASH]){
+void init_my_hash(struct mydb_node *xhash[]){
    int i;
 
    for(i=0;i<MAX_MYDB_HASH;i++)
@@ -41,7 +37,7 @@ void init_my_hash(struct mydb_node *xhash[MAX_MYDB_HASH]){
 }
 
 
-int init_mydb(char *mydb_file, struct mydb_node *xhash[MAX_MYDB_HASH], struct session_data *sdata){
+int init_mydb(char *mydb_file, struct mydb_node *xhash[], struct session_data *sdata){
    int i, n, fd, pos;
    unsigned char buf[N_SIZE*SEGMENT_SIZE];
    unsigned long x;
@@ -85,7 +81,7 @@ int init_mydb(char *mydb_file, struct mydb_node *xhash[MAX_MYDB_HASH], struct se
 }
 
 
-void close_mydb(struct mydb_node *xhash[MAX_MYDB_HASH]){
+void close_mydb(struct mydb_node *xhash[]){
    int i;
    struct mydb_node *p, *q;
 
@@ -106,7 +102,7 @@ unsigned long long mydb_hash(unsigned long long key){
    return key % MAX_MYDB_HASH;
 }
 
-struct mydb_node *makenewmydb_node(struct mydb_node *xhash[MAX_MYDB_HASH], unsigned long long key, unsigned int nham, unsigned int nspam, unsigned long ts, unsigned int pos){
+struct mydb_node *makenewmydb_node(struct mydb_node *xhash[], unsigned long long key, unsigned int nham, unsigned int nspam, unsigned long ts, unsigned int pos){
    struct mydb_node *h;
 
    if((h = malloc(sizeof(struct mydb_node))) == NULL)
@@ -125,7 +121,7 @@ struct mydb_node *makenewmydb_node(struct mydb_node *xhash[MAX_MYDB_HASH], unsig
 }
 
 
-int addmydb_node(struct mydb_node *xhash[MAX_MYDB_HASH], unsigned long long key, unsigned int nham, unsigned int nspam, unsigned long ts, unsigned int pos){
+int addmydb_node(struct mydb_node *xhash[], unsigned long long key, unsigned int nham, unsigned int nspam, unsigned long ts, unsigned int pos){
    struct mydb_node *p=NULL, *q;
 
    if(xhash[mydb_hash(key)] == NULL){
@@ -151,7 +147,7 @@ int addmydb_node(struct mydb_node *xhash[MAX_MYDB_HASH], unsigned long long key,
 }
 
 
-struct mydb_node *findmydb_node(struct mydb_node *xhash[MAX_MYDB_HASH], unsigned long long key){
+struct mydb_node *findmydb_node(struct mydb_node *xhash[], unsigned long long key){
    struct mydb_node *p, *q;
 
    if(key == 0)
@@ -175,7 +171,7 @@ struct mydb_node *findmydb_node(struct mydb_node *xhash[MAX_MYDB_HASH], unsigned
 }
 
 
-float mydbqry(struct mydb_node *xhash[MAX_MYDB_HASH], char *p, struct session_data *sdata, float rob_s, float rob_x){
+float mydbqry(struct mydb_node *xhash[], char *p, struct session_data *sdata, float rob_s, float rob_x){
    struct mydb_node *q;
    unsigned long long key;
    float spamicity = DEFAULT_SPAMICITY;
@@ -195,7 +191,7 @@ float mydbqry(struct mydb_node *xhash[MAX_MYDB_HASH], char *p, struct session_da
 }
 
 
-int add_or_update(int fd, struct mydb_node *mhash[MAX_MYDB_HASH], int ham_or_spam, char *token, int train_mode, unsigned long ts){
+int add_or_update(int fd, struct mydb_node *mhash[], int ham_or_spam, char *token, int train_mode, unsigned long ts){
    unsigned long long key = APHash(token);
    struct mydb_node *q;
    struct mydb e;
@@ -247,7 +243,7 @@ int add_or_update(int fd, struct mydb_node *mhash[MAX_MYDB_HASH], int ham_or_spa
 }
 
 
-int my_walk_hash(char *mydbfile, struct mydb_node *xhash[MAX_MYDB_HASH], int ham_or_spam, struct _token *token, int train_mode){
+int my_walk_hash(char *mydbfile, struct mydb_node *xhash[], int ham_or_spam, struct _token *token, int train_mode){
    int i, n=0, fd;
    struct _token *p;
    struct node *thash[MAXHASH], *q;
@@ -342,7 +338,7 @@ int my_walk_hash(char *mydbfile, struct mydb_node *xhash[MAX_MYDB_HASH], int ham
 }
 
 
-int update_tokens(char *mydbfile, struct mydb_node *xhash[MAX_MYDB_HASH], struct _token *token){
+int update_tokens(char *mydbfile, struct mydb_node *xhash[], struct _token *token){
    int n, fd;
    struct _token *q;
    struct mydb_node *Q;
@@ -390,7 +386,7 @@ int update_tokens(char *mydbfile, struct mydb_node *xhash[MAX_MYDB_HASH], struct
 }
 
 
-void hash_2_to_1(struct mydb_node *xhash[MAX_MYDB_HASH], struct mydb_node *xhash2[MAX_MYDB_HASH], struct mydb_node *xhash3[MAX_MYDB_HASH]){
+void hash_2_to_1(struct mydb_node *xhash[], struct mydb_node *xhash2[], struct mydb_node *xhash3[]){
    int i;
    struct mydb_node *q;
 

@@ -1,5 +1,5 @@
 /*
- * score.c, 2008.09.08, SJ
+ * score.c, 2008.09.17, SJ
  */
 
 #include <stdio.h>
@@ -35,7 +35,7 @@ float calc_spamicity(float NHAM, float NSPAM, unsigned int nham, unsigned int ns
  * calculate spam probability by the chi square algorithm
  */
 
-double calc_score_chi2(struct node *xhash[MAXHASH], struct __config cfg){
+double calc_score_chi2(struct node *xhash[], struct __config cfg){
    int i, l=0;
    struct node *p, *q;
    double P, Q, H, S, I;

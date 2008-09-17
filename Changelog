@@ -1,5 +1,13 @@
 0.3.31:
 
+2008.09.17, SJ
+
+Fix a bug preventing to decode base64 encoded textual parts.
+(parser.c)
+
+Modified the decorder functions.
+(decoder.c)
+
 Fixed a bug using the rbl_list_check() function.
 (bayes.c)
 

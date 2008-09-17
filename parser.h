@@ -48,6 +48,7 @@ struct _state {
    int qp;
    int html_comment;
    int base64_text;
+   int base64_lines;
    int ipcnt;
    int check_attachment;
    int has_to_dump;

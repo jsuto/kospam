@@ -43,6 +43,7 @@ void init_state(struct _state *state){
    state->iso_8859_2 = 1;
    state->qp = 0;
 
+   state->base64_lines = 0;
    state->html_comment = 0;
 
    state->base64_text = 0;
@@ -211,7 +212,7 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
    /* skip empty lines */
 
    if(buf[0] == '\r' || buf[0] == '\n'){
-      state->base64 = 0;
+      if(state->base64_lines > 0) state->base64 = 0;
 
       if(state->is_header == 1){
          state->is_header = 0;
@@ -323,6 +324,7 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
       state->texthtml = 0;
       state->html_comment = 0;
       state->base64 = 0;
+      state->base64_lines = 0;
       state->base64_text = 0;
       state->utf8 = 0;
       state->iso_8859_2 = 1; /* changed 0->1, 2008.06.28, SJ */
@@ -407,6 +409,10 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
       /* check for textual base64 encoded part, 2005.03.25, SJ */
       if(strcasestr(buf, "base64")) state->base64 = 1;
    }
+
+   if(state->base64 == 1 && !strchr(buf, ':'))
+      state->base64_lines++;
+
 
    /* check for UTF-8 encoding */
 
@@ -512,7 +518,7 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
 
    if(state->qp == 1 || ( (state->message_state == MSG_SUBJECT || state->message_state == MSG_FROM) && strcasestr(buf, "?Q?")) ){
       //fprintf(stderr, "qp decoding: %s", buf);
-      qp_decode((unsigned char*)buf);
+      qp_decode(buf);
    }
 
    /* handle base64 encoded subject */
@@ -587,7 +593,7 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
     *  with the pre_translate() and url_decode() functions,  2007.05.22, SJ
     */
 
-   if(state->utf8 == 1) utf8_decode((unsigned char*)buf);
+   if(state->utf8 == 1) utf8_decode(buf);
 
    /* handle html comments, 2007.06.07, SJ */
 
@@ -625,26 +631,14 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
 
 
 
-   /* count invalid junk characters unless UTF-8 encoded or ISO-8859-2 part, 2007.04.04, SJ */
-   //if(state->utf8 == 0 && state->iso_8859_2 == 0) state->c_shit += count_invalid_junk(buf);
-
    /* count invalid junk characters specified in the ijc.h file, 2008.09.08 */
    state->c_shit += count_invalid_junk(buf, cfg.replace_junk_characters);
-   //fprintf(stderr, "%ld %s", state->c_shit, buf);
 
    /* skip unless we have an URL, 2006.11.09, SJ */
 
    if(x > 0){
       state->l_shit += x;
    }
-
-   /* translate junk characters to JUNK_REPLACEMENT_CHAR, 2007.09.04, SJ */
-
-   /*if(state->utf8 == 0 && state->iso_8859_2 == 0){
-      for(i=0; i<strlen(buf); i++)
-         if(buf[i] < 0) buf[i] = JUNK_REPLACEMENT_CHAR;
-   }*/
-
 
 DECOMPOSE:
    translate2((unsigned char*)buf, state->qp);
@@ -653,13 +647,13 @@ DECOMPOSE:
    else p = buf;
 
    if(cfg.debug == 1) fprintf(stderr, "%s\n", buf);
+   //if(cfg.debug == 1) fprintf(stderr, "%d %ld %s\n", state->base64, state->c_shit, buf);
 
    do {
       p = split(p, DELIMITER, puf, MAXBUFSIZE-1);
 
       /* 2008.08.18, SJ */
 
-      //if(strncasecmp(puf, "http://", 7) == 0 || strncasecmp(puf, "https://", 8) == 0){
       if(strcasestr(puf, "http://") || strcasestr(puf, "https://")){
          q = puf;
          do {

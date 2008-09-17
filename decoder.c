@@ -1,5 +1,5 @@
 /*
- * decoder.c, 2008.08.18, SJ
+ * decoder.c, 2008.09.17, SJ
  */
 
 #include <stdio.h>
@@ -33,13 +33,35 @@ static int b64[] = {
 
 };
 
+static char hex_table[] = {
+   0,  0,  0,  0,   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+   0,  0,  0,  0,   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+   0,  0,  0,  0,   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+   0,  1,  2,  3,   4,  5,  6,  7,  8,  9,  0,  0,  0,  0,  0,  0,
+
+   0, 10, 11, 12,  13, 14, 15,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+   0,  0,  0,  0,   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+   0, 10, 11, 12,  13, 14, 15,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+   0,  0,  0,  0,   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+
+   0,  0,  0,  0,   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+   0,  0,  0,  0,   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+   0,  0,  0,  0,   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+   0,  0,  0,  0,   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+
+   0,  0,  0,  0,   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+   0,  0,  0,  0,   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+   0,  0,  0,  0,   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+   0,  0,  0,  0,   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+};
+
+
 /*
  * url decode buffer
  */
 
 void url_decode(char *p){
-   int i, c, k=0;
-   char ch[3];
+   int i, c, k=0, a, b;
 
    if(p == NULL) return;
 
@@ -51,10 +73,11 @@ void url_decode(char *p){
 
          case '%':
             if(isxdigit(p[i+1]) && isxdigit(p[i+2])){
-               ch[0] = '0';
-               ch[1] = p[i+1];
-               ch[2] = p[i+2];
-               c = (char)strtol(ch, NULL, 16);
+               a = p[i+1];
+               b = p[i+2];
+
+               c = 16 * hex_table[a] + hex_table[b];
+
                i += 2;
             }
             else
@@ -75,6 +98,7 @@ void url_decode(char *p){
    p[k] = '\0';
 }
 
+
 /*
  * sanitise base64 data
  */
@@ -91,6 +115,7 @@ void sanitiseBase64(char *s){
       }
    }
 }
+
 
 /*
  * base64 decode buffer
@@ -148,34 +173,31 @@ int base64_decode(char *p, char *r){
 
 }
 
+
 /*
  * decode UTF-8 stuff
  */
 
-void utf8_decode(unsigned char *p){
-   int i, k=0;
+void utf8_decode(char *p){
+   int i, k=0, a, b;
    unsigned char c, c1, c2;
-   char ch[3];
 
    if(p == NULL) return;
 
-   for(i=0; i<strlen((char*)p); i++){
+   for(i=0; i<strlen(p); i++){
       c = p[i];
 
       if(p[i] == '=' && isxdigit(p[i+1]) && isxdigit(p[i+2]) &&
            p[i+3] == '=' && isxdigit(p[i+4]) && isxdigit(p[i+5])){
 
-         ch[0] = '0';
-         ch[1] = p[i+1];
-         ch[2] = p[i+2];
+         a = p[i+1];
+         b = p[i+2];
+         c1 = 16 * hex_table[a] + hex_table[b];
 
-         c1 = strtol(ch, NULL, 16) % 255;
+         a = p[i+4];
+         b = p[i+5];
+         c2 = 16 * hex_table[a] + hex_table[b];
 
-         ch[0] = '0';
-         ch[1] = p[i+4];
-         ch[2] = p[i+5];
-
-         c2 = strtol(ch, NULL, 16) % 255;
 
          if(c1 >= 192 && c1 <= 223){
             c = 64 * (c1 - 192) + c2 - 128;
@@ -201,10 +223,9 @@ void utf8_decode(unsigned char *p){
  * decode Quoted-printable stuff
  */
 
-void qp_decode(unsigned char *p){
-   int i, k=0;
-   unsigned char c;
-   char ch[3];
+void qp_decode(char *p){
+   int i, k=0, a, b;
+   char c;
 
    if(p == NULL) return;
 
@@ -212,11 +233,11 @@ void qp_decode(unsigned char *p){
       c = p[i];
 
       if(p[i] == '=' && isxdigit(p[i+1]) && isxdigit(p[i+2])){
-         ch[0] = '0';
-         ch[1] = p[i+1];
-         ch[2] = p[i+2];
+         a = p[i+1];
+         b = p[i+2];
 
-         c = strtol(ch, NULL, 16) % 255;
+         c = 16 * hex_table[a] + hex_table[b];
+
          i += 2;
       }
 

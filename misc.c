@@ -167,12 +167,13 @@ void uncut_text(char *p){
 
    for(i=0; i<strlen(p); i++){
 
-      if(isprint(*(p+i)) && *(p+i+1) == ' ' && isprint(*(p+i+2)) && *(p+i+3) == ' '){
+      if(isprint(*(p+i)) && *(p+i+1) == ' ' && isprint(*(p+i+2)) && *(p+i+3) == ' ' && isprint(*(p+i+4)) && *(p+i+5) == ' '){
          p[k] = *(p+i); k++;
          p[k] = *(p+i+2); k++;
+         p[k] = *(p+i+4); k++;
 
          //fprintf(stderr, "%c*%c*", *(p+i), *(p+i+2));
-         i += 3;
+         i += 5;
       }
       else {
          p[k] = *(p+i);

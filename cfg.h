@@ -1,5 +1,5 @@
 /*
- * cfg.h, 2008.08.22, SJ
+ * cfg.h, 2008.09.29, SJ
  */
 
 #ifndef _CFG_H
@@ -46,6 +46,7 @@ struct __config {
 
    int verbosity;
    int debug;
+   char locale[MAXVAL];
 
    int session_timeout;
 

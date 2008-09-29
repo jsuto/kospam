@@ -1,5 +1,5 @@
 /*
- * cfg.c, 2008.08.22, SJ
+ * cfg.c, 2008.09.29, SJ
  */
 
 #include <stdio.h>
@@ -266,6 +266,9 @@ struct __config read_config(char *configfile){
 
                   if(strcmp(key, "debug") == 0)
                      cfg.debug = atoi(val);
+
+                  if(strcmp(key, "locale") == 0)
+                     memcpy(cfg.locale, val, MAXVAL-1);
 
                   if(strcmp(key, "session_timeout") == 0)
                      cfg.session_timeout = atoi(val);

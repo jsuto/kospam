@@ -159,6 +159,34 @@ int translate2(unsigned char *p, int qp){
 
 
 /*
+ * reassemble 'V i a g r a' to 'Viagra'
+ */
+
+void uncut_text(char *p){
+   int i, k=0;
+
+   for(i=0; i<strlen(p); i++){
+
+      if(isprint(*(p+i)) && *(p+i+1) == ' ' && isprint(*(p+i+2)) && *(p+i+3) == ' '){
+         p[k] = *(p+i); k++;
+         p[k] = *(p+i+2); k++;
+
+         //fprintf(stderr, "%c*%c*", *(p+i), *(p+i+2));
+         i += 3;
+      }
+      else {
+         p[k] = *(p+i);
+         k++;
+         //fprintf(stderr, "%c", *(p+i));
+      }
+   }
+
+   p[k] = '\0';
+
+}
+
+
+/*
  * count the invalid characters (ie. garbage on your display) in the buffer
  */
 

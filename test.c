@@ -1,5 +1,5 @@
 /*
- * test.c, 2008.07.03, SJ
+ * test.c, 2008.09.29, SJ
  *
  * test the bayesian decision with a single message
  */
@@ -10,6 +10,7 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <locale.h>
 #include <clapf.h>
 
 #ifdef HAVE_MYSQL
@@ -49,6 +50,8 @@ int main(int argc, char **argv){
    }
 
    cfg = read_config(argv[1]);
+
+   fprintf(stderr, "locale: %s\n", setlocale(LC_ALL, cfg.locale));
 
    /*
     * override training mode to make sure we will not train the token database

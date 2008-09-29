@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2008.08.28, SJ
+ * spamdrop.c, 2008.09.29, SJ
  */
 
 #include <stdio.h>
@@ -14,6 +14,7 @@
 #include <unistd.h>
 #include <sysexits.h>
 #include <clapf.h>
+#include <locale.h>
 
 extern char *optarg;
 extern int optind;
@@ -154,6 +155,8 @@ int main(int argc, char **argv, char **envp){
    /* read config file */
 
    cfg = read_config(configfile);
+
+   setlocale(LC_ALL, cfg.locale);
 
    /* do not query the username if we got it from the command line, 2008.03.10, SJ */
 

@@ -18,6 +18,7 @@ long tvdiff(struct timeval a, struct timeval b);
 void pre_translate(char *p);
 int translate(unsigned char *p, int qp);
 int translate2(unsigned char *p, int qp);
+void uncut_text(char *p);
 int count_invalid_junk(char *p, int replace_junk);
 int is_odd_punctuations(char *p);
 int is_number(char *p);

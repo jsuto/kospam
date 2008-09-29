@@ -1,5 +1,5 @@
 /*
- * clapf.c, 2008.08.24, SJ
+ * clapf.c, 2008.09.29, SJ
  */
 
 #include <stdio.h>
@@ -17,6 +17,7 @@
 #include <syslog.h>
 #include <time.h>
 #include <unistd.h>
+#include <locale.h>
 #include <errno.h>
 #include "misc.h"
 #include "sig.h"
@@ -142,6 +143,8 @@ void reload_config(){
        options = 0;
 
 #endif
+
+   setlocale(LC_ALL, cfg.locale);
 
    syslog(LOG_PRIORITY, "reloaded config: %s", configfile);
 }

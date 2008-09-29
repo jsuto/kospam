@@ -1,5 +1,10 @@
 0.3.31:
 
+2008.09.29, SJ
+
+Implemented a primitive token reassembly logic to get 'Cialis'
+from 'C i a l i s'. To use it, set the locale variable in clapf.conf.
+(misc.c, misc.h, cfg.c, cfg.h, parser.c)
 2008.09.17, SJ
 
 Fix a bug preventing to decode base64 encoded textual parts.

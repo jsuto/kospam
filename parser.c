@@ -643,7 +643,7 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
 DECOMPOSE:
    translate2((unsigned char*)buf, state->qp);
 
-   uncut_text(buf);
+   reassemble_token(buf);
 
    if(state->is_header == 1) p = strchr(buf, ' ');
    else p = buf;

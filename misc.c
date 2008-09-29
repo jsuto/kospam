@@ -1,5 +1,5 @@
 /*
- * misc.c, 2008.09.08, SJ
+ * misc.c, 2008.09.29, SJ
  */
 
 #include <stdio.h>
@@ -162,7 +162,7 @@ int translate2(unsigned char *p, int qp){
  * reassemble 'V i a g r a' to 'Viagra'
  */
 
-void uncut_text(char *p){
+void reassemble_token(char *p){
    int i, k=0;
 
    for(i=0; i<strlen(p); i++){

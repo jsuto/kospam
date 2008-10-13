@@ -1,5 +1,12 @@
 0.3.31:
 
+2008.10.13, SJ
+
+If you are running clapf in daemon mode, you can forward messages to
+be trained to ham@yourdomain and spam@yourdomain too. Not just to the
+ordinary user+ham@ and user+spam@ addresses.
+(session.c)
+
 2008.09.29, SJ
 
 Implemented a primitive token reassembly logic to get 'Cialis'

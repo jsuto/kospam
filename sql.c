@@ -1,5 +1,5 @@
 /*
- * sql.c, 2008.08.20, SJ
+ * sql.c, 2008.10.25, SJ
  */
 
 #include <stdio.h>
@@ -110,75 +110,16 @@ int my_walk_hash(sqlite3 *db, int ham_or_spam, char *tokentable, struct _token *
 
 
 /*
- * get uid and username from rcptto
- */
-
-#ifdef HAVE_MYSQL
-struct ue get_user_from_email(MYSQL mysql, char *email){
-   MYSQL_RES *res;
-   MYSQL_ROW row;
-#endif
-#ifdef HAVE_SQLITE3
-struct ue get_user_from_email(sqlite3 *db, char *email){
-   sqlite3_stmt *pStmt;
-   const char **pzTail=NULL;
-#endif
-   char *p, buf[MAXBUFSIZE];
-   struct ue UE;
-
-   memset((char *)&UE, 0, sizeof(UE));
-
-   if((p = strcasestr(email, "+spam"))){
-      *p = '\0';
-      snprintf(buf, MAXBUFSIZE-1, "SELECT uid, username FROM %s WHERE email='%s%s'", SQL_USER_TABLE, email, p+5);
-   }
-   else if((p = strcasestr(email, "+ham"))){
-      *p = '\0';
-      snprintf(buf, MAXBUFSIZE-1, "SELECT uid, username FROM %s WHERE email='%s%s'", SQL_USER_TABLE, email, p+4);
-   }
-   else
-      snprintf(buf, MAXBUFSIZE-1, "SELECT uid, username FROM %s WHERE email='%s'", SQL_USER_TABLE, email);
-
-
-#ifdef HAVE_MYSQL
-   if(mysql_real_query(&mysql, buf, strlen(buf)) == 0){
-      res = mysql_store_result(&mysql);
-      if(res != NULL){
-         row = mysql_fetch_row(res);
-         if(row){
-            UE.uid = atol(row[0]);
-            strncpy(UE.name, (char *)row[1], SMALLBUFSIZE-1);
-         }               
-         mysql_free_result(res);
-      }
-   }
-#endif
-#ifdef HAVE_SQLITE3
-   if(sqlite3_prepare_v2(db, buf, -1, &pStmt, pzTail) == SQLITE_OK){
-      if(sqlite3_step(pStmt) == SQLITE_ROW){
-         UE.uid = sqlite3_column_int(pStmt, 0);
-         strncpy(UE.name, (char *)sqlite3_column_blob(pStmt, 1), SMALLBUFSIZE-1);
-      }
-   }
-   sqlite3_finalize(pStmt);
-#endif
-
-
-   return UE;
-}
-
-
-/*
  * check whether the email address is on the white list
  */
 
 #ifdef HAVE_MYSQL
-int is_sender_on_white_list(MYSQL mysql, char *email, unsigned long uid){
+int is_sender_on_white_list(MYSQL mysql, char *email, unsigned long uid, struct __config cfg){
    MYSQL_RES *res;
    MYSQL_ROW row;
 #endif
 #ifdef HAVE_SQLITE3
-int is_sender_on_white_list(sqlite3 *db, char *email, unsigned long uid){
+int is_sender_on_white_list(sqlite3 *db, char *email, unsigned long uid, struct __config cfg){
    sqlite3_stmt *pStmt;
    const char **pzTail=NULL;
 #endif
@@ -191,16 +132,18 @@ int is_sender_on_white_list(sqlite3 *db, char *email, unsigned long uid){
 
    if(!email) return 0;
 
-   snprintf(buf, SMALLBUFSIZE-1, "SELECT email FROM %s WHERE uid=0 OR uid=%ld", SQL_WHITE_LIST, uid);
+   snprintf(buf, SMALLBUFSIZE-1, "SELECT whitelist FROM %s WHERE uid=0 OR uid=%ld", SQL_WHITE_LIST, uid);
 
 #ifdef HAVE_MYSQL
    if(mysql_real_query(&mysql, buf, strlen(buf)) == 0){
       res = mysql_store_result(&mysql);
       if(res != NULL){
          while((row = mysql_fetch_row(res))){
-            if(strcasestr(email, row[0])){
-               r = 1;
-               break;
+            if(row[0]){
+               if(whitelist_check((char *)row[0], email, cfg) == 1){
+                  r = 1;
+                  break;
+               }
             }
          }
          mysql_free_result(res);
@@ -210,7 +153,7 @@ int is_sender_on_white_list(sqlite3 *db, char *email, unsigned long uid){
 #ifdef HAVE_SQLITE3
    if(sqlite3_prepare_v2(db, buf, -1, &pStmt, pzTail) == SQLITE_OK){
       while(sqlite3_step(pStmt) == SQLITE_ROW){
-         if(strcasestr(email, (char *)sqlite3_column_blob(pStmt, 0))){
+         if(whitelist_check((char *)sqlite3_column_blob(pStmt, 0), email, cfg) == 1){
             r = 1;
             break;
          }

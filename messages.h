@@ -1,5 +1,5 @@
 /*
- * messages.h, 2008.07.14, SJ
+ * messages.h, 2008.10.20, SJ
  */
 
 #ifndef _MESSAGES_H
@@ -8,6 +8,8 @@
 // cgi
 
 #define ERR_CGI_INVALID_METHOD "Invalid method"
+
+#define ERR_MISSING_DATA "Missing data"
 
 #define CGI_SPAM_QUARANTINE "Spam Quarantine"
 #define ERR_CGI_DELIVER_AND_REMOVE "Deliver and remove"

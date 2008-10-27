@@ -1,5 +1,5 @@
 /*
- * cfg.h, 2008.09.29, SJ
+ * cfg.h, 2008.10.26, SJ
  */
 
 #ifndef _CFG_H
@@ -195,6 +195,8 @@ struct __config {
    char ldap_user[MAXVAL];
    char ldap_pwd[MAXVAL];
    int ldap_use_tls;
+   char email_address_attribute_name[MAXVAL];
+   char email_alias_attribute_name[MAXVAL];
 
    // ssl
 

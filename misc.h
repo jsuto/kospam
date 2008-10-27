@@ -63,4 +63,6 @@ char *spamsum_file(const char *fname, unsigned int flags, unsigned int block_siz
 
 unsigned long resolve_host(char *h);
 
+int whitelist_check(char *whitelist, char *email, struct __config cfg);
+
 #endif /* _MISC_H */

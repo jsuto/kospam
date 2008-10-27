@@ -1,5 +1,5 @@
 /*
- * cfg.c, 2008.09.29, SJ
+ * cfg.c, 2008.10.26, SJ
  */
 
 #include <stdio.h>
@@ -546,6 +546,11 @@ struct __config read_config(char *configfile){
                   if(strcmp(key, "ldap_use_tls") == 0)
                      cfg.ldap_use_tls = atoi(val);
 
+                  if(strcmp(key, "email_address_attribute_name") == 0)
+                     memcpy(cfg.email_address_attribute_name, val, MAXVAL-1);
+
+                  if(strcmp(key, "email_alias_attribute_name") == 0)
+                     memcpy(cfg.email_alias_attribute_name, val, MAXVAL-1);
 
                   if(strcmp(key, "ssl_cert_file") == 0)
                      memcpy(cfg.ssl_cert_file, val, MAXVAL-1);

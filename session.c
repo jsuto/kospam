@@ -1,5 +1,5 @@
 /*
- * session.c, 2008.10.13, SJ
+ * session.c, 2008.10.25, SJ
  */
 
 #include <stdio.h>
@@ -22,15 +22,19 @@ struct session_data sdata;
 int x, rc;
 
 
-#ifdef HAVE_MYSQL
+#ifdef NEED_MYSQL
    #include <mysql.h>
    MYSQL mysql;
    int mysql_connection=0;
 #endif
 
-#ifdef HAVE_SQLITE3
+#ifdef NEED_SQLITE3
    #include <sqlite3.h>
    sqlite3 *db;
+#endif
+
+#ifdef NEED_LDAP
+   LDAP *ldap;
 #endif
 
 #ifdef HAVE_STORE
@@ -109,7 +113,7 @@ void init_session_data(struct session_data *sdata){
     #endif
       struct timeval tv_spam_start, tv_spam_stop;
       struct _state sstate, sstate2;
-      struct ue UE;
+      struct ue UE, UE2;
       int is_spam, train_mode=T_TOE;
 
       result.spaminess=DEFAULT_SPAMICITY;
@@ -527,6 +531,40 @@ void init_session_data(struct session_data *sdata){
                memset(email2, 0, SMALLBUFSIZE);
                extract_email(sdata.mailfrom, email2);
 
+
+               /* open database backend handler */
+
+            #ifdef NEED_MYSQL
+               mysql_init(&mysql);
+               mysql_options(&mysql, MYSQL_OPT_CONNECT_TIMEOUT, (const char*)&cfg.mysql_connect_timeout);
+               if(mysql_real_connect(&mysql, cfg.mysqlhost, cfg.mysqluser, cfg.mysqlpwd, cfg.mysqldb, cfg.mysqlport, cfg.mysqlsocket, 0))
+                  mysql_connection = 1;
+               else {
+                  mysql_connection = 0;
+                  syslog(LOG_PRIORITY, "%s: %s", sdata.ttmpfile, ERR_MYSQL_CONNECT);
+               }
+            #endif
+            #ifdef NEED_SQLITE3
+               rc = sqlite3_open(cfg.sqlite3, &db);
+               if(rc){
+                  syslog(LOG_PRIORITY, "%s: %s", sdata.ttmpfile, ERR_SQLITE3_OPEN);
+               }
+            #endif
+
+
+            /* get user from 'MAIL FROM:', 2008.10.25, SJ */
+
+            #ifdef USERS_IN_MYSQL
+               UE2 = get_user_from_email(mysql, email2);
+            #endif
+            #ifdef USERS_IN_SQLITE3
+               UE2 = get_user_from_email(db, email2);
+            #endif
+            #ifdef USERS_IN_LDAP
+               ldap = do_bind_ldap(cfg.ldap_host, cfg.ldap_user, cfg.ldap_pwd, cfg.ldap_use_tls);
+               UE2 = get_user_from_email(ldap, cfg.ldap_base, email2, cfg);
+            #endif
+
             #ifdef HAVE_LMTP
                for(i=0; i<sdata.num_of_rcpt_to; i++){
             #else
@@ -570,29 +608,23 @@ void init_session_data(struct session_data *sdata){
                         } 
                      }
 
-                     /* open database backend handler */
 
-                  #ifdef HAVE_MYSQL
-                     mysql_init(&mysql);
-                     mysql_options(&mysql, MYSQL_OPT_CONNECT_TIMEOUT, (const char*)&cfg.mysql_connect_timeout);
-                     if(mysql_real_connect(&mysql, cfg.mysqlhost, cfg.mysqluser, cfg.mysqlpwd, cfg.mysqldb, cfg.mysqlport, cfg.mysqlsocket, 0))
-                        mysql_connection = 1;
-                     else {
-                        mysql_connection = 0;
-                        syslog(LOG_PRIORITY, "%s: %s", sdata.ttmpfile, ERR_MYSQL_CONNECT);
-                     }
-                  #endif
-                  #ifdef HAVE_SQLITE3
-                      rc = sqlite3_open(cfg.sqlite3, &db);
-                      if(rc){
-                         syslog(LOG_PRIORITY, "%s: %s", sdata.ttmpfile, ERR_SQLITE3_OPEN);
-                      }
-                  #endif
 
+                  /* get user from 'RCPT TO:', 2008.10.25, SJ */
+
+                  #ifdef USERS_IN_MYSQL
+                     UE = get_user_from_email(mysql, email);
+                  #endif
+                  #ifdef USERS_IN_SQLITE3
+                     UE = get_user_from_email(db, email);
+                  #endif
+                  #ifdef USERS_IN_LDAP
+                     UE = get_user_from_email(ldap, cfg.ldap_base, email, cfg);
+                  #endif
 
                   #ifdef HAVE_MYSQL
                      if(mysql_connection == 1){
-                        UE = get_user_from_email(mysql, email);
+                        //UE = get_user_from_email(mysql, email);
                         sdata.uid = UE.uid;
 
                         /* if we have forwarded something for retraining */
@@ -602,18 +634,18 @@ void init_session_data(struct session_data *sdata){
                            snprintf(acceptbuf, MAXBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata.ttmpfile, email);
                            if(strcasestr(sdata.rcptto[0], "+spam@") || strncmp(email, "spam@", 5) == 0) is_spam = 1;
 
-                           UE = get_user_from_email(mysql, email2);
-                           sdata.uid = UE.uid;
-                           snprintf(sdata.name, SMALLBUFSIZE-1, "%s", UE.name);
+                           //UE2 = get_user_from_email(mysql, email2);
+                           sdata.uid = UE2.uid;
+                           snprintf(sdata.name, SMALLBUFSIZE-1, "%s", UE2.name);
 
                            train_mode = extract_id_from_message(sdata.ttmpfile, cfg.clapf_header_field, ID);
 
-                           syslog(LOG_PRIORITY, "%s: training request for %s by uid: %ld", sdata.ttmpfile, ID, UE.uid);
+                           syslog(LOG_PRIORITY, "%s: training request for %s by uid: %ld", sdata.ttmpfile, ID, UE2.uid);
 
                            if(is_spam == 1)
-                              snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s/h.%s", USER_QUEUE_DIR, UE.name[0], UE.name, ID);
+                              snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s/h.%s", USER_QUEUE_DIR, UE2.name[0], UE2.name, ID);
                            else
-                              snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s/s.%s", USER_QUEUE_DIR, UE.name[0], UE.name, ID);
+                              snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s/s.%s", USER_QUEUE_DIR, UE2.name[0], UE2.name, ID);
 
                            sstate2 = parse_message(qpath, sdata, cfg);
 
@@ -626,7 +658,7 @@ void init_session_data(struct session_data *sdata){
                         }
                         else {
 
-                           if(is_sender_on_white_list(mysql, email2, sdata.uid)){
+                           if(is_sender_on_white_list(mysql, email2, sdata.uid, cfg)){
                               syslog(LOG_PRIORITY, "%s: sender (%s) found on whitelist", sdata.ttmpfile, email);
                               snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on white list\r\n", cfg.clapf_header_field);
                               goto END_OF_SPAM_CHECK;
@@ -676,7 +708,7 @@ void init_session_data(struct session_data *sdata){
                         rc = sqlite3_exec(db, cfg.sqlite3_pragma, 0, 0, NULL);
                         if(rc != SQLITE_OK) syslog(LOG_PRIORITY, "%s: could not set pragma", sdata.ttmpfile);
 
-                        UE = get_user_from_email(db, email);
+                        //UE = get_user_from_email(db, email);
                         //sdata.uid = UE.uid;
                         sdata.uid = 0;
                         snprintf(sdata.name, SMALLBUFSIZE-1, "%s", UE.name);
@@ -688,17 +720,17 @@ void init_session_data(struct session_data *sdata){
                            snprintf(acceptbuf, MAXBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata.ttmpfile, email);
                            if(strcasestr(sdata.rcptto[0], "+spam@") || strncmp(email, "spam@", 5) == 0) is_spam = 1;
 
-                           UE = get_user_from_email(db, email2);
-                           sdata.uid = UE.uid;
+                           //UE2 = get_user_from_email(db, email2);
+                           sdata.uid = UE2.uid;
 
                            train_mode = extract_id_from_message(sdata.ttmpfile, cfg.clapf_header_field, ID);
 
-                           syslog(LOG_PRIORITY, "%s: training request for %s by uid: %ld", sdata.ttmpfile, ID, UE.uid);
+                           syslog(LOG_PRIORITY, "%s: training request for %s by uid: %ld", sdata.ttmpfile, ID, UE2.uid);
 
                            if(is_spam == 1)
-                              snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s/h.%s", USER_QUEUE_DIR, UE.name[0], UE.name, ID);
+                              snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s/h.%s", USER_QUEUE_DIR, UE2.name[0], UE2.name, ID);
                            else
-                              snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s/s.%s", USER_QUEUE_DIR, UE.name[0], UE.name, ID);
+                              snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s/s.%s", USER_QUEUE_DIR, UE2.name[0], UE2.name, ID);
 
 
                            sstate2 = parse_message(qpath, sdata, cfg);
@@ -713,7 +745,7 @@ void init_session_data(struct session_data *sdata){
                         }
                         else {
 
-                           if(is_sender_on_white_list(db, email2, sdata.uid)){
+                           if(is_sender_on_white_list(db, email2, sdata.uid, cfg)){
                               syslog(LOG_PRIORITY, "%s: sender (%s) found on whitelist", sdata.ttmpfile, email);
                               snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on white list\r\n", cfg.clapf_header_field);
                               goto END_OF_SPAM_CHECK;
@@ -781,11 +813,11 @@ void init_session_data(struct session_data *sdata){
                         else {
                            snprintf(qpath, SMALLBUFSIZE-1, "%s/%c", USER_QUEUE_DIR, UE.name[0]);
                            if(stat(qpath, &st))
-                              mkdir(qpath, 0775);
+                              mkdir(qpath, QUEUE_DIR_PERMISSION);
 
                            snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s", USER_QUEUE_DIR, UE.name[0], UE.name);
                            if(stat(qpath, &st))
-                              mkdir(qpath, 0775);
+                              mkdir(qpath, QUEUE_DIR_PERMISSION);
 
                            if(result.spaminess >= cfg.spam_overall_limit)
                               snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s/s.%s", USER_QUEUE_DIR, UE.name[0], UE.name, sdata.ttmpfile);
@@ -915,13 +947,17 @@ void init_session_data(struct session_data *sdata){
                free_url_list(sstate.urls);
             #endif
 
-            #ifdef HAVE_MYSQL
+            #ifdef NEED_MYSQL
                mysql_close(&mysql);
+               mysql_connection = 0;
             #endif
-            #ifdef HAVE_SQLITE3
+            #ifdef NEED_SQLITE3
                sqlite3_close(db);
+               rc = SQLITE_ERROR;
             #endif
-
+            #ifdef NEED_IN_LDAP
+               ldap_unbind_s(ldap);
+            #endif
 
             } /* PERIOD found */
 

@@ -1,5 +1,29 @@
 0.3.31:
 
+2008.10.25, SJ
+
+Redesigned the username/uid vs. email address query.
+You must specify the --with-userdb option. The ldap
+support is not fully functional yet. The clapf.schema
+must be fixed.
+(users.c, users.h, clapf.h, sql.c, sql.h, configure*, ...)
+
+2008.10.23, SJ
+
+Thinking about the problem I realised that I still need the
+t_white_list table. It holds all the user's whitelisted addresses
+in one blob per user.
+(db-*.sql)
+
+2008.10.20, SJ
+
+Modified whitelist support. I changed the 'user' table to hold
+a new column (whitelist) with type blob. Now the whitelist column
+stores all the whitelisted email addresses for the given uid one
+email address in a line, ie. separated by a new line character.
+The t_white_list table is no longer supported or used.
+(sql.c, sql.h, misc.c, misc.h, config.h, db-new.sql)
+
 2008.10.13, SJ
 
 If you are running clapf in daemon mode, you can forward messages to

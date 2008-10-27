@@ -266,10 +266,40 @@ dnl  if test "$want_antispam" = "yes"; then
 
 
 AC_ARG_WITH(userdb,
-[  --with-userdb[[=ldap|mysql]]      use either ldap or mysql database holding user data (default: none)],[
+[  --with-userdb[[=mysql|sqlite3|ldap]]      use either ldap or mysql or sqlite3 database holding user data (default: none)],[
   if test "$withval" != "no" -a "$withval" != "yes"; then
     USERDB=$withval
   fi
+
+  if test "$withval" = "mysql"; then
+     AC_CHECK_PROG(MYSQL_CONFIG, mysql_config, yes)
+
+     if test x$MYSQL_CONFIG = xyes; then
+       have_mysql="yes"
+     fi
+
+     if test "$have_mysql" = "yes"; then
+            dnl AC_DEFINE(USE_MYSQL, 1, [MySQL database support enabled])
+
+            mysql_includes=`mysql_config --cflags`
+            mysql_libs=`mysql_config --libs_r`
+     else
+        echo "MySQL support is not found"
+        exit 1;
+     fi
+   fi
+
+  if test "$withval" = "sqlite3"; then
+    AC_CHECK_HEADERS(sqlite3.h, have_sqlite3=yes, echo "sqlite3.h is not found")
+
+    AC_HAVE_LIBRARY(sqlite3, AC_CHECK_LIB(sqlite3, sqlite3_open, have_sqlite3=yes, have_sqlite3=no))
+
+      if test "$have_sqlite3" = "no"; then
+           echo "sqlite3 not found";
+           exit 1;
+      fi
+  fi
+
 ])
 
 
@@ -480,7 +510,6 @@ fi
 
 if test "$TOKENDB" = "sqlite3"; then
    defs="$defs -DHAVE_SQLITE3"
-   sqlite3_libs="-lsqlite3 -lpthread"
    mysql_obj="sqlite3.o sql.o"
 fi
 
@@ -499,6 +528,11 @@ if test "x$QCACHE" != "x"; then
       echo "please specify the --with-tokendb option"
       exit 1
    fi
+fi
+
+if test "x$USERDB" = "x"; then
+   echo "please specify the --with-userdb option"
+   exit 1
 fi
 
 
@@ -629,17 +663,19 @@ fi
 
 if test "$USERDB" = "mysql" && test "$have_mysql" = "yes"; then
    echo "user database: mysql"
-   defs="$defs -DHAVE_USERDB -DHAVE_USER_MYSQL"
-   #objs="$objs user.o"
-   user_obj="user.o"
+   defs="$defs -DUSERS_IN_MYSQL"
+   #user_obj="user.o"
+fi
+
+if test "$USERDB" = "sqlite3" && test "$have_sqlite3" = "yes"; then
+   echo "user database: sqlite3"
+   defs="$defs -DUSERS_IN_SQLITE3"
+   #user_obj="user.o"
 fi
 
 if test "$USERDB" = "ldap" && test "$have_ldap" = "yes"; then
    echo "user database: ldap"
-   defs="$defs -DHAVE_USERDB -DHAVE_USER_LDAP"
-   #objs="$objs user.o"
-   user_obj="user.o"
-   ldap_libs="-lldap -llber"
+   defs="$defs -DUSERS_IN_LDAP"
 fi
 
 echo "token database backend: $TOKENDB"
@@ -712,6 +748,21 @@ else
 fi
 
 
+if test "$have_mysql" = "yes"; then
+   defs="$defs -DNEED_MYSQL"
+fi
+
+if test "$have_sqlite3" = "yes"; then
+   defs="$defs -DNEED_SQLITE3"
+   sqlite3_libs="-lsqlite3 -lpthread"
+fi
+
+if test "$have_ldap" = "yes"; then
+   defs="$defs -DNEED_LDAP"
+   ldap_libs="-lldap -llber"
+fi
+
+
 id -u $CLAPF_USER 2>/dev/null 1>/dev/null
 if test $? -eq 1; then echo "the user \"$CLAPF_USER\" does not exists, please create it, first with adduser..."; exit 1; fi
 
@@ -727,7 +778,7 @@ echo; echo
 
 CFLAGS="$static -O2 -Wall -g"
 LIBS="$libclamav $antispam_libs $gsl_libs $sqlite3_libs"
-OBJS="misc.o cfg.o smtp.o sig.o decoder.o list.o parser.o cgi.o session.o $objs"
+OBJS="misc.o cfg.o smtp.o sig.o decoder.o list.o parser.o cgi.o session.o users.o $objs"
 
 AC_OUTPUT(Makefile)
 AC_OUTPUT(contrib/spamsum/Makefile)

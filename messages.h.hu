@@ -1,5 +1,5 @@
 /*
- * messages.h.hu, 2008.07.14, SJ
+ * messages.h.hu, 2008.10.20, SJ
  * Hungarian version
  */
 
@@ -9,6 +9,8 @@
 // cgi
 
 #define ERR_CGI_INVALID_METHOD "Érvénytelen CGI metódus"
+
+#define ERR_MISSING_DATA "Hiányzó adat(ok)"
 
 #define CGI_SPAM_QUARANTINE "Spam Karantén"
 #define ERR_CGI_DELIVER_AND_REMOVE "Kézbesít és töröl"

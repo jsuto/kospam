@@ -1,5 +1,5 @@
 /*
- * clapfadmincgi.c, 2008.07.14, SJ
+ * clapfadmincgi.c, 2008.10.20, SJ
  */
 
 #include <stdio.h>
@@ -126,7 +126,6 @@ int main(){
    }
 
 
-
 #ifdef HAVE_MYSQL
    mysql_init(&mysql);
    mysql_options(&mysql, MYSQL_OPT_CONNECT_TIMEOUT, (const char*)&cfg.mysql_connect_timeout);
@@ -247,6 +246,7 @@ int main(){
    /* add a new user */
 
    if(method == M_POST){
+      if(strlen(cgi.email) < 4 || strlen(cgi.user) < 1) errout(input, ERR_MISSING_DATA);
 
       /* sanity check variables */
 
@@ -257,7 +257,7 @@ int main(){
 
       if(uid < 0) uid = 0;
 
-      printf("i: %s", input);
+      //printf("i: %s * email: %s, uid: %s", input, cgi.email, cgi.userid);
 
    #ifdef HAVE_MYSQL
       if(strncmp(input, "add=1", 5) == 0){

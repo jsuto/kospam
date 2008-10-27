@@ -388,7 +388,7 @@ int main(int argc, char **argv, char **envp){
 
    else {
    #ifdef HAVE_MYSQL
-      if(is_sender_on_white_list(mysql, from, sdata.uid)){
+      if(is_sender_on_white_list(mysql, from, sdata.uid, cfg)){
          syslog(LOG_PRIORITY, "%s: sender (%s) found on whitelist", sdata.ttmpfile, from);
          snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on white list\r\n", cfg.clapf_header_field);
       } else
@@ -397,7 +397,7 @@ int main(int argc, char **argv, char **envp){
       update_mysql_tokens(mysql, state.first, sdata.uid);
    #endif
    #ifdef HAVE_SQLITE3
-      if(is_sender_on_white_list(db, from, sdata.uid)){
+      if(is_sender_on_white_list(db, from, sdata.uid, cfg)){
          syslog(LOG_PRIORITY, "%s: sender (%s) found on whitelist", sdata.ttmpfile, from);
          snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on white list\r\n", cfg.clapf_header_field);
       } else

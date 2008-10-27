@@ -25,18 +25,19 @@ create table if not exists user (
         email char(128) not null,
 	action enum ('drop', 'junk', 'quarantine') default 'junk',
 	pagelen int default 25,
-        username char(32) primary key not null
+        username char(32) not null,
+	unique (uid, email)
 );
 
-create index user_idx on user (username, email);
+create index user_idx on user (uid, email);
 
 create table if not exists t_white_list (
-	email char(64) primary key not null,
-	uid int default 0
+	uid int unsigned not null primary key,
+	whitelist blob default null
 );
 
-create index t_white_list_idx on t_white_list (email);
-
+create index t_white_list_idx on t_white_list (uid);
+insert into t_white_list (uid) values(0);
 
 create table if not exists t_queue (
 	id char(32) not null,

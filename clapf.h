@@ -1,5 +1,5 @@
 /*
- * clapf.h, 2008.05.11, SJ
+ * clapf.h, 2008.10.25, SJ
  */
 
 #include <misc.h>
@@ -11,6 +11,7 @@
 #include <smtpcodes.h>
 #include <session.h>
 #include <buffer.h>
+#include <users.h>
 #include <config.h>
 
 #ifdef HAVE_MYSQL

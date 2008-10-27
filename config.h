@@ -21,7 +21,7 @@
 #define PER_USER_SQLITE3_DB_FILE "clapf.sdb"
 #define MYDB_FILE "tokens.mydb"
 
-#define POP3_USER_DB USER_DATA_DIR "/users.sdb"
+#define QUEUE_DIR_PERMISSION 0775
 
 #define SQLITE3_PRAGMA "PRAGMA synchronous = OFF"
 

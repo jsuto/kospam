@@ -1,5 +1,5 @@
 /*
- * session.c, 2008.10.25, SJ
+ * session.c, 2008.10.27, SJ
  */
 
 #include <stdio.h>
@@ -34,6 +34,7 @@ int x, rc;
 #endif
 
 #ifdef NEED_LDAP
+   #include <ldap.h>
    LDAP *ldap;
 #endif
 

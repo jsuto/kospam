@@ -1,0 +1,37 @@
+dn: dc=aaaa,dc=fu
+dc: aaaa
+objectClass: top
+objectClass: dcObject
+objectClass: organization
+o: aaaa.fu
+
+dn: ou=billing,dc=aaaa,dc=fu
+ou: billing
+objectClass: top
+objectClass: organizationalUnit
+
+dn: cn=joe,ou=billing,dc=aaaa,dc=fu
+cn: joe
+sn: whatever
+objectClass: top
+objectClass: person
+objectClass: qmailUser
+objectClass: qmailGroup
+uid: 1000
+mail: joe@aaaa.fu
+mailMessageStore: x
+filtersender:
+
+dn: cn=jim,ou=billing,dc=aaaa,dc=fu
+cn: jim
+sn: whatever
+objectClass: top
+objectClass: person
+objectClass: qmailUser
+objectClass: qmailGroup
+uid: 1001
+mail: jim@aaaa.fu
+mailAlternateAddress: jim@mail.aaaa.fu
+mailMessageStore: x
+filtersender:
+

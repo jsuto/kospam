@@ -6485,7 +6485,8 @@ fi
 
 if test "$USERDB" = "ldap" && test "$have_ldap" = "yes"; then
    echo "user database: ldap"
-   defs="$defs -DUSERS_IN_LDAP"
+   defs="$defs -DUSERS_IN_LDAP -DNEED_LDAP"
+   ldap_libs="-lldap -llber"
 fi
 
 echo "token database backend: $TOKENDB"
@@ -6567,10 +6568,6 @@ if test "$have_sqlite3" = "yes"; then
    sqlite3_libs="-lsqlite3 -lpthread"
 fi
 
-if test "$have_ldap" = "yes"; then
-   defs="$defs -DNEED_LDAP"
-   ldap_libs="-lldap -llber"
-fi
 
 
 id -u $CLAPF_USER 2>/dev/null 1>/dev/null

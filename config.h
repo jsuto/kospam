@@ -1,5 +1,5 @@
 /*
- * config.h, 2008.08.18, SJ
+ * config.h, 2008.10.27, SJ
  */
 
 #ifndef _CONFIG_H
@@ -21,7 +21,7 @@
 #define PER_USER_SQLITE3_DB_FILE "clapf.sdb"
 #define MYDB_FILE "tokens.mydb"
 
-#define QUEUE_DIR_PERMISSION 0775
+#define QUEUE_DIR_PERMISSION 0755
 
 #define SQLITE3_PRAGMA "PRAGMA synchronous = OFF"
 

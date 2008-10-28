@@ -817,8 +817,18 @@ void init_session_data(struct session_data *sdata){
                               mkdir(qpath, QUEUE_DIR_PERMISSION);
 
                            snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s", USER_QUEUE_DIR, UE.name[0], UE.name);
-                           if(stat(qpath, &st))
+                           if(stat(qpath, &st)){
                               mkdir(qpath, QUEUE_DIR_PERMISSION);
+
+                              /*
+                               * the web server must have write permissions on the user's queue directory.
+                               * you have to either extend these rights the to world, ie. 777 or
+                               * change group-id of clapf to the web server, ie. usermod -g www-data clapf.
+                               * 2008.10.27, SJ
+                               */
+
+                              chmod(qpath, S_IRUSR|S_IWUSR|S_IXUSR|S_IRGRP|S_IWGRP|S_IXGRP);
+                           }
 
                            if(result.spaminess >= cfg.spam_overall_limit)
                               snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s/s.%s", USER_QUEUE_DIR, UE.name[0], UE.name, sdata.ttmpfile);

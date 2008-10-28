@@ -1,5 +1,5 @@
 /*
- * cfg.h, 2008.10.26, SJ
+ * cfg.h, 2008.10.27, SJ
  */
 
 #ifndef _CFG_H
@@ -210,9 +210,6 @@ struct __config {
    // spamsum
    char sig_db[MAXVAL];
 
-
-   // pop3 stuff
-   int has_personal_db;
 
 };
 

@@ -1,5 +1,5 @@
 /*
- * session.c, 2008.10.27, SJ
+ * session.c, 2008.10.29, SJ
  */
 
 #include <stdio.h>
@@ -846,12 +846,15 @@ void init_session_data(struct session_data *sdata){
                         }
                      #endif
 
+                        /* this info is not used yet, 2008.10.29, SJ
+
                      #ifdef HAVE_MYSQL
                         insert_2_queue(mysql, &sdata, cfg, is_spam);
                      #endif
                      #ifdef HAVE_SQLITE3
                         insert_2_queue(db, &sdata, cfg, is_spam);
                      #endif
+                         */
 
                      }
 

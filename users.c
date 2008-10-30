@@ -1,5 +1,5 @@
 /*
- * sql.c, 2008.10.25, SJ
+ * sql.c, 2008.10.30, SJ
  */
 
 #include <stdio.h>
@@ -162,7 +162,7 @@ struct ue get_user_from_email(LDAP *ld, char *base, char *email, struct __config
    e = ldap_first_entry(ld, res);
 
    if(e){
-      vals = ldap_get_values(ld, e, "qmailUID");
+      vals = ldap_get_values(ld, e, "uid");
       if(ldap_count_values(vals) > 0) UE.uid = atol(vals[0]);
       ldap_value_free(vals);
 

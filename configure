@@ -730,15 +730,12 @@ enable_whitelist
 enable_case
 enable_rbl
 enable_all_received
-enable_old_format
 enable_blackhole
 enable_cgi
 with_userdb
 with_tokendb
-with_qcache
 enable_lmtp
 enable_language_detection
-enable_store
 enable_outgoing_smtp
 enable_spamsum
 with_clapf_user
@@ -1383,12 +1380,10 @@ Optional Features:
   --enable-case           use case sensitive tokens
   --enable-rbl            use the (SU)RBL database
   --enable-all-received   check all the IP-addresses from "Received: from ..." lines against blacklists
-  --enable-old-format     use old token format
   --enable-blackhole      build the blackhole feature
   --enable-cgi            build the web interface to train the database
   --enable-lmtp           use LMTP local delivery (default: SMTP)
   --enable-language-detection use the language detection feature (experimental)
-  --enable-store          use external store to store emails for later retraining
   --enable-outgoing-smtp  enable outgoing SMTP server mode
   --enable-spamsum        enable spamsum support (experimental)
   --enable-spamdrop-helper use external spamdrop helper program
@@ -1396,9 +1391,8 @@ Optional Features:
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
-  --with-userdb[=mysql|sqlite3|ldap]      use either ldap or mysql or sqlite3 database holding user data (default: none)
+  --with-userdb[=mysql|ldap]      use either ldap or mysql database holding user data (default: none)
   --with-tokendb[=mysql|sqlite3]      use either mysql or sqlite3 database holding tokens (default: none)
-  --with-qcache[=tcp|socket]      use Qcache via either a TCP or Unix domain socket (default: none)
   --with-clapf-user=username What user the clapf daemon shall be run as
 
 Some influential environment variables:
@@ -4922,16 +4916,6 @@ fi
 
 
 
-    # Check whether --enable-old-format was given.
-if test "${enable_old_format+set}" = set; then
-  enableval=$enable_old_format; keep_old_token_format=$enableval
-else
-  keep_old_token_format="no"
-fi
-
-
-
-
 
 for ac_header in gsl/gsl_cdf.h
 do
@@ -5870,18 +5854,6 @@ fi
 
 
 
-# Check whether --with-qcache was given.
-if test "${with_qcache+set}" = set; then
-  withval=$with_qcache;
-  if test "$withval" != "no" -a "$withval" != "yes"; then
-    QCACHE=$withval
-  else
-    echo "please specify the connection type of the qcache: tcp or unix socket"; exit 1;
-  fi
-
-fi
-
-
 
 
     # Check whether --enable-lmtp was given.
@@ -5901,21 +5873,7 @@ fi
 
 
 
-    # Check whether --enable-store was given.
-if test "${enable_store+set}" = set; then
-  enableval=$enable_store; want_store=$enableval
-else
-  want_store="no"
-fi
 
-
-    if test "$want_store" = "yes"; then
-        defs="$defs -DHAVE_STORE"
-        clapfstore="clapfstore"
-        store_obj="store.o"
-	clapfstore_install="install-clapfstore"
-        have_store="yes"
-    fi
 
 
     # Check whether --enable-outgoing-smtp was given.

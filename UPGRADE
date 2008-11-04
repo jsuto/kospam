@@ -9,35 +9,8 @@ update it, you should review the newer config file and modify it
 according to your settings.
 
 
-4. create the whitelist table:
+4. Update the 
 
-create table if not exists t_white_list (
-        email char(64) primary key not null,
-        uid int default 0
-);
-create index t_white_list_idx on t_white_list (email);
-
-
-5. Modify the existing t_token table *IF* it has no 'timestamp' column:
-
-ALTER TABLE t_token ADD COLUMN timestamp int default 0;
-UPDATE t_token SET timestamp=UNIX_TIMESTAMP();
-
-if you are using SQLite3, then use the current unix timestamp.
-
-
-6. Update the t_misc table IF it has NOT the following schema:
-
-create table if not exists t_misc (
-        nham int default 0,
-        nspam int default 0,
-        uid int unsigned default 0
-);
-create index t_misc_idx on t_misc(uid);
-
-In this case, issue the following SQL statements:
-
-ALTER TABLE t_misc CHANGE COLUMN N_HAM nham int unsigned default 0;
-ALTER TABLE t_misc CHANGE COLUMN N_SPAM nspam int unsigned default 0;
-
+Update the t_white_list and user tables according to the new db.sql
+schema.
 

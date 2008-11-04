@@ -99,7 +99,7 @@ spamsum:
 	(cd $(srcdir)/contrib/spamsum; make all)
 
 test:
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o spamtest $(srcdir)/test.c -lclapf $(LIBS) @spamsum_libs@ $(LIBDIR) @LDFLAGS@
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o spamtest $(srcdir)/test.c -lclapf $(LIBS) $(LDAP_LIBS) @spamsum_libs@ $(LIBDIR) @LDFLAGS@
 
 qcache: qs.o misc.o cfg.o qcache.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o qs $^ $(LIBS) -lpthread $(LIBDIR)

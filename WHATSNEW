@@ -1,3 +1,29 @@
+0.3.31:
+-------
+
+Added an experimental language detection. See contrib/i18n for
+more details.
+
+Added a kind of backscatter detection using a special email header.
+
+Extended whitelist supports.
+
+Implemented a primitive token reassembly logic to get 'Cialis'
+from 'C i a l i s'. To use it, set the locale variable in clapf.conf.
+
+If you are running clapf in daemon mode, you can forward messages to
+be trained to ham@yourdomain and spam@yourdomain too.
+
+Redesigned the username/uid vs. email address query. You can store
+these assignments in either a mysql database or in an LDAP database/Active
+Directory.
+
+Added a new web UI replacing the cgi applications. The LDAP admin part
+is not ready yet, but it's pretty usable. And much nicer.
+
+Temporarily disabled the qcache and external store support as they need
+further review to work with this release.
+
 0.3.30:
 -------
 

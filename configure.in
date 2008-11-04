@@ -226,12 +226,6 @@ dnl  if test "$want_antispam" = "yes"; then
     fi
 
 
-    dnl token format
-
-    AC_ARG_ENABLE(old-format,
-          [  --enable-old-format     use old token format], keep_old_token_format=$enableval, keep_old_token_format="no")
-
-
     dnl gsl support
 
     AC_CHECK_HEADERS(gsl/gsl_cdf.h, have_gsl=yes, echo "gsl_cdf.h is not found")
@@ -266,7 +260,7 @@ dnl  if test "$want_antispam" = "yes"; then
 
 
 AC_ARG_WITH(userdb,
-[  --with-userdb[[=mysql|sqlite3|ldap]]      use either ldap or mysql or sqlite3 database holding user data (default: none)],[
+[  --with-userdb[[=mysql|ldap]]      use either ldap or mysql database holding user data (default: none)],[
   if test "$withval" != "no" -a "$withval" != "yes"; then
     USERDB=$withval
   fi
@@ -378,14 +372,15 @@ AC_ARG_WITH(tokendb,
 ])
 
 
-AC_ARG_WITH(qcache,
-[  --with-qcache[[=tcp|socket]]      use Qcache via either a TCP or Unix domain socket (default: none)],[
-  if test "$withval" != "no" -a "$withval" != "yes"; then
-    QCACHE=$withval
-  else
-    echo "please specify the connection type of the qcache: tcp or unix socket"; exit 1;
-  fi
-])
+dnl temporarily disable the qcache support
+dnl AC_ARG_WITH(qcache,
+dnl [  --with-qcache[[=tcp|socket]]      use Qcache via either a TCP or Unix domain socket (default: none)],[
+dnl if test "$withval" != "no" -a "$withval" != "yes"; then
+dnl    QCACHE=$withval
+dnl  else
+dnl    echo "please specify the connection type of the qcache: tcp or unix socket"; exit 1;
+dnl  fi
+dnl ])
 
 
 
@@ -399,16 +394,16 @@ dnl language detection
 
 
 dnl external store
-    AC_ARG_ENABLE(store,
-          [  --enable-store          use external store to store emails for later retraining], want_store=$enableval, want_store="no")
+dnl    AC_ARG_ENABLE(store,
+dnl          [  --enable-store          use external store to store emails for later retraining], want_store=$enableval, want_store="no")
 
-    if test "$want_store" = "yes"; then
-        defs="$defs -DHAVE_STORE"
-        clapfstore="clapfstore"
-        store_obj="store.o"
-	clapfstore_install="install-clapfstore"
-        have_store="yes"
-    fi
+dnl    if test "$want_store" = "yes"; then
+dnl        defs="$defs -DHAVE_STORE"
+dnl        clapfstore="clapfstore"
+dnl        store_obj="store.o"
+dnl	clapfstore_install="install-clapfstore"
+dnl        have_store="yes"
+dnl    fi
 
 
 dnl outgoing smtp support

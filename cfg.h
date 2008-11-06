@@ -210,7 +210,7 @@ struct __config {
    // spamsum
    char sig_db[MAXVAL];
 
-
+   int has_personal_db;
 };
 
 struct __config read_config(char *configfile);

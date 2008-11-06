@@ -569,6 +569,9 @@ struct __config read_config(char *configfile){
                   if(strcmp(key, "pidfile") == 0)
                      memcpy(cfg.pidfile, val, MAXVAL-1);
 
+                  if(strcmp(key, "has_personal_db") == 0)
+                     cfg.has_personal_db = atoi(val);
+
                }
 
             }

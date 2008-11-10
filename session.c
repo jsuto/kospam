@@ -1,5 +1,5 @@
 /*
- * session.c, 2008.10.29, SJ
+ * session.c, 2008.11.09, SJ
  */
 
 #include <stdio.h>
@@ -625,7 +625,6 @@ void init_session_data(struct session_data *sdata){
 
                   #ifdef HAVE_MYSQL
                      if(mysql_connection == 1){
-                        //UE = get_user_from_email(mysql, email);
                         sdata.uid = UE.uid;
 
                         /* if we have forwarded something for retraining */
@@ -635,7 +634,6 @@ void init_session_data(struct session_data *sdata){
                            snprintf(acceptbuf, MAXBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata.ttmpfile, email);
                            if(strcasestr(sdata.rcptto[0], "+spam@") || strncmp(email, "spam@", 5) == 0) is_spam = 1;
 
-                           //UE2 = get_user_from_email(mysql, email2);
                            sdata.uid = UE2.uid;
                            snprintf(sdata.name, SMALLBUFSIZE-1, "%s", UE2.name);
 
@@ -709,8 +707,6 @@ void init_session_data(struct session_data *sdata){
                         rc = sqlite3_exec(db, cfg.sqlite3_pragma, 0, 0, NULL);
                         if(rc != SQLITE_OK) syslog(LOG_PRIORITY, "%s: could not set pragma", sdata.ttmpfile);
 
-                        //UE = get_user_from_email(db, email);
-                        //sdata.uid = UE.uid;
                         sdata.uid = 0;
                         snprintf(sdata.name, SMALLBUFSIZE-1, "%s", UE.name);
 
@@ -721,7 +717,6 @@ void init_session_data(struct session_data *sdata){
                            snprintf(acceptbuf, MAXBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata.ttmpfile, email);
                            if(strcasestr(sdata.rcptto[0], "+spam@") || strncmp(email, "spam@", 5) == 0) is_spam = 1;
 
-                           //UE2 = get_user_from_email(db, email2);
                            sdata.uid = UE2.uid;
 
                            train_mode = extract_id_from_message(sdata.ttmpfile, cfg.clapf_header_field, ID);

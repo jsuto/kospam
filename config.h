@@ -172,7 +172,6 @@
 #define SQL_QUEUE_TABLE "t_queue"
 #define SQL_STAT_TABLE "t_stat"
 #define SQL_SMAP_KEY_TABLE "t_smap_key"
-#define SQL_POP3_GW_TABLE "pop3_gw_users"
 
 #define _90_DAYS 90*86400
 #define _60_DAYS 60*86400

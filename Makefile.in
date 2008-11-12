@@ -84,10 +84,6 @@ aphash: % : %.o misc.o
 prepare-sql : % : %.o misc.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^
 
-clapf_admin	: % : %.o buffer.o misc.o score.o cfg.o chi.o hash.o $(MYSQL_OBJS)
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
-
-
 clapfstore:	% : %.o cfg.o misc.o ssl_util.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR) -lssl -lcrypto -ldl -lpthread
 
@@ -185,7 +181,7 @@ intall-clapfstore: clapfstore
 install-spamdrop: spamdrop
 	$(INSTALL) -m 0755 spamdrop $(DESTDIR)$(bindir)
 	$(INSTALL) -m 0755 aphash $(DESTDIR)$(bindir)
-	if [ -f $(srcdir)/clapf_admin ]; then $(INSTALL) -m 0755 clapf_admin $(DESTDIR)$(bindir); fi
+	(cd $(DESTDIR)$(bindir); ln -sf spamdrop blackhole)
 
 install-splitmbox: splitmbox
 	$(INSTALL) -m 0755 splitmbox $(DESTDIR)$(bindir)
@@ -224,7 +220,7 @@ clean_db:
 	rm -f ham.tmp spam.tmp num_of_spam.tmp num_of_ham.tmp tokens.mydb temp.*
 
 clean:
-	rm -f *.o *.a libclapf.so* qs db.sql clapf clapfstore clapf.conf parsembox splitmbox spamtest spamdrop spamcgi traincgi trainlogcgi usercgi statcgi spamstat aphash clapf_admin prepare-sql mydb_stat mydb_compress
+	rm -f *.o *.a libclapf.so* qs db.sql clapf clapfstore clapf.conf parsembox splitmbox spamtest spamdrop spamcgi traincgi trainlogcgi usercgi statcgi spamstat aphash prepare-sql mydb_stat mydb_compress
 	(cd $(srcdir)/contrib/spamsum; make clean)
 
 

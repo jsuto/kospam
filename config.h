@@ -1,5 +1,5 @@
 /*
- * config.h, 2008.10.27, SJ
+ * config.h, 2008.11.11, SJ
  */
 
 #ifndef _CONFIG_H
@@ -11,7 +11,7 @@
 #define PROGNAME "clapf"
 #define OOOPNAME "ooop"
 
-#define VERSION "0.3.31-rc3"
+#define VERSION "0.3.31"
 
 #define HOSTID "av-engine.localhost"
 
@@ -88,11 +88,7 @@
 
 #define CLAPFUSAGE "usage: " PROGNAME " -c <config file> -d -V -h"
 
-#define TRAINGPROGNAME "train"
-#define TRAINUSAGE "usage: " TRAINGPROGNAME " -c <config file> [ <-S spam message> | <-H ham message> ] [-u <uid> ]"
-
-#define ADMINPROGNAME "clapf_admin"
-#define ADMINUSAGE "usage: " ADMINPROGNAME " [-c <config file>] -u <username> -e <email address> [-a <action>] [-i <uid>]"
+#define SPAMDROPUSAGE "usage: spamdrop [-c <config file>] [-u <username>] [-s] [-p] [-H | -S] < message"
 
 #define POP3_PROGNAME "clapf-pop3"
 

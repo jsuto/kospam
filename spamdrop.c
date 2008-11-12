@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2008.09.29, SJ
+ * spamdrop.c, 2008.11.11, SJ
  */
 
 #include <stdio.h>
@@ -110,7 +110,7 @@ int main(int argc, char **argv, char **envp){
 #endif
 
 
-   while((i = getopt(argc, argv, "c:u:SHps")) > 0){
+   while((i = getopt(argc, argv, "c:u:SHpsh?")) > 0){
        switch(i){
 
          case 'c' :
@@ -136,6 +136,12 @@ int main(int argc, char **argv, char **envp){
          case 'H' :
                     train_as_ham = 1;
                     break;
+
+         case 'h' :
+         case '?' :
+                    printf("%s", SPAMDROPUSAGE);
+                    break;
+
 
          default  : 
                     break;
@@ -482,26 +488,30 @@ int main(int argc, char **argv, char **envp){
    /* if this is a blackhole request and spaminess < 0.99, then learn the message in an iterative loop */
    /****************************************************************************************************/
 
-   if(blackhole_request == 1 && result.spaminess < 0.99){
-      rounds = MAX_ITERATIVE_TRAIN_LOOPS;
+   if(blackhole_request == 1){
+      if(result.spaminess < 0.99){
+         rounds = MAX_ITERATIVE_TRAIN_LOOPS;
 
-      syslog(LOG_PRIORITY, "%s: training on a blackhole message", sdata.ttmpfile);
-      snprintf(trainbuf, SMALLBUFSIZE-1, "%sTUM on blackhole\r\n", cfg.clapf_header_field);
+         syslog(LOG_PRIORITY, "%s: training on a blackhole message", sdata.ttmpfile);
+         snprintf(trainbuf, SMALLBUFSIZE-1, "%sTUM on blackhole\r\n", cfg.clapf_header_field);
 
-   #ifdef HAVE_MYSQL
-      train_message(mysql, sdata, state, rounds, 1, T_TOE, cfg);
-   #endif
-   #ifdef HAVE_SQLITE3
-      train_message(db, sdata, state, rounds, 1, T_TOE, cfg);
-   #endif
-   #ifdef HAVE_MYDB
-      train_message(cfg.mydbfile, mhash, sdata, state, rounds, 1, T_TOE, cfg);
-   #endif
+      #ifdef HAVE_MYSQL
+         train_message(mysql, sdata, state, rounds, 1, T_TOE, cfg);
+      #endif
+      #ifdef HAVE_SQLITE3
+         train_message(db, sdata, state, rounds, 1, T_TOE, cfg);
+      #endif
+      #ifdef HAVE_MYDB
+         train_message(cfg.mydbfile, mhash, sdata, state, rounds, 1, T_TOE, cfg);
+      #endif
+      }
 
    #ifdef HAVE_BLACKHOLE
+      state.ip[strlen(state.ip)-1] = '\0';
       put_ip_to_dir(cfg.blackhole_path, state.ip);
    #endif
    }
+
 
    /* close db handles */
 

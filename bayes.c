@@ -1,5 +1,5 @@
 /*
- * bayes.c, 2008.09.15, SJ
+ * bayes.c, 2008.11.12, SJ
  */
 
 #include <stdio.h>
@@ -688,6 +688,8 @@ int train_message(char *mydbfile, struct mydb_node *mhash[], struct session_data
    cfg.penalize_octet_stream = 0;
 
    result.spaminess = DEFAULT_SPAMICITY;
+
+   if(cfg.group_type == 0) sdata.uid = 0;
 
    for(i=1; i<=rounds; i++){
    #ifdef HAVE_MYSQL

@@ -37,6 +37,7 @@ AC_SUBST(store_obj)
 AC_SUBST(db_install)
 AC_SUBST(spamsum_libs)
 AC_SUBST(spamsum)
+AC_SUBST(spamsum_install)
 
 have_libclamav="no"
 have_clamd="no"
@@ -320,7 +321,7 @@ AC_ARG_WITH(tokendb,
 
     have_spamdrop="yes"
     parsembox="$parsembox"
-    preparesql="prepare-sql aphash clapf_admin"
+    preparesql="prepare-sql aphash "
     spamdrop="spamdrop"
     spamdrop_install="install-spamdrop"
 
@@ -343,7 +344,7 @@ AC_ARG_WITH(tokendb,
             mysql_libs=`mysql_config --libs_r`
             have_spamdrop="yes"
             parsembox="$parsembox"
-            preparesql="prepare-sql aphash clapf_admin"
+            preparesql="prepare-sql aphash "
 	    spamdrop="spamdrop"
 	    spamdrop_install="install-spamdrop"
 
@@ -701,6 +702,7 @@ fi
 
 if test "$want_spamsum" = "yes"; then
    echo "spamsum: yes"
+   spamsum_install="install-spamsum"
 else
    echo "spamsum: no"
 fi

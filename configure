@@ -640,6 +640,7 @@ LIBOBJS
 DATADIR
 CFGDIR
 MYSQL_CONFIG
+spamsum_install
 spamsum
 spamsum_libs
 db_install
@@ -3849,6 +3850,7 @@ done
 
 
 
+
 have_libclamav="no"
 have_clamd="no"
 have_avg="no"
@@ -5764,7 +5766,7 @@ ac_cv_lib_sqlite3=ac_cv_lib_sqlite3_main
 
     have_spamdrop="yes"
     parsembox="$parsembox"
-    preparesql="prepare-sql aphash clapf_admin"
+    preparesql="prepare-sql aphash "
     spamdrop="spamdrop"
     spamdrop_install="install-spamdrop"
 
@@ -5822,7 +5824,7 @@ fi
             mysql_libs=`mysql_config --libs_r`
             have_spamdrop="yes"
             parsembox="$parsembox"
-            preparesql="prepare-sql aphash clapf_admin"
+            preparesql="prepare-sql aphash "
 	    spamdrop="spamdrop"
 	    spamdrop_install="install-spamdrop"
 
@@ -6474,6 +6476,7 @@ fi
 
 if test "$want_spamsum" = "yes"; then
    echo "spamsum: yes"
+   spamsum_install="install-spamsum"
 else
    echo "spamsum: no"
 fi

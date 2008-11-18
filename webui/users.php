@@ -39,8 +39,8 @@ $conn = webui_connect() or nice_error($err_connect_db);
    <input type="hidden" name="add" value="1">
    <table border="0">
       <tr><td><? print $EMAIL_ADDRESS; ?>:</td><td><input type="text" name="email"></td></tr>
-      <tr><td>Username:</td><td><input type="text" name="username" ></td></tr>
-      <tr><td>User id:</td><td><input type="text" name="uid" ></td></tr>
+      <tr><td><? print $USERNAME; ?>:</td><td><input type="text" name="username" ></td></tr>
+      <tr><td><? print $USERID; ?>:</td><td><input type="text" name="uid" ></td></tr>
       <tr colspan="2"><td><input type="submit" value="OK"></td></tr>
    </table>
 </form>

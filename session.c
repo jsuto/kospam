@@ -1,5 +1,5 @@
 /*
- * session.c, 2008.11.09, SJ
+ * session.c, 2008.11.15, SJ
  */
 
 #include <stdio.h>
@@ -1005,9 +1005,9 @@ QUITTING:
 
    close(sdata.fd);
 
-   if(strlen(cfg.queuedir) > 2){
-      snprintf(queuedfile, SMALLBUFSIZE-1, "%s/%s", cfg.queuedir, sdata.ttmpfile);
-      write_delivery_info(sdata.ttmpfile, cfg.queuedir, sdata.mailfrom, sdata.rcptto, sdata.num_of_rcpt_to);
+   if(strlen(cfg.holddir) > 2){
+      snprintf(queuedfile, SMALLBUFSIZE-1, "%s/%s", cfg.holddir, sdata.ttmpfile);
+      write_delivery_info(sdata.ttmpfile, cfg.holddir, sdata.mailfrom, sdata.rcptto, sdata.num_of_rcpt_to);
       link(sdata.ttmpfile, queuedfile);
    }
 

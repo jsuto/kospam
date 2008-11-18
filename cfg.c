@@ -1,5 +1,5 @@
 /*
- * cfg.c, 2008.10.26, SJ
+ * cfg.c, 2008.11.15, SJ
  */
 
 #include <stdio.h>
@@ -246,8 +246,8 @@ struct __config read_config(char *configfile){
                   if(strcmp(key, "workdir") == 0)
                      memcpy(cfg.workdir, val, MAXVAL-1);
 
-                  if(strcmp(key, "queuedir") == 0)
-                     memcpy(cfg.queuedir, val, MAXVAL-1);
+                  if(strcmp(key, "holddir") == 0)
+                     memcpy(cfg.holddir, val, MAXVAL-1);
 
                   if(strcmp(key, "quarantine_dir") == 0)
                      memcpy(cfg.quarantine_dir, val, MAXVAL-1);

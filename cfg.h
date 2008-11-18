@@ -1,5 +1,5 @@
 /*
- * cfg.h, 2008.10.27, SJ
+ * cfg.h, 2008.11.15, SJ
  */
 
 #ifndef _CFG_H
@@ -37,7 +37,7 @@ struct __config {
 
    char chrootdir[MAXVAL];
    char workdir[MAXVAL];
-   char queuedir[MAXVAL];
+   char holddir[MAXVAL];
    char quarantine_dir[MAXVAL];
    char blackhole_path[MAXVAL];
 

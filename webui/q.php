@@ -89,6 +89,8 @@ if($_SERVER['REQUEST_METHOD'] == "GET"){
    /* release message from quarantine */
 
    else if($deliver){
+      if($username == "aaa") nice_error("I don't deliver for the demo user....");
+
       $m = get_message_for_delivery($my_q_dir . "/$deliver", $fromaddr);
 
       /* get user's email address */
@@ -117,8 +119,8 @@ if($_SERVER['REQUEST_METHOD'] == "GET"){
       print "<form action=\"$meurl\" name=\"aaa0\" method=\"get\">\n";
       print "<input type=\"hidden\" name=\"user\" value=\"$username\">\n";
       print "<table border=\"0\">\n";
-      print "<tr><td>From:</td><td><input type=\"text\" name=\"from\" value=\"$from\"></td></tr>\n";
-      print "<tr><td>Subject:</td><td><input type=\"text\" name=\"subj\" value=\"$subj\"></td></tr>\n";
+      print "<tr><td>$FROM:</td><td><input type=\"text\" name=\"from\" value=\"$from\"></td></tr>\n";
+      print "<tr><td>$SUBJECT:</td><td><input type=\"text\" name=\"subj\" value=\"$subj\"></td></tr>\n";
       print "<tr colspan=\"2\"><td><input type=\"submit\" value=\"OK\"></td></tr>\n";
       print "</table>\n";
       print "</form>\n";

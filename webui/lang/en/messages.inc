@@ -26,6 +26,7 @@ $EXISTING_USERS = "Existing users";
 
 $FAILED_TO_REMOVE = "Failed to remove";
 $FIRST = "First";
+$FROM = "From";
 
 $HOME = "Home";
 
@@ -46,12 +47,14 @@ $REMOVE = "Remove";
 
 $SELECT_ALL = "Select all";
 $STATS = "Statistics";
+$SUBJECT = "Subject";
 $SUCCESSFULLY_REMOVED = "Successfully removed";
 
 $TOTAL = "Total";
 
 $USERLIST = "User's list";
 $USERNAME = "Username";
+$USERID = "User id";
 $USER_MANAGEMENT = "User management";
 
 $WHITELIST = "Whitelist";

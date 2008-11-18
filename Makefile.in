@@ -54,6 +54,7 @@ clapf.conf:
 	sed -e 's%pidfile=.*%pidfile=$(localstatedir)/lib/clapf/clapf.pid%' \
 	-e 's%blackhole_path=.*%blackhole_path=$(localstatedir)/lib/clapf/blackhole%' \
 	-e 's%sqlite3=.*%sqlite3=$(localstatedir)/lib/clapf/data/tokens.sdb%' \
+	-e 's%queuedir=.*%queuedir=$(localstatedir)/lib/clapf/hold%' \
 	-e 's%workdir=.*%workdir=$(localstatedir)/lib/clapf/tmp%' <$(srcdir)/example.conf >$@
 
 clapf: % : %.o
@@ -162,6 +163,8 @@ install-clapf: clapf
 	$(INSTALL) -d $(DESTDIR)$(localstatedir)/lib/clapf/blackhole
 	$(INSTALL) -d -m 711 $(DESTDIR)$(localstatedir)/lib/clapf/tmp
 	$(INSTALL) -d $(DESTDIR)$(localstatedir)/lib/clapf/stat
+	$(INSTALL) -d $(DESTDIR)$(localstatedir)/lib/clapf/hold
+
 	chown -R $(CLAPF_USER):$(CLAPF_GROUP) $(DESTDIR)$(localstatedir)/lib/clapf
 	cat $(srcdir)/util/check_clapf.sh.in | sed -e "s%YOUR_PATH%$(bindir)%" -e "s%YOUR_QUEUE%$(localstatedir)/lib/clapf/queue%" -e "s%USER%$(CLAPF_USER)%" > $(srcdir)/util/check_clapf.sh
 	$(INSTALL) -m 0755 util/check_clapf.sh $(DESTDIR)$(libexecdir)/clapf

@@ -183,7 +183,7 @@ function get_message_for_delivery($f, $new_from){
 
 
 function check_directory($dir, $username, $page, $from, $subj){
-   global $page_len, $max_cgi_from_subj_len, $NUMBER_OF_SPAM_MESSAGES_IN_QUARANTINE, $DATE, $PURGE_SELECTED_MESSAGES, $CANCEL, $SELECT_ALL;
+   global $page_len, $max_cgi_from_subj_len, $NUMBER_OF_SPAM_MESSAGES_IN_QUARANTINE, $DATE, $FROM, $SUBJECT, $PURGE_SELECTED_MESSAGES, $CANCEL, $SELECT_ALL;
 
    $n_spam = 0;
    $spam_total_size = 0;
@@ -235,7 +235,7 @@ function check_directory($dir, $username, $page, $from, $subj){
    $_50_space = "<font color=\"#ffffff\">" . str_repeat("x", 3+$max_cgi_from_subj_len) . "</font>";
 
    print "<table border=\"0\">\n";
-   print "<tr align=\"middle\"><th>&nbsp;</th><th>$DATE</th><th>FROM</th><th>SUBJECT</th><th>&nbsp;</th></tr>\n";
+   print "<tr align=\"middle\"><th>&nbsp;</th><th>$DATE</th><th>$FROM</th><th>$SUBJECT</th><th>&nbsp;</th></tr>\n";
    print "<tr><td>&nbsp;</td><td>&nbsp;</td><td>$_50_space</td><td>$_50_space</td><td>&nbsp;</td></tr>\n";
 
    while(list($k, $v) = each($this_page)){

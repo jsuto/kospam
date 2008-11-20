@@ -38,7 +38,6 @@ $base_url = "http://" . $_SERVER['SERVER_NAME'] . $directory;
 // list of admin users
 
 $ADMIN['admin'] = 1;
-$ADMIN['sj'] = 1;
 
 $admin_user = 0;
 

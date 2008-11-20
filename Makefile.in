@@ -35,7 +35,7 @@ LIBCLAPF_VERSION=$(CLAPF_VERSION).$(CLAPF_REVISION).$(CLAPF_RELEASE)
 
 INSTALL = @INSTALL@
 
-all: clapf-lib clapf @spamsum@ @clapfstore@ splitmbox @cgi@ @parsembox@ @spamdrop@ @preparesql@ @qcache@ @test@
+all: clapf-lib clapf @spamsum@ @clapfstore@ splitmbox @cgi@ @parsembox@ @spamdrop@ @preparesql@ @qcache@ @test@ ui
 install: install-clapf @clapfstore_install@ install-splitmbox install-man @parsembox_install@ @spamsum_install@ @spamdrop_install@ @qcache_install@ @db_install@
 
 clapf.conf.old:
@@ -56,6 +56,10 @@ clapf.conf:
 	-e 's%sqlite3=.*%sqlite3=$(localstatedir)/lib/clapf/data/tokens.sdb%' \
 	-e 's%queuedir=.*%queuedir=$(localstatedir)/lib/clapf/hold%' \
 	-e 's%workdir=.*%workdir=$(localstatedir)/lib/clapf/tmp%' <$(srcdir)/example.conf >$@
+
+config.php:
+	sed -e 's%$$clapf_conf = .*%$$clapf_conf = "$(sysconfdir)/clapf.conf";%' \
+	-e 's%$$queue_directory = .*%$$queue_directory = "$(localstatedir)/lib/clapf/queue";%' <$(srcdir)/webui/config.in.php >$(srcdir)/webui/$@
 
 clapf: % : %.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ -lclapf $(LIBS) $(LDAP_LIBS) $(LIBDIR) @LDFLAGS@
@@ -91,6 +95,8 @@ clapfstore:	% : %.o cfg.o misc.o ssl_util.o
 mydb_stat mydb_compress:	%: %.o mydb.o misc.o hash.o chi.o score.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
 
+ui:
+	make config.php
 
 spamsum:
 	(cd $(srcdir)/contrib/spamsum; make all)
@@ -227,7 +233,7 @@ clean_db:
 clean:
 	rm -f *.o *.a libclapf.so* qs db.sql clapf clapfstore clapf.conf parsembox splitmbox spamtest spamdrop spamcgi traincgi trainlogcgi usercgi statcgi spamstat aphash prepare-sql mydb_stat mydb_compress
 	(cd $(srcdir)/contrib/spamsum; make clean)
-
+	rm -f webui/config.php
 
 dist_clean distclean: clean
 	rm -f Makefile config.log config.status clapf-config.h stamp.h clapf.conf

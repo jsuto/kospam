@@ -1,5 +1,14 @@
 0.3.32-rc1:
 
+2008.11.21, SJ
+
+Do not let the quarantine scripts modify the From:
+line of the released messages.
+(webui/funcs.php)
+
+The webui config is updated according to the configure options.
+(Makefile.in, webui/config.in.php)
+
 2008.11.19, SJ
 
 Added Hungarian web UI translation.

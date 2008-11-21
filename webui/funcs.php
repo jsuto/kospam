@@ -170,10 +170,14 @@ function get_message_for_delivery($f, $new_from){
    $fp = fopen($f, "r");
    if($fp){
       while(($l = fgets($fp, 4096))){
-         if(strncmp($l, "From:", 5) == 0)
+         /*if(strncmp($l, "From:", 5) == 0)
             $msg .= "From: $new_from\r\n";         
          else
-            $msg .= $l;
+            $msg .= $l;*/
+
+         /* do not modify the From: line, 2008.11.21, SJ */
+         $msg .= $l;
+
       }
       fclose($fp);
    }

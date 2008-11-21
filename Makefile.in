@@ -54,8 +54,9 @@ clapf.conf:
 	sed -e 's%pidfile=.*%pidfile=$(localstatedir)/lib/clapf/clapf.pid%' \
 	-e 's%blackhole_path=.*%blackhole_path=$(localstatedir)/lib/clapf/blackhole%' \
 	-e 's%sqlite3=.*%sqlite3=$(localstatedir)/lib/clapf/data/tokens.sdb%' \
-	-e 's%queuedir=.*%queuedir=$(localstatedir)/lib/clapf/hold%' \
-	-e 's%workdir=.*%workdir=$(localstatedir)/lib/clapf/tmp%' <$(srcdir)/example.conf >$@
+	-e 's%holddir=.*%holddir=$(localstatedir)/lib/clapf/hold%' \
+	-e 's%workdir=.*%workdir=$(localstatedir)/lib/clapf/tmp%' \
+	-e 's%mydbfile=.*%mydbfile=$(localstatedir)/lib/clapf/tokens.mydb%' < $(srcdir)/example.conf >$@
 
 config.php:
 	sed -e 's%$$clapf_conf = .*%$$clapf_conf = "$(sysconfdir)/clapf.conf";%' \

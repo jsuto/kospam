@@ -77,4 +77,7 @@ $err_failed_to_remove_user = "User failed to remove";
 $err_removed_user_successfully = "User removed successfully";
 $err_you_are_not_admin = "You are not an admin user";
 
+$err_message_delivered = "Message delivered to";
+$err_message_failed_to_deliver = "Message failed to deliver to";
+
 ?>

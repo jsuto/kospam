@@ -77,4 +77,7 @@ $err_failed_to_remove_user = "Nem sikerült a felhasználó törlése";
 $err_removed_user_successfully = "Felhasználó törlése sikerült";
 $err_you_are_not_admin = "Ön nem adminisztrátor szintû felhasználó";
 
+$err_message_delivered = "Üzenet sikeresen továbbítva: ";
+$err_message_failed_to_deliver = "Sikertelen üzenet továbbítás: ";
+
 ?>

@@ -9,6 +9,9 @@ line of the released messages.
 The webui config is updated according to the configure options.
 (Makefile.in, webui/config.in.php)
 
+Fixed a naming issue in example.conf/clapf.conf
+(example.conf)
+
 2008.11.19, SJ
 
 Added Hungarian web UI translation.

@@ -228,6 +228,27 @@ install-man:
 install-qcache:
 	$(INSTALL) -m 0755 qs $(DESTDIR)$(bindir)
 
+uninstall:
+	rm -f $(DESTDIR)$(bindir)/parsembox
+	rm -f $(DESTDIR)$(bindir)/spamtest
+	rm -f $(DESTDIR)$(bindir)/splitmbox
+	rm -f $(DESTDIR)$(bindir)/blackhole
+	rm -f $(DESTDIR)$(bindir)/spamdrop
+	rm -f $(DESTDIR)$(bindir)/aphash
+	rm -f $(DESTDIR)$(bindir)/clapf
+	rm -f $(DESTDIR)$(libdir)/libclapf.*
+	rm -f $(DESTDIR)$(sysconfdir)/clapf.conf
+	rm -f $(DESTDIR)$(mandir)/man1/parsembox.1
+	rm -f $(DESTDIR)$(mandir)/man1/spamdrop.1
+	rm -f $(DESTDIR)$(mandir)/man1/spamtest.1
+	rm -f $(DESTDIR)$(mandir)/man1/splitmbox.1
+	rm -f $(DESTDIR)$(mandir)/man8/clapf.8
+
+	rm -rf $(DESTDIR)$(libexecdir)/clapf
+	rm -rf $(DESTDIR)$(localstatedir)/lib/clapf
+	rm -rf $(DESTDIR)$(includedir)/clapf
+	rm -rf $(DESTDIR)$(datarootdir)/clapf
+
 clean_db:
 	rm -f ham.tmp spam.tmp num_of_spam.tmp num_of_ham.tmp tokens.mydb temp.*
 

@@ -1,5 +1,5 @@
 /*
- * test.c, 2008.09.29, SJ
+ * test.c, 2008.11.24, SJ
  *
  * test the bayesian decision with a single message
  */
@@ -60,6 +60,8 @@ int main(int argc, char **argv){
 
    cfg.training_mode = 0;
    cfg.initial_1000_learning=0;
+
+   cfg.debug = 1;
 
    sdata.uid = 0;
    sdata.num_of_rcpt_to = -1;

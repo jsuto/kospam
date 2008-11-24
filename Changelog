@@ -1,5 +1,22 @@
 0.3.32-rc1:
 
+2008.11.24, SJ
+
+Fixed a bug in the parser causing false junk character
+situation resulting possible false positives.
+(parser.c)
+
+You don't have to set debug=1 in a separate config
+file for spamtest any longer.
+(test.c)
+
+2008.11.22, SJ
+
+Added an uninstall option to the Makefile
+(Makefile.in)
+
+(credits: Miklos Toldi)
+
 2008.11.21, SJ
 
 Do not let the quarantine scripts modify the From:

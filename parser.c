@@ -1,5 +1,5 @@
 /*
- * parser.c, 2008.09.08, SJ
+ * parser.c, 2008.11.24, SJ
  */
 
 #include <stdio.h>
@@ -521,12 +521,31 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
       qp_decode(buf);
    }
 
-   /* handle base64 encoded subject */
+   /* handle base64 encoded From:, To: and Subject: lines, 2008.11.24, SJ */
 
-   if( (state->message_state == MSG_SUBJECT || state->message_state == MSG_FROM) && (p = strcasestr(buf, "?B?"))){
-      base64_decode(p+3, huf);
-      *(p+3) = '\0';
-      snprintf(tuf, MAXBUFSIZE-1, "%s%s", buf, huf);
+   if(state->message_state == MSG_SUBJECT || state->message_state == MSG_FROM || state->message_state == MSG_TO){
+      memset(tuf, 0, MAXBUFSIZE);
+
+      q = buf;
+
+      do {
+         q = split_str(q, " ", u, SMALLBUFSIZE-1);
+
+         p = strcasestr(u, "?B?");
+         if(p){
+            *(p+2) = '\0';
+            strncat(tuf, u, MAXBUFSIZE-1); strncat(tuf, "? ", MAXBUFSIZE-1);
+
+            *(p+2) = '?';
+            base64_decode(p+3, huf);
+            strncat(tuf, huf, MAXBUFSIZE-1); strncat(tuf, " ", MAXBUFSIZE-1);
+         }
+         else {
+            strncat(tuf, u, MAXBUFSIZE-1);
+            strncat(tuf, " ", MAXBUFSIZE-1);
+         }
+      } while(q);
+
       snprintf(buf, MAXBUFSIZE-1, "%s", tuf);
    }
 

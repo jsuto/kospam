@@ -1,5 +1,5 @@
 /*
- * session.c, 2008.11.15, SJ
+ * session.c, 2008.11.25, SJ
  */
 
 #include <stdio.h>
@@ -96,6 +96,11 @@ void init_session_data(struct session_data *sdata){
    char *p, buf[MAXBUFSIZE], prevbuf[MAXBUFSIZE], last2buf[2*MAXBUFSIZE+1], acceptbuf[MAXBUFSIZE];
    char queuedfile[SMALLBUFSIZE], email[SMALLBUFSIZE], email2[SMALLBUFSIZE];
 
+   struct __config my_cfg;
+   struct c_res result;
+   int is_spam;
+   struct ue UE;
+
    #ifdef HAVE_ANTIVIRUS
       int ret;
       char virusinfo[SMALLBUFSIZE];
@@ -107,15 +112,14 @@ void init_session_data(struct session_data *sdata){
    #endif
 
    #ifdef HAVE_ANTISPAM
-      struct c_res result;
       char spaminessbuf[MAXBUFSIZE], reason[SMALLBUFSIZE], qpath[SMALLBUFSIZE], trainbuf[SMALLBUFSIZE], whitelistbuf[SMALLBUFSIZE], ID[RND_STR_LEN+1];
     #ifndef HAVE_STORE
       struct stat st;
     #endif
       struct timeval tv_spam_start, tv_spam_stop;
       struct _state sstate, sstate2;
-      struct ue UE, UE2;
-      int is_spam, train_mode=T_TOE;
+      struct ue UE2;
+      int train_mode=T_TOE;
 
       result.spaminess=DEFAULT_SPAMICITY;
 
@@ -576,9 +580,32 @@ void init_session_data(struct session_data *sdata){
                   memset(acceptbuf, 0, MAXBUFSIZE);
                   memset(email, 0, SMALLBUFSIZE);
 
+                  is_spam = 0;
+                  result.spaminess = DEFAULT_SPAMICITY;
+                  UE.policy_group = 0;
+
                   extract_email(sdata.rcptto[i], email);
 
+                  my_cfg = cfg;
+
+
+                  /* get user from 'RCPT TO:', then read policy, 2008.11.24, SJ */
+
+                  #ifdef USERS_IN_MYSQL
+                     UE = get_user_from_email(mysql, email);
+                     if(UE.policy_group > 0) get_policy(mysql, &cfg, &my_cfg, UE.policy_group, sdata.num_of_rcpt_to);
+                  #endif
+                  #ifdef USERS_IN_SQLITE3
+                     UE = get_user_from_email(db, email);
+                  #endif
+                  #ifdef USERS_IN_LDAP
+                     UE = get_user_from_email(ldap, cfg.ldap_base, email, cfg);
+                  #endif
+
+
                   if(rav == AVIR_VIRUS){
+                     if(my_cfg.deliver_infected_email == 1) goto END_OF_SPAM_CHECK;
+
                      snprintf(acceptbuf, MAXBUFSIZE-1, "%s <%s>\r\n", SMTP_RESP_550_ERR_PREF, email);
 
                      if(cfg.silently_discard_infected_email == 1)
@@ -590,12 +617,12 @@ void init_session_data(struct session_data *sdata){
                   }
 
                #ifdef HAVE_ANTISPAM
-                  is_spam = 0;
-                  result.spaminess = DEFAULT_SPAMICITY;
+                  //is_spam = 0;
+                  //result.spaminess = DEFAULT_SPAMICITY;
 
                   /* run statistical antispam check */
 
-                  if(cfg.use_antispam == 1 && (cfg.max_message_size_to_filter == 0 || sdata.tot_len < cfg.max_message_size_to_filter) ){
+                  if(my_cfg.use_antispam == 1 && (my_cfg.max_message_size_to_filter == 0 || sdata.tot_len < my_cfg.max_message_size_to_filter) ){
                      memset(trainbuf, 0, SMALLBUFSIZE);
 
                      gettimeofday(&tv_spam_start, &tz);
@@ -610,18 +637,6 @@ void init_session_data(struct session_data *sdata){
                      }
 
 
-
-                  /* get user from 'RCPT TO:', 2008.10.25, SJ */
-
-                  #ifdef USERS_IN_MYSQL
-                     UE = get_user_from_email(mysql, email);
-                  #endif
-                  #ifdef USERS_IN_SQLITE3
-                     UE = get_user_from_email(db, email);
-                  #endif
-                  #ifdef USERS_IN_LDAP
-                     UE = get_user_from_email(ldap, cfg.ldap_base, email, cfg);
-                  #endif
 
                   #ifdef HAVE_MYSQL
                      if(mysql_connection == 1){
@@ -646,9 +661,9 @@ void init_session_data(struct session_data *sdata){
                            else
                               snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s/s.%s", USER_QUEUE_DIR, UE2.name[0], UE2.name, ID);
 
-                           sstate2 = parse_message(qpath, sdata, cfg);
+                           sstate2 = parse_message(qpath, sdata, my_cfg);
 
-                           train_message(mysql, sdata, sstate2, MAX_ITERATIVE_TRAIN_LOOPS, is_spam, train_mode, cfg);
+                           train_message(mysql, sdata, sstate2, MAX_ITERATIVE_TRAIN_LOOPS, is_spam, train_mode, my_cfg);
 
                            free_and_print_list(sstate2.first, 0);
                            free_url_list(sstate2.urls);
@@ -657,24 +672,24 @@ void init_session_data(struct session_data *sdata){
                         }
                         else {
 
-                           if(is_sender_on_white_list(mysql, email2, sdata.uid, cfg)){
+                           if(is_sender_on_white_list(mysql, email2, sdata.uid, my_cfg)){
                               syslog(LOG_PRIORITY, "%s: sender (%s) found on whitelist", sdata.ttmpfile, email);
                               snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on white list\r\n", cfg.clapf_header_field);
                               goto END_OF_SPAM_CHECK;
                            }
                            else {
                               if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: running Bayesian test", sdata.ttmpfile);
-                              result = bayes_file(mysql, sstate, sdata, cfg);
+                              result = bayes_file(mysql, sstate, sdata, my_cfg);
                            }
                            update_mysql_tokens(mysql, sstate.first, sdata.uid);
 
                            if(
-                               (cfg.training_mode == T_TUM && ( (result.spaminess >= cfg.spam_overall_limit && result.spaminess < 0.99) || (result.spaminess < cfg.max_ham_spamicity && result.spaminess > 0.1) )) ||
-                               (cfg.initial_1000_learning == 1 && (result.ham_msg < NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED || result.spam_msg < NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED))
+                               (my_cfg.training_mode == T_TUM && ( (result.spaminess >= my_cfg.spam_overall_limit && result.spaminess < 0.99) || (result.spaminess < my_cfg.max_ham_spamicity && result.spaminess > 0.1) )) ||
+                               (my_cfg.initial_1000_learning == 1 && (result.ham_msg < NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED || result.spam_msg < NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED))
                            )
                            {
 
-                              if(result.spaminess >= cfg.spam_overall_limit){
+                              if(result.spaminess >= my_cfg.spam_overall_limit){
                                  is_spam = 1;
                                  syslog(LOG_PRIORITY, "%s: TUM training a spam", sdata.ttmpfile);
                               }
@@ -685,7 +700,7 @@ void init_session_data(struct session_data *sdata){
 
                               snprintf(trainbuf, SMALLBUFSIZE-1, "%sTUM\r\n", cfg.clapf_header_field);
 
-                              train_message(mysql, sdata, sstate, 1, is_spam, train_mode, cfg);
+                              train_message(mysql, sdata, sstate, 1, is_spam, train_mode, my_cfg);
                            }
 
 
@@ -923,6 +938,7 @@ void init_session_data(struct session_data *sdata){
                      inj = inject_mail(sdata, i, cfg.postfix_addr, cfg.postfix_port, spaminessbuf, cfg, NULL);
 
                #else
+               END_OF_SPAM_CHECK:
                   inj = inject_mail(sdata, i, cfg.postfix_addr, cfg.postfix_port, NULL, cfg, NULL);
                #endif
 

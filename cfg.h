@@ -1,5 +1,5 @@
 /*
- * cfg.h, 2008.11.15, SJ
+ * cfg.h, 2008.11.25, SJ
  */
 
 #ifndef _CFG_H
@@ -53,6 +53,7 @@ struct __config {
    char clapfemail[MAXVAL];
    char localpostmaster[MAXVAL];
    int silently_discard_infected_email;
+   int deliver_infected_email;
 
    char dha_trap_address_list[MAXVAL];
    char blackhole_email_list[MAXVAL];
@@ -110,7 +111,6 @@ struct __config {
    int replace_junk_characters;
    int invalid_junk_limit;
    int invalid_junk_line;
-   int invalid_hex_junk_limit;
 
    int penalize_images;
    int penalize_embed_images;

@@ -7,6 +7,7 @@ $TITLE['/whitelist.php'] = 'Fehérlista';
 $TITLE['/stat.php'] = 'Statisztika';
 $TITLE['/q.php'] = 'Karantén';
 $TITLE['/users.php'] = 'Felhasználó menedzselés';
+$TITLE['/policy.php'] = 'Házirend';
 
 
 $ADD_NEW_USER = "Új felhasználó hozzáadása";
@@ -42,6 +43,8 @@ $PURGE_SELECTED_MESSAGES = "Kiválasztott üzenetek eltávolítása";
 $PURGED = "Eltávolítva";
 
 $QUARANTINE = "Karantén";
+
+$POLICY = "Házirend";
 
 $REMOVE = "Törlés";
 

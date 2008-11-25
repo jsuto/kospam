@@ -167,6 +167,7 @@
 #define SQL_TRAININGLOG_TABLE "t_train_log"
 #define SQL_QUEUE_TABLE "t_queue"
 #define SQL_STAT_TABLE "t_stat"
+#define SQL_POLICY_TABLE "t_policy"
 #define SQL_SMAP_KEY_TABLE "t_smap_key"
 
 #define _90_DAYS 90*86400

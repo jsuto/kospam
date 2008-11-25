@@ -1,5 +1,5 @@
 /*
- * users.h, 2008.10.25, SJ
+ * users.h, 2008.11.25, SJ
  */
 
 #ifndef _USERS_H
@@ -10,6 +10,7 @@
 
 struct ue {
    unsigned long uid;
+   unsigned int policy_group;
    char name[SMALLBUFSIZE];
 };
 

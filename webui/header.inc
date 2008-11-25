@@ -39,7 +39,7 @@ if($ADMIN[$username] == 1) $admin_user = 1;
    if($admin_user == 1){
 
       print "<li><a href=\"$base_url/users.php\""; if(strstr($_SERVER['PHP_SELF'], "/users.php")) print ", id=\"active"; print "\">$USER_MANAGEMENT</a></li>\n";
-
+      print "<li><a href=\"$base_url/policy.php\""; if(strstr($_SERVER['PHP_SELF'], "/policy.php")) print ", id=\"active"; print "\">$POLICY</a></li>\n";
    }
 ?>
 

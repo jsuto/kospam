@@ -1,5 +1,5 @@
 /*
- * cfg.c, 2008.11.15, SJ
+ * cfg.c, 2008.11.25, SJ
  */
 
 #include <stdio.h>
@@ -83,6 +83,7 @@ struct __config read_config(char *configfile){
    cfg.session_timeout = SESSION_TIMEOUT;
 
    cfg.silently_discard_infected_email = 1;
+   cfg.deliver_infected_email = 0;
 
    memset(cfg.chrootdir, 0, MAXVAL);
 
@@ -108,7 +109,6 @@ struct __config read_config(char *configfile){
    cfg.replace_junk_characters = 1;
    cfg.invalid_junk_limit = INVALID_JUNK_LIMIT;
    cfg.invalid_junk_line = INVALID_JUNK_LINE;
-   cfg.invalid_hex_junk_limit = INVALID_HEX_JUNK_LIMIT;
    cfg.max_ham_spamicity = MAX_HAM_SPAMICITY;
 
    cfg.verbosity = 0;
@@ -282,6 +282,9 @@ struct __config read_config(char *configfile){
                   if(strcmp(key, "silently_discard_infected_email") == 0)
                      cfg.silently_discard_infected_email = atoi(val);
 
+                  if(strcmp(key, "deliver_infected_email") == 0)
+                     cfg.deliver_infected_email = atoi(val);
+
                   if(strcmp(key, "dha_trap_address_list") == 0)
                      memcpy(cfg.dha_trap_address_list, val, MAXVAL-1);
 
@@ -402,9 +405,6 @@ struct __config read_config(char *configfile){
 
                   if(strcmp(key, "invalid_junk_line") == 0)
                      cfg.invalid_junk_line = atoi(val);
-
-                  if(strcmp(key, "invalid_hex_junk_limit") == 0)
-                     cfg.invalid_hex_junk_limit = atoi(val);
 
                   if(strcmp(key, "max_ham_spamicity") == 0)
                      cfg.max_ham_spamicity = atof(val);

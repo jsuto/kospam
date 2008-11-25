@@ -7,6 +7,7 @@ $TITLE['/whitelist.php'] = 'Whitelist';
 $TITLE['/stat.php'] = 'Statistics';
 $TITLE['/q.php'] = 'Quarantine';
 $TITLE['/users.php'] = 'User management';
+$TITLE['/policy.php'] = 'Policy';
 
 
 $ADD_NEW_USER = "Add new user";
@@ -42,6 +43,8 @@ $PURGE_SELECTED_MESSAGES = "Purge selected messages";
 $PURGED = "Purged";
 
 $QUARANTINE = "Quarantine";
+
+$POLICY = "Policy";
 
 $REMOVE = "Remove";
 

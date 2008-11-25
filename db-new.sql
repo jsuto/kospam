@@ -23,9 +23,8 @@ create index t_token_idx on t_token(token, uid);
 create table if not exists user (
 	uid int unsigned not null,
         email char(128) not null,
-	action enum ('drop', 'junk', 'quarantine') default 'junk',
-	pagelen int default 25,
         username char(32) not null,
+	policy_group int default 0,
 	unique (uid, email)
 );
 

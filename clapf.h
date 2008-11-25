@@ -12,6 +12,7 @@
 #include <session.h>
 #include <buffer.h>
 #include <users.h>
+#include <policy.h>
 #include <config.h>
 
 #ifdef HAVE_MYSQL

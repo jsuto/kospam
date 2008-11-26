@@ -60,6 +60,7 @@ have_gsl="no"
 have_store="no"
 have_whitelist="no"
 have_case="no"
+have_policy="no"
 
 have_static_build="no"
 
@@ -298,8 +299,20 @@ AC_ARG_WITH(userdb,
 ])
 
 
+
+dnl the blackhole feature
+
+AC_ARG_ENABLE(policy,
+      [  --enable-policy         enable the policy feature], want_policy=$enableval, want_policy="no")
+
+if test "$want_policy" = "yes"; then
+    have_policy="yes"
+fi
+
+
+
 AC_ARG_WITH(tokendb,
-[  --with-tokendb[[=mysql|sqlite3]]      use either mysql or sqlite3 database holding tokens (default: none)],[
+[  --with-tokendb[[=mysql|sqlite3]]  use either mysql or sqlite3 database holding tokens (default: none)],[
   if test "$withval" != "no" -a "$withval" != "yes"; then
     TOKENDB=$withval
   fi
@@ -431,7 +444,7 @@ dnl enable spamsum support
 dnl user running clapf
 
 AC_ARG_WITH(clapf-user,
-    [  --with-clapf-user=username What user the clapf daemon shall be run as],
+    [  --with-clapf-user=username      what user the clapf daemon shall be run as],
     [ CLAPF_USER=$withval ],
     [ CLAPF_USER=clapf ]
     )
@@ -526,7 +539,7 @@ if test "x$QCACHE" != "x"; then
    fi
 fi
 
-if test "x$USERDB" = "x"; then
+if test "x$TOKENDB" != "x" && test "x$USERDB" = "x"; then
    echo "please specify the --with-userdb option"
    exit 1
 fi
@@ -677,6 +690,8 @@ fi
 
 echo "token database backend: $TOKENDB"
 
+
+
 if test "$TOKENDB" = "sqlite3"; then
    db_install="install-sqlite3"
 fi
@@ -728,6 +743,14 @@ else
    echo "local delivery: SMTP"
 fi
 
+if test "$have_policy" = "yes"; then
+   defs="$defs -DHAVE_POLICY"
+   echo "policy support: yes"
+   objs="$objs policy.o"
+else
+   echo "policy support: no"
+fi
+
 if test "$want_language_detection" = "yes"; then
    echo "language detection: enabled"
    defs="$defs -DHAVE_LANG_DETECT"
@@ -772,7 +795,7 @@ echo; echo
 
 CFLAGS="$static -O2 -Wall -g"
 LIBS="$libclamav $antispam_libs $gsl_libs $sqlite3_libs"
-OBJS="misc.o cfg.o smtp.o sig.o decoder.o list.o parser.o cgi.o session.o users.o policy.o $objs"
+OBJS="misc.o cfg.o smtp.o sig.o decoder.o list.o parser.o cgi.o session.o users.o $objs"
 
 AC_OUTPUT(Makefile)
 AC_OUTPUT(contrib/spamsum/Makefile)

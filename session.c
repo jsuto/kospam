@@ -570,6 +570,10 @@ void init_session_data(struct session_data *sdata){
                UE2 = get_user_from_email(ldap, cfg.ldap_base, email2, cfg);
             #endif
 
+               /* copy default config from clapf.conf, to enable policy support later, 2008.11.26, SJ */
+
+               my_cfg = cfg;
+
             #ifdef HAVE_LMTP
                for(i=0; i<sdata.num_of_rcpt_to; i++){
             #else
@@ -586,21 +590,30 @@ void init_session_data(struct session_data *sdata){
 
                   extract_email(sdata.rcptto[i], email);
 
-                  my_cfg = cfg;
 
+                  /* get user from 'RCPT TO:', 2008.11.24, SJ */
 
-                  /* get user from 'RCPT TO:', then read policy, 2008.11.24, SJ */
+               #ifdef USERS_IN_MYSQL
+                  UE = get_user_from_email(mysql, email);
+               #endif
+               #ifdef USERS_IN_SQLITE3
+                  UE = get_user_from_email(db, email);
+               #endif
+               #ifdef USERS_IN_LDAP
+                  UE = get_user_from_email(ldap, cfg.ldap_base, email, cfg);
+               #endif
 
+                  /* read policy, 2008.11.24, SJ */
+
+               #ifdef HAVE_POLICY
                   #ifdef USERS_IN_MYSQL
-                     UE = get_user_from_email(mysql, email);
                      if(UE.policy_group > 0) get_policy(mysql, &cfg, &my_cfg, UE.policy_group, sdata.num_of_rcpt_to);
                   #endif
-                  #ifdef USERS_IN_SQLITE3
-                     UE = get_user_from_email(db, email);
-                  #endif
+
                   #ifdef USERS_IN_LDAP
-                     UE = get_user_from_email(ldap, cfg.ldap_base, email, cfg);
+                     //if(UE.policy_group > 0) get_policy(ldap, cfg.ldap_base, &cfg, &my_cfg, UE.policy_group, sdata.num_of_rcpt_to);
                   #endif
+               #endif
 
 
                   if(rav == AVIR_VIRUS){

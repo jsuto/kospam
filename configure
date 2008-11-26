@@ -734,6 +734,7 @@ enable_all_received
 enable_blackhole
 enable_cgi
 with_userdb
+enable_policy
 with_tokendb
 enable_lmtp
 enable_language_detection
@@ -1383,6 +1384,7 @@ Optional Features:
   --enable-all-received   check all the IP-addresses from "Received: from ..." lines against blacklists
   --enable-blackhole      build the blackhole feature
   --enable-cgi            build the web interface to train the database
+  --enable-policy         enable the policy feature
   --enable-lmtp           use LMTP local delivery (default: SMTP)
   --enable-language-detection use the language detection feature (experimental)
   --enable-outgoing-smtp  enable outgoing SMTP server mode
@@ -1393,8 +1395,8 @@ Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   --with-userdb[=mysql|ldap]      use either ldap or mysql database holding user data (default: none)
-  --with-tokendb[=mysql|sqlite3]      use either mysql or sqlite3 database holding tokens (default: none)
-  --with-clapf-user=username What user the clapf daemon shall be run as
+  --with-tokendb[=mysql|sqlite3]  use either mysql or sqlite3 database holding tokens (default: none)
+  --with-clapf-user=username      what user the clapf daemon shall be run as
 
 Some influential environment variables:
   CC          C compiler command
@@ -3872,6 +3874,7 @@ have_gsl="no"
 have_store="no"
 have_whitelist="no"
 have_case="no"
+have_policy="no"
 
 have_static_build="no"
 
@@ -5462,6 +5465,22 @@ fi
 
 
 
+
+# Check whether --enable-policy was given.
+if test "${enable_policy+set}" = set; then
+  enableval=$enable_policy; want_policy=$enableval
+else
+  want_policy="no"
+fi
+
+
+if test "$want_policy" = "yes"; then
+    have_policy="yes"
+fi
+
+
+
+
 # Check whether --with-tokendb was given.
 if test "${with_tokendb+set}" = set; then
   withval=$with_tokendb;
@@ -6303,7 +6322,7 @@ if test "x$QCACHE" != "x"; then
    fi
 fi
 
-if test "x$USERDB" = "x"; then
+if test "x$TOKENDB" != "x" && test "x$USERDB" = "x"; then
    echo "please specify the --with-userdb option"
    exit 1
 fi
@@ -6451,6 +6470,8 @@ fi
 
 echo "token database backend: $TOKENDB"
 
+
+
 if test "$TOKENDB" = "sqlite3"; then
    db_install="install-sqlite3"
 fi
@@ -6502,6 +6523,14 @@ else
    echo "local delivery: SMTP"
 fi
 
+if test "$have_policy" = "yes"; then
+   defs="$defs -DHAVE_POLICY"
+   echo "policy support: yes"
+   objs="$objs policy.o"
+else
+   echo "policy support: no"
+fi
+
 if test "$want_language_detection" = "yes"; then
    echo "language detection: enabled"
    defs="$defs -DHAVE_LANG_DETECT"
@@ -6546,7 +6575,7 @@ echo; echo
 
 CFLAGS="$static -O2 -Wall -g"
 LIBS="$libclamav $antispam_libs $gsl_libs $sqlite3_libs"
-OBJS="misc.o cfg.o smtp.o sig.o decoder.o list.o parser.o cgi.o session.o users.o policy.o $objs"
+OBJS="misc.o cfg.o smtp.o sig.o decoder.o list.o parser.o cgi.o session.o users.o $objs"
 
 ac_config_files="$ac_config_files Makefile"
 

@@ -66,3 +66,38 @@ int get_policy(MYSQL mysql, struct __config *cfg, struct __config *my_cfg, unsig
 #endif
 
 
+#ifdef USERS_IN_LDAP
+
+struct ue get_user_from_email(LDAP *ld, char *base, char *email, struct __config cfg){
+   int rc;
+   char filter[SMALLBUFSIZE], *attrs[] = { NULL }, **vals;
+   LDAPMessage *res, *e;
+   struct ue UE;
+
+   memset((char *)&UE, 0, sizeof(UE));
+
+   if(ld == NULL) return UE;
+
+   snprintf(filter, SMALLBUFSIZE-1, "(|(%s=%s)(%s=%s))", cfg.email_address_attribute_name, email, cfg.email_alias_attribute_name, email);
+
+   rc = ldap_search_s(ld, base, LDAP_SCOPE, filter, attrs, 0, &res);
+   if(rc) return UE;
+
+   e = ldap_first_entry(ld, res);
+
+   if(e){
+      vals = ldap_get_values(ld, e, "uid");
+      if(ldap_count_values(vals) > 0) UE.uid = atol(vals[0]);
+      ldap_value_free(vals);
+
+      vals = ldap_get_values(ld, e, "cn");
+      if(ldap_count_values(vals) > 0) strncpy(UE.name, vals[0], SMALLBUFSIZE-1);
+      ldap_value_free(vals);
+   }
+
+   ldap_msgfree(res);
+
+   return UE;
+}
+
+#endif

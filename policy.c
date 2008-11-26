@@ -1,5 +1,5 @@
 /*
- * policy.c, 2008.11.25, SJ
+ * policy.c, 2008.11.26, SJ
  */
 
 #include <stdio.h>
@@ -40,7 +40,7 @@ int get_policy(MYSQL mysql, struct __config *cfg, struct __config *my_cfg, unsig
             my_cfg->deliver_infected_email = atoi(row[0]);
             my_cfg->silently_discard_infected_email = atoi(row[1]);
             my_cfg->use_antispam = atoi(row[2]);
-            if(row[3] != NULL) snprintf(my_cfg->spam_subject_prefix, MAXVAL-1, "%s", row[3]);
+            if(row[3] != NULL) snprintf(my_cfg->spam_subject_prefix, MAXVAL-1, "%s ", row[3]);
             my_cfg->enable_auto_white_list = atoi(row[4]);
             my_cfg->max_message_size_to_filter = atoi(row[5]);
             if(row[6] != NULL) snprintf(my_cfg->rbl_domain, MAXVAL-1, "%s", row[6]);

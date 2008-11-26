@@ -1,5 +1,5 @@
 /*
- * sql.c, 2008.10.30, SJ
+ * sql.c, 2008.11.26, SJ
  */
 
 #include <stdio.h>
@@ -45,7 +45,7 @@ struct ue get_user_from_email(MYSQL mysql, char *email){
          snprintf(buf, MAXBUFSIZE-1, "SELECT uid, username FROM %s WHERE email='%s%s'", SQL_USER_TABLE, email, p+4);
       }
       else
-         snprintf(buf, MAXBUFSIZE-1, "SELECT uid, username FROM %s WHERE email='%s'", SQL_USER_TABLE, email);
+         snprintf(buf, MAXBUFSIZE-1, "SELECT uid, username, policy_group FROM %s WHERE email='%s'", SQL_USER_TABLE, email);
 
 
       if(mysql_real_query(&mysql, buf, strlen(buf)) == 0){
@@ -55,6 +55,7 @@ struct ue get_user_from_email(MYSQL mysql, char *email){
             if(row){
                UE.uid = atol(row[0]);
                strncpy(UE.name, (char *)row[1], SMALLBUFSIZE-1);
+               UE.policy_group = atoi(row[2]);
             }               
             mysql_free_result(res);
          }

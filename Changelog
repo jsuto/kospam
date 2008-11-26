@@ -1,4 +1,27 @@
-0.3.32-rc1:
+0.4.0-rc1:
+
+2008.11.26, SJ
+
+An early bird policy is available. Please extend the user
+table as follows: ALTER TABLE user ADD COLUMN policy_group DEFAULT 0;
+
+The default policy group (0) is just the same, as the configuration
+you have in clapf.conf. Please see the policy.sql for list, what you
+can override on a per user or per group basis.
+
+Currently the policy stuff can be in mysql (the same place where your
+userdb is). An LDAP version is to come soon. Then the web ui will be
+updated, let the administrators set different policies.
+(policy.c, policy.h, policy.sql, session.c, configure*)
+
+Added a new clapf.conf variable called "deliver_infected_email".
+If enabled (1) - disabled (0) by default - then clapf will deliver
+the malware to the user. Enable it with caution if you really need
+it! Of course, it can be enabled on a per user basis, so you can
+have all the malware and still your users can be safe.
+(cfg.c, cfg.h)
+
+(credits: Miklos Toldi)
 
 2008.11.25, SJ
 

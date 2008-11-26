@@ -1,5 +1,5 @@
 /*
- * session.c, 2008.11.25, SJ
+ * session.c, 2008.11.26, SJ
  */
 
 #include <stdio.h>
@@ -498,7 +498,7 @@ void init_session_data(struct session_data *sdata){
 
                      snprintf(sdata.rcptto[0], MAXBUFSIZE-1, "RCPT TO: <%s>\r\n", cfg.localpostmaster);
                      sdata.num_of_rcpt_to = 1;
-                     ret = inject_mail(sdata, 0, cfg.postfix_addr, cfg.postfix_port, NULL, cfg, buf);
+                     ret = inject_mail(sdata, 0, cfg.postfix_addr, cfg.postfix_port, NULL, my_cfg, buf);
 
                      if(ret == 0)
                         syslog(LOG_PRIORITY, "notification about %s to %s failed", sdata.ttmpfile, cfg.localpostmaster);
@@ -945,14 +945,14 @@ void init_session_data(struct session_data *sdata){
                     if(result.spaminess >= cfg.spaminess_oblivion_limit)
                        inj = ERR_DROP_SPAM;
                     else
-                       inj = inject_mail(sdata, i, cfg.spam_smtp_addr, cfg.spam_smtp_port, spaminessbuf, cfg, NULL);
+                       inj = inject_mail(sdata, i, cfg.spam_smtp_addr, cfg.spam_smtp_port, spaminessbuf, my_cfg, NULL);
                   }
                   else
-                     inj = inject_mail(sdata, i, cfg.postfix_addr, cfg.postfix_port, spaminessbuf, cfg, NULL);
+                     inj = inject_mail(sdata, i, cfg.postfix_addr, cfg.postfix_port, spaminessbuf, my_cfg, NULL);
 
                #else
                END_OF_SPAM_CHECK:
-                  inj = inject_mail(sdata, i, cfg.postfix_addr, cfg.postfix_port, NULL, cfg, NULL);
+                  inj = inject_mail(sdata, i, cfg.postfix_addr, cfg.postfix_port, NULL, my_cfg, NULL);
                #endif
 
                   /* set the accept buffer */

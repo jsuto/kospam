@@ -1,5 +1,5 @@
 /*
- * smtp.c, 2008.05.05, SJ
+ * smtp.c, 2008.11.26, SJ
  */
 
 #include <stdio.h>
@@ -169,7 +169,7 @@ int inject_mail(struct session_data sdata, int msg, char *smtpaddr, int smtpport
 
       /* is this message spam and do we have to put [sp@m] prefix to the Subject: line? */
 
-      if(spaminessbuf && strlen(cfg.spam_subject_prefix) > 1 && strstr(spaminessbuf, cfg.clapf_spam_header_field))
+      if(spaminessbuf && strlen(cfg.spam_subject_prefix) > 22 && strstr(spaminessbuf, cfg.clapf_spam_header_field))
          put_subject_spam_prefix = 1;
 
       /*

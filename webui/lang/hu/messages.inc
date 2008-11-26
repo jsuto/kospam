@@ -9,7 +9,8 @@ $TITLE['/q.php'] = 'Karantén';
 $TITLE['/users.php'] = 'Felhasználó menedzselés';
 $TITLE['/policy.php'] = 'Házirend';
 
-
+$ADD = "Felvesz";
+$ADD_NEW_POLICY = "Új házirend";
 $ADD_NEW_USER = "Új felhasználó hozzáadása";
 
 $BACK = "Vissza";
@@ -19,19 +20,27 @@ $CGI_DAILY_REPORT = "Napi riport";
 $CGI_MONTHLY_REPORT = "Havi riport";
 
 $DATE = "Dátum";
+$default_policy = "alapértelmezett";
 $DELIVER = "Kézbesítés";
 
+$EDIT_OR_VIEW = "Szerkeszt/Megnéz";
 $EMAIL_ADDRESS = "Email cím";
 $ERROR = "Hiba";
-$EXISTING_USERS = "Létezõ felhasználó";
+$EXISTING_POLICY = "Létezõ házirendek";
+$EXISTING_USERS = "Létezõ felhasználók";
 
 $FAILED_TO_REMOVE = "Hiba az eltávolításkor";
 $FIRST = "Elsõ";
+$FLOAT = "float";
 $FROM = "Feladó";
 
 $HOME = "Kezdõlap";
 
+$INTEGER = "integer";
+
 $LAST = "Utolsó";
+
+$MODIFY = "Módosít";
 
 $NEXT = "Következõ";
 $NO_SENDER = "nincs feladó";
@@ -45,11 +54,15 @@ $PURGED = "Eltávolítva";
 $QUARANTINE = "Karantén";
 
 $POLICY = "Házirend";
+$POLICY_GROUP = "Házirend csoport";
+$POLICY_NAME = "Házirend neve";
 
 $REMOVE = "Törlés";
+$REMOVE_POLICY = "Házirend törlése";
 
 $SELECT_ALL = "Mindegyik kijelölése";
 $STATS = "Statisztika";
+$STRING = "string";
 $SUBJECT = "Tárgy";
 $SUCCESSFULLY_REMOVED = "A törlés sikerült";
 
@@ -57,7 +70,7 @@ $TOTAL = "Összes";
 
 $USERLIST = "Felhasználók listája";
 $USERNAME = "Felhasználónév";
-$USERID = "Felhasználó azonosíta";
+$USERID = "Felhasználó azonosító";
 $USER_MANAGEMENT = "Felhasználó menedzselés";
 
 $WHITELIST = "Fehérlista";
@@ -82,5 +95,9 @@ $err_you_are_not_admin = "Ön nem adminisztrátor szintû felhasználó";
 
 $err_message_delivered = "Üzenet sikeresen továbbítva: ";
 $err_message_failed_to_deliver = "Sikertelen üzenet továbbítás: ";
+
+$err_cannot_view_default_policy = "Az alapértelmezett házirend a clapf.conf állományban nézhetõ/módosítható";
+$err_added_new_policy = "Új házirend felvéve";
+$err_removed_policy = "Házirend törölve";
 
 ?>

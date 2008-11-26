@@ -11,12 +11,14 @@ if($admin_user != 1) nice_error($err_you_are_not_admin);
 $uid = -1;
 $username = "";
 $email = "";
+$policy_group = 0;
 
 $remove = 0;
 
 if(isset($_POST['uid'])) $uid = $_POST['uid'];
 if(isset($_POST['username'])) $username = $_POST['username'];
 if(isset($_POST['email'])) $email = $_POST['email'];
+if(isset($_POST['policy_group'])) $policy_group = $_POST['policy_group'];
 
 if(isset($_GET['uid'])) $uid = $_GET['uid'];
 if(isset($_GET['email'])) $email = $_GET['email'];
@@ -41,6 +43,17 @@ $conn = webui_connect() or nice_error($err_connect_db);
       <tr><td><? print $EMAIL_ADDRESS; ?>:</td><td><input type="text" name="email"></td></tr>
       <tr><td><? print $USERNAME; ?>:</td><td><input type="text" name="username" ></td></tr>
       <tr><td><? print $USERID; ?>:</td><td><input type="text" name="uid" ></td></tr>
+
+      <tr><td><? print $POLICY_GROUP; ?>:</td><td>
+<?
+   print "<select name=\"policy_group\">\n";
+   print "<option value=\"0\">$default_policy</option>\n";
+   show_existing_policy_groups();
+   print "</select>\n";
+
+?>
+      </td></tr>
+
       <tr colspan="2"><td><input type="submit" value="OK"></td></tr>
    </table>
 </form>
@@ -53,7 +66,7 @@ $conn = webui_connect() or nice_error($err_connect_db);
 <?
 
 if($uid >= 0 && is_numeric($uid) && $email && $username){
-   add_user_entry($uid, $username, $email);
+   add_user_entry($uid, $username, $email, $policy_group);
    nice_screen($err_added_user_successfully . ". <a href=\"users.php\">$BACK.</a>");
 }
 
@@ -72,7 +85,7 @@ else {
    print "<h4>$EXISTING_USERS</h4>\n";
 
    print "<table border=\"1\">\n";
-   print "<tr align=\"center\"><th>UID</th><th>$USERNAME</th><th>$EMAIL_ADDRESS</th><th>&nbsp;</th></tr>\n";
+   print "<tr align=\"center\"><th>UID</th><th>$USERNAME</th><th>$EMAIL_ADDRESS</th><th>$POLICY_GROUP</th><th>&nbsp;</th></tr>\n";
 
    show_existing_users();
 

@@ -21,6 +21,7 @@ $user_table = "user";
 $misc_table = "t_misc";
 $whitelist_table = "t_white_list";
 $stat_table = "t_stat";
+$policy_group_table = "t_policy";
 
 $page_len = 25;
 $max_cgi_from_subj_len = 45;
@@ -29,8 +30,8 @@ $max_cgi_from_subj_len = 45;
 
 $smtphost = "127.0.0.1";
 $smtpport = 10026;
-$yourdomain = "acts.hu";
-$fromaddr = "noreply@spamtelenul.hu";
+$yourdomain = "xxxxx.com";
+$fromaddr = "noreply@xxxxx.com";
 
 
 $base_url = "http://" . $_SERVER['SERVER_NAME'] . $directory;

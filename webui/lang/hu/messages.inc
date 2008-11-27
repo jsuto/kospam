@@ -91,6 +91,8 @@ $err_existing_user = "A felhasználó már létezik";
 $err_added_user_successfully = "Felhasználó hozzáadása sikerült";
 $err_failed_to_remove_user = "Nem sikerült a felhasználó törlése";
 $err_removed_user_successfully = "Felhasználó törlése sikerült";
+$err_modified_user = "Felhasználó módosítva";
+
 $err_you_are_not_admin = "Ön nem adminisztrátor szintû felhasználó";
 
 $err_message_delivered = "Üzenet sikeresen továbbítva: ";
@@ -99,5 +101,6 @@ $err_message_failed_to_deliver = "Sikertelen üzenet továbbítás: ";
 $err_cannot_view_default_policy = "Az alapértelmezett házirend a clapf.conf állományban nézhetõ/módosítható";
 $err_added_new_policy = "Új házirend felvéve";
 $err_removed_policy = "Házirend törölve";
+$err_modified_policy = "Házirend módosítva";
 
 ?>

@@ -6327,6 +6327,10 @@ if test "x$TOKENDB" != "x" && test "x$USERDB" = "x"; then
    exit 1
 fi
 
+if test "$have_policy" = "yes" && test "x$USERDB" = "x"; then
+   echo "please specify the --with-userdb option"
+   exit 1
+fi
 
 if test "$have_antivirus" = "no" && test "$have_antispam" = "no"; then
    echo "you have not specified either antivirus or antispam support"

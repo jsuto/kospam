@@ -13,16 +13,24 @@ $username = "";
 $email = "";
 $policy_group = 0;
 
+$add = 0;
+$edit = 0;
 $remove = 0;
+$modify = 0;
+
 
 if(isset($_POST['uid'])) $uid = $_POST['uid'];
 if(isset($_POST['username'])) $username = $_POST['username'];
 if(isset($_POST['email'])) $email = $_POST['email'];
 if(isset($_POST['policy_group'])) $policy_group = $_POST['policy_group'];
+if(isset($_POST['modify'])) $modify = $_POST['modify'];
 
 if(isset($_GET['uid'])) $uid = $_GET['uid'];
 if(isset($_GET['email'])) $email = $_GET['email'];
 if(isset($_GET['remove'])) $remove = 1;
+if(isset($_GET['edit'])) $edit = $_GET['edit'];
+if(isset($_GET['add'])) $add = $_GET['add'];
+
 
 $conn = webui_connect() or nice_error($err_connect_db);
 
@@ -34,40 +42,48 @@ $conn = webui_connect() or nice_error($err_connect_db);
   <div id="body">
 
 
-<h4><? print $ADD_NEW_USER; ?></h4>
-
-<p>
-<form action="users.php" name="adduser" method="post">
-   <input type="hidden" name="add" value="1">
-   <table border="0">
-      <tr><td><? print $EMAIL_ADDRESS; ?>:</td><td><input type="text" name="email"></td></tr>
-      <tr><td><? print $USERNAME; ?>:</td><td><input type="text" name="username" ></td></tr>
-      <tr><td><? print $USERID; ?>:</td><td><input type="text" name="uid" ></td></tr>
-
-      <tr><td><? print $POLICY_GROUP; ?>:</td><td>
-<?
-   print "<select name=\"policy_group\">\n";
-   print "<option value=\"0\">$default_policy</option>\n";
-   show_existing_policy_groups();
-   print "</select>\n";
-
-?>
-      </td></tr>
-
-      <tr colspan="2"><td><input type="submit" value="OK"></td></tr>
-   </table>
-</form>
-</p>
-
-
 <p>
 
 
 <?
 
-if($uid >= 0 && is_numeric($uid) && $email && $username){
+if($add == 1 && uid >= 0 && is_numeric($uid) && $email && $username){
    add_user_entry($uid, $username, $email, $policy_group);
    nice_screen($err_added_user_successfully . ". <a href=\"users.php\">$BACK.</a>");
+}
+
+else if($modify == 1 && $uid >= 0 && is_numeric($uid) && $email && $username){
+   update_user($uid);
+   nice_screen("$err_modified_user. <a href=\"users.php\">$BACK.</a>");
+}
+
+else if($edit == 1 && $uid >= 1 && is_numeric($uid)){
+   print "<form action=\"users.php\" name=\"modifyuser\" method=\"post\">\n";
+   print "<input type=\"hidden\" name=\"modify\" value=\"1\">\n";
+   print "<table border=\"0\">\n";
+
+   $x = get_user_entry($uid);
+   print_user($x, 1);
+
+   print "<tr colspan=\"2\"><td><input type=\"submit\" value=\"OK\"></td></tr>\n";
+   print "</table>\n";
+   print "</form>\n";
+
+}
+
+else if($add == 1){
+   print "<h4>$ADD_NEW_USER</h4>\n";
+   print "<form action=\"users.php\" name=\"adduser\" method=\"post\">\n";
+   print "<input type=\"hidden\" name=\"add\" value=\"1\">\n";
+   print "<table border=\"0\">\n";
+
+   $x = array('', '', '', 0);
+   print_user($x);
+
+   print "<tr colspan=\"2\"><td><input type=\"submit\" value=\"$ADD\"></td></tr>\n";
+   print "</table>\n";
+   print "</form>\n";
+
 }
 
 else if($remove == 1 && $uid >= 1 && is_numeric($uid) && $email){
@@ -89,7 +105,10 @@ else {
 
    show_existing_users();
 
-   print "</table>\n";
+   print "</table><p/>\n";
+
+   print "<p><a href=\"users.php?add=1\">$ADD_NEW_USER</a></p>\n";
+
 }
 
 webui_close($conn);

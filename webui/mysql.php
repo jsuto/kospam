@@ -68,6 +68,9 @@ function set_whitelist($whitelist, $username){
 }
 
 
+/*** users ***/
+
+
 function get_users_email_address($username){
    global $user_table, $err_sql_error;
    $to = "";
@@ -78,6 +81,48 @@ function get_users_email_address($username){
    mysql_free_result($r);
 
    return $to;
+}
+
+
+function print_user($x, $ro_uid = 0){
+   global $EMAIL_ADDRESS, $USERNAME, $USERID, $POLICY_GROUP, $default_policy;
+
+   print "<tr><td>$EMAIL_ADDRESS:</td><td><input type=\"text\" name=\"email\" value=\"$x[0]\"></td></tr>\n";
+   print "<tr><td>$USERNAME:</td><td><input type=\"text\" name=\"username\" value=\"$x[1]\"></td></tr>\n";
+
+   if($ro_uid == 1)
+      print "<tr><td>$USERID:</td><td>$x[2]</td></tr>\n";
+   else
+      print "<tr><td>$USERID:</td><td><input type=\"text\" name=\"uid\" value=\"$x[2]\"></td></tr>\n";
+
+   print "<tr><td>$POLICY_GROUP:</td><td>\n";
+
+   print "<select name=\"policy_group\">\n";
+   print "<option value=\"0\">$default_policy</option>\n";
+   show_existing_policy_groups($x[3]);
+   print "</select>\n";
+
+   print "</td></tr>\n";
+
+}
+
+
+function get_user_entry($uid, $email = ""){
+   global $user_table, $err_sql_error;
+
+   $x = array();
+
+   if(!is_numeric($uid) || $uid < 1) return $x;
+
+   $email = mysql_real_escape_string($email);
+   if($email) $EMAIL = " AND email='$email'";
+
+   $stmt = "SELECT email, username, uid, policy_group FROM $user_table WHERE uid=$uid $EMAIL ORDER by uid, email";
+   $r = mysql_query($stmt) or nice_error($err_sql_error);
+   $x = mysql_fetch_row($r);
+   mysql_free_result($r);
+
+   return $x;
 }
 
 
@@ -114,6 +159,7 @@ function add_user_entry($u, $user, $mail, $policy_group){
    $uid = mysql_real_escape_string($u);
    $username = mysql_real_escape_string($user);
    $email = mysql_real_escape_string($mail);
+   $policy_group = mysql_real_escape_string($policy_group);
 
    $stmt = "INSERT INTO $user_table (uid, username, email, policy_group) VALUES($uid, '$username', '$email', $policy_group)";
    if(!mysql_query($stmt)) nice_error($err_existing_user . ". <a href=\"users.php\">$BACK.</a>");
@@ -126,14 +172,32 @@ function add_user_entry($u, $user, $mail, $policy_group){
 }
 
 
-function show_existing_policy_groups(){
+function update_user($uid){
+   global $user_table, $err_sql_error;
+
+   while(list($k, $v) = each($_POST)) $$k = mysql_real_escape_string($v);
+
+   $stmt = "UPDATE $user_table SET username='$username', email='$email', policy_group=$policy_group WHERE uid=$uid";
+
+   mysql_query($stmt) or nice_error($err_sql_error);
+}
+
+
+
+/*** policy groups ***/
+
+
+function show_existing_policy_groups($id = 0){
    global $policy_group_table, $err_sql_error, $REMOVE;
 
    $stmt = "SELECT policy_group, name FROM $policy_group_table ORDER by policy_group";
 
    $r = mysql_query($stmt) or nice_error($err_sql_error);
    while(list($policy_group, $name) = mysql_fetch_row($r)){
-      print "<option value=\"$policy_group\">$name</option>\n";
+      if($policy_group == $id)
+         print "<option value=\"$policy_group\" selected>$name</option>\n";
+      else
+         print "<option value=\"$policy_group\">$name</option>\n";
    }
    mysql_free_result($r);
 }
@@ -169,7 +233,9 @@ function get_new_policy_group_id(){
 
 
 function print_policy($x){
-   global $POLICY, $MODIFY, $CANCEL, $INTEGER, $FLOAT, $STRING;
+   global $POLICY, $POLICY_NAME, $INTEGER, $FLOAT, $STRING;
+
+   print "<tr><td>$POLICY_NAME</td><td><b><input type=\"text\" name=\"name\" value=\"$x[0]\" size=\"30\"></b></td><td>&nbsp;</td></tr>\n";
 
    print "<tr><td>deliver_infected_email</td><td><input name=\"deliver_infected_email\" value=\"$x[1]\" size=\"3\"></td><td>0|1</td></tr>\n";
    print "<tr><td>silently_discard_infected_email</td><td><input name=\"silently_discard_infected_email\" value=\"$x[2]\" size=\"3\"></td><td>0|1</td></tr>\n";
@@ -193,7 +259,7 @@ function print_policy($x){
 }
 
 function show_policy($policy_group){
-   global $policy_group_table, $err_sql_error, $POLICY, $MODIFY, $CANCEL, $INTEGER, $FLOAT, $STRING;
+   global $policy_group_table, $err_sql_error, $POLICY, $MODIFY, $CANCEL;
 
    $x = array();
 
@@ -204,7 +270,6 @@ function show_policy($policy_group){
    mysql_free_result($r);
 
    print "<table>\n";
-   print "<tr><td>$POLICY:</td><td><b>$x[0]</b></td><td>&nbsp;</td></tr>\n";
 
    print_policy($x);
 
@@ -217,11 +282,9 @@ function show_policy($policy_group){
 function update_policy($policy_group){
    global $policy_group_table, $err_sql_error, $POLICY, $MODIFY, $CANCEL;
 
-   while(list($k, $v) = each($_POST)) $$k = $v;
+   while(list($k, $v) = each($_POST)) $$k = mysql_real_escape_string($v);
 
-   print "$max_message_size_to_filter\n";
-
-   $stmt = "UPDATE $policy_group_table SET deliver_infected_email=$deliver_infected_email, silently_discard_infected_email=$silently_discard_infected_email, use_antispam=$use_antispam, spam_subject_prefix='$spam_subject_prefix', enable_auto_white_list=$enable_auto_white_list, max_message_size_to_filter=$max_message_size_to_filter, rbl_domain='$rbl_domain', surbl_domain='$surbl_domain', spam_overall_limit=$spam_overall_limit, spaminess_oblivion_limit=$spaminess_oblivion_limit, replace_junk_characters=$replace_junk_characters, invalid_junk_limit=$invalid_junk_limit, invalid_junk_line=$invalid_junk_line, penalize_images=$penalize_images, penalize_embed_images=$penalize_embed_images, penalize_octet_stream=$penalize_octet_stream, training_mode=$initial_1000_learning WHERE policy_group=$policy_group";
+   $stmt = "UPDATE $policy_group_table SET name='$name', deliver_infected_email=$deliver_infected_email, silently_discard_infected_email=$silently_discard_infected_email, use_antispam=$use_antispam, spam_subject_prefix='$spam_subject_prefix', enable_auto_white_list=$enable_auto_white_list, max_message_size_to_filter=$max_message_size_to_filter, rbl_domain='$rbl_domain', surbl_domain='$surbl_domain', spam_overall_limit=$spam_overall_limit, spaminess_oblivion_limit=$spaminess_oblivion_limit, replace_junk_characters=$replace_junk_characters, invalid_junk_limit=$invalid_junk_limit, invalid_junk_line=$invalid_junk_line, penalize_images=$penalize_images, penalize_embed_images=$penalize_embed_images, penalize_octet_stream=$penalize_octet_stream, training_mode=$initial_1000_learning WHERE policy_group=$policy_group";
 
    mysql_query($stmt) or nice_error($err_sql_error);
 

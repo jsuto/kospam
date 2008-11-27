@@ -99,7 +99,7 @@ void init_session_data(struct session_data *sdata){
    struct __config my_cfg;
    struct c_res result;
    int is_spam;
-   struct ue UE;
+   struct ue UE, UE2;
 
    #ifdef HAVE_ANTIVIRUS
       int ret;
@@ -118,7 +118,7 @@ void init_session_data(struct session_data *sdata){
     #endif
       struct timeval tv_spam_start, tv_spam_stop;
       struct _state sstate, sstate2;
-      struct ue UE2;
+      //struct ue UE2;
       int train_mode=T_TOE;
 
       result.spaminess=DEFAULT_SPAMICITY;

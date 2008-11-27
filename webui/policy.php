@@ -41,7 +41,7 @@ $conn = webui_connect() or nice_error($err_connect_db);
 if($modify == 1 && is_numeric($policy_group) && $policy_group > 0){
    update_policy($policy_group);
 
-   nice_screen("aaaaaaaa. <a href=\"policy.php\">$BACK.</a>");
+   nice_screen("$err_modified_policy. <a href=\"policy.php\">$BACK.</a>");
 }
 
 else if($view == 1 && is_numeric($policy_group) && $policy_group >= 0){
@@ -81,13 +81,12 @@ else if($add == 1 && $name){
 }
 
 else if($add == 1){
-   $x = array('xxx', 0, 1, 1, '', 1, 128000, '', '', 0.92, 1.01, 1, 5, 1, 0, 0, 0, 0, 0);
+   $x = array('', 0, 1, 1, '', 1, 128000, '', '', 0.92, 1.01, 1, 5, 1, 0, 0, 0, 0, 0);
 
    print "<form action=\"policy.php\" method=\"post\">\n";
    print "<input type=\"hidden\" name=\"add\" value=\"1\">\n";
 
    print "<table>\n";
-   print "<tr><td>$POLICY_NAME:</td><td><b><input type=\"text\" name=\"name\" value=\"\" size=\"30\"></b></td><td>&nbsp;</td></tr>\n";
 
    print_policy($x);
 
@@ -95,6 +94,8 @@ else if($add == 1){
    print "</table>\n";
 
    print "</form>\n\n\n";
+
+   print "<p>&nbsp;</p>\n<a href=\"policy.php\">$BACK.</a>\n";
 }
 
 else {
@@ -113,9 +114,9 @@ else {
    print "<input type=\"submit\" value=\"$EDIT_OR_VIEW\">\n";
 
 
-   print "<h4>$ADD_NEW_POLICY</h4>\n";
+   //print "<h4>$ADD_NEW_POLICY</h4>\n";
 
-   print "<a href=\"policy.php?add=1\">$ADD_NEW_POLICY</a>\n";
+   print "<p>&nbsp;</p>\n<a href=\"policy.php?add=1\">$ADD_NEW_POLICY</a>\n";
 }
 
 webui_close($conn);

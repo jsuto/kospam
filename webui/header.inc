@@ -34,12 +34,12 @@ if($ADMIN[$username] == 1) $admin_user = 1;
           <li><a href="<? print $base_url; ?>/index.php"<? if(strstr($_SERVER['PHP_SELF'], "/index.php")) print " id=\"active\""; ?>><? print $HOME; ?></a></li>
           <li><a href="<? print $base_url; ?>/q.php"<? if(strstr($_SERVER['PHP_SELF'], "/q.php")) print ", id=\"active\""; ?>><? print $QUARANTINE; ?></a></li>
           <li><a href="<? print $base_url; ?>/whitelist.php"<? if(strstr($_SERVER['PHP_SELF'], "/whitelist.php")) print " id=\"active\""; ?>><? print $WHITELIST; ?></a></li>
-          <li><a href="<? print $base_url; ?>/stat.php"<? if(strstr($_SERVER['PHP_SELF'], "/stat.php")) print ", id=\"active\""; ?>><? print $STATS; ?></a></li>
+          <li><a href="<? print $base_url; ?>/stat.php"<? if(strstr($_SERVER['PHP_SELF'], "/stat.php")) print " id=\"active\""; ?>><? print $STATS; ?></a></li>
 <?
    if($admin_user == 1){
 
-      print "<li><a href=\"$base_url/users.php\""; if(strstr($_SERVER['PHP_SELF'], "/users.php")) print ", id=\"active"; print "\">$USER_MANAGEMENT</a></li>\n";
-      print "<li><a href=\"$base_url/policy.php\""; if(strstr($_SERVER['PHP_SELF'], "/policy.php")) print ", id=\"active"; print "\">$POLICY</a></li>\n";
+      print "<li><a href=\"$base_url/users.php\""; if(strstr($_SERVER['PHP_SELF'], "/users.php")) print " id=\"active\""; print ">$USER_MANAGEMENT</a></li>\n";
+      print "<li><a href=\"$base_url/policy.php\""; if(strstr($_SERVER['PHP_SELF'], "/policy.php")) print " id=\"active\""; print ">$POLICY</a></li>\n";
    }
 ?>
 

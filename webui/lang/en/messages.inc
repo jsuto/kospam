@@ -91,6 +91,8 @@ $err_existing_user = "User already exists";
 $err_added_user_successfully = "User added successfully";
 $err_failed_to_remove_user = "User failed to remove";
 $err_removed_user_successfully = "User removed successfully";
+$err_modified_user = "Modified user";
+
 $err_you_are_not_admin = "You are not an admin user";
 
 $err_message_delivered = "Message delivered to";
@@ -99,5 +101,6 @@ $err_message_failed_to_deliver = "Message failed to deliver to";
 $err_cannot_view_default_policy = "The default policy can be view/edit in clapf.conf";
 $err_added_new_policy = "Added new policy";
 $err_removed_policy = "Removed policy";
+$err_modified_policy = "Modified policy";
 
 ?>

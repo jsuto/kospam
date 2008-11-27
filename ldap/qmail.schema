@@ -107,6 +107,12 @@ attributetype ( 1.3.6.1.4.1.7914.1.2.1.17 NAME 'mailSizeMax'
 	EQUALITY integerMatch
 	SYNTAX 1.3.6.1.4.1.1466.115.121.1.27 SINGLE-VALUE )
 
+attributetype ( 1.3.6.1.4.1.7914.1.2008.1.1 NAME 'policyGroupId'
+        DESC 'The maximum size of a single messages the user accepts.'
+        EQUALITY integerMatch
+        SYNTAX 1.3.6.1.4.1.1466.115.121.1.27 SINGLE-VALUE )
+
+
 #
 # qmailGroup attributes
 #
@@ -256,7 +262,7 @@ objectclass ( 1.3.6.1.4.1.7914.1.2.2.1 NAME 'qmailUser'
 	      mailHost $ mailForwardingAddress $ deliveryProgramPath $
 	      qmailDotMode $ deliveryMode $ mailReplyText $
 	      accountStatus $ qmailAccountPurge $ 
-	      mailQuotaSize $ mailQuotaCount $ mailSizeMax ) )
+	      mailQuotaSize $ mailQuotaCount $ mailSizeMax $ policyGroupId ) )
 
 objectclass ( 1.3.6.1.4.1.7914.1.3.2.1 NAME 'qmailGroup'
 	DESC 'QMail-LDAP Group'

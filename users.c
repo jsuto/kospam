@@ -1,5 +1,5 @@
 /*
- * sql.c, 2008.11.26, SJ
+ * sql.c, 2008.11.27, SJ
  */
 
 #include <stdio.h>
@@ -169,6 +169,10 @@ struct ue get_user_from_email(LDAP *ld, char *base, char *email, struct __config
 
       vals = ldap_get_values(ld, e, "cn");
       if(ldap_count_values(vals) > 0) strncpy(UE.name, vals[0], SMALLBUFSIZE-1);
+      ldap_value_free(vals);
+
+      vals = ldap_get_values(ld, e, "policyGroupId");
+      if(ldap_count_values(vals) > 0) UE.policy_group = atoi(vals[0]);
       ldap_value_free(vals);
    }
 

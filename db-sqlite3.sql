@@ -23,7 +23,7 @@ create table if not exists user (
         uid int unsigned not null,
         email char(128) not null,
         username char(32) not null,
-	policy_group int default 0,
+	policy_group integer(4) default 0,
         unique (uid, email)
 );
 

@@ -1,9 +1,20 @@
 0.4.0-rc1:
 
+2008.11.27, SJ
+
+Modified the t_policy table to use tinyint types for storing
+boolean (0 or 1) values to use less space.
+(policy.sql)
+
+LDAP version of the policy storage is available. Add the
+ldap/clapf-policy.schema file to your openldap schemas.
+For an example ldif file, see the ldap/policy.ldif.
+(policy.c, policy.h, session.c, ldap/clapf-policy.schema)
+
 2008.11.26, SJ
 
 An early bird policy is available. Please extend the user
-table as follows: ALTER TABLE user ADD COLUMN policy_group DEFAULT 0;
+table as follows: ALTER TABLE user ADD COLUMN policy_group int(4) DEFAULT 0;
 
 The default policy group (0) is just the same, as the configuration
 you have in clapf.conf. Please see the policy.sql for list, what you

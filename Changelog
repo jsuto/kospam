@@ -9,6 +9,11 @@ boolean (0 or 1) values to use less space.
 LDAP version of the policy storage is available. Add the
 ldap/clapf-policy.schema file to your openldap schemas.
 For an example ldif file, see the ldap/policy.ldif.
+
+Please note that I have added an attribute called
+policyGroupId to qmail.schema to store the policy_group
+parameter for the given user.
+
 (policy.c, policy.h, session.c, ldap/clapf-policy.schema)
 
 2008.11.26, SJ

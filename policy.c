@@ -67,37 +67,103 @@ int get_policy(MYSQL mysql, struct __config *cfg, struct __config *my_cfg, unsig
 
 
 #ifdef USERS_IN_LDAP
-
-struct ue get_user_from_email(LDAP *ld, char *base, char *email, struct __config cfg){
+int get_policy(LDAP *ld, char *base, struct __config *cfg, struct __config *my_cfg, unsigned int policy_group, int num_of_rcpt_to){
    int rc;
    char filter[SMALLBUFSIZE], *attrs[] = { NULL }, **vals;
    LDAPMessage *res, *e;
-   struct ue UE;
 
-   memset((char *)&UE, 0, sizeof(UE));
+#ifndef HAVE_LMTP
+   if(num_of_rcpt_to != 1) return 0;
+#endif
 
-   if(ld == NULL) return UE;
+   if(ld == NULL) return 0;
 
-   snprintf(filter, SMALLBUFSIZE-1, "(|(%s=%s)(%s=%s))", cfg.email_address_attribute_name, email, cfg.email_alias_attribute_name, email);
+   snprintf(filter, SMALLBUFSIZE-1, "(policyGroup=%d)", policy_group);
 
    rc = ldap_search_s(ld, base, LDAP_SCOPE, filter, attrs, 0, &res);
-   if(rc) return UE;
+   if(rc) return 0;
 
    e = ldap_first_entry(ld, res);
 
    if(e){
-      vals = ldap_get_values(ld, e, "uid");
-      if(ldap_count_values(vals) > 0) UE.uid = atol(vals[0]);
+      vals = ldap_get_values(ld, e, "deliverinfectedemail");
+      if(ldap_count_values(vals) > 0) my_cfg->deliver_infected_email = atoi(vals[0]);
       ldap_value_free(vals);
 
-      vals = ldap_get_values(ld, e, "cn");
-      if(ldap_count_values(vals) > 0) strncpy(UE.name, vals[0], SMALLBUFSIZE-1);
+      vals = ldap_get_values(ld, e, "silentlydiscardinfectedemail");
+      if(ldap_count_values(vals) > 0) my_cfg->silently_discard_infected_email = atoi(vals[0]);
       ldap_value_free(vals);
+
+      vals = ldap_get_values(ld, e, "useantispam");
+      if(ldap_count_values(vals) > 0) my_cfg->use_antispam = atoi(vals[0]);
+      ldap_value_free(vals);
+
+      vals = ldap_get_values(ld, e, "spamsubjectprefix");
+      if(ldap_count_values(vals) > 0) snprintf(my_cfg->spam_subject_prefix, MAXVAL-1, "%s", vals[0]);
+      ldap_value_free(vals);
+
+      vals = ldap_get_values(ld, e, "enableautowhitelist");
+      if(ldap_count_values(vals) > 0) my_cfg->enable_auto_white_list = atoi(vals[0]);
+      ldap_value_free(vals);
+
+      vals = ldap_get_values(ld, e, "maxmessagesizetofilter");
+      if(ldap_count_values(vals) > 0) my_cfg->max_message_size_to_filter = atoi(vals[0]);
+      ldap_value_free(vals);
+
+      vals = ldap_get_values(ld, e, "rbldomain");
+      if(ldap_count_values(vals) > 0) snprintf(my_cfg->rbl_domain, MAXVAL-1, "%s", vals[0]);
+      ldap_value_free(vals);
+
+      vals = ldap_get_values(ld, e, "surbldomain");
+      if(ldap_count_values(vals) > 0) snprintf(my_cfg->surbl_domain, MAXVAL-1, "%s", vals[0]);
+      ldap_value_free(vals);
+
+      vals = ldap_get_values(ld, e, "spamoveralllimit");
+      if(ldap_count_values(vals) > 0) my_cfg->spam_overall_limit = atof(vals[0]);
+      ldap_value_free(vals);
+
+      vals = ldap_get_values(ld, e, "spaminessoblivionlimit");
+      if(ldap_count_values(vals) > 0) my_cfg->spaminess_oblivion_limit = atof(vals[0]);
+      ldap_value_free(vals);
+
+      vals = ldap_get_values(ld, e, "replacejunkcharacters");
+      if(ldap_count_values(vals) > 0) my_cfg->replace_junk_characters = atoi(vals[0]);
+      ldap_value_free(vals);
+
+      vals = ldap_get_values(ld, e, "invalidjunklimit");
+      if(ldap_count_values(vals) > 0) my_cfg->invalid_junk_limit = atoi(vals[0]);
+      ldap_value_free(vals);
+
+      vals = ldap_get_values(ld, e, "invalidjunkline");
+      if(ldap_count_values(vals) > 0) my_cfg->invalid_junk_line = atoi(vals[0]);
+      ldap_value_free(vals);
+
+      vals = ldap_get_values(ld, e, "penalizeimages");
+      if(ldap_count_values(vals) > 0) my_cfg->penalize_images = atoi(vals[0]);
+      ldap_value_free(vals);
+
+      vals = ldap_get_values(ld, e, "penalizeembedimages");
+      if(ldap_count_values(vals) > 0) my_cfg->penalize_embed_images = atoi(vals[0]);
+      ldap_value_free(vals);
+
+      vals = ldap_get_values(ld, e, "penalizeoctetstream");
+      if(ldap_count_values(vals) > 0) my_cfg->penalize_octet_stream = atoi(vals[0]);
+      ldap_value_free(vals);
+
+      vals = ldap_get_values(ld, e, "trainingmode");
+      if(ldap_count_values(vals) > 0) my_cfg->training_mode = atoi(vals[0]);
+      ldap_value_free(vals);
+
+      vals = ldap_get_values(ld, e, "initial1000learning");
+      if(ldap_count_values(vals) > 0) my_cfg->initial_1000_learning = atoi(vals[0]);
+      ldap_value_free(vals);
+
    }
+
 
    ldap_msgfree(res);
 
-   return UE;
+   return 1;
 }
 
 #endif

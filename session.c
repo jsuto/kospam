@@ -611,7 +611,7 @@ void init_session_data(struct session_data *sdata){
                   #endif
 
                   #ifdef USERS_IN_LDAP
-                     //if(UE.policy_group > 0) get_policy(ldap, cfg.ldap_base, &cfg, &my_cfg, UE.policy_group, sdata.num_of_rcpt_to);
+                     if(UE.policy_group > 0) get_policy(ldap, cfg.ldap_base, &cfg, &my_cfg, UE.policy_group, sdata.num_of_rcpt_to);
                   #endif
                #endif
 

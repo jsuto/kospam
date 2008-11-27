@@ -1,0 +1,14 @@
+dn: ou=clapfpolicies,dc=yourdomain,dc=com
+ou: clapfpolicies
+objectClass: top
+objectClass: organizationalUnit
+
+dn: policygroup=1,ou=clapfpolicies,dc=yourdomain,dc=com
+objectClass: top
+objectClass: clapfPolicyGroup
+policyGroup: 1
+policyName: test2
+maxMessageSizeToFilter: 128000
+spamoveralllimit: 0.92
+spamsubjectprefix: [SPAM]
+

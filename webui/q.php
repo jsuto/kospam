@@ -99,7 +99,10 @@ if($_SERVER['REQUEST_METHOD'] == "GET"){
 
       $x = send_smtp_email($smtphost, $smtpport, $yourdomain, $fromaddr, $to, $m);
 
-      if($x == 1) nice_screen("$err_message_delivered $to");
+      if($x == 1){
+         @unlink($my_q_dir . "/" . $deliver);
+         nice_screen("$err_message_delivered $to");
+      }
       else nice_error("$err_message_failed_to_deliver $to");
    }
 

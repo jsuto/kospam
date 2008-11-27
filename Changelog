@@ -16,6 +16,10 @@ parameter for the given user.
 
 (policy.c, policy.h, session.c, ldap/clapf-policy.schema)
 
+Remove the message from quarantine if the user releases
+the message.
+(webui/q.php)
+
 2008.11.26, SJ
 
 An early bird policy is available. Please extend the user

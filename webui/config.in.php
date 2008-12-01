@@ -6,7 +6,7 @@ $clapf_conf = "/usr/local/etc/clapf.conf";
 
 $lang = "en";
 
-$directory = "/users";
+$directory = "/webui";
 
 include_once($_SERVER['DOCUMENT_ROOT'] . "$directory/.htdb.php");
 include_once($_SERVER['DOCUMENT_ROOT'] . "$directory/funcs.php");

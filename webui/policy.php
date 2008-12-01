@@ -67,15 +67,7 @@ else if($remove == 1 && is_numeric($policy_group) && $policy_group >= 0){
 }
 
 else if($add == 1 && $name){
-   while(list($k, $v) = each($_POST))
-      $$k = mysql_real_escape_string($v);
-
-
-   $policy_group = get_new_policy_group_id();
-
-   $stmt = "INSERT INTO $policy_group_table (policy_group, name, deliver_infected_email, silently_discard_infected_email, use_antispam, spam_subject_prefix, enable_auto_white_list, max_message_size_to_filter, rbl_domain, surbl_domain, spam_overall_limit, spaminess_oblivion_limit, replace_junk_characters, invalid_junk_limit, invalid_junk_line, penalize_images, penalize_embed_images, penalize_octet_stream, training_mode, initial_1000_learning) VALUES($policy_group, '$name', $deliver_infected_email, $silently_discard_infected_email, $use_antispam, '$spam_subject_prefix', $enable_auto_white_list, $max_message_size_to_filter, '$rbl_domain', '$surbl_domain', $spam_overall_limit, $spaminess_oblivion_limit, $replace_junk_characters, $invalid_junk_limit, $invalid_junk_line, $penalize_images, $penalize_embed_images, $penalize_octet_stream, $training_mode, $initial_1000_learning)";
-
-   mysql_query($stmt) or nice_error($err_sql_error);
+   add_policy();
 
    nice_screen("$err_added_new_policy. <a href=\"policy.php\">$BACK.</a>");
 }

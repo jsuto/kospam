@@ -18,21 +18,8 @@ if($username == "") nice_error($err_not_authenticated);
       <td>
 
 <p>
+
 <? print "$YOU_ARE: $username"; ?>
-
-   <table border="1">
-      <tr align="left"><th>Email</th></tr>
-
-<?
-
-   $conn = webui_connect() or nice_error($err_connect_db);
-   print_email_addresses_for_user($conn, $username);
-   webui_close($conn);
-
-?>
-
-
-   </table>
 
 </p>
 

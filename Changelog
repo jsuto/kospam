@@ -1,5 +1,10 @@
 0.4.0-rc1:
 
+2008.12.04, SJ
+
+Template based virus notifications.
+(templates/, templates.c, templates.h)
+
 2008.11.27, SJ
 
 Modified the t_policy table to use tinyint types for storing

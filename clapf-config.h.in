@@ -1,11 +1,13 @@
 /*
- * clapf-config.h.in, 2008.04.12, SJ
+ * clapf-config.h.in, 2008.12.04, SJ
  */
 
 #define CONFDIR "/usr/local/etc"
 #define DATADIR "/usr/local/var"
 
 #define SPAMDROP_HELPER_PROGRAM "/usr/local/libexec/clapf/spamdrop_helper"
+
+#define VIRUS_TEMPLATE "/usr/local/share/clapf/template.virus"
 
 #undef OUTGOING_SMTP
 

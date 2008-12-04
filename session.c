@@ -1,5 +1,5 @@
 /*
- * session.c, 2008.11.26, SJ
+ * session.c, 2008.12.04, SJ
  */
 
 #include <stdio.h>
@@ -492,16 +492,15 @@ void init_session_data(struct session_data *sdata){
 
                   if(strlen(cfg.clapfemail) > 3 && strlen(cfg.localpostmaster) > 3){
 
-                     snprintf(buf, MAXBUFSIZE-1, "From: <%s>\r\nTo: <%s>\r\nSubject: %s has been infected\r\n\r\n"
-                                    "E-mail from %s to %s (id: %s) was infected\r\n\r\n.\r\n",
-                                     cfg.clapfemail, cfg.localpostmaster, sdata.ttmpfile, sdata.mailfrom, sdata.rcptto[0], sdata.ttmpfile);
+                     if(get_template(VIRUS_TEMPLATE, buf, cfg.localpostmaster, sdata.rcptto[0], sdata.mailfrom, virusinfo) == 1){
 
-                     snprintf(sdata.rcptto[0], MAXBUFSIZE-1, "RCPT TO: <%s>\r\n", cfg.localpostmaster);
-                     sdata.num_of_rcpt_to = 1;
-                     ret = inject_mail(sdata, 0, cfg.postfix_addr, cfg.postfix_port, NULL, my_cfg, buf);
+                        snprintf(sdata.rcptto[0], MAXBUFSIZE-1, "RCPT TO: <%s>\r\n", cfg.localpostmaster);
+                        sdata.num_of_rcpt_to = 1;
+                        ret = inject_mail(sdata, 0, cfg.postfix_addr, cfg.postfix_port, NULL, my_cfg, buf);
 
-                     if(ret == 0)
-                        syslog(LOG_PRIORITY, "notification about %s to %s failed", sdata.ttmpfile, cfg.localpostmaster);
+                        if(ret == 0)
+                           syslog(LOG_PRIORITY, "notification about %s to %s failed", sdata.ttmpfile, cfg.localpostmaster);
+                     }
                   }
 
                }

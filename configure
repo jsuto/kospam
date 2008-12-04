@@ -6003,8 +6003,14 @@ fi
     fi
 
 
+
 cat >>confdefs.h <<_ACEOF
 #define SPAMDROP_HELPER_PROGRAM "$my_prefix/libexec/clapf/spamdrop_helper"
+_ACEOF
+
+
+cat >>confdefs.h <<_ACEOF
+#define VIRUS_TEMPLATE "$my_prefix/share/clapf/template.virus"
 _ACEOF
 
 
@@ -6579,7 +6585,7 @@ echo; echo
 
 CFLAGS="$static -O2 -Wall -g"
 LIBS="$libclamav $antispam_libs $gsl_libs $sqlite3_libs"
-OBJS="misc.o cfg.o smtp.o sig.o decoder.o list.o parser.o cgi.o session.o users.o $objs"
+OBJS="misc.o cfg.o smtp.o sig.o decoder.o list.o parser.o cgi.o session.o users.o templates.o $objs"
 
 ac_config_files="$ac_config_files Makefile"
 

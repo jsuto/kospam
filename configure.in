@@ -500,7 +500,9 @@ dnl spamdrop helper program
         defs="$defs -DHAVE_SPAMDROP_HELPER"
     fi
 
-    AC_DEFINE_UNQUOTED(SPAMDROP_HELPER_PROGRAM,"$my_prefix/libexec/clapf/spamdrop_helper",[where to look for the spamdrop helper file])
+
+AC_DEFINE_UNQUOTED(SPAMDROP_HELPER_PROGRAM,"$my_prefix/libexec/clapf/spamdrop_helper",[where to look for the spamdrop helper file])
+AC_DEFINE_UNQUOTED(VIRUS_TEMPLATE, "$my_prefix/share/clapf/template.virus", [where the virus template is])
 
 
 
@@ -799,7 +801,7 @@ echo; echo
 
 CFLAGS="$static -O2 -Wall -g"
 LIBS="$libclamav $antispam_libs $gsl_libs $sqlite3_libs"
-OBJS="misc.o cfg.o smtp.o sig.o decoder.o list.o parser.o cgi.o session.o users.o $objs"
+OBJS="misc.o cfg.o smtp.o sig.o decoder.o list.o parser.o cgi.o session.o users.o templates.o $objs"
 
 AC_OUTPUT(Makefile)
 AC_OUTPUT(contrib/spamsum/Makefile)

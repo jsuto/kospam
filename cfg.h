@@ -1,5 +1,5 @@
 /*
- * cfg.h, 2008.11.25, SJ
+ * cfg.h, 2008.12.04, SJ
  */
 
 #ifndef _CFG_H
@@ -50,7 +50,6 @@ struct __config {
 
    int session_timeout;
 
-   char clapfemail[MAXVAL];
    char localpostmaster[MAXVAL];
    int silently_discard_infected_email;
    int deliver_infected_email;

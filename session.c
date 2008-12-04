@@ -218,6 +218,9 @@ void init_session_data(struct session_data *sdata){
                memcpy(sdata.mailfrom, buf, MAXBUFSIZE-1);
                send(new_sd, SMTP_RESP_250_OK, strlen(SMTP_RESP_250_OK), 0);
                if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent: %s", sdata.ttmpfile, SMTP_RESP_250_OK);
+
+               memset(email2, 0, SMALLBUFSIZE);
+               extract_email(sdata.mailfrom, email2);
             }
 
             continue;
@@ -490,13 +493,16 @@ void init_session_data(struct session_data *sdata){
 
                   /* send notification if cfg.localpostmaster is set, 2005.10.04, SJ */
 
-                  if(strlen(cfg.clapfemail) > 3 && strlen(cfg.localpostmaster) > 3){
+                  if(strlen(cfg.localpostmaster) > 3){
 
-                     if(get_template(VIRUS_TEMPLATE, buf, cfg.localpostmaster, sdata.rcptto[0], sdata.mailfrom, virusinfo) == 1){
+                     memset(email, 0, SMALLBUFSIZE);
+                     extract_email(sdata.rcptto[0], email);
+
+                     if(get_template(VIRUS_TEMPLATE, buf, cfg.localpostmaster, email, email2, virusinfo) == 1){
 
                         snprintf(sdata.rcptto[0], MAXBUFSIZE-1, "RCPT TO: <%s>\r\n", cfg.localpostmaster);
                         sdata.num_of_rcpt_to = 1;
-                        ret = inject_mail(sdata, 0, cfg.postfix_addr, cfg.postfix_port, NULL, my_cfg, buf);
+                        ret = inject_mail(sdata, 0, cfg.postfix_addr, cfg.postfix_port, NULL, cfg, buf);
 
                         if(ret == 0)
                            syslog(LOG_PRIORITY, "notification about %s to %s failed", sdata.ttmpfile, cfg.localpostmaster);
@@ -532,8 +538,8 @@ void init_session_data(struct session_data *sdata){
 
                /* send results back to the '.' command */
 
-               memset(email2, 0, SMALLBUFSIZE);
-               extract_email(sdata.mailfrom, email2);
+               /*memset(email2, 0, SMALLBUFSIZE);
+               extract_email(sdata.mailfrom, email2);*/
 
 
                /* open database backend handler */

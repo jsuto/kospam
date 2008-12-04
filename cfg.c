@@ -1,5 +1,5 @@
 /*
- * cfg.c, 2008.11.25, SJ
+ * cfg.c, 2008.12.04, SJ
  */
 
 #include <stdio.h>
@@ -272,9 +272,6 @@ struct __config read_config(char *configfile){
 
                   if(strcmp(key, "session_timeout") == 0)
                      cfg.session_timeout = atoi(val);
-
-                  if(strcmp(key, "clapfemail") == 0)
-                     memcpy(cfg.clapfemail, val, MAXVAL-1);
 
                   if(strcmp(key, "localpostmaster") == 0)
                      memcpy(cfg.localpostmaster, val, MAXVAL-1);

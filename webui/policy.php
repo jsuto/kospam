@@ -61,8 +61,7 @@ else if($view == 1 && is_numeric($policy_group) && $policy_group >= 0){
 }
 
 else if($remove == 1 && is_numeric($policy_group) && $policy_group >= 0){
-   $stmt = "DELETE FROM $policy_group_table WHERE policy_group=$policy_group";
-   mysql_query($stmt) or nice_error($err_sql_error);
+   remove_policy($policy_group);
    nice_screen("$err_removed_policy. <a href=\"policy.php\">$BACK.</a>");
 }
 

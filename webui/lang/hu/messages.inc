@@ -9,9 +9,12 @@ $TITLE['/q.php'] = 'Karantén';
 $TITLE['/users.php'] = 'Felhasználó menedzselés';
 $TITLE['/policy.php'] = 'Házirend';
 
+$ALIAS = "álnév";
+
 $ADD = "Felvesz";
 $ADD_NEW_POLICY = "Új házirend";
-$ADD_NEW_USER = "Új felhasználó hozzáadása";
+$ADD_NEW_USER = "Új felhasználó/$ALIAS hozzáadása";
+$ALIASES = "Email álnevek";
 
 $BACK = "Vissza";
 
@@ -59,6 +62,7 @@ $POLICY_NAME = "Házirend neve";
 
 $REMOVE = "Törlés";
 $REMOVE_POLICY = "Házirend törlése";
+$REMOVE_USER = "Felhasználó/$ALIAS törlése";
 
 $SELECT_ALL = "Mindegyik kijelölése";
 $STATS = "Statisztika";
@@ -87,11 +91,13 @@ $err_sql_error = "SQL hiba";
 $err_NaN = "Nem szám";
 $err_successfully_modified = "Sikeresen módosítva";
 $err_invalid_message_id = "Helytelen üzenet azonosító";
+
 $err_existing_user = "A felhasználó már létezik";
 $err_added_user_successfully = "Felhasználó hozzáadása sikerült";
 $err_failed_to_remove_user = "Nem sikerült a felhasználó törlése";
 $err_removed_user_successfully = "Felhasználó törlése sikerült";
 $err_modified_user = "Felhasználó módosítva";
+$err_failed_to_add_user = "Nem sikerült a felhasználó felvétele";
 
 $err_you_are_not_admin = "Ön nem adminisztrátor szintû felhasználó";
 
@@ -102,5 +108,8 @@ $err_cannot_view_default_policy = "Az alapértelmezett házirend a clapf.conf állo
 $err_added_new_policy = "Új házirend felvéve";
 $err_removed_policy = "Házirend törölve";
 $err_modified_policy = "Házirend módosítva";
+$err_policy_failed_to_modify = "Házirendet nem sikerült módosítani";
+$err_policy_failed_to_add = "Házirendet nem sikerült felvenni";
+$err_policy_failed_to_remove = "Házirendet nem sikerült törölni";
 
 ?>

@@ -11,7 +11,10 @@ $db = "your_database";
 
 $ldaphost = "ldap://127.0.0.1/";
 $basedn = "dc=aaaa,dc=fu";
-$binddn = "cn=admin,dc=aaaa,dc=fu";
-$bindpw = "secret";
+$binddn = "";
+$bindpw = "";
+
+$user_base_dn = "ou=clapfusers,$basedn";
+$policy_base_dn = "ou=clapfpolicies,$basedn";
 
 ?>

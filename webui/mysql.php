@@ -127,14 +127,14 @@ function get_user_entry($uid, $email = ""){
 
 
 function show_existing_users(){
-   global $user_table, $err_sql_error, $REMOVE;
+   global $user_table, $err_sql_error, $EDIT_OR_VIEW;
 
    $stmt = "SELECT uid, username, email, policy_group FROM $user_table ORDER by uid, email";
    $r = mysql_query($stmt) or nice_error($err_sql_error);
    while(list($uid, $username, $email, $policy_group) = mysql_fetch_row($r)){
       $policy_group = get_policy_group_name_by_id($policy_group);
 
-      print "<tr align=\"left\"><td><a href=\"users.php?uid=$uid&edit=1\">$uid</a></td><td>$username</td><td>$email</td><td>$policy_group</td><td><a href=\"users.php?remove=1&uid=$uid&email=$email\">$REMOVE</a></td></tr>\n";
+      print "<tr align=\"left\"><td>$uid</td><td>$username</td><td>$email</td><td>$policy_group</td><td><a href=\"users.php?uid=$uid&edit=1\">$EDIT_OR_VIEW</a></td></tr>\n";
    }
    mysql_free_result($r);
 }
@@ -148,8 +148,6 @@ function delete_existing_user_entry($uid, $email){
 
    $stmt = "DELETE FROM $user_table WHERE uid=$uid AND email='$email'";
    if(!mysql_query($stmt)) nice_error($err_failed_to_remove_user . ". <a href=\"users.php\">$BACK.</a>");
-
-   /* TODO: remove his entry from the whitelist table only if this was his last entry */
 }
 
 
@@ -299,6 +297,14 @@ function update_policy($policy_group){
 
    $stmt = "UPDATE $policy_group_table SET name='$name', deliver_infected_email=$deliver_infected_email, silently_discard_infected_email=$silently_discard_infected_email, use_antispam=$use_antispam, spam_subject_prefix='$spam_subject_prefix', enable_auto_white_list=$enable_auto_white_list, max_message_size_to_filter=$max_message_size_to_filter, rbl_domain='$rbl_domain', surbl_domain='$surbl_domain', spam_overall_limit=$spam_overall_limit, spaminess_oblivion_limit=$spaminess_oblivion_limit, replace_junk_characters=$replace_junk_characters, invalid_junk_limit=$invalid_junk_limit, invalid_junk_line=$invalid_junk_line, penalize_images=$penalize_images, penalize_embed_images=$penalize_embed_images, penalize_octet_stream=$penalize_octet_stream, training_mode=$initial_1000_learning WHERE policy_group=$policy_group";
 
+   mysql_query($stmt) or nice_error($err_sql_error);
+}
+
+
+function remove_policy($policy_group){
+   global $policy_group_table, $err_sql_error;
+
+   $stmt = "DELETE FROM $policy_group_table WHERE policy_group=$policy_group";
    mysql_query($stmt) or nice_error($err_sql_error);
 }
 

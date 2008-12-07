@@ -24,6 +24,7 @@ if(isset($_POST['username'])) $username = $_POST['username'];
 if(isset($_POST['email'])) $email = $_POST['email'];
 if(isset($_POST['policy_group'])) $policy_group = $_POST['policy_group'];
 if(isset($_POST['modify'])) $modify = $_POST['modify'];
+if(isset($_POST['add'])) $add = $_POST['add'];
 
 if(isset($_GET['uid'])) $uid = $_GET['uid'];
 if(isset($_GET['email'])) $email = $_GET['email'];
@@ -60,15 +61,19 @@ else if($modify == 1 && $uid >= 0 && is_numeric($uid) && $email && $username){
 else if($edit == 1 && $uid >= 1 && is_numeric($uid)){
    print "<form action=\"users.php\" name=\"modifyuser\" method=\"post\">\n";
    print "<input type=\"hidden\" name=\"modify\" value=\"1\">\n";
+   print "<input type=\"hidden\" name=\"uid\" value=\"$uid\">\n";
    print "<table border=\"0\">\n";
 
    $x = get_user_entry($uid);
    print_user($x, 1);
 
-   print "<tr colspan=\"2\"><td><input type=\"submit\" value=\"OK\"></td></tr>\n";
+   print "<tr><td>&nbsp;</td><td><input type=\"submit\" value=\"$MODIFY\"> <input type=\"reset\" value=\"$CANCEL\"></td></tr>\n";
    print "</table>\n";
    print "</form>\n";
 
+   print "<p>&nbsp;</p>\n<p><a href=\"users.php?uid=$uid&email=$x[0]&remove=1\">$REMOVE_USER</a></p>\n";
+
+   print "<p>&nbsp;</p>\n<a href=\"users.php\">$BACK.</a>\n";
 }
 
 else if($add == 1){
@@ -77,7 +82,7 @@ else if($add == 1){
    print "<input type=\"hidden\" name=\"add\" value=\"1\">\n";
    print "<table border=\"0\">\n";
 
-   $x = array('', '', '', 0);
+   $x = array('', '', '', 0, '');
    print_user($x);
 
    print "<tr colspan=\"2\"><td><input type=\"submit\" value=\"$ADD\"></td></tr>\n";
@@ -86,7 +91,7 @@ else if($add == 1){
 
 }
 
-else if($remove == 1 && $uid >= 1 && is_numeric($uid) && $email){
+else if($remove == 1 && $uid >= 1 && is_numeric($uid)){
    /* remove the given email address/alias */
 
    delete_existing_user_entry($uid, $email);

@@ -1,5 +1,11 @@
 0.4.0-rc1:
 
+2008.12.07, SJ
+
+Working user-, alias- and policy handling with both
+LDAP and MySQL backend.
+(webui/*)
+
 2008.12.04, SJ
 
 Template based virus notifications.

@@ -1,5 +1,5 @@
 /*
- * session.c, 2008.12.04, SJ
+ * session.c, 2008.12.10, SJ
  */
 
 #include <stdio.h>
@@ -103,7 +103,7 @@ void init_session_data(struct session_data *sdata){
 
    #ifdef HAVE_ANTIVIRUS
       int ret;
-      char virusinfo[SMALLBUFSIZE];
+      char virusinfo[SMALLBUFSIZE], engine[SMALLBUFSIZE];
    #endif
 
    #ifdef HAVE_LIBCLAMAV
@@ -118,7 +118,6 @@ void init_session_data(struct session_data *sdata){
     #endif
       struct timeval tv_spam_start, tv_spam_stop;
       struct _state sstate, sstate2;
-      //struct ue UE2;
       int train_mode=T_TOE;
 
       result.spaminess=DEFAULT_SPAMICITY;
@@ -387,6 +386,7 @@ void init_session_data(struct session_data *sdata){
 
                /* antivirus result is ok by default, 2006.02.08, SJ */
                rav = AVIR_OK;
+               memset(engine, 0, SMALLBUFSIZE);
 
                gettimeofday(&tv_rcvd, &tz);
 
@@ -410,6 +410,7 @@ void init_session_data(struct session_data *sdata){
                   memset(virusinfo, 0, SMALLBUFSIZE);
                   strncpy(virusinfo, virname, SMALLBUFSIZE-1);
                   rav = AVIR_VIRUS;
+                  snprintf(engine, SMALLBUFSIZE-1, "libClamAV");
                }
 
             #endif
@@ -428,6 +429,7 @@ void init_session_data(struct session_data *sdata){
 
                      if(avg_scan(cfg.avg_addr, cfg.avg_port, cfg.workdir, Qmime.tmpdir, sdata.ttmpfile, cfg.verbosity, virusinfo) == AV_VIRUS)
                         rav = AVIR_VIRUS;
+                        snprintf(engine, SMALLBUFSIZE-1, "AVG");
 
                      /* and remove files */
 
@@ -452,30 +454,40 @@ void init_session_data(struct session_data *sdata){
 
 
             #ifdef HAVE_AVAST
-               if(avast_scan(cfg.avast_addr, cfg.avast_port, cfg.workdir, sdata.ttmpfile, cfg.verbosity, virusinfo) == AV_VIRUS)
+               if(avast_scan(cfg.avast_addr, cfg.avast_port, cfg.workdir, sdata.ttmpfile, cfg.verbosity, virusinfo) == AV_VIRUS){
                   rav = AVIR_VIRUS;
+                  snprintf(engine, SMALLBUFSIZE-1, "Avast");
+               }
             #endif
 
 
             #ifdef HAVE_KAV
-               if(kav_scan(cfg.kav_socket, cfg.workdir, sdata.ttmpfile, cfg.verbosity, virusinfo) == AV_VIRUS)
+               if(kav_scan(cfg.kav_socket, cfg.workdir, sdata.ttmpfile, cfg.verbosity, virusinfo) == AV_VIRUS){
                   rav = AVIR_VIRUS;
+                  snprintf(engine, SMALLBUFSIZE-1, "Kaspersky");
+               }
             #endif
 
             #ifdef HAVE_DRWEB
-               if(drweb_scan(cfg.drweb_socket, sdata.ttmpfile, cfg.verbosity, virusinfo) == AV_VIRUS)
+               if(drweb_scan(cfg.drweb_socket, sdata.ttmpfile, cfg.verbosity, virusinfo) == AV_VIRUS){
                   rav = AVIR_VIRUS;
+                  snprintf(engine, SMALLBUFSIZE-1, "DR.Web");
+               }
             #endif
 
             #ifdef HAVE_CLAMD
                chmod(sdata.ttmpfile, 0644);
                if(strlen(cfg.clamd_addr) > 3){
-                  if(clamd_net_scan(cfg.clamd_addr, cfg.clamd_port, cfg.chrootdir, cfg.workdir, sdata.ttmpfile, cfg.verbosity, virusinfo) == AV_VIRUS)
+                  if(clamd_net_scan(cfg.clamd_addr, cfg.clamd_port, cfg.chrootdir, cfg.workdir, sdata.ttmpfile, cfg.verbosity, virusinfo) == AV_VIRUS){
                      rav = AVIR_VIRUS;
+                     snprintf(engine, SMALLBUFSIZE-1, "ClamAV");
+                  }
                }
                else {
-                  if(clamd_scan(cfg.clamd_socket, cfg.chrootdir, cfg.workdir, sdata.ttmpfile, cfg.verbosity, virusinfo) == AV_VIRUS)
+                  if(clamd_scan(cfg.clamd_socket, cfg.chrootdir, cfg.workdir, sdata.ttmpfile, cfg.verbosity, virusinfo) == AV_VIRUS){
                      rav = AVIR_VIRUS;
+                     snprintf(engine, SMALLBUFSIZE-1, "ClamAV");
+                  }
                }
             #endif
 
@@ -498,7 +510,7 @@ void init_session_data(struct session_data *sdata){
                      memset(email, 0, SMALLBUFSIZE);
                      extract_email(sdata.rcptto[0], email);
 
-                     if(get_template(VIRUS_TEMPLATE, buf, cfg.localpostmaster, email, email2, virusinfo) == 1){
+                     if(get_template(VIRUS_TEMPLATE, buf, cfg.localpostmaster, email, email2, virusinfo, engine) == 1){
 
                         snprintf(sdata.rcptto[0], MAXBUFSIZE-1, "RCPT TO: <%s>\r\n", cfg.localpostmaster);
                         sdata.num_of_rcpt_to = 1;

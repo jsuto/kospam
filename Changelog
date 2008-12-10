@@ -1,5 +1,10 @@
 0.4.0-rc1:
 
+2008.12.10, SJ
+
+Added the anti-virus engine info to the notification.
+(templates.c, templates.g, session.c, templates/template.virus)
+
 2008.12.07, SJ
 
 Working user-, alias- and policy handling with both

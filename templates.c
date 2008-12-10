@@ -1,5 +1,5 @@
 /*
-   templates.c, 2008.12.04, SJ
+   templates.c, 2008.12.10, SJ
 */
 
 #include <stdio.h>
@@ -12,7 +12,7 @@
 #include <clapf.h>
 
 
-int get_template(char *template, char *msg, char *postmaster, char *recipient, char *sender, char *virus){
+int get_template(char *template, char *msg, char *postmaster, char *recipient, char *sender, char *virus, char *engine){
    FILE *f;
    char buf[SMALLBUFSIZE], puf[SMALLBUFSIZE], *p;
 
@@ -32,6 +32,7 @@ int get_template(char *template, char *msg, char *postmaster, char *recipient, c
             else if(strcmp(puf, "RECIPIENTADDRESS") == 0) strncat(msg, recipient, MAXBUFSIZE-1);
             else if(strcmp(puf, "SENDERADDRESS") == 0) strncat(msg, sender, MAXBUFSIZE-1);
             else if(strcmp(puf, "THEVIRUS") == 0) strncat(msg, virus, MAXBUFSIZE-1);
+            else if(strcmp(puf, "ENGINE") == 0) strncat(msg, engine, MAXBUFSIZE-1);
 
             else strncat(msg, puf, MAXBUFSIZE-1);
          }

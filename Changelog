@@ -1,5 +1,13 @@
 0.4.0-rc1:
 
+2008.12.12, SJ
+
+Mydb modifications: added a qcache daemon to enable the clapf
+daemon to query tokens from the daemon.
+Please note that this is an experimental feature, and
+subject to changes in the future.
+(session.c, xdb.c, mydb.h)
+
 2008.12.10, SJ
 
 Added the anti-virus engine info to the notification.

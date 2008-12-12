@@ -38,6 +38,7 @@ int extract_email(char *rawmail, char *email);
 int readfrompool(int fd, void *_s, size_t n);
 int get_random_bytes(unsigned char *buf, int len);
 int recvtimeout(int s, char *buf, int len, int timeout);
+int recvtimeout2(int s, unsigned char *buf, int len, int timeout);
 int make_rnd_string(char *res);
 int is_valid_id(char *p);
 void log_ham_spam_per_email(char *tmpfile, char *email, int ham_or_spam);

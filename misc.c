@@ -646,6 +646,25 @@ int recvtimeout(int s, char *buf, int len, int timeout){
 }
 
 
+int recvtimeout2(int s, unsigned char *buf, int len, int timeout){
+    fd_set fds;
+    int n;
+    struct timeval tv;
+
+    FD_ZERO(&fds);
+    FD_SET(s, &fds);
+
+    tv.tv_sec = TIMEOUT;
+    tv.tv_usec = TIMEOUT_USEC;
+
+    n = select(s+1, &fds, NULL, NULL, &tv);
+    if (n == 0) return -2; // timeout!
+    if (n == -1) return -1; // error
+
+    return recv(s, buf, len, 0);
+}
+
+
 /*
  * create a random ID
  */

@@ -1,5 +1,5 @@
 /*
- * mydb.h, 2008.09.15, SJ
+ * mydb.h, 2008.12.12, SJ
  */
 
 #ifndef _MYDB_H
@@ -23,10 +23,19 @@ struct mydb_node {
    struct mydb_node *r;
 };
 
+struct x_token {
+   unsigned long long token;
+   float spaminess;
+};
+
 #define MYDB_HEADER_SIZE 8
 #define N_SIZE 16
 #define SEGMENT_SIZE 768
 #define MAX_MYDB_HASH 74713
+
+#define NETWORK_SEGMENT_SIZE 1000
+#define PKT_SIZE sizeof(struct x_token) * NETWORK_SEGMENT_SIZE
+#define MY_PORT 29781
 
 void init_my_hash(struct mydb_node *xhash[]);
 int init_mydb(char *mydb_file, struct mydb_node *xhash[], struct session_data *sdata);
@@ -43,5 +52,7 @@ int my_walk_hash(char *mydbfile, struct mydb_node *xhash[], int ham_or_spam, str
 int update_tokens(char *mydbfile, struct mydb_node *xhash[], struct _token *token);
 
 void hash_2_to_1(struct mydb_node *xhash[], struct mydb_node *xhash2[], struct mydb_node *xhash3[]);
+
+double x_spam_check(struct session_data *sdata, struct _state *state, struct __config cfg);
 
 #endif /* _MYDB_H */

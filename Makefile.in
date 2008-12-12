@@ -35,8 +35,8 @@ LIBCLAPF_VERSION=$(CLAPF_VERSION).$(CLAPF_REVISION).$(CLAPF_RELEASE)
 
 INSTALL = @INSTALL@
 
-all: clapf-lib clapf @spamsum@ @clapfstore@ splitmbox @cgi@ @parsembox@ @spamdrop@ @preparesql@ @qcache@ @test@ ui
-install: install-clapf @clapfstore_install@ install-splitmbox install-man @parsembox_install@ @spamsum_install@ @spamdrop_install@ @qcache_install@ @db_install@
+all: clapf-lib clapf @spamsum@ @clapfstore@ splitmbox @cgi@ @parsembox@ @spamdrop@ @preparesql@ @test@ ui
+install: install-clapf @clapfstore_install@ install-splitmbox install-man @parsembox_install@ @spamsum_install@ @spamdrop_install@ @db_install@
 
 clapf.conf.old:
 	sed -e 's%pidfile=.*%pidfile=$(localstatedir)/run/clapf.pid%' \
@@ -93,7 +93,7 @@ prepare-sql : % : %.o misc.o
 clapfstore:	% : %.o cfg.o misc.o ssl_util.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR) -lssl -lcrypto -ldl -lpthread
 
-mydb_stat mydb_compress:	%: %.o mydb.o misc.o hash.o chi.o score.o
+mydb_stat mydb_compress qcache:	%: %.o mydb.o misc.o hash.o chi.o score.o cfg.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
 
 ui:
@@ -104,9 +104,6 @@ spamsum:
 
 test:
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o spamtest $(srcdir)/test.c -lclapf $(LIBS) $(LDAP_LIBS) @spamsum_libs@ $(LIBDIR) @LDFLAGS@
-
-qcache: qs.o misc.o cfg.o qcache.o
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o qs $^ $(LIBS) -lpthread $(LIBDIR)
 
 %.o: $(srcdir)/%.c
 	$(CC) $(CFLAGS) -fPIC $(INCDIR) $(DEFS) -c $< -o $@
@@ -228,9 +225,6 @@ install-man:
 	$(INSTALL) -m 0644 $(srcdir)/doc/man/clapf.8 $(DESTDIR)$(mandir)/man8
 
 
-install-qcache:
-	$(INSTALL) -m 0755 qs $(DESTDIR)$(bindir)
-
 uninstall:
 	rm -f $(DESTDIR)$(bindir)/parsembox
 	rm -f $(DESTDIR)$(bindir)/spamtest
@@ -256,7 +250,7 @@ clean_db:
 	rm -f ham.tmp spam.tmp num_of_spam.tmp num_of_ham.tmp tokens.mydb temp.*
 
 clean:
-	rm -f *.o *.a libclapf.so* qs db.sql clapf clapfstore clapf.conf parsembox splitmbox spamtest spamdrop spamcgi traincgi trainlogcgi usercgi statcgi spamstat aphash prepare-sql mydb_stat mydb_compress
+	rm -f *.o *.a libclapf.so* qcache db.sql clapf clapfstore clapf.conf parsembox splitmbox spamtest spamdrop spamcgi traincgi trainlogcgi usercgi statcgi spamstat aphash prepare-sql mydb_stat mydb_compress
 	(cd $(srcdir)/contrib/spamsum; make clean)
 	rm -f webui/config.php
 

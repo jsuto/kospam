@@ -104,19 +104,13 @@ int main(int argc, char **argv){
 #endif
 
 #ifdef HAVE_MYDB
+   //result.spaminess = x_spam_check(&sdata, &state, cfg);
+
    rc = init_mydb(cfg.mydbfile, mhash, &sdata);
    fprintf(stderr, "using %s. %.0f, %0.f ...\n", cfg.mydbfile, sdata.Nham, sdata.Nspam);
    if(rc == 1){
       result = bayes_file(mhash, state, sdata, cfg);
 
-      /*struct session_data sdata2;
-      init_mydb("/home/sj/temp/aaa.mydb", mhash2, &sdata2);
-      hash_2_to_1(mhash3, mhash, mhash2);
-      sdata.Nham += sdata2.Nham;
-      sdata.Nspam += sdata2.Nspam;
-      result = bayes_file(mhash3, state, sdata, cfg);
-      close_mydb(mhash2);
-      close_mydb(mhash3);*/
    }
    close_mydb(mhash);
 #endif

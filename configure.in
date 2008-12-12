@@ -22,11 +22,9 @@ AC_SUBST(clapfstore)
 AC_SUBST(clapfstore_install)
 AC_SUBST(cgi)
 AC_SUBST(parsembox_install)
-AC_SUBST(qcache)
 AC_SUBST(spamdrop)
 AC_SUBST(spamdrop_install)
 AC_SUBST(preparesql)
-AC_SUBST(qcache_install)
 AC_SUBST(test)
 AC_SUBST(mysql_includes)
 AC_SUBST(mysql_libs)
@@ -373,7 +371,7 @@ AC_ARG_WITH(tokendb,
   if test "$withval" = "mydb"; then
      have_spamdrop="yes"
      parsembox="$parsembox"
-     spamdrop="spamdrop mydb_stat mydb_compress"
+     spamdrop="spamdrop mydb_stat mydb_compress qcache"
      preparesql="prepare-sql aphash"
      spamdrop_install="install-spamdrop"
      test="test"
@@ -384,18 +382,6 @@ AC_ARG_WITH(tokendb,
 
 
 ])
-
-
-dnl temporarily disable the qcache support
-dnl AC_ARG_WITH(qcache,
-dnl [  --with-qcache[[=tcp|socket]]      use Qcache via either a TCP or Unix domain socket (default: none)],[
-dnl if test "$withval" != "no" -a "$withval" != "yes"; then
-dnl    QCACHE=$withval
-dnl  else
-dnl    echo "please specify the connection type of the qcache: tcp or unix socket"; exit 1;
-dnl  fi
-dnl ])
-
 
 
 dnl lmtp support
@@ -531,7 +517,7 @@ fi
 
 if test "$TOKENDB" = "mydb"; then
    defs="$defs -DHAVE_MYDB"
-   mysql_obj="mydb.o"
+   mysql_obj="mydb.o xdb.o"
 fi
 
 if test "x$QCACHE" != "x"; then
@@ -700,19 +686,6 @@ echo "token database backend: $TOKENDB"
 
 if test "$TOKENDB" = "sqlite3"; then
    db_install="install-sqlite3"
-fi
-
-if test "$QCACHE" = "tcp"; then
-   defs="$defs -DHAVE_QCACHE -DHAVE_TCP"
-   echo "Qcache: tcp"
-   qcache="qcache"
-   qcache_install="install-qcache"
-fi
-if test "$QCACHE" = "socket"; then
-   defs="$defs -DHAVE_QCACHE"
-   echo "Qcache: socket"
-   qcache="qcache"
-   qcache_install="install-qcache"
 fi
 
 if test "$have_store" = "yes"; then

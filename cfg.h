@@ -1,5 +1,5 @@
 /*
- * cfg.h, 2008.12.04, SJ
+ * cfg.h, 2008.12.13, SJ
  */
 
 #ifndef _CFG_H
@@ -59,17 +59,12 @@ struct __config {
 
    int use_antispam;
 
-   char userprefdb[MAXVAL];
-
    char spam_subject_prefix[MAXVAL];
 
-   int use_triplets;
    int use_pairs;
    int use_single_tokens;
 
    int enable_auto_white_list;
-
-   int min_phrase_number;
 
    float rob_s;
    float rob_x;
@@ -93,8 +88,6 @@ struct __config {
 
    float spam_overall_limit;
    float spaminess_oblivion_limit;
-   float use_single_tokens_min_limit;
-   float min_deviation_to_use_single_tokens;
 
    float spaminess_of_strange_language_stuff;
    float spaminess_of_too_much_spam_in_top15;
@@ -102,10 +95,6 @@ struct __config {
    float spaminess_of_text_and_base64;
    float spaminess_of_caught_by_surbl;
    float spaminess_of_embed_image;
-
-   int use_all_the_most_interesting_tokens;
-
-   float spam_ratio_in_top10;
 
    int replace_junk_characters;
    int invalid_junk_limit;
@@ -165,24 +154,6 @@ struct __config {
    char store_addr[MAXVAL];
    int store_port;
    char store_secret[MAXVAL];
-
-   // web interface
-
-   int relocate_delay;
-   char relocate_url[MAXVAL];
-   char spamcgi_url[MAXVAL];
-   char traincgi_url[MAXVAL];
-   char trainlogcgi_url[MAXVAL];
-   char usercgi_url[MAXVAL];
-   char statcgi_url[MAXVAL];
-   char clapfadmincgi_url[MAXVAL];
-   int page_len;
-   char admin_user[MAXVAL];
-
-   // spam quarantine
-
-   char spam_mail_from[MAXVAL];
-   char spam_quarantine_dir[MAXVAL];
 
    char spam_smtp_addr[MAXVAL];
    int spam_smtp_port;

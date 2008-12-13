@@ -655,7 +655,6 @@ preparesql
 spamdrop_install
 spamdrop
 parsembox_install
-cgi
 clapfstore_install
 clapfstore
 parsembox
@@ -730,7 +729,6 @@ enable_case
 enable_rbl
 enable_all_received
 enable_blackhole
-enable_cgi
 with_userdb
 enable_policy
 with_tokendb
@@ -1381,7 +1379,6 @@ Optional Features:
   --enable-rbl            use the (SU)RBL database
   --enable-all-received   check all the IP-addresses from "Received: from ..." lines against blacklists
   --enable-blackhole      build the blackhole feature
-  --enable-cgi            build the web interface to train the database
   --enable-policy         enable the policy feature
   --enable-lmtp           use LMTP local delivery (default: SMTP)
   --enable-language-detection use the language detection feature (experimental)
@@ -3848,7 +3845,6 @@ done
 
 
 
-
 have_libclamav="no"
 have_clamd="no"
 have_avg="no"
@@ -3859,7 +3855,6 @@ have_drweb="no"
 have_antivirus="no"
 have_antispam="no"
 have_blackhole="no"
-have_cgi="no"
 have_spamdrop="no"
 have_mysql="no"
 have_sqlite3="no"
@@ -5084,22 +5079,6 @@ fi
     if test "$want_blackhole" = "yes"; then
        have_blackhole="yes"
        echo "So you've selected the blackhole feature ... good"
-    fi
-
-
-
-    # Check whether --enable-cgi was given.
-if test "${enable_cgi+set}" = set; then
-  enableval=$enable_cgi; want_cgi=$enableval
-else
-  want_cgi="no"
-fi
-
-
-    if test "$want_cgi" = "yes"; then
-
-       have_cgi="yes"
-
     fi
 
 
@@ -6415,24 +6394,6 @@ else
    echo "blackhole feature: no"
 fi
 
-if test "$have_spamdrop" = "yes"; then
-   echo "train utilities: yes"
-else
-   echo "train utilities: no"
-fi
-
-if test "$have_cgi" = "yes"; then
-   echo "CGI interface: yes"
-   if test "$TOKENDB" = "mysql" || test "$TOKENDB" = "sqlite3"; then
-      cgi="spamcgi usercgi traincgi trainlogcgi statcgi"
-   else
-      cgi="spamcgi usercgi traincgi"
-   fi
-else
-   echo "CGI interface: no"
-fi
-
-
 if test "$have_rbl" = "yes"; then
    echo "(SU)RBL support: yes"
    defs="$defs -DHAVE_RBL"
@@ -6456,13 +6417,11 @@ fi
 if test "$USERDB" = "mysql" && test "$have_mysql" = "yes"; then
    echo "user database: mysql"
    defs="$defs -DUSERS_IN_MYSQL"
-   #user_obj="user.o"
 fi
 
 if test "$USERDB" = "sqlite3" && test "$have_sqlite3" = "yes"; then
    echo "user database: sqlite3"
    defs="$defs -DUSERS_IN_SQLITE3"
-   #user_obj="user.o"
 fi
 
 if test "$USERDB" = "ldap" && test "$have_ldap" = "yes"; then
@@ -6565,7 +6524,7 @@ echo; echo
 
 CFLAGS="$static -O2 -Wall -g"
 LIBS="$libclamav $antispam_libs $gsl_libs $sqlite3_libs"
-OBJS="misc.o cfg.o smtp.o sig.o decoder.o list.o parser.o cgi.o session.o users.o templates.o $objs"
+OBJS="misc.o cfg.o smtp.o sig.o decoder.o list.o parser.o session.o users.o templates.o $objs"
 
 ac_config_files="$ac_config_files Makefile"
 

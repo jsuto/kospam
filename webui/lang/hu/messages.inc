@@ -71,6 +71,7 @@ $SUBJECT = "Tárgy";
 $SUCCESSFULLY_REMOVED = "A törlés sikerült";
 
 $TOTAL = "Összes";
+$TRAIN_AND_DELIVER = "Tanítás és kézbesítés";
 
 $USERLIST = "Felhasználók listája";
 $USERNAME = "Felhasználónév";
@@ -103,6 +104,7 @@ $err_you_are_not_admin = "Ön nem adminisztrátor szintû felhasználó";
 
 $err_message_delivered = "Üzenet sikeresen továbbítva: ";
 $err_message_failed_to_deliver = "Sikertelen üzenet továbbítás: ";
+$err_message_failed_to_train = "Sikertelen tanítás";
 
 $err_cannot_view_default_policy = "Az alapértelmezett házirend a clapf.conf állományban nézhetõ/módosítható";
 $err_added_new_policy = "Új házirend felvéve";

@@ -150,10 +150,11 @@ function show_existing_users(){
 
 
 function print_user($x, $ro_uid = 0){
-   global $EMAIL_ADDRESS, $USERNAME, $USERID, $POLICY_GROUP, $ALIASES, $default_policy;
+   global $EMAIL_ADDRESS, $USERNAME, $USERID, $POLICY_GROUP, $ALIASES, $WHITELIST, $default_policy;
 
    $len = 30;
    $aliases = "";
+   $whitelist = "";
 
    print "<input type=\"hidden\" name=\"cn\" value=\"$x[1]\">\n";
 
@@ -182,6 +183,14 @@ function print_user($x, $ro_uid = 0){
    }
 
    print "<tr valign=\"top\"><td>$ALIASES:</td><td><textarea name=\"mailAlternateAddress\" cols=\"$len\" rows=\"5\">$aliases</textarea></td></tr>\n";
+
+   if($x[5]){
+      array_shift($x[5]);
+      while(list($k, $v) = each($x[5])) $whitelist .= "$v\n";
+      $whitelist = preg_replace("/\n$/", "", $whitelist);
+   }
+
+   print "<tr valign=\"top\"><td>$WHITELIST:</td><td><textarea name=\"filtersender\" cols=\"$len\" rows=\"5\">$whitelist</textarea></td></tr>\n";
 
 }
 
@@ -214,6 +223,7 @@ function get_user_entry($uid){
       $a[2] = $info[0]["uid"][0];
       $a[3] = $info[0]["policygroupid"][0];
       $a[4] = $info[0]["mailalternateaddress"];
+      $a[5] = $info[0]["filtersender"];
    }
 
    return $a;
@@ -251,12 +261,15 @@ function update_user($uid){
    global $basedn, $conn, $user_base_dn, $err_user_failed_to_modify;
 
    $entry = array();
-   $a = explode("\n", $_POST['mailAlternateAddress']);
+
+   $a = trim_to_array($_POST['mailAlternateAddress']);
+   $b = trim_to_array($_POST['filtersender']);
 
    $entry["cn"] = $_POST['username'];
    $entry["mail"] = $_POST['email'];
    $entry["policyGroupId"] = $_POST['policy_group'];
    $entry["mailAlternateAddress"] = $a;
+   $entry["filtersender"] = $b;
 
    $dn = "cn=" . $_POST['cn'] . ",$user_base_dn";
 

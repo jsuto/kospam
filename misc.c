@@ -726,6 +726,8 @@ int extract_id_from_message(char *messagefile, char *clapf_header_field, char *I
    int i=0, fd, len, train_mode=T_TOE;
    char *p, *q, *r, buf[8*MAXBUFSIZE], puf[SMALLBUFSIZE];
 
+   memset(ID, 0, RND_STR_LEN+1);
+
    fd = open(messagefile, O_RDONLY);
    if(fd == -1) return -1;
 

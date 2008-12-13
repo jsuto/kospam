@@ -9,5 +9,6 @@ update it, you should review the newer config file and modify it
 according to your settings.
 
 
-4. Update the t_white_list and user tables according to the new db.sql schema.
+4. Update the t_white_list and user tables, then create the t_policy
+table according to the new db.sql schema.
 

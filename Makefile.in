@@ -35,20 +35,9 @@ LIBCLAPF_VERSION=$(CLAPF_VERSION).$(CLAPF_REVISION).$(CLAPF_RELEASE)
 
 INSTALL = @INSTALL@
 
-all: clapf-lib clapf @spamsum@ @clapfstore@ splitmbox @cgi@ @parsembox@ @spamdrop@ @preparesql@ @test@ ui
+all: clapf-lib clapf @spamsum@ @clapfstore@ splitmbox @parsembox@ @spamdrop@ @preparesql@ @test@ ui
 install: install-clapf @clapfstore_install@ install-splitmbox install-man @parsembox_install@ @spamsum_install@ @spamdrop_install@ @db_install@
 
-clapf.conf.old:
-	sed -e 's%pidfile=.*%pidfile=$(localstatedir)/run/clapf.pid%' \
-	    -e 's%clamd_socket=.*%clamd_socket=$(localstatedir)/run/clamav/clamd.ctl%' \
-	    -e 's%tokensfile=.*%clamd_socket=$(localstatedir)/lib/clapf/tokens.cdb%' \
-	    -e 's%blackhole_path=.*%clamd_socket=$(localstatedir)/lib/clapf/blackhole%' \
-	    -e 's%mysqlsocket=.*%mysqlsocket=$(localstatedir)/run/mysqld/mysqld.sock%' \
-	    -e 's%sqlite3=.*%sqlite3=$(localstatedir)/lib/clapf/tokens.sdb%' \
-	    -e 's%saved_ham_path=.*%saved_ham_path=$(localstatedir)/lib/clapf/saved/ham%' \
-	    -e 's%saved_spam_path=.*%saved_spam_path=$(localstatedir)/lib/clapf/saved/spam%' \
-	    -e 's%spam_quarantine_dir=.*%spam_quarantine_dir=$(localstatedir)/lib/clapf/spamquarantine%' \
-	    -e 's%workdir=.*%workdir=/tmp%' <$(srcdir)/example.conf >$@
 
 clapf.conf:
 	sed -e 's%pidfile=.*%pidfile=$(localstatedir)/lib/clapf/clapf.pid%' \
@@ -79,9 +68,6 @@ spamdrop: % : %.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ -lclapf @spamsum_libs@ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
 
 splitmbox: % : %.o misc.o decoder.o list.o parser.o
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
-
-spamcgi spamstat usercgi traincgi trainlogcgi statcgi clapfadmincgi: % : %.o $(OBJS) $(USER_OBJ) $(MYSQL_OBJS)
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
 
 aphash: % : %.o misc.o
@@ -250,7 +236,7 @@ clean_db:
 	rm -f ham.tmp spam.tmp num_of_spam.tmp num_of_ham.tmp tokens.mydb temp.*
 
 clean:
-	rm -f *.o *.a libclapf.so* qcache db.sql clapf clapfstore clapf.conf parsembox splitmbox spamtest spamdrop spamcgi traincgi trainlogcgi usercgi statcgi spamstat aphash prepare-sql mydb_stat mydb_compress
+	rm -f *.o *.a libclapf.so* qcache db.sql clapf clapfstore clapf.conf parsembox splitmbox spamtest spamdrop spamstat aphash prepare-sql mydb_stat mydb_compress
 	(cd $(srcdir)/contrib/spamsum; make clean)
 	rm -f webui/config.php
 

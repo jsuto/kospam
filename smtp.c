@@ -15,7 +15,6 @@
 #include "smtpcodes.h"
 #include "config.h"
 #include "misc.h"
-#include "user.h"
 #include "parser.h"
 #include "cfg.h"
 

@@ -64,6 +64,19 @@ function gen_random_id($n){
 }
 
 
+function trim_to_array($x){
+   $a = array();
+
+   $z = explode("\n", $x);
+   while(list($k, $v) = each($z)){
+      $v = rtrim($v);
+      if($v) array_push($a, $v);
+   }
+
+   return $a;
+}
+
+
 function check_email($email){
    if($email == "")
       return false;
@@ -89,11 +102,11 @@ function send_smtp_email($smtphost, $smtpport, $yourdomain, $from, $to, $msg){
    if(!$r) return -1;
 
    $l = fgets($r, 4096);
+
    fputs($r, "HELO $yourdomain\r\n");
-
    $l = fgets($r, 4096);
-   fputs($r, "MAIL FROM: <$from>\r\n");
 
+   fputs($r, "MAIL FROM: <$from>\r\n");
    $l = fgets($r, 4096);
 
    fputs($r, "RCPT TO: <$to>\r\n");
@@ -101,11 +114,12 @@ function send_smtp_email($smtphost, $smtpport, $yourdomain, $from, $to, $msg){
 
 
    fputs($r, "DATA\r\n");
-
    $l = fgets($r, 4096);
+   if(!preg_match("/^354/", $l)) $l = fgets($r, 4096);
+
    fputs($r, $msg . "\n.\r\n");
-
    $l = fgets($r, 4096);
+
    if(preg_match("/^250/", $l)){ $ok = 1; }
 
    fputs($r, "QUIT\r\n");

@@ -59,12 +59,15 @@ else if($modify == 1 && $uid >= 0 && is_numeric($uid) && $email && $username){
 }
 
 else if($edit == 1 && $uid >= 1 && is_numeric($uid)){
+   $x = get_user_entry($uid);
+
    print "<form action=\"users.php\" name=\"modifyuser\" method=\"post\">\n";
    print "<input type=\"hidden\" name=\"modify\" value=\"1\">\n";
    print "<input type=\"hidden\" name=\"uid\" value=\"$uid\">\n";
+   print "<input type=\"hidden\" name=\"email_orig\" value=\"$x[0]\">\n";
+
    print "<table border=\"0\">\n";
 
-   $x = get_user_entry($uid);
    print_user($x, 1);
 
    print "<tr><td>&nbsp;</td><td><input type=\"submit\" value=\"$MODIFY\"> <input type=\"reset\" value=\"$CANCEL\"></td></tr>\n";
@@ -82,7 +85,7 @@ else if($add == 1){
    print "<input type=\"hidden\" name=\"add\" value=\"1\">\n";
    print "<table border=\"0\">\n";
 
-   $x = array('', '', '', 0, '');
+   $x = array('', '', '', 0, '', '');
    print_user($x);
 
    print "<tr colspan=\"2\"><td><input type=\"submit\" value=\"$ADD\"></td></tr>\n";

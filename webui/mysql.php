@@ -85,7 +85,9 @@ function get_users_email_address($username){
 
 
 function print_user($x, $ro_uid = 0){
-   global $EMAIL_ADDRESS, $USERNAME, $USERID, $POLICY_GROUP, $default_policy;
+   global $EMAIL_ADDRESS, $USERNAME, $USERID, $POLICY_GROUP, $WHITELIST, $default_policy;
+
+   $len = 30;
 
    print "<tr><td>$EMAIL_ADDRESS:</td><td><input type=\"text\" name=\"email\" value=\"$x[0]\"></td></tr>\n";
    print "<tr><td>$USERNAME:</td><td><input type=\"text\" name=\"username\" value=\"$x[1]\"></td></tr>\n";
@@ -102,13 +104,15 @@ function print_user($x, $ro_uid = 0){
    show_existing_policy_groups($x[3]);
    print "</select>\n";
 
+   print "<tr valign=\"top\"><td>$WHITELIST:</td><td><textarea name=\"whitelist\" cols=\"$len\" rows=\"5\">$x[4]</textarea></td></tr>\n";
+
    print "</td></tr>\n";
 
 }
 
 
 function get_user_entry($uid, $email = ""){
-   global $user_table, $err_sql_error;
+   global $user_table, $whitelist_table, $err_sql_error;
 
    $x = array();
 
@@ -121,6 +125,13 @@ function get_user_entry($uid, $email = ""){
    $r = mysql_query($stmt) or nice_error($err_sql_error);
    $x = mysql_fetch_row($r);
    mysql_free_result($r);
+
+   $stmt = "SELECT whitelist FROM $whitelist_table WHERE uid=$uid";
+   $r = mysql_query($stmt) or nice_error($err_sql_error);
+   list($whitelist) = mysql_fetch_row($r) or nice_error($err_sql_error);
+   mysql_free_result($r);
+
+   array_push($x, $whitelist);
 
    return $x;
 }
@@ -171,13 +182,16 @@ function add_user_entry($u, $user, $mail, $policy_group){
 
 
 function update_user($uid){
-   global $user_table, $err_sql_error;
+   global $user_table, $whitelist_table, $err_sql_error;
 
    while(list($k, $v) = each($_POST)) $$k = mysql_real_escape_string($v);
 
-   $stmt = "UPDATE $user_table SET username='$username', email='$email', policy_group=$policy_group WHERE uid=$uid";
-
+   $stmt = "UPDATE $user_table SET username='$username', email='$email', policy_group=$policy_group WHERE uid=$uid AND email='$email_orig'";
    mysql_query($stmt) or nice_error($err_sql_error);
+
+   $stmt = "UPDATE $whitelist_table SET whitelist='$whitelist' WHERE uid=$uid";
+   mysql_query($stmt) or nice_error($err_sql_error);
+
 }
 
 

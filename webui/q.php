@@ -12,6 +12,7 @@ $subj = "";
 $id = "";
 $remove = "";
 $deliver = "";
+$train = "";
 
 $topurge = 0;
 
@@ -22,6 +23,7 @@ if(isset($_GET['subj'])) $subj = $_GET['subj'];
 if(isset($_GET['id'])) $id = $_GET['id'];
 if(isset($_GET['remove'])) $remove = $_GET['remove'];
 if(isset($_GET['deliver'])) $deliver = $_GET['deliver'];
+if(isset($_GET['train'])) $train = $_GET['train'];
 
 if(isset($_POST['topurge'])) $topurge = $_POST['topurge'];
 if(isset($_POST['user'])) $user = $_POST['user'];
@@ -79,7 +81,7 @@ if($_SERVER['REQUEST_METHOD'] == "GET"){
    /* show selected message ... */
 
    else if($id){
-      print "<p><a href=\"$meurl?remove=$id&user=$username\">$REMOVE</a> <a href=\"$meurl?deliver=$id&user=$username\">$DELIVER</a></p>\n";
+      print "<p><a href=\"$meurl?remove=$id&user=$username\">$REMOVE</a> <a href=\"$meurl?deliver=$id&user=$username\">$DELIVER</a> <a href=\"$meurl?train=$id&user=$username\">$TRAIN_AND_DELIVER</a></p>\n";
 
       print "<pre>\n";
       show_message($my_q_dir, $id);
@@ -88,10 +90,24 @@ if($_SERVER['REQUEST_METHOD'] == "GET"){
 
    /* release message from quarantine */
 
-   else if($deliver){
+   else if($train || $deliver){
       if($username == "aaa") nice_error("I don't deliver for the demo user....");
 
+      if($train) $deliver = $train;
+
       $m = get_message_for_delivery($my_q_dir . "/$deliver", $fromaddr);
+
+      if($train){
+         $fromaddr = get_users_email_address($username);
+         $id = preg_replace("/s./", "", $train);
+
+         $m2 = "From: $fromaddr\r\nTo: $ham_train_address\r\nSubject: training a spam as ham\r\n\r\n\r\n";
+         $m2 .= "$clapf_header_field$id\r\n" . $m;
+
+         $x = send_smtp_email($smtphost, $clapfport, $yourdomain, $fromaddr, $ham_train_address, $m2);
+         if(!$x) nice_error("$err_message_failed_to_train");
+      }
+
 
       /* get user's email address */
 

@@ -1,5 +1,21 @@
 0.4.0-rc1:
 
+2008.12.13, SJ
+
+Removed the cgi utilities since the web ui is a nicer implementation.
+(*cgi.c, Makefile.in, configure*)
+
+Added training support to the web ui.
+(webui/config.in.php, webui/q.php)
+
+The mail administrators may edit the per user whitelists as well
+as the global whitelist.
+(webui/mysql.php, webui/ldap.php)
+
+Removed some unused configuration parameters from example.conf
+(example.conf, cfg.c, cfg.h)
+
+
 2008.12.12, SJ
 
 Mydb modifications: added a qcache daemon to enable the clapf

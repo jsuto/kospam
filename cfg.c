@@ -1,5 +1,5 @@
 /*
- * cfg.c, 2008.12.04, SJ
+ * cfg.c, 2008.12.13, SJ
  */
 
 #include <stdio.h>
@@ -93,8 +93,6 @@ struct __config read_config(char *configfile){
 
    cfg.spam_overall_limit = 0.92;
    cfg.spaminess_oblivion_limit=1.01;
-   cfg.min_deviation_to_use_single_tokens = 0.1;
-   cfg.use_single_tokens_min_limit = 0.85;
 
    cfg.spaminess_of_strange_language_stuff = 0.9876;
    cfg.spaminess_of_too_much_spam_in_top15 = 0.9998;
@@ -102,9 +100,6 @@ struct __config read_config(char *configfile){
    cfg.spaminess_of_text_and_base64 = 0;
    cfg.spaminess_of_caught_by_surbl = 0.9997;
    cfg.spaminess_of_embed_image = 0.9994;
-
-   cfg.use_all_the_most_interesting_tokens = 1;
-   cfg.spam_ratio_in_top10 = 0.9;
 
    cfg.replace_junk_characters = 1;
    cfg.invalid_junk_limit = INVALID_JUNK_LIMIT;
@@ -120,8 +115,6 @@ struct __config read_config(char *configfile){
    cfg.use_pairs = 1;
    cfg.use_single_tokens = 1;
 
-   cfg.min_phrase_number = MIN_PHRASE_NUMBER;
-
    cfg.enable_auto_white_list = 1;
 
    cfg.store_metadata = 1;
@@ -133,9 +126,7 @@ struct __config read_config(char *configfile){
 
    cfg.exclusion_radius = EXCLUSION_RADIUS;
 
-   cfg.max_message_size_to_filter = 0;
-
-   cfg.relocate_delay = 5;
+   cfg.max_message_size_to_filter = 65535;
 
    cfg.use_libclamav_block_max_feature = 1;
    cfg.clamav_maxfile = MAXFILES;
@@ -148,8 +139,6 @@ struct __config read_config(char *configfile){
 
    cfg.mysql_connect_timeout = 2;
    cfg.mysql_enable_autoreconnect = 0;
-
-   cfg.page_len = MESSAGES_PER_ONE_PAGE;
 
    strncpy(cfg.pidfile, PIDFILE, MAXVAL-1);
 
@@ -292,28 +281,15 @@ struct __config read_config(char *configfile){
                      cfg.use_antispam = atoi(val);
 
 
-                  if(strcmp(key, "userprefdb") == 0)
-                     memcpy(cfg.userprefdb, val, MAXVAL-1);
-
                   if(strcmp(key, "spam_subject_prefix") == 0)
                      memcpy(cfg.spam_subject_prefix, val, MAXVAL-1);
 
-
-                  if(strcmp(key, "spam_quarantine_dir") == 0)
-                     memcpy(cfg.spam_quarantine_dir, val, MAXVAL-1);
-
-
-                  if(strcmp(key, "use_triplets") == 0)
-                     cfg.use_triplets = atoi(val);
 
                   if(strcmp(key, "use_pairs") == 0)
                      cfg.use_pairs = atoi(val);
 
                   if(strcmp(key, "use_single_tokens") == 0)
                      cfg.use_single_tokens = atoi(val);
-
-                  if(strcmp(key, "min_phrase_number") == 0)
-                     cfg.min_phrase_number = atoi(val);
 
                   if(strcmp(key, "enable_auto_white_list") == 0)
                      cfg.enable_auto_white_list = atoi(val);
@@ -364,12 +340,6 @@ struct __config read_config(char *configfile){
                   if(strcmp(key, "spaminess_oblivion_limit") == 0)
                      cfg.spaminess_oblivion_limit = atof(val);
 
-                  if(strcmp(key, "use_single_tokens_min_limit") == 0)
-                     cfg.use_single_tokens_min_limit = atof(val);
-
-                  if(strcmp(key, "min_deviation_to_use_single_tokens") == 0)
-                     cfg.min_deviation_to_use_single_tokens = atof(val);
-
                   if(strcmp(key, "spaminess_of_strange_language_stuff") == 0)
                      cfg.spaminess_of_strange_language_stuff = atof(val);
 
@@ -387,12 +357,6 @@ struct __config read_config(char *configfile){
 
                   if(strcmp(key, "spaminess_of_embed_image") == 0)
                      cfg.spaminess_of_embed_image = atof(val);
-
-                  if(strcmp(key, "use_all_the_most_interesting_tokens") == 0)
-                     cfg.use_all_the_most_interesting_tokens = atoi(val);
-
-                  if(strcmp(key, "spam_ratio_in_top10") == 0)
-                     cfg.spam_ratio_in_top10 = atof(val);
 
                   if(strcmp(key, "replace_junk_characters") == 0)
                      cfg.replace_junk_characters = atoi(val);
@@ -486,40 +450,6 @@ struct __config read_config(char *configfile){
 
                   if(strcmp(key, "mydbfile") == 0)
                      memcpy(cfg.mydbfile, val, MAXVAL-1);
-
-                  if(strcmp(key, "relocate_delay") == 0)
-                     cfg.relocate_delay = atoi(val);
-
-                  if(strcmp(key, "relocate_url") == 0)
-                     memcpy(cfg.relocate_url, val, MAXVAL-1);
-
-                  if(strcmp(key, "spamcgi_url") == 0)
-                     memcpy(cfg.spamcgi_url, val, MAXVAL-1);
-
-                  if(strcmp(key, "traincgi_url") == 0)
-                     memcpy(cfg.traincgi_url, val, MAXVAL-1);
-
-                  if(strcmp(key, "usercgi_url") == 0)
-                     memcpy(cfg.usercgi_url, val, MAXVAL-1);
-
-                  if(strcmp(key, "trainlogcgi_url") == 0)
-                     memcpy(cfg.trainlogcgi_url, val, MAXVAL-1);
-
-                  if(strcmp(key, "statcgi_url") == 0)
-                     memcpy(cfg.statcgi_url, val, MAXVAL-1);
-
-                  if(strcmp(key, "clapfadmincgi_url") == 0)
-                     memcpy(cfg.clapfadmincgi_url, val, MAXVAL-1);
-
-
-                  if(strcmp(key, "page_len") == 0)
-                     cfg.page_len = atoi(val);
-
-                  if(strcmp(key, "admin_user") == 0)
-                     memcpy(cfg.admin_user, val, MAXVAL-1);
-
-                  if(strcmp(key, "spam_mail_from") == 0)
-                     memcpy(cfg.spam_mail_from, val, MAXVAL-1);
 
                   if(strcmp(key, "spam_smtp_addr") == 0)
                      memcpy(cfg.spam_smtp_addr, val, MAXVAL-1);

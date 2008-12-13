@@ -40,7 +40,7 @@ make clean all
 install -d %{buildroot}/etc/init.d
 install -m 755 %{SOURCE1} %{buildroot}/etc/init.d/%{name}
 
-cat example.conf | sed 's/^workdir=.*$/workdir=\/var\/spool\/clapf/g' | sed 's/^quarantine_dir=.*$/quarantine_dir=\/var\/spool\/clapf\/quarantine/g' | sed 's/^spam_quarantine_dir=.*$/spam_quarantine_dir=\/var\/spool\/clapf\/spamquarantine/g' | sed 's/^tokensfile=.*/tokensfile=\/var\/spool\/clapf\/tokens.cdb/g' | sed 's/^raw_text_datafile=.*/raw_text_datafile=\/var\/spool\/clapf\/tokens.raw/g' > example2.conf
+cat example.conf | sed 's/^workdir=.*$/workdir=\/var\/spool\/clapf/g' | sed 's/^quarantine_dir=.*$/quarantine_dir=\/var\/spool\/clapf\/quarantine/g' | sed 's/^tokensfile=.*/tokensfile=\/var\/spool\/clapf\/tokens.cdb/g' | sed 's/^raw_text_datafile=.*/raw_text_datafile=\/var\/spool\/clapf\/tokens.raw/g' > example2.conf
 install -m 644 example2.conf %{buildroot}/etc/%{name}.conf
 
 install -d %{buildroot}/var/spool/clapf/quarantine

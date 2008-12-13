@@ -71,6 +71,7 @@ $SUBJECT = "Subject";
 $SUCCESSFULLY_REMOVED = "Successfully removed";
 
 $TOTAL = "Total";
+$TRAIN_AND_DELIVER = "Train and deliver";
 
 $USERLIST = "User's list";
 $USERNAME = "Username";
@@ -103,6 +104,7 @@ $err_you_are_not_admin = "You are not an admin user";
 
 $err_message_delivered = "Message delivered to";
 $err_message_failed_to_deliver = "Message failed to deliver to";
+$err_message_failed_to_train = "Message failed to train";
 
 $err_cannot_view_default_policy = "The default policy can be view/edit in clapf.conf";
 $err_added_new_policy = "Added new policy";

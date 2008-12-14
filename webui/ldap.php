@@ -230,7 +230,7 @@ function get_user_entry($uid){
 }
 
 
-function add_user_entry($u, $user, $mail, $policy_group){
+function add_user_entry($uid){
    global $basedn, $conn, $user_base_dn, $err_existing_user, $err_failed_to_add_user, $BACK;
 
    $entry = array();
@@ -240,15 +240,20 @@ function add_user_entry($u, $user, $mail, $policy_group){
    $a[2] = "qmailUser";
    $a[3] = "qmailGroup";
 
+   $c = trim_to_array($_POST['mailAlternateAddress']);
+   $b = trim_to_array($_POST['filtersender']);
+
+   $user = $_POST['username'];
+
    $entry["objectClass"] = $a;
    $entry["cn"] = $user;
    $entry["sn"] = "x";
-   $entry["mail"] = $mail;
-   $entry["uid"] = $u;
-   $entry["filtersender"] = "";
+   $entry["mail"] = $_POST['email'];
+   $entry["uid"] = $uid;
+   $entry["filtersender"] = $b;
    $entry["mailMessageStore"] = "";
-   $entry["mailAlternateAddress"] = "";
-   $entry["policyGroupId"] = $policy_group;
+   $entry["mailAlternateAddress"] = $c;
+   $entry["policyGroupId"] = $_POST['policy_group'];
 
 
    $dn = "cn=$user,$user_base_dn";

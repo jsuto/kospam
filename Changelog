@@ -1,5 +1,10 @@
 0.4.0-rc1:
 
+2008.12.14, SJ
+
+Web ui fixes.
+(webui/mysql.php, webui/ldap.php, webui/users.php)
+
 2008.12.13, SJ
 
 Removed the cgi utilities since the web ui is a nicer implementation.

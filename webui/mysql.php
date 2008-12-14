@@ -128,7 +128,7 @@ function get_user_entry($uid, $email = ""){
 
    $stmt = "SELECT whitelist FROM $whitelist_table WHERE uid=$uid";
    $r = mysql_query($stmt) or nice_error($err_sql_error);
-   list($whitelist) = mysql_fetch_row($r) or nice_error($err_sql_error);
+   list($whitelist) = mysql_fetch_row($r);
    mysql_free_result($r);
 
    array_push($x, $whitelist);
@@ -152,28 +152,41 @@ function show_existing_users(){
 
 
 function delete_existing_user_entry($uid, $email){
-   global $user_table, $err_sql_error, $BACK, $err_failed_to_remove_user;
+   global $user_table, $whitelist_table, $misc_table, $err_sql_error, $BACK, $err_failed_to_remove_user;
 
    $uid = mysql_real_escape_string($uid);
    $email = mysql_real_escape_string($email);
 
+   /* determine if this is the last user entry */
+
+   $stmt = "SELECT COUNT(*) FROM $user_table WHERE uid=$uid";
+   $r = mysql_query($stmt) or nice_error($err_sql_error);
+   list($n) = mysql_fetch_row($r);
+   mysql_free_result($r);
+
    $stmt = "DELETE FROM $user_table WHERE uid=$uid AND email='$email'";
    if(!mysql_query($stmt)) nice_error($err_failed_to_remove_user . ". <a href=\"users.php\">$BACK.</a>");
+
+   if($n == 1 && $uid > 0){
+      $stmt = "DELETE FROM $whitelist_table WHERE uid=$uid";
+      mysql_query($stmt);
+      $stmt = "DELETE FROM $misc_table WHERE uid=$uid";
+      mysql_query($stmt);
+   }
 }
 
 
-function add_user_entry($u, $user, $mail, $policy_group){
+function add_user_entry($uid){
    global $user_table, $whitelist_table, $misc_table, $err_sql_error, $err_existing_user, $BACK;
 
-   $uid = mysql_real_escape_string($u);
-   $username = mysql_real_escape_string($user);
-   $email = mysql_real_escape_string($mail);
-   $policy_group = mysql_real_escape_string($policy_group);
+   while(list($k, $v) = each($_POST)) $$k = mysql_real_escape_string($v);
+
+   $uid = mysql_real_escape_string($uid);
 
    $stmt = "INSERT INTO $user_table (uid, username, email, policy_group) VALUES($uid, '$username', '$email', $policy_group)";
    if(!mysql_query($stmt)) nice_error($err_existing_user . ". <a href=\"users.php\">$BACK.</a>");
 
-   $stmt = "INSERT INTO $whitelist_table (uid) VALUES($uid)";
+   $stmt = "INSERT INTO $whitelist_table (uid, whitelist) VALUES($uid, '$whitelist')";
    mysql_query($stmt);
 	 
    $stmt = "INSERT INTO $misc_table (uid, nham, nspam) VALUES($uid, 0, 0)";

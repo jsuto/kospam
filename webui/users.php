@@ -49,7 +49,7 @@ $conn = webui_connect() or nice_error($err_connect_db);
 <?
 
 if($add == 1 && uid >= 0 && is_numeric($uid) && $email && $username){
-   add_user_entry($uid, $username, $email, $policy_group);
+   add_user_entry($uid);
    nice_screen($err_added_user_successfully . ". <a href=\"users.php\">$BACK.</a>");
 }
 

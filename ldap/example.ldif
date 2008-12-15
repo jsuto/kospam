@@ -19,6 +19,7 @@ objectClass: qmailUser
 objectClass: qmailGroup
 uid: 1000
 mail: joe@aaaa.fu
+mailAlternateAddress:
 mailMessageStore: x
 filtersender:
 

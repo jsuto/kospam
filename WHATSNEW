@@ -1,3 +1,15 @@
+0.4.0:
+------
+
+Fully usable web ui that supports both MySQL and LDAP.
+
+Policy support.
+
+Template based virus notifications.
+
+Added training support to the spam quarantine.
+
+
 0.3.31:
 -------
 

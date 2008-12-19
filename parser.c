@@ -1,5 +1,5 @@
 /*
- * parser.c, 2008.11.24, SJ
+ * parser.c, 2008.12.17, SJ
  */
 
 #include <stdio.h>
@@ -386,6 +386,7 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
       if(strcasestr(buf, "text/plain") ||
          strcasestr(buf, "multipart/mixed") ||
          strcasestr(buf, "multipart/alternative") ||
+         strcasestr(buf, "multipart/report") ||
          strcasestr(buf, "message/delivery-status") ||
          strcasestr(buf, "text/rfc822-headers") ||
          strcasestr(buf, "message/rfc822") ||

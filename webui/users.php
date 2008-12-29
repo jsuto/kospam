@@ -49,7 +49,7 @@ $conn = webui_connect() or nice_error($err_connect_db);
 <?
 
 if($add == 1 && uid >= 0 && is_numeric($uid) && $email && $username){
-   add_user_entry($uid);
+   add_user_entry($uid); //, $username, $email, $policy_group);
    nice_screen($err_added_user_successfully . ". <a href=\"users.php\">$BACK.</a>");
 }
 
@@ -85,7 +85,9 @@ else if($add == 1){
    print "<input type=\"hidden\" name=\"add\" value=\"1\">\n";
    print "<table border=\"0\">\n";
 
-   $x = array('', '', '', 0, '', '');
+   $next_uid = get_next_uid();
+
+   $x = array('', '', $next_uid, 0, '', '');
    print_user($x);
 
    print "<tr colspan=\"2\"><td><input type=\"submit\" value=\"$ADD\"></td></tr>\n";

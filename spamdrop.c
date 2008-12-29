@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2008.11.11, SJ
+ * spamdrop.c, 2008.12.29, SJ
  */
 
 #include <stdio.h>
@@ -231,6 +231,8 @@ int main(int argc, char **argv, char **envp){
 
    result.spaminess = DEFAULT_SPAMICITY;
    result.ham_msg = result.spam_msg = 0;
+
+   memset(qpath, 0, SMALLBUFSIZE);
 
    if(from && (strcasecmp(from, "MAILER-DAEMON") == 0 || strcmp(from, "<>") == 0) && strlen(cfg.our_signo) > 3){
       if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: from: %s, we should really see our signo", sdata.ttmpfile, from);
@@ -693,13 +695,14 @@ ENDE:
 
    /* add trailing dot to the file, 2008.09.08, SJ */
 
-   fd2 = open(qpath, O_EXCL|O_RDWR, S_IRUSR|S_IWUSR);
-   if(fd2 != -1){
-      lseek(fd2, 0, SEEK_END);
-      write(fd2, SMTP_CMD_PERIOD, strlen(SMTP_CMD_PERIOD));
-      close(fd2);
+   if(strlen(qpath) > 3){
+      fd2 = open(qpath, O_EXCL|O_RDWR, S_IRUSR|S_IWUSR);
+      if(fd2 != -1){
+         lseek(fd2, 0, SEEK_END);
+         write(fd2, SMTP_CMD_PERIOD, strlen(SMTP_CMD_PERIOD));
+         close(fd2);
+      }
    }
-
 
    if(print_message == 0 && result.spaminess >= cfg.spam_overall_limit && result.spaminess < 1.01)
       return 1;

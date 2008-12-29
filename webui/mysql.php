@@ -42,6 +42,22 @@ function get_uid_by_name($username){
 }
 
 
+function get_next_uid(){
+   global $user_table, $err_sql_error;
+   $uid = "";
+
+   $stmt = "SELECT MAX(uid) FROM $user_table";
+   $r = mysql_query($stmt) or nice_error($err_sql_error);
+   list($uid) = mysql_fetch_row($r);
+   mysql_free_result($r);
+
+   if($uid > 0) $uid++;
+   else $uid = 1;
+
+   return $uid;
+}
+
+
 function get_whitelist_by_name($username){
    global $whitelist_table, $err_sql_error;
    $whitelist = "";

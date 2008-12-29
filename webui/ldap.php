@@ -123,6 +123,29 @@ function get_users_email_address($username){
 }
 
 
+function get_next_uid(){
+   global $basedn, $conn;
+   $uid = 1;
+
+   $filter="uid=*";
+   $justthese = array("uid");
+
+   $sr = ldap_search($conn, $basedn, $filter, $justthese);
+
+   $info = ldap_get_entries($conn, $sr);
+
+   for($i=0; $i<$info["count"]; $i++){
+      $__uid = $info[$i]["uid"][0];
+
+      if($__uid > $uid) $uid = $__uid;
+   }
+
+   $uid++;
+
+   return $uid;
+}
+
+
 function show_existing_users(){
    global $basedn, $conn, $EDIT_OR_VIEW;
 

@@ -1,5 +1,5 @@
 /*
- * qcache.c, 2008.12.12, SJ
+ * qcache.c, 2009.01.04, SJ
  */
 
 #include <stdio.h>
@@ -18,20 +18,26 @@
 #include <time.h>
 #include <unistd.h>
 #include <errno.h>
-#include "mydb.h"
+#include <mysql.h>
 #include <clapf.h>
+#include "cache.h"
+#include "buffer.h"
+
 
 #define QCACHE_PROGNAME "Qcache"
+#define ALARM_TIME 300
 
 extern char *optarg;
 extern int optind;
 
 int sd;
 int nconn = 0;
+int toggle = 0;
 char *configfile = CONFIG_FILE;
 struct __config cfg;
-struct mydb_node *mhash[MAX_MYDB_HASH], **m;
-struct session_data sdata;
+struct cache *hash_table1[MAX_CACHE_HASH], *hash_table2[MAX_CACHE_HASH], **m;
+struct timezone tz;
+struct timeval tv1, tv2;
 
 float calc_spamicity(float NHAM, float NSPAM, unsigned int nham, unsigned int nspam, float rob_s, float rob_x);
 
@@ -44,8 +50,9 @@ void clean_exit(){
    if(sd != -1)
       close(sd);
 
-   close_mydb(mhash);
-   printf("terminated\n");
+   clearcache(hash_table1);
+   clearcache(hash_table2);
+
    syslog(LOG_PRIORITY, "%s has been terminated", QCACHE_PROGNAME);
    exit(1);
 }
@@ -71,14 +78,139 @@ void reload_config(){
 }
 
 
-float xqry(struct mydb_node **xhash, unsigned long long key, struct session_data *sdata, float rob_s, float rob_x){
-   struct mydb_node *q;
+int load_all_tokens(struct cache *xhash[]){
+   MYSQL mysql;
+   MYSQL_RES *res;
+   MYSQL_ROW row;
+   char stmt[SMALLBUFSIZE];
+   float Nham=0, Nspam=0, nh=0, ns=0;
+   unsigned long long key;
+   float spamicity;
+   int ntokens = 0;
+
+   mysql_init(&mysql);
+   mysql_options(&mysql, MYSQL_OPT_CONNECT_TIMEOUT, (const char*)&cfg.mysql_connect_timeout);
+   if(mysql_real_connect(&mysql, cfg.mysqlhost, cfg.mysqluser, cfg.mysqlpwd, cfg.mysqldb, cfg.mysqlport, cfg.mysqlsocket, 0) == 0){
+      syslog(LOG_PRIORITY, "%s", ERR_MYSQL_CONNECT);
+      return 0;
+   }
+
+   snprintf(stmt, SMALLBUFSIZE-1, "SELECT nham, nspam FROM %s WHERE uid=0", SQL_MISC_TABLE);
+
+   if(mysql_real_query(&mysql, stmt, strlen(stmt)) == 0){
+      res = mysql_store_result(&mysql);
+      if(res != NULL){
+         row = mysql_fetch_row(res);
+         if(row){
+            Nham += atof(row[0]);
+            Nspam += atof(row[1]);
+         }
+         mysql_free_result(res);
+      }
+   }
+
+   snprintf(stmt, SMALLBUFSIZE-1, "SELECT token, nham, nspam FROM %s WHERE uid=0", SQL_TOKEN_TABLE);
+
+   if(mysql_real_query(&mysql, stmt, strlen(stmt)) == 0){
+      res = mysql_store_result(&mysql);
+      if(res != NULL){
+         while((row = mysql_fetch_row(res))){
+            key = atoll(row[0]);
+            nh = atof(row[1]);
+            ns = atof(row[2]);
+            spamicity = calc_spamicity(Nham, Nspam, nh, ns, cfg.rob_s, cfg.rob_x);
+            ntokens++;
+            addcache(xhash, key, spamicity);
+         }
+         mysql_free_result(res);
+      }
+   }
+
+   mysql_close(&mysql);
+
+   if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "we have %.0f good and %.0f bad messages with %d tokens\n", Nham, Nspam, ntokens);
+
+   return 1;
+}
 
 
-   q = findmydb_node(xhash, key);
-   if(q == NULL) return DEFAULT_SPAMICITY;
+int flush_dirty(struct cache *xhash[]){
+   char buf[SMALLBUFSIZE];
+   unsigned long now;
+   time_t cclock;
+   buffer *query;
+   int n=0, total=0;
+   MYSQL mysql;
 
-   return calc_spamicity(sdata->Nham, sdata->Nspam, q->nham, q->nspam, rob_s, rob_x);
+   time(&cclock);
+   now = cclock;
+
+   snprintf(buf, SMALLBUFSIZE-1, "UPDATE %s SET timestamp=%ld WHERE token in (", SQL_TOKEN_TABLE, now);
+
+   mysql_init(&mysql);
+   mysql_options(&mysql, MYSQL_OPT_CONNECT_TIMEOUT, (const char*)&cfg.mysql_connect_timeout);
+   if(mysql_real_connect(&mysql, cfg.mysqlhost, cfg.mysqluser, cfg.mysqlpwd, cfg.mysqldb, cfg.mysqlport, cfg.mysqlsocket, 0) == 0){
+      syslog(LOG_PRIORITY, "%s", ERR_MYSQL_CONNECT);
+      return 0;
+   }
+
+   do {
+      query = buffer_create(NULL);
+
+      if(query){
+
+         buffer_cat(query, buf);
+
+         n = flush_dirty_cache(xhash, query);
+         total += n;
+
+         buffer_cat(query, "0) AND uid=0");
+
+         if(n > 0) mysql_real_query(&mysql, query->data, strlen(query->data));
+
+         buffer_destroy(query);
+      }
+   } while(n);
+
+   if(total > 0) syslog(LOG_PRIORITY, "updated %d tokens", total);
+
+   return 1;
+}
+
+
+void swap_hash_table(){
+   int rc = 0;
+
+   if(toggle == 0){
+      gettimeofday(&tv1, &tz);
+      rc = load_all_tokens(hash_table2);
+      gettimeofday(&tv2, &tz);
+
+      if(rc == 1){
+         m = &hash_table2[0];
+         toggle = 1;
+         flush_dirty(hash_table1);
+         clearcache(hash_table1);
+      }
+      else clearcache(hash_table2);
+   }
+   else {
+      gettimeofday(&tv1, &tz);
+      rc = load_all_tokens(hash_table1);
+      gettimeofday(&tv2, &tz);
+
+      if(rc == 1){
+         m = &hash_table1[0];
+         toggle = 0;
+         flush_dirty(hash_table2);
+         clearcache(hash_table2);
+      }
+      else clearcache(hash_table1);
+   }
+
+   if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "reading tokens from database in %ld [ms]", tvdiff(tv2, tv1)/1000);
+
+   alarm(ALARM_TIME);
 }
 
 
@@ -114,6 +246,10 @@ int main(int argc, char **argv){
        }
    }
 
+   initcache(hash_table1);
+   initcache(hash_table2);
+
+
    (void) openlog(QCACHE_PROGNAME, LOG_PID, LOG_MAIL);
 
    signal(SIGINT, clean_exit);
@@ -121,6 +257,7 @@ int main(int argc, char **argv){
    signal(SIGKILL, clean_exit);
    signal(SIGTERM, clean_exit);
    signal(SIGHUP, reload_config);
+   signal(SIGALRM, swap_hash_table);
 
    reload_config();
 
@@ -145,15 +282,15 @@ int main(int argc, char **argv){
 
    syslog(LOG_PRIORITY, "%s %s starting", QCACHE_PROGNAME, VERSION);
 
-
    clen = sizeof(client_addr);
 
-   init_mydb(cfg.mydbfile, mhash, &sdata);
-
-   m = &mhash[0];
 
    /* go to the background */
    if(daemonise == 1) daemon(1, 0);
+
+
+   swap_hash_table();
+
 
    FD_ZERO(&master);
    FD_ZERO(&read_fds);
@@ -170,8 +307,8 @@ int main(int argc, char **argv){
    for(;;){
       read_fds = master; // copy it
       if(select(fdmax+1, &read_fds, NULL, NULL, NULL) == -1){
-         perror("select");
-         exit(1);
+         //perror("select");
+         continue;
       }
 
 
@@ -211,7 +348,11 @@ int main(int argc, char **argv){
 
                   for(j=0; j<NETWORK_SEGMENT_SIZE; j++){
                      x = (struct x_token*)(buf + j*sizeof(struct x_token));
-                     if(x->token > 0) x->spaminess = xqry(m, x->token, &sdata, cfg.rob_s, cfg.rob_x);
+                     if(x->token > 0) x->spaminess = spamcache(m, x->token);
+                     /*if(x->token > 0){
+                        x->spaminess = spamcache(m, x->token);
+                        printf("%llu: %.4f\n", x->token, x->spaminess);
+                     }*/
                   }
 
                   send(new_sd, buf, PKT_SIZE, 0);

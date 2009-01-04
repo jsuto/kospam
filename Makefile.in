@@ -35,7 +35,7 @@ LIBCLAPF_VERSION=$(CLAPF_VERSION).$(CLAPF_REVISION).$(CLAPF_RELEASE)
 
 INSTALL = @INSTALL@
 
-all: clapf-lib clapf @spamsum@ @clapfstore@ splitmbox @parsembox@ @spamdrop@ @preparesql@ @test@ ui
+all: clapf-lib clapf @spamsum@ @clapfstore@ splitmbox @parsembox@ @spamdrop@ @preparesql@ @qcache@ @test@ ui
 install: install-clapf @clapfstore_install@ install-splitmbox install-man @parsembox_install@ @spamsum_install@ @spamdrop_install@ @db_install@
 
 
@@ -79,7 +79,10 @@ prepare-sql : % : %.o misc.o
 clapfstore:	% : %.o cfg.o misc.o ssl_util.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR) -lssl -lcrypto -ldl -lpthread
 
-mydb_stat mydb_compress qcache:	%: %.o mydb.o misc.o hash.o chi.o score.o cfg.o
+mydb_stat mydb_compress mydb_export:	%: %.o mydb.o misc.o hash.o chi.o score.o cfg.o
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
+
+qcache:	%:	%.o misc.o chi.o score.o cfg.o cache.o rbl.o parser.o decoder.o list.o buffer.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
 
 ui:

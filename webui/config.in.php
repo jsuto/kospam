@@ -6,6 +6,11 @@ $clapf_conf = "/usr/local/etc/clapf.conf";
 
 $lang = "en";
 
+/*
+ * if webui is in the DocumentRoot, then let
+ * the $directory variable have an empty value, ie.
+ * $directory = "";
+ */
 $directory = "/webui";
 
 include_once($_SERVER['DOCUMENT_ROOT'] . "$directory/.htdb.php");

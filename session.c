@@ -1,5 +1,5 @@
 /*
- * session.c, 2008.12.10, SJ
+ * session.c, 2009.01.02, SJ
  */
 
 #include <stdio.h>
@@ -97,7 +97,7 @@ void init_session_data(struct session_data *sdata){
 
    int i, n, rav=AVIR_OK, inj=ERR_REJECT, state, prevlen=0;
    char *p, buf[MAXBUFSIZE], prevbuf[MAXBUFSIZE], last2buf[2*MAXBUFSIZE+1], acceptbuf[MAXBUFSIZE];
-   char queuedfile[SMALLBUFSIZE], email[SMALLBUFSIZE], email2[SMALLBUFSIZE];
+   char email[SMALLBUFSIZE], email2[SMALLBUFSIZE];
 
    struct __config my_cfg;
    struct c_res result;
@@ -308,6 +308,9 @@ void init_session_data(struct session_data *sdata){
             send(new_sd, buf, strlen(buf), 0);
             if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent: %s", sdata.ttmpfile, buf);
 
+            if(unlink(sdata.ttmpfile)) syslog(LOG_PRIORITY, "%s: failed to remove", sdata.ttmpfile);
+            if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: removed", sdata.ttmpfile);
+
             goto QUITTING;
          }
 
@@ -331,8 +334,6 @@ void init_session_data(struct session_data *sdata){
 
             send(new_sd, SMTP_RESP_250_OK, strlen(SMTP_RESP_250_OK), 0);
             if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent: %s", sdata.ttmpfile, SMTP_RESP_250_OK);
-
-            /* remove old queue file, 2007.07.17, SJ */
 
             if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: removed", sdata.ttmpfile);
             unlink(sdata.ttmpfile);
@@ -665,7 +666,7 @@ void init_session_data(struct session_data *sdata){
                      }
 
 
-                  #ifdef HAVE_MYDB
+                  /*#ifdef HAVE_MYDB
                      if(sdata.num_of_rcpt_to == 1 && (strcasestr(sdata.rcptto[0], "+spam@") || strcasestr(sdata.rcptto[0], "+ham@") || strncmp(email, "spam@", 5) == 0 || strncmp(email, "ham@", 4) == 0) ){
                         is_spam = 0;
                         snprintf(acceptbuf, MAXBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata.ttmpfile, email);
@@ -683,13 +684,13 @@ void init_session_data(struct session_data *sdata){
                      }
                      else {
 
-                        /* TODO: check for whitelist */
+                        // TODO: check for whitelist
 
                         result.spaminess = x_spam_check(&sdata, &sstate, cfg);
 
                         gettimeofday(&tv_spam_stop, &tz);
                      }
-                  #endif
+                  #endif*/
 
                   #ifdef HAVE_MYSQL
                      if(mysql_connection == 1){
@@ -732,7 +733,12 @@ void init_session_data(struct session_data *sdata){
                            }
                            else {
                               if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: running Bayesian test", sdata.ttmpfile);
+                           #ifdef HAVE_QCACHE
+                              result.spaminess = x_spam_check(&sdata, &sstate, my_cfg);
+                              result.ham_msg = result.spam_msg = NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED + 1;
+                           #else
                               result = bayes_file(mysql, sstate, sdata, my_cfg);
+                           #endif
                            }
                            update_mysql_tokens(mysql, sstate.first, sdata.uid);
 
@@ -1017,6 +1023,8 @@ void init_session_data(struct session_data *sdata){
                } /* for */
             #endif
 
+               /* 2009.09.02, SJ */
+               unlink(sdata.ttmpfile);
 
                /* close database backend handler */
 
@@ -1072,16 +1080,7 @@ void init_session_data(struct session_data *sdata){
 
 QUITTING:
 
-   close(sdata.fd);
-
-   if(strlen(cfg.holddir) > 2){
-      snprintf(queuedfile, SMALLBUFSIZE-1, "%s/%s", cfg.holddir, sdata.ttmpfile);
-      write_delivery_info(sdata.ttmpfile, cfg.holddir, sdata.mailfrom, sdata.rcptto, sdata.num_of_rcpt_to);
-      link(sdata.ttmpfile, queuedfile);
-   }
-
-   if(unlink(sdata.ttmpfile)) syslog(LOG_PRIORITY, "%s: failed to remove", sdata.ttmpfile);
-   if(cfg.verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: removed", sdata.ttmpfile);
+   if(cfg.verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "child has finished");
 
    _exit(0);
 }

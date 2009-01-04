@@ -14,6 +14,7 @@
 #include <users.h>
 #include <policy.h>
 #include <templates.h>
+#include <xdb.h>
 #include <config.h>
 
 #ifdef HAVE_MYSQL

@@ -1,5 +1,14 @@
 0.4.0-rc2:
 
+2009.01.03, SJ
+
+(qcache.c, turbo.c, turbo.h, Makefile.in)
+
+2009.01.02, SJ
+
+Removed the holddir configuration parameter.
+(session.c, cfg.c, cfg.h, example.conf)
+
 2008.12.29, SJ
 
 Fill automatically the uid field when adding a new user.

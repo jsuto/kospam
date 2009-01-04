@@ -37,7 +37,6 @@ struct __config {
 
    char chrootdir[MAXVAL];
    char workdir[MAXVAL];
-   char holddir[MAXVAL];
    char quarantine_dir[MAXVAL];
    char blackhole_path[MAXVAL];
 

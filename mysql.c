@@ -98,7 +98,7 @@ int do_mysql_qry(MYSQL mysql, int sockfd, int ham_or_spam, char *token, unsigned
 
    /* update token entry ... */
 
-#ifdef HAVE_QCACHE
+#ifdef HAVE_QCACHE_OLD
    TE = myqry(mysql, sockfd, SQL_TOKEN_TABLE, token, uid);
 
    if(ham_or_spam == 1){
@@ -193,7 +193,7 @@ struct te myqry(MYSQL mysql, int sockfd, char *token, unsigned long uid){
    snprintf(stmt, MAXBUFSIZE-1, "SELECT nham, nspam FROM %s WHERE token=%llu AND (uid=0 OR uid=%ld)", SQL_TOKEN_TABLE, hash, uid);
 #endif
 
-#ifdef HAVE_QCACHE
+#ifdef HAVE_QCACHE_OLD
    char *p, *q;
 
    snprintf(stmt, MAXBUFSIZE-1, "SELECT %llu %d\r\n", hash, uid);

@@ -235,9 +235,6 @@ struct __config read_config(char *configfile){
                   if(strcmp(key, "workdir") == 0)
                      memcpy(cfg.workdir, val, MAXVAL-1);
 
-                  if(strcmp(key, "holddir") == 0)
-                     memcpy(cfg.holddir, val, MAXVAL-1);
-
                   if(strcmp(key, "quarantine_dir") == 0)
                      memcpy(cfg.quarantine_dir, val, MAXVAL-1);
 

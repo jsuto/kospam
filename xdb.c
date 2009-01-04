@@ -14,9 +14,9 @@
 #include <fcntl.h>
 #include <math.h>
 #include <unistd.h>
-#include "mydb.h"
 #include "hash.h"
 #include "score.h"
+#include "cache.h"
 #include <clapf.h>
 
 

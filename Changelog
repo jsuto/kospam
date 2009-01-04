@@ -5,6 +5,10 @@
 Added the qcache feature (again).
 (qcache.c, cache.c, cache.h, Makefile.in)
 
+Code refactoring: simplified structures.
+(lots of *.h and *.c)
+
+
 2009.01.02, SJ
 
 Removed the holddir configuration parameter.

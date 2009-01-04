@@ -5,6 +5,7 @@
 #ifndef _MYDB_H
  #define _MYDB_H
 
+#include "defs.h"
 #include "parser.h"
 
 struct mydb {
@@ -23,10 +24,10 @@ struct mydb_node {
    struct mydb_node *r;
 };
 
-#define MYDB_HEADER_SIZE 8
+/*#define MYDB_HEADER_SIZE 8
 #define N_SIZE 16
 #define SEGMENT_SIZE 768
-#define MAX_MYDB_HASH 74713
+#define MAX_MYDB_HASH 74713*/
 
 
 void init_my_hash(struct mydb_node *xhash[]);
@@ -39,7 +40,7 @@ struct mydb_node *findmydb_node(struct mydb_node *xhash[], unsigned long long ke
 int add_or_update(int fd, struct mydb_node *mhash[], int ham_or_spam, char *token, int train_mode, unsigned long ts);
 int update_tokens(char *mydbfile, struct mydb_node *xhash[], struct _token *token);
 
-float mydbqry(struct mydb_node *Mhash[], char *p, struct session_data *sdata, float rob_s, float rob_x);
+float mydbqry(struct session_data *sdata, char *p, struct __config *cfg);
 int my_walk_hash(char *mydbfile, struct mydb_node *xhash[], int ham_or_spam, struct _token *token, int train_mode);
 int update_tokens(char *mydbfile, struct mydb_node *xhash[], struct _token *token);
 

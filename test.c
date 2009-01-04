@@ -23,7 +23,6 @@
 #endif
 #ifdef HAVE_MYDB
    int rc;
-   struct mydb_node *mhash[MAX_MYDB_HASH], *mhash2[MAX_MYDB_HASH], *mhash3[MAX_MYDB_HASH];
 #endif
 
 
@@ -108,12 +107,12 @@ int main(int argc, char **argv){
 #endif
 
 #ifdef HAVE_MYDB
-   rc = init_mydb(cfg.mydbfile, mhash, &sdata);
+   rc = init_mydb(cfg.mydbfile, sdata.mhash, &sdata);
    fprintf(stderr, "using %s. %.0f, %0.f ...\n", cfg.mydbfile, sdata.Nham, sdata.Nspam);
    if(rc == 1){
-      spaminess = bayes_file(mhash, state, &sdata, &cfg);
+      spaminess = bayes_file(state, &sdata, &cfg);
    }
-   close_mydb(mhash);
+   close_mydb(sdata.mhash);
 #endif
 #endif /* HAVE_QCACHE */
 

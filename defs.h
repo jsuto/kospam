@@ -11,9 +11,18 @@
 #ifdef HAVE_SQLITE3
   #include <sqlite3.h>
 #endif
-
+#ifdef HAVE_MYDB
+  //#include "mydb.h"
+#endif
 
 #include "config.h"
+
+
+#define MYDB_HEADER_SIZE 8
+#define N_SIZE 16
+#define SEGMENT_SIZE 768
+#define MAX_MYDB_HASH 74713
+
 
 struct cache {
    unsigned long long key;
@@ -101,6 +110,9 @@ struct session_data {
 #ifdef HAVE_SQLITE3
    sqlite3 *db;
 #endif
+#ifdef HAVE_MYDB
+   struct mydb_node *mhash[MAX_MYDB_HASH];
+#endif
 };
 
 
@@ -115,7 +127,6 @@ struct ue {
    unsigned int policy_group;
    char name[SMALLBUFSIZE];
 };
-
 
 
 #endif /* _DEFS_H */

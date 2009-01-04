@@ -35,9 +35,6 @@ struct session_data sdata;
    sqlite3_stmt *pStmt;
    const char **ppzTail=NULL;
 #endif
-#ifdef HAVE_MYDB
-   struct mydb_node *mhash[MAX_MYDB_HASH];
-#endif
 
 
 /* open database connection */
@@ -69,7 +66,7 @@ int open_db(char *messagefile){
 #ifdef HAVE_MYDB
    int rc;
 
-   rc = init_mydb(cfg.mydbfile, mhash, &sdata);
+   rc = init_mydb(cfg.mydbfile, sdata.mhash, &sdata);
    if(rc != 1)
       return 0;
 #endif
@@ -348,7 +345,7 @@ int main(int argc, char **argv, char **envp){
       train_message(db, sdata, state, rounds, is_spam, train_mode, cfg);
    #endif
    #ifdef HAVE_MYDB
-      train_message(cfg.mydbfile, mhash, sdata, state, rounds, is_spam, train_mode, cfg);
+      train_message(cfg.mydbfile, sdata.mhash, sdata, state, rounds, is_spam, train_mode, cfg);
    #endif
 
       goto CLOSE_DB;
@@ -382,7 +379,7 @@ int main(int argc, char **argv, char **envp){
       train_message(db, sdata, state, rounds, is_spam, train_mode, cfg);
    #endif
    #ifdef HAVE_MYDB
-      train_message(cfg.mydbfile, mhash, sdata, state, rounds, is_spam, train_mode, cfg);
+      train_message(cfg.mydbfile, sdata.mhash, sdata, state, rounds, is_spam, train_mode, cfg);
    #endif
    }
 
@@ -411,8 +408,8 @@ int main(int argc, char **argv, char **envp){
       update_sqlite3_tokens(db, state.first);
    #endif
    #ifdef HAVE_MYDB
-      spaminess = bayes_file(mhash, state, &sdata, &cfg);
-      update_tokens(cfg.mydbfile, mhash, state.first);
+      spaminess = bayes_file(state, &sdata, &cfg);
+      update_tokens(cfg.mydbfile, sdata.mhash, state.first);
    #endif
 
    #ifdef HAVE_LANG_DETECT
@@ -477,7 +474,7 @@ int main(int argc, char **argv, char **envp){
             train_message(db, sdata, state, 1, is_spam, train_mode, cfg);
          #endif
          #ifdef HAVE_MYDB
-            train_message(cfg.mydbfile, mhash, sdata, state, 1, is_spam, train_mode, cfg);
+            train_message(cfg.mydbfile, sdata.mhash, sdata, state, 1, is_spam, train_mode, cfg);
          #endif
       }
 
@@ -501,7 +498,7 @@ int main(int argc, char **argv, char **envp){
          train_message(db, sdata, state, rounds, 1, T_TOE, cfg);
       #endif
       #ifdef HAVE_MYDB
-         train_message(cfg.mydbfile, mhash, sdata, state, rounds, 1, T_TOE, cfg);
+         train_message(cfg.mydbfile, sdata.mhash, sdata, state, rounds, 1, T_TOE, cfg);
       #endif
       }
 
@@ -523,7 +520,7 @@ CLOSE_DB:
    sqlite3_close(db);
 #endif
 #ifdef HAVE_MYDB
-   close_mydb(mhash);
+   close_mydb(sdata.mhash);
 #endif
 
    /* free structures */

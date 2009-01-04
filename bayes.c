@@ -1,5 +1,5 @@
 /*
- * bayes.c, 2008.11.12, SJ
+ * bayes.c, 2009.01.04, SJ
  */
 
 #include <stdio.h>
@@ -22,8 +22,8 @@
 #include "messages.h"
 #include "score.h"
 #include "sql.h"
+#include "bayes.h"
 #include "config.h"
-
 
 
 
@@ -45,21 +45,11 @@
 #endif
 
 
- 
 /*
  * assign spaminess value to token
  */
 
-#ifdef HAVE_MYSQL
-int assign_spaminess(struct session_data *sdata, char *p, struct __config *cfg, struct node *s_phrase_hash[], struct node *shash[], struct node *s_mix[]){
-#endif
-#ifdef HAVE_SQLITE3
-int assign_spaminess(struct session_data *sdata, char *p, struct __config *cfg, struct node *s_phrase_hash[], struct node *shash[], struct node *s_mix[]){
-#endif
-#ifdef HAVE_MYDB
-int assign_spaminess(struct session_data *sdata, struct mydb_node *mhash[], char *p, struct __config *cfg, struct node *s_phrase_hash[], struct node *shash[], struct node *s_mix[]){
-#endif
-
+int assign_spaminess(struct session_data *sdata, char *p, struct __config *cfg, struct node *s_phrase_hash[], struct node *s_mix[]){
    float spaminess=0;
    char t[MAX_TOKEN_LEN], *s;
 
@@ -75,7 +65,7 @@ int assign_spaminess(struct session_data *sdata, struct mydb_node *mhash[], char
    spaminess = SQL_QUERY(sdata, p, cfg);
 #endif
 #ifdef HAVE_MYDB
-   spaminess = mydbqry(mhash, p, sdata, cfg->rob_s, cfg->rob_x);
+   spaminess = mydbqry(sdata, p, cfg);
 #endif
 
    /* if it was at the Subject: header line, let's try it if it were not in the Subject line, 2006.05.03, SJ */
@@ -98,7 +88,7 @@ int assign_spaminess(struct session_data *sdata, struct mydb_node *mhash[], char
       spaminess = SQL_QUERY(sdata, t, cfg);
    #endif
    #ifdef HAVE_MYDB
-      spaminess = mydbqry(mhash, t, sdata, cfg->rob_s, cfg->rob_x);
+      spaminess = mydbqry(sdata, t, cfg);
    #endif
    }
 
@@ -110,10 +100,8 @@ int assign_spaminess(struct session_data *sdata, struct mydb_node *mhash[], char
          addnode(s_phrase_hash, p, spaminess, DEVIATION(spaminess));
          addnode(s_mix, p, spaminess, DEVIATION(spaminess));
       }
-      if(strchr(p, '+') == NULL){
-         addnode(shash, p, spaminess, DEVIATION(spaminess));
+      if(strchr(p, '+') == NULL)
          addnode(s_mix, p, spaminess, DEVIATION(spaminess));
-      }
    }
 
    return 0;
@@ -129,16 +117,7 @@ inline double calc_score(struct node *xhash[], struct __config *cfg){
 }
 
 
-#ifdef HAVE_MYSQL
-int walk_hash(struct session_data *sdata, struct node *xhash[], struct __config *cfg, struct node *s_phrase_hash[], struct node *shash[], struct node *s_mix[]){
-#endif
-#ifdef HAVE_SQLITE3
-int walk_hash(struct session_data *sdata, struct node *xhash[], struct __config *cfg, struct node *s_phrase_hash[], struct node *shash[], struct node *s_mix[]){
-#endif
-#ifdef HAVE_MYDB
-int walk_hash(struct session_data *sdata, struct mydb_node *mhash[], struct node *xhash[], struct __config *cfg, struct node *s_phrase_hash[], struct node *shash[], struct node *s_mix[]){
-#endif
-
+int walk_hash(struct session_data *sdata, struct node *xhash[], struct __config *cfg, struct node *s_phrase_hash[], struct node *s_mix[]){
    int i, n=0;
    struct node *p, *q;
 
@@ -147,15 +126,7 @@ int walk_hash(struct session_data *sdata, struct mydb_node *mhash[], struct node
       while(q != NULL){
          p = q;
 
-      #ifdef HAVE_MYSQL
-         assign_spaminess(sdata, p->str, cfg, s_phrase_hash, shash, s_mix);
-      #endif
-      #ifdef HAVE_SQLITE3
-         assign_spaminess(sdata, p->str, cfg, s_phrase_hash, shash, s_mix);
-      #endif
-      #ifdef HAVE_MYDB
-         assign_spaminess(sdata, mhash, p->str, cfg, s_phrase_hash, shash, s_mix);
-      #endif
+         assign_spaminess(sdata, p->str, cfg, s_phrase_hash, s_mix);
 
          n++;
 
@@ -189,9 +160,7 @@ struct _state parse_message(char *spamfile, struct session_data sdata, struct __
    while(fgets(buf, MAXBUFSIZE-1, f)){
       parse(buf, &state, &sdata, cfg);
 
-      //if(state.message_state != MSG_BODY && strncmp(buf, tumbuf, strlen(tumbuf)) == 0){
       if(strncmp(buf, tumbuf, strlen(tumbuf)) == 0){
-         //printf("tum trained message\n");
          state.train_mode = T_TUM;
       }
    }
@@ -206,40 +175,24 @@ struct _state parse_message(char *spamfile, struct session_data sdata, struct __
  * evaulate tokens
  */
 
-#ifdef HAVE_MYSQL
-double eval_tokens(MYSQL mysql, struct session_data *sdata, struct __config *cfg, struct _state state){
-#endif
-#ifdef HAVE_SQLITE3
-double eval_tokens(sqlite3 *db, struct session_data *sdata, struct __config *cfg, struct _state state){
-#endif
-#ifdef HAVE_MYDB
-double eval_tokens(struct mydb_node *mhash[], struct session_data *sdata, struct __config *cfg, struct _state state){
-#endif
-
+double eval_tokens(struct session_data *sdata, struct __config *cfg, struct _state state){
    unsigned long n = 0;
    struct _token *p, *q;
    float spaminess, spaminess2;
-   int found_on_rbl=0, has_embed_image=0, surbl_match=0;
-#ifdef HAVE_RBL
-   struct url *url;
-   char surbl_token[MAX_TOKEN_LEN];
-   int i, j;
-#endif
-   struct node *s_phrase_hash[MAXHASH], *shash[MAXHASH], *s_mix[MAXHASH];
+   int has_embed_image=0;
+   struct node *s_phrase_hash[MAXHASH], *s_mix[MAXHASH];
    struct node *B_hash[MAXHASH];
-   struct timezone tz;
-   struct timeval tv1, tv2;
-
+#ifdef HAVE_RBL
+   int found_on_rbl=0, surbl_match=0;
+#endif
 
    if(!state.first)
       return DEFAULT_SPAMICITY;
 
-   surbl_match = 0;
    spaminess = spaminess2 = DEFAULT_SPAMICITY;
 
    p = state.first;
 
-   inithash(shash);
    inithash(s_phrase_hash);
    inithash(s_mix);
 
@@ -251,31 +204,14 @@ double eval_tokens(struct mydb_node *mhash[], struct session_data *sdata, struct
       /* add to URL hash, 2006.06.23, SJ */
 
       if(strncmp(p->str, "URL*", 4) == 0){
-      #ifdef HAVE_MYSQL
-         assign_spaminess(sdata, p->str, cfg, s_phrase_hash, shash, s_mix);
-      #endif
-      #ifdef HAVE_SQLITE3
-         assign_spaminess(sdata, p->str, cfg, s_phrase_hash, shash, s_mix);
-      #endif
-      #ifdef HAVE_MYDB
-         assign_spaminess(sdata, mhash, p->str, cfg, s_phrase_hash, shash, s_mix);
-      #endif
-
+         assign_spaminess(sdata, p->str, cfg, s_phrase_hash, s_mix);
          addnode(B_hash, p->str, 0, 0);
       }
 
       /* 2007.06.06, SJ */
 
       if(cfg->use_pairs == 1 && (strchr(p->str, '+') || strchr(p->str, '*')) ){
-      #ifdef HAVE_MYSQL
-         assign_spaminess(sdata, p->str, cfg, s_phrase_hash, shash, s_mix);
-      #endif
-      #ifdef HAVE_SQLITE3
-         assign_spaminess(sdata, p->str, cfg, s_phrase_hash, shash, s_mix);
-      #endif
-      #ifdef HAVE_MYDB
-         assign_spaminess(sdata, mhash, p->str, cfg, s_phrase_hash, shash, s_mix);
-      #endif
+         assign_spaminess(sdata, p->str, cfg, s_phrase_hash, s_mix);
       }
 
       else addnode(B_hash, p->str, 0, 0);
@@ -285,10 +221,7 @@ double eval_tokens(struct mydb_node *mhash[], struct session_data *sdata, struct
          /* we may penalize embedded images, 2007.01.03, SJ */
 
          if(cfg->penalize_embed_images == 1 && strcmp(p->str, "src+cid") == 0){
-            spaminess = REAL_SPAM_TOKEN_PROBABILITY;
-            addnode(s_phrase_hash, "EMBED*", spaminess, DEVIATION(spaminess));
-            addnode(shash, "EMBED*", spaminess, DEVIATION(spaminess));
-            addnode(s_mix, "EMBED*", spaminess, DEVIATION(spaminess));
+            append_to_hash_tables(s_phrase_hash, s_mix, "EMBED*", REAL_SPAM_TOKEN_PROBABILITY);
             has_embed_image = 1;
          }
 
@@ -300,59 +233,15 @@ double eval_tokens(struct mydb_node *mhash[], struct session_data *sdata, struct
    }
 
 
-   /* add a spammy token if we got a binary, eg. PDF attachment, 2007.07.02, SJ */
+   /* apply some penalties, 2009.01.04, SJ */
+   add_penalties(sdata, s_phrase_hash, s_mix, state, cfg);
 
-   if(cfg->penalize_octet_stream == 1 && (attachment_by_type(state, "application/octet-stream") == 1 || attachment_by_type(state, "application/pdf") == 1
-       || attachment_by_type(state, "application/vnd.ms-excel") == 1
-       || attachment_by_type(state, "application/msword") == 1
-       || attachment_by_type(state, "application/rtf") == 1
-       || attachment_by_type(state, "application/x-zip-compressed") == 1)
-   ){
-       spaminess = REAL_SPAM_TOKEN_PROBABILITY;
-       addnode(s_phrase_hash, "OCTET_STREAM*", spaminess, DEVIATION(spaminess));
-       addnode(shash, "OCTET_STREAM*", spaminess, DEVIATION(spaminess));
-       addnode(s_mix, "OCTET_STREAM*", spaminess, DEVIATION(spaminess));
-   }
-
-   /* add penalty for images, 2007.07.02, SJ */
-
-   if(cfg->penalize_images == 1 && attachment_by_type(state, "image/") == 1){
-       spaminess = REAL_SPAM_TOKEN_PROBABILITY;
-       addnode(s_phrase_hash, "IMAGE*", spaminess, DEVIATION(spaminess));
-       addnode(shash, "IMAGE*", spaminess, DEVIATION(spaminess));
-       addnode(s_mix, "IMAGE*", spaminess, DEVIATION(spaminess));
-   }
-
-
-   if(state.n_subject_token == 0){
-      spaminess = REAL_SPAM_TOKEN_PROBABILITY;
-      addnode(s_phrase_hash, "NO_SUBJECT*", spaminess, DEVIATION(spaminess));
-      addnode(shash, "NO_SUBJECT*", spaminess, DEVIATION(spaminess));
-      addnode(s_mix, "NO_SUBJECT*", spaminess, DEVIATION(spaminess));
-   }
 
    /* add the From line, 2007.06.16, SJ */
 
-#ifdef HAVE_MYSQL
-   assign_spaminess(sdata, state.from, cfg, s_phrase_hash, shash, s_mix);
-#endif
-#ifdef HAVE_SQLITE3
-   assign_spaminess(sdata, state.from, cfg, s_phrase_hash, shash, s_mix);
-#endif
-#ifdef HAVE_MYDB
-   assign_spaminess(sdata, mhash, state.from, cfg, s_phrase_hash, shash, s_mix);
-#endif
-
+   assign_spaminess(sdata, state.from, cfg, s_phrase_hash, s_mix);
    addnode(B_hash, state.from, 0, 0);
 
-#ifdef HAVE_XFORWARD
-   if(sdata->unknown_client == 1 && QRY.ham_msg > NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED){
-      spaminess = REAL_SPAM_TOKEN_PROBABILITY;
-      addnode(s_phrase_hash, "UNKNOWN_CLIENT*", spaminess, DEVIATION(spaminess));
-      addnode(shash, "UNKNOWN_CLIENT*", spaminess, DEVIATION(spaminess));
-      addnode(s_mix, "UNKNOWN_CLIENT*", spaminess, DEVIATION(spaminess));
-   }
-#endif
 
    /* redesigned spaminess calculation, 2007.08.28, SJ */
 
@@ -368,62 +257,11 @@ double eval_tokens(struct mydb_node *mhash[], struct session_data *sdata, struct
    }
 
    if(cfg->use_single_tokens == 1){
-   #ifdef HAVE_MYSQL
-      walk_hash(sdata, B_hash, cfg, s_phrase_hash, shash, s_mix);
-   #endif
-   #ifdef HAVE_SQLITE3
-      walk_hash(sdata, B_hash, cfg, s_phrase_hash, shash, s_mix);
-   #endif
-   #ifdef HAVE_MYDB
-      walk_hash(sdata, mhash, B_hash, cfg, s_phrase_hash, shash, s_mix);
-   #endif
+      walk_hash(sdata, B_hash, cfg, s_phrase_hash, s_mix);
 
-      /* consult blacklists about the IPv4 address connecting to us */
-
+      /* consult blacklists */
    #ifdef HAVE_RBL
-      if(strlen(cfg->rbl_domain) > 3){
-         gettimeofday(&tv1, &tz);
-         found_on_rbl = rbl_list_check(cfg->rbl_domain, state.ip, cfg->debug);
-         gettimeofday(&tv2, &tz);
-
-         if(cfg->debug == 1) fprintf(stderr, "rbl check took %ld ms\n", tvdiff(tv2, tv1)/1000);
-         if(cfg->verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: rbl check took %ld ms", sdata->ttmpfile, tvdiff(tv2, tv1)/1000);
-
-         for(i=0; i<found_on_rbl; i++){
-            snprintf(surbl_token, MAX_TOKEN_LEN-1, "RBL%d*%s", i, state.ip);
-            addnode(s_phrase_hash, surbl_token, REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
-            addnode(shash, surbl_token, REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
-            addnode(s_mix, surbl_token, REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
-         }
-      }
-   #endif
-
-      /* consult URL blacklists */
-
-   #ifdef HAVE_RBL
-      if(state.urls){
-         url = state.urls;
-
-         while(url){
-            gettimeofday(&tv1, &tz);
-            i = rbl_list_check(cfg->surbl_domain, url->url_str+4, cfg->debug);
-            gettimeofday(&tv2, &tz);
-
-            if(cfg->debug == 1) fprintf(stderr, "surbl check for %s (%d) took %ld ms\n", url->url_str+4, i, tvdiff(tv2, tv1)/1000);
-            if(cfg->verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: surbl check took %ld ms", sdata->ttmpfile, tvdiff(tv2, tv1)/1000);
-
-            surbl_match += i;
-
-            for(j=0; j<i; j++){
-               snprintf(surbl_token, MAX_TOKEN_LEN-1, "SURBL%d*%s", j, url->url_str+4);
-               addnode(s_phrase_hash, surbl_token, REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
-               addnode(shash, surbl_token, REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
-               addnode(s_mix, surbl_token, REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
-            }
-
-            url = url->r;
-         }
-      }
+      check_lists(sdata, &state, s_phrase_hash, s_mix, &found_on_rbl, &surbl_match, cfg);
    #endif
 
 
@@ -442,7 +280,6 @@ double eval_tokens(struct mydb_node *mhash[], struct session_data *sdata, struct
 
 END_OF_EVALUATION:
 
-   clearhash(shash);
    clearhash(s_phrase_hash);
    clearhash(s_mix);
    clearhash(B_hash);
@@ -475,7 +312,7 @@ float bayes_file(MYSQL mysql, struct _state state, struct session_data *sdata, s
 float bayes_file(sqlite3 *db, struct _state state, struct session_data *sdata, struct __config *cfg){
 #endif
 #ifdef HAVE_MYDB
-float bayes_file(struct mydb_node *mhash[], struct _state state, struct session_data *sdata, struct __config *cfg){
+float bayes_file(struct _state state, struct session_data *sdata, struct __config *cfg){
 #endif
 
    char buf[MAXBUFSIZE], *p;
@@ -487,14 +324,6 @@ float bayes_file(struct mydb_node *mhash[], struct _state state, struct session_
 #endif
 #ifdef HAVE_MYDB
    struct mydb_node *Q;
-#endif
-
-
-#ifdef HAVE_MYSQL
-   sdata->mysql = mysql;
-#endif
-#ifdef HAVE_SQLITE3
-   sdata->db = db;
 #endif
 
 
@@ -515,14 +344,17 @@ float bayes_file(struct mydb_node *mhash[], struct _state state, struct session_
    }
 #endif
 
-   /* switch to shared group if we are using mydb, 2007.10.09, SJ */
-
+#ifdef HAVE_MYSQL
+   sdata->mysql = mysql;
+#endif
 #ifdef HAVE_MYDB
    cfg->group_type = GROUP_SHARED;
 #endif
 #ifdef HAVE_SQLITE3
+   sdata->db = db;
    cfg->group_type = GROUP_SHARED;
 #endif
+
 
    /* fix uid and sql statement if this is a shared group */
 
@@ -559,7 +391,7 @@ float bayes_file(struct mydb_node *mhash[], struct _state state, struct session_
 
 
    if((sdata->Nham + sdata->Nspam == 0) && cfg->initial_1000_learning == 0){
-      syslog(LOG_PRIORITY, "%s: %s", p, ERR_SQL_DATA);
+      if(cfg->verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: %s", p, ERR_SQL_DATA);
       return DEFAULT_SPAMICITY;
    }
 
@@ -591,7 +423,7 @@ float bayes_file(struct mydb_node *mhash[], struct _state state, struct session_
       sqlite3_finalize(pStmt);
    #endif
    #ifdef HAVE_MYDB
-      Q = findmydb_node(mhash, APHash(state.from));
+      Q = findmydb_node(sdata->mhash, APHash(state.from));
       if(Q){
          ham_from = Q->nham;
          spam_from = Q->nspam;
@@ -608,16 +440,7 @@ float bayes_file(struct mydb_node *mhash[], struct _state state, struct session_
 
 
    /* evaluate the tokens */
-
-#ifdef HAVE_MYSQL
-   spaminess = eval_tokens(mysql, sdata, cfg, state);
-#endif
-#ifdef HAVE_SQLITE3
-   spaminess = eval_tokens(db, sdata, cfg, state);
-#endif
-#ifdef HAVE_MYDB
-   spaminess = eval_tokens(mhash, sdata, cfg, state);
-#endif
+   spaminess = eval_tokens(sdata, cfg, state);
 
    return spaminess;
 }
@@ -637,7 +460,7 @@ int train_message(sqlite3 *db, struct session_data sdata, struct _state state, i
 #ifdef HAVE_MYDB
 int train_message(char *mydbfile, struct mydb_node *mhash[], struct session_data sdata, struct _state state, int rounds, int is_spam, int train_mode, struct __config cfg){
    int rc;
-   struct mydb_node *mhash2[MAX_MYDB_HASH];
+   //struct mydb_node *mhash2[MAX_MYDB_HASH];
 #endif
    int i, tm=train_mode;
    char buf[SMALLBUFSIZE];
@@ -701,11 +524,15 @@ int train_message(char *mydbfile, struct mydb_node *mhash[], struct session_data
       }
 
    #ifdef HAVE_MYDB
-      rc = init_mydb(cfg.mydbfile, mhash2, &sdata);
+      /*rc = init_mydb(cfg.mydbfile, mhash2, &sdata);
       if(rc == 1){
          spaminess = bayes_file(mhash2, state, &sdata, &cfg);
       }
-      close_mydb(mhash2);
+      close_mydb(mhash2);*/
+
+      rc = init_mydb(cfg.mydbfile, sdata.mhash, &sdata);
+      if(rc == 1) spaminess = bayes_file(state, &sdata, &cfg);
+      close_mydb(sdata.mhash);
    #endif
 
       if(cfg.verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "training round: %d, spaminess: %0.4f", i, spaminess);

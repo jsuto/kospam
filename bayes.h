@@ -1,5 +1,5 @@
 /*
- * bayes.h, 2008.09.15, SJ
+ * bayes.h, 2009.01.04, SJ
  */
 
 #ifndef _BAYES_H
@@ -7,9 +7,16 @@
 
 #include "parser.h"
 #include "cfg.h"
+#include "hash.h"
+
 
 double spamicity(char *spamfile, struct __config cfg);
 struct _state parse_message(char *spamfile, struct session_data sdata, struct __config cfg);
+
+inline void append_to_hash_tables(struct node *s_phrase_hash[], struct node *s_mix[], char *p, float spaminess);
+void add_penalties(struct session_data *sdata, struct node *s_phrase_hash[], struct node *s_mix[], struct _state state, struct __config *cfg);
+void check_lists(struct session_data *sdata, struct _state *state, struct node *s_phrase_hash[], struct node *s_mix[], int *found_on_rbl, int *surbl_matc, struct __config *cfg);
+
 
 #ifdef HAVE_MYSQL
    #include <mysql.h>
@@ -25,7 +32,7 @@ struct _state parse_message(char *spamfile, struct session_data sdata, struct __
 
 #ifdef HAVE_MYDB
    #include "mydb.h"
-   float bayes_file(struct mydb_node *mhash[], struct _state state, struct session_data *sdata, struct __config *cfg);
+   float bayes_file(struct _state state, struct session_data *sdata, struct __config *cfg);
    int train_message(char *mydbfile, struct mydb_node *mhash[], struct session_data sdata, struct _state state, int rounds, int is_spam, int train_mode, struct __config cfg);
 #endif
 

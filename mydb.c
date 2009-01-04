@@ -166,7 +166,7 @@ struct mydb_node *findmydb_node(struct mydb_node *xhash[], unsigned long long ke
 }
 
 
-float mydbqry(struct mydb_node *xhash[], char *p, struct session_data *sdata, float rob_s, float rob_x){
+float mydbqry(struct session_data *sdata, char *p, struct __config *cfg){
    struct mydb_node *q;
    unsigned long long key;
    float spamicity = DEFAULT_SPAMICITY;
@@ -175,10 +175,10 @@ float mydbqry(struct mydb_node *xhash[], char *p, struct session_data *sdata, fl
 
    key = APHash(p);
 
-   q = findmydb_node(xhash, key);
+   q = findmydb_node(sdata->mhash, key);
    if(q == NULL) return spamicity;
 
-   spamicity = calc_spamicity(sdata->Nham, sdata->Nspam, q->nham, q->nspam, rob_s, rob_x);
+   spamicity = calc_spamicity(sdata->Nham, sdata->Nspam, q->nham, q->nspam, cfg->rob_s, cfg->rob_x);
 
    //fprintf(stderr, "%s %d %d %.4f\n", p, q->nham, q->nspam, spamicity);
 

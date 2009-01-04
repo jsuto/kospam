@@ -21,7 +21,7 @@
 
 
 
-void read_x_data(unsigned char *buf, int use_pair, struct node *s_phrase_hash[], struct node *shash[], struct node *s_mix[]){
+void read_x_data(unsigned char *buf, int use_pair, struct node *s_phrase_hash[], struct node *s_mix[]){
    int j;
    char t[SMALLBUFSIZE];
    struct x_token *x;
@@ -34,8 +34,6 @@ void read_x_data(unsigned char *buf, int use_pair, struct node *s_phrase_hash[],
 
       if(DEVIATION(x->spaminess) > 0.1){
          if(use_pair == 1) addnode(s_phrase_hash, t, x->spaminess, DEVIATION(x->spaminess));
-         else addnode(shash, t, x->spaminess, DEVIATION(x->spaminess));
-
          addnode(s_mix, t, x->spaminess, DEVIATION(x->spaminess));
       }
 
@@ -43,7 +41,7 @@ void read_x_data(unsigned char *buf, int use_pair, struct node *s_phrase_hash[],
 }
 
 
-int bulk_qry(int sd, struct _state *state, int use_pair, int *has_embed_image, struct __config *cfg, struct node *s_phrase_hash[], struct node *shash[], struct node *s_mix[]){
+int bulk_qry(int sd, struct _state *state, int use_pair, int *has_embed_image, struct __config *cfg, struct node *s_phrase_hash[], struct node *s_mix[]){
    int i=0, n;
    unsigned char buf[PKT_SIZE];
    struct _token *p;
@@ -69,7 +67,6 @@ int bulk_qry(int sd, struct _state *state, int use_pair, int *has_embed_image, s
 
       if(cfg->penalize_embed_images == 1 && strcmp(p->str, "src+cid") == 0){
          addnode(s_phrase_hash, "EMBED*", REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
-         addnode(shash, "EMBED*", REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
          addnode(s_mix, "EMBED*", REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
          *has_embed_image = 1;
       }
@@ -93,7 +90,7 @@ int bulk_qry(int sd, struct _state *state, int use_pair, int *has_embed_image, s
          if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "packet exchange in %ld [us]\n", tvdiff(tv1, tv2));
          if(n <= 0) break;
 
-         read_x_data(buf, use_pair, s_phrase_hash, shash, s_mix);
+         read_x_data(buf, use_pair, s_phrase_hash, s_mix);
       }
 
    NEXT_ITEM:
@@ -107,16 +104,8 @@ int bulk_qry(int sd, struct _state *state, int use_pair, int *has_embed_image, s
       gettimeofday(&tv2, &tz);
       if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "packet exchange in %ld [us]\n", tvdiff(tv1, tv2));
 
-      if(n > 0) read_x_data(buf, use_pair, s_phrase_hash, shash, s_mix);
+      if(n > 0) read_x_data(buf, use_pair, s_phrase_hash, s_mix);
    }
-
-#ifdef HAVE_XFORWARD
-   if(sdata->unknown_client == 1){
-      addnode(s_phrase_hash, "UNKNOWN_CLIENT*", REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
-      addnode(shash, "UNKNOWN_CLIENT*", REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
-      addnode(s_mix, "UNKNOWN_CLIENT*", REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
-   }
-#endif
 
 
 
@@ -129,17 +118,9 @@ double x_spam_check(struct session_data *sdata, struct _state *state, struct __c
    int has_embed_image=0, found_on_rbl=0, surbl_match=0;
    struct in_addr addr;
    struct sockaddr_in clamd_addr;
-   struct timezone tz;
-   struct timeval tv1, tv2;
    float spaminess;
-#ifdef HAVE_RBL
-   struct url *url;
-   char surbl_token[MAX_TOKEN_LEN];
-   int i, j;
-#endif
-   struct node *s_phrase_hash[MAXHASH], *shash[MAXHASH], *s_mix[MAXHASH];
+   struct node *s_phrase_hash[MAXHASH], *s_mix[MAXHASH];
 
-   inithash(shash);
    inithash(s_phrase_hash);
    inithash(s_mix);
 
@@ -153,89 +134,25 @@ double x_spam_check(struct session_data *sdata, struct _state *state, struct __c
 
    if(connect(sd, (struct sockaddr *)&clamd_addr, sizeof(struct sockaddr)) == -1) return DEFAULT_SPAMICITY;
 
-   /* add a spammy token if we got a binary, eg. PDF attachment, 2007.07.02, SJ */
-
-   if(cfg->penalize_octet_stream == 1 && (attachment_by_type(*state, "application/octet-stream") == 1 || attachment_by_type(*state, "application/pdf") == 1
-       || attachment_by_type(*state, "application/vnd.ms-excel") == 1
-       || attachment_by_type(*state, "application/msword") == 1
-       || attachment_by_type(*state, "application/rtf") == 1
-       || attachment_by_type(*state, "application/x-zip-compressed") == 1)
-   ){
-       addnode(s_phrase_hash, "OCTET_STREAM*", REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
-       addnode(shash, "OCTET_STREAM*", REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
-       addnode(s_mix, "OCTET_STREAM*", REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
-   }
-
-   /* add penalty for images, 2007.07.02, SJ */
-
-   if(cfg->penalize_images == 1 && attachment_by_type(*state, "image/") == 1){
-       addnode(s_phrase_hash, "IMAGE*", REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
-       addnode(shash, "IMAGE*", REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
-       addnode(s_mix, "IMAGE*", REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
-   }
+   /* add penalties */
+   add_penalties(sdata, s_phrase_hash, s_mix, *state, cfg);
 
 
-   if(state->n_subject_token == 0){
-      addnode(s_phrase_hash, "NO_SUBJECT*", REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
-      addnode(shash, "NO_SUBJECT*", REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
-      addnode(s_mix, "NO_SUBJECT*", REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
-   }
-
-   bulk_qry(sd, state, 1, &has_embed_image, cfg, s_phrase_hash, shash, s_mix);
+   bulk_qry(sd, state, 1, &has_embed_image, cfg, s_phrase_hash, s_mix);
    spaminess = calc_score_chi2(s_phrase_hash, cfg);
    if(cfg->debug == 1) fprintf(stderr, "phrase: %.4f\n", spaminess);
 
    if(spaminess >= cfg->spam_overall_limit || spaminess <= cfg->max_ham_spamicity) goto END_OF_EVAL;
 
    #ifdef HAVE_RBL
-      if(strlen(cfg->rbl_domain) > 3){
-         gettimeofday(&tv1, &tz);
-         found_on_rbl = rbl_list_check(cfg->rbl_domain, state->ip, cfg->debug);
-         gettimeofday(&tv2, &tz);
-
-         if(cfg->debug == 1) fprintf(stderr, "rbl check took %ld ms\n", tvdiff(tv2, tv1)/1000);
-         if(cfg->verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: rbl check took %ld ms", sdata->ttmpfile, tvdiff(tv2, tv1)/1000);
-
-         for(i=0; i<found_on_rbl; i++){
-            snprintf(surbl_token, MAX_TOKEN_LEN-1, "RBL%d*%s", i, state->ip);
-            addnode(s_phrase_hash, surbl_token, REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
-            addnode(shash, surbl_token, REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
-            addnode(s_mix, surbl_token, REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
-         }
-      }
+      check_lists(sdata, state, s_phrase_hash, s_mix, &found_on_rbl, &surbl_match, cfg);
    #endif
 
-   #ifdef HAVE_RBL
-      if(state->urls){
-         url = state->urls;
-
-         while(url){
-            gettimeofday(&tv1, &tz);
-            i = rbl_list_check(cfg->surbl_domain, url->url_str+4, cfg->debug);
-            gettimeofday(&tv2, &tz);
-
-            if(cfg->debug == 1) fprintf(stderr, "surbl check for %s (%d) took %ld ms\n", url->url_str+4, i, tvdiff(tv2, tv1)/1000);
-
-            surbl_match += i;
-
-            for(j=0; j<i; j++){
-               snprintf(surbl_token, MAX_TOKEN_LEN-1, "SURBL%d*%s", j, url->url_str+4);
-               addnode(s_phrase_hash, surbl_token, REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
-               addnode(shash, surbl_token, REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
-               addnode(s_mix, surbl_token, REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
-            }
-
-            url = url->r;
-         }
-      }
-   #endif
-
-   bulk_qry(sd, state, 0, &has_embed_image, cfg, s_phrase_hash, shash, s_mix);
+   bulk_qry(sd, state, 0, &has_embed_image, cfg, s_phrase_hash, s_mix);
    spaminess = calc_score_chi2(s_mix, cfg);
    if(cfg->debug == 1) fprintf(stderr, "mix: %.4f\n", spaminess);
 
 END_OF_EVAL:
-   clearhash(shash);
    clearhash(s_phrase_hash);
    clearhash(s_mix);
 

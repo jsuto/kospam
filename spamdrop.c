@@ -22,7 +22,6 @@ extern int optind;
 
 struct __config cfg;
 struct session_data sdata;
-struct c_res result;
 
 
 #ifdef HAVE_MYSQL
@@ -93,7 +92,7 @@ int main(int argc, char **argv, char **envp){
    struct stat st;
    struct passwd *pwd;
    struct _state state;
-
+   float spaminess=DEFAULT_SPAMICITY;
 #ifdef MY_TEST
    char rblbuf[SMALLBUFSIZE];
 #endif
@@ -223,14 +222,12 @@ int main(int argc, char **argv, char **envp){
 
    sdata.num_of_rcpt_to = 1;
    sdata.uid = getuid();
+   sdata.Nham = sdata.Nspam = 0;
    if(from) snprintf(sdata.mailfrom, MAXBUFSIZE-1, "%s", from);
    memset(sdata.rcptto[0], 0, MAXBUFSIZE);
    memset(whitelistbuf, 0, SMALLBUFSIZE);
    memset(sdata.ttmpfile, 0, SMALLBUFSIZE);
    make_rnd_string(&(sdata.ttmpfile[0]));
-
-   result.spaminess = DEFAULT_SPAMICITY;
-   result.ham_msg = result.spam_msg = 0;
 
    memset(qpath, 0, SMALLBUFSIZE);
 
@@ -400,7 +397,7 @@ int main(int argc, char **argv, char **envp){
          syslog(LOG_PRIORITY, "%s: sender (%s) found on whitelist", sdata.ttmpfile, from);
          snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on white list\r\n", cfg.clapf_header_field);
       } else
-         result = bayes_file(mysql, state, sdata, cfg);
+         spaminess = bayes_file(mysql, state, &sdata, &cfg);
 
       update_mysql_tokens(mysql, state.first, sdata.uid);
    #endif
@@ -409,12 +406,12 @@ int main(int argc, char **argv, char **envp){
          syslog(LOG_PRIORITY, "%s: sender (%s) found on whitelist", sdata.ttmpfile, from);
          snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on white list\r\n", cfg.clapf_header_field);
       } else
-         result = bayes_file(db, state, sdata, cfg);
+         spaminess = bayes_file(db, state, &sdata, &cfg);
 
       update_sqlite3_tokens(db, state.first);
    #endif
    #ifdef HAVE_MYDB
-      result = bayes_file(mhash, state, sdata, cfg);
+      spaminess = bayes_file(mhash, state, &sdata, &cfg);
       update_tokens(cfg.mydbfile, mhash, state.first);
    #endif
 
@@ -425,12 +422,12 @@ int main(int argc, char **argv, char **envp){
    #ifdef HAVE_SPAMSUM
       /* if we are uncertain, try the spamsum module, 2008.04.28, SJ */
 
-      if(result.spaminess > cfg.max_ham_spamicity && result.spaminess < cfg.spam_overall_limit){
+      if(spaminess > cfg.max_ham_spamicity && spaminess < cfg.spam_overall_limit){
          flags |= FLAG_IGNORE_HEADERS;
          sum = spamsum_file(sdata.ttmpfile, flags, 0);
          if(sum){
             spamsum_score = spamsum_match_db(cfg.sig_db, sum, 55);
-            if(spamsum_score >= 50) result.spaminess = 0.9988;
+            if(spamsum_score >= 50) spaminess = 0.9988;
             snprintf(spamsum_buf, SMALLBUFSIZE-1, "%sspamsum=%d\r\n", cfg.clapf_header_field, spamsum_score);
             free(sum);
          }
@@ -440,19 +437,19 @@ int main(int argc, char **argv, char **envp){
       if(sdata.need_signo_check == 1){
          if(!state.found_our_signo){
             syslog(LOG_PRIORITY, "%s: looks like a bounce, but our signo is missing", sdata.ttmpfile);
-            if(result.spaminess < cfg.spam_overall_limit){
-               result.spaminess = 0.99;
+            if(spaminess < cfg.spam_overall_limit){
+               spaminess = 0.99;
                syslog(LOG_PRIORITY, "%s: raising spamicity", sdata.ttmpfile);
             }
          }
          else {
             syslog(LOG_PRIORITY, "found our signo, this should be a real bounce message");
-            result.spaminess = DEFAULT_SPAMICITY;
+            spaminess = DEFAULT_SPAMICITY;
          }
       }
 
 
-      if(result.spaminess >= cfg.spam_overall_limit)
+      if(spaminess >= cfg.spam_overall_limit)
          is_spam = 1;
       else
          is_spam = 0;
@@ -461,8 +458,8 @@ int main(int argc, char **argv, char **envp){
       /* don't TUM train if this is a blackhole message */
 
       if(
-         (blackhole_request == 0 && cfg.training_mode == T_TUM && ( (result.spaminess >= cfg.spam_overall_limit && result.spaminess < 0.99) || (result.spaminess < cfg.max_ham_spamicity && result.spaminess > 0.1) )) ||
-         (cfg.initial_1000_learning == 1 && (result.ham_msg < NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED || result.spam_msg < NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED))
+         (blackhole_request == 0 && cfg.training_mode == T_TUM && ( (spaminess >= cfg.spam_overall_limit && spaminess < 0.99) || (spaminess < cfg.max_ham_spamicity && spaminess > 0.1) )) ||
+         (cfg.initial_1000_learning == 1 && (sdata.Nham < NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED || sdata.Nspam < NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED))
         )
       {
 
@@ -491,7 +488,7 @@ int main(int argc, char **argv, char **envp){
    /****************************************************************************************************/
 
    if(blackhole_request == 1){
-      if(result.spaminess < 0.99){
+      if(spaminess < 0.99){
          rounds = MAX_ITERATIVE_TRAIN_LOOPS;
 
          syslog(LOG_PRIORITY, "%s: training on a blackhole message", sdata.ttmpfile);
@@ -539,7 +536,7 @@ CLOSE_DB:
    /* rename file name according to its spamicity status, unless its a blackhole request, 2007.12.22, SJ */
 
    if(cfg.store_metadata == 1 && tot_len <= cfg.max_message_size_to_filter && blackhole_request == 0){
-      if(result.spaminess >= cfg.spam_overall_limit)
+      if(spaminess >= cfg.spam_overall_limit)
          snprintf(qpath, SMALLBUFSIZE-1, "s.%s", sdata.ttmpfile);
       else if(cfg.store_only_spam == 0)
          snprintf(qpath, SMALLBUFSIZE-1, "h.%s", sdata.ttmpfile);
@@ -561,7 +558,7 @@ CLOSE_DB:
 
 ENDE_SPAMDROP:
 
-   syslog(LOG_PRIORITY, "%s: %.4f %d in %ld [ms]", sdata.ttmpfile, result.spaminess, tot_len, tvdiff(tv_stop, tv_start)/1000);
+   syslog(LOG_PRIORITY, "%s: %.4f %d in %ld [ms]", sdata.ttmpfile, spaminess, tot_len, tvdiff(tv_stop, tv_start)/1000);
 
 
    /***************************/
@@ -575,7 +572,7 @@ ENDE_SPAMDROP:
          return EX_TEMPFAIL;
       }
 
-      if(result.spaminess >= cfg.spam_overall_limit && result.spaminess < 1.01 && strlen(cfg.spam_subject_prefix) > 1) put_subject_spam_prefix = 1;
+      if(spaminess >= cfg.spam_overall_limit && spaminess < 1.01 && strlen(cfg.spam_subject_prefix) > 1) put_subject_spam_prefix = 1;
 
    #ifdef MY_TEST
       memset(rblbuf, 0, SMALLBUFSIZE);
@@ -592,15 +589,15 @@ ENDE_SPAMDROP:
       memset(clapf_info, 0, MAXBUFSIZE);
 
       snprintf(clapf_info, MAXBUFSIZE-1, "%s%s\r\n%s%s%.4f\r\n%s%ld ms\r\n",
-              cfg.clapf_header_field, sdata.ttmpfile, trainbuf, cfg.clapf_header_field, result.spaminess, cfg.clapf_header_field, tvdiff(tv_stop, tv_start)/1000);
+              cfg.clapf_header_field, sdata.ttmpfile, trainbuf, cfg.clapf_header_field, spaminess, cfg.clapf_header_field, tvdiff(tv_stop, tv_start)/1000);
 
-      if(result.spaminess > 0.9999){
+      if(spaminess > 0.9999){
          strncat(clapf_info, cfg.clapf_header_field, MAXBUFSIZE-1);
          strncat(clapf_info, MSG_ABSOLUTELY_SPAM, MAXBUFSIZE-1);
          strncat(clapf_info, "\r\n", MAXBUFSIZE-1);
       }
 
-      if(result.spaminess >= cfg.spam_overall_limit && result.spaminess < 1.01){
+      if(spaminess >= cfg.spam_overall_limit && spaminess < 1.01){
          strncat(clapf_info, cfg.clapf_header_field, MAXBUFSIZE-1);
          strncat(clapf_info, "Yes\r\n", MAXBUFSIZE-1);
       }
@@ -639,7 +636,7 @@ ENDE_SPAMDROP:
 
             /* if we did not find a Subject line, add one - if we have to */
 
-            if(sent_subject_spam_prefix == 0 && put_subject_spam_prefix == 1 && result.spaminess >= cfg.spam_overall_limit && result.spaminess < 1.01)
+            if(sent_subject_spam_prefix == 0 && put_subject_spam_prefix == 1 && spaminess >= cfg.spam_overall_limit && spaminess < 1.01)
                printf("Subject: %s\r\n", cfg.spam_subject_prefix);
 
             if(sent_clapf_info == 0){
@@ -667,20 +664,20 @@ ENDE_SPAMDROP:
    /* print summary if we have to */
    /*******************************/
 
-   if(result.spaminess >= cfg.spam_overall_limit){
+   if(spaminess >= cfg.spam_overall_limit){
       rc = 1;
       if(print_summary_only == 1)
-         printf("S %.4f\n", result.spaminess);
+         printf("S %.4f\n", spaminess);
 
       log_ham_spam_per_email(sdata.ttmpfile, buf, 1);
    }
    else {
       rc = 0;
       if(print_summary_only == 1){
-         if(result.spaminess <= cfg.max_ham_spamicity)
-            printf("H %.4f\n", result.spaminess);
+         if(spaminess <= cfg.max_ham_spamicity)
+            printf("H %.4f\n", spaminess);
          else
-            printf("U %.4f\n", result.spaminess);
+            printf("U %.4f\n", spaminess);
       }
 
       log_ham_spam_per_email(sdata.ttmpfile, buf, 0);
@@ -704,7 +701,7 @@ ENDE:
       }
    }
 
-   if(print_message == 0 && result.spaminess >= cfg.spam_overall_limit && result.spaminess < 1.01)
+   if(print_message == 0 && spaminess >= cfg.spam_overall_limit && spaminess < 1.01)
       return 1;
 
    /* maildrop requires us to exit with 0 */

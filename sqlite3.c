@@ -29,7 +29,7 @@
  * query the number of occurances from SQLite3 table
  */
 
-struct te sqlite3_qry(sqlite3 *db, char *token){
+struct te sqlite3_qry(struct session_data *sdata, char *token){
    struct te TE;
    char stmt[MAXBUFSIZE];
    unsigned long long hash = APHash(token);
@@ -40,7 +40,7 @@ struct te sqlite3_qry(sqlite3 *db, char *token){
 
    snprintf(stmt, MAXBUFSIZE-1, "SELECT nham, nspam FROM %s WHERE token=%llu", SQL_TOKEN_TABLE, hash);
 
-   if(sqlite3_prepare_v2(db, stmt, -1, &pStmt, pzTail) != SQLITE_OK) return TE;
+   if(sqlite3_prepare_v2(sdata->db, stmt, -1, &pStmt, pzTail) != SQLITE_OK) return TE;
 
    while(sqlite3_step(pStmt) == SQLITE_ROW){
       TE.nham += sqlite3_column_int(pStmt, 0);

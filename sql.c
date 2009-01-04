@@ -38,22 +38,22 @@
  * query the spamicity value of a token from token database
  */
 
-float SQL_QUERY(qry QRY, int group_type, char *tokentable, char *token){
+float SQL_QUERY(struct session_data *sdata, char *token, struct __config *cfg){
    float r = DEFAULT_SPAMICITY;
    struct te TE;
 
    TE.nham = TE.nspam = 0;
 
 #ifdef HAVE_MYSQL
-   TE = myqry(QRY.mysql, QRY.sockfd, token, QRY.uid);
+   TE = myqry(sdata, token);
 #endif
 #ifdef HAVE_SQLITE3
-   TE = sqlite3_qry(QRY.db, token);
+   TE = sqlite3_qry(sdata, token);
 #endif
 
    if(TE.nham == 0 && TE.nspam == 0) return r;
 
-   r = calc_spamicity(QRY.ham_msg, QRY.spam_msg, TE.nham, TE.nspam, QRY.rob_s, QRY.rob_x);
+   r = calc_spamicity(sdata->Nham, sdata->Nspam, TE.nham, TE.nspam, cfg->rob_s, cfg->rob_x);
 
    return r;
 }

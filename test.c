@@ -13,6 +13,7 @@
 #include <locale.h>
 #include <clapf.h>
 
+
 #ifdef HAVE_MYSQL
    MYSQL mysql;
 #endif
@@ -32,7 +33,7 @@ int main(int argc, char **argv){
    struct session_data sdata;
    struct _state state;
    struct __config cfg;
-   struct c_res result;
+   float spaminess;
    struct stat st;
 #ifdef HAVE_SPAMSUM
    char *sum, spamsum_buf[SMALLBUFSIZE];
@@ -69,17 +70,20 @@ int main(int argc, char **argv){
    snprintf(sdata.ttmpfile, SMALLBUFSIZE-1, "%s", argv[2]);
    state = parse_message(argv[2], sdata, cfg);
 
-   result.spaminess = DEFAULT_SPAMICITY;
-   result.ham_msg = result.spam_msg = 0;
+   spaminess = DEFAULT_SPAMICITY;
+   sdata.Nham = sdata.Nspam = 0;
 
    if(argc >= 4) sdata.uid = atoi(argv[3]);
 
    gettimeofday(&tv_spam_start, &tz);
 
+#ifdef HAVE_QCACHE
+   spaminess = x_spam_check(&sdata, &state, &cfg);
+#else
 #ifdef HAVE_MYSQL
    mysql_init(&mysql);
    if(mysql_real_connect(&mysql, cfg.mysqlhost, cfg.mysqluser, cfg.mysqlpwd, cfg.mysqldb, cfg.mysqlport, cfg.mysqlsocket, 0)){
-      result = bayes_file(mysql, state, sdata, cfg);
+      spaminess = bayes_file(mysql, state, &sdata, &cfg);
       mysql_close(&mysql);
    }
    else {
@@ -98,22 +102,20 @@ int main(int argc, char **argv){
           fprintf(stderr, "error happened\n");
 
 
-      result = bayes_file(db, state, sdata, cfg);
+      spaminess = bayes_file(db, state, &sdata, &cfg);
    }
    sqlite3_close(db);
 #endif
 
 #ifdef HAVE_MYDB
-   //result.spaminess = x_spam_check(&sdata, &state, cfg);
-
    rc = init_mydb(cfg.mydbfile, mhash, &sdata);
    fprintf(stderr, "using %s. %.0f, %0.f ...\n", cfg.mydbfile, sdata.Nham, sdata.Nspam);
    if(rc == 1){
-      result = bayes_file(mhash, state, sdata, cfg);
-
+      spaminess = bayes_file(mhash, state, &sdata, &cfg);
    }
    close_mydb(mhash);
 #endif
+#endif /* HAVE_QCACHE */
 
 #ifdef MY_TEST
    reverse_ipv4_addr(state.ip);
@@ -130,7 +132,7 @@ int main(int argc, char **argv){
 
    gettimeofday(&tv_spam_stop, &tz);
 
-   fprintf(stderr, "%s: %.4f in %ld [ms]\n", argv[2], result.spaminess, tvdiff(tv_spam_stop, tv_spam_start)/1000);
+   fprintf(stderr, "%s: %.4f in %ld [ms]\n", argv[2], spaminess, tvdiff(tv_spam_stop, tv_spam_start)/1000);
 
    fprintf(stderr, "%ld %ld\n", state.c_shit, state.l_shit);
 
@@ -146,7 +148,7 @@ int main(int argc, char **argv){
    }
 #endif
 
-   if(result.spaminess >= cfg.spam_overall_limit)
+   if(spaminess >= cfg.spam_overall_limit)
       return 1;
 
    return 0;

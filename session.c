@@ -16,35 +16,23 @@
 #include "av.h"
 #include <clapf.h>
 
-struct timezone tz;
-struct timeval tv_start, tv_rcvd, tv_scnd, tv_sent, tv_stop, tv_meta1, tv_meta2;
-struct session_data sdata;
-int x, rc;
 
 #ifdef NEED_MYSQL
    #include <mysql.h>
-   MYSQL mysql;
-   int mysql_connection=0;
 #endif
 
 #ifdef NEED_SQLITE3
    #include <sqlite3.h>
-   sqlite3 *db;
 #endif
 
 #ifdef NEED_LDAP
    #include <ldap.h>
-   LDAP *ldap;
 #endif
 
 #ifdef HAVE_MYDB
    #include "mydb.h"
 #endif
 
-#ifdef HAVE_STORE
-   #include "clapfstore.h"
-   store *SSTORE;
-#endif
 
 
 /*
@@ -52,8 +40,7 @@ int x, rc;
  */
 
 void kill_child(){
-   syslog(LOG_PRIORITY, "%s: child is killed by force", sdata.ttmpfile);
-   if(unlink(sdata.ttmpfile)) syslog(LOG_PRIORITY, "%s: failed to remove", sdata.ttmpfile);
+   syslog(LOG_PRIORITY, "child is killed by force");
    exit(0);
 }
 
@@ -65,7 +52,6 @@ void kill_child(){
 void init_session_data(struct session_data *sdata){
    int i;
 
-   gettimeofday(&tv_start, &tz);
 
    sdata->fd = -1;
 
@@ -81,6 +67,8 @@ void init_session_data(struct session_data *sdata){
    sdata->skip_id_check = 0;
    sdata->num_of_rcpt_to = 0;
    sdata->unknown_client = 0;
+   sdata->Nham = 0;
+   sdata->Nspam = 0;
 
    for(i=0; i<MAX_RCPT_TO; i++){
       memset(sdata->rcptto[i], 0, MAXBUFSIZE);
@@ -98,10 +86,13 @@ void init_session_data(struct session_data *sdata){
    int i, n, rav=AVIR_OK, inj=ERR_REJECT, state, prevlen=0;
    char *p, buf[MAXBUFSIZE], prevbuf[MAXBUFSIZE], last2buf[2*MAXBUFSIZE+1], acceptbuf[MAXBUFSIZE];
    char email[SMALLBUFSIZE], email2[SMALLBUFSIZE];
-
+   float spaminess;
+   struct session_data sdata;
    struct __config my_cfg;
-   struct c_res result;
+   struct timezone tz;
+   struct timeval tv_rcvd, tv_scnd;
    int is_spam;
+   int rc;
    struct ue UE, UE2;
 
    #ifdef HAVE_ANTIVIRUS
@@ -114,6 +105,17 @@ void init_session_data(struct session_data *sdata){
       unsigned int options=0;
    #endif
 
+#ifdef NEED_MYSQL
+   MYSQL mysql;
+   int mysql_connection=0;
+#endif
+#ifdef NEED_SQLITE3
+   sqlite3 *db;
+#endif
+#ifdef NEED_LDAP
+   LDAP *ldap;
+#endif
+
    #ifdef HAVE_ANTISPAM
       char spaminessbuf[MAXBUFSIZE], reason[SMALLBUFSIZE], qpath[SMALLBUFSIZE], trainbuf[SMALLBUFSIZE], whitelistbuf[SMALLBUFSIZE], ID[RND_STR_LEN+1];
     #ifndef HAVE_STORE
@@ -123,7 +125,7 @@ void init_session_data(struct session_data *sdata){
       struct _state sstate, sstate2;
       int train_mode=T_TOE;
 
-      result.spaminess=DEFAULT_SPAMICITY;
+      spaminess=DEFAULT_SPAMICITY;
 
    #endif
 
@@ -601,7 +603,7 @@ void init_session_data(struct session_data *sdata){
                   memset(email, 0, SMALLBUFSIZE);
 
                   is_spam = 0;
-                  result.spaminess = DEFAULT_SPAMICITY;
+                  spaminess = DEFAULT_SPAMICITY;
                   UE.policy_group = 0;
 
                   extract_email(sdata.rcptto[i], email);
@@ -647,7 +649,6 @@ void init_session_data(struct session_data *sdata){
 
                #ifdef HAVE_ANTISPAM
                   //is_spam = 0;
-                  //result.spaminess = DEFAULT_SPAMICITY;
 
                   /* run statistical antispam check */
 
@@ -686,7 +687,7 @@ void init_session_data(struct session_data *sdata){
 
                         // TODO: check for whitelist
 
-                        result.spaminess = x_spam_check(&sdata, &sstate, cfg);
+                        spaminess = x_spam_check(&sdata, &sstate, cfg);
 
                         gettimeofday(&tv_spam_stop, &tz);
                      }
@@ -734,21 +735,21 @@ void init_session_data(struct session_data *sdata){
                            else {
                               if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: running Bayesian test", sdata.ttmpfile);
                            #ifdef HAVE_QCACHE
-                              result.spaminess = x_spam_check(&sdata, &sstate, my_cfg);
-                              result.ham_msg = result.spam_msg = NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED + 1;
+                              spaminess = x_spam_check(&sdata, &sstate, &my_cfg);
+                              sdata.Nham = sdata.Nspam = NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED + 1;
                            #else
-                              result = bayes_file(mysql, sstate, sdata, my_cfg);
+                              spaminess = bayes_file(mysql, sstate, &sdata, &my_cfg);
                            #endif
                            }
                            update_mysql_tokens(mysql, sstate.first, sdata.uid);
 
                            if(
-                               (my_cfg.training_mode == T_TUM && ( (result.spaminess >= my_cfg.spam_overall_limit && result.spaminess < 0.99) || (result.spaminess < my_cfg.max_ham_spamicity && result.spaminess > 0.1) )) ||
-                               (my_cfg.initial_1000_learning == 1 && (result.ham_msg < NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED || result.spam_msg < NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED))
+                               (my_cfg.training_mode == T_TUM && ( (spaminess >= my_cfg.spam_overall_limit && spaminess < 0.99) || (spaminess < my_cfg.max_ham_spamicity && spaminess > 0.1) )) ||
+                               (my_cfg.initial_1000_learning == 1 && (sdata.Nham < NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED || sdata.Nspam < NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED))
                            )
                            {
 
-                              if(result.spaminess >= my_cfg.spam_overall_limit){
+                              if(spaminess >= my_cfg.spam_overall_limit){
                                  is_spam = 1;
                                  syslog(LOG_PRIORITY, "%s: TUM training a spam", sdata.ttmpfile);
                               }
@@ -769,12 +770,12 @@ void init_session_data(struct session_data *sdata){
                      }
                      else {
                         gettimeofday(&tv_spam_stop, &tz);
-                        result.spaminess = DEFAULT_SPAMICITY;
+                        spaminess = DEFAULT_SPAMICITY;
                      }
                   #endif
                   #ifdef HAVE_SQLITE3
                      if(rc){
-                        result.spaminess = DEFAULT_SPAMICITY;
+                        spaminess = DEFAULT_SPAMICITY;
                         gettimeofday(&tv_spam_stop, &tz);
                      }
                      else {
@@ -822,17 +823,17 @@ void init_session_data(struct session_data *sdata){
                            }
                            else {
                               if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: running Bayesian test", sdata.ttmpfile);
-                              result = bayes_file(db, sstate, sdata, cfg);
+                              spaminess = bayes_file(db, sstate, &sdata, &cfg);
                            }
                            update_sqlite3_tokens(db, sstate.first);
 
                            if(
-                               (cfg.training_mode == T_TUM && ( (result.spaminess >= cfg.spam_overall_limit && result.spaminess < 0.99) || (result.spaminess < cfg.max_ham_spamicity && result.spaminess > 0.1) )) ||
-                               (cfg.initial_1000_learning == 1 && (result.ham_msg < NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED || result.spam_msg < NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED))
+                               (cfg.training_mode == T_TUM && ( (spaminess >= cfg.spam_overall_limit && spaminess < 0.99) || (spaminess < cfg.max_ham_spamicity && spaminess > 0.1) )) ||
+                               (cfg.initial_1000_learning == 1 && (sdata.Nham < NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED || sdata.Nspam < NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED))
                            )
                            {
 
-                              if(result.spaminess >= cfg.spam_overall_limit){
+                              if(spaminess >= cfg.spam_overall_limit){
                                  is_spam = 1;
                                  syslog(LOG_PRIORITY, "%s: TUM training a spam", sdata.ttmpfile);
                               }
@@ -859,26 +860,7 @@ void init_session_data(struct session_data *sdata){
 
                      if(cfg.store_metadata == 1 && strlen(UE.name) > 1){
 
-                     #ifdef HAVE_STORE
-                        gettimeofday(&tv_meta1, &tz);
-
-                        SSTORE = store_init(cfg.store_addr, cfg.store_port);
-                        if(SSTORE){
-                          if(SSTORE->rc == 1){
-                           if(result.spaminess >= cfg.spam_overall_limit)
-                              rc = store_email(SSTORE, sdata.ttmpfile, UE.name, sdata.ttmpfile, 1, cfg.store_secret);
-                           else
-                              rc = store_email(SSTORE, sdata.ttmpfile, UE.name, sdata.ttmpfile, 0, cfg.store_secret);
-                          }
-
-                          store_free(SSTORE);
-                        }
-
-                        gettimeofday(&tv_meta2, &tz);
-
-
-                     #else
-                        if(cfg.store_only_spam == 1 && result.spaminess < cfg.spam_overall_limit){
+                        if(cfg.store_only_spam == 1 && spaminess < cfg.spam_overall_limit){
                         }
                         else {
                            snprintf(qpath, SMALLBUFSIZE-1, "%s/%c", USER_QUEUE_DIR, UE.name[0]);
@@ -899,7 +881,7 @@ void init_session_data(struct session_data *sdata){
                               chmod(qpath, S_IRUSR|S_IWUSR|S_IXUSR|S_IRGRP|S_IWGRP|S_IXGRP);
                            }
 
-                           if(result.spaminess >= cfg.spam_overall_limit)
+                           if(spaminess >= cfg.spam_overall_limit)
                               snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s/s.%s", USER_QUEUE_DIR, UE.name[0], UE.name, sdata.ttmpfile);
                            else
                               snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s/h.%s", USER_QUEUE_DIR, UE.name[0], UE.name, sdata.ttmpfile);
@@ -913,7 +895,7 @@ void init_session_data(struct session_data *sdata){
                            }
 
                         }
-                     #endif
+
 
                         /* this info is not used yet, 2008.10.29, SJ
 
@@ -929,45 +911,45 @@ void init_session_data(struct session_data *sdata){
 
                   #endif
 
-                     syslog(LOG_PRIORITY, "%s: %.4f %d in %ld [ms]", sdata.ttmpfile, result.spaminess, sdata.tot_len, tvdiff(tv_spam_stop, tv_spam_start)/1000);
+                     syslog(LOG_PRIORITY, "%s: %.4f %d in %ld [ms]", sdata.ttmpfile, spaminess, sdata.tot_len, tvdiff(tv_spam_stop, tv_spam_start)/1000);
 
 
                      if(sdata.need_signo_check == 1){
                         if(!sstate.found_our_signo){
                            syslog(LOG_PRIORITY, "%s: looks like a bounce, but our signo is missing", sdata.ttmpfile);
-                           if(result.spaminess < cfg.spam_overall_limit){
-                              result.spaminess = 0.99;
+                           if(spaminess < cfg.spam_overall_limit){
+                              spaminess = 0.99;
                               syslog(LOG_PRIORITY, "%s: raising spamicity", sdata.ttmpfile);
                            }
                         }
                         else {
                            syslog(LOG_PRIORITY, "found our signo, this should be a real bounce message");
-                           result.spaminess = DEFAULT_SPAMICITY;
+                           spaminess = DEFAULT_SPAMICITY;
                         }
                      }
 
 
-                     if(result.spaminess >= cfg.spam_overall_limit){
+                     if(spaminess >= cfg.spam_overall_limit){
                         memset(reason, 0, SMALLBUFSIZE);
 
-                        if(result.spaminess == cfg.spaminess_of_strange_language_stuff) snprintf(reason, SMALLBUFSIZE-1, "%s%s\r\n", cfg.clapf_header_field, MSG_STRANGE_LANGUAGE);
-                        if(result.spaminess == cfg.spaminess_of_too_much_spam_in_top15) snprintf(reason, SMALLBUFSIZE-1, "%s%s\r\n", cfg.clapf_header_field, MSG_TOO_MUCH_SPAM_IN_TOP15);
-                        if(result.spaminess == cfg.spaminess_of_blackholed_mail) snprintf(reason, SMALLBUFSIZE-1, "%s%s\r\n", cfg.clapf_header_field, MSG_BLACKHOLED);
-                        if(result.spaminess == cfg.spaminess_of_caught_by_surbl) snprintf(reason, SMALLBUFSIZE-1, "%s%s\r\n", cfg.clapf_header_field, MSG_CAUGHT_BY_SURBL);
-                        if(result.spaminess == cfg.spaminess_of_text_and_base64) snprintf(reason, SMALLBUFSIZE-1, "%s%s\r\n", cfg.clapf_header_field, MSG_TEXT_AND_BASE64);
-                        if(result.spaminess == cfg.spaminess_of_embed_image) snprintf(reason, SMALLBUFSIZE-1, "%s%s\r\n", cfg.clapf_header_field, MSG_EMBED_IMAGE);
-                        if(result.spaminess > 0.9999) snprintf(reason, SMALLBUFSIZE-1, "%s%s\r\n", cfg.clapf_header_field, MSG_ABSOLUTELY_SPAM);
+                        if(spaminess == cfg.spaminess_of_strange_language_stuff) snprintf(reason, SMALLBUFSIZE-1, "%s%s\r\n", cfg.clapf_header_field, MSG_STRANGE_LANGUAGE);
+                        if(spaminess == cfg.spaminess_of_too_much_spam_in_top15) snprintf(reason, SMALLBUFSIZE-1, "%s%s\r\n", cfg.clapf_header_field, MSG_TOO_MUCH_SPAM_IN_TOP15);
+                        if(spaminess == cfg.spaminess_of_blackholed_mail) snprintf(reason, SMALLBUFSIZE-1, "%s%s\r\n", cfg.clapf_header_field, MSG_BLACKHOLED);
+                        if(spaminess == cfg.spaminess_of_caught_by_surbl) snprintf(reason, SMALLBUFSIZE-1, "%s%s\r\n", cfg.clapf_header_field, MSG_CAUGHT_BY_SURBL);
+                        if(spaminess == cfg.spaminess_of_text_and_base64) snprintf(reason, SMALLBUFSIZE-1, "%s%s\r\n", cfg.clapf_header_field, MSG_TEXT_AND_BASE64);
+                        if(spaminess == cfg.spaminess_of_embed_image) snprintf(reason, SMALLBUFSIZE-1, "%s%s\r\n", cfg.clapf_header_field, MSG_EMBED_IMAGE);
+                        if(spaminess > 0.9999) snprintf(reason, SMALLBUFSIZE-1, "%s%s\r\n", cfg.clapf_header_field, MSG_ABSOLUTELY_SPAM);
 
                         /* add additional headers, credits: Mariano, 2006.08.14 */
 
                         snprintf(spaminessbuf, MAXBUFSIZE-1, "%s%.4f\r\n%s%s\r\n%s%s%s%s\r\n",
-                           cfg.clapf_header_field, result.spaminess, cfg.clapf_header_field, sdata.ttmpfile, reason, trainbuf, whitelistbuf, cfg.clapf_spam_header_field);
+                           cfg.clapf_header_field, spaminess, cfg.clapf_header_field, sdata.ttmpfile, reason, trainbuf, whitelistbuf, cfg.clapf_spam_header_field);
 
 
                         log_ham_spam_per_email(sdata.ttmpfile, email, 1);
                      }
                      else {
-                        snprintf(spaminessbuf, MAXBUFSIZE-1, "%s%.4f\r\n%s%s\r\n%s%s", cfg.clapf_header_field, result.spaminess, cfg.clapf_header_field, sdata.ttmpfile, trainbuf, whitelistbuf);
+                        snprintf(spaminessbuf, MAXBUFSIZE-1, "%s%.4f\r\n%s%s\r\n%s%s", cfg.clapf_header_field, spaminess, cfg.clapf_header_field, sdata.ttmpfile, trainbuf, whitelistbuf);
 
                         log_ham_spam_per_email(sdata.ttmpfile, email, 0);
                      }
@@ -978,7 +960,7 @@ void init_session_data(struct session_data *sdata){
 
                   else {
                      snprintf(spaminessbuf, MAXBUFSIZE-1, "%s%.4f\r\n%s%s\r\n",
-                              cfg.clapf_header_field, result.spaminess, cfg.clapf_header_field, sdata.ttmpfile);
+                              cfg.clapf_header_field, spaminess, cfg.clapf_header_field, sdata.ttmpfile);
                   }
 
 
@@ -986,9 +968,9 @@ void init_session_data(struct session_data *sdata){
 
                   /* then inject message back */
 
-                  if(result.spaminess >= cfg.spam_overall_limit){
+                  if(spaminess >= cfg.spam_overall_limit){
                     /* shall we redirect the message into oblivion? 2007.02.07, SJ */
-                    if(result.spaminess >= cfg.spaminess_oblivion_limit)
+                    if(spaminess >= cfg.spaminess_oblivion_limit)
                        inj = ERR_DROP_SPAM;
                     else
                        inj = inject_mail(sdata, i, cfg.spam_smtp_addr, cfg.spam_smtp_port, spaminessbuf, my_cfg, NULL);

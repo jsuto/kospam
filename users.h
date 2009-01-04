@@ -6,13 +6,8 @@
  #define _USERS_H
 
 #include <clapf.h>
+#include "defs.h"
 
-
-struct ue {
-   unsigned long uid;
-   unsigned int policy_group;
-   char name[SMALLBUFSIZE];
-};
 
 #ifdef USERS_IN_MYSQL
    #include <mysql.h>

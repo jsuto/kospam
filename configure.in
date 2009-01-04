@@ -716,7 +716,7 @@ if test "$have_qcache" = "yes"; then
    echo "qcache support: yes"
    objs="$objs xdb.o"
 else
-   echo "policy support: no"
+   echo "qcache support: no"
 fi
 
 if test "$want_language_detection" = "yes"; then

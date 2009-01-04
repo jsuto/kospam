@@ -32,7 +32,7 @@ struct mydb_node {
 void init_my_hash(struct mydb_node *xhash[]);
 int init_mydb(char *mydb_file, struct mydb_node *xhash[], struct session_data *sdata);
 void close_mydb(struct mydb_node *xhash[]);
-unsigned long long mydb_hash(unsigned long long key);
+inline unsigned long long mydb_hash(unsigned long long key);
 struct mydb_node *makenewmydb_node(struct mydb_node *xhash[], unsigned long long key, unsigned int nham, unsigned int nspam, unsigned long ts, unsigned int pos);
 int addmydb_node(struct mydb_node *xhash[], unsigned long long key, unsigned int nham, unsigned int nspam, unsigned long ts, unsigned int pos);
 struct mydb_node *findmydb_node(struct mydb_node *xhash[], unsigned long long key);

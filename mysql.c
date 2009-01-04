@@ -98,23 +98,6 @@ int do_mysql_qry(MYSQL mysql, int sockfd, int ham_or_spam, char *token, unsigned
 
    /* update token entry ... */
 
-#ifdef HAVE_QCACHE_OLD
-   TE = myqry(mysql, sockfd, SQL_TOKEN_TABLE, token, uid);
-
-   if(ham_or_spam == 1){
-      if(train_mode == T_TUM && TE.nham > 0) TE.nham--;
-      snprintf(stmt, MAXBUFSIZE-1, "UPDATE %llu %ld %d %d\r\n", hash, uid, TE.nham, TE.nspam+1);
-   }
-   else {
-      if(train_mode == T_TUM && TE.nspam > 0) TE.nspam--;
-      snprintf(stmt, MAXBUFSIZE-1, "UPDATE %llu %d %ld %d\r\n", hash, uid, TE.nham+1, TE.nspam);
-   }
-
-   if(sockfd != -1){
-      send(sockfd, stmt, strlen(stmt), 0);
-      recv(sockfd, stmt, MAXBUFSIZE, 0);
-   }
-#else
    TE = get_ham_spam(mysql, stmt);
 
    if(TE.nham > 0 || TE.nspam > 0){
@@ -137,7 +120,6 @@ int do_mysql_qry(MYSQL mysql, int sockfd, int ham_or_spam, char *token, unsigned
 
       mysql_real_query(&mysql, stmt, strlen(stmt));
    }
-#endif
 
 
    /* ... or insert token entry */
@@ -173,53 +155,22 @@ int do_mysql_qry(MYSQL mysql, int sockfd, int ham_or_spam, char *token, unsigned
  * query the number of occurances from MySQL table
  */
 
-struct te myqry(MYSQL mysql, int sockfd, char *token, unsigned long uid){
+struct te myqry(struct session_data *sdata, char *token){
    struct te TE;
    char stmt[MAXBUFSIZE];
 
    TE.nham = 0;
    TE.nspam = 0;
 
-#ifdef HAVE_NO_64_HASH
-   char buf[MAXBUFSIZE];
-   if(strlen(token) < (MAXBUFSIZE/2)-1){
-      mysql_real_escape_string(&mysql, buf, token, strlen(token));
-      snprintf(stmt, MAXBUFSIZE-1, "SELECT nham, nspam FROM %s WHERE token='%s' AND (uid=0 OR uid=%ld)", SQL_TOKEN_TABLE, buf, uid);
-   }
-   else
-      return TE;
-#else
    unsigned long long hash = APHash(token);
-   snprintf(stmt, MAXBUFSIZE-1, "SELECT nham, nspam FROM %s WHERE token=%llu AND (uid=0 OR uid=%ld)", SQL_TOKEN_TABLE, hash, uid);
-#endif
+   snprintf(stmt, MAXBUFSIZE-1, "SELECT nham, nspam FROM %s WHERE token=%llu AND (uid=0 OR uid=%ld)", SQL_TOKEN_TABLE, hash, sdata->uid);
 
-#ifdef HAVE_QCACHE_OLD
-   char *p, *q;
-
-   snprintf(stmt, MAXBUFSIZE-1, "SELECT %llu %d\r\n", hash, uid);
-   send(sockfd, stmt, strlen(stmt), 0);
-   memset(stmt, 0, MAXBUFSIZE);
-   recv(sockfd, stmt, MAXBUFSIZE, 0);
-
-   /* is it a valid response (status code: 250) */
-
-   if(strncmp(stmt, "250 ", 4) == 0){
-      p = stmt+4;
-      q = strchr(p, ' ');
-      if(q){
-        *q = '\0';
-        TE.nham = atof(p);
-        TE.nspam = atof(++q);
-      }
-   }
-
-#else
 
    MYSQL_RES *res;
    MYSQL_ROW row;
 
-   if(mysql_real_query(&mysql, stmt, strlen(stmt)) == 0){
-      res = mysql_store_result(&mysql);
+   if(mysql_real_query(&(sdata->mysql), stmt, strlen(stmt)) == 0){
+      res = mysql_store_result(&(sdata->mysql));
       if(res != NULL){
          while((row = mysql_fetch_row(res))){
             TE.nham += atol(row[0]);
@@ -229,7 +180,6 @@ struct te myqry(MYSQL mysql, int sockfd, char *token, unsigned long uid){
          mysql_free_result(res);
       }
    }
-#endif
 
    return TE;
 }

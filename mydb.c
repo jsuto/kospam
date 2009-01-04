@@ -23,12 +23,6 @@
 
 
 
-struct te {
-   unsigned int nham;
-   unsigned int nspam;
-};
-
-
 void init_my_hash(struct mydb_node *xhash[]){
    int i;
 
@@ -98,9 +92,10 @@ void close_mydb(struct mydb_node *xhash[]){
 }
 
 
-unsigned long long mydb_hash(unsigned long long key){
+inline unsigned long long mydb_hash(unsigned long long key){
    return key % MAX_MYDB_HASH;
 }
+
 
 struct mydb_node *makenewmydb_node(struct mydb_node *xhash[], unsigned long long key, unsigned int nham, unsigned int nspam, unsigned long ts, unsigned int pos){
    struct mydb_node *h;

@@ -7,6 +7,6 @@
 
 #include "parser.h"
 
-double x_spam_check(struct session_data *sdata, struct _state *state, struct __config cfg);
+double x_spam_check(struct session_data *sdata, struct _state *state, struct __config *cfg);
 
 #endif

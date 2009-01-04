@@ -1,8 +1,9 @@
 0.4.0-rc2:
 
-2009.01.03, SJ
+2009.01.04, SJ
 
-(qcache.c, turbo.c, turbo.h, Makefile.in)
+Added the qcache feature (again).
+(qcache.c, cache.c, cache.h, Makefile.in)
 
 2009.01.02, SJ
 

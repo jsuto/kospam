@@ -1,28 +1,21 @@
 /*
- * hash.h, 2008.09.15, SJ
+ * hash.h, 2009.01.07, SJ
  */
 
 #ifndef _HASH_H
  #define _HASH_H
 
 #include "cfg.h"
+#include "defs.h"
 
-#define MAXHASH 4099 /* if you want more try this value: 74713 */
-#define MAX_HASH_STR_LEN 64
-
-struct node {
-   char str[MAX_HASH_STR_LEN];
-   double spaminess;
-   double deviation;
-   unsigned long num;
-   struct node *r;
-};
 
 void inithash(struct node *xhash[]);
-void clearhash(struct node *xhash[]);
+void clearhash(struct node *xhash[], int print);
+int counthash(struct node *xhash[]);
 struct node *makenewnode(struct node *xhash[], char *s, double spaminess, double deviation);
 int addnode(struct node *xhash[], char *s, double spaminess, double deviation);
 struct node *findnode(struct node *xhash[], char *s);
-unsigned long hash(char *s);
+int updatenode(struct node *xhash[], unsigned long long key, float spaminess);
+inline int hash(unsigned long long key);
 
 #endif /* _HASH_H */

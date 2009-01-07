@@ -13,9 +13,8 @@
 double spamicity(char *spamfile, struct __config cfg);
 struct _state parse_message(char *spamfile, struct session_data sdata, struct __config cfg);
 
-inline void append_to_hash_tables(struct node *s_phrase_hash[], struct node *s_mix[], char *p, float spaminess);
-void add_penalties(struct session_data *sdata, struct node *s_phrase_hash[], struct node *s_mix[], struct _state state, struct __config *cfg);
-void check_lists(struct session_data *sdata, struct _state *state, struct node *s_phrase_hash[], struct node *s_mix[], int *found_on_rbl, int *surbl_matc, struct __config *cfg);
+void add_penalties(struct session_data *sdata, struct _state state, struct node *xhash[], struct __config *cfg);
+void check_lists(struct session_data *sdata, struct _state *state, struct node *xhash[], int *found_on_rbl, int *surbl_matc, struct __config *cfg);
 
 
 #ifdef HAVE_MYSQL

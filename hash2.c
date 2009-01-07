@@ -18,20 +18,10 @@
 
 
 /*
- * append to hashes
- */
-
-inline void append_to_hash_tables(struct node *s_phrase_hash[], struct node *s_mix[], char *p, float spaminess){
-   addnode(s_phrase_hash, p, spaminess, DEVIATION(spaminess));
-   addnode(s_mix, p, spaminess, DEVIATION(spaminess));
-}
-
-
-/*
  * add penalties
  */
 
-void add_penalties(struct session_data *sdata, struct node *s_phrase_hash[], struct node *s_mix[], struct _state state, struct __config *cfg){
+void add_penalties(struct session_data *sdata, struct _state state, struct node *xhash[], struct __config *cfg){
 
    /* add a spammy token if we got a binary, eg. PDF attachment, 2007.07.02, SJ */
 
@@ -41,30 +31,30 @@ void add_penalties(struct session_data *sdata, struct node *s_phrase_hash[], str
        || attachment_by_type(state, "application/rtf") == 1
        || attachment_by_type(state, "application/x-zip-compressed") == 1)
    ){
-       append_to_hash_tables(s_phrase_hash, s_mix, "OCTET_STREAM*", REAL_SPAM_TOKEN_PROBABILITY);
+       addnode(xhash, "OCTET_STREAM*", REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
    }
 
    /* add penalty for images, 2007.07.02, SJ */
 
    if(cfg->penalize_images == 1 && attachment_by_type(state, "image/") == 1)
-       append_to_hash_tables(s_phrase_hash, s_mix, "IMAGE*", REAL_SPAM_TOKEN_PROBABILITY);
+       addnode(xhash, "IMAGE*", REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
 
 
    /* if no valid Subject: line */
 
    if(state.n_subject_token == 0)
-      append_to_hash_tables(s_phrase_hash, s_mix, "NO_SUBJECT*", REAL_SPAM_TOKEN_PROBABILITY);
+      addnode(xhash, "NO_SUBJECT*", REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
 
 
 #ifdef HAVE_XFORWARD
    if(sdata->unknown_client == 1 && sdata->Nham > NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED)
-      append_to_hash_tables(s_phrase_hash, s_mix, "UNKNOWN_CLIENT*", REAL_SPAM_TOKEN_PROBABILITY);
+      addnode(xhash, "UNKNOWN_CLIENT*", REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
 #endif
 
 }
 
 
-void check_lists(struct session_data *sdata, struct _state *state, struct node *s_phrase_hash[], struct node *s_mix[], int *found_on_rbl, int *surbl_match, struct __config *cfg){
+void check_lists(struct session_data *sdata, struct _state *state, struct node *xhash[], int *found_on_rbl, int *surbl_match, struct __config *cfg){
 #ifdef HAVE_RBL
    int i, j;
    char surbl_token[MAX_TOKEN_LEN];
@@ -85,7 +75,7 @@ void check_lists(struct session_data *sdata, struct _state *state, struct node *
 
       for(i=0; i<*found_on_rbl; i++){
          snprintf(surbl_token, MAX_TOKEN_LEN-1, "RBL%d*%s", i, state->ip);
-         append_to_hash_tables(s_phrase_hash, s_mix, surbl_token, REAL_SPAM_TOKEN_PROBABILITY);
+         addnode(xhash, surbl_token, REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
       }
    }
 
@@ -107,7 +97,7 @@ void check_lists(struct session_data *sdata, struct _state *state, struct node *
 
          for(j=0; j<i; j++){
             snprintf(surbl_token, MAX_TOKEN_LEN-1, "SURBL%d*%s", j, url->url_str+4);
-            append_to_hash_tables(s_phrase_hash, s_mix, surbl_token, REAL_SPAM_TOKEN_PROBABILITY);
+            addnode(xhash, surbl_token, REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
          }
 
          url = url->r;

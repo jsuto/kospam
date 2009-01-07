@@ -238,10 +238,9 @@ int add_or_update(int fd, struct mydb_node *mhash[], int ham_or_spam, char *toke
 }
 
 
-int my_walk_hash(char *mydbfile, struct mydb_node *xhash[], int ham_or_spam, struct _token *token, int train_mode){
+int my_walk_hash(char *mydbfile, struct mydb_node *xhash[], int ham_or_spam, struct node *thash[], int train_mode){
    int i, n=0, fd;
-   struct _token *p;
-   struct node *thash[MAXHASH], *q;
+   struct node *q;
    unsigned long now, x;
    time_t cclock;
 
@@ -260,14 +259,6 @@ int my_walk_hash(char *mydbfile, struct mydb_node *xhash[], int ham_or_spam, str
       return 0;
    }
 
-   inithash(thash);
-
-   p = token;
-
-   while(p != NULL){
-      addnode(thash, p->str, 1, 1);
-      p = p->r;
-   }
 
    for(i=0;i<MAXHASH;i++){
       q = thash[i];
@@ -278,7 +269,6 @@ int my_walk_hash(char *mydbfile, struct mydb_node *xhash[], int ham_or_spam, str
       }
    }
 
-   clearhash(thash);
 
 
    /* update ham/spam counter */
@@ -333,12 +323,11 @@ int my_walk_hash(char *mydbfile, struct mydb_node *xhash[], int ham_or_spam, str
 }
 
 
-int update_tokens(char *mydbfile, struct mydb_node *xhash[], struct _token *token){
-   int n, fd;
-   struct _token *q;
+int update_tokens(char *mydbfile, struct mydb_node *xhash[], struct node *thash[]){
+   int i, n=0, fd;
+   struct node *q;
    struct mydb_node *Q;
    unsigned long now;
-   unsigned long long key;
    time_t cclock;
 
    time(&cclock);
@@ -356,23 +345,22 @@ int update_tokens(char *mydbfile, struct mydb_node *xhash[], struct _token *toke
       return 0;
    }
 
-   n = 0;
 
-   q = token;
+   for(i=0; i<MAXHASH; i++){
+      q = thash[i];
+      while(q != NULL){
+         Q = findmydb_node(xhash, q->key);
+         if(Q){
+            //fprintf(stderr, "updating timestamp of %s %llu\n", q->str, q->key);
+            lseek(fd, MYDB_HEADER_SIZE + (Q->pos * N_SIZE) + 12, SEEK_SET);
+            write(fd, &now, 4);
+            n++;
+         }
 
-   while(q != NULL){
-
-      key = APHash(q->str);
-      Q = findmydb_node(xhash, key);
-      if(Q){
-         //fprintf(stderr, "updating timestamp of %s %llu\n", q->str, key);
-         lseek(fd, MYDB_HEADER_SIZE + (Q->pos * N_SIZE) + 12, SEEK_SET);
-         write(fd, &now, 4);
-         n++;
+         q = q->r;
       }
-
-      q = q->r;
    }
+
 
    flock(fd, LOCK_UN|LOCK_NB);
    close(fd);

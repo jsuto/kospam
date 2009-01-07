@@ -1,5 +1,5 @@
 /*
- * session.c, 2009.01.02, SJ
+ * session.c, 2009.01.05, SJ
  */
 
 #include <stdio.h>
@@ -118,9 +118,7 @@ void init_session_data(struct session_data *sdata){
 
    #ifdef HAVE_ANTISPAM
       char spaminessbuf[MAXBUFSIZE], reason[SMALLBUFSIZE], qpath[SMALLBUFSIZE], trainbuf[SMALLBUFSIZE], whitelistbuf[SMALLBUFSIZE], ID[RND_STR_LEN+1];
-    #ifndef HAVE_STORE
       struct stat st;
-    #endif
       struct timeval tv_spam_start, tv_spam_stop;
       struct _state sstate, sstate2;
       int train_mode=T_TOE;
@@ -720,8 +718,8 @@ void init_session_data(struct session_data *sdata){
 
                            train_message(mysql, sdata, sstate2, MAX_ITERATIVE_TRAIN_LOOPS, is_spam, train_mode, my_cfg);
 
-                           free_and_print_list(sstate2.first, 0);
                            free_url_list(sstate2.urls);
+                           clearhash(sstate2.token_hash, 0);
 
                            goto SEND_RESULT;
                         }
@@ -734,14 +732,9 @@ void init_session_data(struct session_data *sdata){
                            }
                            else {
                               if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: running Bayesian test", sdata.ttmpfile);
-                           #ifdef HAVE_QCACHE
-                              spaminess = x_spam_check(&sdata, &sstate, &my_cfg);
-                              sdata.Nham = sdata.Nspam = NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED + 1;
-                           #else
                               spaminess = bayes_file(mysql, sstate, &sdata, &my_cfg);
-                           #endif
                            }
-                           update_mysql_tokens(mysql, sstate.first, sdata.uid);
+                           update_mysql_tokens(mysql, sstate.token_hash, sdata.uid);
 
                            if(
                                (my_cfg.training_mode == T_TUM && ( (spaminess >= my_cfg.spam_overall_limit && spaminess < 0.99) || (spaminess < my_cfg.max_ham_spamicity && spaminess > 0.1) )) ||
@@ -808,8 +801,8 @@ void init_session_data(struct session_data *sdata){
 
                            train_message(db, sdata, sstate2, MAX_ITERATIVE_TRAIN_LOOPS, is_spam, train_mode, cfg);
 
-                           free_and_print_list(sstate2.first, 0);
                            free_url_list(sstate2.urls);
+                           clearhash(sstate2.token_hash, 0);
 
 
                            goto SEND_RESULT;
@@ -825,7 +818,7 @@ void init_session_data(struct session_data *sdata){
                               if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: running Bayesian test", sdata.ttmpfile);
                               spaminess = bayes_file(db, sstate, &sdata, &cfg);
                            }
-                           update_sqlite3_tokens(db, sstate.first);
+                           update_sqlite3_tokens(db, sstate.token_hash);
 
                            if(
                                (cfg.training_mode == T_TUM && ( (spaminess >= cfg.spam_overall_limit && spaminess < 0.99) || (spaminess < cfg.max_ham_spamicity && spaminess > 0.1) )) ||
@@ -1011,8 +1004,8 @@ void init_session_data(struct session_data *sdata){
                /* close database backend handler */
 
             #ifdef HAVE_ANTISPAM
-               free_and_print_list(sstate.first, 0);
                free_url_list(sstate.urls);
+               clearhash(sstate.token_hash, 0);
             #endif
 
             #ifdef NEED_MYSQL

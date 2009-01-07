@@ -8,28 +8,6 @@
 #include "defs.h"
 #include "parser.h"
 
-struct mydb {
-   unsigned long long key;
-   unsigned short int nham;
-   unsigned short int nspam;
-   unsigned long ts;
-};
-
-struct mydb_node {
-   unsigned long long key;
-   unsigned short int nham;
-   unsigned short int nspam;
-   unsigned long ts;
-   unsigned int pos;
-   struct mydb_node *r;
-};
-
-/*#define MYDB_HEADER_SIZE 8
-#define N_SIZE 16
-#define SEGMENT_SIZE 768
-#define MAX_MYDB_HASH 74713*/
-
-
 void init_my_hash(struct mydb_node *xhash[]);
 int init_mydb(char *mydb_file, struct mydb_node *xhash[], struct session_data *sdata);
 void close_mydb(struct mydb_node *xhash[]);
@@ -38,11 +16,10 @@ struct mydb_node *makenewmydb_node(struct mydb_node *xhash[], unsigned long long
 int addmydb_node(struct mydb_node *xhash[], unsigned long long key, unsigned int nham, unsigned int nspam, unsigned long ts, unsigned int pos);
 struct mydb_node *findmydb_node(struct mydb_node *xhash[], unsigned long long key);
 int add_or_update(int fd, struct mydb_node *mhash[], int ham_or_spam, char *token, int train_mode, unsigned long ts);
-int update_tokens(char *mydbfile, struct mydb_node *xhash[], struct _token *token);
 
 float mydbqry(struct session_data *sdata, char *p, struct __config *cfg);
-int my_walk_hash(char *mydbfile, struct mydb_node *xhash[], int ham_or_spam, struct _token *token, int train_mode);
-int update_tokens(char *mydbfile, struct mydb_node *xhash[], struct _token *token);
+int my_walk_hash(char *mydbfile, struct mydb_node *xhash[], int ham_or_spam, struct node *thash[], int train_mode);
+int update_tokens(char *mydbfile, struct mydb_node *xhash[], struct node *thash[]);
 
 void hash_2_to_1(struct mydb_node *xhash[], struct mydb_node *xhash2[], struct mydb_node *xhash3[]);
 

@@ -22,24 +22,40 @@
 #define N_SIZE 16
 #define SEGMENT_SIZE 768
 #define MAX_MYDB_HASH 74713
+#define MAX_TOKENS_TO_UPDATE_IN_1_ROUND 65535
+
+#define MAXHASH 8171
 
 
-struct cache {
+struct node {
+   char str[MAX_TOKEN_LEN];
    unsigned long long key;
-   float spaminess;
-   unsigned char dirty;
-   struct cache *r;
+   double spaminess;
+   double deviation;
+   unsigned long num;
+   char type;
+   struct node *r;
+};
+
+struct mydb {
+   unsigned long long key;
+   unsigned short int nham;
+   unsigned short int nspam;
+   unsigned long ts;
+};
+
+struct mydb_node {
+   unsigned long long key;
+   unsigned short int nham;
+   unsigned short int nspam;
+   unsigned long ts;
+   unsigned int pos;
+   struct mydb_node *r;
 };
 
 struct x_token {
    unsigned long long token;
    float spaminess;
-};
-
-struct _token {
-   char str[MAX_TOKEN_LEN];
-   unsigned long num;
-   struct _token *r;
 };
 
 struct attachment {
@@ -89,14 +105,16 @@ struct _state {
    unsigned long n_subject_token;
    unsigned long n_body_token;
    unsigned long n_chain_token;
-   struct _token *c_token;
-   struct _token *first;
+   //struct _token *c_token;
+   //struct _token *first;
    struct url *urls;
 
    int found_our_signo;
 
    int n_attachments;
    struct attachment attachments[MAX_ATTACHMENTS];
+
+   struct node *token_hash[MAXHASH];
 };
 
 struct session_data {

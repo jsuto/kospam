@@ -732,7 +732,6 @@ enable_all_received
 enable_blackhole
 with_userdb
 enable_policy
-enable_qcache
 with_tokendb
 enable_lmtp
 enable_language_detection
@@ -1382,7 +1381,6 @@ Optional Features:
   --enable-all-received   check all the IP-addresses from "Received: from ..." lines against blacklists
   --enable-blackhole      build the blackhole feature
   --enable-policy         enable the policy feature
-  --enable-qcache         enable the qcache feature
   --enable-lmtp           use LMTP local delivery (default: SMTP)
   --enable-language-detection use the language detection feature (experimental)
   --enable-outgoing-smtp  enable outgoing SMTP server mode
@@ -5462,22 +5460,6 @@ fi
 
 
 
-# Check whether --enable-qcache was given.
-if test "${enable_qcache+set}" = set; then
-  enableval=$enable_qcache; want_qcache=$enableval
-else
-  want_qcache="no"
-fi
-
-
-if test "$want_qcache" = "yes"; then
-    have_qcache="yes"
-    qcache="qcache"
-fi
-
-
-
-
 # Check whether --with-tokendb was given.
 if test "${with_tokendb+set}" = set; then
   withval=$with_tokendb;
@@ -5856,7 +5838,7 @@ fi
   if test "$withval" = "mydb"; then
      have_spamdrop="yes"
      parsembox="$parsembox"
-     spamdrop="spamdrop mydb_stat mydb_compress qcache"
+     spamdrop="spamdrop mydb_stat mydb_compress"
      preparesql="prepare-sql aphash"
      spamdrop_install="install-spamdrop"
      test="test"
@@ -6500,14 +6482,6 @@ if test "$have_policy" = "yes"; then
    objs="$objs policy.o"
 else
    echo "policy support: no"
-fi
-
-if test "$have_qcache" = "yes"; then
-   defs="$defs -DHAVE_QCACHE"
-   echo "qcache support: yes"
-   objs="$objs xdb.o"
-else
-   echo "qcache support: no"
 fi
 
 if test "$want_language_detection" = "yes"; then

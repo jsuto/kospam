@@ -14,9 +14,10 @@
 #include "decoder.h"
 #include "list.h"
 #include "parser.h"
+#include "hash.h"
 #include "shdr.h"
 #include "config.h"
-
+#include "defs.h"
 
 /*
  * initialise parser state
@@ -70,8 +71,8 @@ void init_state(struct _state *state){
    memset(state->qpbuf, 0, MAX_TOKEN_LEN);
    memset(state->from, 0, SMALLBUFSIZE);
 
-   state->c_token = NULL;
-   state->first = NULL;
+   //state->c_token = NULL;
+   //state->first = NULL;
 
    state->urls = NULL;
 
@@ -91,6 +92,7 @@ void init_state(struct _state *state){
       memset(state->attachments[i].type, 0, SMALLBUFSIZE);
    }
 
+   inithash(state->token_hash);
 }
 
 
@@ -685,7 +687,7 @@ DECOMPOSE:
 
                fix_url(muf);
 
-               insert_token(state, muf);
+               addnode(state->token_hash, muf, DEFAULT_SPAMICITY, 0);
 
                append_url(state, muf);
 
@@ -733,7 +735,7 @@ DECOMPOSE:
 
       /* add single token to list */
 
-      insert_token(state, muf);
+      addnode(state->token_hash, muf, DEFAULT_SPAMICITY, 0);
 
 
       /* create token pairs, 2007.06.06, SJ */
@@ -742,7 +744,7 @@ DECOMPOSE:
 
       if(((state->is_header == 1 && state->n_chain_token > 1) || state->n_body_token > 1) && strlen(token) >= MIN_WORD_LEN && state->message_state != MSG_CONTENT_TYPE){
          snprintf(phrase, MAX_TOKEN_LEN-1, "%s+%s", token, muf);
-         insert_token(state, phrase);
+         addnode(state->token_hash, phrase, DEFAULT_SPAMICITY, 0);
       }
       snprintf(token, MAX_TOKEN_LEN-1, "%s", muf);
 
@@ -755,7 +757,7 @@ DECOMPOSE:
    if(state->is_header == 1) state->n_chain_token = 0;
 
    if(state->message_state == MSG_FROM && strlen(state->from) > 3){
-      insert_token(state, state->from);
+      addnode(state->token_hash, state->from, DEFAULT_SPAMICITY, 0);
    }
 
    return 0;

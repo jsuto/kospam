@@ -396,7 +396,7 @@ int main(int argc, char **argv, char **envp){
       } else
          spaminess = bayes_file(mysql, state, &sdata, &cfg);
 
-      update_mysql_tokens(mysql, state.first, sdata.uid);
+      update_mysql_tokens(mysql, state.token_hash, sdata.uid);
    #endif
    #ifdef HAVE_SQLITE3
       if(is_sender_on_white_list(db, from, sdata.uid, cfg)){
@@ -405,11 +405,11 @@ int main(int argc, char **argv, char **envp){
       } else
          spaminess = bayes_file(db, state, &sdata, &cfg);
 
-      update_sqlite3_tokens(db, state.first);
+      update_sqlite3_tokens(db, state.token_hash);
    #endif
    #ifdef HAVE_MYDB
       spaminess = bayes_file(state, &sdata, &cfg);
-      update_tokens(cfg.mydbfile, sdata.mhash, state.first);
+      update_tokens(cfg.mydbfile, sdata.mhash, state.token_hash);
    #endif
 
    #ifdef HAVE_LANG_DETECT
@@ -524,8 +524,8 @@ CLOSE_DB:
 #endif
 
    /* free structures */
-   free_and_print_list(state.first, 0);
    free_url_list(state.urls);
+   clearhash(state.token_hash, 0);
 
    gettimeofday(&tv_stop, &tz);
 

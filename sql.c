@@ -48,7 +48,7 @@ float SQL_QUERY(struct session_data *sdata, char *token, struct __config *cfg){
    TE = myqry(sdata, token);
 #endif
 #ifdef HAVE_SQLITE3
-   TE = sqlite3_qry(sdata, token);
+   TE = sqlite3_qry(sdata->db, token);
 #endif
 
    if(TE.nham == 0 && TE.nspam == 0) return r;
@@ -64,46 +64,33 @@ float SQL_QUERY(struct session_data *sdata, char *token, struct __config *cfg){
  */
 
 #ifdef HAVE_MYSQL
-int my_walk_hash(MYSQL mysql, int sockfd, int ham_or_spam, char *tokentable, unsigned long uid, struct _token *token, int train_mode){
+int my_walk_hash(MYSQL mysql, int ham_or_spam, unsigned long uid, struct node *xhash[], int train_mode){
 #endif
 #ifdef HAVE_SQLITE3
-int my_walk_hash(sqlite3 *db, int ham_or_spam, char *tokentable, struct _token *token, int train_mode){
+int my_walk_hash(sqlite3 *db, int ham_or_spam, struct node *xhash[], int train_mode){
 #endif
    int i, n=0;
-   struct _token *p;
    time_t cclock;
    unsigned long now;
-   struct node *thash[MAXHASH], *q;
+   struct node *q;
 
    time(&cclock);
    now = cclock;
 
-   inithash(thash);
-
-   p = token;
-
-   while(p != NULL){
-      addnode(thash, p->str, 1, 1);
-      p = p->r;
-   }
-
-   for(i=0;i<MAXHASH;i++){
-      q = thash[i];
+   for(i=0; i<MAXHASH; i++){
+      q = xhash[i];
       while(q != NULL){
       #ifdef HAVE_MYSQL
-         do_mysql_qry(mysql, sockfd, ham_or_spam, q->str, uid, train_mode, now);
+         do_mysql_qry(mysql, ham_or_spam, q->str, uid, train_mode, now);
       #endif
       #ifdef HAVE_SQLITE3
          do_sqlite3_qry(db, ham_or_spam, q->str, train_mode, now);
       #endif
-
+         
          q = q->r;
          n++;
       }
    }
-
-
-   clearhash(thash);
 
    return n;
 }

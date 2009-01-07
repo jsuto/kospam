@@ -21,6 +21,7 @@
 #include "errmsg.h"
 #include "messages.h"
 #include "sql.h"
+#include "score.h"
 #include "buffer.h"
 #include "config.h"
 
@@ -29,7 +30,7 @@
  * query the number of occurances from SQLite3 table
  */
 
-struct te sqlite3_qry(struct session_data *sdata, char *token){
+struct te sqlite3_qry(sqlite3 *db, char *token){
    struct te TE;
    char stmt[MAXBUFSIZE];
    unsigned long long hash = APHash(token);
@@ -40,7 +41,7 @@ struct te sqlite3_qry(struct session_data *sdata, char *token){
 
    snprintf(stmt, MAXBUFSIZE-1, "SELECT nham, nspam FROM %s WHERE token=%llu", SQL_TOKEN_TABLE, hash);
 
-   if(sqlite3_prepare_v2(sdata->db, stmt, -1, &pStmt, pzTail) != SQLITE_OK) return TE;
+   if(sqlite3_prepare_v2(db, stmt, -1, &pStmt, pzTail) != SQLITE_OK) return TE;
 
    while(sqlite3_step(pStmt) == SQLITE_ROW){
       TE.nham += sqlite3_column_int(pStmt, 0);
@@ -53,19 +54,44 @@ struct te sqlite3_qry(struct session_data *sdata, char *token){
 }
 
 
+int update_hash(sqlite3 *db, char *qry, float Nham, float Nspam, struct node *xhash[], struct __config *cfg){
+   sqlite3_stmt *pStmt;
+   const char **pzTail=NULL;
+   float nham, nspam, spaminess;
+   unsigned long long token;
+
+   if(sqlite3_prepare_v2(db, qry, -1, &pStmt, pzTail) != SQLITE_OK) return 0;
+
+   while(sqlite3_step(pStmt) == SQLITE_ROW){
+      token = strtoull((char *)sqlite3_column_blob(pStmt, 0), NULL, 10);
+      nham = sqlite3_column_double(pStmt, 1);
+      nspam = sqlite3_column_double(pStmt, 2);
+
+      spaminess = calc_spamicity(Nham, Nspam, nham, nspam, cfg->rob_s, cfg->rob_x);
+            
+      updatenode(xhash, token, spaminess);
+
+   }
+
+   sqlite3_finalize(pStmt);
+
+   return 1;
+}
+
+
 /*
  * update the token timestamps
  */
 
-int update_sqlite3_tokens(sqlite3 *db, struct _token *token){
-   int n=0;
+int update_sqlite3_tokens(sqlite3 *db, struct node *xhash[]){
+   int i, n=0;
    unsigned long now;
    time_t cclock;
    char *err=NULL, buf[SMALLBUFSIZE];
    buffer *query;
-   struct _token *p, *q;
+   struct node *q;
 
-   if(token == NULL) return 0;
+   if(counthash(xhash) <= 0) return 0;
 
    query = buffer_create(NULL);
    if(!query) return n;
@@ -77,16 +103,21 @@ int update_sqlite3_tokens(sqlite3 *db, struct _token *token){
 
    buffer_cat(query, buf);
 
-   p = token;
 
-   while(p != NULL){
-      q = p->r;
+   for(i=0; i<MAXHASH; i++){
+      q = xhash[i];
+      while(q != NULL){
+         snprintf(buf, SMALLBUFSIZE-1, ",%llu", q->key);
 
-      snprintf(buf, SMALLBUFSIZE-1, "%llu, ", APHash(p->str));
-      buffer_cat(query, buf);
+         buffer_cat(query, buf);
 
-      p = q;
+         n++;
+
+         q = q->r;
+      }
    }
+
+
 
    snprintf(buf, SMALLBUFSIZE-1, "0)");
    buffer_cat(query, buf);

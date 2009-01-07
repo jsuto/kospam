@@ -76,9 +76,6 @@ int main(int argc, char **argv){
 
    gettimeofday(&tv_spam_start, &tz);
 
-#ifdef HAVE_QCACHE
-   spaminess = x_spam_check(&sdata, &state, &cfg);
-#else
 #ifdef HAVE_MYSQL
    mysql_init(&mysql);
    if(mysql_real_connect(&mysql, cfg.mysqlhost, cfg.mysqluser, cfg.mysqlpwd, cfg.mysqldb, cfg.mysqlport, cfg.mysqlsocket, 0)){
@@ -114,7 +111,6 @@ int main(int argc, char **argv){
    }
    close_mydb(sdata.mhash);
 #endif
-#endif /* HAVE_QCACHE */
 
 #ifdef MY_TEST
    reverse_ipv4_addr(state.ip);
@@ -126,8 +122,9 @@ int main(int argc, char **argv){
    fprintf(stderr, "lang detected: %s\n", check_lang(state.first));
 #endif
 
-   free_and_print_list(state.first, 0);
+   //free_and_print_list(state.first, 0);
    free_url_list(state.urls);
+   clearhash(state.token_hash, 0);
 
    gettimeofday(&tv_spam_stop, &tz);
 

@@ -24,7 +24,7 @@
 #include "sql.h"
 #include "bayes.h"
 #include "config.h"
-
+#include "buffer.h"
 
 
 #ifdef HAVE_MYSQL
@@ -46,66 +46,51 @@
 
 
 /*
- * assign spaminess value to token
+ * query the spaminess values at once
  */
 
-int assign_spaminess(struct session_data *sdata, char *p, struct __config *cfg, struct node *s_phrase_hash[], struct node *s_mix[]){
-   float spaminess=0;
-   char t[MAX_TOKEN_LEN], *s;
+int qry_spaminess(struct session_data *sdata, struct _state *state, char type, struct __config *cfg){
+   int i, n=0;
+   char s[SMALLBUFSIZE];
+   struct node *q;
+   buffer *query;
 
-   /* if we already have this token, 2006.03.13, SJ */
+   query = buffer_create(NULL);
+   if(!query) return 0;
 
-   if(findnode(s_mix, p))
-      return 0;
+   snprintf(s, SMALLBUFSIZE-1, "SELECT token, nham, nspam FROM %s WHERE token in(%llu", SQL_TOKEN_TABLE, APHash(state->from));
+   buffer_cat(query, s);
+
+   for(i=0; i<MAXHASH; i++){
+      q = state->token_hash[i];
+      while(q != NULL){
+         if( (type == 1 && q->type == 1) || (type == 0 && q->type == 0) ){
+            n++;
+            snprintf(s, SMALLBUFSIZE-1, ",%llu", APHash(q->str));
+
+            buffer_cat(query, s);
+         }
+
+         q = q->r;
+      }
+   }
+
+   buffer_cat(query, ")");
+
+   //fprintf(stderr, "qry: %s\n", query->data);
 
 #ifdef HAVE_MYSQL
-   spaminess = SQL_QUERY(sdata, p, cfg);
+   update_hash(sdata->mysql, query->data, sdata->Nham, sdata->Nspam, state->token_hash, cfg);
 #endif
 #ifdef HAVE_SQLITE3
-   spaminess = SQL_QUERY(sdata, p, cfg);
-#endif
-#ifdef HAVE_MYDB
-   spaminess = mydbqry(sdata, p, cfg);
+   update_hash(sdata->db, query->data, sdata->Nham, sdata->Nspam, state->token_hash, cfg);
 #endif
 
-   /* if it was at the Subject: header line, let's try it if it were not in the Subject line, 2006.05.03, SJ */
+   buffer_destroy(query);
 
-   if(spaminess < DEFAULT_SPAMICITY_HIGH && spaminess > DEFAULT_SPAMICITY_LOW && strncasecmp(p, "Subject*", 8) == 0){
-      memset(t, 0, MAX_TOKEN_LEN);
-
-      s = strchr(p, '+');
-      if(s){
-         *s = '\0';
-         snprintf(t, MAX_TOKEN_LEN-1, "%s+%s", p+8, s+1+8);
-      }
-      else
-         strncpy(t, p+8, MAX_TOKEN_LEN-1);
-
-   #ifdef HAVE_MYSQL
-      spaminess = SQL_QUERY(sdata, t, cfg);
-   #endif
-   #ifdef HAVE_SQLITE3
-      spaminess = SQL_QUERY(sdata, t, cfg);
-   #endif
-   #ifdef HAVE_MYDB
-      spaminess = mydbqry(sdata, t, cfg);
-   #endif
-   }
-
-
-   /* exclude unknown tokens, 2008.01.08, SJ */
-
-   if(DEVIATION(spaminess) > 0.1){
-      if(strchr(p, '+') || strchr(p, '*')){
-         addnode(s_phrase_hash, p, spaminess, DEVIATION(spaminess));
-         addnode(s_mix, p, spaminess, DEVIATION(spaminess));
-      }
-      if(strchr(p, '+') == NULL)
-         addnode(s_mix, p, spaminess, DEVIATION(spaminess));
-   }
-
-   return 0;
+   return 1;
 }
+
 
 
 /*
@@ -114,27 +99,6 @@ int assign_spaminess(struct session_data *sdata, char *p, struct __config *cfg, 
 
 inline double calc_score(struct node *xhash[], struct __config *cfg){
    return calc_score_chi2(xhash, cfg);
-}
-
-
-int walk_hash(struct session_data *sdata, struct node *xhash[], struct __config *cfg, struct node *s_phrase_hash[], struct node *s_mix[]){
-   int i, n=0;
-   struct node *p, *q;
-
-   for(i=0;i<MAXHASH;i++){
-      q = xhash[i];
-      while(q != NULL){
-         p = q;
-
-         assign_spaminess(sdata, p->str, cfg, s_phrase_hash, s_mix);
-
-         n++;
-
-         q = q->r;
-      }
-   }
-
-   return n;
 }
 
 
@@ -176,114 +140,48 @@ struct _state parse_message(char *spamfile, struct session_data sdata, struct __
  */
 
 double eval_tokens(struct session_data *sdata, struct __config *cfg, struct _state state){
-   unsigned long n = 0;
-   struct _token *p, *q;
-   float spaminess, spaminess2;
-   int has_embed_image=0;
-   struct node *s_phrase_hash[MAXHASH], *s_mix[MAXHASH];
-   struct node *B_hash[MAXHASH];
-#ifdef HAVE_RBL
-   int found_on_rbl=0, surbl_match=0;
-#endif
+   float spaminess=DEFAULT_SPAMICITY;
+   int has_embed_image=0, found_on_rbl=0, surbl_match=0;
 
-   if(!state.first)
-      return DEFAULT_SPAMICITY;
-
-   spaminess = spaminess2 = DEFAULT_SPAMICITY;
-
-   p = state.first;
-
-   inithash(s_phrase_hash);
-   inithash(s_mix);
-
-   inithash(B_hash);
-
-   while(p != NULL){
-      q = p->r;
-
-      /* add to URL hash, 2006.06.23, SJ */
-
-      if(strncmp(p->str, "URL*", 4) == 0){
-         assign_spaminess(sdata, p->str, cfg, s_phrase_hash, s_mix);
-         addnode(B_hash, p->str, 0, 0);
-      }
-
-      /* 2007.06.06, SJ */
-
-      if(cfg->use_pairs == 1 && (strchr(p->str, '+') || strchr(p->str, '*')) ){
-         assign_spaminess(sdata, p->str, cfg, s_phrase_hash, s_mix);
-      }
-
-      else addnode(B_hash, p->str, 0, 0);
-
-      if(n > 0){
-
-         /* we may penalize embedded images, 2007.01.03, SJ */
-
-         if(cfg->penalize_embed_images == 1 && strcmp(p->str, "src+cid") == 0){
-            append_to_hash_tables(s_phrase_hash, s_mix, "EMBED*", REAL_SPAM_TOKEN_PROBABILITY);
-            has_embed_image = 1;
-         }
-
-      }
-
-      n++;
-
-      p = q;
-   }
 
 
    /* apply some penalties, 2009.01.04, SJ */
-   add_penalties(sdata, s_phrase_hash, s_mix, state, cfg);
+   add_penalties(sdata, state, state.token_hash, cfg);
 
 
-   /* add the From line, 2007.06.16, SJ */
-
-   assign_spaminess(sdata, state.from, cfg, s_phrase_hash, s_mix);
-   addnode(B_hash, state.from, 0, 0);
-
-
-   /* redesigned spaminess calculation, 2007.08.28, SJ */
-
-   if(cfg->use_pairs == 1){
-      spaminess = calc_score(s_phrase_hash, cfg);
-
-      if(cfg->debug == 1)
-         fprintf(stderr, "phrase: %.4f\n", spaminess);
-
-      if(spaminess >= cfg->spam_overall_limit || spaminess <= cfg->max_ham_spamicity)
-         goto END_OF_EVALUATION;
-
+   if(cfg->penalize_embed_images == 1 && findnode(state.token_hash, "src+cid")){
+      addnode(state.token_hash, "EMBED*", REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
+      has_embed_image = 1;
    }
 
-   if(cfg->use_single_tokens == 1){
-      walk_hash(sdata, B_hash, cfg, s_phrase_hash, s_mix);
 
-      /* consult blacklists */
-   #ifdef HAVE_RBL
-      check_lists(sdata, &state, s_phrase_hash, s_mix, &found_on_rbl, &surbl_match, cfg);
-   #endif
+   /* calculate spaminess based on the token pairs and other special tokens */
 
+   qry_spaminess(sdata, &state, 1, cfg);
+   spaminess = calc_score(state.token_hash, cfg);
+   if(cfg->debug == 1) fprintf(stderr, "phrase: %.4f\n", spaminess);
+   if(spaminess >= cfg->spam_overall_limit || spaminess <= cfg->max_ham_spamicity) goto END_OF_EVALUATION;
 
-      if(cfg->use_pairs == 1){
-         spaminess = calc_score(s_mix, cfg);
-         if(cfg->debug == 1)
-            fprintf(stderr, "mix: %.4f\n", spaminess);
+   /* query the single tokens, then use the 'mix' for calculation */
 
-         if(spaminess >= cfg->spam_overall_limit || spaminess <= cfg->max_ham_spamicity)
-            goto END_OF_EVALUATION;
-      }
+   qry_spaminess(sdata, &state, 0, cfg);
+   spaminess = calc_score(state.token_hash, cfg);
+   if(cfg->debug == 1) fprintf(stderr, "mix: %.4f\n", spaminess);
+   if(spaminess >= cfg->spam_overall_limit || spaminess <= cfg->max_ham_spamicity) goto END_OF_EVALUATION;
 
 
-   }
+   /* if we are still unsure, consult blacklists */
+ 
+#ifdef HAVE_RBL
+   check_lists(sdata, &state, state.token_hash, &found_on_rbl, &surbl_match, cfg);
+#endif
+
+   spaminess = calc_score(state.token_hash, cfg);
+   if(cfg->debug == 1) fprintf(stderr, "mix after blacklists: %.4f\n", spaminess);
+
 
 
 END_OF_EVALUATION:
-
-   clearhash(s_phrase_hash);
-   clearhash(s_mix);
-   clearhash(B_hash);
-
 
 
    /* if the message is unsure, try to determine if it's a spam, 2008.01.09, SJ */
@@ -466,7 +364,7 @@ int train_message(char *mydbfile, struct mydb_node *mhash[], struct session_data
    char buf[SMALLBUFSIZE];
    float spaminess = DEFAULT_SPAMICITY;
 
-   if(state.first == NULL) return 0;
+   if(counthash(state.token_hash) <= 0) return 0;
 
    /* disable some configuration settings, 2008.06.28, SJ */
 
@@ -481,13 +379,13 @@ int train_message(char *mydbfile, struct mydb_node *mhash[], struct session_data
 
    for(i=1; i<=rounds; i++){
    #ifdef HAVE_MYSQL
-      my_walk_hash(mysql, -1, is_spam, SQL_TOKEN_TABLE, sdata.uid, state.first, tm);
+      my_walk_hash(mysql, is_spam, sdata.uid, state.token_hash, tm);
    #endif
    #ifdef HAVE_SQLITE3
-      my_walk_hash(db, is_spam, SQL_TOKEN_TABLE, state.first, tm);
+      my_walk_hash(db, is_spam, state.token_hash, tm);
    #endif
    #ifdef HAVE_MYDB
-      my_walk_hash(mydbfile, mhash, is_spam, state.first, tm);
+      my_walk_hash(mydbfile, mhash, is_spam, state.token_hash, tm);
    #else
 
       /* update the t_misc table */

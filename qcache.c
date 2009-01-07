@@ -1,5 +1,5 @@
 /*
- * qcache.c, 2009.01.04, SJ
+ * qcache.c, 2009.01.05, SJ
  */
 
 #include <stdio.h>
@@ -8,6 +8,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <netinet/tcp.h>
 #include <arpa/inet.h>
 #include <sys/time.h>
 #include <sys/wait.h>
@@ -19,6 +20,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <mysql.h>
+#include <pthread.h>
 #include <clapf.h>
 #include "cache.h"
 #include "buffer.h"
@@ -30,6 +32,12 @@
 extern char *optarg;
 extern int optind;
 
+typedef struct {
+   int sockfd;
+   pthread_t thread;
+} qconn;
+
+
 int sd;
 int nconn = 0;
 int toggle = 0;
@@ -38,6 +46,11 @@ struct __config cfg;
 struct cache *hash_table1[MAX_CACHE_HASH], *hash_table2[MAX_CACHE_HASH], **m;
 struct timezone tz;
 struct timeval tv1, tv2;
+
+pthread_mutex_t __lock;
+pthread_attr_t attr;
+int __num_threads, listener;
+
 
 float calc_spamicity(float NHAM, float NSPAM, unsigned int nham, unsigned int nspam, float rob_s, float rob_x);
 
@@ -52,6 +65,8 @@ void clean_exit(){
 
    clearcache(hash_table1);
    clearcache(hash_table2);
+
+   pthread_attr_destroy(&attr);
 
    syslog(LOG_PRIORITY, "%s has been terminated", QCACHE_PROGNAME);
    exit(1);
@@ -75,6 +90,53 @@ void fatal(char *s){
 void reload_config(){
    cfg = read_config(configfile);
    syslog(LOG_PRIORITY, "reloaded config: %s", configfile);
+}
+
+
+/*
+ * increment thread counter
+ */
+
+void increment_thread_count(void){
+   pthread_mutex_lock(&__lock);
+   __num_threads++;
+   pthread_mutex_unlock(&__lock);
+}
+
+
+/*
+ * decrement thread counter
+ */
+
+void decrement_thread_count(void){
+   pthread_mutex_lock(&__lock);
+   __num_threads--;
+   pthread_mutex_unlock(&__lock);
+}
+
+
+void *process_connection(void *ptr){
+   qconn *QC = (qconn*)ptr;
+   int j, n;
+   char buf[PKT_SIZE];
+   struct x_token *x;
+
+   while((n = recv(QC->sockfd, buf, sizeof buf, 0)) > 0){
+      if(n > 0){
+          for(j=0; j<NETWORK_SEGMENT_SIZE; j++){
+             x = (struct x_token*)(buf + j*sizeof(struct x_token));
+             if(x->token > 0) x->spaminess = spamcache(m, x->token);
+          }
+          send(QC->sockfd, buf, PKT_SIZE, 0);
+      }
+   }
+
+   close(QC->sockfd);
+
+   decrement_thread_count();
+   pthread_exit(0);
+
+   return 0;
 }
 
 
@@ -223,7 +285,8 @@ int main(int argc, char **argv){
    fd_set read_fds;
    int fdmax;
    struct x_token *x;
-
+   struct timeval tv;
+   qconn *QC;
 
    while((i = getopt(argc, argv, "c:u:g:dVh")) > 0){
        switch(i){
@@ -296,20 +359,23 @@ int main(int argc, char **argv){
    FD_ZERO(&read_fds);
 
    FD_SET(sd, &master);
-
    fdmax = sd;
+
+
+   pthread_attr_init(&attr);
+   pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+   __num_threads=0;
+
 
    /* main accept loop */
 
-   int nbytes;
-   char buf[PKT_SIZE];
+   tv.tv_sec = 10;
+   tv.tv_usec = 0;
 
    for(;;){
-      read_fds = master; // copy it
-      if(select(fdmax+1, &read_fds, NULL, NULL, NULL) == -1){
-         //perror("select");
-         continue;
-      }
+    read_fds = master; // copy it
+   
+    if(select(fdmax+1, &read_fds, NULL, NULL, &tv) > 0){
 
 
       /* run through the existing connections looking for data to read */
@@ -320,50 +386,32 @@ int main(int argc, char **argv){
             /* handle new connections */
 
             if(i == sd){
-               if((new_sd = accept(sd, (struct sockaddr *)&client_addr, &clen)) != -1){
-                  FD_SET(new_sd, &master);
-                  if(new_sd > fdmax) fdmax = new_sd;
+               if((new_sd = accept(sd, (struct sockaddr *)&client_addr, &clen)) == -1) continue;
 
-                  //printf("selectserver: new connection from %s on socket %d\n", inet_ntoa(client_addr.sin_addr), new_sd);
-               }
-            }
+               fcntl(new_sd, F_SETFL, O_RDWR);
+               setsockopt(new_sd, SOL_SOCKET, TCP_NODELAY, &yes, sizeof(int));
 
-            else{
-               /* handle data from a client */
-
-               if((nbytes = recv(i, buf, sizeof buf, 0)) <= 0){
-
-                  /* let's close the connection */
-
-                  if(nbytes == 0){
-                     //printf("selectserver: socket %d hung up\n", i);
-                  }
-                  close(i);
-                  FD_CLR(i, &master);
-
-                  if(i == new_sd) new_sd = -1;
-
+               QC = malloc(sizeof(qconn));
+               if(QC == NULL){
+                  close(new_sd);
+                  continue;
                } else {
-                  /* we got some data from a client */
-
-                  for(j=0; j<NETWORK_SEGMENT_SIZE; j++){
-                     x = (struct x_token*)(buf + j*sizeof(struct x_token));
-                     if(x->token > 0) x->spaminess = spamcache(m, x->token);
-                     /*if(x->token > 0){
-                        x->spaminess = spamcache(m, x->token);
-                        printf("%llu: %.4f\n", x->token, x->spaminess);
-                     }*/
+                  QC->sockfd = new_sd;
+                  increment_thread_count();
+                  if(pthread_create(&QC->thread, &attr, process_connection, (void *) QC)){
+                     decrement_thread_count();
+                     close(QC->sockfd);
+                     free(QC);
+                     continue;
                   }
-
-                  send(new_sd, buf, PKT_SIZE, 0);
                }
-
             }
 
 
          }
       }
 
+    }
    }
 
    return 0;

@@ -1,5 +1,5 @@
 /*
- * parsembox.c, 2008.05.26, SJ
+ * parsembox.c, 2009.01.07, SJ
  */
 
 #include <stdio.h>
@@ -12,6 +12,7 @@
 #include "list.h"
 #include "parser.h"
 #include "cfg.h"
+#include "hash.h"
 #include "config.h"
 
 int main(int argc, char **argv){
@@ -49,13 +50,14 @@ int main(int argc, char **argv){
       if(buf[0] == 'F' && buf[1] == 'r' && buf[2] == 'o' && buf[3] == 'm' && buf[4] == ' '){
          tot_msgs++;
 
-         if(state.first){
+         if(counthash(state.token_hash) > 0){
             if(state.num_of_images > 0 || state.num_of_msword > 0){
                snprintf(ifile, SMALLBUFSIZE-1, "%s", state.attachedfile);
                unlink(ifile);
             }
-            free_and_print_list(state.first, 1);
+
             free_url_list(state.urls);
+            clearhash(state.token_hash, 1);
          }
 
          init_state(&state);
@@ -70,14 +72,14 @@ int main(int argc, char **argv){
 
    /* free the last message */
 
-   if(state.first){
+   if(counthash(state.token_hash) > 0){
       if(state.num_of_images > 0 || state.num_of_msword > 0){
          snprintf(ifile, SMALLBUFSIZE-1, "%s", state.attachedfile);
          unlink(ifile);
       }
 
-      free_and_print_list(state.first, 1);
       free_url_list(state.urls);
+      clearhash(state.token_hash, 1);
    }
 
    fclose(F);

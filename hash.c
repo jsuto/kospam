@@ -1,5 +1,5 @@
 /*
- * hash.c, 2008.09.15, SJ
+ * hash.c, 2009.01.07, SJ
  */
 
 #include <stdio.h>
@@ -27,7 +27,7 @@ void inithash(struct node *xhash[]){
  * release everything in the hash and calculate the ratio of unique tokens
  */
 
-void clearhash(struct node *xhash[]){
+void clearhash(struct node *xhash[], int print){
    int i;
    struct node *p, *q;
 
@@ -36,13 +36,34 @@ void clearhash(struct node *xhash[]){
       while(q != NULL){
          p = q;
 
+         if(print == 1) printf("%s (%llu) = %.4f\n", p->str, p->key, p->spaminess);
+
          q = q->r;
          if(p)
             free(p);
       }
       xhash[i] = NULL;
    }
+}
 
+
+/*
+ * count nodes in hash
+ */
+
+int counthash(struct node *xhash[]){
+   int i, n=0;
+   struct node *q;
+
+   for(i=0;i<MAXHASH;i++){
+      q = xhash[i];
+      while(q != NULL){
+         q = q->r;
+         n++;
+      }
+   }
+
+   return n;
 }
 
 
@@ -59,7 +80,7 @@ struct node *makenewnode(struct node *xhash[], char *s, double spaminess, double
 
    len = strlen(s);
 
-   if(len > MAX_HASH_STR_LEN-1)
+   if(len > MAX_TOKEN_LEN-1)
       return NULL;
 
    if((h = malloc(sizeof(struct node))) == NULL)
@@ -68,10 +89,14 @@ struct node *makenewnode(struct node *xhash[], char *s, double spaminess, double
    memset(h, 0, sizeof(struct node));
 
    strncpy(h->str, s, len);
+   h->key = APHash(s);
    h->spaminess = spaminess;
    h->deviation = deviation;
    h->num = 1;
    h->r = NULL;
+
+   if(strchr(s, '*') || strchr(s, '+')) h->type = 1;
+   else h->type = 0;
 
    return h;
 }
@@ -83,18 +108,21 @@ struct node *makenewnode(struct node *xhash[], char *s, double spaminess, double
 
 int addnode(struct node *xhash[], char *s, double spaminess, double deviation){
    struct node *p=NULL, *q;
+   unsigned long long key = 0;
 
    if(s == NULL)
       return 0;
 
-   if(xhash[hash(s)] == NULL){
-      xhash[hash(s)] = makenewnode(xhash, s, spaminess, deviation);
+   key = APHash(s);
+
+   if(xhash[hash(key)] == NULL){
+      xhash[hash(key)] = makenewnode(xhash, s, spaminess, deviation);
    }
    else {
-      q = xhash[hash(s)];
+      q = xhash[hash(key)];
       while(q != NULL){
          p = q;
-         if(strcmp(q->str, s) == 0){
+         if(p->key == key){
             p->num++;
             return 0;
          }
@@ -114,11 +142,14 @@ int addnode(struct node *xhash[], char *s, double spaminess, double deviation){
 
 struct node *findnode(struct node *xhash[], char *s){
    struct node *p, *q;
+   unsigned long long key;
 
    if(s == NULL)
       return 0;
 
-   q = xhash[hash(s)];
+   key = APHash(s);
+
+   q = xhash[hash(key)];
 
    if(q == NULL)
       return NULL;
@@ -137,19 +168,34 @@ struct node *findnode(struct node *xhash[], char *s){
 }
 
 
+int updatenode(struct node *xhash[], unsigned long long key, float spaminess){
+   struct node *p, *q;
+
+   q = xhash[hash(key)];
+
+   if(q == NULL) return 0;
+
+   while(q != NULL){
+      p = q;
+      if(q->key == key){
+         q->spaminess = spaminess;
+         q->deviation = DEVIATION(spaminess);
+         return 1;
+      }
+      else
+         q = q->r;
+   }
+
+   return 0;
+}
+
+
 /*
  * calculate hash value
  */
 
-unsigned long hash(char *s){
-    unsigned long h;
-
-    if(s == NULL)
-       return 0;
-
-    for(h=0; *s != '\0'; s++)
-        h = *s + 31 * h;
-
-    return h % MAXHASH;
+inline int hash(unsigned long long key){
+   return key % MAXHASH;
 }
+
 

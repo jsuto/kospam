@@ -298,18 +298,6 @@ if test "$want_policy" = "yes"; then
 fi
 
 
-dnl Qcache support
-
-AC_ARG_ENABLE(qcache,
-      [  --enable-qcache         enable the qcache feature], want_qcache=$enableval, want_qcache="no")
-
-if test "$want_qcache" = "yes"; then
-    have_qcache="yes"
-    qcache="qcache"
-fi
-
-
-
 AC_ARG_WITH(tokendb,
 [  --with-tokendb[[=mysql|sqlite3]]  use either mysql or sqlite3 database holding tokens (default: none)],[
   if test "$withval" != "no" -a "$withval" != "yes"; then
@@ -372,7 +360,7 @@ AC_ARG_WITH(tokendb,
   if test "$withval" = "mydb"; then
      have_spamdrop="yes"
      parsembox="$parsembox"
-     spamdrop="spamdrop mydb_stat mydb_compress qcache"
+     spamdrop="spamdrop mydb_stat mydb_compress"
      preparesql="prepare-sql aphash"
      spamdrop_install="install-spamdrop"
      test="test"
@@ -709,14 +697,6 @@ if test "$have_policy" = "yes"; then
    objs="$objs policy.o"
 else
    echo "policy support: no"
-fi
-
-if test "$have_qcache" = "yes"; then
-   defs="$defs -DHAVE_QCACHE"
-   echo "qcache support: yes"
-   objs="$objs xdb.o"
-else
-   echo "qcache support: no"
 fi
 
 if test "$want_language_detection" = "yes"; then

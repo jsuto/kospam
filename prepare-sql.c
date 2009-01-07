@@ -16,13 +16,13 @@
 #include "config.h"
 
 
-#define MAXHASH 74713
+#define MAX_HASH 74713
 
-struct node {
+struct aaaa {
    unsigned long long key;
    unsigned int nham;
    unsigned int nspam;
-   struct node *r;
+   struct aaaa *r;
 };
 
 unsigned long nham=0, nspam=0;
@@ -32,17 +32,17 @@ unsigned long nham=0, nspam=0;
    char *f;
 #endif
 
-void inithash(struct node *xhash[MAXHASH]){
+void inithash(struct aaaa *xhash[MAX_HASH]){
    int i;
 
-   for(i=0;i<MAXHASH;i++)
+   for(i=0;i<MAX_HASH;i++)
       xhash[i] = NULL;
 }
 
 
-void clearhash(struct node *xhash[MAXHASH]){
+void clearhash(struct aaaa *xhash[MAX_HASH]){
    int i;
-   struct node *p, *q;
+   struct aaaa *p, *q;
    time_t cclock;
    unsigned long now;
 #ifdef HAVE_SQLITE3
@@ -63,7 +63,7 @@ void clearhash(struct node *xhash[MAXHASH]){
    time(&cclock);
    now = cclock;
 
-   for(i=0;i<MAXHASH;i++){
+   for(i=0;i<MAX_HASH;i++){
       q = xhash[i];
       while(q != NULL){
          p = q;
@@ -105,16 +105,16 @@ void clearhash(struct node *xhash[MAXHASH]){
 
 
 unsigned long hash(unsigned long long key){
-    return key % MAXHASH;
+    return key % MAX_HASH;
 }
 
-struct node *makenewnode(struct node *xhash[MAXHASH], unsigned long long key, unsigned int nham, unsigned int nspam){
-   struct node *h;
+struct aaaa *makenewnode(struct aaaa *xhash[MAX_HASH], unsigned long long key, unsigned int nham, unsigned int nspam){
+   struct aaaa *h;
 
-   if((h = malloc(sizeof(struct node))) == NULL)
+   if((h = malloc(sizeof(struct aaaa))) == NULL)
       return NULL;
 
-   memset(h, 0, sizeof(struct node));
+   memset(h, 0, sizeof(struct aaaa));
 
    h->key = key;
    h->nham = nham;
@@ -125,8 +125,8 @@ struct node *makenewnode(struct node *xhash[MAXHASH], unsigned long long key, un
 }
 
 
-int addnode(struct node *xhash[MAXHASH], unsigned long long key, unsigned int nham, unsigned int nspam){
-   struct node *p=NULL, *q;
+int addnode(struct aaaa *xhash[MAX_HASH], unsigned long long key, unsigned int nham, unsigned int nspam){
+   struct aaaa *p=NULL, *q;
 
    if(xhash[hash(key)] == NULL){
       xhash[hash(key)] = makenewnode(xhash, key, nham, nspam);
@@ -153,7 +153,7 @@ int addnode(struct node *xhash[MAXHASH], unsigned long long key, unsigned int nh
 int main(int argc, char **argv){
    FILE *fham, *fspam;
    char buf[MAXBUFSIZE];
-   struct node *tokens[MAXHASH];
+   struct aaaa *tokens[MAX_HASH];
    unsigned long long key;
 
 #ifdef HAVE_MYDB

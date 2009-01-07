@@ -12,68 +12,6 @@
 
 
 /*
- * inserts a token to list
- */
-
-void insert_token(struct _state *state, char *p){
-   struct _token *t;
-
-   t = new_token(p);
-
-   if(t){
-      if(state->first == NULL)
-         state->first = t;
-      else
-         state->c_token->r = t;
-
-      state->c_token = t;
-   }
-
-}
-
-
-/*
- * allocate a token
- */
-
-struct _token *new_token(char *s){
-   struct _token *h=NULL;
-
-   if((h = malloc(sizeof(struct _token))) == NULL)
-      return NULL;
-
-   strncpy(h->str, s, MAX_TOKEN_LEN-1);
-   h->num = 1;
-   h->r = NULL;
-
-   return h;
-}
-
-
-/*
- * print list then free allocated memory
- */
-
-void free_and_print_list(struct _token *t, int print){
-   struct _token *p, *q;
-
-   p = t;
-
-   while(p != NULL){
-      q = p->r;
-
-      if(print == 1)
-         printf("%s\n", p->str);
-
-      if(p)
-         free(p);
-
-      p = q;
-   }
-}
-
-
-/*
  * append url to list if we have to
  */
 

@@ -1,9 +1,13 @@
 0.4.0-rc2:
 
-2009.01.04, SJ
+2009.01.08, SJ
 
-Added the qcache feature (again).
-(qcache.c, cache.c, cache.h, Makefile.in)
+Even more serious code refactoring. I modified the SQL statement to
+query all the needed tokens at once. It should result a faster SQL
+lookup.
+(lots of *.h and *.c)
+
+2009.01.04, SJ
 
 Code refactoring: simplified structures.
 (lots of *.h and *.c)

@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2008.12.29, SJ
+ * spamdrop.c, 2009.01.08, SJ
  */
 
 #include <stdio.h>
@@ -413,7 +413,7 @@ int main(int argc, char **argv, char **envp){
    #endif
 
    #ifdef HAVE_LANG_DETECT
-      lang = check_lang(state.first);
+      lang = check_lang(state.token_hash);
    #endif
 
    #ifdef HAVE_SPAMSUM

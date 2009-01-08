@@ -1,5 +1,5 @@
 /*
- * bayes.c, 2009.01.04, SJ
+ * bayes.c, 2009.01.08, SJ
  */
 
 #include <stdio.h>
@@ -66,9 +66,14 @@ int qry_spaminess(struct session_data *sdata, struct _state *state, char type, s
       while(q != NULL){
          if( (type == 1 && q->type == 1) || (type == 0 && q->type == 0) ){
             n++;
-            snprintf(s, SMALLBUFSIZE-1, ",%llu", APHash(q->str));
 
+         #ifdef HAVE_MYDB
+            float spaminess = mydbqry(sdata, q->str, cfg);
+            updatenode(state->token_hash, q->key, spaminess);
+         #else
+            snprintf(s, SMALLBUFSIZE-1, ",%llu", APHash(q->str));
             buffer_cat(query, s);
+         #endif
          }
 
          q = q->r;
@@ -358,7 +363,6 @@ int train_message(sqlite3 *db, struct session_data sdata, struct _state state, i
 #ifdef HAVE_MYDB
 int train_message(char *mydbfile, struct mydb_node *mhash[], struct session_data sdata, struct _state state, int rounds, int is_spam, int train_mode, struct __config cfg){
    int rc;
-   //struct mydb_node *mhash2[MAX_MYDB_HASH];
 #endif
    int i, tm=train_mode;
    char buf[SMALLBUFSIZE];
@@ -422,12 +426,6 @@ int train_message(char *mydbfile, struct mydb_node *mhash[], struct session_data
       }
 
    #ifdef HAVE_MYDB
-      /*rc = init_mydb(cfg.mydbfile, mhash2, &sdata);
-      if(rc == 1){
-         spaminess = bayes_file(mhash2, state, &sdata, &cfg);
-      }
-      close_mydb(mhash2);*/
-
       rc = init_mydb(cfg.mydbfile, sdata.mhash, &sdata);
       if(rc == 1) spaminess = bayes_file(state, &sdata, &cfg);
       close_mydb(sdata.mhash);

@@ -1,5 +1,5 @@
 /*
- * session.c, 2009.01.05, SJ
+ * session.c, 2009.01.08, SJ
  */
 
 #include <stdio.h>

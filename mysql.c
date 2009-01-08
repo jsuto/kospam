@@ -1,5 +1,5 @@
 /*
- * mysql.c, 2008.07.25, SJ
+ * mysql.c, 2009.01.08, SJ
  */
 
 #include <stdio.h>
@@ -101,10 +101,7 @@ int do_mysql_qry(MYSQL mysql, int ham_or_spam, char *token, unsigned long uid, i
          if(train_mode == T_TUM && TE.nspam > 0) snprintf(puf, SMALLBUFSIZE-1, ", nspam=nspam-1");
          snprintf(stmt, MAXBUFSIZE-1, "UPDATE %s SET nham=nham+1%s WHERE token=%llu AND uid=%ld", SQL_TOKEN_TABLE, puf, hash, uid);
       }
-
-      mysql_real_query(&mysql, stmt, strlen(stmt));
    }
-
 
    /* ... or insert token entry */
 
@@ -118,50 +115,12 @@ int do_mysql_qry(MYSQL mysql, int ham_or_spam, char *token, unsigned long uid, i
          snprintf(stmt, MAXBUFSIZE-1, "INSERT INTO %s (token, nham, nspam, uid, timestamp) VALUES(%llu, %d, %d, %ld, %ld)", SQL_TOKEN_TABLE, hash, TE.nham, TE.nspam, uid, timestamp);
       else
          snprintf(stmt, MAXBUFSIZE-1, "INSERT INTO %s (token, nham, nspam, timestamp) VALUES(%llu, %d, %d, %ld)", SQL_TOKEN_TABLE, hash, TE.nham, TE.nspam, timestamp);
-
-      mysql_real_query(&mysql, stmt, strlen(stmt));
    }
 
+   mysql_real_query(&mysql, stmt, strlen(stmt));
 
    return 0;
 }
-
-
-
-/*
- * query the number of occurances from MySQL table
- */
-
-struct te myqry(struct session_data *sdata, char *token){
-   struct te TE;
-   char stmt[MAXBUFSIZE];
-
-   TE.nham = 0;
-   TE.nspam = 0;
-
-   unsigned long long hash = APHash(token);
-   snprintf(stmt, MAXBUFSIZE-1, "SELECT nham, nspam FROM %s WHERE token=%llu AND (uid=0 OR uid=%ld)", SQL_TOKEN_TABLE, hash, sdata->uid);
-
-
-   MYSQL_RES *res;
-   MYSQL_ROW row;
-
-   if(mysql_real_query(&(sdata->mysql), stmt, strlen(stmt)) == 0){
-      res = mysql_store_result(&(sdata->mysql));
-      if(res != NULL){
-         while((row = mysql_fetch_row(res))){
-            TE.nham += atol(row[0]);
-            TE.nspam += atol(row[1]);
-         }
-
-         mysql_free_result(res);
-      }
-   }
-
-   return TE;
-}
-
-
 
 
 

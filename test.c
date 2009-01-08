@@ -1,7 +1,5 @@
 /*
- * test.c, 2008.11.24, SJ
- *
- * test the bayesian decision with a single message
+ * test.c, 2009.01.08, SJ
  */
 
 #include <stdio.h>
@@ -119,10 +117,9 @@ int main(int argc, char **argv){
 #endif
 
 #ifdef HAVE_LANG_DETECT
-   fprintf(stderr, "lang detected: %s\n", check_lang(state.first));
+   fprintf(stderr, "lang detected: %s\n", check_lang(state.token_hash));
 #endif
 
-   //free_and_print_list(state.first, 0);
    free_url_list(state.urls);
    clearhash(state.token_hash, 0);
 

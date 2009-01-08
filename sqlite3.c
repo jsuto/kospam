@@ -1,5 +1,5 @@
 /*
- * sqlite3.c, 2008.05.14, SJ
+ * sqlite3.c, 2009.01.08, SJ
  */
 
 #include <stdio.h>
@@ -137,11 +137,9 @@ int update_sqlite3_tokens(sqlite3 *db, struct node *xhash[]){
  */
 
 int do_sqlite3_qry(sqlite3 *db, int ham_or_spam, char *token, int train_mode, unsigned long timestamp){
-   char stmt[MAXBUFSIZE], puf[SMALLBUFSIZE];
+   char stmt[MAXBUFSIZE], puf[SMALLBUFSIZE], *err=NULL;
    struct te TE;
    unsigned long long hash = APHash(token);
-   sqlite3_stmt *pStmt;
-   const char **ppzTail=NULL;
 
    memset(puf, 0, SMALLBUFSIZE);
 
@@ -158,11 +156,6 @@ int do_sqlite3_qry(sqlite3 *db, int ham_or_spam, char *token, int train_mode, un
          if(train_mode == T_TUM && TE.nspam > 0) snprintf(puf, SMALLBUFSIZE-1, ", nspam=nspam-1");
          snprintf(stmt, MAXBUFSIZE-1, "UPDATE %s SET nham=nham+1%s WHERE token=%llu", SQL_TOKEN_TABLE, puf, hash);
       }
-
-      sqlite3_prepare_v2(db, stmt, -1, &pStmt, ppzTail);
-      sqlite3_step(pStmt);
-      sqlite3_finalize(pStmt);
-
    }
 
    /* ... or insert token entry */
@@ -174,13 +167,10 @@ int do_sqlite3_qry(sqlite3 *db, int ham_or_spam, char *token, int train_mode, un
          TE.nham = 1;
 
       snprintf(stmt, MAXBUFSIZE-1, "INSERT INTO %s (token, nham, nspam, timestamp) VALUES(%llu, %d, %d, %ld)", SQL_TOKEN_TABLE, hash, TE.nham, TE.nspam, timestamp);
-
-      sqlite3_prepare_v2(db, stmt, -1, &pStmt, ppzTail);
-      sqlite3_step(pStmt);
-      sqlite3_finalize(pStmt);
-
    }
 
+   sqlite3_exec(db, stmt, NULL, NULL, &err);
+   
    return 0;
 }
 

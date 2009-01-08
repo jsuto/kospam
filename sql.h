@@ -1,5 +1,5 @@
 /*
- * sql.h, 2008.10.25, SJ
+ * sql.h, 2009.01.08, SJ
  */
 
 #ifndef _SQL_H
@@ -21,7 +21,6 @@
    unsigned long get_uid(MYSQL mysql, char *stmt);
    struct te get_ham_spam(MYSQL mysql, char *stmt);
    int do_mysql_qry(MYSQL mysql, int ham_or_spam, char *token, unsigned long uid, int train_mode, unsigned long timestamp);
-   struct te myqry(struct session_data *sdata, char *token);
    int update_hash(MYSQL mysql, char *qry, float Nham, float Nspam, struct node *xhash[], struct __config *cfg);
    int is_sender_on_white_list(MYSQL mysql, char *email, unsigned long uid, struct __config cfg);
    void insert_2_queue(MYSQL mysql, struct session_data *sdata, struct __config cfg, int is_spam);
@@ -38,7 +37,5 @@
    int update_training_metadata(sqlite3 *db, char *tmpfile, unsigned long uid, struct __config cfg, int is_spam);
    int my_walk_hash(sqlite3 *db, int ham_or_spam, struct node *xhash[], int train_mode);
 #endif
-
-float SQL_QUERY(struct session_data *sdata, char *token, struct __config *cfg);
 
 #endif /* _SQL_H */

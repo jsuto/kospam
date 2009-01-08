@@ -1,5 +1,5 @@
 /*
- * clapf.h, 2008.12.04, SJ
+ * clapf.h, 2009.01.08, SJ
  */
 
 #include <misc.h>
@@ -26,5 +26,5 @@
    int update_sqlite3_tokens(sqlite3 *db, struct node *xhash[]);
 #endif
 
-//char *check_lang(struct _token *t);
+char *check_lang(struct node *xhash[]);
 

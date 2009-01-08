@@ -1,5 +1,5 @@
 /*
- * lang.c, 2008.08.26, SJ
+ * lang.c, 2009.01.08, SJ
  */
 
 #include <stdio.h>
@@ -62,33 +62,36 @@ unsigned long int get_distance_text(struct node *t[MAX_NUM_OF_SAMPLES], int n, u
 }
 
 
-char *check_lang(struct _token *T){
-   struct _token *p;
+char *check_lang(struct node *xhash[]){
    struct node *s_lang[MAXHASH], *t[MAX_NUM_OF_SAMPLES], *q;
    int i, j, n, r;
    unsigned long int l_max=MAX_NGRAM*MAX_NGRAM, lang_detected_num[NUM_LANG];
 
-   if(T == NULL) return "language detection failed";
+   if(counthash(xhash) <= 0) return "language detection failed";
 
    for(i=0; i<NUM_LANG; i++)
       lang_detected_num[i] = MAX_NGRAM*MAX_NGRAM;
 
 
    inithash(s_lang);
-   p = T;
    n = 0;
 
-   while(p){
-      if(!strchr(p->str, '+') && !strchr(p->str, '*')){
-         n += parse_ngrams(s_lang, p->str, 1);
-         n += parse_ngrams(s_lang, p->str, 2);
-         n += parse_ngrams(s_lang, p->str, 3);
-         n += parse_ngrams(s_lang, p->str, 4);
-         n += parse_ngrams(s_lang, p->str, 5);
-      }
+   for(i=0; i<MAXHASH; i++){
+      q = xhash[i];
+      while(q != NULL){
+         if(q->type == 0){
+            n += parse_ngrams(s_lang, q->str, 1);
+            n += parse_ngrams(s_lang, q->str, 2);
+            n += parse_ngrams(s_lang, q->str, 3);
+            n += parse_ngrams(s_lang, q->str, 4);
+            n += parse_ngrams(s_lang, q->str, 5);
+         }
 
-      p = p->r;
+         q = q->r;
+      }
    }
+
+
 
    n = 0;
 
@@ -131,7 +134,7 @@ char *check_lang(struct _token *T){
       }
    }
 
-   clearhash(s_lang);
+   clearhash(s_lang, 0);
 
    if(r >= 0)
       return lang_detected[r];

@@ -53,7 +53,7 @@ int rbl_check(char *rbldomain, char *host, int debug);
 int reverse_ipv4_addr(char *ip);
 int rbl_list_check(char *domainlist, char *hostlist, int debug);
 
-unsigned long blackness(char *dir, char *ip, struct __config cfg);
+unsigned long blackness(char *dir, char *ip, struct __config *cfg);
 void put_ip_to_dir(char *dir, char *ip);
 
 double gsl_chi2inv(double x, double df);

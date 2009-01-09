@@ -11,12 +11,18 @@
 #ifdef HAVE_SQLITE3
   #include <sqlite3.h>
 #endif
-#ifdef HAVE_MYDB
-  //#include "mydb.h"
-#endif
 
 #include "config.h"
 
+#define MSG_UNDEF -1
+#define MSG_BODY 0
+#define MSG_RECEIVED 1
+#define MSG_FROM 2
+#define MSG_TO 3
+#define MSG_SUBJECT 4
+#define MSG_CONTENT_TYPE 5
+#define MSG_CONTENT_TRANSFER_ENCODING 6
+#define MSG_CONTENT_DISPOSITION 7
 
 #define MYDB_HEADER_SIZE 8
 #define N_SIZE 16

@@ -797,7 +797,7 @@ void init_session_data(struct session_data *sdata){
                               snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s/s.%s", USER_QUEUE_DIR, UE2.name[0], UE2.name, ID);
 
 
-                           sstate2 = parse_message(qpath, sdata, cfg);
+                           sstate2 = parse_message(qpath, &sdata, &cfg);
 
                            train_message(db, sdata, sstate2, MAX_ITERATIVE_TRAIN_LOOPS, is_spam, train_mode, cfg);
 

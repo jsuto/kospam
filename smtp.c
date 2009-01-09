@@ -1,5 +1,5 @@
 /*
- * smtp.c, 2008.11.26, SJ
+ * smtp.c, 2009.01.09, SJ
  */
 
 #include <stdio.h>
@@ -22,7 +22,7 @@
  * inject mail back to postfix
  */
 
-int inject_mail(struct session_data sdata, int msg, char *smtpaddr, int smtpport, char *spaminessbuf, struct __config cfg, char *notify){
+int inject_mail(struct session_data *sdata, int msg, char *smtpaddr, int smtpport, char *spaminessbuf, struct __config *cfg, char *notify){
    int i, n, psd;
    char buf[MAXBUFSIZE+1], line[SMALLBUFSIZE], bigbuf[MAX_MAIL_HEADER_SIZE], oursigno[SMALLBUFSIZE];
    struct in_addr addr;
@@ -35,23 +35,23 @@ int inject_mail(struct session_data sdata, int msg, char *smtpaddr, int smtpport
    int put_subject_spam_prefix =0, sent_subject_spam_prefix = 0;
    char *hdr_ptr, *p, *q, *recipient=NULL;
 
-   if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: trying to inject back", sdata.ttmpfile);
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: trying to inject back", sdata->ttmpfile);
 
    gettimeofday(&tv_start, &tz);
 
 
    memset(oursigno, 0, SMALLBUFSIZE);
-   if(strlen(cfg.our_signo) > 3)
-      snprintf(oursigno, SMALLBUFSIZE-1, "%s\r\n", cfg.our_signo);
+   if(strlen(cfg->our_signo) > 3)
+      snprintf(oursigno, SMALLBUFSIZE-1, "%s\r\n", cfg->our_signo);
 
 
-   if(smtpaddr == NULL || smtpport == 0){
-      syslog(LOG_PRIORITY, "%s: ERR: invalid smtp address or port", sdata.ttmpfile);
+   if(cfg->postfix_addr == NULL || smtpport == 0){
+      syslog(LOG_PRIORITY, "%s: ERR: invalid smtp address or port", sdata->ttmpfile);
       return ERR_INJECT;
    }
 
    if((psd = socket(AF_INET, SOCK_STREAM, 0)) == -1){
-      syslog(LOG_PRIORITY, "%s: ERR: create socket", sdata.ttmpfile);
+      syslog(LOG_PRIORITY, "%s: ERR: create socket", sdata->ttmpfile);
       return ERR_INJECT;
    }
 
@@ -62,53 +62,53 @@ int inject_mail(struct session_data sdata, int msg, char *smtpaddr, int smtpport
    bzero(&(postfix_addr.sin_zero), 8);
 
    if(connect(psd, (struct sockaddr *)&postfix_addr, sizeof(struct sockaddr)) == -1){
-      syslog(LOG_PRIORITY, "%s: ERR: connect to %s %d", sdata.ttmpfile, smtpaddr, smtpport);
+      syslog(LOG_PRIORITY, "%s: ERR: connect to %s %d", sdata->ttmpfile, smtpaddr, smtpport);
       return ERR_INJECT;
    }
 
    n = recvtimeout(psd, buf, MAXBUFSIZE, 0);
-   if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: got in injecting: %s", sdata.ttmpfile, buf);
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: got in injecting: %s", sdata->ttmpfile, buf);
 
    /* 220 banner */
 
    if(strncmp(buf, "220", 3)){
       send(psd, SMTP_CMD_QUIT, strlen(SMTP_CMD_QUIT), 0);
-      if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent in injecting: %s", sdata.ttmpfile, SMTP_CMD_QUIT);
+      if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent in injecting: %s", sdata->ttmpfile, SMTP_CMD_QUIT);
       close(psd);
-      syslog(LOG_PRIORITY, "%s: missing 220 banner (%s)", sdata.ttmpfile, buf);
+      syslog(LOG_PRIORITY, "%s: missing 220 banner (%s)", sdata->ttmpfile, buf);
       return ERR_INJECT;
    }
 
-   snprintf(buf, MAXBUFSIZE-1, "HELO %s\r\n", cfg.hostid);
+   snprintf(buf, MAXBUFSIZE-1, "HELO %s\r\n", cfg->hostid);
    send(psd, buf, strlen(buf), 0);
-   if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent in injecting: %s", sdata.ttmpfile, buf);
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent in injecting: %s", sdata->ttmpfile, buf);
 
    n = recvtimeout(psd, buf, MAXBUFSIZE, 0);
-   if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: got in injecting: %s", sdata.ttmpfile, buf);
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: got in injecting: %s", sdata->ttmpfile, buf);
 
    /* HELO */
 
    if(strncmp(buf, "250", 3)){
       send(psd, SMTP_CMD_QUIT, strlen(SMTP_CMD_QUIT), 0);
-      if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent in injecting: %s", sdata.ttmpfile, SMTP_CMD_QUIT);
+      if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent in injecting: %s", sdata->ttmpfile, SMTP_CMD_QUIT);
       close(psd);
-      syslog(LOG_PRIORITY, "%s: failed HELO (%s)", sdata.ttmpfile, buf);
+      syslog(LOG_PRIORITY, "%s: failed HELO (%s)", sdata->ttmpfile, buf);
       return ERR_INJECT;
    }
 
    /* MAIL FROM */
  
-   send(psd, sdata.mailfrom, strlen(sdata.mailfrom), 0);
-   if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent in injecting: %s", sdata.ttmpfile, sdata.mailfrom);
+   send(psd, sdata->mailfrom, strlen(sdata->mailfrom), 0);
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent in injecting: %s", sdata->ttmpfile, sdata->mailfrom);
 
    n = recvtimeout(psd, buf, MAXBUFSIZE, 0);
-   if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: got in injecting: %s", sdata.ttmpfile, buf);
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: got in injecting: %s", sdata->ttmpfile, buf);
 
    if(strncmp(buf, "250", 3)){
       send(psd, SMTP_CMD_QUIT, strlen(SMTP_CMD_QUIT), 0);
-      if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent in injecting: %s", sdata.ttmpfile, SMTP_CMD_QUIT);
+      if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent in injecting: %s", sdata->ttmpfile, SMTP_CMD_QUIT);
       close(psd);
-      syslog(LOG_PRIORITY, "%s: MAIL FROM failed (%s)", sdata.ttmpfile, buf);
+      syslog(LOG_PRIORITY, "%s: MAIL FROM failed (%s)", sdata->ttmpfile, buf);
       if(strncmp(buf, "550", 3) == 0) return ERR_REJECT;
       return ERR_INJECT;
    }
@@ -116,23 +116,23 @@ int inject_mail(struct session_data sdata, int msg, char *smtpaddr, int smtpport
    /* RCPT TO */
 
 #ifndef HAVE_LMTP
-   for(i=0; i<sdata.num_of_rcpt_to; i++){
+   for(i=0; i<sdata->num_of_rcpt_to; i++){
 #else
       i = msg;
 #endif
-      recipient = sdata.rcptto[i];
+      recipient = sdata->rcptto[i];
 
-      send(psd, sdata.rcptto[i], strlen(sdata.rcptto[i]), 0);
-      if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent in injecting (%d): %s", sdata.ttmpfile, i, sdata.rcptto[i]);
+      send(psd, sdata->rcptto[i], strlen(sdata->rcptto[i]), 0);
+      if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent in injecting (%d): %s", sdata->ttmpfile, i, sdata->rcptto[i]);
 
       n = recvtimeout(psd, buf, MAXBUFSIZE, 0);
-      if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: got in injecting (%d): %s", sdata.ttmpfile, i, buf);
+      if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: got in injecting (%d): %s", sdata->ttmpfile, i, buf);
 
       if(strncmp(buf, "250", 3)){
          send(psd, SMTP_CMD_QUIT, strlen(SMTP_CMD_QUIT), 0);
-         if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent in injecting (%d): %s", sdata.ttmpfile, i, SMTP_CMD_QUIT);
+         if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent in injecting (%d): %s", sdata->ttmpfile, i, SMTP_CMD_QUIT);
          close(psd);
-         syslog(LOG_PRIORITY, "%s: RCPT TO (%d) failed (%s)", sdata.ttmpfile, i, buf);
+         syslog(LOG_PRIORITY, "%s: RCPT TO (%d) failed (%s)", sdata->ttmpfile, i, buf);
          if(strncmp(buf, "550", 3) == 0) return ERR_REJECT;
          return ERR_INJECT;
       }
@@ -144,15 +144,15 @@ int inject_mail(struct session_data sdata, int msg, char *smtpaddr, int smtpport
    /* DATA */
 
    send(psd, SMTP_CMD_DATA, strlen(SMTP_CMD_DATA), 0);
-   if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent in injecting: %s", sdata.ttmpfile, SMTP_CMD_DATA);
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent in injecting: %s", sdata->ttmpfile, SMTP_CMD_DATA);
 
    n = recvtimeout(psd, buf, MAXBUFSIZE, 0);
-   if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: got in injecting: %s", sdata.ttmpfile, buf);
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: got in injecting: %s", sdata->ttmpfile, buf);
 
    if(strncmp(buf, "354", 3)){
       send(psd, SMTP_CMD_QUIT, strlen(SMTP_CMD_QUIT), 0);
-      if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent in injecting: %s", sdata.ttmpfile, SMTP_CMD_QUIT);
-      syslog(LOG_PRIORITY, "%s: DATA failed (%s)", sdata.ttmpfile, buf);
+      if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent in injecting: %s", sdata->ttmpfile, SMTP_CMD_QUIT);
+      syslog(LOG_PRIORITY, "%s: DATA failed (%s)", sdata->ttmpfile, buf);
       close(psd);
       return ERR_INJECT;
    }
@@ -162,13 +162,13 @@ int inject_mail(struct session_data sdata, int msg, char *smtpaddr, int smtpport
    if(notify == NULL){
       /* read and send stored mail */
 
-      fd = open(sdata.ttmpfile, O_RDONLY);
+      fd = open(sdata->ttmpfile, O_RDONLY);
       if(fd == -1)
          return ERR_INJECT;
 
       /* is this message spam and do we have to put [sp@m] prefix to the Subject: line? */
 
-      if(spaminessbuf && strlen(cfg.spam_subject_prefix) > 22 && strstr(spaminessbuf, cfg.clapf_spam_header_field))
+      if(spaminessbuf && strlen(cfg->spam_subject_prefix) > 22 && strstr(spaminessbuf, cfg->clapf_spam_header_field))
          put_subject_spam_prefix = 1;
 
       /*
@@ -233,9 +233,9 @@ int inject_mail(struct session_data sdata, int msg, char *smtpaddr, int smtpport
 
                      /* send the spam_subject_prefix in the Subject line if this is a spam, 2006.11.13, SJ */
 
-                     if(put_subject_spam_prefix == 1 && strncmp(line, "Subject: ", 9) == 0 && !strstr(line, cfg.spam_subject_prefix) ){
+                     if(put_subject_spam_prefix == 1 && strncmp(line, "Subject: ", 9) == 0 && !strstr(line, cfg->spam_subject_prefix) ){
                         send(psd, "Subject: ", 9, 0);
-                        send(psd, cfg.spam_subject_prefix, strlen(cfg.spam_subject_prefix), 0);
+                        send(psd, cfg->spam_subject_prefix, strlen(cfg->spam_subject_prefix), 0);
                         send(psd, line+9, strlen(line)-9, 0);
                         sent_subject_spam_prefix = 1;
                      }
@@ -252,7 +252,7 @@ int inject_mail(struct session_data sdata, int msg, char *smtpaddr, int smtpport
                /* if no Subject: line but this is a spam, create a Subject: line, 2006.11.13, SJ */
 
                if(put_subject_spam_prefix == 1 && sent_subject_spam_prefix == 0){
-                  snprintf(line, SMALLBUFSIZE-1, "Subject: %s\r\n", cfg.spam_subject_prefix);
+                  snprintf(line, SMALLBUFSIZE-1, "Subject: %s\r\n", cfg->spam_subject_prefix);
                   send(psd, line, strlen(line), 0);
                }
 
@@ -298,7 +298,7 @@ int inject_mail(struct session_data sdata, int msg, char *smtpaddr, int smtpport
 
 
    n = recvtimeout(psd, buf, MAXBUFSIZE, 0);
-   if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: got in injecting: %s", sdata.ttmpfile, buf);
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: got in injecting: %s", sdata->ttmpfile, buf);
 
    buf[n-2] = '\0';
 
@@ -306,15 +306,15 @@ int inject_mail(struct session_data sdata, int msg, char *smtpaddr, int smtpport
 
    if(strncmp(buf, "250", 3) == 0)
       /* our mail was accepted */
-      syslog(LOG_PRIORITY, "%s: injected back, sent: %ld [ms] -> %s", sdata.ttmpfile, tvdiff(tv_sent, tv_start)/1000, buf);
+      syslog(LOG_PRIORITY, "%s: injected back, sent: %ld [ms] -> %s", sdata->ttmpfile, tvdiff(tv_sent, tv_start)/1000, buf);
 
    else
       /* our messages was not rejected with 550 but inject failed */
-      syslog(LOG_PRIORITY, "%s: injecting failed (%s)", sdata.ttmpfile, buf);
+      syslog(LOG_PRIORITY, "%s: injecting failed (%s)", sdata->ttmpfile, buf);
 
 
    send(psd, SMTP_CMD_QUIT, strlen(SMTP_CMD_QUIT), 0);
-   if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent in injecting: %s", sdata.ttmpfile, SMTP_CMD_QUIT);
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent in injecting: %s", sdata->ttmpfile, SMTP_CMD_QUIT);
 
    close(psd);
 

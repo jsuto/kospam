@@ -1,5 +1,5 @@
 /*
- * session.c, 2009.01.08, SJ
+ * session.c, 2009.01.09, SJ
  */
 
 #include <stdio.h>
@@ -308,7 +308,7 @@ void init_session_data(struct session_data *sdata){
             send(new_sd, buf, strlen(buf), 0);
             if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent: %s", sdata.ttmpfile, buf);
 
-            if(unlink(sdata.ttmpfile)) syslog(LOG_PRIORITY, "%s: failed to remove", sdata.ttmpfile);
+            unlink(sdata.ttmpfile);
             if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: removed", sdata.ttmpfile);
 
             goto QUITTING;
@@ -385,6 +385,7 @@ void init_session_data(struct session_data *sdata){
                   goto AFTER_PERIOD;
                }
 
+               write_delivery_info(&sdata, cfg.workdir);
 
          #ifdef HAVE_ANTIVIRUS
 
@@ -505,7 +506,7 @@ void init_session_data(struct session_data *sdata){
                   /* move to quarantine, if we have to */
 
                   if(strlen(cfg.quarantine_dir) > 3)
-                     move_message_to_quarantine(sdata.ttmpfile, cfg.quarantine_dir, sdata.mailfrom, sdata.rcptto, sdata.num_of_rcpt_to);
+                     move_message_to_quarantine(&sdata, cfg.quarantine_dir);
 
                   /* send notification if cfg.localpostmaster is set, 2005.10.04, SJ */
 
@@ -518,7 +519,7 @@ void init_session_data(struct session_data *sdata){
 
                         snprintf(sdata.rcptto[0], MAXBUFSIZE-1, "RCPT TO: <%s>\r\n", cfg.localpostmaster);
                         sdata.num_of_rcpt_to = 1;
-                        ret = inject_mail(sdata, 0, cfg.postfix_addr, cfg.postfix_port, NULL, cfg, buf);
+                        ret = inject_mail(&sdata, 0, cfg.postfix_addr, cfg.postfix_port, NULL, &cfg, buf);
 
                         if(ret == 0)
                            syslog(LOG_PRIORITY, "notification about %s to %s failed", sdata.ttmpfile, cfg.localpostmaster);
@@ -540,7 +541,7 @@ void init_session_data(struct session_data *sdata){
                }
 
                memset(whitelistbuf, 0, SMALLBUFSIZE);
-               sstate = parse_message(sdata.ttmpfile, sdata, cfg);
+               sstate = parse_message(sdata.ttmpfile, &sdata, &cfg);
 
                if(sdata.need_signo_check == 1){
                   if(sstate.found_our_signo == 1)
@@ -583,7 +584,7 @@ void init_session_data(struct session_data *sdata){
             #endif
             #ifdef USERS_IN_LDAP
                ldap = do_bind_ldap(cfg.ldap_host, cfg.ldap_user, cfg.ldap_pwd, cfg.ldap_use_tls);
-               UE2 = get_user_from_email(ldap, cfg.ldap_base, email2, cfg);
+               UE2 = get_user_from_email(ldap, email2, &cfg);
             #endif
 
                /* copy default config from clapf.conf, to enable policy support later, 2008.11.26, SJ */
@@ -616,7 +617,7 @@ void init_session_data(struct session_data *sdata){
                   UE = get_user_from_email(db, email);
                #endif
                #ifdef USERS_IN_LDAP
-                  UE = get_user_from_email(ldap, cfg.ldap_base, email, cfg);
+                  UE = get_user_from_email(ldap, email, &cfg);
                #endif
 
                   /* read policy, 2008.11.24, SJ */
@@ -646,7 +647,6 @@ void init_session_data(struct session_data *sdata){
                   }
 
                #ifdef HAVE_ANTISPAM
-                  //is_spam = 0;
 
                   /* run statistical antispam check */
 
@@ -714,7 +714,7 @@ void init_session_data(struct session_data *sdata){
                            else
                               snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s/s.%s", USER_QUEUE_DIR, UE2.name[0], UE2.name, ID);
 
-                           sstate2 = parse_message(qpath, sdata, my_cfg);
+                           sstate2 = parse_message(qpath, &sdata, &my_cfg);
 
                            train_message(mysql, sdata, sstate2, MAX_ITERATIVE_TRAIN_LOOPS, is_spam, train_mode, my_cfg);
 
@@ -732,7 +732,7 @@ void init_session_data(struct session_data *sdata){
                            }
                            else {
                               if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: running Bayesian test", sdata.ttmpfile);
-                              spaminess = bayes_file(mysql, sstate, &sdata, &my_cfg);
+                              spaminess = bayes_file(mysql, &sstate, &sdata, &my_cfg);
                            }
                            update_mysql_tokens(mysql, sstate.token_hash, sdata.uid);
 
@@ -816,7 +816,7 @@ void init_session_data(struct session_data *sdata){
                            }
                            else {
                               if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: running Bayesian test", sdata.ttmpfile);
-                              spaminess = bayes_file(db, sstate, &sdata, &cfg);
+                              spaminess = bayes_file(db, &sstate, &sdata, &cfg);
                            }
                            update_sqlite3_tokens(db, sstate.token_hash);
 
@@ -966,14 +966,14 @@ void init_session_data(struct session_data *sdata){
                     if(spaminess >= cfg.spaminess_oblivion_limit)
                        inj = ERR_DROP_SPAM;
                     else
-                       inj = inject_mail(sdata, i, cfg.spam_smtp_addr, cfg.spam_smtp_port, spaminessbuf, my_cfg, NULL);
+                       inj = inject_mail(&sdata, i, cfg.spam_smtp_addr, cfg.spam_smtp_port, spaminessbuf, &my_cfg, NULL);
                   }
                   else
-                     inj = inject_mail(sdata, i, cfg.postfix_addr, cfg.postfix_port, spaminessbuf, my_cfg, NULL);
+                     inj = inject_mail(&sdata, i, cfg.postfix_addr, cfg.postfix_port, spaminessbuf, &my_cfg, NULL);
 
                #else
                END_OF_SPAM_CHECK:
-                  inj = inject_mail(sdata, i, cfg.postfix_addr, cfg.postfix_port, NULL, my_cfg, NULL);
+                  inj = inject_mail(&sdata, i, cfg.postfix_addr, cfg.postfix_port, NULL, &my_cfg, NULL);
                #endif
 
                   /* set the accept buffer */
@@ -1000,6 +1000,7 @@ void init_session_data(struct session_data *sdata){
 
                /* 2009.09.02, SJ */
                unlink(sdata.ttmpfile);
+               unlink(sdata.deliveryinfo);
 
                /* close database backend handler */
 

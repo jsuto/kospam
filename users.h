@@ -1,5 +1,5 @@
 /*
- * users.h, 2008.11.25, SJ
+ * users.h, 2009.01.09, SJ
  */
 
 #ifndef _USERS_H
@@ -35,7 +35,7 @@
    int ldap_unbind_s(LDAP *ld);
 
    LDAP *do_bind_ldap(char *ldap_host, char *binddn, char *bindpw, int usetls);
-   struct ue get_user_from_email(LDAP *ld, char *base, char *email, struct __config cfg);
+   struct ue get_user_from_email(LDAP *ld, char *email, struct __config *cfg);
 #endif
 
 #endif /* _USERS_H */

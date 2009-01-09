@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2009.01.08, SJ
+ * spamdrop.c, 2009.01.09, SJ
  */
 
 #include <stdio.h>
@@ -329,7 +329,7 @@ int main(int argc, char **argv, char **envp){
          snprintf(buf, MAXBUFSIZE-1, "%s/%s/%c/%s/s.%s", cfg.chrootdir, USER_QUEUE_DIR, username[0], username, ID);
 
 
-      state = parse_message(buf, sdata, cfg);
+      state = parse_message(buf, &sdata, &cfg);
 
       /* is it a TUM trained message? */
 
@@ -353,7 +353,7 @@ int main(int argc, char **argv, char **envp){
 
 
    /* parse message */
-   state = parse_message(sdata.ttmpfile, sdata, cfg);
+   state = parse_message(sdata.ttmpfile, &sdata, &cfg);
 
 
    /*******************************************************/
@@ -394,7 +394,7 @@ int main(int argc, char **argv, char **envp){
          syslog(LOG_PRIORITY, "%s: sender (%s) found on whitelist", sdata.ttmpfile, from);
          snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on white list\r\n", cfg.clapf_header_field);
       } else
-         spaminess = bayes_file(mysql, state, &sdata, &cfg);
+         spaminess = bayes_file(mysql, &state, &sdata, &cfg);
 
       update_mysql_tokens(mysql, state.token_hash, sdata.uid);
    #endif
@@ -403,12 +403,12 @@ int main(int argc, char **argv, char **envp){
          syslog(LOG_PRIORITY, "%s: sender (%s) found on whitelist", sdata.ttmpfile, from);
          snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on white list\r\n", cfg.clapf_header_field);
       } else
-         spaminess = bayes_file(db, state, &sdata, &cfg);
+         spaminess = bayes_file(db, &state, &sdata, &cfg);
 
       update_sqlite3_tokens(db, state.token_hash);
    #endif
    #ifdef HAVE_MYDB
-      spaminess = bayes_file(state, &sdata, &cfg);
+      spaminess = bayes_file(&state, &sdata, &cfg);
       update_tokens(cfg.mydbfile, sdata.mhash, state.token_hash);
    #endif
 

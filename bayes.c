@@ -1,5 +1,5 @@
 /*
- * bayes.c, 2009.01.08, SJ
+ * bayes.c, 2009.01.09, SJ
  */
 
 #include <stdio.h>
@@ -82,8 +82,6 @@ int qry_spaminess(struct session_data *sdata, struct _state *state, char type, s
 
    buffer_cat(query, ")");
 
-   //fprintf(stderr, "qry: %s\n", query->data);
-
 #ifdef HAVE_MYSQL
    update_hash(sdata->mysql, query->data, sdata->Nham, sdata->Nspam, state->token_hash, cfg);
 #endif
@@ -111,7 +109,7 @@ inline double calc_score(struct node *xhash[], struct __config *cfg){
  * parse the message into tokens and return the pointer
  */
 
-struct _state parse_message(char *spamfile, struct session_data sdata, struct __config cfg){
+struct _state parse_message(char *spamfile, struct session_data *sdata, struct __config *cfg){
    FILE *f;
    char buf[MAXBUFSIZE], tumbuf[SMALLBUFSIZE];
    struct _state state;
@@ -124,10 +122,10 @@ struct _state parse_message(char *spamfile, struct session_data sdata, struct __
       return state;
    }
 
-   snprintf(tumbuf, SMALLBUFSIZE-1, "%sTUM", cfg.clapf_header_field);
+   snprintf(tumbuf, SMALLBUFSIZE-1, "%sTUM", cfg->clapf_header_field);
 
    while(fgets(buf, MAXBUFSIZE-1, f)){
-      parse(buf, &state, &sdata, cfg);
+      parse(buf, &state, sdata, cfg);
 
       if(strncmp(buf, tumbuf, strlen(tumbuf)) == 0){
          state.train_mode = T_TUM;
@@ -144,33 +142,33 @@ struct _state parse_message(char *spamfile, struct session_data sdata, struct __
  * evaulate tokens
  */
 
-double eval_tokens(struct session_data *sdata, struct __config *cfg, struct _state state){
+double eval_tokens(struct session_data *sdata, struct _state *state, struct __config *cfg){
    float spaminess=DEFAULT_SPAMICITY;
    int has_embed_image=0, found_on_rbl=0, surbl_match=0;
 
 
 
    /* apply some penalties, 2009.01.04, SJ */
-   add_penalties(sdata, state, state.token_hash, cfg);
+   add_penalties(sdata, state, cfg);
 
 
-   if(cfg->penalize_embed_images == 1 && findnode(state.token_hash, "src+cid")){
-      addnode(state.token_hash, "EMBED*", REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
+   if(cfg->penalize_embed_images == 1 && findnode(state->token_hash, "src+cid")){
+      addnode(state->token_hash, "EMBED*", REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
       has_embed_image = 1;
    }
 
 
    /* calculate spaminess based on the token pairs and other special tokens */
 
-   qry_spaminess(sdata, &state, 1, cfg);
-   spaminess = calc_score(state.token_hash, cfg);
+   qry_spaminess(sdata, state, 1, cfg);
+   spaminess = calc_score(state->token_hash, cfg);
    if(cfg->debug == 1) fprintf(stderr, "phrase: %.4f\n", spaminess);
    if(spaminess >= cfg->spam_overall_limit || spaminess <= cfg->max_ham_spamicity) goto END_OF_EVALUATION;
 
    /* query the single tokens, then use the 'mix' for calculation */
 
-   qry_spaminess(sdata, &state, 0, cfg);
-   spaminess = calc_score(state.token_hash, cfg);
+   qry_spaminess(sdata, state, 0, cfg);
+   spaminess = calc_score(state->token_hash, cfg);
    if(cfg->debug == 1) fprintf(stderr, "mix: %.4f\n", spaminess);
    if(spaminess >= cfg->spam_overall_limit || spaminess <= cfg->max_ham_spamicity) goto END_OF_EVALUATION;
 
@@ -178,10 +176,10 @@ double eval_tokens(struct session_data *sdata, struct __config *cfg, struct _sta
    /* if we are still unsure, consult blacklists */
  
 #ifdef HAVE_RBL
-   check_lists(sdata, &state, state.token_hash, &found_on_rbl, &surbl_match, cfg);
+   check_lists(sdata, state, &found_on_rbl, &surbl_match, cfg);
 #endif
 
-   spaminess = calc_score(state.token_hash, cfg);
+   spaminess = calc_score(state->token_hash, cfg);
    if(cfg->debug == 1) fprintf(stderr, "mix after blacklists: %.4f\n", spaminess);
 
 
@@ -192,7 +190,7 @@ END_OF_EVALUATION:
    /* if the message is unsure, try to determine if it's a spam, 2008.01.09, SJ */
 
    if(spaminess > cfg->max_ham_spamicity && spaminess < cfg->spam_overall_limit)
-      spaminess = apply_fixes(spaminess, found_on_rbl, surbl_match, has_embed_image, state.base64_text, state.c_shit, state.l_shit, cfg);
+      spaminess = apply_fixes(spaminess, found_on_rbl, surbl_match, has_embed_image, state->base64_text, state->c_shit, state->l_shit, cfg);
 
 
    /* fix spaminess value if we have to */
@@ -209,13 +207,13 @@ END_OF_EVALUATION:
  */
 
 #ifdef HAVE_MYSQL
-float bayes_file(MYSQL mysql, struct _state state, struct session_data *sdata, struct __config *cfg){
+float bayes_file(MYSQL mysql, struct _state *state, struct session_data *sdata, struct __config *cfg){
 #endif
 #ifdef HAVE_SQLITE3
-float bayes_file(sqlite3 *db, struct _state state, struct session_data *sdata, struct __config *cfg){
+float bayes_file(sqlite3 *db, struct _state *state, struct session_data *sdata, struct __config *cfg){
 #endif
 #ifdef HAVE_MYDB
-float bayes_file(struct _state state, struct session_data *sdata, struct __config *cfg){
+float bayes_file(struct _state *state, struct session_data *sdata, struct __config *cfg){
 #endif
 
    char buf[MAXBUFSIZE], *p;
@@ -240,8 +238,8 @@ float bayes_file(struct _state state, struct session_data *sdata, struct __confi
    /* evaluate the blackhole result, 2006.10.02, SJ */
 
 #ifdef HAVE_BLACKHOLE
-   if(strlen(cfg.blackhole_path) > 3 && blackness(cfg.blackhole_path, state.ip, cfg) > 100){
-      syslog(LOG_PRIORITY, "%s: found %s on our blackhole", p, state.ip);
+   if(strlen(cfg->blackhole_path) > 3 && blackness(cfg->blackhole_path, state->ip, cfg) > 100){
+      syslog(LOG_PRIORITY, "%s: found %s on our blackhole", p, state->ip);
 
       return cfg->spaminess_of_blackholed_mail;
    }
@@ -310,13 +308,13 @@ float bayes_file(struct _state state, struct session_data *sdata, struct __confi
    if(cfg->enable_auto_white_list == 1){
 
    #ifdef HAVE_MYSQL
-      snprintf(buf, MAXBUFSIZE-1, "SELECT nham, nspam FROM %s WHERE token=%llu AND (uid=0 OR uid=%ld)", SQL_TOKEN_TABLE, APHash(state.from), sdata->uid);
+      snprintf(buf, MAXBUFSIZE-1, "SELECT nham, nspam FROM %s WHERE token=%llu AND (uid=0 OR uid=%ld)", SQL_TOKEN_TABLE, APHash(state->from), sdata->uid);
       TE = get_ham_spam(mysql, buf);
       ham_from = TE.nham;
       spam_from = TE.nspam;
    #endif
    #ifdef HAVE_SQLITE3
-      snprintf(buf, MAXBUFSIZE-1, "SELECT nham, nspam FROM %s WHERE token=%llu", SQL_TOKEN_TABLE, APHash(state.from));
+      snprintf(buf, MAXBUFSIZE-1, "SELECT nham, nspam FROM %s WHERE token=%llu", SQL_TOKEN_TABLE, APHash(state->from));
       if(sqlite3_prepare_v2(db, buf, -1, &pStmt, pzTail) == SQLITE_OK){
          if(sqlite3_step(pStmt) == SQLITE_ROW){
             ham_from = sqlite3_column_int(pStmt, 0);
@@ -326,7 +324,7 @@ float bayes_file(struct _state state, struct session_data *sdata, struct __confi
       sqlite3_finalize(pStmt);
    #endif
    #ifdef HAVE_MYDB
-      Q = findmydb_node(sdata->mhash, APHash(state.from));
+      Q = findmydb_node(sdata->mhash, APHash(state->from));
       if(Q){
          ham_from = Q->nham;
          spam_from = Q->nspam;
@@ -343,7 +341,7 @@ float bayes_file(struct _state state, struct session_data *sdata, struct __confi
 
 
    /* evaluate the tokens */
-   spaminess = eval_tokens(sdata, cfg, state);
+   spaminess = eval_tokens(sdata, state, cfg);
 
    return spaminess;
 }
@@ -416,18 +414,18 @@ int train_message(char *mydbfile, struct mydb_node *mhash[], struct session_data
       #ifdef HAVE_MYSQL
          mysql_real_query(&mysql, buf, strlen(buf));
 
-         spaminess = bayes_file(mysql, state, &sdata, &cfg);
+         spaminess = bayes_file(mysql, &state, &sdata, &cfg);
       #endif
       #ifdef HAVE_SQLITE3
          sqlite3_exec(db, buf, NULL, NULL, &err);
 
-         spaminess = bayes_file(db, state, &sdata, &cfg);
+         spaminess = bayes_file(db, &state, &sdata, &cfg);
       #endif
       }
 
    #ifdef HAVE_MYDB
       rc = init_mydb(cfg.mydbfile, sdata.mhash, &sdata);
-      if(rc == 1) spaminess = bayes_file(state, &sdata, &cfg);
+      if(rc == 1) spaminess = bayes_file(&state, &sdata, &cfg);
       close_mydb(sdata.mhash);
    #endif
 

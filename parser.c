@@ -1,5 +1,5 @@
 /*
- * parser.c, 2008.12.17, SJ
+ * parser.c, 2009.01.09, SJ
  */
 
 #include <stdio.h>
@@ -100,11 +100,11 @@ void init_state(struct _state *state){
  *
  */
 
-int attachment_by_type(struct _state state, char *type){
+int attachment_by_type(struct _state *state, char *type){
    int i;
 
    for(i=0; i<MAX_ATTACHMENTS; i++){
-      if(strstr(state.attachments[i].type, type))
+      if(strstr(state->attachments[i].type, type))
          return 1;
    }
 
@@ -204,7 +204,7 @@ int is_date(char *s){
  * parse buffer
  */
 
-int parse(char *buf, struct _state *state, struct session_data *sdata, struct __config cfg){
+int parse(char *buf, struct _state *state, struct session_data *sdata, struct __config *cfg){
    char *p, *q, *c, huf[MAXBUFSIZE], puf[MAXBUFSIZE], muf[MAXBUFSIZE], tuf[MAXBUFSIZE], rnd[RND_STR_LEN], u[SMALLBUFSIZE], token[MAX_TOKEN_LEN], phrase[MAX_TOKEN_LEN], ipbuf[IPLEN];
    int x, b64_len;
 
@@ -221,7 +221,7 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
          state->message_state = MSG_BODY;
       }
 
-      if(cfg.debug == 1) fprintf(stderr, "\n");
+      if(cfg->debug == 1) fprintf(stderr, "\n");
 
       return 0;
    }
@@ -229,7 +229,7 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
    /* check for our anti backscatter signo, SJ */
 
    if(sdata->need_signo_check == 1){
-      if(strncmp(buf, cfg.our_signo, strlen(cfg.our_signo)) == 0)
+      if(strncmp(buf, cfg->our_signo, strlen(cfg->our_signo)) == 0)
          state->found_our_signo = 1;
    }
 
@@ -629,7 +629,7 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
          if(q){
             *q = '\0';
 
-            if(cfg.debug == 1)
+            if(cfg->debug == 1)
                fprintf(stderr, "DISCARDED HTML: %s", ++q);
          }
       }
@@ -654,7 +654,7 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
 
 
    /* count invalid junk characters specified in the ijc.h file, 2008.09.08 */
-   state->c_shit += count_invalid_junk(buf, cfg.replace_junk_characters);
+   state->c_shit += count_invalid_junk(buf, cfg->replace_junk_characters);
 
    /* skip unless we have an URL, 2006.11.09, SJ */
 
@@ -670,8 +670,8 @@ DECOMPOSE:
    if(state->is_header == 1) p = strchr(buf, ' ');
    else p = buf;
 
-   if(cfg.debug == 1) fprintf(stderr, "%s\n", buf);
-   //if(cfg.debug == 1) fprintf(stderr, "%d %ld %s\n", state->base64, state->c_shit, buf);
+   if(cfg->debug == 1) fprintf(stderr, "%s\n", buf);
+   //if(cfg->debug == 1) fprintf(stderr, "%d %ld %s\n", state->base64, state->c_shit, buf);
 
    do {
       p = split(p, DELIMITER, puf, MAXBUFSIZE-1);

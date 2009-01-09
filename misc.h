@@ -1,5 +1,5 @@
 /*
- * misc.h, 2008.09.29, SJ
+ * misc.h, 2009.01.09, SJ
  */
 
 #ifndef _MISC_H
@@ -10,6 +10,7 @@
 
 #include <sys/time.h>
 #include <cfg.h>
+#include "defs.h"
 #include <config.h>
 
 void _fatal(char *s);
@@ -44,9 +45,9 @@ int is_valid_id(char *p);
 void log_ham_spam_per_email(char *tmpfile, char *email, int ham_or_spam);
 int extract_id_from_message(char *messagefile, char *clapf_header_field, char *ID);
 int is_recipient_in_array(char rcptto[MAX_RCPT_TO][MAXBUFSIZE], char *buf, int num_of_rcpt_to);
-void write_delivery_info(char *tmpfile, char *dir, char *mailfrom, char rcptto[MAX_RCPT_TO][MAXBUFSIZE], int num_of_rcpt_to);
-int move_message_to_quarantine(char *tmpfile, char *quarantine_dir, char *mailfrom, char rcptto[MAX_RCPT_TO][MAXBUFSIZE], int num_of_rcpt_to);
-int is_recipient_in_our_domains(char *rawmail,  struct __config cfg);
+void write_delivery_info(struct session_data *sdata, char *dir);
+int move_message_to_quarantine(struct session_data *sdata, char *quarantine_dir);
+int is_recipient_in_our_domains(char *rawmail,  struct __config *cfg);
 
 int rbl_check(char *rbldomain, char *host, int debug);
 int reverse_ipv4_addr(char *ip);

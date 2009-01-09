@@ -1,5 +1,5 @@
 /*
- * test.c, 2009.01.08, SJ
+ * test.c, 2009.01.09, SJ
  */
 
 #include <stdio.h>
@@ -65,7 +65,7 @@ int main(int argc, char **argv){
    sdata.num_of_rcpt_to = -1;
    memset(sdata.rcptto[0], 0, MAXBUFSIZE);
    snprintf(sdata.ttmpfile, SMALLBUFSIZE-1, "%s", argv[2]);
-   state = parse_message(argv[2], sdata, cfg);
+   state = parse_message(argv[2], &sdata, &cfg);
 
    spaminess = DEFAULT_SPAMICITY;
    sdata.Nham = sdata.Nspam = 0;
@@ -77,7 +77,7 @@ int main(int argc, char **argv){
 #ifdef HAVE_MYSQL
    mysql_init(&mysql);
    if(mysql_real_connect(&mysql, cfg.mysqlhost, cfg.mysqluser, cfg.mysqlpwd, cfg.mysqldb, cfg.mysqlport, cfg.mysqlsocket, 0)){
-      spaminess = bayes_file(mysql, state, &sdata, &cfg);
+      spaminess = bayes_file(mysql, &state, &sdata, &cfg);
       mysql_close(&mysql);
    }
    else {
@@ -96,7 +96,7 @@ int main(int argc, char **argv){
           fprintf(stderr, "error happened\n");
 
 
-      spaminess = bayes_file(db, state, &sdata, &cfg);
+      spaminess = bayes_file(db, &state, &sdata, &cfg);
    }
    sqlite3_close(db);
 #endif
@@ -105,7 +105,7 @@ int main(int argc, char **argv){
    rc = init_mydb(cfg.mydbfile, sdata.mhash, &sdata);
    fprintf(stderr, "using %s. %.0f, %0.f ...\n", cfg.mydbfile, sdata.Nham, sdata.Nspam);
    if(rc == 1){
-      spaminess = bayes_file(state, &sdata, &cfg);
+      spaminess = bayes_file(&state, &sdata, &cfg);
    }
    close_mydb(sdata.mhash);
 #endif

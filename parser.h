@@ -1,5 +1,5 @@
 /*
- * parser.h, 2008.08.18, SJ
+ * parser.h, 2009.01.09, SJ
  */
 
 #ifndef _PARSER_H
@@ -21,8 +21,8 @@
 
 
 void init_state(struct _state *state);
-int attachment_by_type(struct _state state, char *type);
+int attachment_by_type(struct _state *state, char *type);
 int extract_boundary(char *p, char *boundary, int boundary_len);
-int parse(char *buf, struct _state *state, struct session_data *sdata, struct __config cfg);
+int parse(char *buf, struct _state *state, struct session_data *sdata, struct __config *cfg);
 
 #endif /* _PARSER_H */

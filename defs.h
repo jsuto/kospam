@@ -1,5 +1,5 @@
 /*
- * defs.h, 2009.01.04, SJ
+ * defs.h, 2009.01.09, SJ
  */
 
 #ifndef _DEFS_H
@@ -105,8 +105,6 @@ struct _state {
    unsigned long n_subject_token;
    unsigned long n_body_token;
    unsigned long n_chain_token;
-   //struct _token *c_token;
-   //struct _token *first;
    struct url *urls;
 
    int found_our_signo;
@@ -118,7 +116,8 @@ struct _state {
 };
 
 struct session_data {
-   char ttmpfile[SMALLBUFSIZE], mailfrom[MAXBUFSIZE], rcptto[MAX_RCPT_TO][MAXBUFSIZE], client_addr[IPLEN], name[SMALLBUFSIZE];
+   char ttmpfile[SMALLBUFSIZE], deliveryinfo[SMALLBUFSIZE];
+   char mailfrom[MAXBUFSIZE], rcptto[MAX_RCPT_TO][MAXBUFSIZE], client_addr[IPLEN], name[SMALLBUFSIZE];
    unsigned long uid;
    int fd, tot_len, num_of_rcpt_to, skip_id_check, need_signo_check, unknown_client;
    float Nham, Nspam;

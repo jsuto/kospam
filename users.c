@@ -1,5 +1,5 @@
 /*
- * sql.c, 2008.11.27, SJ
+ * users.c, 2009.01.09, SJ
  */
 
 #include <stdio.h>
@@ -145,7 +145,7 @@ LDAP *do_bind_ldap(char *ldap_host, char *binddn, char *bindpw, int usetls){
  * ask a specific entry about the user from LDAP directory
  */
 
-struct ue get_user_from_email(LDAP *ld, char *base, char *email, struct __config cfg){
+struct ue get_user_from_email(LDAP *ld, char *email, struct __config *cfg){
    int rc;
    char filter[SMALLBUFSIZE], *attrs[] = { NULL }, **vals;
    LDAPMessage *res, *e;
@@ -155,9 +155,9 @@ struct ue get_user_from_email(LDAP *ld, char *base, char *email, struct __config
 
    if(ld == NULL) return UE;
 
-   snprintf(filter, SMALLBUFSIZE-1, "(|(%s=%s)(%s=%s))", cfg.email_address_attribute_name, email, cfg.email_alias_attribute_name, email);
+   snprintf(filter, SMALLBUFSIZE-1, "(|(%s=%s)(%s=%s))", cfg->email_address_attribute_name, email, cfg->email_alias_attribute_name, email);
 
-   rc = ldap_search_s(ld, base, LDAP_SCOPE, filter, attrs, 0, &res);
+   rc = ldap_search_s(ld, cfg->ldap_base, LDAP_SCOPE, filter, attrs, 0, &res);
    if(rc) return UE;
 
    e = ldap_first_entry(ld, res);

@@ -1,5 +1,5 @@
 /*
- * parsembox.c, 2009.01.07, SJ
+ * parsembox.c, 2009.01.09, SJ
  */
 
 #include <stdio.h>
@@ -66,7 +66,7 @@ int main(int argc, char **argv){
          continue;
       }
 
-      parse(buf, &state, &sdata, cfg);
+      parse(buf, &state, &sdata, &cfg);
 
    }
 

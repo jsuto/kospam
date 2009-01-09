@@ -1,5 +1,5 @@
 /*
- * misc.c, 2008.09.29, SJ
+ * misc.c, 2009.01.09, SJ
  */
 
 #include <stdio.h>
@@ -786,23 +786,22 @@ int is_recipient_in_array(char rcptto[MAX_RCPT_TO][MAXBUFSIZE], char *buf, int n
  * write delivery info to file
  */
 
-void write_delivery_info(char *tmpfile, char *dir, char *mailfrom, char rcptto[MAX_RCPT_TO][MAXBUFSIZE], int num_of_rcpt_to){
+void write_delivery_info(struct session_data *sdata, char *dir){
    int i;
-   char qdelivery[SMALLBUFSIZE];
    FILE *f;
 
-   snprintf(qdelivery, SMALLBUFSIZE-1, "%s/%s.d", dir, tmpfile);
+   snprintf(sdata->deliveryinfo, SMALLBUFSIZE-1, "%s/%s.d", dir, sdata->ttmpfile);
 
-   f = fopen(qdelivery, "w+");
+   f = fopen(sdata->deliveryinfo, "w+");
    if(f){
-      fprintf(f, mailfrom);
-         for(i=0; i<num_of_rcpt_to; i++)
-            fprintf(f, rcptto[i]);
+      fprintf(f, sdata->mailfrom);
+         for(i=0; i<sdata->num_of_rcpt_to; i++)
+            fprintf(f, sdata->rcptto[i]);
 
       fclose(f);
    }
    else
-      syslog(LOG_PRIORITY, "%s: failed writing delivery info to %s", tmpfile, qdelivery);
+      syslog(LOG_PRIORITY, "%s: failed writing delivery info to %s", sdata->ttmpfile, sdata->deliveryinfo);
 }
 
 
@@ -810,26 +809,22 @@ void write_delivery_info(char *tmpfile, char *dir, char *mailfrom, char rcptto[M
  * move message to quarantine
  */
 
-int move_message_to_quarantine(char *tmpfile, char *quarantine_dir, char *mailfrom, char rcptto[MAX_RCPT_TO][MAXBUFSIZE], int num_of_rcpt_to){
+int move_message_to_quarantine(struct session_data *sdata, char *quarantine_dir){
    char qfile[QUARANTINELEN];
 
-   snprintf(qfile, QUARANTINELEN-1, "%s/%s", quarantine_dir, tmpfile);
-
-   /* put down delivery info, 2006.01.19, SJ */
+   snprintf(qfile, QUARANTINELEN-1, "%s/%s", quarantine_dir, sdata->ttmpfile);
 
    /* if we would use rename, we cannot unlink this file later, producing an
       error message to syslog */
 
-   if(link(tmpfile, qfile) == 0){
-      syslog(LOG_PRIORITY, "%s saved as %s", tmpfile, qfile);
+   if(link(sdata->ttmpfile, qfile) == 0){
+      syslog(LOG_PRIORITY, "%s saved as %s", sdata->ttmpfile, qfile);
       chmod(qfile, 0644);
-
-      write_delivery_info(tmpfile, quarantine_dir, mailfrom, rcptto, num_of_rcpt_to);
 
       return OK;
    }
    else {
-      syslog(LOG_PRIORITY, "failed to put %s into quarantine: %s", tmpfile, qfile);
+      syslog(LOG_PRIORITY, "failed to put %s into quarantine: %s", sdata->ttmpfile, qfile);
       return ERR_MOVED;
    }
 
@@ -840,7 +835,7 @@ int move_message_to_quarantine(char *tmpfile, char *quarantine_dir, char *mailfr
  * is the email address in our domains?
  */
 
-int is_recipient_in_our_domains(char *rawmail, struct __config cfg){
+int is_recipient_in_our_domains(char *rawmail, struct __config *cfg){
    char *p, email[SMALLBUFSIZE];
 
    if(extract_email(rawmail, email) == 0) return 0;
@@ -848,9 +843,9 @@ int is_recipient_in_our_domains(char *rawmail, struct __config cfg){
    p = strchr(email, '@');
    if(!p) return 0;
 
-   //syslog(LOG_PRIORITY, "%s in %s", p, cfg.mydomains);
+   //syslog(LOG_PRIORITY, "%s in %s", p, cfg->mydomains);
 
-   if(strstr(cfg.mydomains, p)) return 1;
+   if(strstr(cfg->mydomains, p)) return 1;
 
    return 0;
 }

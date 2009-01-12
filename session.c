@@ -1,5 +1,5 @@
 /*
- * session.c, 2009.01.09, SJ
+ * session.c, 2009.01.12, SJ
  */
 
 #include <stdio.h>
@@ -935,8 +935,9 @@ void init_session_data(struct session_data *sdata){
 
                         /* add additional headers, credits: Mariano, 2006.08.14 */
 
-                        snprintf(spaminessbuf, MAXBUFSIZE-1, "%s%.4f\r\n%s%s\r\n%s%s%s%s\r\n%s%ld ms\r\n",
-                           cfg.clapf_header_field, spaminess, cfg.clapf_header_field, sdata.ttmpfile, reason, trainbuf, whitelistbuf, cfg.clapf_spam_header_field, cfg.clapf_header_field, tvdiff(tv_spam_stop, tv_spam_start)/1000);
+                        snprintf(spaminessbuf, MAXBUFSIZE-1, "%s%.4f\r\n%s%s\r\n%s%ld ms\r\n%s%s%s%s\r\n",
+                           cfg.clapf_header_field, spaminess, cfg.clapf_header_field, sdata.ttmpfile, cfg.clapf_header_field, tvdiff(tv_spam_stop, tv_spam_start)/1000,
+                           reason, trainbuf, whitelistbuf, cfg.clapf_spam_header_field);
 
 
                         log_ham_spam_per_email(sdata.ttmpfile, email, 1);

@@ -935,14 +935,15 @@ void init_session_data(struct session_data *sdata){
 
                         /* add additional headers, credits: Mariano, 2006.08.14 */
 
-                        snprintf(spaminessbuf, MAXBUFSIZE-1, "%s%.4f\r\n%s%s\r\n%s%s%s%s\r\n",
-                           cfg.clapf_header_field, spaminess, cfg.clapf_header_field, sdata.ttmpfile, reason, trainbuf, whitelistbuf, cfg.clapf_spam_header_field);
+                        snprintf(spaminessbuf, MAXBUFSIZE-1, "%s%.4f\r\n%s%s\r\n%s%s%s%s\r\n%s%ld ms\r\n",
+                           cfg.clapf_header_field, spaminess, cfg.clapf_header_field, sdata.ttmpfile, reason, trainbuf, whitelistbuf, cfg.clapf_spam_header_field, cfg.clapf_header_field, tvdiff(tv_spam_stop, tv_spam_start)/1000);
 
 
                         log_ham_spam_per_email(sdata.ttmpfile, email, 1);
                      }
                      else {
-                        snprintf(spaminessbuf, MAXBUFSIZE-1, "%s%.4f\r\n%s%s\r\n%s%s", cfg.clapf_header_field, spaminess, cfg.clapf_header_field, sdata.ttmpfile, trainbuf, whitelistbuf);
+                        snprintf(spaminessbuf, MAXBUFSIZE-1, "%s%.4f\r\n%s%s\r\n%s%ld ms\r\n%s%s",
+                            cfg.clapf_header_field, spaminess, cfg.clapf_header_field, sdata.ttmpfile, cfg.clapf_header_field, tvdiff(tv_spam_stop, tv_spam_start)/1000, trainbuf, whitelistbuf);
 
                         log_ham_spam_per_email(sdata.ttmpfile, email, 0);
                      }
@@ -952,8 +953,8 @@ void init_session_data(struct session_data *sdata){
                   /* set a reasonable clapf header if no spam check has happened, 2008.04.14, SJ */
 
                   else {
-                     snprintf(spaminessbuf, MAXBUFSIZE-1, "%s%.4f\r\n%s%s\r\n",
-                              cfg.clapf_header_field, spaminess, cfg.clapf_header_field, sdata.ttmpfile);
+                     snprintf(spaminessbuf, MAXBUFSIZE-1, "%s%.4f\r\n%s%s\r\n%s%ld ms\r\n",
+                              cfg.clapf_header_field, spaminess, cfg.clapf_header_field, sdata.ttmpfile, cfg.clapf_header_field, tvdiff(tv_spam_stop, tv_spam_start)/1000);
                   }
 
 

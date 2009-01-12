@@ -71,9 +71,6 @@ void init_state(struct _state *state){
    memset(state->qpbuf, 0, MAX_TOKEN_LEN);
    memset(state->from, 0, SMALLBUFSIZE);
 
-   //state->c_token = NULL;
-   //state->first = NULL;
-
    state->urls = NULL;
 
    state->found_our_signo = 0;
@@ -236,6 +233,7 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
    /* header checks */
 
    if(state->is_header == 1){
+      if(strchr(buf, ':')) state->message_state = MSG_UNDEF;
 
       /* Subject: */
 
@@ -262,7 +260,7 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
 
       /* Received: 2005.12.09, SJ */
 
-   #ifdef HAVE_PROCESS_ALL_RECEIVED_LINES
+   /*#ifdef HAVE_PROCESS_ALL_RECEIVED_LINES
       if(strncmp(buf, "Received: from ", strlen("Received: from ")) == 0){
    #else
       if(strncmp(buf, "Received: from ", strlen("Received: from ")) == 0 && state->ipcnt < 2){
@@ -274,7 +272,6 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
             q = strchr(p, ']');
             if(q){
 
-               /* we care only IPv4 addresses for now, 2005.12.23, SJ */
 
                if(q > p+6 && q-p-1 <= IPLEN-1){
                   memset(ipbuf, 0, IPLEN);
@@ -289,7 +286,40 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
             }
          }
 
+      }*/
+
+
+      if(strncmp(buf, "Received: from ", strlen("Received: from ")) == 0){
+         state->message_state = MSG_RECEIVED;
+
+      #ifndef HAVE_PROCESS_ALL_RECEIVED_LINES
+         if(state->ipcnt < 2){
+      #endif
+            p = strchr(buf, '[');
+            if(p){
+               q = strchr(p, ']');
+               if(q){
+
+                  /* we care only IPv4 addresses for now, 2005.12.23, SJ */
+
+                  if(q > p+6 && q-p-1 <= IPLEN-1){
+                     memset(ipbuf, 0, IPLEN);
+                     memcpy(ipbuf, p+1, q-p-1);
+                     strncat(ipbuf, ",", IPLEN-1);
+
+                     if(strncmp(ipbuf, "127.", 4) && !strstr(state->ip, ipbuf) && strlen(state->ip) + strlen(ipbuf) < SMALLBUFSIZE-1)
+                        strncat(state->ip, ipbuf, SMALLBUFSIZE-1);
+
+                     state->ipcnt++;
+                  }
+               }
+            }
+      #ifndef HAVE_PROCESS_ALL_RECEIVED_LINES
+         }
+      #endif
+
       }
+
 
 
       /* extract prefix type */
@@ -312,6 +342,7 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
    }
    else
       state->cnt_type = 0;
+
 
    /* end of header checks */
 
@@ -520,7 +551,6 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
    /* handle qp encoded lines */
 
    if(state->qp == 1 || ( (state->message_state == MSG_SUBJECT || state->message_state == MSG_FROM) && strcasestr(buf, "?Q?")) ){
-      //fprintf(stderr, "qp decoding: %s", buf);
       qp_decode(buf);
    }
 
@@ -663,6 +693,9 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
    }
 
 DECOMPOSE:
+   /* skip unnecessary header lines */
+   if(state->message_state == MSG_UNDEF && state->is_header == 1) return 0;
+
    translate2((unsigned char*)buf, state->qp);
 
    reassemble_token(buf);
@@ -707,9 +740,9 @@ DECOMPOSE:
       if(strlen(puf) < MIN_WORD_LEN || strlen(puf) > MAX_WORD_LEN || is_hex_number(puf))
          continue;
 
-      /* skip date tokens */
-      if(is_odd_punctuations(puf) == 1 || is_month(puf) == 1 || is_weekday(puf) == 1 || is_date(puf) )
-         continue;
+      /* skip date tokens. Update: this is unnecessary from 2009.01.12, SJ  */
+      /*if(is_odd_punctuations(puf) == 1 || is_month(puf) == 1 || is_weekday(puf) == 1 || is_date(puf) )
+         continue;*/
 
       if(state->message_state == MSG_SUBJECT){
          snprintf(muf, MAXBUFSIZE-1, "Subject*%s", puf);

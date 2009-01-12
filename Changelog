@@ -1,3 +1,18 @@
+0.4.0:
+
+2009.01.12, SJ
+
+Fixed a bug, causing unnecessary header lines appearing in the
+token list.
+(parser.c)
+
+Removed the old token format support.
+(Makefile.in, configure*)
+
+Fixed a bug in training with the MySQL/SQLite3 backends.
+(bayes.c)
+
+
 0.4.0-rc2:
 
 2009.01.08, SJ

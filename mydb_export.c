@@ -73,17 +73,25 @@ int main(int argc, char **argv){
 
    gettimeofday(&tv_stop, &tz);
 
+   j = 0;
+   printf("INSERT INTO %s (token,nham,nspam,timestamp,uid) VALUES ", SQL_TOKEN_TABLE);
+
    for(i=0;i<MAX_MYDB_HASH;i++){
       z = mhash[i];
       while(z != NULL){
 
-         printf("%llu 0 %d %d %ld\n", z->key, z->nham, z->nspam, z->ts);
+         if(j > 0) printf(",");
+
+         printf("(%llu,%d,%d,%ld,0)", z->key, z->nham, z->nspam, z->ts);
 
          z = z->r;
+         j++;
       }
    }
 
    close_mydb(mhash);
+
+   printf("\n");
 
    return 0;
 }

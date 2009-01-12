@@ -73,7 +73,6 @@ ldap_libs=""
 sqlite3_libs=""
 spamsum_libs=""
 os=`uname -s`
-keep_old_token_format="no"
 
 want_outgoing_smtp="no"
 want_language_detection="no"
@@ -347,6 +346,7 @@ AC_ARG_WITH(tokendb,
             preparesql="prepare-sql aphash "
 	    spamdrop="spamdrop"
 	    spamdrop_install="install-spamdrop"
+            db_install="install-mysql-new"
 
             test="test"
      else
@@ -624,15 +624,6 @@ else
    echo "(SU)RBL support: no"
 fi
 
-if test "$keep_old_token_format" = "yes"; then
-   defs="$defs -DHAVE_NO_64_HASH"
-   echo "token format: old"
-   db_install="install-mysql-old"
-else
-   echo "token format: hash (2^64)"
-   db_install="install-mysql-new"
-fi
-
 if test "$USERDB" = "mysql" && test "$have_mysql" = "yes"; then
    echo "user database: mysql"
    defs="$defs -DUSERS_IN_MYSQL"
@@ -652,6 +643,9 @@ fi
 echo "token database backend: $TOKENDB"
 
 
+if test "$TOKENDB" = "mysql"; then
+   db_install="install-mysql-new"
+fi
 
 if test "$TOKENDB" = "sqlite3"; then
    db_install="install-sqlite3"

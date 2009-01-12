@@ -1,5 +1,5 @@
 /*
- * bayes.c, 2009.01.09, SJ
+ * bayes.c, 2009.01.12, SJ
  */
 
 #include <stdio.h>
@@ -405,7 +405,9 @@ int train_message(char *mydbfile, struct mydb_node *mhash[], struct session_data
       sqlite3_exec(db, buf, NULL, NULL, &err);
    #endif
 
-      if(train_mode == T_TUM){
+      /* fix the message counters if it was a TUM training */
+
+      if(tm == T_TUM){
          if(is_spam == 1)
             snprintf(buf, SMALLBUFSIZE-1, "UPDATE %s SET nham=nham-1 WHERE uid=%ld", SQL_MISC_TABLE, sdata.uid);
          else
@@ -413,16 +415,20 @@ int train_message(char *mydbfile, struct mydb_node *mhash[], struct session_data
 
       #ifdef HAVE_MYSQL
          mysql_real_query(&mysql, buf, strlen(buf));
-
-         spaminess = bayes_file(mysql, &state, &sdata, &cfg);
       #endif
       #ifdef HAVE_SQLITE3
          sqlite3_exec(db, buf, NULL, NULL, &err);
-
-         spaminess = bayes_file(db, &state, &sdata, &cfg);
       #endif
       }
 
+      /* query the new spamicity value in this round */
+
+   #ifdef HAVE_MYSQL
+      spaminess = bayes_file(mysql, &state, &sdata, &cfg);
+   #endif
+   #ifdef HAVE_SQLITE3
+      spaminess = bayes_file(db, &state, &sdata, &cfg);
+   #endif
    #ifdef HAVE_MYDB
       rc = init_mydb(cfg.mydbfile, sdata.mhash, &sdata);
       if(rc == 1) spaminess = bayes_file(&state, &sdata, &cfg);

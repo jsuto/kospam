@@ -96,14 +96,8 @@ test:
 
 install-mysql-new:
 	$(INSTALL) -d $(DESTDIR)$(datarootdir)/clapf
-	$(INSTALL) -m 0644 $(srcdir)/db-new.sql $(DESTDIR)$(datarootdir)/clapf/db.sql
+	$(INSTALL) -m 0644 $(srcdir)/db-mysql.sql $(DESTDIR)$(datarootdir)/clapf/db.sql
 	$(INSTALL) -m 0644 $(srcdir)/util/purge-mysql.sql $(DESTDIR)$(datarootdir)/clapf
-
-install-mysql-old:
-	$(INSTALL) -d $(DESTDIR)$(datarootdir)/clapf
-	$(INSTALL) -m 0644 $(srcdir)/db-old.sql $(DESTDIR)$(datarootdir)/clapf/db.sql
-	$(INSTALL) -m 0644 $(srcdir)/util/purge-mysql.sql $(DESTDIR)$(datarootdir)/clapf
-
 
 install-sqlite3:
 	$(INSTALL) -d $(DESTDIR)$(datarootdir)/clapf

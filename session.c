@@ -426,7 +426,7 @@ void init_session_data(struct session_data *sdata){
 
                      /* scan directory */
 
-                     rav = avg_scan(Qmime.tmpdir, sdata.ttmpfile, engine, virusinfo, &cfg);
+                     if(avg_scan(Qmime.tmpdir, sdata.ttmpfile, engine, virusinfo, &cfg) == AV_VIRUS) rav = AVIR_VIRUS;
 
                      /* and remove files */
 
@@ -447,19 +447,20 @@ void init_session_data(struct session_data *sdata){
                   syslog(LOG_PRIORITY, "%s: internal error while extracting", sdata.ttmpfile);
             #endif
             #ifdef HAVE_AVAST
-               rav = avast_scan(sdata.ttmpfile, engine, virusinfo, &cfg);
+               if(avast_scan(sdata.ttmpfile, engine, virusinfo, &cfg) == AV_VIRUS) rav = AVIR_VIRUS;
             #endif
             #ifdef HAVE_KAV
-               rav = kav_scan(sdata.ttmpfile, engine, virusinfo, &cfg);
+               if(kav_scan(sdata.ttmpfile, engine, virusinfo, &cfg) == AV_VIRUS) rav = AVIR_VIRUS;
             #endif
             #ifdef HAVE_DRWEB
-               rav = drweb_scan(sdata.ttmpfile, engine, virusinfo, &cfg);
+               if(drweb_scan(sdata.ttmpfile, engine, virusinfo, &cfg) == AV_VIRUS) rav = AVIR_VIRUS;
             #endif
             #ifdef HAVE_CLAMD
-               if(strlen(cfg.clamd_addr) > 3)
-                  rav = clamd_net_scan(sdata.ttmpfile, engine, virusinfo, &cfg);
-               else
-                  rav = clamd_scan(sdata.ttmpfile, engine, virusinfo, &cfg);
+               if(strlen(cfg.clamd_addr) > 3){
+                  if(clamd_net_scan(sdata.ttmpfile, engine, virusinfo, &cfg) == AV_VIRUS) rav = AVIR_VIRUS;
+               } else {
+                  if(clamd_scan(sdata.ttmpfile, engine, virusinfo, &cfg) == AV_VIRUS) rav = AVIR_VIRUS;
+               }
             #endif
 
                gettimeofday(&tv_scnd, &tz);
@@ -604,7 +605,7 @@ void init_session_data(struct session_data *sdata){
 
                      snprintf(acceptbuf, MAXBUFSIZE-1, "%s <%s>\r\n", SMTP_RESP_550_ERR_PREF, email);
 
-                     if(cfg.silently_discard_infected_email == 1)
+                     if(my_cfg.silently_discard_infected_email == 1)
                         snprintf(acceptbuf, MAXBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata.ttmpfile, email);
                      else
                         snprintf(acceptbuf, MAXBUFSIZE-1, "550 %s %s\r\n", sdata.ttmpfile, email);

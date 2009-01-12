@@ -396,7 +396,6 @@ void init_session_data(struct session_data *sdata){
                gettimeofday(&tv_rcvd, &tz);
 
             #ifdef HAVE_LIBCLAMAV
-
                options = CL_SCAN_STDOPT | CL_SCAN_ARCHIVE | CL_SCAN_MAIL | CL_SCAN_OLE2;
 
                /* whether to mark archives as viruses if maxfiles, maxfilesize, or maxreclevel limit is reached, 2006.02.16, SJ */
@@ -408,7 +407,6 @@ void init_session_data(struct session_data *sdata){
                /* whether to enable phishing stuff */
                //if(cfg.clamav_use_phishing_db == 1) options |= CL_SCAN_PHISHING_DOMAINLIST;
 
-
                ret = cl_scanfile(sdata.ttmpfile, &virname, NULL, root, &limits, options);
 
                if(ret == CL_VIRUS){
@@ -417,12 +415,8 @@ void init_session_data(struct session_data *sdata){
                   rav = AVIR_VIRUS;
                   snprintf(engine, SMALLBUFSIZE-1, "libClamAV");
                }
-
             #endif
-
-
             #ifdef HAVE_AVG
-
                /* extract attachments from message file */
 
                Qmime = extract_from_rfc822(sdata.ttmpfile);
@@ -432,9 +426,7 @@ void init_session_data(struct session_data *sdata){
 
                      /* scan directory */
 
-                     if(avg_scan(cfg.avg_addr, cfg.avg_port, cfg.workdir, Qmime.tmpdir, sdata.ttmpfile, cfg.verbosity, virusinfo) == AV_VIRUS)
-                        rav = AVIR_VIRUS;
-                        snprintf(engine, SMALLBUFSIZE-1, "AVG");
+                     rav = avg_scan(Qmime.tmpdir, sdata.ttmpfile, engine, virusinfo, &cfg);
 
                      /* and remove files */
 
@@ -453,47 +445,21 @@ void init_session_data(struct session_data *sdata){
                }
                else
                   syslog(LOG_PRIORITY, "%s: internal error while extracting", sdata.ttmpfile);
-
             #endif
-
-
-
             #ifdef HAVE_AVAST
-               if(avast_scan(cfg.avast_addr, cfg.avast_port, cfg.workdir, sdata.ttmpfile, cfg.verbosity, virusinfo) == AV_VIRUS){
-                  rav = AVIR_VIRUS;
-                  snprintf(engine, SMALLBUFSIZE-1, "Avast");
-               }
+               rav = avast_scan(sdata.ttmpfile, engine, virusinfo, &cfg);
             #endif
-
-
             #ifdef HAVE_KAV
-               if(kav_scan(cfg.kav_socket, cfg.workdir, sdata.ttmpfile, cfg.verbosity, virusinfo) == AV_VIRUS){
-                  rav = AVIR_VIRUS;
-                  snprintf(engine, SMALLBUFSIZE-1, "Kaspersky");
-               }
+               rav = kav_scan(sdata.ttmpfile, engine, virusinfo, &cfg);
             #endif
-
             #ifdef HAVE_DRWEB
-               if(drweb_scan(cfg.drweb_socket, sdata.ttmpfile, cfg.verbosity, virusinfo) == AV_VIRUS){
-                  rav = AVIR_VIRUS;
-                  snprintf(engine, SMALLBUFSIZE-1, "DR.Web");
-               }
+               rav = drweb_scan(sdata.ttmpfile, engine, virusinfo, &cfg);
             #endif
-
             #ifdef HAVE_CLAMD
-               chmod(sdata.ttmpfile, 0644);
-               if(strlen(cfg.clamd_addr) > 3){
-                  if(clamd_net_scan(cfg.clamd_addr, cfg.clamd_port, cfg.chrootdir, cfg.workdir, sdata.ttmpfile, cfg.verbosity, virusinfo) == AV_VIRUS){
-                     rav = AVIR_VIRUS;
-                     snprintf(engine, SMALLBUFSIZE-1, "ClamAV");
-                  }
-               }
-               else {
-                  if(clamd_scan(cfg.clamd_socket, cfg.chrootdir, cfg.workdir, sdata.ttmpfile, cfg.verbosity, virusinfo) == AV_VIRUS){
-                     rav = AVIR_VIRUS;
-                     snprintf(engine, SMALLBUFSIZE-1, "ClamAV");
-                  }
-               }
+               if(strlen(cfg.clamd_addr) > 3)
+                  rav = clamd_net_scan(sdata.ttmpfile, engine, virusinfo, &cfg);
+               else
+                  rav = clamd_scan(sdata.ttmpfile, engine, virusinfo, &cfg);
             #endif
 
                gettimeofday(&tv_scnd, &tz);

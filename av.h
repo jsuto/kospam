@@ -1,9 +1,13 @@
 /*
- * av.h, 2008.04.05, SJ
+ * av.h, 2009.01.12, SJ
  */
 
 #ifndef _AV_H
  #define _AV_H
+
+#include "defs.h"
+#include "cfg.h"
+
 
 #define AV_OK 200
 #define AV_VIRUS 403
@@ -16,15 +20,15 @@
 #define CLAMD_RESP_INFECTED "FOUND"
 #define CLAMD_RESP_ERROR "ERROR"
 
-int clamd_scan(char *clamav_socket, char *chrootdir, char *workdir, char *tmpfile, int v, char *clamdinfo);
-int clamd_net_scan(char *clamd_address, int clamd_port, char *chrootdir, char *workdir, char *tmpfile, int v, char *clamdinfo);
+int clamd_scan(char *tmpfile, char *engine, char *avinfo, struct __config *cfg);
+int clamd_net_scan(char *tmpfile, char *engine, char *avinfo, struct __config *cfg);
 
 // Dr.Web stuff
 
 #define DRWEB_RESP_VIRUS 0x20
 #define DRWEB_VIRUS_HAS_FOUND_MESSAGE "Virus has been found in message. See drwebd.log for details"
 
-int drweb_scan(char *drweb_socket, char *tmpfile, int v, char *drwebinfo);
+int drweb_scan(char *tmpfile, char *engine, char *avinfo, struct __config *cfg);
 
 
 // avast! stuff
@@ -39,7 +43,7 @@ int drweb_scan(char *drweb_socket, char *tmpfile, int v, char *drwebinfo);
 #define AVAST_RESP_CLEAN "[+]"
 #define AVAST_RESP_INFECTED "[L]"
 
-int avast_scan(char *avast_address, int avast_port, char *workdir, char *tmpfile, int v, char *avastinfo);
+int avast_scan(char *tmpfile, char *engine, char *avinfo, struct __config *cfg);
 
 // Kaspersky stuff
 
@@ -51,8 +55,7 @@ int avast_scan(char *avast_address, int avast_port, char *workdir, char *tmpfile
 #define KAV_RESP_INFECTED_NAME "322-"
 #define KAV_RESP_NOT_FOUND "525 File not found"
 
-int kav_scan(char *kav_socket, char *workdir, char *tmpfile, int v, char *kavinfo);
-
+int kav_scan(char *tmpfile, char *engine, char *avinfo, struct __config *cfg);
 
 // avg stuff
 
@@ -66,7 +69,7 @@ int kav_scan(char *kav_socket, char *workdir, char *tmpfile, int v, char *kavinf
 
 #define AVG_NOT_FOUND 404
 
-int avg_scan(char *avg_address, int avg_port, char *workdir, char *tmpdir, char *tmpfile, int v, char *avginfo);
+int avg_scan(char *tmpdir, char *tmpfile, char *engine, char *avinfo, struct __config *cfg);
 
 
 #endif /* _AV_H */

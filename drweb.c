@@ -1,5 +1,5 @@
 /*
- * drweb.c, 2008.02.23, SJ
+ * drweb.c, 2009.01.12, SJ
  */
 
 #include <stdio.h>
@@ -16,18 +16,18 @@
 #include "misc.h"
 #include "av.h"
 
-int drweb_scan(char *drweb_socket, char *tmpfile, int v, char *drwebinfo){
+int drweb_scan(char *tmpfile, char *engine, char *avinfo, struct __config *cfg){
    int sd, n, fd;
    unsigned long q, size;
    unsigned char buf[MAXBUFSIZE];
    struct sockaddr_un server;
    struct stat st;
 
-   memset(drwebinfo, 0, SMALLBUFSIZE);
+   memset(avinfo, 0, SMALLBUFSIZE);
 
-   if(v >= _LOG_DEBUG) syslog(LOG_PRIORITY, "trying to pass to Dr.Web: %s", tmpfile);
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "trying to pass to Dr.Web: %s", tmpfile);
 
-   strcpy(server.sun_path, drweb_socket);
+   strcpy(server.sun_path, cfg->drweb_socket);
    server.sun_family = AF_UNIX;
 
    if((sd = socket(AF_UNIX, SOCK_STREAM, 0)) == -1){
@@ -36,7 +36,7 @@ int drweb_scan(char *drweb_socket, char *tmpfile, int v, char *drwebinfo){
    }
 
    if(connect(sd, (struct sockaddr *)&server, strlen(server.sun_path) + sizeof (server.sun_family)) == -1){
-      syslog(LOG_PRIORITY, "DRWEB ERR: connect to %s", drweb_socket);
+      syslog(LOG_PRIORITY, "DRWEB ERR: connect to %s", cfg->drweb_socket);
       return AV_ERROR;
    }
 
@@ -80,7 +80,9 @@ int drweb_scan(char *drweb_socket, char *tmpfile, int v, char *drwebinfo){
    close(sd);
 
    if(ntohl(q) == DRWEB_RESP_VIRUS){
-      strncpy(drwebinfo, DRWEB_VIRUS_HAS_FOUND_MESSAGE, SMALLBUFSIZE-1);
+      strncpy(avinfo, DRWEB_VIRUS_HAS_FOUND_MESSAGE, SMALLBUFSIZE-1);
+      snprintf(engine, SMALLBUFSIZE-1, "DR.Web");
+
       return AV_VIRUS;
    }
 

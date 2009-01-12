@@ -12,6 +12,8 @@ Removed the old token format support.
 Fixed a bug in training with the MySQL/SQLite3 backends.
 (bayes.c)
 
+Simplified AV-interfaces.
+(av.h, avast.c, avg.c, clad.c, drweb.c, kav.c, session.c)
 
 0.4.0-rc2:
 

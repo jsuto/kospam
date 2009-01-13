@@ -1,5 +1,5 @@
 /*
- * config.h, 2009.01.12, SJ
+ * config.h, 2009.01.13, SJ
  */
 
 #ifndef _CONFIG_H
@@ -48,13 +48,6 @@
 #define CLAMD_PORT 3310
 #define CLAMD_SOCKET "/tmp/clamd"
 
-
-#define QCACHE_PROGRAM_NAME "Qcache"
-#define QCACHE_ADDR "127.0.0.1"
-#define QCACHE_PORT 48791
-#define QCACHE_SOCKET "/tmp/qcache"
-
-#define SMAPD_PORT 28643
 
 #define STORE_ADDR "127.0.0.1"
 #define CLAPFSTORE_PORT 29771
@@ -161,7 +154,6 @@
 #define SQL_MISC_TABLE "t_misc"
 #define SQL_USER_TABLE "user"
 #define SQL_WHITE_LIST "t_white_list"
-#define SQL_TRAININGLOG_TABLE "t_train_log"
 #define SQL_QUEUE_TABLE "t_queue"
 #define SQL_STAT_TABLE "t_stat"
 #define SQL_POLICY_TABLE "t_policy"

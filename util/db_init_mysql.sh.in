@@ -1,11 +1,10 @@
 #!/bin/sh
 ##
-## db_init_mysql.sh, 2008.08.27, SJ
+## db_init_mysql.sh, 2009.01.13, SJ
 ## create the MySQL tables and load ham/spam tokens from scratch
 ##
 
-if [ $# -lt 3 ]; then echo "usage: $0 <ham> <spam> <my.cnf> [nohash]"; exit 1; fi
-#if [ $# -ne 3 ]; then echo "usage: $0 <ham> <spam> <my.cnf>"; exit 1; fi
+if [ $# -ne 3 ]; then echo "usage: $0 <ham> <spam> <my.cnf>"; exit 1; fi
 
 export PATH=$PATH:/usr/local/bin:YOUR_BINDIR:.:`pwd`/perl:YOUR_LIBEXECDIR
 export LC_ALL=C
@@ -22,22 +21,16 @@ HASHTEMP=$TEMP.$$
 TS1=`date +%s`
 START_TS=$TS1
 
-rm -f ham.tmp spam.tmp temp.* tokens*.cdb num_of_ham.tmp num_of_spam.tmp
+rm -f ham.tmp spam.tmp temp.* num_of_ham.tmp num_of_spam.tmp
 
 import_tokens(){
    rm -f $TEMP
 
    prepare.pl ham.tmp spam.tmp $TEMP
 
-   if test "$HASHED" = "nohash";
-   then
-      echo "not using hashed tokens..."
-      mysql --defaults-file=$MYCNF < YOUR_SHAREDIR/db.sql
-   else
-      aphash < $TEMP > $HASHTEMP
-      TEMP=$HASHTEMP
-      mysql --defaults-file=$MYCNF < YOUR_SHAREDIR/db.sql
-   fi
+   aphash < $TEMP > $HASHTEMP
+   TEMP=$HASHTEMP
+   mysql --defaults-file=$MYCNF < YOUR_SHAREDIR/db.sql
 
    echo "Num of ham messages: $NHAM"
    echo "Num of spam messages: $NSPAM"
@@ -60,10 +53,6 @@ import_tokens(){
 
 }
 
-create_cdb_file(){
-   echo "select token, nham, nspam from t_token where nham > 1 OR nspam > 1 " | mysql --defaults-file=$MYCNF | grep [0-9] | mysql2cdb.pl $NHAM $NSPAM tokens
-}
-
 process_maildir(){
    echo -n "parsing HAM directory. . . "
    for i in `\ls $HAM`; do (echo "*** NEW_MSG_STARTS_HERE $NHAM ***"; parsembox $HAM/$i ) | shrink.pl; NHAM=`expr $NHAM + 1`; done > ham.tmp 2>/dev/null
@@ -81,7 +70,6 @@ process_maildir(){
 
    import_tokens;
 
-   #if [ -x `which cdb 2>/dev/null` ]; then create_cdb_file; fi
 
 }
 
@@ -105,8 +93,6 @@ process_mbox(){
    NSPAM=`cat num_of_spam.tmp`
 
    import_tokens;
-
-   #if [ -x `which cdb 2>/dev/null` ]; then create_cdb_file; fi
 
 }
 

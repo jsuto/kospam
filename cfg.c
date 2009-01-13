@@ -1,5 +1,5 @@
 /*
- * cfg.c, 2008.12.13, SJ
+ * cfg.c, 2009.01.13, SJ
  */
 
 #include <stdio.h>
@@ -69,11 +69,6 @@ struct __config read_config(char *configfile){
 
    strncpy(cfg.clamd_socket, CLAMD_SOCKET, MAXVAL-1);
 
-   strncpy(cfg.qcache_addr, QCACHE_ADDR, MAXVAL-1);
-   cfg.qcache_port = QCACHE_PORT;
-   strncpy(cfg.qcache_socket, QCACHE_SOCKET, MAXVAL-1);
-   cfg.qcache_update = 1;
-
    strncpy(cfg.store_addr, STORE_ADDR, MAXVAL-1);
    cfg.store_port = CLAPFSTORE_PORT;
 
@@ -111,9 +106,6 @@ struct __config read_config(char *configfile){
 
    cfg.use_antispam = 1;
 
-
-   cfg.use_pairs = 1;
-   cfg.use_single_tokens = 1;
 
    cfg.enable_auto_white_list = 1;
 
@@ -202,18 +194,6 @@ struct __config read_config(char *configfile){
                   if(strcmp(key, "clamd_socket") == 0)
                      memcpy(cfg.clamd_socket, val, MAXVAL-1);
 
-                  if(strcmp(key, "qcache_addr") == 0)
-                     memcpy(cfg.qcache_addr, val, MAXVAL-1);
-
-                  if(strcmp(key, "qcache_port") == 0)
-                     cfg.qcache_port = atoi(val);
-
-                  if(strcmp(key, "qcache_socket") == 0)
-                     memcpy(cfg.qcache_socket, val, MAXVAL-1);
-
-                  if(strcmp(key, "qcache_update") == 0)
-                     cfg.qcache_update = atoi(val);
-
                   if(strcmp(key, "store_addr") == 0)
                      memcpy(cfg.store_addr, val, MAXVAL-1);
 
@@ -281,12 +261,6 @@ struct __config read_config(char *configfile){
                   if(strcmp(key, "spam_subject_prefix") == 0)
                      memcpy(cfg.spam_subject_prefix, val, MAXVAL-1);
 
-
-                  if(strcmp(key, "use_pairs") == 0)
-                     cfg.use_pairs = atoi(val);
-
-                  if(strcmp(key, "use_single_tokens") == 0)
-                     cfg.use_single_tokens = atoi(val);
 
                   if(strcmp(key, "enable_auto_white_list") == 0)
                      cfg.enable_auto_white_list = atoi(val);
@@ -484,17 +458,11 @@ struct __config read_config(char *configfile){
 
 
 
-                  if(strcmp(key, "phishtankdb") == 0)
-                     memcpy(cfg.phishtankdb, val, MAXVAL-1);
-
                   if(strcmp(key, "sig_db") == 0)
                      memcpy(cfg.sig_db, val, MAXVAL-1);
 
                   if(strcmp(key, "pidfile") == 0)
                      memcpy(cfg.pidfile, val, MAXVAL-1);
-
-                  if(strcmp(key, "has_personal_db") == 0)
-                     cfg.has_personal_db = atoi(val);
 
                }
 

@@ -1,5 +1,5 @@
 /*
- * cfg.h, 2008.12.13, SJ
+ * cfg.h, 2009.01.13, SJ
  */
 
 #ifndef _CFG_H
@@ -59,9 +59,6 @@ struct __config {
    int use_antispam;
 
    char spam_subject_prefix[MAXVAL];
-
-   int use_pairs;
-   int use_single_tokens;
 
    int enable_auto_white_list;
 
@@ -173,13 +170,9 @@ struct __config {
    char ssl_key_file[MAXVAL];
    int use_ssl;
 
-   // phishing cdb
-   char phishtankdb[MAXVAL];
-
    // spamsum
    char sig_db[MAXVAL];
 
-   int has_personal_db;
 };
 
 struct __config read_config(char *configfile);

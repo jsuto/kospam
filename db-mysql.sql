@@ -59,15 +59,6 @@ create table if not exists t_stat (
 
 create index t_stat_idx on t_stat(uid);
 
-create table if not exists t_train_log (
-	uid int unsigned not null,
-	ts bigint unsigned not null,
-	msgid char(32) not null,
-	is_spam tinyint not null
-);
-
-create index t_train_log_idx on t_train_log(uid);
-
 
 create table if not exists t_policy (
 	policy_group int(4) not null,

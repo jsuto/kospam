@@ -1,5 +1,5 @@
 /*
- * bayes.c, 2009.01.12, SJ
+ * bayes.c, 2009.01.13, SJ
  */
 
 #include <stdio.h>
@@ -97,15 +97,6 @@ int qry_spaminess(struct session_data *sdata, struct _state *state, char type, s
 
 
 /*
- * calc_score
- */
-
-inline double calc_score(struct node *xhash[], struct __config *cfg){
-   return calc_score_chi2(xhash, cfg);
-}
-
-
-/*
  * parse the message into tokens and return the pointer
  */
 
@@ -161,14 +152,14 @@ double eval_tokens(struct session_data *sdata, struct _state *state, struct __co
    /* calculate spaminess based on the token pairs and other special tokens */
 
    qry_spaminess(sdata, state, 1, cfg);
-   spaminess = calc_score(state->token_hash, cfg);
+   spaminess = calc_score_chi2(state->token_hash, cfg);
    if(cfg->debug == 1) fprintf(stderr, "phrase: %.4f\n", spaminess);
    if(spaminess >= cfg->spam_overall_limit || spaminess <= cfg->max_ham_spamicity) goto END_OF_EVALUATION;
 
    /* query the single tokens, then use the 'mix' for calculation */
 
    qry_spaminess(sdata, state, 0, cfg);
-   spaminess = calc_score(state->token_hash, cfg);
+   spaminess = calc_score_chi2(state->token_hash, cfg);
    if(cfg->debug == 1) fprintf(stderr, "mix: %.4f\n", spaminess);
    if(spaminess >= cfg->spam_overall_limit || spaminess <= cfg->max_ham_spamicity) goto END_OF_EVALUATION;
 
@@ -179,7 +170,7 @@ double eval_tokens(struct session_data *sdata, struct _state *state, struct __co
    check_lists(sdata, state, &found_on_rbl, &surbl_match, cfg);
 #endif
 
-   spaminess = calc_score(state->token_hash, cfg);
+   spaminess = calc_score_chi2(state->token_hash, cfg);
    if(cfg->debug == 1) fprintf(stderr, "mix after blacklists: %.4f\n", spaminess);
 
 

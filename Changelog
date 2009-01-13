@@ -1,5 +1,10 @@
 0.4.0:
 
+2009.01.13, SJ
+
+Code cleanup.
+(bayes.c, cfg.h, cfg.c, example.conf)
+
 2009.01.12, SJ
 
 Fixed a bug, causing unnecessary header lines appearing in the

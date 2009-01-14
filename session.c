@@ -1,5 +1,5 @@
 /*
- * session.c, 2009.01.12, SJ
+ * session.c, 2009.01.14, SJ
  */
 
 #include <stdio.h>
@@ -632,32 +632,6 @@ void init_session_data(struct session_data *sdata){
                      }
 
 
-                  /*#ifdef HAVE_MYDB
-                     if(sdata.num_of_rcpt_to == 1 && (strcasestr(sdata.rcptto[0], "+spam@") || strcasestr(sdata.rcptto[0], "+ham@") || strncmp(email, "spam@", 5) == 0 || strncmp(email, "ham@", 4) == 0) ){
-                        is_spam = 0;
-                        snprintf(acceptbuf, MAXBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata.ttmpfile, email);
-                        if(strcasestr(sdata.rcptto[0], "+spam@") || strncmp(email, "spam@", 5) == 0) is_spam = 1;
-
-                        sdata.uid = 0;
-                        snprintf(sdata.name, SMALLBUFSIZE-1, "%s", UE2.name);
-
-                        train_mode = extract_id_from_message(sdata.ttmpfile, cfg.clapf_header_field, ID);
-                        syslog(LOG_PRIORITY, "%s: training request for %s by uid: %ld", sdata.ttmpfile, ID, UE2.uid);
-
-                        sstate2.first = NULL; // just to get rid of the compiler warning
-
-                        goto SEND_RESULT;
-                     }
-                     else {
-
-                        // TODO: check for whitelist
-
-                        spaminess = x_spam_check(&sdata, &sstate, cfg);
-
-                        gettimeofday(&tv_spam_stop, &tz);
-                     }
-                  #endif*/
-
                   #ifdef HAVE_MYSQL
                      if(mysql_connection == 1){
                         sdata.uid = UE.uid;
@@ -692,7 +666,7 @@ void init_session_data(struct session_data *sdata){
                         }
                         else {
 
-                           if(is_sender_on_white_list(mysql, email2, sdata.uid, my_cfg)){
+                           if(is_sender_on_white_list(mysql, sdata.ttmpfile, email2, sdata.uid, &my_cfg)){
                               syslog(LOG_PRIORITY, "%s: sender (%s) found on whitelist", sdata.ttmpfile, email);
                               snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on white list\r\n", cfg.clapf_header_field);
                               goto END_OF_SPAM_CHECK;
@@ -776,7 +750,7 @@ void init_session_data(struct session_data *sdata){
                         }
                         else {
 
-                           if(is_sender_on_white_list(db, email2, sdata.uid, cfg)){
+                           if(is_sender_on_white_list(db, sdata.ttmpfile, email2, sdata.uid, &cfg)){
                               syslog(LOG_PRIORITY, "%s: sender (%s) found on whitelist", sdata.ttmpfile, email);
                               snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on white list\r\n", cfg.clapf_header_field);
                               goto END_OF_SPAM_CHECK;

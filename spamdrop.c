@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2009.01.09, SJ
+ * spamdrop.c, 2009.01.14, SJ
  */
 
 #include <stdio.h>
@@ -390,7 +390,7 @@ int main(int argc, char **argv, char **envp){
 
    else {
    #ifdef HAVE_MYSQL
-      if(is_sender_on_white_list(mysql, from, sdata.uid, cfg)){
+      if(is_sender_on_white_list(mysql, sdata.ttmpfile, from, sdata.uid, &cfg)){
          syslog(LOG_PRIORITY, "%s: sender (%s) found on whitelist", sdata.ttmpfile, from);
          snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on white list\r\n", cfg.clapf_header_field);
       } else
@@ -399,7 +399,7 @@ int main(int argc, char **argv, char **envp){
       update_mysql_tokens(mysql, state.token_hash, sdata.uid);
    #endif
    #ifdef HAVE_SQLITE3
-      if(is_sender_on_white_list(db, from, sdata.uid, cfg)){
+      if(is_sender_on_white_list(db, sdata.ttmpfile, from, sdata.uid, &cfg)){
          syslog(LOG_PRIORITY, "%s: sender (%s) found on whitelist", sdata.ttmpfile, from);
          snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on white list\r\n", cfg.clapf_header_field);
       } else

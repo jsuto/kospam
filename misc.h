@@ -1,5 +1,5 @@
 /*
- * misc.h, 2009.01.09, SJ
+ * misc.h, 2009.01.14, SJ
  */
 
 #ifndef _MISC_H
@@ -44,7 +44,6 @@ int make_rnd_string(char *res);
 int is_valid_id(char *p);
 void log_ham_spam_per_email(char *tmpfile, char *email, int ham_or_spam);
 int extract_id_from_message(char *messagefile, char *clapf_header_field, char *ID);
-int is_recipient_in_array(char rcptto[MAX_RCPT_TO][MAXBUFSIZE], char *buf, int num_of_rcpt_to);
 void write_delivery_info(struct session_data *sdata, char *dir);
 int move_message_to_quarantine(struct session_data *sdata, char *quarantine_dir);
 int is_recipient_in_our_domains(char *rawmail,  struct __config *cfg);
@@ -64,6 +63,6 @@ char *spamsum_file(const char *fname, unsigned int flags, unsigned int block_siz
 
 unsigned long resolve_host(char *h);
 
-int whitelist_check(char *whitelist, char *email, struct __config cfg);
+int whitelist_check(char *whitelist, char *tmpfile, char *email, struct __config *cfg);
 
 #endif /* _MISC_H */

@@ -1,5 +1,10 @@
 0.4.0:
 
+2009.01.14, SJ
+
+Additional code cleanup. The XForward support is enable by default.
+(session.c, sql.c, sql.h, misc.c, misc.h, hash2.c)
+
 2009.01.13, SJ
 
 Code cleanup.

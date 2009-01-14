@@ -1,5 +1,5 @@
 /*
- * misc.c, 2009.01.09, SJ
+ * misc.c, 2009.01.14, SJ
  */
 
 #include <stdio.h>
@@ -768,21 +768,6 @@ int extract_id_from_message(char *messagefile, char *clapf_header_field, char *I
 
 
 /*
- * if we have this recipient in the rcptto array
- */
-
-int is_recipient_in_array(char rcptto[MAX_RCPT_TO][MAXBUFSIZE], char *buf, int num_of_rcpt_to){
-   int i;
-
-   for(i=0; i<num_of_rcpt_to; i++){
-      if(strcmp(rcptto[i], buf) == 0) return 1;
-   }
-
-   return 0;
-}
-
-
-/*
  * write delivery info to file
  */
 
@@ -875,19 +860,20 @@ unsigned long resolve_host(char *h){
  * whitelist check
  */
 
-int whitelist_check(char *whitelist, char *email, struct __config cfg){
+int whitelist_check(char *whitelist, char *tmpfile, char *email, struct __config *cfg){
    int r=0;
    char *p, *q, w[SMALLBUFSIZE];
 
    p = whitelist;
 
+   if(cfg->verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: whitelist: %s", tmpfile, whitelist);
 
    do {
       p = split(p, '\n', w, SMALLBUFSIZE-1);
 
       trim(w);
 
-      if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "matching %s on %s", w, email);
+      if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: matching %s on %s", tmpfile, w, email);
 
       if(strlen(w) > 2){
 
@@ -900,7 +886,7 @@ int whitelist_check(char *whitelist, char *email, struct __config cfg){
             r = 1;
 
          if(r == 1){
-            syslog(LOG_PRIORITY, "found on whitelist (%s matches %s)", email, w);
+            syslog(LOG_PRIORITY, "%s: found on whitelist (%s matches %s)", tmpfile, email, w);
             return r;
          }
       }

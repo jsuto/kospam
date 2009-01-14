@@ -46,10 +46,9 @@ void add_penalties(struct session_data *sdata, struct _state *state, struct __co
       addnode(state->token_hash, "NO_SUBJECT*", REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
 
 
-#ifdef HAVE_XFORWARD
+   /* use XFORWARD info */
    if(sdata->unknown_client == 1 && sdata->Nham > NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED)
       addnode(state->token_hash, "UNKNOWN_CLIENT*", REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
-#endif
 
 }
 

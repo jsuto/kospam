@@ -1,5 +1,5 @@
 /*
- * misc.c, 2009.01.14, SJ
+ * misc.c, 2009.01.15, SJ
  */
 
 #include <stdio.h>
@@ -861,7 +861,6 @@ unsigned long resolve_host(char *h){
  */
 
 int whitelist_check(char *whitelist, char *tmpfile, char *email, struct __config *cfg){
-   int r=0;
    char *p, *q, w[SMALLBUFSIZE];
 
    p = whitelist;
@@ -880,20 +879,16 @@ int whitelist_check(char *whitelist, char *tmpfile, char *email, struct __config
          if(w[strlen(w)-1] == '$' && strlen(email) > strlen(w)){
             q = email + strlen(email) - strlen(w) + 1;
             if(strncasecmp(q, w, strlen(w)-1) == 0)
-                r = 1;
+               return 1;
          }
          else if(strcasestr(email, w))
-            r = 1;
+            return 1;
 
-         if(r == 1){
-            syslog(LOG_PRIORITY, "%s: found on whitelist (%s matches %s)", tmpfile, email, w);
-            return r;
-         }
       }
 
    } while(p);
 
-   return r;
+   return 0;
 }
 
 

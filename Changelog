@@ -1,8 +1,16 @@
 0.4.0:
 
+2009.01.15, SJ
+
+Fixed a bug around syslog()'ing the sender of the whitelist passed message.
+(session.c)
+
+Disabled the AVG supporting code in the configure script.
+(configure*)
+
 2009.01.14, SJ
 
-Additional code cleanup. The XForward support is enable by default.
+Additional code cleanup. The XForward support is enabled by default.
 (session.c, sql.c, sql.h, misc.c, misc.h, hash2.c)
 
 2009.01.13, SJ

@@ -721,7 +721,6 @@ enable_option_checking
 enable_static_build
 enable_libclamav
 enable_clamd
-enable_avg
 enable_avast
 enable_kav
 enable_drweb
@@ -1371,7 +1370,6 @@ Optional Features:
   --enable-static-build   build statically linked executables (default: dynamically linked)
   --enable-libclamav      build libclamav antivirus support
   --enable-clamd          build clamd antivirus support
-  --enable-avg            build AVG Linux antivirus support
   --enable-avast          build avast! antivirus support
   --enable-kav            build Kaspersky antivirus support
   --enable-drweb          build Dr.Web antivirus support
@@ -4214,20 +4212,6 @@ fi
       have_antivirus="yes"
    fi
 
-
-
-# Check whether --enable-avg was given.
-if test "${enable_avg+set}" = set; then
-  enableval=$enable_avg; want_avg=$enableval
-else
-  want_avg="no"
-fi
-
-
-    if test "$want_avg" = "yes"; then
-       have_avg="yes"
-       have_antivirus="yes"
-    fi
 
 
 # Check whether --enable-avast was given.

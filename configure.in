@@ -113,16 +113,6 @@ AC_ARG_ENABLE(clamd,
    fi
 
 
-dnl avg
-
-AC_ARG_ENABLE(avg,
-          [  --enable-avg            build AVG Linux antivirus support], want_avg=$enableval, want_avg="no")
-
-    if test "$want_avg" = "yes"; then
-       have_avg="yes"
-       have_antivirus="yes"
-    fi
-
 dnl avast!
 
 AC_ARG_ENABLE(avast,

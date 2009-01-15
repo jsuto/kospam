@@ -1,5 +1,5 @@
 /*
- * session.c, 2009.01.14, SJ
+ * session.c, 2009.01.15, SJ
  */
 
 #include <stdio.h>
@@ -667,7 +667,7 @@ void init_session_data(struct session_data *sdata){
                         else {
 
                            if(is_sender_on_white_list(mysql, sdata.ttmpfile, email2, sdata.uid, &my_cfg)){
-                              syslog(LOG_PRIORITY, "%s: sender (%s) found on whitelist", sdata.ttmpfile, email);
+                              syslog(LOG_PRIORITY, "%s: sender (%s) found on whitelist", sdata.ttmpfile, email2);
                               snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on white list\r\n", cfg.clapf_header_field);
                               goto END_OF_SPAM_CHECK;
                            }
@@ -751,7 +751,7 @@ void init_session_data(struct session_data *sdata){
                         else {
 
                            if(is_sender_on_white_list(db, sdata.ttmpfile, email2, sdata.uid, &cfg)){
-                              syslog(LOG_PRIORITY, "%s: sender (%s) found on whitelist", sdata.ttmpfile, email);
+                              syslog(LOG_PRIORITY, "%s: sender (%s) found on whitelist", sdata.ttmpfile, email2);
                               snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on white list\r\n", cfg.clapf_header_field);
                               goto END_OF_SPAM_CHECK;
                            }

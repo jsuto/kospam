@@ -1,5 +1,5 @@
 /*
- * hash.c, 2009.01.07, SJ
+ * hash.c, 2009.01.15, SJ
  */
 
 #include <stdio.h>
@@ -8,6 +8,7 @@
 #include <math.h>
 #include "hash.h"
 #include "misc.h"
+#include "score.h"
 #include "config.h"
 
 
@@ -92,6 +93,8 @@ struct node *makenewnode(struct node *xhash[], char *s, double spaminess, double
    h->key = APHash(s);
    h->spaminess = spaminess;
    h->deviation = deviation;
+   h->nham = 0;
+   h->nspam = 0;
    h->num = 1;
    h->r = NULL;
 
@@ -168,7 +171,11 @@ struct node *findnode(struct node *xhash[], char *s){
 }
 
 
-int updatenode(struct node *xhash[], unsigned long long key, float spaminess){
+/*
+ * update token counters
+ */
+
+int updatenode(struct node *xhash[], unsigned long long key, float nham, float nspam, float spaminess, float deviation){
    struct node *p, *q;
 
    q = xhash[hash(key)];
@@ -178,8 +185,11 @@ int updatenode(struct node *xhash[], unsigned long long key, float spaminess){
    while(q != NULL){
       p = q;
       if(q->key == key){
-         q->spaminess = spaminess;
-         q->deviation = DEVIATION(spaminess);
+         q->nham += nham;
+         q->nspam += nspam;
+
+         if(spaminess != DEFAULT_SPAMICITY){ q->spaminess = spaminess; q->deviation = deviation; }
+
          return 1;
       }
       else
@@ -187,6 +197,28 @@ int updatenode(struct node *xhash[], unsigned long long key, float spaminess){
    }
 
    return 0;
+}
+
+
+/*
+ * calculate token probabilities
+ */
+
+void calcnode(struct node *xhash[], float Nham, float Nspam, struct __config *cfg){
+   int i;
+   struct node *q;
+
+   for(i=0;i<MAXHASH;i++){
+      q = xhash[i];
+      while(q != NULL){
+         if(q->nham >= 0 && q->nspam >= 0 && (q->nham + q->nspam) > 0){
+            q->spaminess = calc_spamicity(Nham, Nspam, q->nham, q->nspam, cfg->rob_s, cfg->rob_x);
+            q->deviation = DEVIATION(q->spaminess);
+         }
+
+         q = q->r;
+      }
+   }
 }
 
 

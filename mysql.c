@@ -124,10 +124,10 @@ int do_mysql_qry(MYSQL mysql, int ham_or_spam, char *token, unsigned long uid, i
 
 
 
-int update_hash(MYSQL mysql, char *qry, float Nham, float Nspam, struct node *xhash[], struct __config *cfg){
+int update_hash(MYSQL mysql, char *qry, struct node *xhash[], struct __config *cfg){
    MYSQL_RES *res;
    MYSQL_ROW row;
-   float nham, nspam, spaminess;
+   float nham, nspam;
    unsigned long long token;
 
    if(mysql_real_query(&mysql, qry, strlen(qry)) == 0){
@@ -138,12 +138,7 @@ int update_hash(MYSQL mysql, char *qry, float Nham, float Nspam, struct node *xh
             nham = atof(row[1]);
             nspam = atof(row[2]);
 
-            spaminess = calc_spamicity(Nham, Nspam, nham, nspam, cfg->rob_s, cfg->rob_x);
-            
-            //fprintf(stderr, "token: %llu, %.0f, %.0f = %f\n", token, nham, nspam, spaminess);
-
-            updatenode(xhash, token, spaminess);
-
+            updatenode(xhash, token, nham, nspam, DEFAULT_SPAMICITY, 0);
          }
 
          mysql_free_result(res);

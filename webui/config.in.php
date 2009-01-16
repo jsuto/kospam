@@ -19,6 +19,7 @@ include_once($_SERVER['DOCUMENT_ROOT'] . "$directory/lang/$lang/messages.inc");
 
 include_once($_SERVER['DOCUMENT_ROOT'] . "$directory/mysql.php");
 //include_once($_SERVER['DOCUMENT_ROOT'] . "$directory/ldap.php");
+//include_once($_SERVER['DOCUMENT_ROOT'] . "$directory/sqlite3.php");
 
 $queue_directory = "/var/lib/clapf/queue";
 

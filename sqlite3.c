@@ -1,5 +1,5 @@
 /*
- * sqlite3.c, 2009.01.08, SJ
+ * sqlite3.c, 2009.01.15, SJ
  */
 
 #include <stdio.h>
@@ -54,10 +54,10 @@ struct te sqlite3_qry(sqlite3 *db, char *token){
 }
 
 
-int update_hash(sqlite3 *db, char *qry, float Nham, float Nspam, struct node *xhash[], struct __config *cfg){
+int update_hash(sqlite3 *db, char *qry, struct node *xhash[], struct __config *cfg){
    sqlite3_stmt *pStmt;
    const char **pzTail=NULL;
-   float nham, nspam, spaminess;
+   float nham, nspam;
    unsigned long long token;
 
    if(sqlite3_prepare_v2(db, qry, -1, &pStmt, pzTail) != SQLITE_OK) return 0;
@@ -67,10 +67,7 @@ int update_hash(sqlite3 *db, char *qry, float Nham, float Nspam, struct node *xh
       nham = sqlite3_column_double(pStmt, 1);
       nspam = sqlite3_column_double(pStmt, 2);
 
-      spaminess = calc_spamicity(Nham, Nspam, nham, nspam, cfg->rob_s, cfg->rob_x);
-            
-      updatenode(xhash, token, spaminess);
-
+      updatenode(xhash, token, nham, nspam, DEFAULT_SPAMICITY, 0);
    }
 
    sqlite3_finalize(pStmt);

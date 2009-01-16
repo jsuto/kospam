@@ -1,5 +1,5 @@
 /*
- * bayes.c, 2009.01.13, SJ
+ * bayes.c, 2009.01.15, SJ
  */
 
 #include <stdio.h>
@@ -69,7 +69,7 @@ int qry_spaminess(struct session_data *sdata, struct _state *state, char type, s
 
          #ifdef HAVE_MYDB
             float spaminess = mydbqry(sdata, q->str, cfg);
-            updatenode(state->token_hash, q->key, spaminess);
+            updatenode(state->token_hash, q->key, 0, 0, spaminess, DEVIATION(spaminess));
          #else
             snprintf(s, SMALLBUFSIZE-1, ",%llu", APHash(q->str));
             buffer_cat(query, s);
@@ -80,16 +80,24 @@ int qry_spaminess(struct session_data *sdata, struct _state *state, char type, s
       }
    }
 
-   buffer_cat(query, ")");
-
 #ifdef HAVE_MYSQL
-   update_hash(sdata->mysql, query->data, sdata->Nham, sdata->Nspam, state->token_hash, cfg);
+   if(sdata->uid > 0){
+      snprintf(s, SMALLBUFSIZE-1, ") AND (uid=0 OR uid=%ld)", sdata->uid);
+      buffer_cat(query, s);
+   }
+   else
+      buffer_cat(query, ") AND uid=0");
+
+   update_hash(sdata->mysql, query->data, state->token_hash, cfg);
 #endif
 #ifdef HAVE_SQLITE3
-   update_hash(sdata->db, query->data, sdata->Nham, sdata->Nspam, state->token_hash, cfg);
+   buffer_cat(query, ")");
+   update_hash(sdata->db, query->data, state->token_hash, cfg);
 #endif
 
    buffer_destroy(query);
+
+   calcnode(state->token_hash, sdata->Nham, sdata->Nspam, cfg);
 
    return 1;
 }

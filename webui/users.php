@@ -59,7 +59,7 @@ else if($modify == 1 && $uid >= 0 && is_numeric($uid) && $email && $username){
 }
 
 else if($edit == 1 && $uid >= 1 && is_numeric($uid)){
-   $x = get_user_entry($uid);
+   $x = get_user_entry($uid, $email);
 
    print "<form action=\"users.php\" name=\"modifyuser\" method=\"post\">\n";
    print "<input type=\"hidden\" name=\"modify\" value=\"1\">\n";

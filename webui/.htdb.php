@@ -17,4 +17,8 @@ $bindpw = "";
 $user_base_dn = "ou=clapfusers,$basedn";
 $policy_base_dn = "ou=clapfpolicies,$basedn";
 
+// sqlite3 stuff
+
+$sqlite3_db = "/path/to/tokens.sdb";
+
 ?>

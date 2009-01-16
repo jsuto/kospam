@@ -179,7 +179,6 @@ float mydbqry(struct session_data *sdata, char *p, struct __config *cfg){
    if(q == NULL) return spamicity;
 
    spamicity = calc_spamicity(sdata->Nham, sdata->Nspam, q->nham, q->nspam, cfg->rob_s, cfg->rob_x);
-
    //fprintf(stderr, "%s %d %d %.4f\n", p, q->nham, q->nspam, spamicity);
 
    return spamicity;

@@ -1,5 +1,10 @@
 0.4.0:
 
+2009.01.16, SJ
+
+Added some sqlite3 support for the web ui.
+(webui/mysql.php, webui/config.in.php, webui/.htdb.php, webui/sqlite3.php)
+
 2009.01.15, SJ
 
 Fixed a bug around syslog()'ing the sender of the whitelist passed message.
@@ -7,6 +12,9 @@ Fixed a bug around syslog()'ing the sender of the whitelist passed message.
 
 Disabled the AVG supporting code in the configure script.
 (configure*)
+
+Added back the merged group type support for mysql
+(bayes.c, mysql.c, sqlite3.c)
 
 2009.01.14, SJ
 

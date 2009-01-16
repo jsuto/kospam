@@ -161,7 +161,7 @@ function show_existing_users(){
    while(list($uid, $username, $email, $policy_group) = mysql_fetch_row($r)){
       $policy_group = get_policy_group_name_by_id($policy_group);
 
-      print "<tr align=\"left\"><td>$uid</td><td>$username</td><td>$email</td><td>$policy_group</td><td><a href=\"users.php?uid=$uid&edit=1\">$EDIT_OR_VIEW</a></td></tr>\n";
+      print "<tr align=\"left\"><td>$uid</td><td>$username</td><td>$email</td><td>$policy_group</td><td><a href=\"users.php?uid=$uid&email=$email&edit=1\">$EDIT_OR_VIEW</a></td></tr>\n";
    }
    mysql_free_result($r);
 }

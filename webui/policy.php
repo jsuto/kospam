@@ -25,6 +25,8 @@ if(isset($_POST['name'])) $name = $_POST['name'];
 $username = $_SERVER['REMOTE_USER'];
 if($username == "") nice_error($err_not_authenticated);
 
+if($admin_user != 1) nice_error($err_you_are_not_admin);
+
 $conn = webui_connect() or nice_error($err_connect_db);
 
 ?>

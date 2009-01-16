@@ -1,5 +1,5 @@
 /*
- * defs.h, 2009.01.09, SJ
+ * defs.h, 2009.01.15, SJ
  */
 
 #ifndef _DEFS_H
@@ -38,6 +38,8 @@ struct node {
    unsigned long long key;
    double spaminess;
    double deviation;
+   float nham;
+   float nspam;
    unsigned long num;
    char type;
    struct node *r;

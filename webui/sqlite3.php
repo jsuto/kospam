@@ -1,4 +1,4 @@
-<?
+<?php
 
 function webui_connect(){
    global $sqlite3_db, $err_connect_db;

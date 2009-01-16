@@ -1,7 +1,7 @@
-<?
+<?php
 
 include_once("config.php");
-include_once("header.inc");
+include_once("header.php");
 
 $username = $_SERVER['REMOTE_USER'];
 if($username == "") nice_error($err_not_authenticated);
@@ -46,7 +46,7 @@ $conn = webui_connect() or nice_error($err_connect_db);
 <p>
 
 
-<?
+<?php
 
 if($add == 1 && uid >= 0 && is_numeric($uid) && $email && $username){
    add_user_entry($uid); //, $username, $email, $policy_group);
@@ -142,4 +142,4 @@ webui_close($conn);
 
 
 
-<? include_once("footer.inc"); ?>
+<?php include_once("footer.php"); ?>

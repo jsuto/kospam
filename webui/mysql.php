@@ -1,4 +1,4 @@
-<?
+<?php
 
 function webui_connect(){
    global $host, $u, $p, $db, $err_connect_db;

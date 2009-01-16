@@ -1,7 +1,7 @@
-<?
+<?php
 
 include_once("config.php");
-include_once("header.inc");
+include_once("header.php");
 
 $add = 0;
 $view = 0;
@@ -38,7 +38,7 @@ $conn = webui_connect() or nice_error($err_connect_db);
 
 <p>
 
-<?
+<?php
 
 if($modify == 1 && is_numeric($policy_group) && $policy_group > 0){
    update_policy($policy_group);
@@ -131,4 +131,4 @@ webui_close($conn);
 
 
 
-<? include_once("footer.inc"); ?>
+<?php include_once("footer.php"); ?>

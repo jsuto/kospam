@@ -1,4 +1,4 @@
-<?
+<?php
 
 function webui_connect(){
    global $ldaphost, $binddn, $bindpw, $err_connect_db;

@@ -5,6 +5,10 @@
 Added some sqlite3 support for the web ui.
 (webui/mysql.php, webui/config.in.php, webui/.htdb.php, webui/sqlite3.php)
 
+Renamed the .inc files as .php files, and changed the "<?" PHP mark to "<?php"
+(webui/*)
+(credits: Mark Feenstra)
+
 2009.01.15, SJ
 
 Fixed a bug around syslog()'ing the sender of the whitelist passed message.

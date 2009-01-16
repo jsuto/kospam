@@ -1,7 +1,7 @@
-<?
+<?php
 
 include_once("config.php");
-include_once("header.inc");
+include_once("header.php");
 
 $meurl = $_SERVER['PHP_SELF'];
 
@@ -65,7 +65,7 @@ function mark_all(x){
 
 <p>
 
-<?
+<?php
 
 
 if($_SERVER['REQUEST_METHOD'] == "GET"){
@@ -201,4 +201,4 @@ webui_close($conn);
 
 
 
-<? include_once("footer.inc"); ?>
+<?php include_once("footer.php"); ?>

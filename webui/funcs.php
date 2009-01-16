@@ -1,4 +1,4 @@
-<?
+<?php
 
 
 function errout($msg){
@@ -11,7 +11,7 @@ function errout($msg){
 function nice_error($msg){
    global $ERROR;
 
-   include_once("header.inc");
+   include_once("header.php");
 
    print "<h3>$ERROR</h3>\n";
 
@@ -21,14 +21,14 @@ function nice_error($msg){
 
    print "</div> <!-- body -->\n\n\n";
 
-   include_once("footer.inc");
+   include_once("footer.php");
 
    exit(1);
 }
 
 
 function nice_screen($msg){
-   include_once("header.inc");
+   include_once("header.php");
 
    print "<h3>OK</h3>\n";
 
@@ -38,7 +38,7 @@ function nice_screen($msg){
 
    print "</div> <!-- body -->\n\n\n";
 
-   include_once("footer.inc");
+   include_once("footer.php");
 
    exit(1);
 }

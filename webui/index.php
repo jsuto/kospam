@@ -1,7 +1,7 @@
-<?
+<?php
 
 include_once("config.php");
-include_once("header.inc");
+include_once("header.php");
 
 $username = $_SERVER['REMOTE_USER'];
 if($username == "") nice_error($err_not_authenticated);
@@ -19,7 +19,7 @@ if($username == "") nice_error($err_not_authenticated);
 
 <p>
 
-<? print "$YOU_ARE: $username"; ?>
+<?php print "$YOU_ARE: $username"; ?>
 
 </p>
 
@@ -36,4 +36,4 @@ if($username == "") nice_error($err_not_authenticated);
 
 
 
-<? include_once("footer.inc"); ?>
+<?php include_once("footer.php"); ?>

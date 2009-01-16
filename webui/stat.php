@@ -1,7 +1,7 @@
-<?
+<?php
 
 include_once("config.php");
-include_once("header.inc");
+include_once("header.php");
 
 $username = $_SERVER['REMOTE_USER'];
 if($username == "") nice_error($err_not_authenticated);
@@ -16,7 +16,6 @@ $nspam = 0;
 
 if(isset($_GET['timespan'])) $timespan = $_GET['timespan'];
 
-//die("timespan: $timespan");
 
 ?>
 
@@ -27,7 +26,7 @@ if(isset($_GET['timespan'])) $timespan = $_GET['timespan'];
 
 <p>
 
-<?
+<?php
    if($timespan == 0)
          print "<p><strong>$CGI_DAILY_REPORT</strong> <a href=\"" . $_SERVER['PHP_SELF'] . "?timespan=1\">$CGI_MONTHLY_REPORT</a></p>\n";
       else
@@ -38,7 +37,7 @@ if(isset($_GET['timespan'])) $timespan = $_GET['timespan'];
 
 <table border="1">
 
-<?
+<?php
    print "<tr align=\"center\"><th>$DATE</th><th>HAM</th><th>SPAM</th></tr>\n";
 
    /* determine your uid */
@@ -93,4 +92,4 @@ if(isset($_GET['timespan'])) $timespan = $_GET['timespan'];
 
 
 
-<? include_once("footer.inc"); ?>
+<?php include_once("footer.php"); ?>

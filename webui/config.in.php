@@ -1,4 +1,4 @@
-<?
+<?php
 
 error_reporting(7);
 
@@ -15,7 +15,7 @@ $directory = "/webui";
 
 include_once($_SERVER['DOCUMENT_ROOT'] . "$directory/.htdb.php");
 include_once($_SERVER['DOCUMENT_ROOT'] . "$directory/funcs.php");
-include_once($_SERVER['DOCUMENT_ROOT'] . "$directory/lang/$lang/messages.inc");
+include_once($_SERVER['DOCUMENT_ROOT'] . "$directory/lang/$lang/messages.php");
 
 include_once($_SERVER['DOCUMENT_ROOT'] . "$directory/mysql.php");
 //include_once($_SERVER['DOCUMENT_ROOT'] . "$directory/ldap.php");

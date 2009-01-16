@@ -1,7 +1,7 @@
-<?
+<?php
 
 include_once("config.php");
-include_once("header.inc");
+include_once("header.php");
 
 $modify = 0;
 $whitelist = "";
@@ -23,7 +23,7 @@ $conn = webui_connect() or nice_error($err_connect_db);
 
 <p>
 
-<?
+<?php
 
 if($modify == 1){
    set_whitelist($whitelist, $username);
@@ -65,4 +65,4 @@ webui_close($conn);
 
 
 
-<? include_once("footer.inc"); ?>
+<?php include_once("footer.php"); ?>

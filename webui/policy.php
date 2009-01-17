@@ -21,6 +21,7 @@ if(isset($_POST['modify'])) $modify = $_POST['modify'];
 if(isset($_POST['policy_group'])) $policy_group = $_POST['policy_group'];
 if(isset($_POST['name'])) $name = $_POST['name'];
 
+if($backend != "mysql" && $backend != "ldap") nice_error($err_this_feature_is_not_available);
 
 $username = $_SERVER['REMOTE_USER'];
 if($username == "") nice_error($err_not_authenticated);
@@ -32,7 +33,7 @@ $conn = webui_connect() or nice_error($err_connect_db);
 ?>
 
 
-  <h3><? print $POLICY; ?></h3>
+  <h3><?php print $POLICY; ?></h3>
 
   <div id="body">
 

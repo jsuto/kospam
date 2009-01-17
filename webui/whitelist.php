@@ -17,7 +17,7 @@ $conn = webui_connect() or nice_error($err_connect_db);
 ?>
 
 
-  <h3><? print $WHITELIST_SETTINGS; ?></h3>
+  <h3><?php print $WHITELIST_SETTINGS; ?></h3>
 
   <div id="body">
 

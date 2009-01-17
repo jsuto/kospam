@@ -9,7 +9,7 @@ if($username == "") nice_error($err_not_authenticated);
 ?>
 
 
-  <h3><? print $HOME; ?></h3>
+  <h3><?php print $HOME; ?></h3>
 
   <div id="body">
 

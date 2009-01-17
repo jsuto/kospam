@@ -114,4 +114,7 @@ $err_policy_failed_to_modify = "Policy failed to modify";
 $err_policy_failed_to_add = "Policy failed to add";
 $err_policy_failed_to_remove = "Policy failed to remove";
 
+$err_this_feature_is_not_available = "This feature is not available for this backend";
+
+
 ?>

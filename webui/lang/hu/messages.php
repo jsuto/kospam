@@ -114,4 +114,6 @@ $err_policy_failed_to_modify = "Házirendet nem sikerült módosítani";
 $err_policy_failed_to_add = "Házirendet nem sikerült felvenni";
 $err_policy_failed_to_remove = "Házirendet nem sikerült törölni";
 
+$err_this_feature_is_not_available = "Ez a funkció nem érhetõ el a használt adatbázissal";
+
 ?>

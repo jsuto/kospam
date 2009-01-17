@@ -14,7 +14,7 @@ if($ADMIN[$username] == 1) $admin_user = 1;
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="hu" lang="hu">
 
 <head>
-    <title><? print $title; ?></title>
+    <title><?php print $title; ?></title>
     <meta http-equiv="content-type" content="text/html; charset=iso-8859-2" />
     <meta name="keywords" content="spam, anti-spam, email, e-mail, mail, unsolicited commercial bulk email, blacklist, software, filtering, service, Bayes, bayesian, bayes-i, minden a spamről" />
     <meta  name="description" content="spam, anti-spam, antispam, pop3, gateway, proxy, gw" />
@@ -31,10 +31,10 @@ if($ADMIN[$username] == 1) $admin_user = 1;
   <div id="menu">
     <ul id="menulist">
 
-          <li><a href="<? print $base_url; ?>/index.php"<? if(strstr($_SERVER['PHP_SELF'], "/index.php")) print " id=\"active\""; ?>><? print $HOME; ?></a></li>
-          <li><a href="<? print $base_url; ?>/q.php"<? if(strstr($_SERVER['PHP_SELF'], "/q.php")) print ", id=\"active\""; ?>><? print $QUARANTINE; ?></a></li>
-          <li><a href="<? print $base_url; ?>/whitelist.php"<? if(strstr($_SERVER['PHP_SELF'], "/whitelist.php")) print " id=\"active\""; ?>><? print $WHITELIST; ?></a></li>
-          <li><a href="<? print $base_url; ?>/stat.php"<? if(strstr($_SERVER['PHP_SELF'], "/stat.php")) print " id=\"active\""; ?>><? print $STATS; ?></a></li>
+          <li><a href="<?php print $base_url; ?>/index.php"<?php if(strstr($_SERVER['PHP_SELF'], "/index.php")) print " id=\"active\""; ?>><?php print $HOME; ?></a></li>
+          <li><a href="<?php print $base_url; ?>/q.php"<?php if(strstr($_SERVER['PHP_SELF'], "/q.php")) print ", id=\"active\""; ?>><?php print $QUARANTINE; ?></a></li>
+          <li><a href="<?php print $base_url; ?>/whitelist.php"<?php if(strstr($_SERVER['PHP_SELF'], "/whitelist.php")) print " id=\"active\""; ?>><?php print $WHITELIST; ?></a></li>
+          <li><a href="<?php print $base_url; ?>/stat.php"<?php if(strstr($_SERVER['PHP_SELF'], "/stat.php")) print " id=\"active\""; ?>><?php print $STATS; ?></a></li>
 <?php
    if($admin_user == 1){
 

@@ -1,5 +1,10 @@
 0.4.0:
 
+2009.01.17, SJ
+
+Additional fixes to the webui.
+(webui/*)
+
 2009.01.16, SJ
 
 Added some sqlite3 support for the web ui.

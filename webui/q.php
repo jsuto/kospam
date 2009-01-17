@@ -59,7 +59,7 @@ function mark_all(x){
 </script>
 
 
-  <h3><? print $QUARANTINE; ?></h3>
+  <h3><?php print $QUARANTINE; ?></h3>
 
   <div id="body">
 

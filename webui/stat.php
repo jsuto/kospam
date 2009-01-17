@@ -16,11 +16,12 @@ $nspam = 0;
 
 if(isset($_GET['timespan'])) $timespan = $_GET['timespan'];
 
+if($backend != "mysql") nice_error($err_this_feature_is_not_available);
 
 ?>
 
 
-  <h3><? print $STATS; ?></h3>
+  <h3><?php print $STATS; ?></h3>
 
   <div id="body">
 

@@ -1,5 +1,5 @@
 /*
- * bayes.h, 2009.01.09, SJ
+ * bayes.h, 2009.01.17, SJ
  */
 
 #ifndef _BAYES_H
@@ -10,7 +10,6 @@
 #include "hash.h"
 
 
-double spamicity(char *spamfile, struct __config cfg);
 struct _state parse_message(char *spamfile, struct session_data *sdata, struct __config *cfg);
 
 void add_penalties(struct session_data *sdata, struct _state *state, struct __config *cfg);

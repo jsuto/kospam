@@ -1,5 +1,5 @@
 /*
- * parser.c, 2009.01.09, SJ
+ * parser.c, 2009.01.17, SJ
  */
 
 #include <stdio.h>
@@ -15,7 +15,6 @@
 #include "list.h"
 #include "parser.h"
 #include "hash.h"
-#include "shdr.h"
 #include "config.h"
 #include "defs.h"
 
@@ -140,57 +139,6 @@ int extract_boundary(char *p, char *boundary, int boundary_len){
       strncpy(boundary, p, boundary_len);
 
       return 1;
-   }
-
-   return 0;
-}
-
-
-/*
- * is it a month?
- */
-
-int is_month(char *s){
-   int i;
-   char *p;
-
-   for(i=0; i<(sizeof(months) / sizeof(p)); i++){
-      if(strcasecmp(s, months[i]) == 0)
-         return 1;
-   }
-
-   return 0;
-}
-
-
-/*
- * is it a weekday?
- */
-
-int is_weekday(char *s){
-   int i;
-   char *p;
-
-   for(i=0; i<(sizeof(weekdays) / sizeof(p)); i++){
-      if(strcasecmp(s, weekdays[i]) == 0)
-         return 1;
-   }
-
-   return 0;
-}
-
-
-/*
- * is it date related stuff?
- */
-
-int is_date(char *s){
-   int i;
-   char *p;
-
-   for(i=0; i<(sizeof(dates) / sizeof(p)); i++){
-      if(strcasecmp(s, dates[i]) == 0)
-         return 1;
    }
 
    return 0;
@@ -739,10 +687,6 @@ DECOMPOSE:
       /* skip too short or long or numeric only tokens */
       if(strlen(puf) < MIN_WORD_LEN || strlen(puf) > MAX_WORD_LEN || is_hex_number(puf))
          continue;
-
-      /* skip date tokens. Update: this is unnecessary from 2009.01.12, SJ  */
-      /*if(is_odd_punctuations(puf) == 1 || is_month(puf) == 1 || is_weekday(puf) == 1 || is_date(puf) )
-         continue;*/
 
       if(state->message_state == MSG_SUBJECT){
          snprintf(muf, MAXBUFSIZE-1, "Subject*%s", puf);

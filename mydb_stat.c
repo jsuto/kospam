@@ -49,7 +49,7 @@ int main(int argc, char **argv){
       return 1;
    }
 
-   rc = init_mydb(argv[1], mhash, &sdata);
+   rc = init_mydb(argv[1], &sdata);
    if(rc != 1){
       printf("cannot open %s\n", argv[1]);
       return 0;

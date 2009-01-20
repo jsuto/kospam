@@ -1,5 +1,5 @@
 /*
- * sql.c, 2009.01.14, SJ
+ * sql.c, 2009.01.20, SJ
  */
 
 #include <stdio.h>
@@ -75,13 +75,12 @@ int my_walk_hash(sqlite3 *db, int ham_or_spam, struct node *xhash[], int train_m
  * check whether the email address is on the white list
  */
 
+int is_sender_on_white_list(struct session_data *sdata, char *email, struct __config *cfg){
 #ifdef HAVE_MYSQL
-int is_sender_on_white_list(MYSQL mysql, char *tmpfile, char *email, unsigned long uid, struct __config *cfg){
    MYSQL_RES *res;
    MYSQL_ROW row;
 #endif
 #ifdef HAVE_SQLITE3
-int is_sender_on_white_list(sqlite3 *db, char *tmpfile, char *email, unsigned long uid, struct __config *cfg){
    sqlite3_stmt *pStmt;
    const char **pzTail=NULL;
 #endif
@@ -94,17 +93,17 @@ int is_sender_on_white_list(sqlite3 *db, char *tmpfile, char *email, unsigned lo
 
    if(!email) return 0;
 
-   snprintf(buf, SMALLBUFSIZE-1, "SELECT whitelist FROM %s WHERE uid=0 OR uid=%ld", SQL_WHITE_LIST, uid);
+   snprintf(buf, SMALLBUFSIZE-1, "SELECT whitelist FROM %s WHERE uid=0 OR uid=%ld", SQL_WHITE_LIST, sdata->uid);
 
-   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sql: %s", tmpfile, buf);
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sql: %s", sdata->ttmpfile, buf);
 
 #ifdef HAVE_MYSQL
-   if(mysql_real_query(&mysql, buf, strlen(buf)) == 0){
-      res = mysql_store_result(&mysql);
+   if(mysql_real_query(&(sdata->mysql), buf, strlen(buf)) == 0){
+      res = mysql_store_result(&(sdata->mysql));
       if(res != NULL){
          while((row = mysql_fetch_row(res))){
             if(row[0]){
-               if(whitelist_check((char *)row[0], tmpfile, email, cfg) == 1){
+               if(whitelist_check((char *)row[0], sdata->ttmpfile, email, cfg) == 1){
                   r = 1;
                   break;
                }
@@ -115,9 +114,9 @@ int is_sender_on_white_list(sqlite3 *db, char *tmpfile, char *email, unsigned lo
    }
 #endif
 #ifdef HAVE_SQLITE3
-   if(sqlite3_prepare_v2(db, buf, -1, &pStmt, pzTail) == SQLITE_OK){
+   if(sqlite3_prepare_v2(sdata->db, buf, -1, &pStmt, pzTail) == SQLITE_OK){
       while(sqlite3_step(pStmt) == SQLITE_ROW){
-         if(whitelist_check((char *)sqlite3_column_blob(pStmt, 0), tmpfile, email, cfg) == 1){
+         if(whitelist_check((char *)sqlite3_column_blob(pStmt, 0), sdata->ttmpfile, email, cfg) == 1){
             r = 1;
             break;
          }

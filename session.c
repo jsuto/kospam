@@ -1,5 +1,5 @@
 /*
- * session.c, 2009.01.15, SJ
+ * session.c, 2009.01.20, SJ
  */
 
 #include <stdio.h>
@@ -27,10 +27,6 @@
 
 #ifdef NEED_LDAP
    #include <ldap.h>
-#endif
-
-#ifdef HAVE_MYDB
-   #include "mydb.h"
 #endif
 
 
@@ -91,7 +87,7 @@ void init_session_data(struct session_data *sdata){
    struct __config my_cfg;
    struct timezone tz;
    struct timeval tv_rcvd, tv_scnd;
-   int is_spam;
+   int is_spam, db_conn=0;
    int rc;
    struct ue UE, UE2;
 
@@ -105,13 +101,6 @@ void init_session_data(struct session_data *sdata){
       unsigned int options=0;
    #endif
 
-#ifdef NEED_MYSQL
-   MYSQL mysql;
-   int mysql_connection=0;
-#endif
-#ifdef NEED_SQLITE3
-   sqlite3 *db;
-#endif
 #ifdef NEED_LDAP
    LDAP *ldap;
 #endif
@@ -122,7 +111,7 @@ void init_session_data(struct session_data *sdata){
       struct timeval tv_spam_start, tv_spam_stop;
       struct _state sstate, sstate2;
       int train_mode=T_TOE;
-
+      int is_whitelist;
       spaminess=DEFAULT_SPAMICITY;
 
    #endif
@@ -523,31 +512,32 @@ void init_session_data(struct session_data *sdata){
 
                /* open database backend handler */
 
+               db_conn = 0;
+
             #ifdef NEED_MYSQL
-               mysql_init(&mysql);
-               mysql_options(&mysql, MYSQL_OPT_CONNECT_TIMEOUT, (const char*)&cfg.mysql_connect_timeout);
-               if(mysql_real_connect(&mysql, cfg.mysqlhost, cfg.mysqluser, cfg.mysqlpwd, cfg.mysqldb, cfg.mysqlport, cfg.mysqlsocket, 0))
-                  mysql_connection = 1;
-               else {
-                  mysql_connection = 0;
+               mysql_init(&(sdata.mysql));
+               mysql_options(&(sdata.mysql), MYSQL_OPT_CONNECT_TIMEOUT, (const char*)&cfg.mysql_connect_timeout);
+               if(mysql_real_connect(&(sdata.mysql), cfg.mysqlhost, cfg.mysqluser, cfg.mysqlpwd, cfg.mysqldb, cfg.mysqlport, cfg.mysqlsocket, 0))
+                  db_conn = 1;
+               else
                   syslog(LOG_PRIORITY, "%s: %s", sdata.ttmpfile, ERR_MYSQL_CONNECT);
-               }
             #endif
             #ifdef NEED_SQLITE3
-               rc = sqlite3_open(cfg.sqlite3, &db);
-               if(rc){
+               rc = sqlite3_open(cfg.sqlite3, &(sdata.db));
+               if(rc)
                   syslog(LOG_PRIORITY, "%s: %s", sdata.ttmpfile, ERR_SQLITE3_OPEN);
-               }
+               else
+                  db_conn = 1;
             #endif
 
 
             /* get user from 'MAIL FROM:', 2008.10.25, SJ */
 
             #ifdef USERS_IN_MYSQL
-               UE2 = get_user_from_email(mysql, email2);
+               UE2 = get_user_from_email(&sdata, email2);
             #endif
             #ifdef USERS_IN_SQLITE3
-               UE2 = get_user_from_email(db, email2);
+               UE2 = get_user_from_email(&sdata, email2);
             #endif
             #ifdef USERS_IN_LDAP
                ldap = do_bind_ldap(cfg.ldap_host, cfg.ldap_user, cfg.ldap_pwd, cfg.ldap_use_tls);
@@ -578,10 +568,10 @@ void init_session_data(struct session_data *sdata){
                   /* get user from 'RCPT TO:', 2008.11.24, SJ */
 
                #ifdef USERS_IN_MYSQL
-                  UE = get_user_from_email(mysql, email);
+                  UE = get_user_from_email(&sdata, email);
                #endif
                #ifdef USERS_IN_SQLITE3
-                  UE = get_user_from_email(db, email);
+                  UE = get_user_from_email(&sdata, email);
                #endif
                #ifdef USERS_IN_LDAP
                   UE = get_user_from_email(ldap, email, &cfg);
@@ -591,7 +581,7 @@ void init_session_data(struct session_data *sdata){
 
                #ifdef HAVE_POLICY
                   #ifdef USERS_IN_MYSQL
-                     if(UE.policy_group > 0) get_policy(mysql, &cfg, &my_cfg, UE.policy_group, sdata.num_of_rcpt_to);
+                     if(UE.policy_group > 0) get_policy(&sdata, &cfg, &my_cfg, UE.policy_group);
                   #endif
 
                   #ifdef USERS_IN_LDAP
@@ -615,6 +605,37 @@ void init_session_data(struct session_data *sdata){
 
                #ifdef HAVE_ANTISPAM
 
+                  /* is it a training request ? */
+
+                  if(sdata.num_of_rcpt_to == 1 && (strcasestr(sdata.rcptto[0], "+spam@") || strcasestr(sdata.rcptto[0], "+ham@") || strncmp(email, "spam@", 5) == 0 || strncmp(email, "ham@", 4) == 0 ) ){
+                     is_spam = 0;
+                     snprintf(acceptbuf, MAXBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata.ttmpfile, email);
+                     if(strcasestr(sdata.rcptto[0], "+spam@") || strncmp(email, "spam@", 5) == 0) is_spam = 1;
+
+                  #ifndef HAVE_MYDB
+                     sdata.uid = UE2.uid;
+
+                     train_mode = extract_id_from_message(sdata.ttmpfile, cfg.clapf_header_field, ID);
+
+                     syslog(LOG_PRIORITY, "%s: training request for %s by uid: %ld", sdata.ttmpfile, ID, UE2.uid);
+
+                     if(is_spam == 1)
+                        snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s/h.%s", USER_QUEUE_DIR, UE2.name[0], UE2.name, ID);
+                     else
+                        snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s/s.%s", USER_QUEUE_DIR, UE2.name[0], UE2.name, ID);
+
+                     sstate2 = parse_message(qpath, &sdata, &my_cfg);
+
+                     train_message(&sdata, &sstate2, MAX_ITERATIVE_TRAIN_LOOPS, is_spam, train_mode, &my_cfg);
+
+                     free_url_list(sstate2.urls);
+                     clearhash(sstate2.token_hash, 0);
+                  #endif
+
+                     goto SEND_RESULT;
+                  }
+
+
                   /* run statistical antispam check */
 
                   if(my_cfg.use_antispam == 1 && (my_cfg.max_message_size_to_filter == 0 || sdata.tot_len < my_cfg.max_message_size_to_filter) ){
@@ -633,160 +654,68 @@ void init_session_data(struct session_data *sdata){
 
 
                   #ifdef HAVE_MYSQL
-                     if(mysql_connection == 1){
-                        sdata.uid = UE.uid;
-
-                        /* if we have forwarded something for retraining */
-
-                        if(sdata.num_of_rcpt_to == 1 && (strcasestr(sdata.rcptto[0], "+spam@") || strcasestr(sdata.rcptto[0], "+ham@") || strncmp(email, "spam@", 5) == 0 || strncmp(email, "ham@", 4) == 0 ) ){
-                           is_spam = 0;
-                           snprintf(acceptbuf, MAXBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata.ttmpfile, email);
-                           if(strcasestr(sdata.rcptto[0], "+spam@") || strncmp(email, "spam@", 5) == 0) is_spam = 1;
-
-                           sdata.uid = UE2.uid;
-                           snprintf(sdata.name, SMALLBUFSIZE-1, "%s", UE2.name);
-
-                           train_mode = extract_id_from_message(sdata.ttmpfile, cfg.clapf_header_field, ID);
-
-                           syslog(LOG_PRIORITY, "%s: training request for %s by uid: %ld", sdata.ttmpfile, ID, UE2.uid);
-
-                           if(is_spam == 1)
-                              snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s/h.%s", USER_QUEUE_DIR, UE2.name[0], UE2.name, ID);
-                           else
-                              snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s/s.%s", USER_QUEUE_DIR, UE2.name[0], UE2.name, ID);
-
-                           sstate2 = parse_message(qpath, &sdata, &my_cfg);
-
-                           train_message(mysql, sdata, sstate2, MAX_ITERATIVE_TRAIN_LOOPS, is_spam, train_mode, my_cfg);
-
-                           free_url_list(sstate2.urls);
-                           clearhash(sstate2.token_hash, 0);
-
-                           goto SEND_RESULT;
-                        }
-                        else {
-
-                           if(is_sender_on_white_list(mysql, sdata.ttmpfile, email2, sdata.uid, &my_cfg)){
-                              syslog(LOG_PRIORITY, "%s: sender (%s) found on whitelist", sdata.ttmpfile, email2);
-                              snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on white list\r\n", cfg.clapf_header_field);
-                              goto END_OF_SPAM_CHECK;
-                           }
-                           else {
-                              if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: running Bayesian test", sdata.ttmpfile);
-                              spaminess = bayes_file(mysql, &sstate, &sdata, &my_cfg);
-                           }
-                           update_mysql_tokens(mysql, sstate.token_hash, sdata.uid);
-
-                           if(
-                               (my_cfg.training_mode == T_TUM && ( (spaminess >= my_cfg.spam_overall_limit && spaminess < 0.99) || (spaminess < my_cfg.max_ham_spamicity && spaminess > 0.1) )) ||
-                               (my_cfg.initial_1000_learning == 1 && (sdata.Nham < NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED || sdata.Nspam < NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED))
-                           )
-                           {
-
-                              if(spaminess >= my_cfg.spam_overall_limit){
-                                 is_spam = 1;
-                                 syslog(LOG_PRIORITY, "%s: TUM training a spam", sdata.ttmpfile);
-                              }
-                              else {
-                                 is_spam = 0;
-                                 syslog(LOG_PRIORITY, "%s: TUM training a ham", sdata.ttmpfile);
-                              }
-
-                              snprintf(trainbuf, SMALLBUFSIZE-1, "%sTUM\r\n", cfg.clapf_header_field);
-
-                              train_message(mysql, sdata, sstate, 1, is_spam, train_mode, my_cfg);
-                           }
-
-
-                        }
-
-                        gettimeofday(&tv_spam_stop, &tz);
-                     }
-                     else {
-                        gettimeofday(&tv_spam_stop, &tz);
-                        spaminess = DEFAULT_SPAMICITY;
-                     }
+                     sdata.uid = UE.uid;
                   #endif
                   #ifdef HAVE_SQLITE3
-                     if(rc){
-                        spaminess = DEFAULT_SPAMICITY;
-                        gettimeofday(&tv_spam_stop, &tz);
-                     }
-                     else {
-                        rc = sqlite3_exec(db, cfg.sqlite3_pragma, 0, 0, NULL);
+                     sdata.uid = 0;
+                  #endif
+
+
+                     if(db_conn == 1){
+
+                        is_whitelist = 0;
+
+                     #ifdef HAVE_MYSQL
+                        is_whitelist = is_sender_on_white_list(&sdata, email2, &my_cfg);
+                     #endif
+                     #ifdef HAVE_SQLITE3
+                        rc = sqlite3_exec(sdata.db, cfg.sqlite3_pragma, 0, 0, NULL);
                         if(rc != SQLITE_OK) syslog(LOG_PRIORITY, "%s: could not set pragma", sdata.ttmpfile);
 
-                        sdata.uid = 0;
-                        snprintf(sdata.name, SMALLBUFSIZE-1, "%s", UE.name);
+                        is_whitelist = is_sender_on_white_list(&sdata, email2, &cfg);
+                     #endif
 
-                        /* if we have forwarded something for retraining */
-
-                        if(sdata.num_of_rcpt_to == 1 && (strcasestr(sdata.rcptto[0], "+spam@") || strcasestr(sdata.rcptto[0], "+ham@") || strncmp(email, "spam@", 5) == 0 || strncmp(email, "ham@", 4) == 0) ){
-                           is_spam = 0;
-                           snprintf(acceptbuf, MAXBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata.ttmpfile, email);
-                           if(strcasestr(sdata.rcptto[0], "+spam@") || strncmp(email, "spam@", 5) == 0) is_spam = 1;
-
-                           sdata.uid = UE2.uid;
-
-                           train_mode = extract_id_from_message(sdata.ttmpfile, cfg.clapf_header_field, ID);
-
-                           syslog(LOG_PRIORITY, "%s: training request for %s by uid: %ld", sdata.ttmpfile, ID, UE2.uid);
-
-                           if(is_spam == 1)
-                              snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s/h.%s", USER_QUEUE_DIR, UE2.name[0], UE2.name, ID);
-                           else
-                              snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s/s.%s", USER_QUEUE_DIR, UE2.name[0], UE2.name, ID);
-
-
-                           sstate2 = parse_message(qpath, &sdata, &cfg);
-
-                           train_message(db, sdata, sstate2, MAX_ITERATIVE_TRAIN_LOOPS, is_spam, train_mode, cfg);
-
-                           free_url_list(sstate2.urls);
-                           clearhash(sstate2.token_hash, 0);
-
-
-                           goto SEND_RESULT;
+                        if(is_whitelist == 1){
+                           syslog(LOG_PRIORITY, "%s: sender (%s) found on whitelist", sdata.ttmpfile, email2);
+                           snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on white list\r\n", cfg.clapf_header_field);
+                           goto END_OF_SPAM_CHECK;
                         }
                         else {
-
-                           if(is_sender_on_white_list(db, sdata.ttmpfile, email2, sdata.uid, &cfg)){
-                              syslog(LOG_PRIORITY, "%s: sender (%s) found on whitelist", sdata.ttmpfile, email2);
-                              snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on white list\r\n", cfg.clapf_header_field);
-                              goto END_OF_SPAM_CHECK;
-                           }
-                           else {
-                              if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: running Bayesian test", sdata.ttmpfile);
-                              spaminess = bayes_file(db, &sstate, &sdata, &cfg);
-                           }
-                           update_sqlite3_tokens(db, sstate.token_hash);
-
-                           if(
-                               (cfg.training_mode == T_TUM && ( (spaminess >= cfg.spam_overall_limit && spaminess < 0.99) || (spaminess < cfg.max_ham_spamicity && spaminess > 0.1) )) ||
-                               (cfg.initial_1000_learning == 1 && (sdata.Nham < NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED || sdata.Nspam < NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED))
-                           )
-                           {
-
-                              if(spaminess >= cfg.spam_overall_limit){
-                                 is_spam = 1;
-                                 syslog(LOG_PRIORITY, "%s: TUM training a spam", sdata.ttmpfile);
-                              }
-                              else {
-                                 is_spam = 0;
-                                 syslog(LOG_PRIORITY, "%s: TUM training a ham", sdata.ttmpfile);
-                              }
-
-                              snprintf(trainbuf, SMALLBUFSIZE-1, "%sTUM\r\n", cfg.clapf_header_field);
-
-                              train_message(db, sdata, sstate, 1, is_spam, train_mode, cfg);
-                           }
-
-
+                           if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: running Bayesian test", sdata.ttmpfile);
+                           spaminess = bayes_file(&sdata, &sstate, &my_cfg);
                         }
 
-                        gettimeofday(&tv_spam_stop, &tz);
-                     }
-                  #endif
+                     #ifdef HAVE_MYSQL
+                        update_mysql_tokens(sdata.mysql, sstate.token_hash, sdata.uid);
+                     #endif
+                     #ifdef HAVE_SQLITE3
+                        update_sqlite3_tokens(sdata.db, sstate.token_hash);
+                     #endif
+
+                        if(
+                            (my_cfg.training_mode == T_TUM && ( (spaminess >= my_cfg.spam_overall_limit && spaminess < 0.99) || (spaminess < my_cfg.max_ham_spamicity && spaminess > 0.1) )) ||
+                            (my_cfg.initial_1000_learning == 1 && (sdata.Nham < NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED || sdata.Nspam < NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED))
+                        )
+                        {
+
+                           if(spaminess >= my_cfg.spam_overall_limit){
+                              is_spam = 1;
+                              syslog(LOG_PRIORITY, "%s: TUM training a spam", sdata.ttmpfile);
+                           }
+                           else {
+                              is_spam = 0;
+                              syslog(LOG_PRIORITY, "%s: TUM training a ham", sdata.ttmpfile);
+                           }
+
+                           snprintf(trainbuf, SMALLBUFSIZE-1, "%sTUM\r\n", cfg.clapf_header_field);
+
+                           train_message(&sdata, &sstate, 1, is_spam, train_mode, &my_cfg);
+                        }
+
+                     } 
+
+                     gettimeofday(&tv_spam_stop, &tz);
+
 
                   #ifndef OUTGOING_SMTP
 
@@ -829,17 +758,6 @@ void init_session_data(struct session_data *sdata){
                            }
 
                         }
-
-
-                        /* this info is not used yet, 2008.10.29, SJ
-
-                     #ifdef HAVE_MYSQL
-                        insert_2_queue(mysql, &sdata, cfg, is_spam);
-                     #endif
-                     #ifdef HAVE_SQLITE3
-                        insert_2_queue(db, &sdata, cfg, is_spam);
-                     #endif
-                         */
 
                      }
 
@@ -952,12 +870,13 @@ void init_session_data(struct session_data *sdata){
                clearhash(sstate.token_hash, 0);
             #endif
 
+               db_conn = 0;
+
             #ifdef NEED_MYSQL
-               mysql_close(&mysql);
-               mysql_connection = 0;
+               mysql_close(&(sdata.mysql));
             #endif
             #ifdef NEED_SQLITE3
-               sqlite3_close(db);
+               sqlite3_close(sdata.db);
                rc = SQLITE_ERROR;
             #endif
             #ifdef NEED_IN_LDAP

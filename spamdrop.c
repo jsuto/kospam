@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2009.01.14, SJ
+ * spamdrop.c, 2009.01.20, SJ
  */
 
 #include <stdio.h>
@@ -20,18 +20,12 @@ extern char *optarg;
 extern int optind;
 
 
-struct __config cfg;
-struct session_data sdata;
-
-
 #ifdef HAVE_MYSQL
-   MYSQL mysql;
    MYSQL_RES *res;
    MYSQL_ROW row;
    struct ue UE;
 #endif
 #ifdef HAVE_SQLITE3
-   sqlite3 *db;
    sqlite3_stmt *pStmt;
    const char **ppzTail=NULL;
 #endif
@@ -39,12 +33,12 @@ struct session_data sdata;
 
 /* open database connection */
 
-int open_db(char *messagefile){
+int open_db(struct session_data *sdata, struct __config *cfg){
 #ifdef HAVE_MYSQL
-   mysql_init(&mysql);
-   mysql_options(&mysql, MYSQL_OPT_CONNECT_TIMEOUT, (const char*)&cfg.mysql_connect_timeout);
-   if(mysql_real_connect(&mysql, cfg.mysqlhost, cfg.mysqluser, cfg.mysqlpwd, cfg.mysqldb, cfg.mysqlport, cfg.mysqlsocket, 0) == 0){
-      syslog(LOG_PRIORITY, "%s: %s", sdata.ttmpfile, ERR_MYSQL_CONNECT);
+   mysql_init(&(sdata->mysql));
+   mysql_options(&(sdata->mysql), MYSQL_OPT_CONNECT_TIMEOUT, (const char*)&cfg->mysql_connect_timeout);
+   if(mysql_real_connect(&(sdata->mysql), cfg->mysqlhost, cfg->mysqluser, cfg->mysqlpwd, cfg->mysqldb, cfg->mysqlport, cfg->mysqlsocket, 0) == 0){
+      syslog(LOG_PRIORITY, "%s: %s", sdata->ttmpfile, ERR_MYSQL_CONNECT);
       return 0;
    }
 #endif
@@ -52,21 +46,21 @@ int open_db(char *messagefile){
 #ifdef HAVE_SQLITE3
    int rc;
 
-   rc = sqlite3_open(cfg.sqlite3, &db);
+   rc = sqlite3_open(cfg->sqlite3, &(sdata->db));
    if(rc){
-      syslog(LOG_PRIORITY, "%s: %s: %s", messagefile, ERR_SQLITE3_OPEN, cfg.sqlite3);
+      syslog(LOG_PRIORITY, "%s: %s: %s", sdata->ttmpfile, ERR_SQLITE3_OPEN, cfg->sqlite3);
       return 0;
    }
    else {
-      rc = sqlite3_exec(db, cfg.sqlite3_pragma, 0, 0, NULL);
-      if(rc != SQLITE_OK) syslog(LOG_PRIORITY, "%s: could not set pragma", sdata.ttmpfile);
+      rc = sqlite3_exec(sdata->db, cfg->sqlite3_pragma, 0, 0, NULL);
+      if(rc != SQLITE_OK) syslog(LOG_PRIORITY, "%s: could not set pragma", sdata->ttmpfile);
    }
 #endif
 
 #ifdef HAVE_MYDB
    int rc;
 
-   rc = init_mydb(cfg.mydbfile, sdata.mhash, &sdata);
+   rc = init_mydb(cfg->mydbfile, sdata);
    if(rc != 1)
       return 0;
 #endif
@@ -88,7 +82,9 @@ int main(int argc, char **argv, char **envp){
    struct timeval tv_start, tv_stop;
    struct stat st;
    struct passwd *pwd;
+   struct session_data sdata;
    struct _state state;
+   struct __config cfg;
    float spaminess=DEFAULT_SPAMICITY;
 #ifdef MY_TEST
    char rblbuf[SMALLBUFSIZE];
@@ -301,7 +297,7 @@ int main(int argc, char **argv, char **envp){
 
 
    /* open database connection */
-   if(open_db(sdata.ttmpfile) == 0)
+   if(open_db(&sdata, &cfg) == 0)
       goto ENDE;
 
 
@@ -338,15 +334,7 @@ int main(int argc, char **argv, char **envp){
 
       /* ... then train with the message */
 
-   #ifdef HAVE_MYSQL
-      train_message(mysql, sdata, state, rounds, is_spam, train_mode, cfg);
-   #endif
-   #ifdef HAVE_SQLITE3
-      train_message(db, sdata, state, rounds, is_spam, train_mode, cfg);
-   #endif
-   #ifdef HAVE_MYDB
-      train_message(cfg.mydbfile, sdata.mhash, sdata, state, rounds, is_spam, train_mode, cfg);
-   #endif
+      train_message(&sdata, &state, rounds, is_spam, train_mode, &cfg);
 
       goto CLOSE_DB;
    }
@@ -372,15 +360,7 @@ int main(int argc, char **argv, char **envp){
       if(cfg.group_type == GROUP_SHARED)
          sdata.uid = 0;
 
-   #ifdef HAVE_MYSQL
-      train_message(mysql, sdata, state, rounds, is_spam, train_mode, cfg);
-   #endif
-   #ifdef HAVE_SQLITE3
-      train_message(db, sdata, state, rounds, is_spam, train_mode, cfg);
-   #endif
-   #ifdef HAVE_MYDB
-      train_message(cfg.mydbfile, sdata.mhash, sdata, state, rounds, is_spam, train_mode, cfg);
-   #endif
+      train_message(&sdata, &state, rounds, is_spam, train_mode, &cfg);
    }
 
 
@@ -390,25 +370,25 @@ int main(int argc, char **argv, char **envp){
 
    else {
    #ifdef HAVE_MYSQL
-      if(is_sender_on_white_list(mysql, sdata.ttmpfile, from, sdata.uid, &cfg)){
+      if(is_sender_on_white_list(&sdata, from, &cfg)){
          syslog(LOG_PRIORITY, "%s: sender (%s) found on whitelist", sdata.ttmpfile, from);
          snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on white list\r\n", cfg.clapf_header_field);
       } else
-         spaminess = bayes_file(mysql, &state, &sdata, &cfg);
+         spaminess = bayes_file(&sdata, &state, &cfg);
 
-      update_mysql_tokens(mysql, state.token_hash, sdata.uid);
+      update_mysql_tokens(sdata.mysql, state.token_hash, sdata.uid);
    #endif
    #ifdef HAVE_SQLITE3
-      if(is_sender_on_white_list(db, sdata.ttmpfile, from, sdata.uid, &cfg)){
+      if(is_sender_on_white_list(&sdata, from, &cfg)){
          syslog(LOG_PRIORITY, "%s: sender (%s) found on whitelist", sdata.ttmpfile, from);
          snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on white list\r\n", cfg.clapf_header_field);
       } else
-         spaminess = bayes_file(db, &state, &sdata, &cfg);
+         spaminess = bayes_file(&sdata, &state, &cfg);
 
-      update_sqlite3_tokens(db, state.token_hash);
+      update_sqlite3_tokens(sdata.db, state.token_hash);
    #endif
    #ifdef HAVE_MYDB
-      spaminess = bayes_file(&state, &sdata, &cfg);
+      spaminess = bayes_file(&sdata, &state, &cfg);
       update_tokens(cfg.mydbfile, sdata.mhash, state.token_hash);
    #endif
 
@@ -467,15 +447,7 @@ int main(int argc, char **argv, char **envp){
 
          snprintf(trainbuf, SMALLBUFSIZE-1, "%sTUM\r\n", cfg.clapf_header_field);
 
-         #ifdef HAVE_MYSQL
-            train_message(mysql, sdata, state, 1, is_spam, train_mode, cfg);
-         #endif
-         #ifdef HAVE_SQLITE3
-            train_message(db, sdata, state, 1, is_spam, train_mode, cfg);
-         #endif
-         #ifdef HAVE_MYDB
-            train_message(cfg.mydbfile, sdata.mhash, sdata, state, 1, is_spam, train_mode, cfg);
-         #endif
+         train_message(&sdata, &state, 1, is_spam, train_mode, &cfg);
       }
 
    }
@@ -491,15 +463,7 @@ int main(int argc, char **argv, char **envp){
          syslog(LOG_PRIORITY, "%s: training on a blackhole message", sdata.ttmpfile);
          snprintf(trainbuf, SMALLBUFSIZE-1, "%sTUM on blackhole\r\n", cfg.clapf_header_field);
 
-      #ifdef HAVE_MYSQL
-         train_message(mysql, sdata, state, rounds, 1, T_TOE, cfg);
-      #endif
-      #ifdef HAVE_SQLITE3
-         train_message(db, sdata, state, rounds, 1, T_TOE, cfg);
-      #endif
-      #ifdef HAVE_MYDB
-         train_message(cfg.mydbfile, sdata.mhash, sdata, state, rounds, 1, T_TOE, cfg);
-      #endif
+         train_message(&sdata, &state, rounds, 1, T_TOE, &cfg);
       }
 
    #ifdef HAVE_BLACKHOLE
@@ -514,10 +478,10 @@ int main(int argc, char **argv, char **envp){
 CLOSE_DB:
 
 #ifdef HAVE_MYSQL
-   mysql_close(&mysql);
+   mysql_close(&(sdata.mysql));
 #endif
 #ifdef HAVE_SQLITE3
-   sqlite3_close(db);
+   sqlite3_close(sdata.db);
 #endif
 #ifdef HAVE_MYDB
    close_mydb(sdata.mhash);
@@ -543,14 +507,6 @@ CLOSE_DB:
          if(S_ISREG(st.st_mode) == 1)
             chmod(qpath, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
       }
-
-   #ifdef HAVE_MYSQL
-      insert_2_queue(mysql, &sdata, cfg, is_spam);
-   #endif
-   #ifdef HAVE_SQLITE3
-      insert_2_queue(db, &sdata, cfg, is_spam);
-   #endif
-
    }
 
 ENDE_SPAMDROP:

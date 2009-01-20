@@ -1,5 +1,5 @@
 /*
- * users.c, 2009.01.09, SJ
+ * users.c, 2009.01.20, SJ
  */
 
 #include <stdio.h>
@@ -28,7 +28,7 @@
  */
 
 #ifdef USERS_IN_MYSQL
-struct ue get_user_from_email(MYSQL mysql, char *email){
+struct ue get_user_from_email(struct session_data *sdata, char *email){
    MYSQL_RES *res;
    MYSQL_ROW row;
    struct ue UE;
@@ -48,8 +48,8 @@ struct ue get_user_from_email(MYSQL mysql, char *email){
          snprintf(buf, MAXBUFSIZE-1, "SELECT uid, username, policy_group FROM %s WHERE email='%s'", SQL_USER_TABLE, email);
 
 
-      if(mysql_real_query(&mysql, buf, strlen(buf)) == 0){
-         res = mysql_store_result(&mysql);
+      if(mysql_real_query(&(sdata->mysql), buf, strlen(buf)) == 0){
+         res = mysql_store_result(&(sdata->mysql));
          if(res != NULL){
             row = mysql_fetch_row(res);
             if(row){
@@ -63,13 +63,12 @@ struct ue get_user_from_email(MYSQL mysql, char *email){
 
 
    return UE;
-
 }
 #endif
 
 
 #ifdef USERS_IN_SQLITE3
-struct ue get_user_from_email(sqlite3 *db, char *email){
+struct ue get_user_from_email(struct session_data *sdata, char *email){
    sqlite3_stmt *pStmt;
    const char **pzTail=NULL;
    struct ue UE;
@@ -89,7 +88,7 @@ struct ue get_user_from_email(sqlite3 *db, char *email){
       snprintf(buf, MAXBUFSIZE-1, "SELECT uid, username FROM %s WHERE email='%s'", SQL_USER_TABLE, email);
 
 
-   if(sqlite3_prepare_v2(db, buf, -1, &pStmt, pzTail) == SQLITE_OK){
+   if(sqlite3_prepare_v2(sdata->db, buf, -1, &pStmt, pzTail) == SQLITE_OK){
       if(sqlite3_step(pStmt) == SQLITE_ROW){
          UE.uid = sqlite3_column_int(pStmt, 0);
          strncpy(UE.name, (char *)sqlite3_column_blob(pStmt, 1), SMALLBUFSIZE-1);

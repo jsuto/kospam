@@ -1,5 +1,5 @@
 /*
- * policy.c, 2008.11.26, SJ
+ * policy.c, 2009.01.20, SJ
  */
 
 #include <stdio.h>
@@ -19,21 +19,21 @@
  */
 
 #ifdef USERS_IN_MYSQL
-int get_policy(MYSQL mysql, struct __config *cfg, struct __config *my_cfg, unsigned int policy_group, int num_of_rcpt_to){
+int get_policy(struct session_data *sdata, struct __config *cfg, struct __config *my_cfg, unsigned int policy_group){
    MYSQL_RES *res;
    MYSQL_ROW row;
    char buf[SMALLBUFSIZE];
 
 #ifndef HAVE_LMTP
-   if(num_of_rcpt_to != 1) return 0;
+   if(sdata->num_of_rcpt_to != 1) return 0;
 #endif
 
    snprintf(buf, SMALLBUFSIZE-1, "SELECT deliver_infected_email, silently_discard_infected_email, use_antispam, spam_subject_prefix, enable_auto_white_list, max_message_size_to_filter, rbl_domain, surbl_domain, spam_overall_limit, spaminess_oblivion_limit, replace_junk_characters, invalid_junk_limit, invalid_junk_line, penalize_images, penalize_embed_images, penalize_octet_stream, training_mode, initial_1000_learning FROM %s WHERE policy_group=%d", SQL_POLICY_TABLE, policy_group);
 
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "policy sql: %s", buf);
 
-   if(mysql_real_query(&mysql, buf, strlen(buf)) == 0){
-      res = mysql_store_result(&mysql);
+   if(mysql_real_query(&(sdata->mysql), buf, strlen(buf)) == 0){
+      res = mysql_store_result(&(sdata->mysql));
       if(res != NULL){
          row = mysql_fetch_row(res);
          if(row){

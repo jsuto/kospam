@@ -5,10 +5,10 @@
 #ifndef _DEFS_H
    #define _DEFS_H
 
-#ifdef HAVE_MYSQL
+#ifdef NEED_MYSQL
   #include <mysql.h>
 #endif
-#ifdef HAVE_SQLITE3
+#ifdef NEED_SQLITE3
   #include <sqlite3.h>
 #endif
 
@@ -129,10 +129,10 @@ struct session_data {
    unsigned long uid;
    int fd, tot_len, num_of_rcpt_to, skip_id_check, need_signo_check, unknown_client;
    float Nham, Nspam;
-#ifdef HAVE_MYSQL
+#ifdef NEED_MYSQL
    MYSQL mysql;
 #endif
-#ifdef HAVE_SQLITE3
+#ifdef NEED_SQLITE3
    sqlite3 *db;
 #endif
 #ifdef HAVE_MYDB

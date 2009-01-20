@@ -1,5 +1,10 @@
 0.4.0:
 
+2009.01.20, SJ
+
+Continued extensive code refactoring.
+(session.c, bayes.*, sql.*, mysq.c, sqlite3.c, mydb.*, users.*, policy.*, spamdrop.c, test.c)
+
 2009.01.17, SJ
 
 Additional fixes to the webui.

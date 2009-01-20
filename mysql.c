@@ -1,5 +1,5 @@
 /*
- * mysql.c, 2009.01.08, SJ
+ * mysql.c, 2009.01.20, SJ
  */
 
 #include <stdio.h>
@@ -210,7 +210,7 @@ int update_mysql_tokens(MYSQL mysql, struct node *xhash[], unsigned long uid){
  * insert email entry to queue table
  */
 
-void insert_2_queue(MYSQL mysql, struct session_data *sdata, struct __config cfg, int is_spam){
+void insert_2_queue(struct session_data *sdata, int is_spam){
    char buf[SMALLBUFSIZE];
    unsigned long now=0;
    time_t clock;
@@ -220,6 +220,6 @@ void insert_2_queue(MYSQL mysql, struct session_data *sdata, struct __config cfg
 
    snprintf(buf, SMALLBUFSIZE-1, "INSERT INTO %s (id, uid, is_spam, ts) VALUES('%s', %ld, %d, %ld)", SQL_QUEUE_TABLE, sdata->ttmpfile, sdata->uid, is_spam, now);
 
-   mysql_real_query(&mysql, buf, strlen(buf));
+   mysql_real_query(&(sdata->mysql), buf, strlen(buf));
 }
 

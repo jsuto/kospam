@@ -1,5 +1,5 @@
 /*
- * users.h, 2009.01.09, SJ
+ * users.h, 2009.01.20, SJ
  */
 
 #ifndef _USERS_H
@@ -11,12 +11,12 @@
 
 #ifdef USERS_IN_MYSQL
    #include <mysql.h>
-   struct ue get_user_from_email(MYSQL mysql, char *email);
+   struct ue get_user_from_email(struct session_data *sdata, char *email);
 #endif
 
 #ifdef USERS_IN_SQLITE3
    #include <sqlite3.h>
-   struct ue get_user_from_email(sqlite3 *db, char *email);
+   struct ue get_user_from_email(struct session_data *sdata, char *email);
 #endif
 
 #ifdef USERS_IN_LDAP

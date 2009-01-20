@@ -31,7 +31,7 @@ void init_my_hash(struct mydb_node *xhash[]){
 }
 
 
-int init_mydb(char *mydb_file, struct mydb_node *xhash[], struct session_data *sdata){
+int init_mydb(char *mydb_file, struct session_data *sdata){
    int i, n, fd, pos;
    unsigned char buf[N_SIZE*SEGMENT_SIZE];
    unsigned long x;
@@ -39,7 +39,7 @@ int init_mydb(char *mydb_file, struct mydb_node *xhash[], struct session_data *s
 
    pos = sdata->Nham = sdata->Nspam = 0;
 
-   init_my_hash(xhash);
+   init_my_hash(sdata->mhash);
 
    fd = open(mydb_file, O_RDONLY);
    if(fd == -1){
@@ -64,7 +64,7 @@ int init_mydb(char *mydb_file, struct mydb_node *xhash[], struct session_data *s
    while((n = read(fd, buf, N_SIZE*SEGMENT_SIZE))){
       for(i=0; i<n/N_SIZE; i++){
          memcpy(&e, &buf[N_SIZE*i], N_SIZE);
-         addmydb_node(xhash, e.key, e.nham, e.nspam, e.ts, pos);
+         addmydb_node(sdata->mhash, e.key, e.nham, e.nspam, e.ts, pos);
          pos++;
       }
    }

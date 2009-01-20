@@ -1,5 +1,5 @@
 /*
- * test.c, 2009.01.09, SJ
+ * test.c, 2009.01.20, SJ
  */
 
 #include <stdio.h>
@@ -12,11 +12,7 @@
 #include <clapf.h>
 
 
-#ifdef HAVE_MYSQL
-   MYSQL mysql;
-#endif
 #ifdef HAVE_SQLITE3
-   sqlite3 *db;
    int rc;
 #endif
 #ifdef HAVE_MYDB
@@ -75,10 +71,10 @@ int main(int argc, char **argv){
    gettimeofday(&tv_spam_start, &tz);
 
 #ifdef HAVE_MYSQL
-   mysql_init(&mysql);
-   if(mysql_real_connect(&mysql, cfg.mysqlhost, cfg.mysqluser, cfg.mysqlpwd, cfg.mysqldb, cfg.mysqlport, cfg.mysqlsocket, 0)){
-      spaminess = bayes_file(mysql, &state, &sdata, &cfg);
-      mysql_close(&mysql);
+   mysql_init(&(sdata.mysql));
+   if(mysql_real_connect(&(sdata.mysql), cfg.mysqlhost, cfg.mysqluser, cfg.mysqlpwd, cfg.mysqldb, cfg.mysqlport, cfg.mysqlsocket, 0)){
+      spaminess = bayes_file(&sdata, &state, &cfg);
+      mysql_close(&(sdata.mysql));
    }
    else {
       fprintf(stderr, "cannot connect to database\n");
@@ -86,26 +82,26 @@ int main(int argc, char **argv){
 #endif
 
 #ifdef HAVE_SQLITE3
-   rc = sqlite3_open(cfg.sqlite3, &db);
+   rc = sqlite3_open(cfg.sqlite3, &(sdata.db));
    if(rc){
-      fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(db));
+      fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(sdata.db));
    }
    else {
-      rc = sqlite3_exec(db, cfg.sqlite3_pragma, 0, 0, NULL);
+      rc = sqlite3_exec(sdata.db, cfg.sqlite3_pragma, 0, 0, NULL);
       if(rc != SQLITE_OK)
           fprintf(stderr, "error happened\n");
 
 
-      spaminess = bayes_file(db, &state, &sdata, &cfg);
+      spaminess = bayes_file(&sdata, &state, &cfg);
    }
-   sqlite3_close(db);
+   sqlite3_close(sdata.db);
 #endif
 
 #ifdef HAVE_MYDB
-   rc = init_mydb(cfg.mydbfile, sdata.mhash, &sdata);
+   rc = init_mydb(cfg.mydbfile, &sdata);
    fprintf(stderr, "using %s. %.0f, %0.f ...\n", cfg.mydbfile, sdata.Nham, sdata.Nspam);
    if(rc == 1){
-      spaminess = bayes_file(&state, &sdata, &cfg);
+      spaminess = bayes_file(&sdata, &state, &cfg);
    }
    close_mydb(sdata.mhash);
 #endif

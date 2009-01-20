@@ -1,5 +1,5 @@
 /*
- * mydb.h, 2008.12.12, SJ
+ * mydb.h, 2009.01.20, SJ
  */
 
 #ifndef _MYDB_H
@@ -9,7 +9,7 @@
 #include "parser.h"
 
 void init_my_hash(struct mydb_node *xhash[]);
-int init_mydb(char *mydb_file, struct mydb_node *xhash[], struct session_data *sdata);
+int init_mydb(char *mydb_file, struct session_data *sdata);
 void close_mydb(struct mydb_node *xhash[]);
 inline unsigned long long mydb_hash(unsigned long long key);
 struct mydb_node *makenewmydb_node(struct mydb_node *xhash[], unsigned long long key, unsigned int nham, unsigned int nspam, unsigned long ts, unsigned int pos);

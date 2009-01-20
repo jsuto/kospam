@@ -1,5 +1,5 @@
 /*
- * policy.h, 2008.11.28, SJ
+ * policy.h, 2009.01.20, SJ
  */
 
 #ifndef _POLICY_H
@@ -9,7 +9,7 @@
 
 #ifdef USERS_IN_MYSQL
    #include <mysql.h>
-   int get_policy(MYSQL mysql, struct __config *cfg, struct __config *my_cfg, unsigned int policy_group, int num_of_rcpt_to);
+   int get_policy(struct session_data *sdata, struct __config *cfg, struct __config *my_cfg, unsigned int policy_group);
 #endif
 
 #ifdef USERS_IN_LDAP

@@ -254,7 +254,31 @@ int get_user_from_email(struct session_data *sdata, char *email, struct __config
 
 
 int is_sender_on_white_list(struct session_data *sdata, char *email, struct __config *cfg){
-   return 0;
+   int i, rc, ret=0;
+   char filter[SMALLBUFSIZE], *attrs[] = { NULL }, **vals;
+   LDAPMessage *res, *e;
+
+   if(sdata->ldap == NULL) return ret;
+
+   snprintf(filter, SMALLBUFSIZE-1, "uid=%ld", sdata->uid);
+
+   rc = ldap_search_s(sdata->ldap, cfg->ldap_base, LDAP_SCOPE, filter, attrs, 0, &res);
+   if(rc) return ret;
+
+   e = ldap_first_entry(sdata->ldap, res);
+
+   if(e){
+      vals = ldap_get_values(sdata->ldap, e, "filterSender");
+      for(i=0; i<ldap_count_values(vals); i++){
+         ret = whitelist_check((char *)vals[i], sdata->ttmpfile, email, cfg);
+         if(ret == 1) break;
+      }
+      ldap_value_free(vals);
+   }
+
+   ldap_msgfree(res);
+
+   return ret;
 }
 
 #endif

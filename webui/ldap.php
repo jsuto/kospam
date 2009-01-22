@@ -275,9 +275,11 @@ function add_user_entry($uid){
    $entry["sn"] = "x";
    $entry["mail"] = $_POST['email'];
    $entry["uid"] = $uid;
-   $entry["filtersender"] = $b;
+   if(count($b) > 0) $entry["filtersender"] = $b;
+   else $entry["filtersender"] = "";
    $entry["mailMessageStore"] = "";
-   $entry["mailAlternateAddress"] = $c;
+   if(count($c) > 0) $entry["mailAlternateAddress"] = $c;
+   else $entry["mailAlternateAddress"] = "";
    $entry["policyGroupId"] = $_POST['policy_group'];
 
 

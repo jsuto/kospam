@@ -4,6 +4,12 @@
 
 Extensive code refactoring in session.c
 
+Added whitelist support for LDAP userdb
+(users.c)
+
+Fixed a bug adding users to LDAP database in the webui
+(webui/ldap.php)
+
 2009.01.20, SJ
 
 Continued extensive code refactoring.

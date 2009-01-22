@@ -584,8 +584,8 @@ void init_session_data(struct session_data *sdata){
                         log_ham_spam_per_email(sdata.ttmpfile, email, 1);
                      }
                      else {
-                        snprintf(spaminessbuf, MAXBUFSIZE-1, "%s%.4f\r\n%s%s\r\n%s%ld ms\r\n%s%s",
-                               cfg->clapf_header_field, spaminess, cfg->clapf_header_field, sdata.ttmpfile, cfg->clapf_header_field, tvdiff(tv_spam_stop, tv_spam_start)/1000, trainbuf, whitelistbuf);
+                        snprintf(spaminessbuf, MAXBUFSIZE-1, "%s%.4f\r\n%s%s\r\n%s%ld ms\r\n%s%s%s",
+                               cfg->clapf_header_field, spaminess, cfg->clapf_header_field, sdata.ttmpfile, cfg->clapf_header_field, tvdiff(tv_spam_stop, tv_spam_start)/1000, reason, trainbuf, whitelistbuf);
 
                         log_ham_spam_per_email(sdata.ttmpfile, email, 0);
                      }

@@ -670,7 +670,7 @@ DECOMPOSE:
 
                addnode(state->token_hash, muf, DEFAULT_SPAMICITY, 0);
 
-               append_url(state, muf);
+               append_list(&(state->urls), muf);
 
                state->n_token++;
             }

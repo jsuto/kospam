@@ -1,5 +1,5 @@
 /*
- * users.h, 2009.01.20, SJ
+ * users.h, 2009.01.22, SJ
  */
 
 #ifndef _USERS_H
@@ -8,16 +8,6 @@
 #include <clapf.h>
 #include "defs.h"
 
-
-#ifdef USERS_IN_MYSQL
-   #include <mysql.h>
-   struct ue get_user_from_email(struct session_data *sdata, char *email);
-#endif
-
-#ifdef USERS_IN_SQLITE3
-   #include <sqlite3.h>
-   struct ue get_user_from_email(struct session_data *sdata, char *email);
-#endif
 
 #ifdef USERS_IN_LDAP
    #include <ldap.h>
@@ -35,8 +25,9 @@
    int ldap_unbind_s(LDAP *ld);
 
    LDAP *do_bind_ldap(char *ldap_host, char *binddn, char *bindpw, int usetls);
-   struct ue get_user_from_email(LDAP *ld, char *email, struct __config *cfg);
 #endif
+
+int get_user_from_email(struct session_data *sdata, char *email, struct __config *cfg);
 
 #endif /* _USERS_H */
 

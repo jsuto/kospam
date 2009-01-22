@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2009.01.20, SJ
+ * spamdrop.c, 2009.01.22, SJ
  */
 
 #include <stdio.h>
@@ -23,13 +23,14 @@ extern int optind;
 #ifdef HAVE_MYSQL
    MYSQL_RES *res;
    MYSQL_ROW row;
-   struct ue UE;
 #endif
 #ifdef HAVE_SQLITE3
    sqlite3_stmt *pStmt;
    const char **ppzTail=NULL;
 #endif
-
+#ifdef HAVE_MYDB
+   #include "mydb.h"
+#endif
 
 /* open database connection */
 
@@ -216,8 +217,8 @@ int main(int argc, char **argv, char **envp){
    sdata.num_of_rcpt_to = 1;
    sdata.uid = getuid();
    sdata.Nham = sdata.Nspam = 0;
-   if(from) snprintf(sdata.mailfrom, MAXBUFSIZE-1, "%s", from);
-   memset(sdata.rcptto[0], 0, MAXBUFSIZE);
+   if(from) snprintf(sdata.mailfrom, SMALLBUFSIZE-1, "%s", from);
+   memset(sdata.rcptto[0], 0, SMALLBUFSIZE);
    memset(whitelistbuf, 0, SMALLBUFSIZE);
    memset(sdata.ttmpfile, 0, SMALLBUFSIZE);
    make_rnd_string(&(sdata.ttmpfile[0]));
@@ -414,10 +415,6 @@ int main(int argc, char **argv, char **envp){
       if(sdata.need_signo_check == 1){
          if(!state.found_our_signo){
             syslog(LOG_PRIORITY, "%s: looks like a bounce, but our signo is missing", sdata.ttmpfile);
-            if(spaminess < cfg.spam_overall_limit){
-               spaminess = 0.99;
-               syslog(LOG_PRIORITY, "%s: raising spamicity", sdata.ttmpfile);
-            }
          }
          else {
             syslog(LOG_PRIORITY, "found our signo, this should be a real bounce message");
@@ -488,7 +485,7 @@ CLOSE_DB:
 #endif
 
    /* free structures */
-   free_url_list(state.urls);
+   free_list(state.urls);
    clearhash(state.token_hash, 0);
 
    gettimeofday(&tv_stop, &tz);

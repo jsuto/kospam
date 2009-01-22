@@ -1,5 +1,5 @@
 /*
- * users.c, 2009.01.20, SJ
+ * users.c, 2009.01.22, SJ
  */
 
 #include <stdio.h>
@@ -28,13 +28,14 @@
  */
 
 #ifdef USERS_IN_MYSQL
-struct ue get_user_from_email(struct session_data *sdata, char *email){
+int get_user_from_email(struct session_data *sdata, char *email, struct __config *cfg){
    MYSQL_RES *res;
    MYSQL_ROW row;
-   struct ue UE;
    char *p, buf[MAXBUFSIZE];
 
-   memset((char *)&UE, 0, sizeof(UE));
+   sdata->uid = 0;
+   sdata->policy_group = 0;
+   memset(sdata->name, 0, SMALLBUFSIZE);
 
       if((p = strcasestr(email, "+spam"))){
          *p = '\0';
@@ -53,28 +54,69 @@ struct ue get_user_from_email(struct session_data *sdata, char *email){
          if(res != NULL){
             row = mysql_fetch_row(res);
             if(row){
-               UE.uid = atol(row[0]);
-               strncpy(UE.name, (char *)row[1], SMALLBUFSIZE-1);
-               UE.policy_group = atoi(row[2]);
+               sdata->uid = atol(row[0]);
+               strncpy(sdata->name, (char *)row[1], SMALLBUFSIZE-1);
+               sdata->policy_group = atoi(row[2]);
             }               
             mysql_free_result(res);
          }
       }
 
 
-   return UE;
+   return 1;
 }
+
+/*
+ * check whether the email address is on the white list
+ */
+
+int is_sender_on_white_list(struct session_data *sdata, char *email, struct __config *cfg){
+   MYSQL_RES *res;
+   MYSQL_ROW row;
+   char buf[SMALLBUFSIZE];
+   int r=0;
+
+#ifndef HAVE_WHITELIST
+   return 0;
+#endif
+
+   if(!email) return 0;
+
+   snprintf(buf, SMALLBUFSIZE-1, "SELECT whitelist FROM %s WHERE uid=0 OR uid=%ld", SQL_WHITE_LIST, sdata->uid);
+
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sql: %s", sdata->ttmpfile, buf);
+
+   if(mysql_real_query(&(sdata->mysql), buf, strlen(buf)) == 0){
+      res = mysql_store_result(&(sdata->mysql));
+      if(res != NULL){
+         while((row = mysql_fetch_row(res))){
+            if(row[0]){
+               if(whitelist_check((char *)row[0], sdata->ttmpfile, email, cfg) == 1){
+                  r = 1;
+                  break;
+               }
+            }
+         }
+         mysql_free_result(res);
+      }
+   }
+
+   return r;
+}
+
 #endif
 
 
 #ifdef USERS_IN_SQLITE3
-struct ue get_user_from_email(struct session_data *sdata, char *email){
+int get_user_from_email(struct session_data *sdata, char *email, struct __config *cfg){
    sqlite3_stmt *pStmt;
    const char **pzTail=NULL;
    struct ue UE;
    char *p, buf[MAXBUFSIZE];
 
-   memset((char *)&UE, 0, sizeof(UE));
+   sdata->uid = 0;
+   sdata->policy_group = 0;
+   memset(sdata->name, 0, SMALLBUFSIZE);
 
    if((p = strcasestr(email, "+spam"))){
       *p = '\0';
@@ -90,15 +132,44 @@ struct ue get_user_from_email(struct session_data *sdata, char *email){
 
    if(sqlite3_prepare_v2(sdata->db, buf, -1, &pStmt, pzTail) == SQLITE_OK){
       if(sqlite3_step(pStmt) == SQLITE_ROW){
-         UE.uid = sqlite3_column_int(pStmt, 0);
-         strncpy(UE.name, (char *)sqlite3_column_blob(pStmt, 1), SMALLBUFSIZE-1);
+         //sdata->uid = sqlite3_column_int(pStmt, 0);
+         strncpy(sdata->name, (char *)sqlite3_column_blob(pStmt, 1), SMALLBUFSIZE-1);
       }
    }
    sqlite3_finalize(pStmt);
 
-
-   return UE;
+   return 1;
 }
+
+int is_sender_on_white_list(struct session_data *sdata, char *email, struct __config *cfg){
+   sqlite3_stmt *pStmt;
+   const char **pzTail=NULL;
+   char buf[SMALLBUFSIZE];
+   int r=0;
+
+#ifndef HAVE_WHITELIST
+   return 0;
+#endif
+
+   if(!email) return 0;
+
+   snprintf(buf, SMALLBUFSIZE-1, "SELECT whitelist FROM %s WHERE uid=0 OR uid=%ld", SQL_WHITE_LIST, sdata->uid);
+
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sql: %s", sdata->ttmpfile, buf);
+
+   if(sqlite3_prepare_v2(sdata->db, buf, -1, &pStmt, pzTail) == SQLITE_OK){
+      while(sqlite3_step(pStmt) == SQLITE_ROW){
+         if(whitelist_check((char *)sqlite3_column_blob(pStmt, 0), sdata->ttmpfile, email, cfg) == 1){
+            r = 1;
+            break;
+         }
+      }
+   }
+   sqlite3_finalize(pStmt);
+
+   return r;
+}
+
 #endif
 
 
@@ -144,40 +215,46 @@ LDAP *do_bind_ldap(char *ldap_host, char *binddn, char *bindpw, int usetls){
  * ask a specific entry about the user from LDAP directory
  */
 
-struct ue get_user_from_email(LDAP *ld, char *email, struct __config *cfg){
+int get_user_from_email(struct session_data *sdata, char *email, struct __config *cfg){
    int rc;
    char filter[SMALLBUFSIZE], *attrs[] = { NULL }, **vals;
    LDAPMessage *res, *e;
-   struct ue UE;
 
-   memset((char *)&UE, 0, sizeof(UE));
+   sdata->uid = 0;
+   sdata->policy_group = 0;
+   memset(sdata->name, 0, SMALLBUFSIZE);
 
-   if(ld == NULL) return UE;
+   if(sdata->ldap == NULL) return 0;
 
    snprintf(filter, SMALLBUFSIZE-1, "(|(%s=%s)(%s=%s))", cfg->email_address_attribute_name, email, cfg->email_alias_attribute_name, email);
 
-   rc = ldap_search_s(ld, cfg->ldap_base, LDAP_SCOPE, filter, attrs, 0, &res);
-   if(rc) return UE;
+   rc = ldap_search_s(sdata->ldap, cfg->ldap_base, LDAP_SCOPE, filter, attrs, 0, &res);
+   if(rc) return 0;
 
-   e = ldap_first_entry(ld, res);
+   e = ldap_first_entry(sdata->ldap, res);
 
    if(e){
-      vals = ldap_get_values(ld, e, "uid");
-      if(ldap_count_values(vals) > 0) UE.uid = atol(vals[0]);
+      vals = ldap_get_values(sdata->ldap, e, "uid");
+      if(ldap_count_values(vals) > 0) sdata->uid = atol(vals[0]);
       ldap_value_free(vals);
 
-      vals = ldap_get_values(ld, e, "cn");
-      if(ldap_count_values(vals) > 0) strncpy(UE.name, vals[0], SMALLBUFSIZE-1);
+      vals = ldap_get_values(sdata->ldap, e, "cn");
+      if(ldap_count_values(vals) > 0) strncpy(sdata->name, vals[0], SMALLBUFSIZE-1);
       ldap_value_free(vals);
 
-      vals = ldap_get_values(ld, e, "policyGroupId");
-      if(ldap_count_values(vals) > 0) UE.policy_group = atoi(vals[0]);
+      vals = ldap_get_values(sdata->ldap, e, "policyGroupId");
+      if(ldap_count_values(vals) > 0) sdata->policy_group = atoi(vals[0]);
       ldap_value_free(vals);
    }
 
    ldap_msgfree(res);
 
-   return UE;
+   return 1;
+}
+
+
+int is_sender_on_white_list(struct session_data *sdata, char *email, struct __config *cfg){
+   return 0;
 }
 
 #endif

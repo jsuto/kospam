@@ -6315,6 +6315,7 @@ fi
 
 if test "$have_libclamav" = "yes" || test "$have_clamd" = "yes" || test "$have_avg" = "yes" || test "$have_avast" = "yes" || test "$have_kav" = "yes"  || test "$have_drweb" = "yes" ; then
    defs="$defs -DHAVE_ANTIVIRUS"
+   objs="$objs avir.o"
 fi
 
 
@@ -6364,7 +6365,7 @@ fi
 if test "$have_antispam" = "yes"; then
    echo "antispam support: yes"
    defs="$defs -DHAVE_ANTISPAM"
-   objs="$objs hash.o hash2.o chi.o bayes.o score.o buffer.o"
+   objs="$objs hash2.o bayes.o buffer.o spam.o"
 fi
 
 
@@ -6506,7 +6507,7 @@ echo; echo
 
 CFLAGS="$static -O2 -Wall -g"
 LIBS="$libclamav $antispam_libs $gsl_libs $sqlite3_libs"
-OBJS="misc.o cfg.o smtp.o sig.o decoder.o list.o parser.o session.o users.o templates.o $objs"
+OBJS="misc.o cfg.o smtp.o sig.o decoder.o list.o parser.o session.o users.o templates.o hash.o score.o chi.o $objs"
 
 ac_config_files="$ac_config_files Makefile"
 

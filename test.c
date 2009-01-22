@@ -16,6 +16,7 @@
    int rc;
 #endif
 #ifdef HAVE_MYDB
+   #include "mydb.h"
    int rc;
 #endif
 
@@ -59,7 +60,7 @@ int main(int argc, char **argv){
 
    sdata.uid = 0;
    sdata.num_of_rcpt_to = -1;
-   memset(sdata.rcptto[0], 0, MAXBUFSIZE);
+   memset(sdata.rcptto[0], 0, SMALLBUFSIZE);
    snprintf(sdata.ttmpfile, SMALLBUFSIZE-1, "%s", argv[2]);
    state = parse_message(argv[2], &sdata, &cfg);
 
@@ -116,7 +117,7 @@ int main(int argc, char **argv){
    fprintf(stderr, "lang detected: %s\n", check_lang(state.token_hash));
 #endif
 
-   free_url_list(state.urls);
+   free_list(state.urls);
    clearhash(state.token_hash, 0);
 
    gettimeofday(&tv_spam_stop, &tz);

@@ -1,5 +1,5 @@
 /*
- * list.c, 2008.05.26, SJ
+ * list.c, 2009.01.22, SJ
  */
 
 #include <stdio.h>
@@ -12,13 +12,13 @@
 
 
 /*
- * append url to list if we have to
+ * append something to list if we have to
  */
 
-int append_url(struct _state *state, char *p){
+int append_list(struct url **urls, char *p){
    struct url *q, *t, *u=NULL;
 
-   q = state->urls;
+   q = *urls;
 
    while(q){
       if(strcmp(q->url_str, p) == 0)
@@ -28,10 +28,10 @@ int append_url(struct _state *state, char *p){
       q = q->r;
    }
 
-   t = new_url(p);
+   t = new_list(p);
    if(t){
-      if(state->urls == NULL)
-         state->urls = t;
+      if(*urls == NULL)
+         *urls = t;
       else if(u)
          u->r = t;
 
@@ -42,11 +42,12 @@ int append_url(struct _state *state, char *p){
 }
 
 
+
 /*
  * create a new url structure
  */
 
-struct url *new_url(char *s){
+struct url *new_list(char *s){
    struct url *h=NULL;
 
    if((h = malloc(sizeof(struct url))) == NULL)
@@ -63,7 +64,7 @@ struct url *new_url(char *s){
  * free url list
  */
 
-void free_url_list(struct url *u){
+void free_list(struct url *u){
    struct url *p, *q;
 
    p = u;
@@ -77,4 +78,6 @@ void free_url_list(struct url *u){
       p = q;
    }
 }
+
+
 

@@ -56,7 +56,7 @@ int main(int argc, char **argv){
                unlink(ifile);
             }
 
-            free_url_list(state.urls);
+            free_list(state.urls);
             clearhash(state.token_hash, 1);
          }
 
@@ -78,7 +78,7 @@ int main(int argc, char **argv){
          unlink(ifile);
       }
 
-      free_url_list(state.urls);
+      free_list(state.urls);
       clearhash(state.token_hash, 1);
    }
 

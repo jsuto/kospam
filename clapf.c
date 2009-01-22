@@ -1,5 +1,5 @@
 /*
- * clapf.c, 2008.09.29, SJ
+ * clapf.c, 2009.01.21, SJ
  */
 
 #include <stdio.h>
@@ -20,6 +20,7 @@
 #include <locale.h>
 #include <errno.h>
 #include "misc.h"
+#include "list.h"
 #include "sig.h"
 #include "errmsg.h"
 #include "session.h"
@@ -32,6 +33,8 @@ int sd;
 int nconn = 0;
 char *configfile = CONFIG_FILE;
 struct __config cfg;
+struct url *blackhole = NULL;
+
 
 void clean_exit();
 void fatal(char *s);
@@ -95,6 +98,8 @@ void clean_exit(){
       cl_free(engine);
 #endif
 
+   free_list(blackhole);
+
    syslog(LOG_PRIORITY, "%s has been terminated", PROGNAME);
 
    unlink(cfg.pidfile);
@@ -118,6 +123,8 @@ void fatal(char *s){
  */
 
 void reload_config(){
+   char *p, puf[SMALLBUFSIZE];
+
    cfg = read_config(configfile);
 
    if(chdir(cfg.workdir))
@@ -145,6 +152,18 @@ void reload_config(){
 #endif
 
    setlocale(LC_ALL, cfg.locale);
+
+   /* (re)create blackhole list */
+
+   free_list(blackhole);
+   blackhole = NULL;
+
+   p = cfg.blackhole_email_list;
+   do {
+      p = split(p, ' ', puf, SMALLBUFSIZE-1);
+      if(strlen(puf) > 3) append_list(&blackhole, puf);
+   } while(p);
+
 
    syslog(LOG_PRIORITY, "reloaded config: %s", configfile);
 }
@@ -283,9 +302,9 @@ int main(int argc, char **argv){
            /* handle session */
 
            #ifdef HAVE_LIBCLAMAV
-              postfix_to_clapf(new_sd, cfg, limits, engine);
+              postfix_to_clapf(new_sd, blackhole, limits, engine, &cfg);
            #else
-              postfix_to_clapf(new_sd, cfg);
+              postfix_to_clapf(new_sd, blackhole, &cfg);
            #endif
 
        }

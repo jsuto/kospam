@@ -1,5 +1,5 @@
 /*
- * defs.h, 2009.01.15, SJ
+ * defs.h, 2009.01.22, SJ
  */
 
 #ifndef _DEFS_H
@@ -10,6 +10,9 @@
 #endif
 #ifdef NEED_SQLITE3
   #include <sqlite3.h>
+#endif
+#ifdef NEED_LDAP
+  #include <ldap.h>
 #endif
 
 #include "config.h"
@@ -125,15 +128,20 @@ struct _state {
 
 struct session_data {
    char ttmpfile[SMALLBUFSIZE], deliveryinfo[SMALLBUFSIZE];
-   char mailfrom[MAXBUFSIZE], rcptto[MAX_RCPT_TO][MAXBUFSIZE], client_addr[IPLEN], name[SMALLBUFSIZE];
+   char mailfrom[SMALLBUFSIZE], rcptto[MAX_RCPT_TO][SMALLBUFSIZE], client_addr[IPLEN], name[SMALLBUFSIZE];
+   char blackhole;
    unsigned long uid;
    int fd, tot_len, num_of_rcpt_to, skip_id_check, need_signo_check, unknown_client;
+   int policy_group;
    float Nham, Nspam;
 #ifdef NEED_MYSQL
    MYSQL mysql;
 #endif
 #ifdef NEED_SQLITE3
    sqlite3 *db;
+#endif
+#ifdef NEED_LDAP
+   LDAP *ldap;
 #endif
 #ifdef HAVE_MYDB
    struct mydb_node *mhash[MAX_MYDB_HASH];
@@ -144,13 +152,6 @@ struct session_data {
 struct te {
    unsigned int nham;
    unsigned int nspam;
-};
-
-
-struct ue {
-   unsigned long uid;
-   unsigned int policy_group;
-   char name[SMALLBUFSIZE];
 };
 
 

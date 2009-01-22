@@ -1,5 +1,5 @@
 /*
- * messages.h, 2008.10.20, SJ
+ * messages.h, 2009.01.22, SJ
  */
 
 #ifndef _MESSAGES_H
@@ -111,7 +111,7 @@
 
 #define MSG_STRANGE_LANGUAGE "message has strange language characters"
 #define MSG_TOO_MUCH_SPAM_IN_TOP15 "message has too many spammy tokens in the top15"
-#define MSG_BLACKHOLED "message sender is in our blackhole"
+#define MSG_BLACKHOLED "sender trapped in blackhole"
 #define MSG_CAUGHT_BY_SURBL "message reached surbl threshold"
 #define MSG_TEXT_AND_BASE64 "messages is text but base64 encoded"
 #define MSG_EMBED_IMAGE "message has embedded image"

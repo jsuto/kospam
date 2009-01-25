@@ -1,5 +1,5 @@
 /*
- * config.h, 2009.01.16, SJ
+ * config.h, 2009.01.22, SJ
  */
 
 #ifndef _CONFIG_H

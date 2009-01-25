@@ -876,7 +876,7 @@ int whitelist_check(char *whitelist, char *tmpfile, char *email, struct __config
 
       if(strlen(w) > 2){
 
-         if(w[strlen(w)-1] == '$' && strlen(email) > strlen(w)){
+         if(w[strlen(w)-1] == '$'){
             q = email + strlen(email) - strlen(w) + 1;
             if(strncasecmp(q, w, strlen(w)-1) == 0)
                return 1;

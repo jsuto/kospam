@@ -1,5 +1,5 @@
 /*
- * mysql.c, 2009.01.20, SJ
+ * mysql.c, 2009.01.25, SJ
  */
 
 #include <stdio.h>
@@ -179,11 +179,11 @@ int update_mysql_tokens(MYSQL mysql, struct node *xhash[], unsigned long uid){
       while(q != NULL){
          p = q;
 
-         snprintf(s, SMALLBUFSIZE-1, ",%llu", p->key);
-
-         buffer_cat(query, s);
-
-         n++;
+         if(p->spaminess != DEFAULT_SPAMICITY){
+            snprintf(s, SMALLBUFSIZE-1, ",%llu", p->key);
+            buffer_cat(query, s);
+            n++;
+         }
 
          q = q->r;
       }

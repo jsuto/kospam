@@ -1,5 +1,5 @@
 /*
- * session.c, 2009.01.22, SJ
+ * session.c, 2009.01.25, SJ
  */
 
 #include <stdio.h>
@@ -91,10 +91,10 @@ void init_session_data(struct session_data *sdata){
    #ifdef HAVE_ANTISPAM
       char spaminessbuf[MAXBUFSIZE], reason[SMALLBUFSIZE], trainbuf[SMALLBUFSIZE], whitelistbuf[SMALLBUFSIZE];
       struct _state sstate;
-      int train_mode=T_TOE;
+      int train_mode=T_TOE, utokens;
       spaminess=DEFAULT_SPAMICITY;
       struct timezone tz;
-      struct timeval tv_spam_start, tv_spam_stop;
+      struct timeval tv_spam_start, tv_spam_stop, tv1, tv2;
    #endif
 
 
@@ -556,21 +556,29 @@ void init_session_data(struct session_data *sdata){
 
                      } 
 
-                  END_OF_TRAINING:
 
                      /* update token timestamps */
 
+                     gettimeofday(&tv1, &tz);
                   #ifdef HAVE_MYSQL
-                     update_mysql_tokens(sdata.mysql, sstate.token_hash, sdata.uid);
+                     utokens = update_mysql_tokens(sdata.mysql, sstate.token_hash, sdata.uid);
                   #endif
                   #ifdef HAVE_SQLITE3
-                     update_sqlite3_tokens(sdata.db, sstate.token_hash);
+                     utokens = update_sqlite3_tokens(sdata.db, sstate.token_hash);
                   #endif
+                     gettimeofday(&tv2, &tz);
+                     if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: updated %d/%ld tokens: %ld [ms]", sdata.ttmpfile, utokens, sstate.n_token, tvdiff(tv2, tv1)/1000);
+
+
+                  END_OF_TRAINING:
 
                      /* save email to queue */
 
                   #ifndef OUTGOING_SMTP
+                     gettimeofday(&tv1, &tz);
                      save_email_to_queue(&sdata, spaminess, cfg);
+                     gettimeofday(&tv2, &tz);
+                     if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: saved to queue: %ld [ms]", sdata.ttmpfile, tvdiff(tv2, tv1)/1000);
                   #endif
 
                      gettimeofday(&tv_spam_stop, &tz);

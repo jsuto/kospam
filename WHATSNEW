@@ -9,6 +9,7 @@ Template based virus notifications.
 
 Added training support to the spam quarantine.
 
+Redesigned token query/update.
 
 0.3.31:
 -------

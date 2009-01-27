@@ -1,14 +1,15 @@
-1. Always backup your current clapf.conf file
-
+1. Always backup your current clapf.conf file and the clapf database.
 
 2. Do a "make install" to replace your old binaries, and other stuff.
-
 
 3. If you already have a clapf.conf file "make install" will not
 update it, you should review the newer config file and modify it
 according to your settings.
 
+4. Create the t_policy table, then update the user table according 
+to the new db.sql schema:
 
-4. Update the t_white_list and user tables, then create the t_policy
-table according to the new db.sql schema.
+alter table user add column policy_group int(4) default 0;
+alter table user drop column action;
+alter table user drop column pagelen;
 

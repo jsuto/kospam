@@ -36,6 +36,7 @@ AC_SUBST(spamsum_libs)
 AC_SUBST(spamsum)
 AC_SUBST(spamsum_install)
 AC_SUBST(qcache)
+AC_SUBST(libclamav_extra_libs)
 
 
 have_libclamav="no"
@@ -550,6 +551,7 @@ if test "$have_libclamav" = "yes"; then
    echo "libclamav support: yes"
    libclamav="-lclamav `clamav-config --libs` "
    defs="$defs -DHAVE_LIBCLAMAV"
+   libclamav_extra_libs='$(CLAMAV_EXTRA_LIBS)'
 fi
 
 if test "$have_clamd" = "yes"; then

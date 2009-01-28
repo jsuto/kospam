@@ -1,5 +1,5 @@
 /*
- * users.c, 2009.01.22, SJ
+ * users.c, 2009.01.28, SJ
  */
 
 #include <stdio.h>
@@ -111,7 +111,6 @@ int is_sender_on_white_list(struct session_data *sdata, char *email, struct __co
 int get_user_from_email(struct session_data *sdata, char *email, struct __config *cfg){
    sqlite3_stmt *pStmt;
    const char **pzTail=NULL;
-   struct ue UE;
    char *p, buf[MAXBUFSIZE];
 
    sdata->uid = 0;

@@ -51,13 +51,12 @@ config.php:
 	-e 's%$$queue_directory = .*%$$queue_directory = "$(localstatedir)/lib/clapf/queue";%' <$(srcdir)/webui/config.in.php >$(srcdir)/webui/$@
 
 clapf: % : %.o
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ -lclapf $(LIBS) $(LDAP_LIBS) $(LIBDIR) @LDFLAGS@
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ -lclapf $(LIBS) $(LDAP_LIBS) $(LIBDIR) @LDFLAGS@ @libclamav_extra_libs@
 
 clapf-lib:	$(OBJS) $(STORE_OBJ) $(MYSQL_OBJS)
 	ar cr libclapf.a $(OBJS) $(MYSQL_OBJS)
 	ranlib libclapf.a
 	$(CC) -shared -Wl,-soname,libclapf.so.$(CLAPF_VERSION) -o libclapf.so.$(LIBCLAPF_VERSION) $(OBJS) $(MYSQL_OBJS) $(LIBS) $(LDAP_LIBS) @LDFLAGS@
-	ldconfig -n .
 	ln -sf libclapf.so.$(CLAPF_VERSION) libclapf.so
 
 parsembox: % : %.o misc.o decoder.o list.o parser.o cfg.o hash.o score.o chi.o

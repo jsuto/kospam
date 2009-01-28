@@ -640,6 +640,7 @@ LIBOBJS
 DATADIR
 CFGDIR
 MYSQL_CONFIG
+libclamav_extra_libs
 qcache
 spamsum_install
 spamsum
@@ -3846,6 +3847,7 @@ done
 
 
 
+
 have_libclamav="no"
 have_clamd="no"
 have_avg="no"
@@ -6329,6 +6331,7 @@ if test "$have_libclamav" = "yes"; then
    echo "libclamav support: yes"
    libclamav="-lclamav `clamav-config --libs` "
    defs="$defs -DHAVE_LIBCLAMAV"
+   libclamav_extra_libs='$(CLAMAV_EXTRA_LIBS)'
 fi
 
 if test "$have_clamd" = "yes"; then

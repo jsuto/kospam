@@ -1,3 +1,14 @@
+0.4.1-rc1:
+
+2009.01.28, SJ
+
+Removed the unnecessary reference to 'UE' from user.c
+causing compilation problem if specified --userdb=sqlite3
+
+(users.c)
+
+
+
 0.4.0:
 
 2009.01.24, SJ
@@ -75,6 +86,8 @@ Simplified AV-interfaces.
 
 Added a Hungarian language virus notification template.
 (templates/template.virus-hu)
+
+
 
 0.4.0-rc2:
 

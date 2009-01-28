@@ -6,6 +6,8 @@ include_once("header.php");
 $username = $_SERVER['REMOTE_USER'];
 if($username == "") nice_error($err_not_authenticated);
 
+if($backend != "mysql") nice_error($err_this_feature_is_not_available);
+
 if(!mysql_connect($host, $u, $p)) nice_error($err_connect_db);
 mysql_select_db($db) or nice_error($err_connect_db);
 
@@ -15,8 +17,6 @@ $nham = 0;
 $nspam = 0;
 
 if(isset($_GET['timespan'])) $timespan = $_GET['timespan'];
-
-if($backend != "mysql") nice_error($err_this_feature_is_not_available);
 
 ?>
 

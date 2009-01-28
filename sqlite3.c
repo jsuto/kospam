@@ -1,5 +1,5 @@
 /*
- * sqlite3.c, 2009.01.20, SJ
+ * sqlite3.c, 2009.01.28, SJ
  */
 
 #include <stdio.h>
@@ -96,7 +96,7 @@ int update_sqlite3_tokens(sqlite3 *db, struct node *xhash[]){
    time(&cclock);
    now = cclock;
 
-   snprintf(buf, SMALLBUFSIZE-1, "UPDATE %s SET timestamp=%ld WHERE token in (", SQL_TOKEN_TABLE, now);
+   snprintf(buf, SMALLBUFSIZE-1, "UPDATE %s SET timestamp=%ld WHERE token in (0", SQL_TOKEN_TABLE, now);
 
    buffer_cat(query, buf);
 
@@ -104,11 +104,11 @@ int update_sqlite3_tokens(sqlite3 *db, struct node *xhash[]){
    for(i=0; i<MAXHASH; i++){
       q = xhash[i];
       while(q != NULL){
-         snprintf(buf, SMALLBUFSIZE-1, ",%llu", q->key);
-
-         buffer_cat(query, buf);
-
-         n++;
+         if(q->spaminess != DEFAULT_SPAMICITY){
+            snprintf(buf, SMALLBUFSIZE-1, ",%llu", q->key);
+            buffer_cat(query, buf);
+            n++;
+         }
 
          q = q->r;
       }

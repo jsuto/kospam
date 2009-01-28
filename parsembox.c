@@ -57,7 +57,7 @@ int main(int argc, char **argv){
             }
 
             free_list(state.urls);
-            clearhash(state.token_hash, 1);
+            clearhash(state.token_hash, 2);
          }
 
          init_state(&state);
@@ -79,7 +79,7 @@ int main(int argc, char **argv){
       }
 
       free_list(state.urls);
-      clearhash(state.token_hash, 1);
+      clearhash(state.token_hash, 2);
    }
 
    fclose(F);

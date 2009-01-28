@@ -38,6 +38,7 @@ void clearhash(struct node *xhash[], int print){
          p = q;
 
          if(print == 1) printf("%s (%llu) = %.4f\n", p->str, p->key, p->spaminess);
+         if(print == 2) printf("%s\n", p->str);
 
          q = q->r;
          if(p)

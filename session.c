@@ -1,5 +1,5 @@
 /*
- * session.c, 2009.01.25, SJ
+ * session.c, 2009.01.29, SJ
  */
 
 #include <stdio.h>
@@ -473,6 +473,17 @@ void init_session_data(struct session_data *sdata){
                      /* get user from 'MAIL FROM:', 2008.10.25, SJ */
 
                      get_user_from_email(&sdata, email2, cfg);
+
+                     /*
+                        If not found, then try to get it from the RCPT TO address.
+
+                        This may happen if your email address is xy@mail.domain.com,
+                        but xy@domain.com is set in your email client application as
+                        your email address.
+                        In this case send training emails to xy+spam@mail.domain.com
+
+                      */
+                     if(sdata.name[0] == 0) get_user_from_email(&sdata, email, cfg);
 
                      do_training(&sdata, email, &acceptbuf[0], &my_cfg);
                      goto SEND_RESULT;

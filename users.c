@@ -1,5 +1,5 @@
 /*
- * users.c, 2009.01.28, SJ
+ * users.c, 2009.01.29, SJ
  */
 
 #include <stdio.h>
@@ -33,34 +33,38 @@ int get_user_from_email(struct session_data *sdata, char *email, struct __config
    MYSQL_ROW row;
    char *p, buf[MAXBUFSIZE];
 
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "query user data from %s", email);
+
    sdata->uid = 0;
    sdata->policy_group = 0;
    memset(sdata->name, 0, SMALLBUFSIZE);
 
-      if((p = strcasestr(email, "+spam"))){
-         *p = '\0';
-         snprintf(buf, MAXBUFSIZE-1, "SELECT uid, username FROM %s WHERE email='%s%s'", SQL_USER_TABLE, email, p+5);
-      }
-      else if((p = strcasestr(email, "+ham"))){
-         *p = '\0';
-         snprintf(buf, MAXBUFSIZE-1, "SELECT uid, username FROM %s WHERE email='%s%s'", SQL_USER_TABLE, email, p+4);
-      }
-      else
-         snprintf(buf, MAXBUFSIZE-1, "SELECT uid, username, policy_group FROM %s WHERE email='%s'", SQL_USER_TABLE, email);
+   if((p = strcasestr(email, "+spam"))){
+      *p = '\0';
+      snprintf(buf, MAXBUFSIZE-1, "SELECT uid, username FROM %s WHERE email='%s%s'", SQL_USER_TABLE, email, p+5);
+      *p = '+';
+   }
+   else if((p = strcasestr(email, "+ham"))){
+      *p = '\0';
+      snprintf(buf, MAXBUFSIZE-1, "SELECT uid, username FROM %s WHERE email='%s%s'", SQL_USER_TABLE, email, p+4);
+      *p = '+';
+   }
+   else
+      snprintf(buf, MAXBUFSIZE-1, "SELECT uid, username, policy_group FROM %s WHERE email='%s'", SQL_USER_TABLE, email);
 
 
-      if(mysql_real_query(&(sdata->mysql), buf, strlen(buf)) == 0){
-         res = mysql_store_result(&(sdata->mysql));
-         if(res != NULL){
-            row = mysql_fetch_row(res);
-            if(row){
-               sdata->uid = atol(row[0]);
-               strncpy(sdata->name, (char *)row[1], SMALLBUFSIZE-1);
-               sdata->policy_group = atoi(row[2]);
-            }               
-            mysql_free_result(res);
-         }
+   if(mysql_real_query(&(sdata->mysql), buf, strlen(buf)) == 0){
+      res = mysql_store_result(&(sdata->mysql));
+      if(res != NULL){
+         row = mysql_fetch_row(res);
+         if(row){
+            sdata->uid = atol(row[0]);
+            strncpy(sdata->name, (char *)row[1], SMALLBUFSIZE-1);
+            sdata->policy_group = atoi(row[2]);
+         }               
+         mysql_free_result(res);
       }
+   }
 
 
    return 1;
@@ -113,6 +117,8 @@ int get_user_from_email(struct session_data *sdata, char *email, struct __config
    const char **pzTail=NULL;
    char *p, buf[MAXBUFSIZE];
 
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "query user data from %s", email);
+
    sdata->uid = 0;
    sdata->policy_group = 0;
    memset(sdata->name, 0, SMALLBUFSIZE);
@@ -120,10 +126,12 @@ int get_user_from_email(struct session_data *sdata, char *email, struct __config
    if((p = strcasestr(email, "+spam"))){
       *p = '\0';
       snprintf(buf, MAXBUFSIZE-1, "SELECT uid, username FROM %s WHERE email='%s%s'", SQL_USER_TABLE, email, p+5);
+      *p = '+';
    }
    else if((p = strcasestr(email, "+ham"))){
       *p = '\0';
       snprintf(buf, MAXBUFSIZE-1, "SELECT uid, username FROM %s WHERE email='%s%s'", SQL_USER_TABLE, email, p+4);
+      *p = '+';
    }
    else
       snprintf(buf, MAXBUFSIZE-1, "SELECT uid, username FROM %s WHERE email='%s'", SQL_USER_TABLE, email);
@@ -218,6 +226,8 @@ int get_user_from_email(struct session_data *sdata, char *email, struct __config
    int rc;
    char filter[SMALLBUFSIZE], *attrs[] = { NULL }, **vals;
    LDAPMessage *res, *e;
+
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "query user data from %s", email);
 
    sdata->uid = 0;
    sdata->policy_group = 0;

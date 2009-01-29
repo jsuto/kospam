@@ -1,5 +1,13 @@
 0.4.1-rc1:
 
+2009.01.29, SJ
+
+Fixed a bug in the clearhash() function.
+(hash.c)
+
+Enhanced the training stuff.
+(session.c, users.c)
+
 2009.01.28, SJ
 
 Removed the unnecessary reference to 'UE' from user.c

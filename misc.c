@@ -1,5 +1,5 @@
 /*
- * misc.c, 2009.01.15, SJ
+ * misc.c, 2009.01.29, SJ
  */
 
 #include <stdio.h>
@@ -872,9 +872,9 @@ int whitelist_check(char *whitelist, char *tmpfile, char *email, struct __config
 
       trim(w);
 
-      if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: matching %s on %s", tmpfile, w, email);
-
       if(strlen(w) > 2){
+
+         if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: matching %s on %s", tmpfile, w, email);
 
          if(w[strlen(w)-1] == '$'){
             q = email + strlen(email) - strlen(w) + 1;

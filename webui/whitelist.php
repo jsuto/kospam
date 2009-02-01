@@ -1,16 +1,19 @@
 <?php
 
 include_once("config.php");
+
+session_start();
+$username = get_authenticated_username();
+
 include_once("header.php");
+
+if($username == "") show_auth_popup();
 
 $modify = 0;
 $whitelist = "";
 
 if(isset($_POST['modify'])) $modify = $_POST['modify'];
 if(isset($_POST['whitelist'])) $whitelist = $_POST['whitelist'];
-
-$username = $_SERVER['REMOTE_USER'];
-if($username == "") nice_error($err_not_authenticated);
 
 $conn = webui_connect() or nice_error($err_connect_db);
 

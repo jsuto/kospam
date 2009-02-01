@@ -1,15 +1,15 @@
 <?php
 
 include_once("config.php");
+
+session_start();
+$username = get_authenticated_username();
+
 include_once("header.php");
 
-$username = $_SERVER['REMOTE_USER'];
-if($username == "") nice_error($err_not_authenticated);
+if($username == "") show_auth_popup();
 
 if($backend != "mysql") nice_error($err_this_feature_is_not_available);
-
-if(!mysql_connect($host, $u, $p)) nice_error($err_connect_db);
-mysql_select_db($db) or nice_error($err_connect_db);
 
 $timespan = 0;
 
@@ -43,12 +43,14 @@ if(isset($_GET['timespan'])) $timespan = $_GET['timespan'];
 
    /* determine your uid */
 
+   $conn = webui_connect() or nice_error($err_connect_db);
+
    $stmt = "SELECT uid FROM $user_table WHERE username='$username'";
    $r = mysql_query($stmt) or nice_error($err_sql_error);
    list($uid) = mysql_fetch_row($r);
    mysql_free_result($r);
 
-
+   if($uid){
    if($timespan == 0)
       $stmt = "SELECT ts, nham, nspam FROM $stat_table WHERE uid=$uid ORDER BY ts DESC LIMIT 24";
    else
@@ -70,7 +72,9 @@ if(isset($_GET['timespan'])) $timespan = $_GET['timespan'];
 
    }
    mysql_free_result($r);
+   }
 
+   webui_close($conn);
 
    print "<tr align=\"center\"><td><b>$TOTAL</b></td><td><b>$nham</b></td><td><b>$nspam</b></td></tr>\n";
 

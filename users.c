@@ -1,5 +1,5 @@
 /*
- * users.c, 2009.01.29, SJ
+ * users.c, 2009.01.30, SJ
  */
 
 #include <stdio.h>
@@ -33,7 +33,7 @@ int get_user_from_email(struct session_data *sdata, char *email, struct __config
    MYSQL_ROW row;
    char *p, buf[MAXBUFSIZE];
 
-   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "query user data from %s", email);
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: query user data from %s", sdata->ttmpfile, email);
 
    sdata->uid = 0;
    sdata->policy_group = 0;
@@ -117,7 +117,7 @@ int get_user_from_email(struct session_data *sdata, char *email, struct __config
    const char **pzTail=NULL;
    char *p, buf[MAXBUFSIZE];
 
-   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "query user data from %s", email);
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: query user data from %s", sdata->ttmpfile, email);
 
    sdata->uid = 0;
    sdata->policy_group = 0;
@@ -227,7 +227,7 @@ int get_user_from_email(struct session_data *sdata, char *email, struct __config
    char filter[SMALLBUFSIZE], *attrs[] = { NULL }, **vals;
    LDAPMessage *res, *e;
 
-   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "query user data from %s", email);
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: query user data from %s", sdata->ttmpfile, email);
 
    sdata->uid = 0;
    sdata->policy_group = 0;

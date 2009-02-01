@@ -1,4 +1,0 @@
-AuthUserFile /opt/www/data/quarantine.yourdomain.com/.htpasswd
-AuthType basic
-AuthName "spam quarantine"
-require valid-user

@@ -8,6 +8,7 @@ $TITLE['/stat.php'] = 'Statistics';
 $TITLE['/q.php'] = 'Quarantine';
 $TITLE['/users.php'] = 'User management';
 $TITLE['/policy.php'] = 'Policy';
+$TITLE['/logout.php'] = 'Logout';
 
 $ALIAS = "alias";
 
@@ -42,6 +43,7 @@ $HOME = "Home";
 $INTEGER = "integer";
 
 $LAST = "Last";
+$LOGOUT = "Logout";
 
 $MODIFY = "Modify";
 
@@ -116,5 +118,6 @@ $err_policy_failed_to_remove = "Policy failed to remove";
 
 $err_this_feature_is_not_available = "This feature is not available for this backend";
 
+$err_you_are_logged_out = "You are logged out";
 
 ?>

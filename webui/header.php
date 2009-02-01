@@ -6,7 +6,6 @@ $w = explode("/", $_SERVER['PHP_SELF']);
 
 $title = $TITLE['/' . array_pop($w) ];
 
-$username = $_SERVER['REMOTE_USER'];
 if($ADMIN[$username] == 1) $admin_user = 1;
 
 ?>
@@ -42,6 +41,7 @@ if($ADMIN[$username] == 1) $admin_user = 1;
       print "<li><a href=\"$base_url/policy.php\""; if(strstr($_SERVER['PHP_SELF'], "/policy.php")) print " id=\"active\""; print ">$POLICY</a></li>\n";
    }
 ?>
+          <li><a href="<?php print $base_url; ?>/logout.php"<?php if(strstr($_SERVER['PHP_SELF'], "/logout.php")) print " id=\"active\""; ?>><?php print $LOGOUT; ?></a></li>
 
     </ul>
 

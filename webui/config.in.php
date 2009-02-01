@@ -13,8 +13,11 @@ $lang = "en";
  */
 $directory = "/webui";
 
+$password_file = $_SERVER['DOCUMENT_ROOT'] . "$directory/.htpasswd";
+
 include_once($_SERVER['DOCUMENT_ROOT'] . "$directory/.htdb.php");
 include_once($_SERVER['DOCUMENT_ROOT'] . "$directory/funcs.php");
+include_once($_SERVER['DOCUMENT_ROOT'] . "$directory/auth.php");
 include_once($_SERVER['DOCUMENT_ROOT'] . "$directory/lang/$lang/messages.php");
 
 include_once($_SERVER['DOCUMENT_ROOT'] . "$directory/mysql.php");

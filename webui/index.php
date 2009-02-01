@@ -1,10 +1,13 @@
 <?php
 
 include_once("config.php");
+
+session_start();
+$username = get_authenticated_username();
+
 include_once("header.php");
 
-$username = $_SERVER['REMOTE_USER'];
-if($username == "") nice_error($err_not_authenticated);
+if($username == "") show_auth_popup();
 
 ?>
 

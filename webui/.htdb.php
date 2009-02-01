@@ -2,10 +2,8 @@
 
 // mysql stuff
 
-$host = "localhost";
-$u = "your_db_user";
-$p = "your_db_password";
-$db = "your_database";
+$dsn = "mysql://clapf:changeme@localhost/clapf";
+
 
 // ldap stuff
 

@@ -1,7 +1,14 @@
 <?php
 
 include_once("config.php");
+
+session_start();
+$username = get_authenticated_username();
+
 include_once("header.php");
+
+if($username == "") show_auth_popup();
+
 
 $meurl = $_SERVER['PHP_SELF'];
 
@@ -27,9 +34,6 @@ if(isset($_GET['train'])) $train = $_GET['train'];
 
 if(isset($_POST['topurge'])) $topurge = $_POST['topurge'];
 if(isset($_POST['user'])) $user = $_POST['user'];
-
-$username = $_SERVER['REMOTE_USER'];
-if($username == "") nice_error($err_not_authenticated);
 
 /* fix the username if you are an admin user */
 if($admin_user == 1 && $user) $username = $user;

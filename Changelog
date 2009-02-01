@@ -1,5 +1,13 @@
 0.4.1-rc1:
 
+2009.02.01, SJ
+
+Modified the webui authentication. Now it uses its own
+method instead of relying on the webserver. Currently
+only the regular htpasswd format password file is supported.
+Plans to add ldap and mysql authentication support, too.
+(webui/*)
+
 2009.01.29, SJ
 
 Fixed a bug in the clearhash() function.

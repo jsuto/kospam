@@ -8,6 +8,7 @@ $TITLE['/stat.php'] = 'Statisztika';
 $TITLE['/q.php'] = 'Karantén';
 $TITLE['/users.php'] = 'Felhasználó menedzselés';
 $TITLE['/policy.php'] = 'Házirend';
+$TITLE['/logout.php'] = 'Kijelentkezés';
 
 $ALIAS = "álnév";
 
@@ -42,6 +43,7 @@ $HOME = "Kezdõlap";
 $INTEGER = "integer";
 
 $LAST = "Utolsó";
+$LOGIN = "Kijelentkezés";
 
 $MODIFY = "Módosít";
 
@@ -115,5 +117,7 @@ $err_policy_failed_to_add = "Házirendet nem sikerült felvenni";
 $err_policy_failed_to_remove = "Házirendet nem sikerült törölni";
 
 $err_this_feature_is_not_available = "Ez a funkció nem érhetõ el a használt adatbázissal";
+
+$err_you_are_logged_out = "Ön sikeresen kijelentkezett";
 
 ?>

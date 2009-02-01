@@ -3,7 +3,9 @@
 $backend = "mysql";
 
 function webui_connect(){
-   global $host, $u, $p, $db, $err_connect_db;
+   global $dsn, $err_connect_db;
+
+   list ($host, $u, $p, $db) = extract_mysql_dsn($dsn);
 
    $conn = mysql_connect($host, $u, $p) or nice_error($err_connect_db);
    mysql_select_db($db) or nice_error($err_connect_db);
@@ -65,6 +67,7 @@ function get_whitelist_by_name($username){
    $whitelist = "";
 
    $uid = get_uid_by_name($username);
+   if($uid == "") return $whitelist;
 
    $stmt = "SELECT whitelist FROM $whitelist_table WHERE uid=$uid";
    $r = mysql_query($stmt) or nice_error($err_sql_error);

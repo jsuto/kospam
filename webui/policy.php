@@ -1,7 +1,13 @@
 <?php
 
 include_once("config.php");
+
+session_start();
+$username = get_authenticated_username();
+
 include_once("header.php");
+
+if($username == "") show_auth_popup();
 
 $add = 0;
 $view = 0;
@@ -22,9 +28,6 @@ if(isset($_POST['policy_group'])) $policy_group = $_POST['policy_group'];
 if(isset($_POST['name'])) $name = $_POST['name'];
 
 if($backend != "mysql" && $backend != "ldap") nice_error($err_this_feature_is_not_available);
-
-$username = $_SERVER['REMOTE_USER'];
-if($username == "") nice_error($err_not_authenticated);
 
 if($admin_user != 1) nice_error($err_you_are_not_admin);
 

@@ -1,5 +1,5 @@
 /*
- * mysql.c, 2009.01.25, SJ
+ * mysql.c, 2009.02.02, SJ
  */
 
 #include <stdio.h>
@@ -201,6 +201,33 @@ int update_mysql_tokens(MYSQL mysql, struct node *xhash[], unsigned long uid){
       n = -1;
 
    buffer_destroy(query);
+
+   return n;
+}
+
+
+/*
+ * walk through the hash table and add/update its elements in sql table
+ */
+
+int my_walk_hash(MYSQL mysql, int ham_or_spam, unsigned long uid, struct node *xhash[], int train_mode){
+   int i, n=0;
+   time_t cclock;
+   unsigned long now;
+   struct node *q;
+
+   time(&cclock);
+   now = cclock;
+
+   for(i=0; i<MAXHASH; i++){
+      q = xhash[i];
+      while(q != NULL){
+         do_mysql_qry(mysql, ham_or_spam, q->str, uid, train_mode, now);
+         
+         q = q->r;
+         n++;
+      }
+   }
 
    return n;
 }

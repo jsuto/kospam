@@ -2,6 +2,12 @@
 
 2009.02.01, SJ
 
+User support is not mandatory any longer just because you
+have specified the --with-tokendb option.
+(configure*, session.c)
+
+2009.02.01, SJ
+
 Modified the webui authentication. Now it uses its own
 method instead of relying on the webserver. Currently
 only the regular htpasswd format password file is supported.

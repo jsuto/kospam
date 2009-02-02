@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2009.01.22, SJ
+ * spamdrop.c, 2009.02.02, SJ
  */
 
 #include <stdio.h>
@@ -370,28 +370,33 @@ int main(int argc, char **argv, char **envp){
     */
 
    else {
-   #ifdef HAVE_MYSQL
+
+      /* whitelist check first */
+
+   #ifdef HAVE_WHITELIST
       if(is_sender_on_white_list(&sdata, from, &cfg)){
          syslog(LOG_PRIORITY, "%s: sender (%s) found on whitelist", sdata.ttmpfile, from);
          snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on white list\r\n", cfg.clapf_header_field);
-      } else
-         spaminess = bayes_file(&sdata, &state, &cfg);
+         goto ENDE_SPAMDROP;
+      }
+   #endif
 
+      /* query spaminess */
+
+      spaminess = bayes_file(&sdata, &state, &cfg);
+
+      /* update tokens */
+ 
+   #ifdef HAVE_MYSQL
       update_mysql_tokens(sdata.mysql, state.token_hash, sdata.uid);
    #endif
    #ifdef HAVE_SQLITE3
-      if(is_sender_on_white_list(&sdata, from, &cfg)){
-         syslog(LOG_PRIORITY, "%s: sender (%s) found on whitelist", sdata.ttmpfile, from);
-         snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on white list\r\n", cfg.clapf_header_field);
-      } else
-         spaminess = bayes_file(&sdata, &state, &cfg);
-
       update_sqlite3_tokens(sdata.db, state.token_hash);
    #endif
    #ifdef HAVE_MYDB
-      spaminess = bayes_file(&sdata, &state, &cfg);
       update_tokens(cfg.mydbfile, sdata.mhash, state.token_hash);
    #endif
+
 
    #ifdef HAVE_LANG_DETECT
       lang = check_lang(state.token_hash);

@@ -1,5 +1,5 @@
 /*
- * session.c, 2009.01.29, SJ
+ * session.c, 2009.02.02, SJ
  */
 
 #include <stdio.h>
@@ -434,7 +434,7 @@ void init_session_data(struct session_data *sdata){
 
                   /* get user from 'RCPT TO:', 2008.11.24, SJ */
 
-               #ifdef HAVE_ANTISPAM
+               #ifdef HAVE_USERS
                   get_user_from_email(&sdata, email, &my_cfg);
                #endif
 
@@ -469,7 +469,7 @@ void init_session_data(struct session_data *sdata){
                   /* is it a training request? */
 
                   if(sdata.num_of_rcpt_to == 1 && (strcasestr(sdata.rcptto[0], "+spam@") || strcasestr(sdata.rcptto[0], "+ham@") || strncmp(email, "spam@", 5) == 0 || strncmp(email, "ham@", 4) == 0 ) ){
-
+                  #ifdef HAVE_USERS
                      /* get user from 'MAIL FROM:', 2008.10.25, SJ */
 
                      get_user_from_email(&sdata, email2, cfg);
@@ -487,6 +487,17 @@ void init_session_data(struct session_data *sdata){
 
                      do_training(&sdata, email, &acceptbuf[0], &my_cfg);
                      goto SEND_RESULT;
+
+                  #else
+
+                     /* if you have not specified --with-userdb=.... then we don't know
+                        much about the recipient, so you have to do the training with
+                        spamdrop
+                      */
+
+                     snprintf(spaminessbuf, MAXBUFSIZE-1, "%s%s\r\n%sTraining request\r\n", cfg->clapf_header_field, sdata.ttmpfile, cfg->clapf_header_field);
+                     goto END_OF_SPAM_CHECK;
+                  #endif
                   }
 
 
@@ -518,17 +529,21 @@ void init_session_data(struct session_data *sdata){
 
                         /* check whitelist first */
 
+                     #ifdef HAVE_WHITELIST
                         if(is_sender_on_white_list(&sdata, email2, &my_cfg) == 1){
                            syslog(LOG_PRIORITY, "%s: sender (%s) found on whitelist", sdata.ttmpfile, email2);
                            snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on white list\r\n", cfg->clapf_header_field);
                            goto END_OF_TRAINING;
                         }
                         else {
+                     #endif
                            if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: running Bayesian test", sdata.ttmpfile);
                            spaminess = bayes_file(&sdata, &sstate, &my_cfg);
 
                            if(spaminess > 0.9999) snprintf(reason, SMALLBUFSIZE-1, "%s%s\r\n", cfg->clapf_header_field, MSG_ABSOLUTELY_SPAM);
+                     #ifdef HAVE_WHITELIST
                         }
+                     #endif
 
                         /* skip TUM training on a blackhole message, unless it may learn a missed spam as a good email */
 

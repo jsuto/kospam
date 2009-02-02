@@ -487,12 +487,12 @@ fi
 
 if test "$TOKENDB" = "sqlite3"; then
    defs="$defs -DHAVE_SQLITE3"
-   mysql_obj="sqlite3.o sql.o"
+   mysql_obj="sqlite3.o "
 fi
 
 if test "$TOKENDB" = "mysql"; then
    defs="$defs -DHAVE_MYSQL"
-   mysql_obj="mysql.o sql.o"
+   mysql_obj="mysql.o "
 fi
 
 if test "$TOKENDB" = "mydb"; then
@@ -507,10 +507,10 @@ if test "x$QCACHE" != "x"; then
    fi
 fi
 
-if test "x$TOKENDB" != "x" && test "x$USERDB" = "x"; then
-   echo "please specify the --with-userdb option"
-   exit 1
-fi
+#if test "x$TOKENDB" != "x" && test "x$USERDB" = "x"; then
+#   echo "please specify the --with-userdb option"
+#   exit 1
+#fi
 
 if test "$have_policy" = "yes" && test "x$USERDB" = "x"; then
    echo "please specify the --with-userdb option"
@@ -619,18 +619,21 @@ fi
 
 if test "$USERDB" = "mysql" && test "$have_mysql" = "yes"; then
    echo "user database: mysql"
-   defs="$defs -DUSERS_IN_MYSQL"
+   defs="$defs -DUSERS_IN_MYSQL -DHAVE_USERS"
+   objs="$objs users.o"
 fi
 
 if test "$USERDB" = "sqlite3" && test "$have_sqlite3" = "yes"; then
    echo "user database: sqlite3"
-   defs="$defs -DUSERS_IN_SQLITE3"
+   defs="$defs -DUSERS_IN_SQLITE3 -DHAVE_USERS"
+   objs="$objs users.o"
 fi
 
 if test "$USERDB" = "ldap" && test "$have_ldap" = "yes"; then
    echo "user database: ldap"
-   defs="$defs -DUSERS_IN_LDAP -DNEED_LDAP"
+   defs="$defs -DUSERS_IN_LDAP -DNEED_LDAP -DHAVE_USERS"
    ldap_libs="-lldap -llber"
+   objs="$objs users.o"
 fi
 
 echo "token database backend: $TOKENDB"
@@ -730,7 +733,7 @@ echo; echo
 
 CFLAGS="$static -O2 -Wall -g"
 LIBS="$libclamav $antispam_libs $gsl_libs $sqlite3_libs"
-OBJS="misc.o cfg.o smtp.o sig.o decoder.o list.o parser.o session.o users.o templates.o hash.o score.o chi.o $objs"
+OBJS="misc.o cfg.o smtp.o sig.o decoder.o list.o parser.o session.o templates.o hash.o score.o chi.o $objs"
 
 AC_OUTPUT(Makefile)
 AC_OUTPUT(contrib/spamsum/Makefile)

@@ -1,5 +1,5 @@
 /*
- * users.c, 2009.01.30, SJ
+ * users.c, 2009.02.02, SJ
  */
 
 #include <stdio.h>
@@ -80,10 +80,6 @@ int is_sender_on_white_list(struct session_data *sdata, char *email, struct __co
    char buf[SMALLBUFSIZE];
    int r=0;
 
-#ifndef HAVE_WHITELIST
-   return 0;
-#endif
-
    if(!email) return 0;
 
    snprintf(buf, SMALLBUFSIZE-1, "SELECT whitelist FROM %s WHERE uid=0 OR uid=%ld", SQL_WHITE_LIST, sdata->uid);
@@ -153,10 +149,6 @@ int is_sender_on_white_list(struct session_data *sdata, char *email, struct __co
    const char **pzTail=NULL;
    char buf[SMALLBUFSIZE];
    int r=0;
-
-#ifndef HAVE_WHITELIST
-   return 0;
-#endif
 
    if(!email) return 0;
 

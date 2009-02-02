@@ -173,6 +173,33 @@ int do_sqlite3_qry(sqlite3 *db, int ham_or_spam, char *token, int train_mode, un
 
 
 /*
+ * walk through the hash table and add/update its elements in sql table
+ */
+
+int my_walk_hash(sqlite3 *db, int ham_or_spam, struct node *xhash[], int train_mode){
+   int i, n=0;
+   time_t cclock;
+   unsigned long now;
+   struct node *q;
+
+   time(&cclock);
+   now = cclock;
+
+   for(i=0; i<MAXHASH; i++){
+      q = xhash[i];
+      while(q != NULL){
+         do_sqlite3_qry(db, ham_or_spam, q->str, train_mode, now);
+         
+         q = q->r;
+         n++;
+      }
+   }
+
+   return n;
+}
+
+
+/*
  * insert email entry to queue table
  */
 

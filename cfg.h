@@ -1,5 +1,5 @@
 /*
- * cfg.h, 2009.01.13, SJ
+ * cfg.h, 2009.02.03, SJ
  */
 
 #ifndef _CFG_H
@@ -17,6 +17,8 @@ struct __config {
 
    char postfix_addr[MAXVAL];
    int postfix_port;
+
+   char delivery_agent[MAXVAL];
 
    char avg_addr[MAXVAL];
    int avg_port;

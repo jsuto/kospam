@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2009.02.02, SJ
+ * spamdrop.c, 2009.02.03, SJ
  */
 
 #include <stdio.h>
@@ -71,14 +71,14 @@ int open_db(struct session_data *sdata, struct __config *cfg){
 
 
 int main(int argc, char **argv, char **envp){
-   FILE *f;
-   int i, n, fd, fd2, tot_len=0, rc=0, is_header=1, rounds=1;
-   int print_message=0, print_summary_only=0, put_subject_spam_prefix=0, sent_subject_spam_prefix=0, sent_clapf_info=0;
+   FILE *f, *ofile=stdout;
+   int i, n, fd, tot_len=0, rc=0, is_header=1, rounds=1, deliver_message=0;
+   int print_message=1, print_summary_only=0, put_subject_spam_prefix=0, sent_subject_spam_prefix=0;
    int is_spam=0, train_as_ham=0, train_as_spam=0, blackhole_request=0, training_request=0;
    int train_mode=T_TOE;
    uid_t u;
    char buf[MAXBUFSIZE], qpath[SMALLBUFSIZE], trainbuf[SMALLBUFSIZE], ID[RND_STR_LEN+1], whitelistbuf[SMALLBUFSIZE], clapf_info[MAXBUFSIZE];
-   char *configfile=CONFIG_FILE, *username=NULL, *from=NULL;
+   char *configfile=CONFIG_FILE, *username=NULL, *from=NULL, *recipient=NULL;
    struct timezone tz;
    struct timeval tv_start, tv_stop;
    struct stat st;
@@ -103,7 +103,7 @@ int main(int argc, char **argv, char **envp){
 #endif
 
 
-   while((i = getopt(argc, argv, "c:u:SHpsh?")) > 0){
+   while((i = getopt(argc, argv, "c:u:f:r:SHsdh?")) > 0){
        switch(i){
 
          case 'c' :
@@ -114,8 +114,16 @@ int main(int argc, char **argv, char **envp){
                     username = optarg;
                     break;
 
-         case 'p' :
-                    print_message = 1;
+         case 'f' :
+                    from = optarg;
+                    break;
+
+         case 'r' :
+                    recipient = optarg;
+                    break;
+
+         case 'd' :
+                    deliver_message = 1;
                     break;
 
          case 's' :
@@ -204,6 +212,7 @@ int main(int argc, char **argv, char **envp){
    }
 #endif
 
+   chdir(cfg.workdir);
 
    if(cfg.store_metadata == 1){
       if(chdir(buf)){
@@ -212,7 +221,7 @@ int main(int argc, char **argv, char **envp){
       }
    }
 
-   from = getenv("FROM");
+   if(!from) from = getenv("FROM");
 
    sdata.num_of_rcpt_to = 1;
    sdata.uid = getuid();
@@ -237,38 +246,39 @@ int main(int argc, char **argv, char **envp){
    memset(trainbuf, 0, SMALLBUFSIZE);
 
 
-   /* read message from standard input */
-
-   fd = open("/dev/stdin", O_RDONLY);
+   fd = open(sdata.ttmpfile, O_CREAT|O_EXCL|O_RDWR|O_TRUNC, S_IRUSR|S_IWUSR);
    if(fd == -1){
-      syslog(LOG_PRIORITY, "cannot read stdin");
-      return EX_TEMPFAIL;
-   }
-
-   fd2 = open(sdata.ttmpfile, O_CREAT|O_EXCL|O_RDWR|O_TRUNC, S_IRUSR|S_IWUSR);
-   if(fd2 == -1){
       close(fd);
       syslog(LOG_PRIORITY, "cannot open: %s", sdata.ttmpfile);
       return EX_TEMPFAIL;
    }
 
-   while((n = read(fd, buf, MAXBUFSIZE)) > 0){
+   /* read message from standard input */
+
+   while((n = read(0, buf, MAXBUFSIZE)) > 0){
       tot_len += n;
-      write(fd2, buf, n);
+      write(fd, buf, n);
    }
 
-   close(fd);
 
    /* make sure we had a successful read */
 
-   if(fsync(fd2)){
+   if(fsync(fd)){
       syslog(LOG_PRIORITY, "failed writing data: %s", sdata.ttmpfile);
       return EX_TEMPFAIL;
    }
 
-   close(fd2);
+   close(fd);
 
    gettimeofday(&tv_start, &tz);
+
+
+#ifdef HAVE_ANTIVIRUS
+   if(do_av_check(&sdata, recipient, from, &cfg) == AVIR_VIRUS){
+      syslog(LOG_PRIORITY, "%s: dropping infected message", sdata.ttmpfile);
+      goto ENDE;
+   }
+#endif
 
 
    /* skip spamicity check if message is too long */
@@ -516,9 +526,9 @@ ENDE_SPAMDROP:
    syslog(LOG_PRIORITY, "%s: %.4f %d in %ld [ms]", sdata.ttmpfile, spaminess, tot_len, tvdiff(tv_stop, tv_start)/1000);
 
 
-   /***************************/
-   /* print message to stdout */
-   /***************************/
+   /********************************/
+   /* print message to stdout/pipe */
+   /********************************/
 
    if(print_message == 1){
       f = fopen(sdata.ttmpfile, "r");
@@ -557,6 +567,7 @@ ENDE_SPAMDROP:
          strncat(clapf_info, "Yes\r\n", MAXBUFSIZE-1);
       }
 
+
    #ifdef MY_TEST
       strncat(clapf_info, rblbuf, MAXBUFSIZE-1);
    #endif
@@ -573,14 +584,21 @@ ENDE_SPAMDROP:
    #endif
 
 
+      if(deliver_message == 1){
+         snprintf(buf, MAXBUFSIZE-1, "%s %s %s", cfg.delivery_agent, from, recipient);
+         ofile = popen(buf, "w");
+      }
+
+      fprintf(ofile, "%s", clapf_info);
+
       while(fgets(buf, MAXBUFSIZE-1, f)){
 
          /* tag the Subject line if we have to, 2007.08.21, SJ */
 
          if(is_header == 1 && put_subject_spam_prefix == 1 && strncmp(buf, "Subject:", 8) == 0 && !strstr(buf, cfg.spam_subject_prefix)){
-            printf("Subject: ");
-            printf("%s", cfg.spam_subject_prefix);
-            printf("%s", &buf[9]);
+            fprintf(ofile, "Subject: ");
+            fprintf(ofile, "%s", cfg.spam_subject_prefix);
+            fprintf(ofile, "%s", &buf[9]);
             sent_subject_spam_prefix = 1;
 
             continue;
@@ -592,23 +610,15 @@ ENDE_SPAMDROP:
             /* if we did not find a Subject line, add one - if we have to */
 
             if(sent_subject_spam_prefix == 0 && put_subject_spam_prefix == 1 && spaminess >= cfg.spam_overall_limit && spaminess < 1.01)
-               printf("Subject: %s\r\n", cfg.spam_subject_prefix);
-
-            if(sent_clapf_info == 0){
-               printf("%s", clapf_info);
-               sent_clapf_info = 1;
-            }
+               fprintf(ofile, "Subject: %s\r\n", cfg.spam_subject_prefix);
 
          }
 
          if(strncmp(buf, cfg.clapf_header_field, strlen(cfg.clapf_header_field)))
-            printf("%s", buf);
+            fprintf(ofile, "%s", buf);
       }
 
-      if(sent_clapf_info == 0){
-         printf("%s\r\n", clapf_info);
-         sent_clapf_info = 1;
-      }
+      fclose(stdout);
 
    }
 
@@ -648,11 +658,11 @@ ENDE:
    /* add trailing dot to the file, 2008.09.08, SJ */
 
    if(strlen(qpath) > 3){
-      fd2 = open(qpath, O_EXCL|O_RDWR, S_IRUSR|S_IWUSR);
-      if(fd2 != -1){
-         lseek(fd2, 0, SEEK_END);
-         write(fd2, SMTP_CMD_PERIOD, strlen(SMTP_CMD_PERIOD));
-         close(fd2);
+      fd = open(qpath, O_EXCL|O_RDWR, S_IRUSR|S_IWUSR);
+      if(fd != -1){
+         lseek(fd, 0, SEEK_END);
+         write(fd, SMTP_CMD_PERIOD, strlen(SMTP_CMD_PERIOD));
+         close(fd);
       }
    }
 

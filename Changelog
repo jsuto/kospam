@@ -1,10 +1,44 @@
 0.4.1-rc1:
 
-2009.02.01, SJ
+2009.02.03, SJ
+
+Enhanced the spamdrop utility. The '-p' option is deprecated,
+spamdrop prints the message by default. If you use the '-d'
+option spamdrop will use the delivery_agent specified in clapf.conf
+to deliver the given message.
+
+So if you don't want to use the SMTP content-filter daemon, try
+the following in master.cf:
+
+spamdrop        unix - n n - - pipe
+		user=clapf argv=/usr/local/bin/spamdrop -d
+		-f ${sender} -r ${recipient}
+
+Then add "-o content_filter=spamdrop" (without the quotes)
+to the smtp service, eg.
+
+smtp      inet  n       -       n       -       -       smtpd
+        -o content_filter=spamdrop
+
+
+Additionally spamdrop can use several antivirus engines.
+
+Please note that spamdrop will print the clapf related extra
+headers to the beginning of the header.
+
+(spamdrop.c, cfg.c, cfg.h, example.conf)
+
+2009.02.02, SJ
 
 User support is not mandatory any longer just because you
 have specified the --with-tokendb option.
 (configure*, session.c)
+
+Removed the sql.c file.
+(sql.c)
+
+Log the time of virus checking.
+(avir.c)
 
 2009.02.01, SJ
 

@@ -1,5 +1,5 @@
 /*
- * spam.c, 2009.01.20, SJ
+ * spam.c, 2009.02.02, SJ
  */
 
 #include <stdio.h>
@@ -60,10 +60,14 @@ void do_training(struct session_data *sdata, char *email, char *acceptbuf, struc
 void save_email_to_queue(struct session_data *sdata, float spaminess, struct __config *cfg){
    char qpath[SMALLBUFSIZE];
    struct stat st;
+   struct timezone tz;
+   struct timeval tv1, tv2;
 
    if(cfg->store_metadata == 0 || strlen(sdata->name) <= 1) return;
 
    if(cfg->store_only_spam == 1 && spaminess < cfg->spam_overall_limit) return;
+
+   gettimeofday(&tv1, &tz);
 
    snprintf(qpath, SMALLBUFSIZE-1, "%s/%c", USER_QUEUE_DIR, sdata->name[0]);
    if(stat(qpath, &st)) mkdir(qpath, QUEUE_DIR_PERMISSION);
@@ -94,6 +98,7 @@ void save_email_to_queue(struct session_data *sdata, float spaminess, struct __c
        if(S_ISREG(st.st_mode) == 1) chmod(qpath, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
     }
 
+    gettimeofday(&tv2, &tz);
+    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: saved to queue: %ld [ms]", sdata->ttmpfile, tvdiff(tv2, tv1)/1000);
 }
-
 

@@ -167,6 +167,9 @@ struct __config read_config(char *configfile){
                   if(strcmp(key, "postfix_port") == 0)
                      cfg.postfix_port = atoi(val);
 
+                  if(strcmp(key, "delivery_agent") == 0)
+                     memcpy(cfg.delivery_agent, val, MAXVAL-1);
+
                   if(strcmp(key, "avg_addr") == 0)
                      memcpy(cfg.avg_addr, val, MAXVAL-1);
 

@@ -1,5 +1,5 @@
 /*
- * avir.c, 2009.01.20, SJ
+ * avir.c, 2009.02.02, SJ
  */
 
 #include <stdio.h>
@@ -73,7 +73,7 @@ int do_av_check(struct session_data *sdata, char *email, char *email2, struct __
 
    gettimeofday(&tv_scnd, &tz);
 
-   if(cfg->verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: virus scanning done in %ld [ms]", sdata->ttmpfile, tvdiff(tv_scnd, tv_rcvd)/1000);
+   syslog(LOG_PRIORITY, "%s: virus scanning done in %ld [ms]", sdata->ttmpfile, tvdiff(tv_scnd, tv_rcvd)/1000);
 
 
    /* if a virus has found */

@@ -601,10 +601,7 @@ void init_session_data(struct session_data *sdata){
                      /* save email to queue */
 
                   #ifndef OUTGOING_SMTP
-                     gettimeofday(&tv1, &tz);
                      save_email_to_queue(&sdata, spaminess, cfg);
-                     gettimeofday(&tv2, &tz);
-                     if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: saved to queue: %ld [ms]", sdata.ttmpfile, tvdiff(tv2, tv1)/1000);
                   #endif
 
                      gettimeofday(&tv_spam_stop, &tz);

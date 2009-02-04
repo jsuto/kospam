@@ -1,13 +1,16 @@
 /*
- * spam.c, 2009.02.02, SJ
+ * spam.c, 2009.02.04, SJ
  */
 
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/mman.h>
 #include <fcntl.h>
+#include <time.h>
 #include <unistd.h>
 #include "defs.h"
 #include "misc.h"
@@ -54,11 +57,11 @@ void do_training(struct session_data *sdata, char *email, char *acceptbuf, struc
 
 
 /*
- * calculate spaminess
+ * save message to queue (local filesystem or mysql database)
  */
 
+#ifdef HAVE_STORE
 void save_email_to_queue(struct session_data *sdata, float spaminess, struct __config *cfg){
-   char qpath[SMALLBUFSIZE];
    struct stat st;
    struct timezone tz;
    struct timeval tv1, tv2;
@@ -68,6 +71,9 @@ void save_email_to_queue(struct session_data *sdata, float spaminess, struct __c
    if(cfg->store_only_spam == 1 && spaminess < cfg->spam_overall_limit) return;
 
    gettimeofday(&tv1, &tz);
+
+#ifdef STORE_FS
+   char qpath[SMALLBUFSIZE];
 
    snprintf(qpath, SMALLBUFSIZE-1, "%s/%c", USER_QUEUE_DIR, sdata->name[0]);
    if(stat(qpath, &st)) mkdir(qpath, QUEUE_DIR_PERMISSION);
@@ -97,8 +103,60 @@ void save_email_to_queue(struct session_data *sdata, float spaminess, struct __c
     if(stat(qpath, &st) == 0){
        if(S_ISREG(st.st_mode) == 1) chmod(qpath, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
     }
+#endif
+
+#ifdef STORE_MYSQL
+   #include <mysql.h>
+
+   char *data=NULL;
+   char buf[MAXBUFSIZE], *map=NULL;
+   unsigned long now=0;
+   int fd, rc=1, is_spam=0;
+   time_t clock;
+
+   time(&clock);
+   now = clock;
+
+   if(spaminess >= cfg->spam_overall_limit) is_spam = 1;
+
+   /* reading message file into memory */
+
+   if(stat(sdata->ttmpfile, &st)){
+      syslog(LOG_PRIORITY, "%s: cannot stat before putting to queue", sdata->ttmpfile);
+      return;
+   }
+
+   fd = open(sdata->ttmpfile, O_RDONLY);
+   if(fd == -1) return;
+
+   map = mmap(map, st.st_size, PROT_READ, MAP_SHARED, fd, 0);
+   close(fd);
+   if(map == NULL) return;
+
+   /* then put it into database */
+
+   data = malloc(2 * st.st_size + strlen(buf) + 1 + 1 + 1);
+   if(!data){
+      rc = ERR_MALLOC;
+      goto ENDE;
+   }
+
+   snprintf(buf, MAXBUFSIZE-1, "INSERT INTO %s (id, uid, is_spam, ts, data) VALUES('%s', %ld, %d, %ld, \"", SQL_QUEUE_TABLE, sdata->ttmpfile, sdata->uid, is_spam, now);
+   snprintf(data, 2 * st.st_size + strlen(buf) + 1, "%s", buf);
+   mysql_real_escape_string(&(sdata->mysql), data+strlen(buf), map, st.st_size);
+   strncat(data, "\")", 2 * st.st_size + strlen(buf) + 1 + 1);
+   mysql_real_query(&(sdata->mysql), data, strlen(data));
+
+   free(data);
+
+ENDE:
+
+   munmap(map, st.st_size);
+
+#endif
 
     gettimeofday(&tv2, &tz);
     if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: saved to queue: %ld [ms]", sdata->ttmpfile, tvdiff(tv2, tv1)/1000);
 }
+#endif
 

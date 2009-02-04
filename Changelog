@@ -1,5 +1,26 @@
 0.4.1-rc1:
 
+2009.02.04, SJ
+
+Revised the store concept. You can use the --with-store option
+to specify where to store the emails for later retraining and
+for spam quarantine.
+
+If you omit this configure option, then clapf will not keep a
+copy of the incoming emails. You may specify 'fs' (without
+the quotes) to keep messages on the local filesystem, or
+you may use 'mysql' if you prefer to keep them in the t_queue
+mysql table.
+
+If you are running clapf to filter spam on multiple machines,
+this should be your choice.
+
+Please note that the --enable-outgoing-smtp configure option
+is deprecated. You may get the same effect if you don't use
+the --with-store option.
+
+(spam.c, session.c, spamdrop.c)
+
 2009.02.03, SJ
 
 Enhanced the spamdrop utility. The '-p' option is deprecated,

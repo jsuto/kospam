@@ -1,5 +1,5 @@
 /*
- * clapf-config.h.in, 2008.12.04, SJ
+ * clapf-config.h.in, 2009.02.04, SJ
  */
 
 #define CONFDIR "/usr/local/etc"
@@ -9,5 +9,4 @@
 
 #define VIRUS_TEMPLATE "/usr/local/share/clapf/template.virus"
 
-#undef OUTGOING_SMTP
 

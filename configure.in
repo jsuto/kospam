@@ -75,7 +75,6 @@ sqlite3_libs=""
 spamsum_libs=""
 os=`uname -s`
 
-want_outgoing_smtp="no"
 want_language_detection="no"
 
 
@@ -278,6 +277,36 @@ AC_ARG_WITH(userdb,
 
 
 
+dnl message store
+
+AC_ARG_WITH(store,
+[  --with-store[[=mysql|fs]]         use either mysql database or the local filesystem to keep emails (default: none)],[
+  if test "$withval" != "no" -a "$withval" != "yes"; then
+    STORE=$withval
+  fi
+
+  if test "$withval" = "mysql"; then
+     AC_CHECK_PROG(MYSQL_CONFIG, mysql_config, yes)
+
+     if test x$MYSQL_CONFIG = xyes; then
+       have_mysql="yes"
+     fi
+
+     if test "$have_mysql" = "yes"; then
+            dnl AC_DEFINE(USE_MYSQL, 1, [MySQL database support enabled])
+
+            mysql_includes=`mysql_config --cflags`
+            mysql_libs=`mysql_config --libs_r`
+     else
+        echo "MySQL support is not found"
+        exit 1;
+     fi
+   fi
+
+])
+
+
+
 dnl the blackhole feature
 
 AC_ARG_ENABLE(policy,
@@ -371,28 +400,6 @@ dnl lmtp support
 dnl language detection
     AC_ARG_ENABLE(language-detection,
           [  --enable-language-detection use the language detection feature (experimental)], want_language_detection=$enableval, want_language_detection="no")
-
-
-dnl external store
-dnl    AC_ARG_ENABLE(store,
-dnl          [  --enable-store          use external store to store emails for later retraining], want_store=$enableval, want_store="no")
-
-dnl    if test "$want_store" = "yes"; then
-dnl        defs="$defs -DHAVE_STORE"
-dnl        clapfstore="clapfstore"
-dnl        store_obj="store.o"
-dnl	clapfstore_install="install-clapfstore"
-dnl        have_store="yes"
-dnl    fi
-
-
-dnl outgoing smtp support
-    AC_ARG_ENABLE(outgoing-smtp,
-          [  --enable-outgoing-smtp  enable outgoing SMTP server mode], want_outgoing_smtp=$enableval, want_outgoing_smtp="no")
-
-    if test "$want_outgoing_smtp" = "yes"; then
-       AC_DEFINE_UNQUOTED(OUTGOING_SMTP, 1, [enable outgoing smtp mode])
-    fi
 
 
 dnl enable spamsum support
@@ -647,10 +654,14 @@ if test "$TOKENDB" = "sqlite3"; then
    db_install="install-sqlite3"
 fi
 
-if test "$have_store" = "yes"; then
-   echo "store: clapfstore"
-else
-   echo "store: internal"
+if test "$STORE" = "mysql"; then
+   echo "message store: mysql"
+   defs="$defs -DHAVE_STORE -DSTORE_MYSQL"
+fi
+
+if test "$STORE" = "fs"; then
+   echo "message store: fs"
+   defs="$defs -DHAVE_STORE -DSTORE_FS"
 fi
 
 if test "$want_spamsum" = "yes"; then
@@ -674,7 +685,7 @@ else
    echo "tokens are case sensitive: no"
 fi
 
-if test "$want_lmtp" = "yes" && test "$want_outgoing_smtp" = "no"; then
+if test "$want_lmtp" = "yes"; then
    echo "local delivery: LMTP"
    defs="$defs -DHAVE_LMTP"
 else

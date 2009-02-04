@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2009.02.03, SJ
+ * spamdrop.c, 2009.02.04, SJ
  */
 
 #include <stdio.h>
@@ -81,7 +81,6 @@ int main(int argc, char **argv, char **envp){
    char *configfile=CONFIG_FILE, *username=NULL, *from=NULL, *recipient=NULL;
    struct timezone tz;
    struct timeval tv_start, tv_stop;
-   struct stat st;
    struct passwd *pwd;
    struct session_data sdata;
    struct _state state;
@@ -506,20 +505,13 @@ CLOSE_DB:
    gettimeofday(&tv_stop, &tz);
 
 
-   /* rename file name according to its spamicity status, unless its a blackhole request, 2007.12.22, SJ */
+   /* save email for later retraining and/or spam quarantine */
 
-   if(cfg.store_metadata == 1 && tot_len <= cfg.max_message_size_to_filter && blackhole_request == 0){
-      if(spaminess >= cfg.spam_overall_limit)
-         snprintf(qpath, SMALLBUFSIZE-1, "s.%s", sdata.ttmpfile);
-      else if(cfg.store_only_spam == 0)
-         snprintf(qpath, SMALLBUFSIZE-1, "h.%s", sdata.ttmpfile);
+#ifdef HAVE_STORE
+   if(tot_len <= cfg.max_message_size_to_filter && blackhole_request == 0)
+      save_email_to_queue(&sdata, spaminess, &cfg);
+#endif
 
-      link(sdata.ttmpfile, qpath);
-      if(stat(qpath, &st) == 0){
-         if(S_ISREG(st.st_mode) == 1)
-            chmod(qpath, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
-      }
-   }
 
 ENDE_SPAMDROP:
 

@@ -601,7 +601,7 @@ void init_session_data(struct session_data *sdata){
                      /* save email to queue */
 
                   #ifdef HAVE_STORE
-                     if(sdata.uid > 0) save_email_to_queue(&sdata, spaminess, cfg);
+                     if(sdata.uid > 0) save_email_to_queue(&sdata, spaminess, &my_cfg);
                   #endif
 
                      gettimeofday(&tv_spam_stop, &tz);

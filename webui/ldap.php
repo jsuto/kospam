@@ -395,7 +395,7 @@ function print_policy($x){
    print "<tr><td>penalize_octet_stream</td><td><input name=\"penalize_octet_stream\" value=\"$x[16]\" size=\"3\"></td><td>0|1</td></tr>\n";
    print "<tr><td>training_mode</td><td><input name=\"training_mode\" value=\"$x[17]\" size=\"3\"></td><td>0|1</td></tr>\n";
    print "<tr><td>initial_1000_learning</td><td><input name=\"initial_1000_learning\" value=\"$x[18]\" size=\"3\"></td><td>0|1</td></tr>\n";
-
+   print "<tr><td>store_metadata</td><td><input name=\"store_metadata\" value=\"$x[19]\" size=\"3\"></td><td>0|1</td></tr>\n";
 }
 
 
@@ -405,7 +405,7 @@ function show_policy($policy_group){
    $x = array();
 
    $filter="policyGroup=$policy_group";
-   $justthese = array("policyName", "deliverinfectedemail", "silentlydiscardinfectedemail", "useantispam", "spamsubjectprefix", "enableautowhitelist", "maxmessagesizetofilter", "rbldomain", "surbldomain", "spamoveralllimit", "spaminessoblivionlimit", "replacejunkcharacters", "invalidjunklimit", "invalidjunkline", "penalizeimages", "penalizeembedimages", "penalizeoctetstream", "trainingmode", "initial1000learning");
+   $justthese = array("policyName", "deliverinfectedemail", "silentlydiscardinfectedemail", "useantispam", "spamsubjectprefix", "enableautowhitelist", "maxmessagesizetofilter", "rbldomain", "surbldomain", "spamoveralllimit", "spaminessoblivionlimit", "replacejunkcharacters", "invalidjunklimit", "invalidjunkline", "penalizeimages", "penalizeembedimages", "penalizeoctetstream", "trainingmode", "initial1000learning", "storemetadata");
 
    $sr = ldap_search($conn, $policy_base_dn, $filter, $justthese);
    $info = ldap_get_entries($conn, $sr);
@@ -432,7 +432,7 @@ function show_policy($policy_group){
       $x[16] = $info[$i]["penalizeoctetstream"][0];
       $x[17] = $info[$i]["trainingmode"][0];
       $x[18] = $info[$i]["initial1000learning"][0];
-
+      $x[19] = $info[$i]["storemetadata"][0];
    }
 
    print "<table>\n";
@@ -473,7 +473,7 @@ function add_policy(){
    $entry["penalizeoctetstream"] = $_POST['penalize_octet_stream'];
    $entry["trainingmode"] = $_POST['training_mode'];
    $entry["initial1000learning"] = $_POST['initial_1000_learning'];
-
+   $entry["storemetadata"] = $_POST['store_metadata'];
 
    $dn = "policyGroup=$policy_group,$policy_base_dn";
 
@@ -505,6 +505,7 @@ function update_policy($policy_group){
    $entry["penalizeoctetstream"] = $_POST['penalize_octet_stream'];
    $entry["trainingmode"] = $_POST['training_mode'];
    $entry["initial1000learning"] = $_POST['initial_1000_learning'];
+   $entry["storemetadata"] = $_POST['store_metadata'];
 
    $dn = "policyGroup=$policy_group,$policy_base_dn";
 

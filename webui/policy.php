@@ -78,7 +78,7 @@ else if($add == 1 && $name){
 }
 
 else if($add == 1){
-   $x = array('', 0, 1, 1, '', 1, 128000, '', '', 0.92, 1.01, 1, 5, 1, 0, 0, 0, 0, 0);
+   $x = array('', 0, 1, 1, '', 1, 128000, '', '', 0.92, 1.01, 1, 5, 1, 0, 0, 0, 0, 0, 0);
 
    print "<form action=\"policy.php\" method=\"post\">\n";
    print "<input type=\"hidden\" name=\"add\" value=\"1\">\n";

@@ -21,6 +21,12 @@ the --with-store option.
 
 (spam.c, session.c, spamdrop.c)
 
+Modified the policy definition to store the store_metadata
+variable.
+
+(policy.c, webui/mysql.php, webui/ldap.php, webui/policy.php,
+db-mysql.sql, ldap/clapf-policy.schema)
+
 2009.02.03, SJ
 
 Enhanced the spamdrop utility. The '-p' option is deprecated,

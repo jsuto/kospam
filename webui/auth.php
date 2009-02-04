@@ -37,6 +37,27 @@ function check_user_from_password_file(){
 }
 
 
+function check_user_from_sql_table(){
+   global $user_table, $err_sql_error;
+   $p = "";
+   $ok = 0;
+
+   $u = $_SERVER['PHP_AUTH_USER'];
+
+   $stmt = "SELECT password FROM $user_table WHERE username='$u'";
+   $r = mysql_query($stmt) or nice_error($err_sql_error);
+   list($p) = mysql_fetch_row($r);
+   mysql_free_result($r);
+
+   if($p == "") return $ok;
+
+   $pass = crypt($_SERVER['PHP_AUTH_PW'], $p);
+   if($pass == $p) $ok = 1;
+
+   return $ok;
+}
+
+
 function get_authenticated_username(){
    if(isset($_SESSION['username'])) return $_SESSION['username'];
 

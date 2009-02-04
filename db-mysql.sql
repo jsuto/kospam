@@ -84,6 +84,7 @@ create table if not exists t_policy (
 
 	training_mode tinyint default 0,
 	initial_1000_learning tinyint default 0,
+        store_metadata tinyint default 0,
 
 	unique(policy_group)
 );

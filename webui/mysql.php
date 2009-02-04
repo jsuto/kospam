@@ -301,6 +301,7 @@ function print_policy($x){
    print "<tr><td>penalize_octet_stream</td><td><input name=\"penalize_octet_stream\" value=\"$x[16]\" size=\"3\"></td><td>0|1</td></tr>\n";
    print "<tr><td>training_mode</td><td><input name=\"training_mode\" value=\"$x[17]\" size=\"3\"></td><td>0|1</td></tr>\n";
    print "<tr><td>initial_1000_learning</td><td><input name=\"initial_1000_learning\" value=\"$x[18]\" size=\"3\"></td><td>0|1</td></tr>\n";
+   print "<tr><td>store_metadata</td><td><input name=\"store_metadata\" value=\"$x[19]\" size=\"3\"></td><td>0|1</td></tr>\n";
 
 }
 
@@ -309,7 +310,7 @@ function show_policy($policy_group){
 
    $x = array();
 
-   $stmt = "SELECT name, deliver_infected_email, silently_discard_infected_email, use_antispam, spam_subject_prefix, enable_auto_white_list, max_message_size_to_filter, rbl_domain, surbl_domain, spam_overall_limit, spaminess_oblivion_limit, replace_junk_characters, invalid_junk_limit, invalid_junk_line, penalize_images, penalize_embed_images, penalize_octet_stream, training_mode, initial_1000_learning FROM $policy_group_table WHERE policy_group=$policy_group";
+   $stmt = "SELECT name, deliver_infected_email, silently_discard_infected_email, use_antispam, spam_subject_prefix, enable_auto_white_list, max_message_size_to_filter, rbl_domain, surbl_domain, spam_overall_limit, spaminess_oblivion_limit, replace_junk_characters, invalid_junk_limit, invalid_junk_line, penalize_images, penalize_embed_images, penalize_octet_stream, training_mode, initial_1000_learning, store_metadata FROM $policy_group_table WHERE policy_group=$policy_group";
 
    $r = mysql_query($stmt) or nice_error($err_sql_error);
    $x = mysql_fetch_row($r);
@@ -332,7 +333,7 @@ function add_policy(){
 
    $policy_group = get_new_policy_group_id();
 
-   $stmt = "INSERT INTO $policy_group_table (policy_group, name, deliver_infected_email, silently_discard_infected_email, use_antispam, spam_subject_prefix, enable_auto_white_list, max_message_size_to_filter, rbl_domain, surbl_domain, spam_overall_limit, spaminess_oblivion_limit, replace_junk_characters, invalid_junk_limit, invalid_junk_line, penalize_images, penalize_embed_images, penalize_octet_stream, training_mode, initial_1000_learning) VALUES($policy_group, '$name', $deliver_infected_email, $silently_discard_infected_email, $use_antispam, '$spam_subject_prefix', $enable_auto_white_list, $max_message_size_to_filter, '$rbl_domain', '$surbl_domain', $spam_overall_limit, $spaminess_oblivion_limit, $replace_junk_characters, $invalid_junk_limit, $invalid_junk_line, $penalize_images, $penalize_embed_images, $penalize_octet_stream, $training_mode, $initial_1000_learning)";
+   $stmt = "INSERT INTO $policy_group_table (policy_group, name, deliver_infected_email, silently_discard_infected_email, use_antispam, spam_subject_prefix, enable_auto_white_list, max_message_size_to_filter, rbl_domain, surbl_domain, spam_overall_limit, spaminess_oblivion_limit, replace_junk_characters, invalid_junk_limit, invalid_junk_line, penalize_images, penalize_embed_images, penalize_octet_stream, training_mode, initial_1000_learning, store_metadata) VALUES($policy_group, '$name', $deliver_infected_email, $silently_discard_infected_email, $use_antispam, '$spam_subject_prefix', $enable_auto_white_list, $max_message_size_to_filter, '$rbl_domain', '$surbl_domain', $spam_overall_limit, $spaminess_oblivion_limit, $replace_junk_characters, $invalid_junk_limit, $invalid_junk_line, $penalize_images, $penalize_embed_images, $penalize_octet_stream, $training_mode, $initial_1000_learning, $store_metadata)";
 
    mysql_query($stmt) or nice_error($err_sql_error);
 }
@@ -343,7 +344,7 @@ function update_policy($policy_group){
 
    while(list($k, $v) = each($_POST)) $$k = mysql_real_escape_string($v);
 
-   $stmt = "UPDATE $policy_group_table SET name='$name', deliver_infected_email=$deliver_infected_email, silently_discard_infected_email=$silently_discard_infected_email, use_antispam=$use_antispam, spam_subject_prefix='$spam_subject_prefix', enable_auto_white_list=$enable_auto_white_list, max_message_size_to_filter=$max_message_size_to_filter, rbl_domain='$rbl_domain', surbl_domain='$surbl_domain', spam_overall_limit=$spam_overall_limit, spaminess_oblivion_limit=$spaminess_oblivion_limit, replace_junk_characters=$replace_junk_characters, invalid_junk_limit=$invalid_junk_limit, invalid_junk_line=$invalid_junk_line, penalize_images=$penalize_images, penalize_embed_images=$penalize_embed_images, penalize_octet_stream=$penalize_octet_stream, training_mode=$training_mode, initial_1000_learning=$initial_1000_learning WHERE policy_group=$policy_group";
+   $stmt = "UPDATE $policy_group_table SET name='$name', deliver_infected_email=$deliver_infected_email, silently_discard_infected_email=$silently_discard_infected_email, use_antispam=$use_antispam, spam_subject_prefix='$spam_subject_prefix', enable_auto_white_list=$enable_auto_white_list, max_message_size_to_filter=$max_message_size_to_filter, rbl_domain='$rbl_domain', surbl_domain='$surbl_domain', spam_overall_limit=$spam_overall_limit, spaminess_oblivion_limit=$spaminess_oblivion_limit, replace_junk_characters=$replace_junk_characters, invalid_junk_limit=$invalid_junk_limit, invalid_junk_line=$invalid_junk_line, penalize_images=$penalize_images, penalize_embed_images=$penalize_embed_images, penalize_octet_stream=$penalize_octet_stream, training_mode=$training_mode, initial_1000_learning=$initial_1000_learning, store_metadata=$store_metadata WHERE policy_group=$policy_group";
 
    mysql_query($stmt) or nice_error($err_sql_error);
 }

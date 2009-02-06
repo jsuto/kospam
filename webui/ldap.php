@@ -69,6 +69,33 @@ function get_whitelist_by_name($username){
 }
 
 
+function get_blacklist_by_name($username){
+   global $basedn, $conn;
+   $blacklist = "";
+
+   $filter="cn=$username";
+   $justthese = array("filtermember");
+
+   $sr = ldap_search($conn, $basedn, $filter, $justthese);
+
+   $info = ldap_get_entries($conn, $sr);
+
+   for($i=0; $i<$info["count"]; $i++){
+      $c = $info[$i]["count"];
+      for($j=0; $j<$c; $j++){
+         $attr_name = $info[$i][$j];
+         $c2 = $info[$i][$attr_name]["count"];
+         for($k=0; $k<$c2; $k++){
+            $blacklist = $info[$i][$attr_name][$k];
+            break;
+         }
+      }
+   }
+
+   return $blacklist;
+}
+
+
 function get_db_by_name($username){
    global $basedn, $conn;
    $dn = "";
@@ -92,6 +119,19 @@ function set_whitelist($whitelist, $username){
    $dn = get_db_by_name($username);
 
    $entry["filtersender"] = $whitelist;
+
+   ldap_mod_replace($conn, $dn, $entry);
+
+}
+
+
+function set_blacklist($blacklist, $username){
+   global $basedn, $conn;
+   $entry = array();
+
+   $dn = get_db_by_name($username);
+
+   $entry["filtermember"] = $blacklist;
 
    ldap_mod_replace($conn, $dn, $entry);
 
@@ -175,11 +215,12 @@ function show_existing_users(){
 
 
 function print_user($x, $ro_uid = 0){
-   global $EMAIL_ADDRESS, $USERNAME, $USERID, $POLICY_GROUP, $ALIASES, $WHITELIST, $default_policy;
+   global $EMAIL_ADDRESS, $USERNAME, $USERID, $POLICY_GROUP, $ALIASES, $WHITELIST, $BLACKLIST, $default_policy;
 
    $len = 30;
    $aliases = "";
    $whitelist = "";
+   $blacklist = "";
 
    print "<input type=\"hidden\" name=\"cn\" value=\"$x[1]\">\n";
 
@@ -215,7 +256,14 @@ function print_user($x, $ro_uid = 0){
       $whitelist = preg_replace("/\n$/", "", $whitelist);
    }
 
+   if($x[6]){
+      array_shift($x[6]);
+      while(list($k, $v) = each($x[6])) $blacklist .= "$v\n";
+      $blacklist = preg_replace("/\n$/", "", $blacklist);
+   }
+
    print "<tr valign=\"top\"><td>$WHITELIST:</td><td><textarea name=\"filtersender\" cols=\"$len\" rows=\"5\">$whitelist</textarea></td></tr>\n";
+   print "<tr valign=\"top\"><td>$BLACKLIST:</td><td><textarea name=\"filtermember\" cols=\"$len\" rows=\"5\">$blacklist</textarea></td></tr>\n";
 
 }
 
@@ -236,7 +284,7 @@ function get_user_entry($uid){
    $a = array();
 
    $filter="uid=$uid";
-   $justthese = array("uid", "cn", "sn", "mail", "filtersender", "mailMessageStore", "mailAlternateAddress", "policygroupid");
+   $justthese = array("uid", "cn", "sn", "mail", "filtersender", "filtermember", "mailMessageStore", "mailAlternateAddress", "policygroupid");
 
    $sr = ldap_search($conn, $user_base_dn, $filter, $justthese);
 
@@ -249,6 +297,7 @@ function get_user_entry($uid){
       $a[3] = $info[0]["policygroupid"][0];
       $a[4] = $info[0]["mailalternateaddress"];
       $a[5] = $info[0]["filtersender"];
+      $a[6] = $info[0]["filtermember"];
    }
 
    return $a;
@@ -267,6 +316,7 @@ function add_user_entry($uid){
 
    $c = trim_to_array($_POST['mailAlternateAddress']);
    $b = trim_to_array($_POST['filtersender']);
+   $d = trim_to_array($_POST['filtermember']);
 
    $user = $_POST['username'];
 
@@ -275,8 +325,13 @@ function add_user_entry($uid){
    $entry["sn"] = "x";
    $entry["mail"] = $_POST['email'];
    $entry["uid"] = $uid;
+
    if(count($b) > 0) $entry["filtersender"] = $b;
    else $entry["filtersender"] = "";
+
+   if(count($d) > 0) $entry["filtermember"] = $d;
+   else $entry["filtermember"] = "";
+
    $entry["mailMessageStore"] = "";
    if(count($c) > 0) $entry["mailAlternateAddress"] = $c;
    else $entry["mailAlternateAddress"] = "";
@@ -296,12 +351,14 @@ function update_user($uid){
 
    $a = trim_to_array($_POST['mailAlternateAddress']);
    $b = trim_to_array($_POST['filtersender']);
+   $d = trim_to_array($_POST['filtermember']);
 
    $entry["cn"] = $_POST['username'];
    $entry["mail"] = $_POST['email'];
    $entry["policyGroupId"] = $_POST['policy_group'];
    $entry["mailAlternateAddress"] = $a;
    $entry["filtersender"] = $b;
+   $entry["filtermember"] = $d;
 
    $dn = "cn=" . $_POST['cn'] . ",$user_base_dn";
 

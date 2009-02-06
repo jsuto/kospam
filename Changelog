@@ -1,5 +1,30 @@
 0.4.1-rc1:
 
+2009.02.06, SJ
+
+Added a blacklist functionality (similar to the whitelist). If
+the sender is on the blacklist then clapf will syslog and discard
+the message. Please note that the whitelist check takes precedence
+and if you happen to put a sender to both the whitelist and the
+blacklist, the email will get through.
+
+If you need this feature, then create the following sql table:
+
+--
+create table if not exists t_black_list (
+        uid int unsigned not null primary key,
+        blacklist blob default null
+);
+
+create index t_black_list_idx on t_black_list (uid);
+insert into t_black_list (uid) values(0);
+--
+
+If you are using ldap, then you may use the 'filterMember'
+attribute to store the blacklisted email addresses.
+
+(users.c, clapf.h, session.c, spamdrop.c, db-mysql.sql, db-sqlite3.sql)
+
 2009.02.04, SJ
 
 Revised the store concept. You can use the --with-store option

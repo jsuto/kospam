@@ -1,5 +1,5 @@
 /*
- * spam.c, 2009.02.04, SJ
+ * spam.c, 2009.02.05, SJ
  */
 
 #include <stdio.h>
@@ -105,13 +105,72 @@ void save_email_to_queue(struct session_data *sdata, float spaminess, struct __c
     }
 #endif
 
+#ifdef STORE_NFS
+   char qpath[SMALLBUFSIZE];
+   char buf[MAXBUFSIZE];
+   int n, fd, fd2;
+
+   snprintf(qpath, SMALLBUFSIZE-1, "%s/%c", USER_QUEUE_DIR, sdata->name[0]);
+   if(stat(qpath, &st)) mkdir(qpath, QUEUE_DIR_PERMISSION);
+
+   snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s", USER_QUEUE_DIR, sdata->name[0], sdata->name);
+   if(stat(qpath, &st)){
+      mkdir(qpath, QUEUE_DIR_PERMISSION);
+
+      /*
+       * the web server must have write permissions on the user's queue directory.
+       * you have to either extend these rights the to world, ie. 777 or
+       * change group-id of clapf to the web server, ie. usermod -g www-data clapf.
+       * 2008.10.27, SJ
+       */
+
+       chmod(qpath, S_IRUSR|S_IWUSR|S_IXUSR|S_IRGRP|S_IWGRP|S_IXGRP);
+   }
+
+    if(spaminess >= cfg->spam_overall_limit)
+       snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s/s.%s", USER_QUEUE_DIR, sdata->name[0], sdata->name, sdata->ttmpfile);
+    else
+       snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s/h.%s", USER_QUEUE_DIR, sdata->name[0], sdata->name, sdata->ttmpfile);
+
+   /* copy here */
+
+   fd = open(sdata->ttmpfile, O_RDONLY);
+   if(fd == -1){
+      syslog(LOG_PRIORITY, "%s: cannot open to store", sdata->ttmpfile);
+      return;
+   }
+
+   fd2 = open(qpath, O_CREAT|O_EXCL|O_RDWR|O_TRUNC, S_IRUSR|S_IWUSR);
+   if(fd2 == -1){
+      close(fd);
+      syslog(LOG_PRIORITY, "%s: cannot open for save: %s", sdata->ttmpfile, qpath);
+      return;
+   }
+
+   /* copy tmpfile to NFS */
+
+   while((n = read(fd, buf, MAXBUFSIZE)) > 0){
+      write(fd2, buf, n);
+   }
+
+   close(fd);
+   close(fd2);
+
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: try to copy to %s", sdata->ttmpfile, qpath);
+
+   if(stat(qpath, &st) == 0){
+      if(S_ISREG(st.st_mode) == 1) chmod(qpath, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+   }
+
+#endif
+
 #ifdef STORE_MYSQL
    #include <mysql.h>
 
    char *data=NULL;
    char buf[MAXBUFSIZE], *map=NULL;
    unsigned long now=0;
-   int fd, rc=1, is_spam=0;
+   int fd, is_spam=0;
    time_t clock;
 
    time(&clock);
@@ -137,7 +196,6 @@ void save_email_to_queue(struct session_data *sdata, float spaminess, struct __c
 
    data = malloc(2 * st.st_size + strlen(buf) + 1 + 1 + 1);
    if(!data){
-      rc = ERR_MALLOC;
       goto ENDE;
    }
 

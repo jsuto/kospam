@@ -154,6 +154,7 @@
 #define SQL_MISC_TABLE "t_misc"
 #define SQL_USER_TABLE "user"
 #define SQL_WHITE_LIST "t_white_list"
+#define SQL_BLACK_LIST "t_black_list"
 #define SQL_QUEUE_TABLE "t_queue"
 #define SQL_STAT_TABLE "t_stat"
 #define SQL_POLICY_TABLE "t_policy"

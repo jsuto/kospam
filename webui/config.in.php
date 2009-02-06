@@ -29,6 +29,7 @@ $queue_directory = "/var/lib/clapf/queue";
 $user_table = "user";
 $misc_table = "t_misc";
 $whitelist_table = "t_white_list";
+$blacklist_table = "t_black_list";
 $stat_table = "t_stat";
 $policy_group_table = "t_policy";
 

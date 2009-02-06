@@ -89,6 +89,33 @@ function set_whitelist($whitelist, $username){
 }
 
 
+function get_blacklist_by_name($username){
+   global $blacklist_table, $err_sql_error;
+   $blacklist = "";
+
+   $uid = get_uid_by_name($username);
+   if($uid == "") return $blacklist;
+
+   $stmt = "SELECT blacklist FROM $blacklist_table WHERE uid=$uid";
+   $r = mysql_query($stmt) or nice_error($err_sql_error);
+   list($blacklist) = mysql_fetch_row($r);
+   mysql_free_result($r);
+
+   return $blacklist;
+}
+
+
+function set_blacklist($blacklist, $username){
+   global $blacklist_table, $err_sql_error;
+
+   $uid = get_uid_by_name($username);
+
+   $blacklist = mysql_real_escape_string($blacklist);
+   $stmt = "UPDATE $blacklist_table SET blacklist='$blacklist' WHERE uid=$uid";
+   mysql_query($stmt) or nice_error($err_sql_error);
+}
+
+
 /*** users ***/
 
 
@@ -106,7 +133,7 @@ function get_users_email_address($username){
 
 
 function print_user($x, $ro_uid = 0){
-   global $EMAIL_ADDRESS, $USERNAME, $USERID, $POLICY_GROUP, $WHITELIST, $default_policy;
+   global $EMAIL_ADDRESS, $USERNAME, $USERID, $POLICY_GROUP, $WHITELIST, $BLACKLIST, $default_policy;
 
    $len = 30;
 
@@ -127,13 +154,15 @@ function print_user($x, $ro_uid = 0){
 
    print "<tr valign=\"top\"><td>$WHITELIST:</td><td><textarea name=\"whitelist\" cols=\"$len\" rows=\"5\">$x[4]</textarea></td></tr>\n";
 
+   print "<tr valign=\"top\"><td>$BLACKLIST:</td><td><textarea name=\"blacklist\" cols=\"$len\" rows=\"5\">$x[5]</textarea></td></tr>\n";
+
    print "</td></tr>\n";
 
 }
 
 
 function get_user_entry($uid, $email = ""){
-   global $user_table, $whitelist_table, $err_sql_error;
+   global $user_table, $whitelist_table, $blacklist_table, $err_sql_error;
 
    $x = array();
 
@@ -152,7 +181,12 @@ function get_user_entry($uid, $email = ""){
    list($whitelist) = mysql_fetch_row($r);
    mysql_free_result($r);
 
-   array_push($x, $whitelist);
+   $stmt = "SELECT blacklist FROM $blacklist_table WHERE uid=$uid";
+   $r = mysql_query($stmt) or nice_error($err_sql_error);
+   list($blacklist) = mysql_fetch_row($r);
+   mysql_free_result($r);
+
+   array_push($x, $whitelist, $blacklist);
 
    return $x;
 }
@@ -173,7 +207,7 @@ function show_existing_users(){
 
 
 function delete_existing_user_entry($uid, $email){
-   global $user_table, $whitelist_table, $misc_table, $err_sql_error, $BACK, $err_failed_to_remove_user;
+   global $user_table, $whitelist_table, $blacklist_table, $misc_table, $err_sql_error, $BACK, $err_failed_to_remove_user;
 
    $uid = mysql_real_escape_string($uid);
    $email = mysql_real_escape_string($email);
@@ -191,6 +225,8 @@ function delete_existing_user_entry($uid, $email){
    if($n == 1 && $uid > 0){
       $stmt = "DELETE FROM $whitelist_table WHERE uid=$uid";
       mysql_query($stmt);
+      $stmt = "DELETE FROM $blacklist_table WHERE uid=$uid";
+      mysql_query($stmt);
       $stmt = "DELETE FROM $misc_table WHERE uid=$uid";
       mysql_query($stmt);
    }
@@ -198,7 +234,7 @@ function delete_existing_user_entry($uid, $email){
 
 
 function add_user_entry($uid){
-   global $user_table, $whitelist_table, $misc_table, $err_sql_error, $err_existing_user, $BACK;
+   global $user_table, $whitelist_table, $blacklist_table, $misc_table, $err_sql_error, $err_existing_user, $BACK;
 
    while(list($k, $v) = each($_POST)) $$k = mysql_real_escape_string($v);
 
@@ -209,14 +245,17 @@ function add_user_entry($uid){
 
    $stmt = "INSERT INTO $whitelist_table (uid, whitelist) VALUES($uid, '$whitelist')";
    mysql_query($stmt);
-	 
+
+   $stmt = "INSERT INTO $blacklist_table (uid, blacklist) VALUES($uid, '$blacklist')";
+   mysql_query($stmt);
+
    $stmt = "INSERT INTO $misc_table (uid, nham, nspam) VALUES($uid, 0, 0)";
    mysql_query($stmt);
 }
 
 
 function update_user($uid){
-   global $user_table, $whitelist_table, $err_sql_error;
+   global $user_table, $whitelist_table, $blacklist_table, $err_sql_error;
 
    while(list($k, $v) = each($_POST)) $$k = mysql_real_escape_string($v);
 
@@ -224,6 +263,9 @@ function update_user($uid){
    mysql_query($stmt) or nice_error($err_sql_error);
 
    $stmt = "UPDATE $whitelist_table SET whitelist='$whitelist' WHERE uid=$uid";
+   mysql_query($stmt) or nice_error($err_sql_error);
+
+   $stmt = "UPDATE $blacklist_table SET blacklist='$blacklist' WHERE uid=$uid";
    mysql_query($stmt) or nice_error($err_sql_error);
 
 }

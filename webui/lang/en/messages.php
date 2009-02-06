@@ -4,6 +4,7 @@
 
 $TITLE['/index.php'] = 'clapf web UI - Home';
 $TITLE['/whitelist.php'] = 'Whitelist';
+$TITLE['/blacklist.php'] = 'Blacklist';
 $TITLE['/stat.php'] = 'Statistics';
 $TITLE['/q.php'] = 'Quarantine';
 $TITLE['/users.php'] = 'User management';
@@ -18,6 +19,8 @@ $ADD_NEW_USER = "Add new user/$ALIAS";
 $ALIASES = "Aliases";
 
 $BACK = "Back";
+$BLACKLIST = "Blacklist";
+$BLACKLIST_SETTINGS = "Blacklist settings";
 
 $CANCEL = "Cancel";
 $CGI_DAILY_REPORT = "Daily report";

@@ -726,6 +726,7 @@ enable_avast
 enable_kav
 enable_drweb
 enable_whitelist
+enable_blacklist
 enable_case
 enable_rbl
 enable_all_received
@@ -1375,6 +1376,7 @@ Optional Features:
   --enable-kav            build Kaspersky antivirus support
   --enable-drweb          build Dr.Web antivirus support
   --enable-whitelist      use whitelist
+  --enable-blacklist      use blacklist (this is _NOT_ rbl)
   --enable-case           use case sensitive tokens
   --enable-rbl            use the (SU)RBL database
   --enable-all-received   check all the IP-addresses from "Received: from ..." lines against blacklists
@@ -1389,7 +1391,7 @@ Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   --with-userdb[=mysql|ldap]      use either ldap or mysql database holding user data (default: none)
-  --with-store[=mysql|fs]         use either mysql database or the local filesystem to keep emails (default: none)
+  --with-store[=fs|nfs]         use either the local filesystem or NFS to keep emails (default: none)
   --with-tokendb[=mysql|sqlite3]  use either mysql or sqlite3 database holding tokens (default: none)
   --with-clapf-user=username      what user the clapf daemon shall be run as
 
@@ -3867,6 +3869,7 @@ have_all_received="no"
 have_gsl="no"
 have_store="no"
 have_whitelist="no"
+have_blacklist="no"
 have_case="no"
 have_policy="no"
 have_qcache="no"
@@ -4272,6 +4275,21 @@ fi
    if test "$want_whitelist" = "yes"; then
       have_whitelist="yes"
    fi
+
+
+
+# Check whether --enable-blacklist was given.
+if test "${enable_blacklist+set}" = set; then
+  enableval=$enable_blacklist; want_blacklist=$enableval
+else
+  want_blacklist="no"
+fi
+
+
+   if test "$want_blacklist" = "yes"; then
+      have_blacklist="yes"
+   fi
+
 
 
 
@@ -6484,6 +6502,11 @@ if test "$STORE" = "fs"; then
    defs="$defs -DHAVE_STORE -DSTORE_FS"
 fi
 
+if test "$STORE" = "nfs"; then
+   echo "message store: nfs"
+   defs="$defs -DHAVE_STORE -DSTORE_NFS"
+fi
+
 if test "$want_spamsum" = "yes"; then
    echo "spamsum: yes"
    spamsum_install="install-spamsum"
@@ -6496,6 +6519,13 @@ if test "$have_whitelist" = "yes"; then
    defs="$defs -DHAVE_WHITELIST"
 else
    echo "whitelist: no"
+fi
+
+if test "$have_blacklist" = "yes"; then
+   echo "blacklist: yes"
+   defs="$defs -DHAVE_BLACKLIST"
+else
+   echo "blacklist: no"
 fi
 
 if test "$have_case" = "yes"; then

@@ -4,6 +4,7 @@
 
 $TITLE['/index.php'] = 'clapf web UI - Kezdõlap';
 $TITLE['/whitelist.php'] = 'Fehérlista';
+$TITLE['/blacklist.php'] = 'Feketelista';
 $TITLE['/stat.php'] = 'Statisztika';
 $TITLE['/q.php'] = 'Karantén';
 $TITLE['/users.php'] = 'Felhasználó menedzselés';
@@ -18,6 +19,8 @@ $ADD_NEW_USER = "Új felhasználó/$ALIAS hozzáadása";
 $ALIASES = "Email álnevek";
 
 $BACK = "Vissza";
+$BLACKLIST = "Feketelista";
+$BLACKLIST_SETTINGS = "Feketelista beállítások";
 
 $CANCEL = "Mégse";
 $CGI_DAILY_REPORT = "Napi riport";

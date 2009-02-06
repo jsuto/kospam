@@ -1,5 +1,5 @@
 /*
- * users.c, 2009.02.02, SJ
+ * users.c, 2009.02.06, SJ
  */
 
 #include <stdio.h>
@@ -74,7 +74,7 @@ int get_user_from_email(struct session_data *sdata, char *email, struct __config
  * check whether the email address is on the white list
  */
 
-int is_sender_on_white_list(struct session_data *sdata, char *email, struct __config *cfg){
+int is_sender_on_black_or_white_list(struct session_data *sdata, char *email, char *table, struct __config *cfg){
    MYSQL_RES *res;
    MYSQL_ROW row;
    char buf[SMALLBUFSIZE];
@@ -82,7 +82,7 @@ int is_sender_on_white_list(struct session_data *sdata, char *email, struct __co
 
    if(!email) return 0;
 
-   snprintf(buf, SMALLBUFSIZE-1, "SELECT whitelist FROM %s WHERE uid=0 OR uid=%ld", SQL_WHITE_LIST, sdata->uid);
+   snprintf(buf, SMALLBUFSIZE-1, "SELECT whitelist FROM %s WHERE uid=0 OR uid=%ld", table, sdata->uid);
 
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sql: %s", sdata->ttmpfile, buf);
 
@@ -144,7 +144,7 @@ int get_user_from_email(struct session_data *sdata, char *email, struct __config
    return 1;
 }
 
-int is_sender_on_white_list(struct session_data *sdata, char *email, struct __config *cfg){
+int is_sender_on_black_or_white_list(struct session_data *sdata, char *email, char *table, struct __config *cfg){
    sqlite3_stmt *pStmt;
    const char **pzTail=NULL;
    char buf[SMALLBUFSIZE];
@@ -152,7 +152,7 @@ int is_sender_on_white_list(struct session_data *sdata, char *email, struct __co
 
    if(!email) return 0;
 
-   snprintf(buf, SMALLBUFSIZE-1, "SELECT whitelist FROM %s WHERE uid=0 OR uid=%ld", SQL_WHITE_LIST, sdata->uid);
+   snprintf(buf, SMALLBUFSIZE-1, "SELECT whitelist FROM %s WHERE uid=0 OR uid=%ld", table, sdata->uid);
 
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sql: %s", sdata->ttmpfile, buf);
 
@@ -254,7 +254,7 @@ int get_user_from_email(struct session_data *sdata, char *email, struct __config
 }
 
 
-int is_sender_on_white_list(struct session_data *sdata, char *email, struct __config *cfg){
+int is_sender_on_black_or_white_list(struct session_data *sdata, char *email, char *table, struct __config *cfg){
    int i, rc, ret=0;
    char filter[SMALLBUFSIZE], *attrs[] = { NULL }, **vals;
    LDAPMessage *res, *e;
@@ -269,7 +269,12 @@ int is_sender_on_white_list(struct session_data *sdata, char *email, struct __co
    e = ldap_first_entry(sdata->ldap, res);
 
    if(e){
-      vals = ldap_get_values(sdata->ldap, e, "filterSender");
+
+      if(strcmp(table, SQL_WHITE_LIST) == 0)
+         vals = ldap_get_values(sdata->ldap, e, "filterSender");
+      else
+         vals = ldap_get_values(sdata->ldap, e, "filterMember");
+
       for(i=0; i<ldap_count_values(vals); i++){
          ret = whitelist_check((char *)vals[i], sdata->ttmpfile, email, cfg);
          if(ret == 1) break;

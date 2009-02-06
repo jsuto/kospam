@@ -33,6 +33,7 @@ if($ADMIN[$username] == 1) $admin_user = 1;
           <li><a href="<?php print $base_url; ?>/index.php"<?php if(strstr($_SERVER['PHP_SELF'], "/index.php")) print " id=\"active\""; ?>><?php print $HOME; ?></a></li>
           <li><a href="<?php print $base_url; ?>/q.php"<?php if(strstr($_SERVER['PHP_SELF'], "/q.php")) print ", id=\"active\""; ?>><?php print $QUARANTINE; ?></a></li>
           <li><a href="<?php print $base_url; ?>/whitelist.php"<?php if(strstr($_SERVER['PHP_SELF'], "/whitelist.php")) print " id=\"active\""; ?>><?php print $WHITELIST; ?></a></li>
+          <li><a href="<?php print $base_url; ?>/blacklist.php"<?php if(strstr($_SERVER['PHP_SELF'], "/blacklist.php")) print " id=\"active\""; ?>><?php print $BLACKLIST; ?></a></li>
           <li><a href="<?php print $base_url; ?>/stat.php"<?php if(strstr($_SERVER['PHP_SELF'], "/stat.php")) print " id=\"active\""; ?>><?php print $STATS; ?></a></li>
 <?php
    if($admin_user == 1){

@@ -530,20 +530,29 @@ void init_session_data(struct session_data *sdata){
                         /* check whitelist first */
 
                      #ifdef HAVE_WHITELIST
-                        if(is_sender_on_white_list(&sdata, email2, &my_cfg) == 1){
+                        if(is_sender_on_black_or_white_list(&sdata, email2, SQL_WHITE_LIST, &my_cfg) == 1){
                            syslog(LOG_PRIORITY, "%s: sender (%s) found on whitelist", sdata.ttmpfile, email2);
-                           snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on white list\r\n", cfg->clapf_header_field);
+                           snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on whitelist\r\n", cfg->clapf_header_field);
                            goto END_OF_TRAINING;
                         }
-                        else {
                      #endif
-                           if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: running Bayesian test", sdata.ttmpfile);
-                           spaminess = bayes_file(&sdata, &sstate, &my_cfg);
 
-                           if(spaminess > 0.9999) snprintf(reason, SMALLBUFSIZE-1, "%s%s\r\n", cfg->clapf_header_field, MSG_ABSOLUTELY_SPAM);
-                     #ifdef HAVE_WHITELIST
+                        /* then give blacklist a try */
+
+                     #ifdef HAVE_BLACKLIST
+                        if(is_sender_on_black_or_white_list(&sdata, email2, SQL_BLACK_LIST, &my_cfg) == 1){
+                           syslog(LOG_PRIORITY, "%s: sender (%s) found on blacklist", sdata.ttmpfile, email2);
+                           snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on blacklist\r\n", cfg->clapf_header_field);
+
+                           snprintf(acceptbuf, MAXBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata.ttmpfile, email);
+                           goto SEND_RESULT;
                         }
                      #endif
+
+                        if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: running Bayesian test", sdata.ttmpfile);
+                        spaminess = bayes_file(&sdata, &sstate, &my_cfg);
+
+                        if(spaminess > 0.9999) snprintf(reason, SMALLBUFSIZE-1, "%s%s\r\n", cfg->clapf_header_field, MSG_ABSOLUTELY_SPAM);
 
                         /* skip TUM training on a blackhole message, unless it may learn a missed spam as a good email */
 

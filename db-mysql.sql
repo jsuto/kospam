@@ -39,6 +39,14 @@ create table if not exists t_white_list (
 create index t_white_list_idx on t_white_list (uid);
 insert into t_white_list (uid) values(0);
 
+create table if not exists t_black_list (
+        uid int unsigned not null primary key,
+        blacklist blob default null
+);
+
+create index t_black_list_idx on t_black_list (uid);
+insert into t_black_list (uid) values(0);
+
 create table if not exists t_queue (
 	id char(32) not null,
 	uid int unsigned not null,

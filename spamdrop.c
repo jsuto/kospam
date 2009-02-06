@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2009.02.04, SJ
+ * spamdrop.c, 2009.02.06, SJ
  */
 
 #include <stdio.h>
@@ -383,12 +383,23 @@ int main(int argc, char **argv, char **envp){
       /* whitelist check first */
 
    #ifdef HAVE_WHITELIST
-      if(is_sender_on_white_list(&sdata, from, &cfg)){
+      if(is_sender_on_black_or_white_list(&sdata, from, SQL_WHITE_LIST, &cfg)){
          syslog(LOG_PRIORITY, "%s: sender (%s) found on whitelist", sdata.ttmpfile, from);
-         snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on white list\r\n", cfg.clapf_header_field);
+         snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on whitelist\r\n", cfg.clapf_header_field);
          goto ENDE_SPAMDROP;
       }
    #endif
+
+      /* then give blacklist a try */
+
+   #ifdef HAVE_BLACKLIST
+      if(is_sender_on_black_or_white_list(&sdata, from, SQL_BLACK_LIST, &cfg) == 1){
+         syslog(LOG_PRIORITY, "%s: sender (%s) found on blacklist", sdata.ttmpfile, from);
+         snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on blacklist\r\n", cfg.clapf_header_field);
+         goto ENDE;
+      }
+   #endif
+
 
       /* query spaminess */
 

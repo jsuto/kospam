@@ -1,5 +1,17 @@
 0.4.1-rc1:
 
+2009.02.13, SJ
+
+You can disable the update of the token timestamps by
+setting update_tokens=0 in clapf.conf. This is useful
+if you do not want to run the periodic purge script,
+and you want to spare the UPDATE t_token .... SQL command.
+
+If you are running the periodic purge script, leave
+the default settings, ie. update_tokens=1
+
+(cfg,c, cfg.h, session.c, spamdrop.c, example.conf)
+
 2009.02.06, SJ
 
 Added a blacklist functionality (similar to the whitelist). If

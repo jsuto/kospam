@@ -1,5 +1,5 @@
 /*
- * session.c, 2009.02.02, SJ
+ * session.c, 2009.02.13, SJ
  */
 
 #include <stdio.h>
@@ -594,16 +594,17 @@ void init_session_data(struct session_data *sdata){
 
                      /* update token timestamps */
 
-                     gettimeofday(&tv1, &tz);
-                  #ifdef HAVE_MYSQL
-                     utokens = update_mysql_tokens(sdata.mysql, sstate.token_hash, sdata.uid);
-                  #endif
-                  #ifdef HAVE_SQLITE3
-                     utokens = update_sqlite3_tokens(sdata.db, sstate.token_hash);
-                  #endif
-                     gettimeofday(&tv2, &tz);
-                     if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: updated %d/%ld tokens: %ld [ms]", sdata.ttmpfile, utokens, sstate.n_token, tvdiff(tv2, tv1)/1000);
-
+                     if(cfg->update_tokens == 1){
+                        gettimeofday(&tv1, &tz);
+                     #ifdef HAVE_MYSQL
+                        utokens = update_mysql_tokens(sdata.mysql, sstate.token_hash, sdata.uid);
+                     #endif
+                     #ifdef HAVE_SQLITE3
+                        utokens = update_sqlite3_tokens(sdata.db, sstate.token_hash);
+                     #endif
+                        gettimeofday(&tv2, &tz);
+                        if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: updated %d/%ld tokens: %ld [ms]", sdata.ttmpfile, utokens, sstate.n_token, tvdiff(tv2, tv1)/1000);
+                     } 
 
                   END_OF_TRAINING:
 

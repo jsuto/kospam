@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2009.02.06, SJ
+ * spamdrop.c, 2009.02.13, SJ
  */
 
 #include <stdio.h>
@@ -189,13 +189,12 @@ int main(int argc, char **argv, char **envp){
 #endif
 
 
-   /* check for the queue directory, and run the helper script, if we have to, 2008.04.12, SJ */
-
-   snprintf(buf, MAXBUFSIZE-1, "%s/%s/%c/%s", cfg.chrootdir, USER_QUEUE_DIR, username[0], username);
+   /* check for the queue directory, and run the helper script, if we have to */
 
 #ifdef HAVE_SPAMDROP_HELPER
-   if(stat(buf, &st) != 0){
+   snprintf(buf, MAXBUFSIZE-1, "%s/%s/%c/%s", cfg.chrootdir, USER_QUEUE_DIR, username[0], username);
 
+   if(stat(buf, &st) != 0){
       syslog(LOG_PRIORITY, "running spamdrop helper script: %s, for user: %s", SPAMDROP_HELPER_PROGRAM, username);
 
       snprintf(envvar, SMALLBUFSIZE-1, "YOURUSERNAME=%s", username);
@@ -213,12 +212,6 @@ int main(int argc, char **argv, char **envp){
 
    chdir(cfg.workdir);
 
-   if(cfg.store_metadata == 1){
-      if(chdir(buf)){
-         syslog(LOG_PRIORITY, "cannot chdir to %s", buf);
-         return EX_TEMPFAIL;
-      }
-   }
 
    if(!from) from = getenv("FROM");
 
@@ -406,17 +399,18 @@ int main(int argc, char **argv, char **envp){
       spaminess = bayes_file(&sdata, &state, &cfg);
 
       /* update tokens */
- 
-   #ifdef HAVE_MYSQL
-      update_mysql_tokens(sdata.mysql, state.token_hash, sdata.uid);
-   #endif
-   #ifdef HAVE_SQLITE3
-      update_sqlite3_tokens(sdata.db, state.token_hash);
-   #endif
-   #ifdef HAVE_MYDB
-      update_tokens(cfg.mydbfile, sdata.mhash, state.token_hash);
-   #endif
 
+      if(cfg.update_tokens == 1){
+      #ifdef HAVE_MYSQL
+         update_mysql_tokens(sdata.mysql, state.token_hash, sdata.uid);
+      #endif
+      #ifdef HAVE_SQLITE3
+         update_sqlite3_tokens(sdata.db, state.token_hash);
+      #endif
+      #ifdef HAVE_MYDB
+         update_tokens(cfg.mydbfile, sdata.mhash, state.token_hash);
+      #endif
+      }
 
    #ifdef HAVE_LANG_DETECT
       lang = check_lang(state.token_hash);

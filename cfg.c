@@ -1,5 +1,5 @@
 /*
- * cfg.c, 2009.01.13, SJ
+ * cfg.c, 2009.02.13, SJ
  */
 
 #include <stdio.h>
@@ -133,6 +133,9 @@ struct __config read_config(char *configfile){
    cfg.mysql_enable_autoreconnect = 0;
 
    strncpy(cfg.pidfile, PIDFILE, MAXVAL-1);
+
+   cfg.update_tokens = 1;
+
 
    /* parse the config file */
 
@@ -310,6 +313,9 @@ struct __config read_config(char *configfile){
 
                   if(strcmp(key, "spam_overall_limit") == 0)
                      cfg.spam_overall_limit = atof(val);
+
+                  if(strcmp(key, "update_tokens") == 0)
+                     cfg.update_tokens = atoi(val);
 
                   if(strcmp(key, "spaminess_oblivion_limit") == 0)
                      cfg.spaminess_oblivion_limit = atof(val);

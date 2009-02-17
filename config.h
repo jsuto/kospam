@@ -1,5 +1,5 @@
 /*
- * config.h, 2009.01.29, SJ
+ * config.h, 2009.02.16, SJ
  */
 
 #ifndef _CONFIG_H
@@ -79,7 +79,7 @@
 /* this should be at least header_size_limit, see the output of postconf, 2006.08.21, SJ */
 #define MAX_MAIL_HEADER_SIZE 128000
 
-#define CLAPFUSAGE "usage: " PROGNAME " -c <config file> -d -V -h"
+#define CLAPFUSAGE "usage: " PROGNAME " -c <config file> -u <uid> -g <gid> -d -V -h"
 
 #define SPAMDROPUSAGE "usage: spamdrop [-c <config file>] [-u <username>] [-s] [-p] [-H | -S] < message"
 

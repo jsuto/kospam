@@ -1,5 +1,5 @@
 /*
- * session.c, 2009.02.13, SJ
+ * session.c, 2009.02.16, SJ
  */
 
 #include <stdio.h>
@@ -509,6 +509,26 @@ void init_session_data(struct session_data *sdata){
 
                   if(my_cfg.use_antispam == 1 && (my_cfg.max_message_size_to_filter == 0 || sdata.tot_len < my_cfg.max_message_size_to_filter) ){
 
+                  #ifdef SPAMC_EMUL
+                     rc = spamc_emul(sdata.ttmpfile, sdata.tot_len, cfg);
+                     gettimeofday(&tv_spam_stop, &tz);
+
+                     if(rc == 1){
+                        snprintf(spaminessbuf, MAXBUFSIZE-1, "%s%s\r\n%s%ld ms\r\n%s\r\n",
+                              cfg->clapf_header_field, sdata.ttmpfile, cfg->clapf_header_field, tvdiff(tv_spam_stop, tv_spam_start)/1000, cfg->clapf_spam_header_field);
+
+                        spaminess = 0.99;
+
+                        syslog(LOG_PRIORITY, "%s: SPAM", sdata.ttmpfile);
+                     }
+                     else {
+                        snprintf(spaminessbuf, MAXBUFSIZE-1, "%s%s\r\n%s%ld ms\r\n",
+                              cfg->clapf_header_field, sdata.ttmpfile, cfg->clapf_header_field, tvdiff(tv_spam_stop, tv_spam_start)/1000);
+                     }
+
+                     goto END_OF_SPAM_CHECK;
+                  #endif
+
                      /* some MTAs strip our signo from the bounce. So if we would raise the spaminess
                       * then we may commit a false positive. Thus in case of a missing signo, let
                       * the statistical analysis decide the fate of a dummy bounce message. 2009.01.20, SJ
@@ -522,7 +542,6 @@ void init_session_data(struct session_data *sdata){
                         else
                            syslog(LOG_PRIORITY, "%s: looks like a bounce, but our signo is missing", sdata.ttmpfile);
                      }
-
 
 
                      if(db_conn == 1){

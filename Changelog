@@ -1,5 +1,44 @@
 0.4.1-rc1:
 
+2009.02.16, SJ
+
+You can start clapf as root, and you can specify what uid and gid
+you want clapf to run (after it binds to the given port).
+
+(clapf.c)
+
+Added an experimental spamd support. So if you want to replace
+amavis with clapf you are good to go.
+I recommend to use either the regular statistical anti-spam
+module or the spamc emulation.
+
+If you want to try how it performs, the use the --enable-spamc-emul
+configure option, and set the spamd_addr, spamd_port and spamc_user
+variables at the end of the clapf.conf file.
+
+(cfg.c, cfg.h, session.c, spamc.c)
+
+2009.02.16, SJ
+
+Possible to use per domain specifications in the user
+table. Let's say you want to give some specific settings
+to the domain @aaaa.fu, but something special to user1@aaaa.fu.
+Then setup user1@aaaa.fu, and instead entering every possible
+other users in the @aaaa.fu domain, add only the @aaaa.fu
+domain itself.
+
+mysql>select * from user;
+
+uid |   username   |   email       | policy_group |
+----+--------------+---------------+--------------+
+1001| user1        | user1@aaaa.fu |      14      |
+1001| @aaaa.fu     | @aaaa.fu      |       0      |
+
+....
+
+
+(users.c)
+
 2009.02.13, SJ
 
 You can disable the update of the token timestamps by

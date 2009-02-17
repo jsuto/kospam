@@ -1,5 +1,5 @@
 /*
- * clapf.c, 2009.01.21, SJ
+ * clapf.c, 2009.02.16, SJ
  */
 
 #include <stdio.h>
@@ -183,13 +183,13 @@ void sigchld(){
 }
 
 int main(int argc, char **argv){
-    int i, new_sd, yes=1, pid, daemonise=0;
+    int i, new_sd, yes=1, pid, daemonise=0, uid=0, gid=0;
     unsigned int clen;
     struct sockaddr_in client_addr, serv_addr;
     struct in_addr addr;
     FILE *f;
 
-    while((i = getopt(argc, argv, "c:dVhQ")) > 0){
+    while((i = getopt(argc, argv, "c:u:g:dVhQ")) > 0){
        switch(i){
 
          case 'c' :
@@ -198,6 +198,14 @@ int main(int argc, char **argv){
 
          case 'd' :
                     daemonise = 1;
+                    break;
+
+         case 'u' :
+                    uid = atoi(optarg);
+                    break;
+
+         case 'g' :
+                    gid = atoi(optarg);
                     break;
 
          case 'V' :
@@ -244,6 +252,9 @@ int main(int argc, char **argv){
 
     if(listen(sd, cfg.backlog) == -1)
         fatal(ERR_LISTEN);
+
+    if(gid > 0) setgid(gid);
+    if(uid > 0) setuid(uid);
 
     syslog(LOG_PRIORITY, "%s %s starting", PROGNAME, VERSION);
 

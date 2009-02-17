@@ -426,6 +426,18 @@ dnl enable spamsum support
     fi
 
 
+dnl SpamAssassin's spamd support
+
+    AC_ARG_ENABLE(spamc-emul,
+          [  --enable-spamc-emul     enable spamc emulation to use spamd of SpamAssassin], want_spamc_emul=$enableval, want_spamc_emul="no")
+
+    if test "$want_spamc_emul" = "yes"; then
+       defs="$defs -DSPAMC_EMUL -DHAVE_ANTISPAM"
+       objs="$objs spamc.o hash2.o bayes.o buffer.o"
+    fi
+
+
+
 dnl user running clapf
 
 AC_ARG_WITH(clapf-user,

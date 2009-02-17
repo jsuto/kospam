@@ -1,5 +1,5 @@
 /*
- * cfg.h, 2009.02.13, SJ
+ * cfg.h, 2009.02.16, SJ
  */
 
 #ifndef _CFG_H
@@ -176,6 +176,10 @@ struct __config {
 
    // spamsum
    char sig_db[MAXVAL];
+
+   char spamd_addr[MAXVAL];
+   int spamd_port;
+   char spamc_user[MAXVAL];
 
 };
 

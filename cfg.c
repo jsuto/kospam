@@ -1,5 +1,5 @@
 /*
- * cfg.c, 2009.02.13, SJ
+ * cfg.c, 2009.02.16, SJ
  */
 
 #include <stdio.h>
@@ -472,6 +472,15 @@ struct __config read_config(char *configfile){
 
                   if(strcmp(key, "pidfile") == 0)
                      memcpy(cfg.pidfile, val, MAXVAL-1);
+
+                  if(strcmp(key, "spamd_addr") == 0)
+                     memcpy(cfg.spamd_addr, val, MAXVAL-1);
+
+                  if(strcmp(key, "spamd_port") == 0)
+                     cfg.spamd_port = atoi(val);
+
+                  if(strcmp(key, "spamc_user") == 0)
+                     memcpy(cfg.spamc_user, val, MAXVAL-1);
 
                }
 

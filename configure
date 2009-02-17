@@ -738,6 +738,7 @@ with_tokendb
 enable_lmtp
 enable_language_detection
 enable_spamsum
+enable_spamc_emul
 with_clapf_user
 enable_spamdrop_helper
 '
@@ -1385,6 +1386,7 @@ Optional Features:
   --enable-lmtp           use LMTP local delivery (default: SMTP)
   --enable-language-detection use the language detection feature (experimental)
   --enable-spamsum        enable spamsum support (experimental)
+  --enable-spamc-emul     enable spamc emulation to use spamd of SpamAssassin
   --enable-spamdrop-helper use external spamdrop helper program
 
 Optional Packages:
@@ -5955,6 +5957,22 @@ fi
        defs="$defs -DHAVE_SPAMSUM"
        spamsum_libs="-lspamsum"
     fi
+
+
+
+    # Check whether --enable-spamc-emul was given.
+if test "${enable_spamc_emul+set}" = set; then
+  enableval=$enable_spamc_emul; want_spamc_emul=$enableval
+else
+  want_spamc_emul="no"
+fi
+
+
+    if test "$want_spamc_emul" = "yes"; then
+       defs="$defs -DSPAMC_EMUL -DHAVE_ANTISPAM"
+       objs="$objs spamc.o hash2.o bayes.o buffer.o"
+    fi
+
 
 
 

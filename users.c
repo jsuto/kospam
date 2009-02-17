@@ -1,5 +1,5 @@
 /*
- * users.c, 2009.02.06, SJ
+ * users.c, 2009.02.16, SJ
  */
 
 #include <stdio.h>
@@ -32,12 +32,15 @@ int get_user_from_email(struct session_data *sdata, char *email, struct __config
    MYSQL_RES *res;
    MYSQL_ROW row;
    char *p, buf[MAXBUFSIZE];
+   int rc=0;
 
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: query user data from %s", sdata->ttmpfile, email);
 
    sdata->uid = 0;
    sdata->policy_group = 0;
    memset(sdata->name, 0, SMALLBUFSIZE);
+
+   if(email == NULL) return 0;
 
    if((p = strcasestr(email, "+spam"))){
       *p = '\0';
@@ -61,14 +64,35 @@ int get_user_from_email(struct session_data *sdata, char *email, struct __config
             sdata->uid = atol(row[0]);
             strncpy(sdata->name, (char *)row[1], SMALLBUFSIZE-1);
             sdata->policy_group = atoi(row[2]);
+            rc = 1;
          }               
          mysql_free_result(res);
       }
    }
 
+   if(rc == 1) return 0;
 
-   return 1;
+   p = strchr(email, '@');
+   if(!p) return 0;
+
+   snprintf(buf, MAXBUFSIZE-1, "SELECT uid, username, policy_group FROM %s WHERE email='%s'", SQL_USER_TABLE, p);
+
+   if(mysql_real_query(&(sdata->mysql), buf, strlen(buf)) == 0){
+      res = mysql_store_result(&(sdata->mysql));
+      if(res != NULL){
+         row = mysql_fetch_row(res);
+         if(row){
+            sdata->uid = atol(row[0]);
+            strncpy(sdata->name, (char *)row[1], SMALLBUFSIZE-1);
+            sdata->policy_group = atoi(row[2]);
+         }
+         mysql_free_result(res);
+      }
+   }
+
+   return 0;
 }
+
 
 /*
  * check whether the email address is on the white list
@@ -112,12 +136,15 @@ int get_user_from_email(struct session_data *sdata, char *email, struct __config
    sqlite3_stmt *pStmt;
    const char **pzTail=NULL;
    char *p, buf[MAXBUFSIZE];
+   int rc=0;
 
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: query user data from %s", sdata->ttmpfile, email);
 
    sdata->uid = 0;
    sdata->policy_group = 0;
    memset(sdata->name, 0, SMALLBUFSIZE);
+
+   if(email == NULL) return 0;
 
    if((p = strcasestr(email, "+spam"))){
       *p = '\0';
@@ -137,12 +164,32 @@ int get_user_from_email(struct session_data *sdata, char *email, struct __config
       if(sqlite3_step(pStmt) == SQLITE_ROW){
          //sdata->uid = sqlite3_column_int(pStmt, 0);
          strncpy(sdata->name, (char *)sqlite3_column_blob(pStmt, 1), SMALLBUFSIZE-1);
+
+         rc = 1;
       }
    }
    sqlite3_finalize(pStmt);
 
-   return 1;
+   if(rc == 1) return 0;
+
+
+   p = strchr(email, '@');
+   if(!p) return 0;
+
+   snprintf(buf, MAXBUFSIZE-1, "SELECT uid, username FROM %s WHERE email='%s'", SQL_USER_TABLE, p);
+
+   if(sqlite3_prepare_v2(sdata->db, buf, -1, &pStmt, pzTail) == SQLITE_OK){
+      if(sqlite3_step(pStmt) == SQLITE_ROW){
+         //sdata->uid = sqlite3_column_int(pStmt, 0);
+         strncpy(sdata->name, (char *)sqlite3_column_blob(pStmt, 1), SMALLBUFSIZE-1);
+      }
+   }
+   sqlite3_finalize(pStmt);
+
+
+   return 0;
 }
+
 
 int is_sender_on_black_or_white_list(struct session_data *sdata, char *email, char *table, struct __config *cfg){
    sqlite3_stmt *pStmt;
@@ -215,8 +262,8 @@ LDAP *do_bind_ldap(char *ldap_host, char *binddn, char *bindpw, int usetls){
  */
 
 int get_user_from_email(struct session_data *sdata, char *email, struct __config *cfg){
-   int rc;
-   char filter[SMALLBUFSIZE], *attrs[] = { NULL }, **vals;
+   int rc=0;
+   char filter[SMALLBUFSIZE], *attrs[] = { NULL }, **vals, *p;
    LDAPMessage *res, *e;
 
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: query user data from %s", sdata->ttmpfile, email);
@@ -225,15 +272,42 @@ int get_user_from_email(struct session_data *sdata, char *email, struct __config
    sdata->policy_group = 0;
    memset(sdata->name, 0, SMALLBUFSIZE);
 
+   if(email == NULL) return 0;
+
    if(sdata->ldap == NULL) return 0;
 
    snprintf(filter, SMALLBUFSIZE-1, "(|(%s=%s)(%s=%s))", cfg->email_address_attribute_name, email, cfg->email_alias_attribute_name, email);
 
    rc = ldap_search_s(sdata->ldap, cfg->ldap_base, LDAP_SCOPE, filter, attrs, 0, &res);
-   if(rc) return 0;
 
    e = ldap_first_entry(sdata->ldap, res);
+   if(e){
+      vals = ldap_get_values(sdata->ldap, e, "uid");
+      if(ldap_count_values(vals) > 0) sdata->uid = atol(vals[0]);
+      ldap_value_free(vals);
 
+      vals = ldap_get_values(sdata->ldap, e, "cn");
+      if(ldap_count_values(vals) > 0) strncpy(sdata->name, vals[0], SMALLBUFSIZE-1);
+      ldap_value_free(vals);
+
+      vals = ldap_get_values(sdata->ldap, e, "policyGroupId");
+      if(ldap_count_values(vals) > 0) sdata->policy_group = atoi(vals[0]);
+      ldap_value_free(vals);
+
+      rc = 1;
+   }
+   ldap_msgfree(res);
+
+   if(rc == 1) return 0;
+
+   p = strchr(email, '@');
+   if(!p) return 0;
+
+   snprintf(filter, SMALLBUFSIZE-1, "(|(%s=%s)(%s=%s))", cfg->email_address_attribute_name, p, cfg->email_alias_attribute_name, p);
+
+   rc = ldap_search_s(sdata->ldap, cfg->ldap_base, LDAP_SCOPE, filter, attrs, 0, &res);
+
+   e = ldap_first_entry(sdata->ldap, res);
    if(e){
       vals = ldap_get_values(sdata->ldap, e, "uid");
       if(ldap_count_values(vals) > 0) sdata->uid = atol(vals[0]);
@@ -247,10 +321,9 @@ int get_user_from_email(struct session_data *sdata, char *email, struct __config
       if(ldap_count_values(vals) > 0) sdata->policy_group = atoi(vals[0]);
       ldap_value_free(vals);
    }
-
    ldap_msgfree(res);
 
-   return 1;
+   return 0;
 }
 
 

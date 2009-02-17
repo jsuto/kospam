@@ -1,5 +1,5 @@
 /*
- * clapf.h, 2009.01.28, SJ
+ * clapf.h, 2009.02.16, SJ
  */
 
 #include <misc.h>
@@ -37,6 +37,8 @@
 void do_training(struct session_data *sdata, char *email, char *acceptbuf, struct __config *cfg);
 void save_email_to_queue(struct session_data *sdata, float spaminess, struct __config *cfg);
 int is_sender_on_black_or_white_list(struct session_data *sdata, char *email, char *table, struct __config *cfg);
+
+int spamc_emul(char *tmpfile, int size, struct __config *cfg);
 
 char *check_lang(struct node *xhash[]);
 

@@ -1,5 +1,5 @@
 /*
- * mysql.c, 2009.02.02, SJ
+ * mysql.c, 2009.02.17, SJ
  */
 
 #include <stdio.h>
@@ -232,21 +232,4 @@ int my_walk_hash(MYSQL mysql, int ham_or_spam, unsigned long uid, struct node *x
    return n;
 }
 
-
-/*
- * insert email entry to queue table
- */
-
-void insert_2_queue(struct session_data *sdata, int is_spam){
-   char buf[SMALLBUFSIZE];
-   unsigned long now=0;
-   time_t clock;
-
-   time(&clock);
-   now = clock;
-
-   snprintf(buf, SMALLBUFSIZE-1, "INSERT INTO %s (id, uid, is_spam, ts) VALUES('%s', %ld, %d, %ld)", SQL_QUEUE_TABLE, sdata->ttmpfile, sdata->uid, is_spam, now);
-
-   mysql_real_query(&(sdata->mysql), buf, strlen(buf));
-}
 

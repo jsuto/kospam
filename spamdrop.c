@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2009.02.13, SJ
+ * spamdrop.c, 2009.02.18, SJ
  */
 
 #include <stdio.h>
@@ -362,6 +362,8 @@ int main(int argc, char **argv, char **envp){
 
       if(cfg.group_type == GROUP_SHARED)
          sdata.uid = 0;
+
+      if(from) get_user_from_email(&sdata, from, &cfg);
 
       train_message(&sdata, &state, rounds, is_spam, train_mode, &cfg);
    }

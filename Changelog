@@ -1,5 +1,21 @@
 0.4.1-rc1:
 
+2009.02.18, SJ
+
+If you train with spamdrop from the command line, you may
+use the FROM environment variable to train for a different
+user, eg.
+
+FROM=someother@email spamdrop -S < message
+
+(spamdrop.c)
+
+2009.02.17, SJ
+
+Removed the unused insert_2_queue() function.
+
+(mysql.c, sqlite3.c)
+
 2009.02.16, SJ
 
 You can start clapf as root, and you can specify what uid and gid

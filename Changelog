@@ -8,7 +8,19 @@ user, eg.
 
 FROM=someother@email spamdrop -S < message
 
+Alternatively you can use the -U command line parameter to
+specify what clapf user-id to train.
+
+Example 1: train a message for jack (assuming that his clapf user-id is 1007)
+
+spamdrop -U 1007 -S < message
+
+Example 2: train the global database
+
+spamdrop -U 0 -S < message
+
 (spamdrop.c)
+
 
 2009.02.17, SJ
 

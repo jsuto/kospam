@@ -76,7 +76,7 @@ int main(int argc, char **argv, char **envp){
    int print_message=1, print_summary_only=0, put_subject_spam_prefix=0, sent_subject_spam_prefix=0;
    int is_spam=0, train_as_ham=0, train_as_spam=0, blackhole_request=0, training_request=0;
    int train_mode=T_TOE;
-   uid_t u;
+   uid_t u=-1;
    char buf[MAXBUFSIZE], qpath[SMALLBUFSIZE], trainbuf[SMALLBUFSIZE], ID[RND_STR_LEN+1], whitelistbuf[SMALLBUFSIZE], clapf_info[MAXBUFSIZE];
    char *configfile=CONFIG_FILE, *username=NULL, *from=NULL, *recipient=NULL;
    struct timezone tz;
@@ -102,7 +102,7 @@ int main(int argc, char **argv, char **envp){
 #endif
 
 
-   while((i = getopt(argc, argv, "c:u:f:r:SHsdh?")) > 0){
+   while((i = getopt(argc, argv, "c:u:U:f:r:SHsdh?")) > 0){
        switch(i){
 
          case 'c' :
@@ -111,6 +111,10 @@ int main(int argc, char **argv, char **envp){
 
          case 'u' :
                     username = optarg;
+                    break;
+
+         case 'U' :
+                    u = atoi(optarg);
                     break;
 
          case 'f' :
@@ -164,6 +168,8 @@ int main(int argc, char **argv, char **envp){
 
    setlocale(LC_ALL, cfg.locale);
 
+   if(u < 0) u = getuid();
+
    /* do not query the username if we got it from the command line, 2008.03.10, SJ */
 
    if(username == NULL){
@@ -172,12 +178,10 @@ int main(int argc, char **argv, char **envp){
 
       username = getenv("LOGNAME");
       if(!username){
-         u = getuid();
-         pwd = getpwuid(u);
+         pwd = getpwuid(getuid());
          username = pwd->pw_name;
       }
    }
-
 
 #ifdef HAVE_SQLITE3
    if(strlen(cfg.sqlite3) < 4)
@@ -210,13 +214,16 @@ int main(int argc, char **argv, char **envp){
    }
 #endif
 
-   chdir(cfg.workdir);
+   /* do not go to the workdir if this is a cmdline training request */
+
+   if(train_as_ham == 0 && train_as_spam == 0)
+      chdir(cfg.workdir);
 
 
    if(!from) from = getenv("FROM");
 
    sdata.num_of_rcpt_to = 1;
-   sdata.uid = getuid();
+   sdata.uid = u;
    sdata.Nham = sdata.Nspam = 0;
    if(from) snprintf(sdata.mailfrom, SMALLBUFSIZE-1, "%s", from);
    memset(sdata.rcptto[0], 0, SMALLBUFSIZE);
@@ -360,10 +367,9 @@ int main(int argc, char **argv, char **envp){
       if(state.train_mode == T_TUM)
          train_mode=T_TUM;
 
-      if(cfg.group_type == GROUP_SHARED)
-         sdata.uid = 0;
-
       if(from) get_user_from_email(&sdata, from, &cfg);
+
+      if(cfg.group_type == GROUP_SHARED) sdata.uid = 0;
 
       train_message(&sdata, &state, rounds, is_spam, train_mode, &cfg);
    }

@@ -6,10 +6,24 @@
 update it, you should review the newer config file and modify it
 according to your settings.
 
+If you store your user data in SQL:
+-----------------------------------
+
 4. Create the t_policy table, then update the user table according 
 to the new db.sql schema:
 
 alter table user add column policy_group int(4) default 0;
 alter table user drop column action;
 alter table user drop column pagelen;
+
+5. Make sure that your t_policy table has the store_metadata
+field. If it's not than apply this statement:
+
+alter table t_policy add column store_metadata tinyint default 0;
+
+If you store your user data in LDAP:
+------------------------------------
+
+6. Update the policy schema of clapf, using ldap/clapf-policy.schema
+
 

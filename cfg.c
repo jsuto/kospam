@@ -120,6 +120,8 @@ struct __config read_config(char *configfile){
 
    cfg.max_message_size_to_filter = 65535;
 
+   cfg.always_scan_message = 1;
+
    cfg.use_libclamav_block_max_feature = 1;
    cfg.clamav_maxfile = MAXFILES;
    cfg.clamav_max_archived_file_size = MAX_ARCHIVED_FILE_SIZE;
@@ -199,6 +201,9 @@ struct __config read_config(char *configfile){
 
                   if(strcmp(key, "clamd_socket") == 0)
                      memcpy(cfg.clamd_socket, val, MAXVAL-1);
+
+                  if(strcmp(key, "always_scan_message") == 0)
+                     cfg.always_scan_message = atoi(val);
 
                   if(strcmp(key, "store_addr") == 0)
                      memcpy(cfg.store_addr, val, MAXVAL-1);

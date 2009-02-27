@@ -56,6 +56,7 @@ $NO_SUBJECT = "no subject";
 $NUMBER_OF_SPAM_MESSAGES_IN_QUARANTINE = "Number of spam messages in the quarantine";
 
 $PREVIOUS = "Previous";
+$PURGE_ALL_MESSAGES_FROM_QUARANTINE = "Purge all messages from quarantine";
 $PURGE_SELECTED_MESSAGES = "Purge selected messages";
 $PURGED = "Purged";
 

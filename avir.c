@@ -1,5 +1,5 @@
 /*
- * avir.c, 2009.02.02, SJ
+ * avir.c, 2009.02.27, SJ
  */
 
 #include <stdio.h>
@@ -21,6 +21,8 @@ int do_av_check(struct session_data *sdata, char *email, char *email2, struct __
    struct timezone tz;
    struct timeval tv_rcvd, tv_scnd;
    char buf[MAXBUFSIZE], engine[SMALLBUFSIZE], virusinfo[SMALLBUFSIZE];
+
+   if(sdata->need_scan == 0) return rav;
 
    memset(engine, 0, SMALLBUFSIZE);
 

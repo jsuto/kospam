@@ -1,5 +1,5 @@
 /*
- * parser.c, 2009.01.17, SJ
+ * parser.c, 2009.02.27, SJ
  */
 
 #include <stdio.h>
@@ -30,6 +30,8 @@ void init_state(struct _state *state){
    state->is_header = 1;
    state->has_boundary = 0;
    state->has_boundary2 = 0;
+
+   state->has_base64 = 0;
 
    /* by default we are a text/plain message */
 
@@ -388,8 +390,10 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
    if(strncasecmp(buf, "Content-Transfer-Encoding:", strlen("Content-Transfer-Encoding:")) == 0){
       if(state->is_header == 1) state->message_state = MSG_CONTENT_TRANSFER_ENCODING;
 
-      /* check for textual base64 encoded part, 2005.03.25, SJ */
-      if(strcasestr(buf, "base64")) state->base64 = 1;
+      if(strcasestr(buf, "base64")){
+         state->base64 = 1;
+         state->has_base64 = 1;
+      }
    }
 
    if(state->base64 == 1 && !strchr(buf, ':'))

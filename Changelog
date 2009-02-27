@@ -1,5 +1,52 @@
 0.4.1-rc1:
 
+2009.02.27, SJ
+
+Added an option to clapf.conf to enable conditional virus scanning
+of the incoming emails. If you enable the always_scan_message
+variable then clapf will send every email to the virus scanner.
+This may help against phishing attacks, as clamav is able to
+mark these scams as viruses.
+
+However at a greater load, it may be better to spare the AV
+scanner from textual only messages. So if you set always_scan_message=0
+then clapf will send emails to the antivirus engine only if they
+contain a base64 encoded part. This is the case when the message
+contains a zip/exe/doc/pdf/... attachment. 
+
+Changed the mysql database opening stuff to connect only once at
+the start of the clapf child handling the SMTP session. Postfix
+may keep a connection open for 300s, so it may be a good idea to
+spare the mysql_real_connect() before processing a single SMTP
+transaction. More tests follow to see how this setup handle the
+restart and loss of the mysql server.
+
+(session.c, cfg.c, cfg.h, example.conf)
+
+
+2009.02.24, SJ
+
+Miklos has discovered two bugs:
+
+Bug #1: a typo caused clapf not to put the spam_subject_prefix
+value to the Subject line if the value was shorter than 22
+characters.
+
+Bug #2: the per user policy settings did not override the default
+policy settings when it comes to decide whether to drop the spam
+spam or not.
+
+(session.c, smtp.c)
+
+(credits: Miklos Toldi)
+
+
+Changed the Makefile to install clapf to the ${prefix}/sbin
+directory.
+
+(Makefile.in)
+
+
 2009.02.18, SJ
 
 If you train with spamdrop from the command line, you may

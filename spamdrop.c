@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2009.02.18, SJ
+ * spamdrop.c, 2009.02.24, SJ
  */
 
 #include <stdio.h>
@@ -367,7 +367,11 @@ int main(int argc, char **argv, char **envp){
       if(state.train_mode == T_TUM)
          train_mode=T_TUM;
 
+   #ifdef HAVE_USERS
       if(from) get_user_from_email(&sdata, from, &cfg);
+   #else
+      sdata.uid = 0;
+   #endif
 
       if(cfg.group_type == GROUP_SHARED) sdata.uid = 0;
 

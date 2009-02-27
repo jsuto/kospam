@@ -56,6 +56,7 @@ $NO_SUBJECT = "nincs tárgy";
 $NUMBER_OF_SPAM_MESSAGES_IN_QUARANTINE = "A spam üzenetek száma a karanténban";
 
 $PREVIOUS = "Elõzõ";
+$PURGE_ALL_MESSAGES_FROM_QUARANTINE = "Összes üzenet törlése a karanténból";
 $PURGE_SELECTED_MESSAGES = "Kiválasztott üzenetek eltávolítása";
 $PURGED = "Eltávolítva";
 

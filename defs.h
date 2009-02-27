@@ -1,5 +1,5 @@
 /*
- * defs.h, 2009.01.22, SJ
+ * defs.h, 2009.02.27, SJ
  */
 
 #ifndef _DEFS_H
@@ -84,6 +84,7 @@ struct _state {
    int is_header;
    int has_boundary;
    int has_boundary2;
+   int has_base64;
    int cnt_type;
    int textplain;
    int texthtml;
@@ -133,6 +134,7 @@ struct session_data {
    unsigned long uid;
    int fd, tot_len, num_of_rcpt_to, skip_id_check, need_signo_check, unknown_client;
    int policy_group;
+   int need_scan;
    float Nham, Nspam;
 #ifdef NEED_MYSQL
    MYSQL mysql;

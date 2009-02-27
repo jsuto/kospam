@@ -131,6 +131,7 @@ install-clapf: clapf
 	$(INSTALL) -m 0644 sig.h $(DESTDIR)$(includedir)/clapf
 	$(INSTALL) -m 0644 av.h $(DESTDIR)$(includedir)/clapf
 	$(INSTALL) -d $(DESTDIR)$(bindir)
+	$(INSTALL) -d $(DESTDIR)$(sbindir)
 	$(INSTALL) -d $(DESTDIR)$(libdir)
 	$(INSTALL) -m 0644 libclapf.a $(DESTDIR)$(libdir)
 	$(INSTALL) -m 0755 libclapf.so.$(LIBCLAPF_VERSION) $(DESTDIR)$(libdir)
@@ -158,7 +159,7 @@ install-clapf: clapf
 	$(INSTALL) -m 0755 util/check_clapf.sh $(DESTDIR)$(libexecdir)/clapf
 	cat $(srcdir)/util/spamdrop_helper.in | sed -e "s%YOUR_STATE_DIR%$(localstatedir)%" > $(srcdir)/util/spamdrop_helper
 	$(INSTALL) -m 0755 util/spamdrop_helper $(DESTDIR)$(libexecdir)/clapf
-	$(INSTALL) -m 0755 clapf $(DESTDIR)$(bindir)
+	$(INSTALL) -m 0755 clapf $(DESTDIR)$(sbindir)
 	$(INSTALL) -d $(DESTDIR)$(sysconfdir)
 	rm -f clapf.conf; make clapf.conf
 	if [ ! -f "$(DESTDIR)$(sysconfdir)/clapf.conf" ]; then $(INSTALL) -m 0644 $(srcdir)/clapf.conf $(DESTDIR)$(sysconfdir)/clapf.conf; fi
@@ -213,7 +214,7 @@ uninstall:
 	rm -f $(DESTDIR)$(bindir)/blackhole
 	rm -f $(DESTDIR)$(bindir)/spamdrop
 	rm -f $(DESTDIR)$(bindir)/aphash
-	rm -f $(DESTDIR)$(bindir)/clapf
+	rm -f $(DESTDIR)$(sbindir)/clapf
 	rm -f $(DESTDIR)$(libdir)/libclapf.*
 	rm -f $(DESTDIR)$(sysconfdir)/clapf.conf
 	rm -f $(DESTDIR)$(mandir)/man1/parsembox.1

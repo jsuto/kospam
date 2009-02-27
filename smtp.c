@@ -1,5 +1,5 @@
 /*
- * smtp.c, 2009.01.09, SJ
+ * smtp.c, 2009.02.24, SJ
  */
 
 #include <stdio.h>
@@ -17,6 +17,7 @@
 #include "misc.h"
 #include "defs.h"
 #include "cfg.h"
+
 
 /*
  * inject mail back to postfix
@@ -143,7 +144,7 @@ int inject_mail(struct session_data *sdata, int msg, char *smtpaddr, int smtppor
 
    /* DATA */
 
-   send(psd, SMTP_CMD_DATA, strlen(SMTP_CMD_DATA), 0);
+   send(psd, "DATA\r\n", 6, 0);
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent in injecting: %s", sdata->ttmpfile, SMTP_CMD_DATA);
 
    n = recvtimeout(psd, buf, MAXBUFSIZE, 0);
@@ -168,7 +169,7 @@ int inject_mail(struct session_data *sdata, int msg, char *smtpaddr, int smtppor
 
       /* is this message spam and do we have to put [sp@m] prefix to the Subject: line? */
 
-      if(spaminessbuf && strlen(cfg->spam_subject_prefix) > 22 && strstr(spaminessbuf, cfg->clapf_spam_header_field))
+      if(spaminessbuf && strlen(cfg->spam_subject_prefix) > 2 && strstr(spaminessbuf, cfg->clapf_spam_header_field))
          put_subject_spam_prefix = 1;
 
       /*
@@ -313,7 +314,7 @@ int inject_mail(struct session_data *sdata, int msg, char *smtpaddr, int smtppor
       syslog(LOG_PRIORITY, "%s: injecting failed (%s)", sdata->ttmpfile, buf);
 
 
-   send(psd, SMTP_CMD_QUIT, strlen(SMTP_CMD_QUIT), 0);
+   send(psd, "QUIT\r\n", 6, 0);
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent in injecting: %s", sdata->ttmpfile, SMTP_CMD_QUIT);
 
    close(psd);

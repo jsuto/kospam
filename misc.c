@@ -263,7 +263,7 @@ int search_in_buf(char *s, int len1, char *what, int len2){
       }
 
       if(r == len2)
-         return 1;
+         return i;
    }
 
    return 0;

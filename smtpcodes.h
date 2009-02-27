@@ -1,5 +1,5 @@
 /*
- * smtpcodes.h, 2007.11.06, SJ
+ * smtpcodes.h, 2009.02.27, SJ
  */
 
 // SMTP states
@@ -19,20 +19,21 @@
 #define SMTP_CMD_EHLO "EHLO"
 #define SMTP_CMD_MAIL_FROM "MAIL FROM:"
 #define SMTP_CMD_RCPT_TO "RCPT TO:"
-#define SMTP_CMD_DATA "DATA\r\n"
+#define SMTP_CMD_DATA "DATA"
 #define SMTP_CMD_PERIOD "\x0d\x0a\x2e\x0d\x0a"
-#define SMTP_CMD_QUIT "QUIT\r\n"
-#define SMTP_CMD_RESET "RSET\r\n"
-#define SMTP_CMD_NOOP "NOOP\r\n"
+#define SMTP_CMD_QUIT "QUIT"
+#define SMTP_CMD_RESET "RSET"
+#define SMTP_CMD_NOOP "NOOP"
 #define SMTP_CMD_XFORWARD "XFORWARD"
 #define SMTP_CMD_XCLIENT "XCLIENT"
 
 // SMTP responses
 
-#define SMTP_RESP_220_BANNER "220 %s\r\n"
+#define SMTP_RESP_220_BANNER "220 ESMTP %s\r\n"
 #define SMTP_RESP_221_GOODBYE "221 %s Goodbye\r\n"
 #define SMTP_RESP_250_OK "250 Ok\r\n"
-#define SMTP_RESP_250_EXTENSIONS "250-%s\r\n250 XFORWARD NAME ADDR PROTO HELO\r\n"
+#define SMTP_RESP_250_EXTENSIONS "250-%s\r\n250-SIZE\r\n250-8BITMIME\r\n250 XFORWARD NAME ADDR PROTO HELO\r\n"
+//#define SMTP_RESP_250_EXTENSIONS "250-%s\r\n250-PIPELINING\r\n250-SIZE\r\n250-8BITMIME\r\n250 XFORWARD NAME ADDR PROTO HELO\r\n"
 
 #define SMTP_RESP_354_DATA_OK "354 Send mail data; end it with <CRLF>.<CRLF>\r\n"
 

@@ -113,6 +113,8 @@ struct __config {
    int store_metadata;
    int store_only_spam;
 
+   int always_scan_message;
+
    // clamav stuff
 
    int use_libclamav_block_max_feature;

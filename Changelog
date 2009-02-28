@@ -1,5 +1,14 @@
 0.4.1-rc1:
 
+2009.02.28, SJ
+
+Added PIPELINING support when injecting the message back to
+postfix. It works, but a little testing is required. So if
+you do not want this behaviour, then replace EHLO with HELO
+in smtp.c.
+
+(smtp.c)
+
 2009.02.27, SJ
 
 Added an option to clapf.conf to enable conditional virus scanning

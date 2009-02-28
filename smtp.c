@@ -1,5 +1,5 @@
 /*
- * smtp.c, 2009.02.24, SJ
+ * smtp.c, 2009.02.28, SJ
  */
 
 #include <stdio.h>
@@ -19,13 +19,48 @@
 #include "cfg.h"
 
 
+int smtp_chat(int sd, char *cmd, int ncmd, char *expect, char *buf, char *ttmpfile, int verbosity){
+   int ok=1, n;
+   char *p, puf[SMALLBUFSIZE];
+
+   send(sd, cmd, strlen(cmd), 0);
+   if(verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent in injecting: %s", ttmpfile, cmd);
+
+READ:
+   recvtimeout(sd, buf, MAXBUFSIZE, 0);
+   if(verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: got in injecting: %s", ttmpfile, buf);
+
+   n = 0;
+   p = buf;
+
+   while((p = split_str(p, "\r\n", puf, SMALLBUFSIZE-1))){
+      n++;
+      if(strncmp(puf, "250", 3) && strncmp(puf, expect, 3)) ok = 0;
+   }
+
+   /* if we got less answer, then read on */
+
+   if(n < ncmd){ ncmd -= n;  goto READ; }
+
+   if(ok == 0){
+      send(sd, "QUIT\r\n", 6, 0);
+      if(verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent in injecting: QUIT", ttmpfile);
+      close(sd);
+      syslog(LOG_PRIORITY, "%s: %s failed (%s)", ttmpfile, cmd, buf);
+      return 1;
+   }
+
+   return 0;
+}
+
+
 /*
  * inject mail back to postfix
  */
 
 int inject_mail(struct session_data *sdata, int msg, char *smtpaddr, int smtpport, char *spaminessbuf, struct __config *cfg, char *notify){
-   int i, n, psd;
-   char buf[MAXBUFSIZE+1], line[SMALLBUFSIZE], bigbuf[MAX_MAIL_HEADER_SIZE], oursigno[SMALLBUFSIZE];
+   int i, n, psd, has_pipelining=0, ncmd=0;
+   char buf[MAXBUFSIZE+1], puf[MAXBUFSIZE], line[SMALLBUFSIZE], bigbuf[MAX_MAIL_HEADER_SIZE], oursigno[SMALLBUFSIZE];
    struct in_addr addr;
    struct sockaddr_in postfix_addr;
    struct timezone tz;
@@ -73,46 +108,32 @@ int inject_mail(struct session_data *sdata, int msg, char *smtpaddr, int smtppor
    /* 220 banner */
 
    if(strncmp(buf, "220", 3)){
-      send(psd, SMTP_CMD_QUIT, strlen(SMTP_CMD_QUIT), 0);
+      send(psd, "QUIT\r\n", 6, 0);
       if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent in injecting: %s", sdata->ttmpfile, SMTP_CMD_QUIT);
       close(psd);
       syslog(LOG_PRIORITY, "%s: missing 220 banner (%s)", sdata->ttmpfile, buf);
       return ERR_INJECT;
    }
 
-   snprintf(buf, MAXBUFSIZE-1, "HELO %s\r\n", cfg->hostid);
-   send(psd, buf, strlen(buf), 0);
-   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent in injecting: %s", sdata->ttmpfile, buf);
 
-   n = recvtimeout(psd, buf, MAXBUFSIZE, 0);
-   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: got in injecting: %s", sdata->ttmpfile, buf);
+   /* HELO/EHLO */
 
-   /* HELO */
+   snprintf(buf, MAXBUFSIZE-1, "EHLO %s\r\n", cfg->hostid);
+   if(smtp_chat(psd, buf, 1, "250", &puf[0], sdata->ttmpfile, cfg->verbosity)) return ERR_INJECT;
 
-   if(strncmp(buf, "250", 3)){
-      send(psd, SMTP_CMD_QUIT, strlen(SMTP_CMD_QUIT), 0);
-      if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent in injecting: %s", sdata->ttmpfile, SMTP_CMD_QUIT);
-      close(psd);
-      syslog(LOG_PRIORITY, "%s: failed HELO (%s)", sdata->ttmpfile, buf);
-      return ERR_INJECT;
-   }
+   if(strstr(puf, "PIPELINING")) has_pipelining = 1;
+
+
+   /*
+    * assemble a pipelined command combo (MAIL
+    * FROM, RCPT TO and DATA) if appropriate
+    */
 
    /* MAIL FROM */
- 
-   send(psd, sdata->mailfrom, strlen(sdata->mailfrom), 0);
-   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent in injecting: %s", sdata->ttmpfile, sdata->mailfrom);
 
-   n = recvtimeout(psd, buf, MAXBUFSIZE, 0);
-   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: got in injecting: %s", sdata->ttmpfile, buf);
+   snprintf(buf,  MAXBUFSIZE-1, "%s", sdata->mailfrom); ncmd = 1;
+   if(!has_pipelining){ if(smtp_chat(psd, buf, 1, "250", &puf[0], sdata->ttmpfile, cfg->verbosity)) return ERR_INJECT; }
 
-   if(strncmp(buf, "250", 3)){
-      send(psd, SMTP_CMD_QUIT, strlen(SMTP_CMD_QUIT), 0);
-      if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent in injecting: %s", sdata->ttmpfile, SMTP_CMD_QUIT);
-      close(psd);
-      syslog(LOG_PRIORITY, "%s: MAIL FROM failed (%s)", sdata->ttmpfile, buf);
-      if(strncmp(buf, "550", 3) == 0) return ERR_REJECT;
-      return ERR_INJECT;
-   }
 
    /* RCPT TO */
 
@@ -123,19 +144,18 @@ int inject_mail(struct session_data *sdata, int msg, char *smtpaddr, int smtppor
 #endif
       recipient = sdata->rcptto[i];
 
-      send(psd, sdata->rcptto[i], strlen(sdata->rcptto[i]), 0);
-      if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent in injecting (%d): %s", sdata->ttmpfile, i, sdata->rcptto[i]);
-
-      n = recvtimeout(psd, buf, MAXBUFSIZE, 0);
-      if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: got in injecting (%d): %s", sdata->ttmpfile, i, buf);
-
-      if(strncmp(buf, "250", 3)){
-         send(psd, SMTP_CMD_QUIT, strlen(SMTP_CMD_QUIT), 0);
-         if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent in injecting (%d): %s", sdata->ttmpfile, i, SMTP_CMD_QUIT);
-         close(psd);
-         syslog(LOG_PRIORITY, "%s: RCPT TO (%d) failed (%s)", sdata->ttmpfile, i, buf);
-         if(strncmp(buf, "550", 3) == 0) return ERR_REJECT;
-         return ERR_INJECT;
+      if(!has_pipelining){ if(smtp_chat(psd, sdata->rcptto[i], 1, "250", &puf[0], sdata->ttmpfile, cfg->verbosity)) return ERR_INJECT; }
+      else {
+         if(strlen(buf) > MAXBUFSIZE/2){
+            if(smtp_chat(psd, buf, ncmd, "250", &puf[0], sdata->ttmpfile, cfg->verbosity)) return ERR_INJECT;
+            memset(buf, 0, MAXBUFSIZE);
+            strncat(buf, sdata->rcptto[i], MAXBUFSIZE-1);
+            ncmd = 0;
+         }
+         else {
+            strncat(buf, sdata->rcptto[i], MAXBUFSIZE-1);
+            ncmd++;
+         }
       }
 #ifndef HAVE_LMTP
    }
@@ -144,19 +164,14 @@ int inject_mail(struct session_data *sdata, int msg, char *smtpaddr, int smtppor
 
    /* DATA */
 
-   send(psd, "DATA\r\n", 6, 0);
-   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent in injecting: %s", sdata->ttmpfile, SMTP_CMD_DATA);
+   strncat(buf, "DATA\r\n", MAXBUFSIZE-1);
+   ncmd++;
 
-   n = recvtimeout(psd, buf, MAXBUFSIZE, 0);
-   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: got in injecting: %s", sdata->ttmpfile, buf);
+   if(!has_pipelining){ snprintf(buf, MAXBUFSIZE-1, "DATA\r\n"); ncmd = 1; }
 
-   if(strncmp(buf, "354", 3)){
-      send(psd, SMTP_CMD_QUIT, strlen(SMTP_CMD_QUIT), 0);
-      if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent in injecting: %s", sdata->ttmpfile, SMTP_CMD_QUIT);
-      syslog(LOG_PRIORITY, "%s: DATA failed (%s)", sdata->ttmpfile, buf);
-      close(psd);
-      return ERR_INJECT;
-   }
+   /* send the rest of the combo command */
+   if(smtp_chat(psd, buf, ncmd, "354", &puf[0], sdata->ttmpfile, cfg->verbosity)) return ERR_INJECT;
+
 
    /* send data */
 

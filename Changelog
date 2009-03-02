@@ -1,5 +1,12 @@
 0.4.1-rc1:
 
+2009.03.02, SJ
+
+It looks a bit better and neater if the spaminess buffer
+is appended to the end of the header instead the beginning.
+
+(smtp.c)
+
 2009.03.01, SJ
 
 Separated the header manipulation to the send_headers() function.

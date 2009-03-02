@@ -24,7 +24,8 @@ int send_headers(int sd, char *bigbuf, int n, char *spaminessbuf, int put_subjec
    int i=0, is_header=1, remove_hdr=0, remove_folded_hdr=0, hdr_field_name_len, sent_subject_spam_prefix=0;
    char *p, *q, *hdr_ptr, buf[MAXBUFSIZE], headerbuf[MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE];
 
-   snprintf(headerbuf, MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE-1, "%s", spaminessbuf);
+   //snprintf(headerbuf, MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE-1, "%s", spaminessbuf);
+   memset(headerbuf, 0, MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE);
 
    /* first find the end of the mail header */
 
@@ -88,6 +89,11 @@ int send_headers(int sd, char *bigbuf, int n, char *spaminessbuf, int put_subjec
       else remove_hdr = 0;
 
    } while(p && p < q);
+
+
+   /* append the spaminessbuf to the end of the header */
+   strncat(headerbuf, spaminessbuf, MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE);
+   strncat(headerbuf, "\r\n", MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE);
 
 
    /* if no Subject: line but this is a spam, create a Subject: line, 2006.11.13, SJ */

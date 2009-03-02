@@ -1,5 +1,16 @@
 0.4.1-rc1:
 
+2009.03.01, SJ
+
+Separated the header manipulation to the send_headers() function.
+This produces a more readable smtp session handling code.
+
+Modified the placement of the spaminess buffer. Now it sends
+before the actual message, so you may find it right after the
+last (ie. first) Received: lines.
+
+(smtp.c, session.c)
+
 2009.02.28, SJ
 
 Added PIPELINING support when injecting the message back to

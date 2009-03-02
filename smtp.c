@@ -1,5 +1,5 @@
 /*
- * smtp.c, 2009.02.28, SJ
+ * smtp.c, 2009.03.01, SJ
  */
 
 #include <stdio.h>
@@ -17,6 +17,96 @@
 #include "misc.h"
 #include "defs.h"
 #include "cfg.h"
+
+
+
+int send_headers(int sd, char *bigbuf, int n, char *spaminessbuf, int put_subject_spam_prefix, struct __config *cfg){
+   int i=0, is_header=1, remove_hdr=0, remove_folded_hdr=0, hdr_field_name_len, sent_subject_spam_prefix=0;
+   char *p, *q, *hdr_ptr, buf[MAXBUFSIZE], headerbuf[MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE];
+
+   snprintf(headerbuf, MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE-1, "%s", spaminessbuf);
+
+   /* first find the end of the mail header */
+
+   for(i=0; i<n; i++){
+      if( (bigbuf[i] == '\r' && bigbuf[i+1] == '\n' && bigbuf[i+2] == '\r' && bigbuf[i+3] == '\n') ||
+          (bigbuf[i] == '\n' && bigbuf[i+1] == '\n') ){
+              is_header = 0;
+              break;
+      }
+   }
+
+
+   p = bigbuf;
+   q = p + i;
+
+
+   /* parse header lines */
+
+   do {
+      p = split(p, '\n', buf, MAXBUFSIZE-1);
+
+      if(buf[0] == ' ' || buf[0] == '\t'){
+         remove_hdr = remove_folded_hdr; /* LWSP Folded header */
+      }
+      else {
+         remove_folded_hdr = 0;
+         hdr_field_name_len = strcspn(p, ": \t\n\r");
+         if(hdr_field_name_len){ /* got a valid header */
+            hdr_ptr = spaminessbuf;
+            while(hdr_ptr){
+               /* drop header because it is in spaminessbuf */
+               if(!strncasecmp(buf, hdr_ptr, hdr_field_name_len)){
+                   remove_hdr = 1;
+                   remove_folded_hdr = 1;
+                   break;
+               }
+
+               hdr_ptr = strstr(hdr_ptr, "\r\n");
+               if(hdr_ptr){
+                  hdr_ptr += 2; /* skip CRLF to the next header */
+                  if(hdr_ptr[0] == '\0') hdr_ptr = NULL; /* set null if we reached end of spaminessbuf */
+               }
+            }
+         }
+      }
+
+
+      if(remove_hdr == 0){
+         if(put_subject_spam_prefix == 1 && strncmp(buf, "Subject: ", 9) == 0 && !strstr(buf, cfg->spam_subject_prefix) ){
+            strncat(headerbuf, "Subject: ", MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE-1);
+            strncat(headerbuf, cfg->spam_subject_prefix, MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE-1);
+            strncat(headerbuf, buf+9, MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE-1);
+            sent_subject_spam_prefix = 1;
+         }
+         else {
+            strncat(headerbuf, buf, MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE-1);
+         }
+
+         strncat(headerbuf, "\n", MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE-1);
+      }
+      else remove_hdr = 0;
+
+   } while(p && p < q);
+
+
+   /* if no Subject: line but this is a spam, create a Subject: line, 2006.11.13, SJ */
+
+   if(put_subject_spam_prefix == 1 && sent_subject_spam_prefix == 0){
+      snprintf(buf, SMALLBUFSIZE-1, "Subject: %s\r\n", cfg->spam_subject_prefix);
+      p = strstr(headerbuf, "\r\n.\r\n");
+      if(p){
+         *p = '\0';
+      }
+      strncat(headerbuf, buf, MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE-1);
+      if(p) strncat(headerbuf, "\r\n.\r\n", MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE-1);
+   }
+
+   send(sd, headerbuf, strlen(headerbuf), 0);
+
+   return i;
+}
+
 
 
 int smtp_chat(int sd, char *cmd, int ncmd, char *expect, char *buf, char *ttmpfile, int verbosity){
@@ -60,16 +150,15 @@ READ:
 
 int inject_mail(struct session_data *sdata, int msg, char *smtpaddr, int smtpport, char *spaminessbuf, struct __config *cfg, char *notify){
    int i, n, psd, has_pipelining=0, ncmd=0;
-   char buf[MAXBUFSIZE+1], puf[MAXBUFSIZE], line[SMALLBUFSIZE], bigbuf[MAX_MAIL_HEADER_SIZE], oursigno[SMALLBUFSIZE];
+   char buf[MAXBUFSIZE], puf[MAXBUFSIZE], bigbuf[MAX_MAIL_HEADER_SIZE], oursigno[SMALLBUFSIZE];
    struct in_addr addr;
    struct sockaddr_in postfix_addr;
    struct timezone tz;
    struct timeval tv_start, tv_sent;
    int fd;
-   int is_header=1, len=0, num_of_reads=0;
-   int hdr_field_name_len, remove_hdr=0, remove_folded_hdr=0;
-   int put_subject_spam_prefix =0, sent_subject_spam_prefix = 0;
-   char *hdr_ptr, *p, *q, *recipient=NULL;
+   int num_of_reads=0;
+   int put_subject_spam_prefix=0;
+   char *recipient=NULL;
 
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: trying to inject back", sdata->ttmpfile);
 
@@ -187,6 +276,7 @@ int inject_mail(struct session_data *sdata, int msg, char *smtpaddr, int smtppor
       if(spaminessbuf && strlen(cfg->spam_subject_prefix) > 2 && strstr(spaminessbuf, cfg->clapf_spam_header_field))
          put_subject_spam_prefix = 1;
 
+
       /*
         the header_size_limit variable of postfix (see the output of postconf)
         limits the length of the message header. So we read a big one and it
@@ -197,107 +287,15 @@ int inject_mail(struct session_data *sdata, int msg, char *smtpaddr, int smtppor
       while((n = read(fd, bigbuf, MAX_MAIL_HEADER_SIZE)) > 0){
          num_of_reads++;
 
-         /* if this is the first read and it contains all the header lines */
+         /* the first read should contain all the header lines */
 
          if(num_of_reads == 1){
 
-            /* first find the end of the mail header */
+            /* send the header lines first */
+            i = send_headers(psd, bigbuf, n, spaminessbuf, put_subject_spam_prefix, cfg);
 
-            for(i=0; i<n; i++){
-               if( (bigbuf[i] == '\r' && bigbuf[i+1] == '\n' && bigbuf[i+2] == '\r' && bigbuf[i+3] == '\n') ||
-                   (bigbuf[i] == '\n' && bigbuf[i+1] == '\n') ){
-                  is_header = 0;
-                  break;
-               }
-            }
-
-            if(is_header == 0){
-               p = bigbuf;
-               
-               while((q = strchr(p, '\n')) && len < i+1){
-                  *q = '\0';
-                  snprintf(line, SMALLBUFSIZE-1, "%s\n", p);
-
-                  /* Mariano Reingart gave the following idea and code snippet */
-
-                  if(line[0] == ' ' || line[0] == '\t'){
-                     remove_hdr = remove_folded_hdr; /* LWSP Folded header */
-                  }
-                  else {
-                     remove_folded_hdr = 0;
-                     hdr_field_name_len = strcspn(p, ": \t\n\r");
-                     if(hdr_field_name_len){ /* got a valid header */
-                        hdr_ptr = spaminessbuf;
-                        while(hdr_ptr){
-                           /* drop header because it is in spaminessbuf */
-                           if(!strncasecmp(line, hdr_ptr, hdr_field_name_len)){
-                              remove_hdr = 1;
-                              remove_folded_hdr = 1;
-                              break;
-                           }
-
-                           hdr_ptr = strstr(hdr_ptr, "\r\n");
-                           if(hdr_ptr){
-                              hdr_ptr += 2; /* skip CRLF to the next header */
-                              if(hdr_ptr[0] == '\0') hdr_ptr = NULL; /* set null if we reached end of spaminessbuf */
-                           }
-                        }
-                     }
-                  }
-
-                  if(!remove_hdr){
-
-                     /* send the spam_subject_prefix in the Subject line if this is a spam, 2006.11.13, SJ */
-
-                     if(put_subject_spam_prefix == 1 && strncmp(line, "Subject: ", 9) == 0 && !strstr(line, cfg->spam_subject_prefix) ){
-                        send(psd, "Subject: ", 9, 0);
-                        send(psd, cfg->spam_subject_prefix, strlen(cfg->spam_subject_prefix), 0);
-                        send(psd, line+9, strlen(line)-9, 0);
-                        sent_subject_spam_prefix = 1;
-                     }
-                     else
-                        send(psd, line, strlen(line), 0);
-                  }
-                  else
-                     remove_hdr = 0;
-
-                  len += strlen(p) + 1;
-                  p = q + 1;
-               }
-
-               /* if no Subject: line but this is a spam, create a Subject: line, 2006.11.13, SJ */
-
-               if(put_subject_spam_prefix == 1 && sent_subject_spam_prefix == 0){
-                  snprintf(line, SMALLBUFSIZE-1, "Subject: %s\r\n", cfg->spam_subject_prefix);
-                  send(psd, line, strlen(line), 0);
-               }
-
-               /* send spaminessbuf and the rest */
-
-               if(strlen(oursigno) > 3 && is_recipient_in_our_domains(recipient, cfg) == 0)
-                  send(psd, oursigno, strlen(oursigno), 0);
-
-               if(spaminessbuf)
-                  send(psd, spaminessbuf, strlen(spaminessbuf), 0);
-
-
-               send(psd, bigbuf+i+2, n-i-2, 0);
-            }
-            else {
-               /* or send stuff as we can as a last resort */
-
-               if(strlen(oursigno) > 3 && is_recipient_in_our_domains(recipient, cfg) == 0)
-                  send(psd, oursigno, strlen(oursigno), 0);
-
-               if(spaminessbuf)
-                  send(psd, spaminessbuf, strlen(spaminessbuf), 0);
-
-               /* do not bother with sending the spam_subject_prefix in the Subject line for now 
-                  if we can't find the endof the header, 2006.11.13, SJ */
-
-               send(psd, bigbuf, n, 0);
-            }
-
+            /* then the rest of the first read */
+            send(psd, &bigbuf[i], strlen(&bigbuf[i]), 0);
 
          } /* end of first read */
          else

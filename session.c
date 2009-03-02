@@ -1,5 +1,5 @@
 /*
- * session.c, 2009.02.27, SJ
+ * session.c, 2009.03.02, SJ
  */
 
 #include <stdio.h>
@@ -337,7 +337,7 @@ void init_session_data(struct session_data *sdata){
                      gettimeofday(&tv_spam_stop, &tz);
 
                      if(rc == 1){
-                        snprintf(spaminessbuf, MAXBUFSIZE-1, "%s%s\r\n%s%ld ms\r\n%s\r\n",
+                        snprintf(spaminessbuf, MAXBUFSIZE-1, "%s%s\r\n%s%ld ms\r\n%s", // !!
                               cfg->clapf_header_field, sdata.ttmpfile, cfg->clapf_header_field, tvdiff(tv_spam_stop, tv_spam_start)/1000, cfg->clapf_spam_header_field);
 
                         spaminess = 0.99;
@@ -467,7 +467,7 @@ void init_session_data(struct session_data *sdata){
                      syslog(LOG_PRIORITY, "%s: %.4f %d in %ld [ms]", sdata.ttmpfile, spaminess, sdata.tot_len, tvdiff(tv_spam_stop, tv_spam_start)/1000);
 
                      if(spaminess >= cfg->spam_overall_limit){
-                        snprintf(spaminessbuf, MAXBUFSIZE-1, "%s%.4f\r\n%s%s\r\n%s%ld ms\r\n%s%s%s%s\r\n",
+                        snprintf(spaminessbuf, MAXBUFSIZE-1, "%s%.4f\r\n%s%s\r\n%s%ld ms\r\n%s%s%s%s", // !!
                               cfg->clapf_header_field, spaminess, cfg->clapf_header_field, sdata.ttmpfile, cfg->clapf_header_field,
                                     tvdiff(tv_spam_stop, tv_spam_start)/1000, reason, trainbuf, whitelistbuf, cfg->clapf_spam_header_field);
 
@@ -640,11 +640,17 @@ AFTER_PERIOD:
             else {
                state = SMTP_STATE_MAIL_FROM;
 
-               q = strstr(buf, " SIZE=");
+               /* if we ever need the SIZE argumentum from the MAIL FROM command */
+
+               /*q = strstr(buf, " SIZE=");
                if(q){
                   *q = '\0';
-                  //syslog(LOG_PRIORITY, "size of message: %d", atoi(q+6));
-               }
+                  i = strcspn(q+6, " \r\n");
+                  if(i > 0){
+                     *(q+6+i) = '\0';
+                     if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: size of message: *%s*", sdata.ttmpfile, q+6);
+                  }
+               }*/
 
                snprintf(sdata.mailfrom, SMALLBUFSIZE-1, "%s\r\n", buf);
 

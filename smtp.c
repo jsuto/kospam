@@ -1,5 +1,5 @@
 /*
- * smtp.c, 2009.03.01, SJ
+ * smtp.c, 2009.03.02, SJ
  */
 
 #include <stdio.h>
@@ -24,7 +24,6 @@ int send_headers(int sd, char *bigbuf, int n, char *spaminessbuf, int put_subjec
    int i=0, is_header=1, remove_hdr=0, remove_folded_hdr=0, hdr_field_name_len, sent_subject_spam_prefix=0;
    char *p, *q, *hdr_ptr, buf[MAXBUFSIZE], headerbuf[MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE];
 
-   //snprintf(headerbuf, MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE-1, "%s", spaminessbuf);
    memset(headerbuf, 0, MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE);
 
    /* first find the end of the mail header */
@@ -301,7 +300,8 @@ int inject_mail(struct session_data *sdata, int msg, char *smtpaddr, int smtppor
             i = send_headers(psd, bigbuf, n, spaminessbuf, put_subject_spam_prefix, cfg);
 
             /* then the rest of the first read */
-            send(psd, &bigbuf[i], strlen(&bigbuf[i]), 0);
+            //send(psd, &bigbuf[i], strlen(&bigbuf[i]), 0);
+            send(psd, &bigbuf[i], n-i, 0);
 
          } /* end of first read */
          else

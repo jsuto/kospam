@@ -92,7 +92,7 @@ int send_headers(int sd, char *bigbuf, int n, char *spaminessbuf, int put_subjec
 
    /* append the spaminessbuf to the end of the header */
    strncat(headerbuf, spaminessbuf, MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE);
-   strncat(headerbuf, "\r\n", MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE);
+   //strncat(headerbuf, "\r\n", MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE);
 
 
    /* if no Subject: line but this is a spam, create a Subject: line, 2006.11.13, SJ */

@@ -81,7 +81,7 @@ void init_session_data(struct session_data *sdata){
 #endif
 
    int i, n, rav=AVIR_OK, inj=ERR_REJECT, state, prevlen=0;
-   char *p, buf[MAXBUFSIZE], puf[MAXBUFSIZE], resp[MAXBUFSIZE], prevbuf[MAXBUFSIZE], last2buf[2*MAXBUFSIZE+1], acceptbuf[MAXBUFSIZE];
+   char *p, *q, buf[MAXBUFSIZE], puf[MAXBUFSIZE], resp[MAXBUFSIZE], prevbuf[MAXBUFSIZE], last2buf[2*MAXBUFSIZE+1], acceptbuf[MAXBUFSIZE];
    char email[SMALLBUFSIZE], email2[SMALLBUFSIZE];
    float spaminess;
    struct session_data sdata;

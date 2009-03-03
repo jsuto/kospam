@@ -80,7 +80,7 @@ void init_session_data(struct session_data *sdata){
    void postfix_to_clapf(int new_sd, struct url *blackhole, struct __config *cfg){
 #endif
 
-   int i, n, rav=AVIR_OK, inj=ERR_REJECT, state, prevlen=0;
+   int i, pos, n, rav=AVIR_OK, inj=ERR_REJECT, state, prevlen=0;
    char *p, *q, buf[MAXBUFSIZE], puf[MAXBUFSIZE], resp[MAXBUFSIZE], prevbuf[MAXBUFSIZE], last2buf[2*MAXBUFSIZE+1], acceptbuf[MAXBUFSIZE];
    char email[SMALLBUFSIZE], email2[SMALLBUFSIZE];
    float spaminess;
@@ -150,6 +150,7 @@ void init_session_data(struct session_data *sdata){
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent: %s", sdata.ttmpfile, buf);
 
    while((n = recvtimeout(new_sd, puf, MAXBUFSIZE, 0)) > 0){
+         pos = 0;
 
          /* accept mail data */
 
@@ -163,8 +164,8 @@ void init_session_data(struct session_data *sdata){
             memcpy(last2buf, prevbuf, MAXBUFSIZE);
             memcpy(last2buf+prevlen, puf, MAXBUFSIZE);
 
-            i = search_in_buf(last2buf, 2*MAXBUFSIZE+1, SMTP_CMD_PERIOD, 5);
-            if(i > 0){
+            pos = search_in_buf(last2buf, 2*MAXBUFSIZE+1, SMTP_CMD_PERIOD, 5);
+            if(pos > 0){
 
                /*write(sdata.fd, puf, i-prevlen+strlen(SMTP_CMD_PERIOD));
                sdata.tot_len += (i-prevlen+strlen(SMTP_CMD_PERIOD));*/
@@ -553,17 +554,19 @@ void init_session_data(struct session_data *sdata){
                ldap_unbind_s(sdata.ldap);
             #endif
 
-               //syslog(LOG_PRIORITY, "puf:*%s+%c+", puf, puf[n-3]);
-
                /* if we have nothing after the trailing (.), we can read
                   the next command from the network */
 
-               if(puf[n-3] == '.') continue;
+               if(puf[n-3] == '.' && puf[n-2] == '\r' && puf[n-1] == '\n') continue;
+
+               /* fix the remaining part of the buffer after the trailing
+                  period (.) command, then we are ready to handle the additional
+                  commands like QUIT */
+
+               pos += 5;
 
             } /* PERIOD found */
             else {
-               //syslog(LOG_PRIORITY, "puf:*%s+", puf);
-
                memcpy(prevbuf, puf, n);
                prevlen = n;
 
@@ -578,15 +581,14 @@ AFTER_PERIOD:
 
       memset(resp, 0, MAXBUFSIZE);
 
-      p = puf;
+      p = &puf[pos];
 
       while((p = split_str(p, "\r\n", buf, MAXBUFSIZE-1))){
+         if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: got: %s", sdata.ttmpfile, buf);
 
          // HELO/EHLO
 
          if(strncasecmp(buf, SMTP_CMD_HELO, strlen(SMTP_CMD_HELO)) == 0 || strncasecmp(buf, SMTP_CMD_EHLO, strlen(SMTP_CMD_EHLO)) == 0 || strncasecmp(buf, LMTP_CMD_LHLO, strlen(LMTP_CMD_LHLO)) == 0){
-            if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: got: %s", sdata.ttmpfile, buf);
-
             if(state == SMTP_STATE_INIT) state = SMTP_STATE_HELO;
 
             snprintf(buf, MAXBUFSIZE-1, SMTP_RESP_250_EXTENSIONS, cfg->hostid);
@@ -600,7 +602,6 @@ AFTER_PERIOD:
          // XFORWARD
 
          if(strncasecmp(buf, SMTP_CMD_XFORWARD, strlen(SMTP_CMD_XFORWARD)) == 0){
-            if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: got: %s", sdata.ttmpfile, buf);
 
             /* extract client address */
 
@@ -632,7 +633,6 @@ AFTER_PERIOD:
          // MAIL FROM
 
          if(strncasecmp(buf, SMTP_CMD_MAIL_FROM, strlen(SMTP_CMD_MAIL_FROM)) == 0){
-            if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: got: %s", sdata.ttmpfile, buf);
 
             if(state != SMTP_STATE_HELO){
                strncat(resp, SMTP_RESP_503_ERR, MAXBUFSIZE-1);
@@ -670,7 +670,6 @@ AFTER_PERIOD:
          // RCPT TO
 
          if(strncasecmp(buf, SMTP_CMD_RCPT_TO, strlen(SMTP_CMD_RCPT_TO)) == 0){
-            if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: got: %s", sdata.ttmpfile, buf);
 
             if(state == SMTP_STATE_MAIL_FROM || state == SMTP_STATE_RCPT_TO){
                if(sdata.num_of_rcpt_to < MAX_RCPT_TO){
@@ -721,8 +720,6 @@ AFTER_PERIOD:
          // DATA
 
          if(strncasecmp(buf, SMTP_CMD_DATA, strlen(SMTP_CMD_DATA)) == 0){
-            if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: got: %s", sdata.ttmpfile, buf);
-
 
             memset(last2buf, 0, 2*MAXBUFSIZE+1);
             memset(prevbuf, 0, MAXBUFSIZE);
@@ -751,7 +748,6 @@ AFTER_PERIOD:
          // QUIT
 
          if(strncasecmp(buf, SMTP_CMD_QUIT, strlen(SMTP_CMD_QUIT)) == 0){
-            if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: got: %s", sdata.ttmpfile, buf);
 
             state = SMTP_STATE_FINISHED;
 
@@ -768,8 +764,6 @@ AFTER_PERIOD:
          // NOOP
 
          if(strncasecmp(buf, SMTP_CMD_NOOP, strlen(SMTP_CMD_NOOP)) == 0){
-            if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: got: %s", sdata.ttmpfile, buf);
-
             strncat(resp, SMTP_RESP_250_OK, MAXBUFSIZE-1);
             continue;
          }
@@ -778,7 +772,6 @@ AFTER_PERIOD:
          // RSET
 
          if(strncasecmp(buf, SMTP_CMD_RESET, strlen(SMTP_CMD_RESET)) == 0){
-            if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: got: %s", sdata.ttmpfile, buf);
 
             /* we must send a 250 Ok */
 
@@ -795,8 +788,8 @@ AFTER_PERIOD:
          }
 
          /* by default send 502 command not implemented message */
-         strncat(resp, SMTP_RESP_502_ERR, MAXBUFSIZE-1);
-
+         //strncat(resp, SMTP_RESP_502_ERR, MAXBUFSIZE-1);
+         strncat(resp, SMTP_RESP_450_ERR_CMD_NOT_IMPLEMENTED, MAXBUFSIZE-1);
       }
 
 

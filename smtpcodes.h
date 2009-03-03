@@ -1,5 +1,5 @@
 /*
- * smtpcodes.h, 2009.02.27, SJ
+ * smtpcodes.h, 2009.03.03, SJ
  */
 
 // SMTP states
@@ -40,6 +40,7 @@
 #define SMTP_RESP_421_ERR "421 %s Error: timed out\r\n"
 #define SMTP_RESP_421_ERR_TMP "421 %s service not available\r\n"
 #define SMTP_RESP_421_ERR_WRITE_FAILED "421 writing queue file failed\r\n"
+#define SMTP_RESP_450_ERR_CMD_NOT_IMPLEMENTED "450 command not implemented\r\n"
 #define SMTP_RESP_451_ERR "451 Error in processing, try again later\r\n"
 
 #define SMTP_RESP_502_ERR "502 Command not implemented\r\n"

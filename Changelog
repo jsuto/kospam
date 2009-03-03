@@ -1,5 +1,10 @@
 0.4.1-rc1:
 
+2009.03.03, SJ
+
+Fixed a bug on the receiving side of the pipelining code
+(session.c)
+
 2009.03.02, SJ
 
 It looks a bit better and neater if the spaminess buffer

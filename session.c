@@ -1,5 +1,5 @@
 /*
- * session.c, 2009.03.02, SJ
+ * session.c, 2009.03.03, SJ
  */
 
 #include <stdio.h>
@@ -605,9 +605,9 @@ AFTER_PERIOD:
             /* extract client address */
 
             trim(buf);
-            p = strstr(buf, "ADDR=");
-            if(p){
-               snprintf(sdata.client_addr, IPLEN-1, p+5);
+            q = strstr(buf, "ADDR=");
+            if(q){
+               snprintf(sdata.client_addr, IPLEN-1, q+5);
                if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: client address: %s", sdata.ttmpfile, sdata.client_addr);
             }
 
@@ -797,7 +797,7 @@ AFTER_PERIOD:
          /* by default send 502 command not implemented message */
          strncat(resp, SMTP_RESP_502_ERR, MAXBUFSIZE-1);
 
-      } while(p);
+      }
 
 
       /* now we can send our buffered response */

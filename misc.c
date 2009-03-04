@@ -1,5 +1,5 @@
 /*
- * misc.c, 2009.01.29, SJ
+ * misc.c, 2009.03.04, SJ
  */
 
 #include <stdio.h>
@@ -470,6 +470,8 @@ char *split(char *row, int ch, char *s, int size){
 char *split_str(char *row, char *what, char *s, int size){
    char *r;
    int len;
+
+   memset(s, 0, size);
 
    if(row == NULL)
       return NULL;

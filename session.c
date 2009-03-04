@@ -1,5 +1,5 @@
 /*
- * session.c, 2009.03.03, SJ
+ * session.c, 2009.03.04, SJ
  */
 
 #include <stdio.h>
@@ -155,10 +155,8 @@ void init_session_data(struct session_data *sdata){
          /* accept mail data */
 
          if(state == SMTP_STATE_DATA){
-            write(sdata.fd, puf, n);
-            sdata.tot_len += n;
 
-            /* join the last 2 buffer, 2004.08.30, SJ */
+            /* join the last 2 buffer */
 
             memset(last2buf, 0, 2*MAXBUFSIZE+1);
             memcpy(last2buf, prevbuf, MAXBUFSIZE);
@@ -167,11 +165,13 @@ void init_session_data(struct session_data *sdata){
             pos = search_in_buf(last2buf, 2*MAXBUFSIZE+1, SMTP_CMD_PERIOD, 5);
             if(pos > 0){
 
-               /*write(sdata.fd, puf, i-prevlen+strlen(SMTP_CMD_PERIOD));
-               sdata.tot_len += (i-prevlen+strlen(SMTP_CMD_PERIOD));*/
+	       /* fix position */
+	       pos = pos - prevlen + strlen(SMTP_CMD_PERIOD);
 
-               /*p = puf + i - prevlen + strlen(SMTP_CMD_PERIOD);
-               memmove(&puf[0], p, n - i - prevlen);*/
+               /* write data only to (and including) the trailing period (.) */
+               write(sdata.fd, puf, pos);
+               sdata.tot_len += pos;
+
 
                if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: got: (.)", sdata.ttmpfile);
 
@@ -559,14 +559,15 @@ void init_session_data(struct session_data *sdata){
 
                if(puf[n-3] == '.' && puf[n-2] == '\r' && puf[n-1] == '\n') continue;
 
-               /* fix the remaining part of the buffer after the trailing
-                  period (.) command, then we are ready to handle the additional
-                  commands like QUIT */
 
-               pos += 5;
+               /* if we left something in the puffer, we are ready to proceed
+                  to handle the additional commands */
 
             } /* PERIOD found */
             else {
+               write(sdata.fd, puf, n);
+               sdata.tot_len += n;
+
                memcpy(prevbuf, puf, n);
                prevlen = n;
 

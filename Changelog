@@ -1,8 +1,13 @@
 0.4.1-rc1:
 
+2009.03.04, SJ
+
+Even more bugfixing with the pipelining code.
+(session.c)
+
 2009.03.03, SJ
 
-Fixed a bug on the receiving side of the pipelining code
+Fixed a bug on the receiving side of the pipelining code.
 (session.c)
 
 2009.03.02, SJ

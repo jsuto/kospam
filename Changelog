@@ -1,5 +1,17 @@
 0.4.1-rc1:
 
+2009.03.07, SJ
+
+Webui enhancements. The quarantine listing now tries
+to decode the 'From:' and 'Subject:' fields to let
+the users have a clue what is that message is about.
+
+You can remove all your spam emails from the quarantine
+with one click on the "Purge all messages from quarantine"
+button.
+
+(webui/funcs.php, webui/q.php)
+
 2009.03.04, SJ
 
 Even more bugfixing with the pipelining code.

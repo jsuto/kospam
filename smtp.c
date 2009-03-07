@@ -1,5 +1,5 @@
 /*
- * smtp.c, 2009.03.02, SJ
+ * smtp.c, 2009.03.06, SJ
  */
 
 #include <stdio.h>
@@ -21,14 +21,21 @@
 
 
 int send_headers(int sd, char *bigbuf, int n, char *spaminessbuf, int put_subject_spam_prefix, struct __config *cfg){
-   int i=0, is_header=1, remove_hdr=0, remove_folded_hdr=0, hdr_field_name_len, sent_subject_spam_prefix=0;
+   int i=0, x, N, is_header=1, remove_hdr=0, remove_folded_hdr=0, hdr_field_name_len, sent_subject_spam_prefix=0, has_subject=0;
    char *p, *q, *hdr_ptr, buf[MAXBUFSIZE], headerbuf[MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE];
+
+   /* any reasonable message really should be longer than 20 bytes */
+   if(n < 20) return 0;
 
    memset(headerbuf, 0, MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE);
 
    /* first find the end of the mail header */
 
-   for(i=0; i<n; i++){
+   x = search_in_buf(bigbuf, n, "\r\n.\r\n", 5);
+   if(x > 0) N = x;
+   else N = n;
+
+   for(i=5; i<N-3; i++){
       if( (bigbuf[i] == '\r' && bigbuf[i+1] == '\n' && bigbuf[i+2] == '\r' && bigbuf[i+3] == '\n') ||
           (bigbuf[i] == '\n' && bigbuf[i+1] == '\n') ){
               is_header = 0;
@@ -37,9 +44,11 @@ int send_headers(int sd, char *bigbuf, int n, char *spaminessbuf, int put_subjec
    }
 
 
+
    p = bigbuf;
    q = p + i;
 
+   //syslog(LOG_PRIORITY, "hdr: %d, i: %d, x: %d, n: %d", is_header, i, x, n);
 
    /* parse header lines */
 
@@ -73,15 +82,18 @@ int send_headers(int sd, char *bigbuf, int n, char *spaminessbuf, int put_subjec
 
 
       if(remove_hdr == 0){
-         if(put_subject_spam_prefix == 1 && strncmp(buf, "Subject: ", 9) == 0 && !strstr(buf, cfg->spam_subject_prefix) ){
-            strncat(headerbuf, "Subject: ", MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE-1);
-            strncat(headerbuf, cfg->spam_subject_prefix, MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE-1);
-            strncat(headerbuf, buf+9, MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE-1);
-            sent_subject_spam_prefix = 1;
-         }
-         else {
-            strncat(headerbuf, buf, MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE-1);
-         }
+         if(strncmp(buf, "Subject:", 8) == 0){
+            has_subject = 1;
+
+            if(put_subject_spam_prefix == 1 && !strstr(buf, cfg->spam_subject_prefix) ){
+               strncat(headerbuf, "Subject:", MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE-1);
+               strncat(headerbuf, cfg->spam_subject_prefix, MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE-1);
+               strncat(headerbuf, buf+8, MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE-1);
+               sent_subject_spam_prefix = 1;
+            }
+            else strncat(headerbuf, buf, MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE-1);
+	 }
+         else strncat(headerbuf, buf, MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE-1);
 
          strncat(headerbuf, "\n", MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE-1);
       }
@@ -90,21 +102,22 @@ int send_headers(int sd, char *bigbuf, int n, char *spaminessbuf, int put_subjec
    } while(p && p < q);
 
 
-   /* append the spaminessbuf to the end of the header */
-   strncat(headerbuf, spaminessbuf, MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE);
-   //strncat(headerbuf, "\r\n", MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE);
-
-
-   /* if no Subject: line but this is a spam, create a Subject: line, 2006.11.13, SJ */
-
-   if(put_subject_spam_prefix == 1 && sent_subject_spam_prefix == 0){
-      snprintf(buf, SMALLBUFSIZE-1, "Subject: %s\r\n", cfg->spam_subject_prefix);
-      p = strstr(headerbuf, "\r\n.\r\n");
-      if(p){
-         *p = '\0';
+   if(has_subject == 0){
+      if(put_subject_spam_prefix == 1 && sent_subject_spam_prefix == 0){
+         strncat(headerbuf, "Subject: ", MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE-1);
+         strncat(headerbuf, cfg->spam_subject_prefix, MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE-1);
+         strncat(headerbuf, "\r\n", MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE-1);
       }
-      strncat(headerbuf, buf, MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE-1);
-      if(p) strncat(headerbuf, "\r\n.\r\n", MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE-1);
+      else strncat(headerbuf, "Subject:\r\n", MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE-1);
+
+   }
+
+   /* append the spaminessbuf to the end of the header */
+   strncat(headerbuf, spaminessbuf, MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE-1);
+
+   if(is_header == 1){
+      strncat(headerbuf, "\r\n\r\n.\r\n", MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE);
+      i = n;
    }
 
    send(sd, headerbuf, strlen(headerbuf), 0);

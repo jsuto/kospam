@@ -22,6 +22,7 @@ $deliver = "";
 $train = "";
 
 $topurge = 0;
+$purgeallfromqueue = 0;
 
 if(isset($_GET['page'])) $page = $_GET['page'];
 if(isset($_GET['user'])) $user = $_GET['user'];
@@ -33,6 +34,7 @@ if(isset($_GET['deliver'])) $deliver = $_GET['deliver'];
 if(isset($_GET['train'])) $train = $_GET['train'];
 
 if(isset($_POST['topurge'])) $topurge = $_POST['topurge'];
+if(isset($_POST['purgeallfromqueue'])) $purgeallfromqueue = $_POST['purgeallfromqueue'];
 if(isset($_POST['user'])) $user = $_POST['user'];
 
 /* fix the username if you are an admin user */
@@ -152,6 +154,7 @@ if($_SERVER['REQUEST_METHOD'] == "GET"){
 
       $nspam = check_directory($my_q_dir, $username, $page, $from, $subj);
 
+      print "<p>\n";
       $prev_page = $page - 1;
       $next_page = $page + 1;
       $total_pages = floor($nspam/$page_len);
@@ -163,7 +166,7 @@ if($_SERVER['REQUEST_METHOD'] == "GET"){
          print " <a href=\"$meurl?page=$next_page&user=$username&from=$from&subj=$subj\">$NEXT</a>\n";
 
       if($page < $nspam/$page_len && $nspam > $page_len)
-         print " <a href=\"$meurl?page=$total_pages&user=$username&from=$from&subj=$subj\">$LAST</a><p>\n";
+         print " <a href=\"$meurl?page=$total_pages&user=$username&from=$from&subj=$subj\">$LAST</a>\n";
 
    }
 }
@@ -183,6 +186,25 @@ if($_SERVER['REQUEST_METHOD'] == "POST"){
 
       print "$PURGED: $n. <a href=\"q.php?user=$username\">$BACK</a>";
    }
+
+
+   if($purgeallfromqueue == 1){
+      $n = 0;
+
+      $files = scandir($my_q_dir, 1);
+
+      while(list($k, $v) = each($files)){
+         if(strncmp($v, "s.", 2) == 0){
+
+            $f = $my_q_dir . "/" . $v;
+            if(preg_match('/^s\.([0-9a-f]+)$/', $v)){
+               if(unlink($f)) $n++;
+            }
+         }
+      }
+      print "$PURGED: $n. <a href=\"q.php?user=$username\">$BACK</a>";
+   }
+
 }
 
 

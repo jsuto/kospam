@@ -141,6 +141,55 @@ function is_it_in($in, $what){
 }
 
 
+function fix_encoded_string($what){
+   $s = "";
+
+   $what = rtrim($what, "\"\r\n");
+   $what = ltrim($what, "\"");
+
+   // From: =?UTF-8?B?S8O2emjDoWzDsyBJSSAtIEhQU0Q=?= <servicedesk@netvisor.hu>
+
+   if(preg_match("/^\=\?/", $what) && preg_match("/\?\=$/", $what)){
+      $what = preg_replace("/^\=\?/", "", $what);
+      $what = preg_replace("/\?\=$/", "", $what);
+
+      if(preg_match("/\?Q\?/", $what)){
+         list($enc, $x) = explode("?Q?", $what);
+
+         $s = quoted_printable_decode($x);
+         $s = preg_replace("/_/", " ", $s);
+      }
+
+      if(preg_match("/\?B\?/", $what)){
+         list($enc, $x) = explode("?B?", $what);
+
+         $s = base64_decode($x);
+      }
+
+      if(preg_match("/utf-8/i", $enc)) $s = utf8_decode($s);
+
+   }
+   else
+      $s = $what;
+
+   return $s;
+}
+
+
+function decode_my_str($what){
+   $result = "";
+
+   $what = rtrim($what);
+
+   $a = explode(" ", $what);
+   while(list($k, $v) = each($a)){
+      if($k > 0) $result .= " ";
+      $result .= fix_encoded_string($v);
+   }
+
+   return $result;
+}
+
 
 function scan_message($dir, $f){
    global $NO_SENDER, $NO_SUBJECT, $max_cgi_from_subj_len;
@@ -155,13 +204,16 @@ function scan_message($dir, $f){
    if($fp){
       while(($l = fgets($fp, 4096))){
          if(strncmp($l, "Subject:", 8) == 0 && strlen($l) > 10){
-            $subj = substr($l, 9, $max_cgi_from_subj_len);
-            if(strlen($l) > 9+$max_cgi_from_subj_len) $subj .= "...";
+            $subj = substr($l, 9, 4096);
+            $subj = fix_encoded_string($subj);
+
+            if(strlen($subj) > 9+$max_cgi_from_subj_len) $subj .= "...";
             $i++;
          }
          if(strncmp($l, "From:", 5) == 0 && strlen($l) > 10){
-            $from = substr($l, 6, $max_cgi_from_subj_len);
-            if(strlen($l) > 6+$max_cgi_from_subj_len) $from .= "...";
+            $from = substr($l, 6, 4096);
+            $from = decode_my_str($from);
+            if(strlen($from) > 6+$max_cgi_from_subj_len) $from .= "...";
             $i++;
          }
 
@@ -171,8 +223,9 @@ function scan_message($dir, $f){
       fclose($fp);
    }
 
-   $from = preg_replace("/</", "[", $from);
-   $from = preg_replace("/>/", "]", $from);
+   $from = preg_replace("/</", "&lt;", $from);
+   $from = preg_replace("/>/", "&gt;", $from);
+
 
    return array ($from, $subj);
 }
@@ -201,7 +254,7 @@ function get_message_for_delivery($f, $new_from){
 
 
 function check_directory($dir, $username, $page, $from, $subj){
-   global $page_len, $max_cgi_from_subj_len, $NUMBER_OF_SPAM_MESSAGES_IN_QUARANTINE, $DATE, $FROM, $SUBJECT, $PURGE_SELECTED_MESSAGES, $CANCEL, $SELECT_ALL;
+   global $page_len, $max_cgi_from_subj_len, $NUMBER_OF_SPAM_MESSAGES_IN_QUARANTINE, $DATE, $FROM, $SUBJECT, $PURGE_SELECTED_MESSAGES, $PURGE_ALL_MESSAGES_FROM_QUARANTINE, $CANCEL, $SELECT_ALL;
 
    $n_spam = 0;
    $spam_total_size = 0;
@@ -277,7 +330,13 @@ function check_directory($dir, $username, $page, $from, $subj){
    print "</table>\n";
 
    print "<p><input type=\"submit\" value=\"$PURGE_SELECTED_MESSAGES\"> <input type=\"reset\" value=\"$CANCEL\">\n";
-   print "<input type=\"button\" value=\"$SELECT_ALL\" onClick=\"mark_all(true)\"></form></p>\n";
+   print "<input type=\"button\" value=\"$SELECT_ALL\" onClick=\"mark_all(true)\"></p></form>\n";
+
+   print "<p><form action=\"$meurl\" name=\"purgeallfromqueue\" method=\"post\">\n";
+   print "<input type=\"hidden\" name=\"purgeallfromqueue\" value=\"1\">\n";
+   print "<input type=\"hidden\" name=\"user\" value=\"$username\">\n";
+   print "<input type=\"submit\" value=\"$PURGE_ALL_MESSAGES_FROM_QUARANTINE\">\n";
+   print "</form></p>\n";
 
    return $n_msgs;
 }

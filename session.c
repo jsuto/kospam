@@ -561,7 +561,7 @@ void init_session_data(struct session_data *sdata){
 
 
                /* if we left something in the puffer, we are ready to proceed
-                  to handle the additional commands */
+                  to handle the additional commands, such as QUIT */
 
             } /* PERIOD found */
             else {
@@ -789,8 +789,9 @@ AFTER_PERIOD:
          }
 
          /* by default send 502 command not implemented message */
-         //strncat(resp, SMTP_RESP_502_ERR, MAXBUFSIZE-1);
-         strncat(resp, SMTP_RESP_450_ERR_CMD_NOT_IMPLEMENTED, MAXBUFSIZE-1);
+         syslog(LOG_PRIORITY, "%s: invalid command: %s", sdata.ttmpfile, buf);
+
+         strncat(resp, SMTP_RESP_502_ERR, MAXBUFSIZE-1);
       }
 
 

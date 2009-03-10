@@ -21,9 +21,25 @@ field. If it's not than apply this statement:
 
 alter table t_policy add column store_metadata tinyint default 0;
 
+6. Make sure your users exist in t_white_list and t_black_list tables.
+If not, then create such an SQL commands:
+
+insert t_white_list (uid, whitelist) values(0, '');
+insert t_white_list (uid, whitelist) values(1, '');
+insert t_white_list (uid, whitelist) values(2, '');
+....
+
+insert t_black_list (uid, blacklist) values(0, '');
+insert t_black_list (uid, blacklist) values(1, '');
+insert t_black_list (uid, blacklist) values(2, '');
+...
+
+Of course, you can script this :-)
+
+
 If you store your user data in LDAP:
 ------------------------------------
 
-6. Update the policy schema of clapf, using ldap/clapf-policy.schema
+7. Update the policy schema of clapf, using ldap/clapf-policy.schema
 
 

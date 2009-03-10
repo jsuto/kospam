@@ -147,8 +147,6 @@ function fix_encoded_string($what){
    $what = rtrim($what, "\"\r\n");
    $what = ltrim($what, "\"");
 
-   // From: =?UTF-8?B?S8O2emjDoWzDsyBJSSAtIEhQU0Q=?= <servicedesk@netvisor.hu>
-
    if(preg_match("/^\=\?/", $what) && preg_match("/\?\=$/", $what)){
       $what = preg_replace("/^\=\?/", "", $what);
       $what = preg_replace("/\?\=$/", "", $what);

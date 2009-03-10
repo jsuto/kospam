@@ -1,5 +1,17 @@
 0.4.1-rc1:
 
+2009.03.09, SJ
+
+Enhanced a webui that if the given user has no entry in
+the t_white_list or t_black_list table, then the set_whitelist()
+and set_blacklist() functions create the necessary entries.
+
+Updated the UPGRADE file, too.
+
+(webui/mysql.php, UPGRADE)
+(credits: epfe)
+
+
 2009.03.07, SJ
 
 Webui enhancements. The quarantine listing now tries

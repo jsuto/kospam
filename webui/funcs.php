@@ -117,7 +117,7 @@ function send_smtp_email($smtphost, $smtpport, $yourdomain, $from, $to, $msg){
    $l = fgets($r, 4096);
    if(!preg_match("/^354/", $l)) $l = fgets($r, 4096);
 
-   fputs($r, $msg . "\n.\r\n");
+   fputs($r, $msg . "\r\n.\r\n");
    $l = fgets($r, 4096);
 
    if(preg_match("/^250/", $l)){ $ok = 1; }
@@ -146,6 +146,8 @@ function fix_encoded_string($what){
 
    $what = rtrim($what, "\"\r\n");
    $what = ltrim($what, "\"");
+
+   // From: =?UTF-8?B?S8O2emjDoWzDsyBJSSAtIEhQU0Q=?= <servicedesk@netvisor.hu>
 
    if(preg_match("/^\=\?/", $what) && preg_match("/\?\=$/", $what)){
       $what = preg_replace("/^\=\?/", "", $what);
@@ -205,13 +207,15 @@ function scan_message($dir, $f){
             $subj = substr($l, 9, 4096);
             $subj = fix_encoded_string($subj);
 
-            if(strlen($subj) > 9+$max_cgi_from_subj_len) $subj .= "...";
+            $len = strlen($subj);
+
+            if(strlen($subj) > 9+$max_cgi_from_subj_len) $subj = substr($subj, 0, $max_cgi_from_subj_len) . "...";
             $i++;
          }
          if(strncmp($l, "From:", 5) == 0 && strlen($l) > 10){
             $from = substr($l, 6, 4096);
             $from = decode_my_str($from);
-            if(strlen($from) > 6+$max_cgi_from_subj_len) $from .= "...";
+            if(strlen($from) > 6+$max_cgi_from_subj_len) $from = substr($from, 0, $max_cgi_from_subj_len) . "...";
             $i++;
          }
 
@@ -253,6 +257,7 @@ function get_message_for_delivery($f, $new_from){
 
 function check_directory($dir, $username, $page, $from, $subj){
    global $page_len, $max_cgi_from_subj_len, $NUMBER_OF_SPAM_MESSAGES_IN_QUARANTINE, $DATE, $FROM, $SUBJECT, $PURGE_SELECTED_MESSAGES, $PURGE_ALL_MESSAGES_FROM_QUARANTINE, $CANCEL, $SELECT_ALL;
+   global $DELIVER_SELECTED_MESSAGES, $DELIVER_AND_TRAIN_SELECTED_MESSAGES;
 
    $n_spam = 0;
    $spam_total_size = 0;
@@ -303,7 +308,7 @@ function check_directory($dir, $username, $page, $from, $subj){
 
    $_50_space = "<font color=\"#ffffff\">" . str_repeat("x", 3+$max_cgi_from_subj_len) . "</font>";
 
-   print "<table border=\"0\">\n";
+   print "<p><table border=\"0\">\n";
    print "<tr align=\"middle\"><th>&nbsp;</th><th>$DATE</th><th>$FROM</th><th>$SUBJECT</th><th>&nbsp;</th></tr>\n";
    print "<tr><td>&nbsp;</td><td>&nbsp;</td><td>$_50_space</td><td>$_50_space</td><td>&nbsp;</td></tr>\n";
 
@@ -325,16 +330,26 @@ function check_directory($dir, $username, $page, $from, $subj){
    }
 
 
-   print "</table>\n";
+   print "</table></p>\n";
 
-   print "<p><input type=\"submit\" value=\"$PURGE_SELECTED_MESSAGES\"> <input type=\"reset\" value=\"$CANCEL\">\n";
-   print "<input type=\"button\" value=\"$SELECT_ALL\" onClick=\"mark_all(true)\"></p></form>\n";
+   print "<p><input type=\"reset\" value=\"$CANCEL\">\n";
+   print "<input type=\"button\" value=\"$SELECT_ALL\" onClick=\"mark_all(true)\"></p>\n";
 
-   print "<p><form action=\"$meurl\" name=\"purgeallfromqueue\" method=\"post\">\n";
-   print "<input type=\"hidden\" name=\"purgeallfromqueue\" value=\"1\">\n";
+   /*print "<p><a href=\"\" onClick='document.forms.aaa1.submit(); return false;'>$PURGE_SELECTED_MESSAGES</a>\n";
+   print "<a href=\"\" onClick='document.forms.aaa1.action=\"massdeliver.php\"; document.forms.aaa1.submit(); return false;'>$DELIVER_SELECTED_MESSAGES</a>\n";
+   print "<a href=\"\" onClick='document.forms.aaa1.action=\"masstrain.php\"; document.forms.aaa1.submit(); return false;'>$DELIVER_AND_TRAIN_SELECTED_MESSAGES</a>\n";
+   print "</p>\n";*/
+
+   print "<p><input type=\"submit\" value=\"$PURGE_SELECTED_MESSAGES\">\n";
+   print "<input type=\"button\" value=\"$DELIVER_SELECTED_MESSAGES\" onClick='document.forms.aaa1.action=\"massdeliver.php\"; document.forms.aaa1.submit();'>\n";
+   print "<input type=\"button\" value=\"$DELIVER_AND_TRAIN_SELECTED_MESSAGES\" onClick='document.forms.aaa1.action=\"masstrain.php\"; document.forms.aaa1.submit();'></p>\n";
+   print "</form>\n";
+
+   print "<form action=\"$meurl\" name=\"purgeallfromqueue\" method=\"post\">\n";
+   print "<p><input type=\"hidden\" name=\"purgeallfromqueue\" value=\"1\">\n";
    print "<input type=\"hidden\" name=\"user\" value=\"$username\">\n";
-   print "<input type=\"submit\" value=\"$PURGE_ALL_MESSAGES_FROM_QUARANTINE\">\n";
-   print "</form></p>\n";
+   print "<input type=\"submit\" value=\"$PURGE_ALL_MESSAGES_FROM_QUARANTINE\"></p>\n";
+   print "</form>\n";
 
    return $n_msgs;
 }

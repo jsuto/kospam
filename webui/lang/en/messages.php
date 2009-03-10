@@ -29,6 +29,9 @@ $CGI_MONTHLY_REPORT = "Monthly report";
 $DATE = "Date";
 $default_policy = "default_policy";
 $DELIVER = "Deliver";
+$DELIVERED = "Delivered";
+$DELIVER_SELECTED_MESSAGES = "Deliver selected messages";
+$DELIVER_AND_TRAIN_SELECTED_MESSAGES = "Deliver and train selected messages";
 
 $EDIT_OR_VIEW = "Edit/view";
 $EMAIL_ADDRESS = "Email address";
@@ -48,6 +51,7 @@ $INTEGER = "integer";
 $LAST = "Last";
 $LOGOUT = "Logout";
 
+$MESSAGES = "messages";
 $MODIFY = "Modify";
 
 $NEXT = "Next";
@@ -62,6 +66,7 @@ $PURGED = "Purged";
 
 $QUARANTINE = "Quarantine";
 
+$PAGE_LENGTH = "Page length";
 $POLICY = "Policy";
 $POLICY_GROUP = "Policy group";
 $POLICY_NAME = "Policy name";
@@ -71,6 +76,7 @@ $REMOVE_POLICY = "Remove this policy";
 $REMOVE_USER = "Remove this user/$ALIAS";
 
 $SELECT_ALL = "Select all";
+$SET = "Set";
 $STATS = "Statistics";
 $STRING = "string";
 $SUBJECT = "Subject";

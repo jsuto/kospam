@@ -1,5 +1,19 @@
 0.4.1-rc1:
 
+2009.03.10, SJ
+
+Added an option to the webui to set the page length of the
+quarantine. You can set it between 10 ... 100.
+(webui/index.php, webui/q.php)
+
+You can do mass training and delivery from the quarantine
+with selecting the messages, then with a single click.
+(webui/mass* webui/funcs.php, webui/lang/*)
+
+Separated the HELO and the EHLO/LHLO answers. We return a
+mere "250 Ok" if the SMTP client tells us "HELO".
+(session.c)
+
 2009.03.09, SJ
 
 Enhanced a webui that if the given user has no entry in

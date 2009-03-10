@@ -29,6 +29,9 @@ $CGI_MONTHLY_REPORT = "Havi riport";
 $DATE = "Dátum";
 $default_policy = "alapértelmezett";
 $DELIVER = "Kézbesítés";
+$DELIVERED = "Kézbesített";
+$DELIVER_SELECTED_MESSAGES = "Kiválasztott üzenetek kézbesítése";
+$DELIVER_AND_TRAIN_SELECTED_MESSAGES = "Kiválasztott üzenetek tanítása és kézbesítése";
 
 $EDIT_OR_VIEW = "Szerkeszt/Megnéz";
 $EMAIL_ADDRESS = "Email cím";
@@ -48,6 +51,7 @@ $INTEGER = "integer";
 $LAST = "Utolsó";
 $LOGIN = "Kijelentkezés";
 
+$MESSAGES = "levelek";
 $MODIFY = "Módosít";
 
 $NEXT = "Következõ";
@@ -62,6 +66,7 @@ $PURGED = "Eltávolítva";
 
 $QUARANTINE = "Karantén";
 
+$PAGE_LENGTH = "Lap méret";
 $POLICY = "Házirend";
 $POLICY_GROUP = "Házirend csoport";
 $POLICY_NAME = "Házirend neve";
@@ -71,6 +76,7 @@ $REMOVE_POLICY = "Házirend törlése";
 $REMOVE_USER = "Felhasználó/$ALIAS törlése";
 
 $SELECT_ALL = "Mindegyik kijelölése";
+$SET = "Beállít";
 $STATS = "Statisztika";
 $STRING = "string";
 $SUBJECT = "Tárgy";

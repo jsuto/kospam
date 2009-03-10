@@ -1,10 +1,9 @@
 #!/bin/sh
 ##
-## check_clapf.sh, 2006.11.16, SJ
+## check_clapf.sh, 2009.03.10, SJ
 ##
 ## periodicaly check clapf-related services and restart them if necessary
 
 NUM=`ps uaxw | grep clapf | grep -c ^USER`
 
-if [ $NUM -eq 0 ]; then su USER -c 'export TMPDIR=YOUR_QUEUE; YOUR_PATH/clapf 2> /dev/null &' ; fi
-
+if [ $NUM -eq 0 ]; then export TMPDIR=YOUR_QUEUE; YOUR_PATH/clapf -d -u `id -u USER` -g `id -g USER` ; fi

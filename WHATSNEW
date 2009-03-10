@@ -1,3 +1,21 @@
+0.4.1:
+------
+
+PIPELINING support.
+
+Enhanced webui supporting mass operations (message delivery,
+training, user editing, etc.)
+
+Optimized antivirus engine utilization.
+
+Revised and smarter message store even in a distributed
+environment.
+
+Added some onfiguration file options suitable for high
+performance installations.
+
+Flexible webui authentication.
+
 0.4.0:
 ------
 

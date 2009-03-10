@@ -247,6 +247,10 @@
 		clear: both;
 	}
 
+	table {
+		margin-bottom: 15px;
+	}
+
 	#tabledata {
 		border: 1px solid #EEE;
 		border-width: 1px 0 0 1px;

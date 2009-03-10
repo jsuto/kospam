@@ -9,6 +9,10 @@ include_once("header.php");
 
 if($username == "") show_auth_popup();
 
+if(isset($_GET['pagelen'])){
+   Header("Set-Cookie: pagelen=" . $_GET['pagelen'] . "; path=/");
+}
+
 ?>
 
 
@@ -26,6 +30,19 @@ if($username == "") show_auth_popup();
 
 </p>
 
+
+<p>
+<form action="index.php" method="get">
+<?php print $PAGE_LENGTH; ?>: <select name="pagelen">
+   <option value="10">10
+   <option value="20">20
+   <option value="30">30
+   <option value="50">50
+</select>
+<input type="submit" value="<?php print $SET; ?>" />
+</form>
+
+</p>
 
       </td>
       <td>

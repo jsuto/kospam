@@ -9,6 +9,9 @@ include_once("header.php");
 
 if($username == "") show_auth_popup();
 
+if(isset($_COOKIE['pagelen'])){
+   if($_COOKIE['pagelen'] >= 10 && $_COOKIE['pagelen'] <= 50) $page_len = $_COOKIE['pagelen'];
+}
 
 $meurl = $_SERVER['PHP_SELF'];
 
@@ -67,12 +70,11 @@ function mark_all(x){
 
   <h3><?php print $QUARANTINE; ?></h3>
 
-  <div id="body">
+  <!--div id="body"-->
 
 <p>
 
 <?php
-
 
 if($_SERVER['REQUEST_METHOD'] == "GET"){
 
@@ -168,6 +170,8 @@ if($_SERVER['REQUEST_METHOD'] == "GET"){
       if($page < $nspam/$page_len && $nspam > $page_len)
          print " <a href=\"$meurl?page=$total_pages&user=$username&from=$from&subj=$subj\">$LAST</a>\n";
 
+      print "</p>\n";
+
    }
 }
 
@@ -207,7 +211,6 @@ if($_SERVER['REQUEST_METHOD'] == "POST"){
 
 }
 
-
 webui_close($conn);
 
 ?>
@@ -222,7 +225,7 @@ webui_close($conn);
    </table>
 
 
-  </div> <!-- body -->
+  </div> <!-- content -->
 
 
 

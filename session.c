@@ -1,5 +1,5 @@
 /*
- * session.c, 2009.03.04, SJ
+ * session.c, 2009.03.10, SJ
  */
 
 #include <stdio.h>
@@ -587,9 +587,9 @@ AFTER_PERIOD:
       while((p = split_str(p, "\r\n", buf, MAXBUFSIZE-1))){
          if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: got: %s", sdata.ttmpfile, buf);
 
-         // HELO/EHLO
+         // EHLO
 
-         if(strncasecmp(buf, SMTP_CMD_HELO, strlen(SMTP_CMD_HELO)) == 0 || strncasecmp(buf, SMTP_CMD_EHLO, strlen(SMTP_CMD_EHLO)) == 0 || strncasecmp(buf, LMTP_CMD_LHLO, strlen(LMTP_CMD_LHLO)) == 0){
+         if(strncasecmp(buf, SMTP_CMD_EHLO, strlen(SMTP_CMD_EHLO)) == 0 || strncasecmp(buf, LMTP_CMD_LHLO, strlen(LMTP_CMD_LHLO)) == 0){
             if(state == SMTP_STATE_INIT) state = SMTP_STATE_HELO;
 
             snprintf(buf, MAXBUFSIZE-1, SMTP_RESP_250_EXTENSIONS, cfg->hostid);
@@ -599,6 +599,20 @@ AFTER_PERIOD:
 
             /* FIXME: implement the ENHANCEDSTATUSCODE extensions */
          }
+
+
+
+         // HELO, let's play it simple for kids and grandmas ...
+
+         if(strncasecmp(buf, SMTP_CMD_HELO, strlen(SMTP_CMD_HELO)) == 0){
+            if(state == SMTP_STATE_INIT) state = SMTP_STATE_HELO;
+
+            strncat(resp, SMTP_RESP_250_OK, MAXBUFSIZE-1);
+
+            continue;
+         }
+
+
 
          // XFORWARD
 

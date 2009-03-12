@@ -1,5 +1,5 @@
 /*
- * session.c, 2009.03.10, SJ
+ * session.c, 2009.03.12, SJ
  */
 
 #include <stdio.h>
@@ -308,6 +308,10 @@ void init_session_data(struct session_data *sdata){
 
                       */
                      if(sdata.name[0] == 0) get_user_from_email(&sdata, email, cfg);
+
+                     /* if still not found, then let this email slip through clapf, 2009.03.12, SJ */
+
+                     if(sdata.name[0] == 0) goto END_OF_SPAM_CHECK;
 
                      do_training(&sdata, email, &acceptbuf[0], &my_cfg);
                      goto SEND_RESULT;

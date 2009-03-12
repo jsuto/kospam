@@ -1,5 +1,18 @@
 0.4.1-rc1:
 
+2009.03.12, SJ
+
+Modified clapf to let a training request get through if we
+cannot find the user it's intended to. This is the case if
+you have to use an SMTP server running clapf, but the training
+request should reach another SMTP server with clapf, ie.
+
+user -> smtp1 -> smtp2
+
+Now clapf will not swallow the training request, so it may
+reach its next destination.
+(session.c)
+
 2009.03.10, SJ
 
 Added an option to the webui to set the page length of the

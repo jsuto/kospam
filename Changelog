@@ -1,5 +1,20 @@
 0.4.1-rc1:
 
+2009.03.16, SJ
+
+Fixed a bug, now clapf handles properly such a pipelining
+situation where an incomplete QUIT command follows the period
+(.), ie.
+
+# end of packet1:
+  6f 70 65 72 6c 79 0d 0a    0d 0a 2e 0d 0a 51 55 49    operly.......QUI
+#
+# this is packet2:
+T 127.0.0.1:45721 -> 127.0.0.1:10025 [AP]
+  54 0d 0a                                              T..             
+
+(session.c)
+
 2009.03.12, SJ
 
 Modified clapf to let a training request get through if we

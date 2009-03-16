@@ -1,5 +1,5 @@
 /*
- * session.c, 2009.03.12, SJ
+ * session.c, 2009.03.16, SJ
  */
 
 #include <stdio.h>
@@ -167,6 +167,9 @@ void init_session_data(struct session_data *sdata){
 
 	       /* fix position */
 	       pos = pos - prevlen + strlen(SMTP_CMD_PERIOD);
+
+               if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: period: *%s*", sdata.ttmpfile, puf+pos);
+
 
                /* write data only to (and including) the trailing period (.) */
                write(sdata.fd, puf, pos);
@@ -566,6 +569,16 @@ void init_session_data(struct session_data *sdata){
 
                /* if we left something in the puffer, we are ready to proceed
                   to handle the additional commands, such as QUIT */
+
+               /* if we miss the trailing \r\n, ie. we need another read */
+
+               if(puf[n-2] != '\r' && puf[n-1] != '\n'){
+                  memmove(puf, puf+pos, n-pos);
+                  memset(puf+n-pos, 0, MAXBUFSIZE-n+pos);
+                  i = recvtimeout(new_sd, buf, MAXBUFSIZE, 0);
+                  strncat(puf, buf, MAXBUFSIZE-1-n+pos);
+                  if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: partial read: %s", sdata.ttmpfile, puf);
+               }
 
             } /* PERIOD found */
             else {

@@ -578,6 +578,7 @@ void init_session_data(struct session_data *sdata){
                   i = recvtimeout(new_sd, buf, MAXBUFSIZE, 0);
                   strncat(puf, buf, MAXBUFSIZE-1-n+pos);
                   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: partial read: %s", sdata.ttmpfile, puf);
+                  pos = 0;
                }
 
             } /* PERIOD found */

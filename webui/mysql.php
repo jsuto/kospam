@@ -85,14 +85,13 @@ function set_whitelist($whitelist, $username){
 
    $whitelist = mysql_real_escape_string($whitelist);
 
-   $x = mysql_result(mysql_query("SELECT COUNT(*) AS `uid` FROM $whitelist_table WHERE `uid` = '$uid'"), 0, 'uid');
+$uuid = mysql_result(mysql_query("SELECT COUNT(*) AS `uid` FROM $whitelist_table WHERE `uid` = '$uid'"), 0, 'uid');
+if(is_numeric($uuid) && $uuid > 0)
+ $stmt = "UPDATE $whitelist_table SET whitelist='$whitelist' WHERE uid=$uid";
+else
+$stmt = "INSERT INTO $whitelist_table (uid, whitelist) VALUES($uid, '$whitelist')";
 
-   if(is_numeric($x) && $x > 0)
-      $stmt = "UPDATE $whitelist_table SET whitelist='$whitelist' WHERE uid=$uid";
-   else
-      $stmt = "INSERT INTO $whitelist_table (uid, whitelist) VALUES($uid, '$whitelist')";
-
-   mysql_query($stmt) or nice_error($err_sql_error);
+mysql_query($stmt) or nice_error($err_sql_error);
 }
 
 
@@ -119,12 +118,11 @@ function set_blacklist($blacklist, $username){
 
    $blacklist = mysql_real_escape_string($blacklist);
 
-   $x = mysql_result(mysql_query("SELECT COUNT(*) AS `uid` FROM $blacklist_table WHERE `uid` = '$uid'"), 0, 'uid');
-
-   if(is_numeric($x) && $x > 0)
-      $stmt = "UPDATE $blacklist_table SET blacklist='$blacklist' WHERE uid=$uid";
-   else
-      $stmt = "INSERT INTO $blacklist_table (uid, blacklist) VALUES($uid, '$blacklist')";
+$uuid = mysql_result(mysql_query("SELECT COUNT(*) AS `uid` FROM $blacklist_table WHERE `uid` = '$uid'"), 0, 'uid');
+if(is_numeric($uuid) && $uuid > 0)
+ $stmt = "UPDATE $blacklist_table SET blacklist='$blacklist' WHERE uid=$uid";
+else
+ $stmt = "INSERT INTO $blacklist_table (uid, blacklist) VALUES($uid, '$blacklist')";
 
    mysql_query($stmt) or nice_error($err_sql_error);
 }
@@ -276,10 +274,20 @@ function update_user($uid){
    $stmt = "UPDATE $user_table SET username='$username', email='$email', policy_group=$policy_group WHERE uid=$uid AND email='$email_orig'";
    mysql_query($stmt) or nice_error($err_sql_error);
 
-   $stmt = "UPDATE $whitelist_table SET whitelist='$whitelist' WHERE uid=$uid";
-   mysql_query($stmt) or nice_error($err_sql_error);
+$uuid = mysql_result(mysql_query("SELECT COUNT(*) AS `uid` FROM $whitelist_table WHERE `uid` = '$uid'"), 0, 'uid');
+if (is_numeric($uuid) && $uuid > 0)
+ $stmt = "UPDATE $whitelist_table SET whitelist='$whitelist' WHERE uid=$uid";
+else
+ $stmt = "INSERT INTO $whitelist_table (uid, whitelist) VALUES($uid, '$whitelist')";
 
-   $stmt = "UPDATE $blacklist_table SET blacklist='$blacklist' WHERE uid=$uid";
+mysql_query($stmt) or nice_error($err_sql_error);
+
+$uuid = mysql_result(mysql_query("SELECT COUNT(*) AS `uid` FROM $blacklist_table WHERE `uid` = '$uid'"), 0, 'uid');
+if (is_numeric($uuid) && $uuid > 0)
+ $stmt = "UPDATE $blacklist_table SET blacklist='$blacklist' WHERE uid=$uid";
+else
+ $stmt = "INSERT INTO $blacklist_table (uid, blacklist) VALUES($uid, '$blacklist')";
+
    mysql_query($stmt) or nice_error($err_sql_error);
 
 }

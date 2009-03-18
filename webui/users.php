@@ -112,12 +112,15 @@ else {
 
    print "<h4>$EXISTING_USERS</h4>\n";
 
+   print "<form method=\"post\" action=\"massusers.php\">\n";
+   print "<input type=\"hidden\" name=\"bulkedit\" value=\"1\">\n";
    print "<table border=\"1\">\n";
-   print "<tr align=\"center\"><th>UID</th><th>$USERNAME</th><th>$EMAIL_ADDRESS</th><th>$POLICY_GROUP</th><th>&nbsp;</th></tr>\n";
+   print "<tr align=\"center\"><th>&nbsp;</th><th>UID</th><th>$USERNAME</th><th>$EMAIL_ADDRESS</th><th>$POLICY_GROUP</th><th>&nbsp;</th></tr>\n";
 
    show_existing_users();
 
    print "</table><p/>\n";
+   print "<input type=\"submit\" value=\"$BULK_EDIT_SELECTED_UIDS\"></form>\n";
 
    print "<p><a href=\"users.php?add=1\">$ADD_NEW_USER</a></p>\n";
 

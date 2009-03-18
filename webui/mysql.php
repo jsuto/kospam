@@ -212,7 +212,7 @@ function show_existing_users(){
    while(list($uid, $username, $email, $policy_group) = mysql_fetch_row($r)){
       $policy_group = get_policy_group_name_by_id($policy_group);
 
-      print "<tr align=\"left\"><td>$uid</td><td>$username</td><td>$email</td><td>$policy_group</td><td><a href=\"users.php?uid=$uid&email=$email&edit=1\">$EDIT_OR_VIEW</a></td></tr>\n";
+      print "<tr align=\"left\"><td><input type=\"checkbox\" name=\"aa_$uid\"></td><td>$uid</td><td>$username</td><td>$email</td><td>$policy_group</td><td><a href=\"users.php?uid=$uid&email=$email&edit=1\">$EDIT_OR_VIEW</a></td></tr>\n";
    }
    mysql_free_result($r);
 }
@@ -245,6 +245,25 @@ function delete_existing_user_entry($uid, $email){
 }
 
 
+function bulk_delete_user($uidlist){
+   global $user_table, $whitelist_table, $blacklist_table, $err_sql_error;
+
+   reset($_POST);
+   while(list($k, $v) = each($_POST)) $$k = mysql_real_escape_string($v);
+
+   $uidlist = mysql_real_escape_string($uidlist);
+
+   $stmt = "DELETE FROM $user_table WHERE uid IN ($uidlist)";
+   mysql_query($stmt) or nice_error($err_sql_error);
+
+   $stmt = "DELETE FROM $whitelist_table WHERE uid IN ($uidlist)";
+   mysql_query($stmt) or nice_error($err_sql_error);
+
+   $stmt = "DELETE FROM $blacklist_table  WHERE uid IN ($uidlist)";
+   mysql_query($stmt) or nice_error($err_sql_error);
+}
+
+
 function add_user_entry($uid){
    global $user_table, $whitelist_table, $blacklist_table, $misc_table, $err_sql_error, $err_existing_user, $BACK;
 
@@ -274,24 +293,43 @@ function update_user($uid){
    $stmt = "UPDATE $user_table SET username='$username', email='$email', policy_group=$policy_group WHERE uid=$uid AND email='$email_orig'";
    mysql_query($stmt) or nice_error($err_sql_error);
 
-$uuid = mysql_result(mysql_query("SELECT COUNT(*) AS `uid` FROM $whitelist_table WHERE `uid` = '$uid'"), 0, 'uid');
-if (is_numeric($uuid) && $uuid > 0)
- $stmt = "UPDATE $whitelist_table SET whitelist='$whitelist' WHERE uid=$uid";
-else
- $stmt = "INSERT INTO $whitelist_table (uid, whitelist) VALUES($uid, '$whitelist')";
+   $uuid = mysql_result(mysql_query("SELECT COUNT(*) AS `uid` FROM $whitelist_table WHERE `uid` = '$uid'"), 0, 'uid');
+   if(is_numeric($uuid) && $uuid > 0)
+      $stmt = "UPDATE $whitelist_table SET whitelist='$whitelist' WHERE uid=$uid";
+   else
+      $stmt = "INSERT INTO $whitelist_table (uid, whitelist) VALUES($uid, '$whitelist')";
 
-mysql_query($stmt) or nice_error($err_sql_error);
+   mysql_query($stmt) or nice_error($err_sql_error);
 
-$uuid = mysql_result(mysql_query("SELECT COUNT(*) AS `uid` FROM $blacklist_table WHERE `uid` = '$uid'"), 0, 'uid');
-if (is_numeric($uuid) && $uuid > 0)
- $stmt = "UPDATE $blacklist_table SET blacklist='$blacklist' WHERE uid=$uid";
-else
- $stmt = "INSERT INTO $blacklist_table (uid, blacklist) VALUES($uid, '$blacklist')";
+   $uuid = mysql_result(mysql_query("SELECT COUNT(*) AS `uid` FROM $blacklist_table WHERE `uid` = '$uid'"), 0, 'uid');
+   if(is_numeric($uuid) && $uuid > 0)
+      $stmt = "UPDATE $blacklist_table SET blacklist='$blacklist' WHERE uid=$uid";
+   else
+      $stmt = "INSERT INTO $blacklist_table (uid, blacklist) VALUES($uid, '$blacklist')";
 
    mysql_query($stmt) or nice_error($err_sql_error);
 
 }
 
+
+function bulk_update_user($uidlist){
+   global $user_table, $whitelist_table, $blacklist_table, $err_sql_error;
+
+   reset($_POST);
+   while(list($k, $v) = each($_POST)) $$k = mysql_real_escape_string($v);
+
+   $uidlist = mysql_real_escape_string($uidlist);
+
+   $stmt = "UPDATE $user_table SET policy_group=$policy_group WHERE uid IN ($uidlist)";
+   mysql_query($stmt) or nice_error($err_sql_error);
+
+   $stmt = "UPDATE $whitelist_table SET whitelist='$whitelist' WHERE uid IN ($uidlist)";
+   mysql_query($stmt) or nice_error($err_sql_error);
+
+   $stmt = "UPDATE $blacklist_table SET blacklist='$blacklist' WHERE uid IN ($uidlist)";
+   mysql_query($stmt) or nice_error($err_sql_error);
+
+}
 
 
 /*** policy groups ***/

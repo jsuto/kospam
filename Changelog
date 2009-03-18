@@ -8,6 +8,15 @@ table.
 (credits: efpe)
 (users.c, session.c, spamdrop.c, clapf.h)
 
+You can do bulk user editing. If you select some user ids in users.php
+and click on the "Bulk edit selected uids" button, then you can set the
+policy group, white- and blacklist for the selected uids.
+
+You can remove the selected uids (and all of their email addresses) by
+clicking on the "Remove selected uids" button.
+
+(webui/massusers.php, webui/lang/*)
+
 2009.03.16, SJ
 
 Fixed a bug, now clapf handles properly such a pipelining

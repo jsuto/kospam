@@ -21,6 +21,8 @@ $ALIASES = "Email álnevek";
 $BACK = "Vissza";
 $BLACKLIST = "Feketelista";
 $BLACKLIST_SETTINGS = "Feketelista beállítások";
+$BULK_EDIT_SELECTED_UIDS = "Kiválasztott azonosítók szerkesztése";
+$BULK_USER_UPDATE = "Kiválasztott azonosítók szerkesztése";
 
 $CANCEL = "Mégse";
 $CGI_DAILY_REPORT = "Napi riport";
@@ -73,6 +75,7 @@ $POLICY_NAME = "Házirend neve";
 
 $REMOVE = "Törlés";
 $REMOVE_POLICY = "Házirend törlése";
+$REMOVE_SELECTED_UIDS = "Kijelölt azonosítók törlése";
 $REMOVE_USER = "Felhasználó/$ALIAS törlése";
 
 $SELECT_ALL = "Mindegyik kijelölése";
@@ -85,6 +88,7 @@ $SUCCESSFULLY_REMOVED = "A törlés sikerült";
 $TOTAL = "Összes";
 $TRAIN_AND_DELIVER = "Tanítás és kézbesítés";
 
+$UPDATE_SELECTED_UIDS = "Kijelölt azonosítók módosítása";
 $USERLIST = "Felhasználók listája";
 $USERNAME = "Felhasználónév";
 $USERID = "Felhasználó azonosító";
@@ -130,4 +134,5 @@ $err_this_feature_is_not_available = "Ez a funkció nem érhetõ el a használt adat
 
 $err_you_are_logged_out = "Ön sikeresen kijelentkezett";
 
+$err_please_select_uids = "Kérem, válasszon felhasználói azonosítókat";
 ?>

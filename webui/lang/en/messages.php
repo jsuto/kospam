@@ -21,6 +21,8 @@ $ALIASES = "Aliases";
 $BACK = "Back";
 $BLACKLIST = "Blacklist";
 $BLACKLIST_SETTINGS = "Blacklist settings";
+$BULK_EDIT_SELECTED_UIDS = "Bulk edit selected uids";
+$BULK_USER_UPDATE = "Bulk update selected uids";
 
 $CANCEL = "Cancel";
 $CGI_DAILY_REPORT = "Daily report";
@@ -73,6 +75,7 @@ $POLICY_NAME = "Policy name";
 
 $REMOVE = "Remove";
 $REMOVE_POLICY = "Remove this policy";
+$REMOVE_SELECTED_UIDS = "Remove selected uids";
 $REMOVE_USER = "Remove this user/$ALIAS";
 
 $SELECT_ALL = "Select all";
@@ -85,6 +88,7 @@ $SUCCESSFULLY_REMOVED = "Successfully removed";
 $TOTAL = "Total";
 $TRAIN_AND_DELIVER = "Train and deliver";
 
+$UPDATE_SELECTED_UIDS = "Update selected uids";
 $USERLIST = "User's list";
 $USERNAME = "Username";
 $USERID = "User id";
@@ -108,7 +112,7 @@ $err_invalid_message_id = "Invalid message id";
 $err_existing_user = "User already exists";
 $err_added_user_successfully = "User added successfully";
 $err_failed_to_remove_user = "User failed to remove";
-$err_removed_user_successfully = "User removed successfully";
+$err_removed_user_successfully = "User(s) removed successfully";
 $err_modified_user = "Modified user";
 $err_failed_to_add_user = "User failed to add";
 
@@ -130,4 +134,5 @@ $err_this_feature_is_not_available = "This feature is not available for this bac
 
 $err_you_are_logged_out = "You are logged out";
 
+$err_please_select_uids = "Please select some uids first";
 ?>

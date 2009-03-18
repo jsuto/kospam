@@ -1,5 +1,5 @@
 /*
- * config.h, 2009.02.16, SJ
+ * config.h, 2009.03.18, SJ
  */
 
 #ifndef _CONFIG_H
@@ -159,6 +159,9 @@
 #define SQL_STAT_TABLE "t_stat"
 #define SQL_POLICY_TABLE "t_policy"
 #define SQL_SMAP_KEY_TABLE "t_smap_key"
+
+#define SQL_WHITE_FIELD_NAME "whitelist"
+#define SQL_BLACK_FIELD_NAME "blacklist"
 
 #define _90_DAYS 90*86400
 #define _60_DAYS 60*86400

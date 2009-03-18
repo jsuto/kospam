@@ -1,5 +1,5 @@
 /*
- * users.c, 2009.02.16, SJ
+ * users.c, 2009.03.18, SJ
  */
 
 #include <stdio.h>
@@ -98,7 +98,7 @@ int get_user_from_email(struct session_data *sdata, char *email, struct __config
  * check whether the email address is on the white list
  */
 
-int is_sender_on_black_or_white_list(struct session_data *sdata, char *email, char *table, struct __config *cfg){
+int is_sender_on_black_or_white_list(struct session_data *sdata, char *email, char *fieldname, char *table, struct __config *cfg){
    MYSQL_RES *res;
    MYSQL_ROW row;
    char buf[SMALLBUFSIZE];
@@ -106,7 +106,7 @@ int is_sender_on_black_or_white_list(struct session_data *sdata, char *email, ch
 
    if(!email) return 0;
 
-   snprintf(buf, SMALLBUFSIZE-1, "SELECT whitelist FROM %s WHERE uid=0 OR uid=%ld", table, sdata->uid);
+   snprintf(buf, SMALLBUFSIZE-1, "SELECT %s FROM %s WHERE uid=0 OR uid=%ld", fieldname, table, sdata->uid);
 
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sql: %s", sdata->ttmpfile, buf);
 
@@ -191,7 +191,7 @@ int get_user_from_email(struct session_data *sdata, char *email, struct __config
 }
 
 
-int is_sender_on_black_or_white_list(struct session_data *sdata, char *email, char *table, struct __config *cfg){
+int is_sender_on_black_or_white_list(struct session_data *sdata, char *email, char *fieldname, char *table, struct __config *cfg){
    sqlite3_stmt *pStmt;
    const char **pzTail=NULL;
    char buf[SMALLBUFSIZE];
@@ -199,7 +199,7 @@ int is_sender_on_black_or_white_list(struct session_data *sdata, char *email, ch
 
    if(!email) return 0;
 
-   snprintf(buf, SMALLBUFSIZE-1, "SELECT whitelist FROM %s WHERE uid=0 OR uid=%ld", table, sdata->uid);
+   snprintf(buf, SMALLBUFSIZE-1, "SELECT %s FROM %s WHERE uid=0 OR uid=%ld", fieldname, table, sdata->uid);
 
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sql: %s", sdata->ttmpfile, buf);
 

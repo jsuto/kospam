@@ -388,7 +388,7 @@ int main(int argc, char **argv, char **envp){
       /* whitelist check first */
 
    #ifdef HAVE_WHITELIST
-      if(is_sender_on_black_or_white_list(&sdata, from, SQL_WHITE_LIST, &cfg)){
+      if(is_sender_on_black_or_white_list(&sdata, from, SQL_WHITE_FIELD_NAME, SQL_WHITE_LIST, &cfg)){
          syslog(LOG_PRIORITY, "%s: sender (%s) found on whitelist", sdata.ttmpfile, from);
          snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on whitelist\r\n", cfg.clapf_header_field);
          goto ENDE_SPAMDROP;
@@ -398,7 +398,7 @@ int main(int argc, char **argv, char **envp){
       /* then give blacklist a try */
 
    #ifdef HAVE_BLACKLIST
-      if(is_sender_on_black_or_white_list(&sdata, from, SQL_BLACK_LIST, &cfg) == 1){
+      if(is_sender_on_black_or_white_list(&sdata, from, SQL_BLACK_FIELD_NAME, SQL_BLACK_LIST, &cfg) == 1){
          syslog(LOG_PRIORITY, "%s: sender (%s) found on blacklist", sdata.ttmpfile, from);
          snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on blacklist\r\n", cfg.clapf_header_field);
          goto ENDE;

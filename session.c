@@ -387,7 +387,7 @@ void init_session_data(struct session_data *sdata){
                         /* check whitelist first */
 
                      #ifdef HAVE_WHITELIST
-                        if(is_sender_on_black_or_white_list(&sdata, email2, SQL_WHITE_LIST, &my_cfg) == 1){
+                        if(is_sender_on_black_or_white_list(&sdata, email2, SQL_WHITE_FIELD_NAME, SQL_WHITE_LIST, &my_cfg) == 1){
                            syslog(LOG_PRIORITY, "%s: sender (%s) found on whitelist", sdata.ttmpfile, email2);
                            snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on whitelist\r\n", cfg->clapf_header_field);
                            goto END_OF_TRAINING;
@@ -397,7 +397,7 @@ void init_session_data(struct session_data *sdata){
                         /* then give blacklist a try */
 
                      #ifdef HAVE_BLACKLIST
-                        if(is_sender_on_black_or_white_list(&sdata, email2, SQL_BLACK_LIST, &my_cfg) == 1){
+                        if(is_sender_on_black_or_white_list(&sdata, email2, SQL_BLACK_FIELD_NAME, SQL_BLACK_LIST, &my_cfg) == 1){
                            syslog(LOG_PRIORITY, "%s: sender (%s) found on blacklist", sdata.ttmpfile, email2);
                            snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on blacklist\r\n", cfg->clapf_header_field);
 

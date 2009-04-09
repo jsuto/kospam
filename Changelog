@@ -1,5 +1,17 @@
 0.4.1-rc1:
 
+2009.04.09, SJ
+
+Added paging support to user list.
+(webui/users.php, webui/mysql.php, webui/sqlite3.php, webui/ldap.php)
+
+2009.04.02, SJ
+
+Fixed a bug in spamdrop preventing to train a message bigger than
+max_message_size_to_filter, and spamdrop can determine now correctly
+your userid if you train from the command line.
+(spamdrop.c)
+
 2009.03.18, SJ
 
 Fixed a bug causing incorrect sql statements if using the t_black_list
@@ -16,6 +28,9 @@ You can remove the selected uids (and all of their email addresses) by
 clicking on the "Remove selected uids" button.
 
 (webui/massusers.php, webui/lang/*)
+
+You can search between usernames and email addresse.
+(webui/mysql.php, webui/users.php)
 
 2009.03.16, SJ
 

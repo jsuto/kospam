@@ -51,7 +51,7 @@ $HOME = "Kezdõlap";
 $INTEGER = "integer";
 
 $LAST = "Utolsó";
-$LOGIN = "Kijelentkezés";
+$LOGOUT = "Kijelentkezés";
 
 $MESSAGES = "levelek";
 $MODIFY = "Módosít";

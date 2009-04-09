@@ -38,7 +38,6 @@ $conn = webui_connect() or nice_error($err_connect_db);
 
   <h3><?php print $POLICY; ?></h3>
 
-  <div id="body">
 
 <p>
 
@@ -130,7 +129,6 @@ webui_close($conn);
    </table>
 
 
-  </div> <!-- body -->
 
 
 

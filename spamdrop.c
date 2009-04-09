@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2009.02.24, SJ
+ * spamdrop.c, 2009.04.02, SJ
  */
 
 #include <stdio.h>
@@ -76,7 +76,7 @@ int main(int argc, char **argv, char **envp){
    int print_message=1, print_summary_only=0, put_subject_spam_prefix=0, sent_subject_spam_prefix=0;
    int is_spam=0, train_as_ham=0, train_as_spam=0, blackhole_request=0, training_request=0;
    int train_mode=T_TOE;
-   uid_t u=-1;
+   int u=-1;
    char buf[MAXBUFSIZE], qpath[SMALLBUFSIZE], trainbuf[SMALLBUFSIZE], ID[RND_STR_LEN+1], whitelistbuf[SMALLBUFSIZE], clapf_info[MAXBUFSIZE];
    char *configfile=CONFIG_FILE, *username=NULL, *from=NULL, *recipient=NULL;
    struct timezone tz;
@@ -135,10 +135,12 @@ int main(int argc, char **argv, char **envp){
 
          case 'S' :
                     train_as_spam = 1;
+                    print_message = 0;
                     break;
 
          case 'H' :
                     train_as_ham = 1;
+                    print_message = 0;
                     break;
 
          case 'h' :

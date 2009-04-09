@@ -98,33 +98,6 @@ function set_whitelist($whitelist, $username){
 }
 
 
-function get_blacklist_by_name($username){
-   global $blacklist_table, $err_sql_error;
-   $blacklist = "";
-
-   $uid = get_uid_by_name($username);
-   if($uid == "") return $blacklist;
-
-   $stmt = "SELECT blacklist FROM $blacklist_table WHERE uid=$uid";
-   $r = mysql_query($stmt) or nice_error($err_sql_error);
-   list($blacklist) = mysql_fetch_row($r);
-   mysql_free_result($r);
-
-   return $blacklist;
-}
-
-
-function set_blacklist($blacklist, $username){
-   global $blacklist_table, $err_sql_error;
-
-   $uid = get_uid_by_name($username);
-
-   $blacklist = mysql_real_escape_string($blacklist);
-   $stmt = "UPDATE $blacklist_table SET blacklist='$whitelist' WHERE uid=$uid";
-   mysql_query($stmt) or nice_error($err_sql_error);
-}
-
-
 /*** users ***/
 
 
@@ -143,7 +116,7 @@ function get_users_email_address($username){
 
 
 function print_user($x, $ro_uid = 0){
-   global $conn, $EMAIL_ADDRESS, $USERNAME, $USERID, $POLICY_GROUP, $WHITELIST, $BLACKLIST, $default_policy;
+   global $conn, $EMAIL_ADDRESS, $USERNAME, $USERID, $POLICY_GROUP, $WHITELIST, $default_policy;
 
    $len = 30;
 
@@ -163,7 +136,6 @@ function print_user($x, $ro_uid = 0){
    print "</select>\n";
 
    print "<tr valign=\"top\"><td>$WHITELIST:</td><td><textarea name=\"whitelist\" cols=\"$len\" rows=\"5\">$x[4]</textarea></td></tr>\n";
-   print "<tr valign=\"top\"><td>$BLACKLIST:</td><td><textarea name=\"blacklist\" cols=\"$len\" rows=\"5\">$x[5]</textarea></td></tr>\n";
 
    print "</td></tr>\n";
 
@@ -171,7 +143,7 @@ function print_user($x, $ro_uid = 0){
 
 
 function get_user_entry($uid, $email = ""){
-   global $conn, $user_table, $whitelist_table, $blacklist_table, $err_sql_error;
+   global $conn, $user_table, $whitelist_table, $err_sql_error;
 
    $x = array();
 
@@ -199,23 +171,31 @@ function get_user_entry($uid, $email = ""){
    $r->execute();
    $R = $r->fetch();
 
-   $stmt = "SELECT blacklist FROM $blacklist_table WHERE uid=:uid";
-
-   $r = $conn->prepare($stmt);
-   $r->bindParam(':uid', $uid, PDO::PARAM_INT);
-   $r->execute();
-   $R2 = $r->fetch();
-
-   array_push($x, $R['whitelist'], $R2['blacklist']);
+   array_push($x, $R['whitelist']);
 
    return $x;
 }
 
 
-function show_existing_users(){
+function show_existing_users($what, $page, $page_len){
    global $conn, $user_table, $err_sql_error, $EDIT_OR_VIEW;
+   $where_cond = "";
+   $n_users = 0;
+   $from = $page * $page_len;
 
-   $stmt = "SELECT uid, username, email, policy_group FROM $user_table ORDER by uid, email";
+   if($what){
+      $where_cond = "WHERE username LIKE '%$what%' OR email LIKE '%$what%' ";
+   }
+
+   $stmt = "SELECT COUNT(*) AS aaa FROM $user_table $where_cond";
+   $result = $conn->query($stmt);
+   $r = $result->fetchAll();
+
+   list($k, $v) = each($r);
+   $n_users = $v['aaa']; 
+
+
+   $stmt = "SELECT uid, username, email, policy_group FROM $user_table $where_cond ORDER by uid, email LIMIT $from, $page_len";
 
    $result = $conn->query($stmt);
    $r = $result->fetchAll();
@@ -226,16 +206,18 @@ function show_existing_users(){
       $email = $v['email'];
       $policy_group = $v['policy_group'];
 
-      //$policy_group = get_policy_group_name_by_id($policy_group);
+      $policy_group = get_policy_group_name_by_id($policy_group);
 
-      print "<tr align=\"left\"><td>$uid</td><td>$username</td><td>$email</td><td>$policy_group</td><td><a href=\"users.php?uid=$uid&email=$email&edit=1\">$EDIT_OR_VIEW</a></td></tr>\n";
+      //print "<tr align=\"left\"><td>$uid</td><td>$username</td><td>$email</td><td>$policy_group</td><td><a href=\"users.php?uid=$uid&email=$email&edit=1\">$EDIT_OR_VIEW</a></td></tr>\n";
+      print "<tr align=\"left\"><td><input type=\"checkbox\" name=\"aa_$uid\"></td><td>$uid</td><td>$username</td><td>$email</td><td>$policy_group</td><td><a href=\"users.php?uid=$uid&email=$email&edit=1\">$EDIT_OR_VIEW</a></td></tr>\n";
    }
 
+   return $n_users;
 }
 
 
 function delete_existing_user_entry($uid, $email){
-   global $conn, $user_table, $whitelist_table, $blacklist_table, $misc_table, $err_sql_error, $BACK, $err_failed_to_remove_user;
+   global $conn, $user_table, $whitelist_table, $misc_table, $err_sql_error, $BACK, $err_failed_to_remove_user;
 
    /* determine if this is the last user entry */
 
@@ -261,11 +243,6 @@ function delete_existing_user_entry($uid, $email){
       $r->bindParam(':uid', $uid, PDO::PARAM_INT);
       $r->execute();
 
-      $stmt = "DELETE FROM $blacklist_table WHERE uid=:uid";
-      $r = $conn->prepare($stmt);
-      $r->bindParam(':uid', $uid, PDO::PARAM_INT);
-      $r->execute();
-
       $stmt = "DELETE FROM $misc_table WHERE uid=:uid";
       $r = $conn->prepare($stmt);
       $r->bindParam(':uid', $uid, PDO::PARAM_INT);
@@ -275,7 +252,7 @@ function delete_existing_user_entry($uid, $email){
 
 
 function add_user_entry($uid){
-   global $conn, $user_table, $whitelist_table, $blacklist_table, $misc_table, $err_sql_error, $err_existing_user, $BACK;
+   global $conn, $user_table, $whitelist_table, $misc_table, $err_sql_error, $err_existing_user, $BACK;
 
    while(list($k, $v) = each($_POST)) $$k = $v;
 
@@ -294,14 +271,7 @@ function add_user_entry($uid){
    $r->bindParam(':uid', $uid, PDO::PARAM_INT);
    $r->bindParam(':whitelist', $whitelist, PDO::PARAM_STR);
    $r->execute();
-
-   $stmt = "INSERT INTO $blacklist_table (uid, blacklist) VALUES(:uid, :blacklist)";
-
-   $r = $conn->prepare($stmt);
-   $r->bindParam(':uid', $uid, PDO::PARAM_INT);
-   $r->bindParam(':blacklist', $blacklist, PDO::PARAM_STR);
-   $r->execute();
-
+         
    $stmt = "INSERT INTO $misc_table (uid, nham, nspam) VALUES(:uid, 0, 0)";
 
    $r = $conn->prepare($stmt);
@@ -312,7 +282,7 @@ function add_user_entry($uid){
 
 
 function update_user($uid){
-   global $conn, $user_table, $whitelist_table, $blacklist_table, $err_sql_error;
+   global $conn, $user_table, $whitelist_table, $err_sql_error;
 
    while(list($k, $v) = each($_POST)) $$k = $v;
 
@@ -332,13 +302,6 @@ function update_user($uid){
    $r->bindParam(':uid', $uid, PDO::PARAM_INT);
    $r->bindParam(':whitelist', $whitelist, PDO::PARAM_STR);
    $r->execute() or nice_error($err_sql_error);
-
-   $stmt = "UPDATE $blacklist_table SET blacklist=:blacklist WHERE uid=:uid";
-   $r = $conn->prepare($stmt);
-   $r->bindParam(':uid', $uid, PDO::PARAM_INT);
-   $r->bindParam(':blacklist', $blacklist, PDO::PARAM_STR);
-   $r->execute() or nice_error($err_sql_error);
-
 }
 
 
@@ -350,4 +313,11 @@ function show_existing_policy_groups($id = 0){
    global $policy_group_table, $err_sql_error, $REMOVE;
 }
 
+function get_policy_group_name_by_id($id){
+   global $policy_group_table, $err_sql_error, $default_policy;
+
+   if($id == 0) return $default_policy;
+
+   return $name;
+}
 

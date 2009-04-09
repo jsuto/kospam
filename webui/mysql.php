@@ -204,10 +204,23 @@ function get_user_entry($uid, $email = ""){
 }
 
 
-function show_existing_users(){
+function show_existing_users($what, $page, $page_len){
    global $user_table, $err_sql_error, $EDIT_OR_VIEW;
+   $where_cond = "";
+   $n_users = 0;
+   $from = $page * $page_len;
 
-   $stmt = "SELECT uid, username, email, policy_group FROM $user_table ORDER by uid, email";
+   if($what){
+      $what = mysql_real_escape_string($what);
+      $where_cond = "WHERE username LIKE '%$what%' OR email LIKE '%$what%' ";
+   }
+
+   $stmt = "SELECT COUNT(*) FROM $user_table $where_cond";
+   $r = mysql_query($stmt) or nice_error($err_sql_error);
+   list ($n_users) = mysql_fetch_row($r);
+   mysql_free_result($r);
+
+   $stmt = "SELECT uid, username, email, policy_group FROM $user_table $where_cond ORDER by uid, email LIMIT $from, $page_len";
    $r = mysql_query($stmt) or nice_error($err_sql_error);
    while(list($uid, $username, $email, $policy_group) = mysql_fetch_row($r)){
       $policy_group = get_policy_group_name_by_id($policy_group);
@@ -215,6 +228,8 @@ function show_existing_users(){
       print "<tr align=\"left\"><td><input type=\"checkbox\" name=\"aa_$uid\"></td><td>$uid</td><td>$username</td><td>$email</td><td>$policy_group</td><td><a href=\"users.php?uid=$uid&email=$email&edit=1\">$EDIT_OR_VIEW</a></td></tr>\n";
    }
    mysql_free_result($r);
+
+   return $n_users;
 }
 
 

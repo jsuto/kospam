@@ -22,7 +22,7 @@ $BACK = "Back";
 $BLACKLIST = "Blacklist";
 $BLACKLIST_SETTINGS = "Blacklist settings";
 $BULK_EDIT_SELECTED_UIDS = "Bulk edit selected uids";
-$BULK_USER_UPDATE = "Bulk update selected uids";
+$BULK_USER_UPDATE = "Bulk update selected users";
 
 $CANCEL = "Cancel";
 $CGI_DAILY_REPORT = "Daily report";

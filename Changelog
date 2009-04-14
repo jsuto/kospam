@@ -1,5 +1,10 @@
 0.4.1-rc1:
 
+2009.04.10, SJ
+
+Fixed a bug in the language files.
+(webui/lang/*)
+
 2009.04.09, SJ
 
 Added paging support to user list.

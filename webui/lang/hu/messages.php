@@ -22,7 +22,7 @@ $BACK = "Vissza";
 $BLACKLIST = "Feketelista";
 $BLACKLIST_SETTINGS = "Feketelista beállítások";
 $BULK_EDIT_SELECTED_UIDS = "Kiválasztott azonosítók szerkesztése";
-$BULK_USER_UPDATE = "Kiválasztott azonosítók szerkesztése";
+$BULK_USER_UPDATE = "Kiválasztott felhasználók módosítása";
 
 $CANCEL = "Mégse";
 $CGI_DAILY_REPORT = "Napi riport";

@@ -1,5 +1,5 @@
 /*
- * bayes.h, 2009.01.20, SJ
+ * bayes.h, 2009.04.14, SJ
  */
 
 #ifndef _BAYES_H
@@ -9,8 +9,6 @@
 #include "cfg.h"
 #include "hash.h"
 
-
-struct _state parse_message(char *spamfile, struct session_data *sdata, struct __config *cfg);
 
 void add_penalties(struct session_data *sdata, struct _state *state, struct __config *cfg);
 void check_lists(struct session_data *sdata, struct _state *state, int *found_on_rbl, int *surbl_matc, struct __config *cfg);

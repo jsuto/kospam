@@ -1,5 +1,35 @@
 0.4.1-rc1:
 
+2009.04.15, SJ
+
+Added a command line utility called smtpscanner. It can be used
+as a content filter for any MTA (eg. sendmail) as follows:
+
+Configure two instances of your MTA. Instance "A" accepts messages
+from the network, then passes to smtpscanner*. Smtpscanner then
+passes the (perhaps) modified message to instance B on a port
+like 10026.
+
+Please note that if you are using postfix, then stick to the regular
+"advanced content-filter" method, as it is more resource efficient.
+
+Plase also note that smtpscanner should NOT be used with libclamav,
+as loading the database into memory has an overhead, use clamd instead.
+
+If you want to use the smtpscanner, then issue a "make smtpscanner" as
+this utility does not compiles by default.
+
+*: it is an interactive version of session.c. It reads data from stdin
+and prints the answers to stdout.
+
+(smtpscanner.c)
+
+2009.04.14, SJ
+
+Moved the parse_message() function to make less object
+files if having only antivirus functionality.
+(bayes.c, bayes.h, parser.c, parser.h, session.c)
+
 2009.04.10, SJ
 
 Fixed a bug in the language files.

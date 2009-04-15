@@ -1,5 +1,5 @@
 /*
- * bayes.c, 2009.01.25, SJ
+ * bayes.c, 2009.04.14, SJ
  */
 
 #include <stdio.h>
@@ -100,40 +100,6 @@ int qry_spaminess(struct session_data *sdata, struct _state *state, char type, s
    calcnode(state->token_hash, sdata->Nham, sdata->Nspam, cfg);
 
    return 1;
-}
-
-
-
-/*
- * parse the message into tokens and return the pointer
- */
-
-struct _state parse_message(char *spamfile, struct session_data *sdata, struct __config *cfg){
-   FILE *f;
-   char buf[MAXBUFSIZE], tumbuf[SMALLBUFSIZE];
-   struct _state state;
-
-   init_state(&state);
-
-   f = fopen(spamfile, "r");
-   if(!f){
-      syslog(LOG_PRIORITY, "%s: cannot open", spamfile);
-      return state;
-   }
-
-   snprintf(tumbuf, SMALLBUFSIZE-1, "%sTUM", cfg->clapf_header_field);
-
-   while(fgets(buf, MAXBUFSIZE-1, f)){
-      parse(buf, &state, sdata, cfg);
-
-      if(strncmp(buf, tumbuf, strlen(tumbuf)) == 0){
-         state.train_mode = T_TUM;
-      }
-   }
-
-   fclose(f);
-
-   return state;
 }
 
 

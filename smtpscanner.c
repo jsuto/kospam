@@ -1,5 +1,5 @@
 /*
- * session.c, 2009.04.14, SJ
+ * smtpscanner.c, 2009.04.15, SJ
  */
 
 #include <stdio.h>
@@ -74,19 +74,38 @@ void init_session_data(struct session_data *sdata){
 }
 
 
-#ifdef HAVE_LIBCLAMAV
-   void postfix_to_clapf(int new_sd, struct url *blackhole, struct cl_limits limits, struct cl_node *root, struct __config *cfg){
-#else
-   void postfix_to_clapf(int new_sd, struct url *blackhole, struct __config *cfg){
-#endif
+int readtimeout(int s, char *buf, int len, int timeout){
+    fd_set fds;
+    int n;
+    struct timeval tv;
 
+    memset(buf, 0, MAXBUFSIZE);
+
+    FD_ZERO(&fds);
+    FD_SET(s, &fds);
+
+    tv.tv_sec = TIMEOUT;
+    tv.tv_usec = TIMEOUT_USEC;
+
+    n = select(s+1, &fds, NULL, NULL, &tv);
+    if (n == 0) return -2; // timeout!
+    if (n == -1) return -1; // error
+
+    return read(s, buf, len);
+}
+
+
+int main(int argc, char **argv){
+   int read_fd=0, write_fd=1;
    int i, pos, n, rav=AVIR_OK, inj=ERR_REJECT, state, prevlen=0;
    char *p, *q, buf[MAXBUFSIZE], puf[MAXBUFSIZE], resp[MAXBUFSIZE], prevbuf[MAXBUFSIZE], last2buf[2*MAXBUFSIZE+1], acceptbuf[MAXBUFSIZE];
    char email[SMALLBUFSIZE], email2[SMALLBUFSIZE];
+   char *configfile=CONFIG_FILE;
    float spaminess;
    struct session_data sdata;
    struct _state sstate;
-   struct __config my_cfg;
+   struct __config *cfg, my_cfg;
+   struct url *blackhole=NULL;
    int is_spam, db_conn=0;
    int rc;
    struct url *a;
@@ -99,6 +118,15 @@ void init_session_data(struct session_data *sdata){
       struct timeval tv_spam_start, tv_spam_stop, tv1, tv2;
    #endif
 
+   (void) openlog(PROGNAME, LOG_PID, LOG_MAIL);
+
+   cfg = malloc(sizeof(struct __config));
+   *cfg = read_config(configfile);
+
+   if(chdir(cfg->workdir)){
+      syslog(LOG_PRIORITY, "cannot chdir() to %s", cfg->workdir);
+      goto QUITTING;
+   }
 
 #ifdef HAVE_LIBCLAMAV
    /* http://www.clamav.net/doc/latest/html/node47.html */
@@ -146,10 +174,10 @@ void init_session_data(struct session_data *sdata){
    snprintf(buf, MAXBUFSIZE-1, SMTP_RESP_220_BANNER, cfg->hostid);
 #endif
 
-   send(new_sd, buf, strlen(buf), 0);
+   write(write_fd, buf, strlen(buf));
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent: %s", sdata.ttmpfile, buf);
 
-   while((n = recvtimeout(new_sd, puf, MAXBUFSIZE, 0)) > 0){
+   while((n = readtimeout(read_fd, puf, MAXBUFSIZE, 0)) > 0){
          pos = 0;
 
          /* accept mail data */
@@ -192,7 +220,7 @@ void init_session_data(struct session_data *sdata){
                   for(i=0; i<sdata.num_of_rcpt_to; i++){
                #endif
 
-                     send(new_sd, SMTP_RESP_421_ERR_WRITE_FAILED, strlen(SMTP_RESP_421_ERR_WRITE_FAILED), 0);
+                     write(write_fd, SMTP_RESP_421_ERR_WRITE_FAILED, strlen(SMTP_RESP_421_ERR_WRITE_FAILED));
 
                #ifdef HAVE_LMTP
                   }
@@ -530,7 +558,7 @@ void init_session_data(struct session_data *sdata){
                   }
 
                SEND_RESULT:
-                  send(new_sd, acceptbuf, strlen(acceptbuf), 0);
+                  write(write_fd, acceptbuf, strlen(acceptbuf));
 
                   if(inj == ERR_DROP_SPAM) syslog(LOG_PRIORITY, "%s: dropped spam", sdata.ttmpfile);
                   else if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent: %s", sdata.ttmpfile, acceptbuf);
@@ -575,7 +603,7 @@ void init_session_data(struct session_data *sdata){
                if(puf[n-2] != '\r' && puf[n-1] != '\n'){
                   memmove(puf, puf+pos, n-pos);
                   memset(puf+n-pos, 0, MAXBUFSIZE-n+pos);
-                  i = recvtimeout(new_sd, buf, MAXBUFSIZE, 0);
+                  i = readtimeout(read_fd, buf, MAXBUFSIZE, 0);
                   strncat(puf, buf, MAXBUFSIZE-1-n+pos);
                   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: partial read: %s", sdata.ttmpfile, puf);
                   pos = 0;
@@ -785,7 +813,7 @@ AFTER_PERIOD:
             state = SMTP_STATE_FINISHED;
 
             snprintf(buf, MAXBUFSIZE-1, SMTP_RESP_221_GOODBYE, cfg->hostid);
-            send(new_sd, buf, strlen(buf), 0);
+            write(write_fd, buf, strlen(buf));
             if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent: %s", sdata.ttmpfile, buf);
 
             unlink(sdata.ttmpfile);
@@ -830,7 +858,7 @@ AFTER_PERIOD:
       /* now we can send our buffered response */
 
       if(strlen(resp) > 0){
-         send(new_sd, resp, strlen(resp), 0);
+         write(write_fd, resp, strlen(resp));
          if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent: %s", sdata.ttmpfile, resp);
          memset(resp, 0, MAXBUFSIZE);
       }
@@ -844,7 +872,7 @@ AFTER_PERIOD:
 
    if(state < SMTP_STATE_QUIT && inj != OK){
       snprintf(buf, MAXBUFSIZE-1, SMTP_RESP_421_ERR, cfg->hostid);
-      send(new_sd, buf, strlen(buf), 0);
+      write(write_fd, buf, strlen(buf));
       if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent: %s", sdata.ttmpfile, buf);
 
       goto QUITTING;
@@ -860,7 +888,9 @@ QUITTING:
    mysql_close(&(sdata.mysql));
 #endif
 
+   free(cfg);
+
    if(cfg->verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "child has finished");
 
-   _exit(0);
+   return 0;
 }

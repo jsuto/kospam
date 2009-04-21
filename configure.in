@@ -780,7 +780,7 @@ echo; echo
 
 CFLAGS="$static -O2 -Wall -g"
 LIBS="$libclamav $antispam_libs $gsl_libs $sqlite3_libs"
-OBJS="misc.o cfg.o smtp.o sig.o decoder.o list.o parser.o session.o templates.o hash.o score.o chi.o $objs"
+OBJS="misc.o cfg.o smtp.o sig.o decoder.o list.o boundary.o parser.o session.o templates.o hash.o score.o chi.o $objs"
 
 AC_OUTPUT(Makefile)
 AC_OUTPUT(contrib/spamsum/Makefile)

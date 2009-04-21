@@ -62,7 +62,7 @@ clapf-lib:	$(OBJS) $(STORE_OBJ) $(MYSQL_OBJS)
 	$(CC) -shared -Wl,-soname,libclapf.so.$(CLAPF_VERSION) -o libclapf.so.$(LIBCLAPF_VERSION) $(OBJS) $(MYSQL_OBJS) $(LIBS) $(LDAP_LIBS) @LDFLAGS@
 	ln -sf libclapf.so.$(CLAPF_VERSION) libclapf.so
 
-parsembox: % : %.o misc.o decoder.o list.o parser.o cfg.o hash.o score.o chi.o
+parsembox: % : %.o misc.o decoder.o list.o boundary.o parser.o cfg.o hash.o score.o chi.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
 
 spamdrop: % : %.o
@@ -71,7 +71,7 @@ spamdrop: % : %.o
 spamstat: % : %.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ -lclapf @spamsum_libs@ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
 
-splitmbox: % : %.o misc.o decoder.o list.o parser.o hash.o score.o chi.o
+splitmbox: % : %.o misc.o decoder.o list.o boundary.o parser.o hash.o score.o chi.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
 
 aphash: % : %.o misc.o

@@ -1,5 +1,5 @@
 /*
- * parser.c, 2009.04.14, SJ
+ * parser.c, 2009.04.20, SJ
  */
 
 #include <stdio.h>
@@ -13,6 +13,7 @@
 #include "misc.h"
 #include "decoder.h"
 #include "list.h"
+#include "boundary.h"
 #include "parser.h"
 #include "hash.h"
 #include "config.h"
@@ -28,10 +29,6 @@ void init_state(struct _state *state){
    state->message_state = MSG_UNDEF;
 
    state->is_header = 1;
-   state->has_boundary = 0;
-   state->has_boundary2 = 0;
-
-   state->has_base64 = 0;
 
    /* by default we are a text/plain message */
 
@@ -41,7 +38,6 @@ void init_state(struct _state *state){
    state->base64 = 0;
    state->utf8 = 0;
 
-   /* changed to 0->1, 2008.03.07, SJ */
    state->iso_8859_2 = 1;
    state->qp = 0;
 
@@ -64,8 +60,6 @@ void init_state(struct _state *state){
 
    state->train_mode = T_TOE;
 
-   memset(state->boundary, 0, BOUNDARY_LEN);
-   memset(state->boundary2, 0, BOUNDARY_LEN);
    memset(state->ctype, 0, MAXBUFSIZE);
    memset(state->ip, 0, SMALLBUFSIZE);
    memset(state->miscbuf, 0, MAX_TOKEN_LEN);
@@ -76,14 +70,15 @@ void init_state(struct _state *state){
 
    state->found_our_signo = 0;
 
-   state->check_attachment = 0;
    state->has_to_dump = 0;
    state->fd = 0;
    state->num_of_images = 0;
    state->num_of_msword = 0;
 
+   state->boundaries = NULL;
+
    state->n_attachments = 0;
-   memset(state->attachedfile, 0, SMALLBUFSIZE);
+   state->has_base64 = 0;
 
    for(i=0; i<MAX_ATTACHMENTS; i++){
       state->attachments[i].size = 0;
@@ -114,7 +109,7 @@ int attachment_by_type(struct _state *state, char *type){
  * extract bondary
  */
 
-int extract_boundary(char *p, char *boundary, int boundary_len){
+int extract_boundary(char *p, struct _state *state){
    char *q;
 
    p += strlen("boundary");
@@ -138,7 +133,7 @@ int extract_boundary(char *p, char *boundary, int boundary_len){
       q = strrchr(p, '\n');
       if(q) *q = '\0';
 
-      strncpy(boundary, p, boundary_len);
+      append_boundary(&(state->boundaries), p);
 
       return 1;
    }
@@ -152,21 +147,21 @@ int extract_boundary(char *p, char *boundary, int boundary_len){
  */
 
 int parse(char *buf, struct _state *state, struct session_data *sdata, struct __config *cfg){
-   char *p, *q, *c, huf[MAXBUFSIZE], puf[MAXBUFSIZE], muf[MAXBUFSIZE], tuf[MAXBUFSIZE], rnd[RND_STR_LEN], u[SMALLBUFSIZE], token[MAX_TOKEN_LEN], phrase[MAX_TOKEN_LEN], ipbuf[IPLEN];
+   char *p, *q, *c, huf[MAXBUFSIZE], puf[MAXBUFSIZE], muf[MAXBUFSIZE], tuf[MAXBUFSIZE], u[SMALLBUFSIZE], token[MAX_TOKEN_LEN], phrase[MAX_TOKEN_LEN], ipbuf[IPLEN];
    int x, b64_len;
 
-
    state->line_num++;
+
+   /* undefined message state */
+   if(state->is_header == 1 && strchr(buf, ':')) state->message_state = MSG_UNDEF;
 
    /* skip empty lines */
 
    if(buf[0] == '\r' || buf[0] == '\n'){
-      if(state->base64_lines > 0) state->base64 = 0;
+      //if(state->base64_lines > 0) state->base64 = 0;
+      state->message_state = MSG_BODY;
 
-      if(state->is_header == 1){
-         state->is_header = 0;
-         state->message_state = MSG_BODY;
-      }
+      if(state->is_header == 1) state->is_header = 0;
 
       if(cfg->debug == 1) fprintf(stderr, "\n");
 
@@ -180,21 +175,23 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
          state->found_our_signo = 1;
    }
 
+
+   if(strncasecmp(buf, "Content-Type:", strlen("Content-Type:")) == 0) state->message_state = MSG_CONTENT_TYPE;
+   else if(strncasecmp(buf, "Content-Transfer-Encoding:", strlen("Content-Transfer-Encoding:")) == 0) state->message_state = MSG_CONTENT_TRANSFER_ENCODING;
+   else if(strncasecmp(buf, "Content-Disposition:", strlen("Content-Disposition:")) == 0) state->message_state = MSG_CONTENT_DISPOSITION;
+
+
    /* header checks */
 
    if(state->is_header == 1){
-      if(strchr(buf, ':')) state->message_state = MSG_UNDEF;
 
-      /* Subject: */
+      if(strncmp(buf, "Received: from ", strlen("Received: from ")) == 0) state->message_state = MSG_RECEIVED;
+      else if(strncmp(buf, "From:", strlen("From:")) == 0) state->message_state = MSG_FROM;
+      else if(strncmp(buf, "To:", 3) == 0) state->message_state = MSG_TO;
+      else if(strncmp(buf, "Subject:", strlen("Subject:")) == 0) state->message_state = MSG_SUBJECT;
 
-      if(strncmp(buf, "Subject:", strlen("Subject:")) == 0){
-         state->message_state = MSG_SUBJECT;
-      }
 
-      /* From: */
-
-      if(strncmp(buf, "From:", strlen("From:")) == 0){
-         state->message_state = MSG_FROM;
+      if(state->message_state == MSG_FROM){
 
          p = strchr(buf+5, ' ');
          if(p) p = buf + 6;
@@ -204,43 +201,8 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
          trim(state->from);
       }
 
-      if(strncmp(buf, "To:", 3) == 0){
-         state->message_state = MSG_TO;
-      }
 
-      /* Received: 2005.12.09, SJ */
-
-   /*#ifdef HAVE_PROCESS_ALL_RECEIVED_LINES
-      if(strncmp(buf, "Received: from ", strlen("Received: from ")) == 0){
-   #else
-      if(strncmp(buf, "Received: from ", strlen("Received: from ")) == 0 && state->ipcnt < 2){
-   #endif
-         state->message_state = MSG_RECEIVED;
-
-         p = strchr(buf, '[');
-         if(p){
-            q = strchr(p, ']');
-            if(q){
-
-
-               if(q > p+6 && q-p-1 <= IPLEN-1){
-                  memset(ipbuf, 0, IPLEN);
-                  memcpy(ipbuf, p+1, q-p-1);
-                  strncat(ipbuf, ",", IPLEN-1);
-
-                  if(strncmp(ipbuf, "127.", 4) && !strstr(state->ip, ipbuf) && strlen(state->ip) + strlen(ipbuf) < SMALLBUFSIZE-1)
-                     strncat(state->ip, ipbuf, SMALLBUFSIZE-1);
-
-                  state->ipcnt++;
-               }
-            }
-         }
-
-      }*/
-
-
-      if(strncmp(buf, "Received: from ", strlen("Received: from ")) == 0){
-         state->message_state = MSG_RECEIVED;
+      if(state->message_state == MSG_RECEIVED){
 
       #ifndef HAVE_PROCESS_ALL_RECEIVED_LINES
          if(state->ipcnt < 2){
@@ -282,13 +244,8 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
             memcpy(puf, buf, p-buf);
       }
 
-      /* we are interested in only these header lines, 2007.07.10, SJ */
-
-      if(strlen(puf) >= 2 && strcasecmp(puf, "Received") && strcasecmp(puf, "From") && strcasecmp(puf, "To") && strcasecmp(puf, "Subject") &&
-           strcasecmp(puf, "Content-Type") && strcasecmp(puf, "Content-Transfer-Encoding") && strcasecmp(puf, "Content-Disposition") )
-         return 0;
-
-
+      /* we are interested in only From:, To:, Subject:, Received:, Content-*: header lines */
+      if(state->message_state <= 0) return 0;
    }
    else
       state->cnt_type = 0;
@@ -297,23 +254,17 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
    /* end of header checks */
 
 
+   if((p = strcasestr(buf, "boundary"))){
+      x = extract_boundary(p, state);
+   }
+
 
    /* Content-type: checking */
 
-   if(strncasecmp(buf, "Content-Type:", strlen("Content-Type:")) == 0){
-      if(state->is_header == 1) state->message_state = MSG_CONTENT_TYPE;
+   if(state->message_state == MSG_CONTENT_TYPE){
 
-      state->textplain = 0;
-      state->texthtml = 0;
-      state->html_comment = 0;
-      state->base64 = 0;
-      state->base64_lines = 0;
-      state->base64_text = 0;
-      state->utf8 = 0;
-      state->iso_8859_2 = 1; /* changed 0->1, 2008.06.28, SJ */
-
-      if(state->n_attachments < MAX_ATTACHMENTS-1 && state->attachments[state->n_attachments].size > 0)
-         state->n_attachments++;
+      //if(state->n_attachments < MAX_ATTACHMENTS-1 && state->attachments[state->n_attachments].size > 0)
+      //   state->n_attachments++;
 
       /* extract Content type */
 
@@ -329,40 +280,6 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
       }
 
       state->cnt_type = 1;
-
-      /* check only the first attachment of this type */
-
-      if( (state->check_attachment == 1 && strcasestr(buf, "image") && state->num_of_images == 0) || (strcasestr(buf, "msword") && state->num_of_msword == 0) ){
-         p = strchr(buf, '/');
-         q = strchr(buf, ';');
-         if(p && q){
-
-            if(strcasestr(buf, "image"))
-               state->num_of_images++;
-
-            if(strcasestr(buf, "msword"))
-               state->num_of_msword++;
-
-            make_rnd_string(rnd);
-
-            snprintf(state->attachedfile, SMALLBUFSIZE-1, "%s.%s", rnd, p+1);
-
-            // get rid of the semicolon (;)
-            q = strchr(state->attachedfile, ';');
-            if(q)
-               *q = '\0';
-
-            /* writing attachments is disabled at the moment, 2007.09.07, SJ */
-
-            /*state->has_to_dump = 1;
-            state->fd = open(state->attachedfile, O_CREAT|O_RDWR, 0644);*/
-         }
-      }
-      else {
-         state->has_to_dump = 0;
-         if(state->fd)
-            close(state->fd);
-      }
 
       /* 2007.04.19, SJ */
 
@@ -387,14 +304,24 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
 
    /* check for textual base64 encoded part, 2005.03.25, SJ */
 
-   if(strncasecmp(buf, "Content-Transfer-Encoding:", strlen("Content-Transfer-Encoding:")) == 0){
-      if(state->is_header == 1) state->message_state = MSG_CONTENT_TRANSFER_ENCODING;
+   if(state->message_state == MSG_CONTENT_TRANSFER_ENCODING){
 
       if(strcasestr(buf, "base64")){
          state->base64 = 1;
          state->has_base64 = 1;
+
+         /*snprintf(u, SMALLBUFSIZE-1, "%s-%d", sdata->ttmpfile, state->n_attachments);
+         state->has_to_dump = 1;
+         state->fd = open(u, O_CREAT|O_RDWR, 0644);*/
       }
+
+      if(strcasestr(buf, "image"))
+         state->num_of_images++;
+
+      if(strcasestr(buf, "msword"))
+         state->num_of_msword++;
    }
+
 
    if(state->base64 == 1 && !strchr(buf, ':'))
       state->base64_lines++;
@@ -405,9 +332,8 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
    if(strcasestr(buf, "charset") && strcasestr(buf, "UTF-8"))
       state->utf8 = 1;
 
-   if(strcasestr(buf, "charset") && (strcasestr(buf, "ISO-8859-2") || strcasestr(buf, "ISO-8859-1"))  ){
+   if(strcasestr(buf, "charset") && (strcasestr(buf, "ISO-8859-2") || strcasestr(buf, "ISO-8859-1"))  )
       state->iso_8859_2 = 1;
-   }
 
    /* catch encoded stuff in the Subject|From lines, 2007.09.04, SJ */
 
@@ -418,14 +344,13 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
 
    /* check for quoted-printable encoding */
 
-   if(strncasecmp(buf, "Content-Transfer-Encoding:", strlen("Content-Transfer-Encoding:")) == 0 && strcasestr(buf, "quoted-printable"))
+   if(state->message_state == MSG_CONTENT_TRANSFER_ENCODING && strcasestr(buf, "quoted-printable"))
       state->qp = 1;
 
-   if(strncasecmp(buf, "Content-Transfer-Encoding:", strlen("Content-Transfer-Encoding:")) == 0 && state->textplain == 0 && state->texthtml == 0)
+   if(state->message_state == MSG_CONTENT_TRANSFER_ENCODING && state->textplain == 0 && state->texthtml == 0)
       goto DECOMPOSE;
 
-   if(strncasecmp(buf, "Content-Disposition:", strlen("Content-Disposition:")) == 0){
-      if(state->is_header == 1) state->message_state = MSG_CONTENT_DISPOSITION;
+   if(state->message_state == MSG_CONTENT_DISPOSITION && state->is_header == 1){
       if(state->textplain == 0 && state->texthtml == 0) goto DECOMPOSE;
    }
 
@@ -435,55 +360,41 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
       state->base64_text = 1;
 
 
-   /* boundary checks */
-
-   if(state->has_boundary == 1 && state->cnt_type == 1 && (p = strcasestr(buf, "boundary"))){
-      x = extract_boundary(p, state->boundary2, BOUNDARY_LEN-1);
-      if(x == 1) state->has_boundary2 = 1;
-      state->base64 = 0; state->textplain = 0; state->texthtml = 0; // state->qp = 0;
-   }
-
-   if(state->cnt_type == 1 && state->has_boundary2 == 0 && (p = strcasestr(buf, "boundary"))){
-      x = extract_boundary(p, state->boundary, BOUNDARY_LEN-1);
-      if(x == 1) state->has_boundary = 1;
-
-      /* do not let the boundary definition reset the Content-* variables if we are in the header, 2006.03.13, SJ */
-
-      if(state->is_header == 1 && strncasecmp(buf, "Content-Type:", strlen("Content-Type:")) == 0){
-         state->base64 = 0; // state->qp = 0;
-      }
-      else {
-         state->base64 = 0; state->textplain = 0; state->texthtml = 0; // state->qp = 0;
-      }
-
-   }
-
- 
    /* skip the boundary itself */
 
-   if(state->has_boundary == 1 && !strcasestr(buf, "boundary") && strstr(buf, state->boundary)){
-      return 0;
-   }
+   if(!strcasestr(buf, "boundary") && is_boundary(state->boundaries, buf) == 1){
+      if(state->has_to_dump == 1){
+         close(state->fd);
+         if(state->n_attachments < MAX_ATTACHMENTS-1)
+            state->n_attachments++;
+      }
 
-   if(state->has_boundary2 == 1 && !strcasestr(buf, "boundary") && strstr(buf, state->boundary2))
-      return 0;
+
+      state->has_to_dump = 0;
+
+      // TODO: do not let the boundary definition reset the Content-* variables if we are in the header
+      state->base64 = 0; state->base64_lines = 0; state->base64_text = 0; state->textplain = 0; state->texthtml = 0;
+      state->html_comment = 0;
+      state->utf8 = 0; state->iso_8859_2 = 1;
+      // state->qp = 0;
+
+      //fprintf(stderr, "skipping found boundary: %s", buf);
+      return 0;      
+   }
 
    /* end of boundary check */
 
 
-   /* dump attachment, 2007.07.03, SJ */
+   /* dump attachment */
 
-   if(!strchr(buf, '\t') && buf[0] != '\n' && buf[0] != '\r' && state->fd != -1){
-      if(state->base64 == 1 && !strchr(buf, ' ')){
+   /*if(state->has_to_dump == 1 && state->message_state == MSG_BODY){
+      if(state->base64 == 1){
          b64_len = base64_decode(buf, puf);
-         state->attachments[state->n_attachments].size += b64_len;
-         if(state->has_to_dump == 1)
-            write(state->fd, puf, b64_len);
+         write(state->fd, puf, b64_len);
       }
-      else if(state->is_header == 0){
-         state->attachments[state->n_attachments].size += strlen(buf);
-      }
-   }
+      else write(state->fd, buf, strlen(buf));
+   }*/
+
 
    /* skip non textual stuff */
 
@@ -502,9 +413,8 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
 
    /* handle qp encoded lines */
 
-   if(state->qp == 1 || ( (state->message_state == MSG_SUBJECT || state->message_state == MSG_FROM) && strcasestr(buf, "?Q?")) ){
+   if(state->qp == 1 || ( (state->message_state == MSG_SUBJECT || state->message_state == MSG_FROM) && strcasestr(buf, "?Q?")) )
       qp_decode(buf);
-   }
 
    /* handle base64 encoded From:, To: and Subject: lines, 2008.11.24, SJ */
 
@@ -640,9 +550,7 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
 
    /* skip unless we have an URL, 2006.11.09, SJ */
 
-   if(x > 0){
-      state->l_shit += x;
-   }
+   if(x > 0) state->l_shit += x;
 
 DECOMPOSE:
    /* skip unnecessary header lines */
@@ -660,8 +568,6 @@ DECOMPOSE:
 
    do {
       p = split(p, DELIMITER, puf, MAXBUFSIZE-1);
-
-      /* 2008.08.18, SJ */
 
       if(strcasestr(puf, "http://") || strcasestr(puf, "https://")){
          q = puf;
@@ -683,12 +589,14 @@ DECOMPOSE:
          continue;
       }
 
-      /* if we have a long string in the Received: lines, let's trucate it, 
+      /* if we have a long string in the Received: lines, let's truncate it, 
          and it may be a domain name, 2008.07.22 */
+
       if(state->message_state == MSG_RECEIVED && strlen(puf) > MAX_WORD_LEN)
          fix_fqdn(puf);
 
       /* skip too short or long or numeric only tokens */
+
       if(strlen(puf) < MIN_WORD_LEN || strlen(puf) > MAX_WORD_LEN || is_hex_number(puf))
          continue;
 
@@ -737,9 +645,8 @@ DECOMPOSE:
    /* do not chain between individual headers, 2007.06.09, SJ */
    if(state->is_header == 1) state->n_chain_token = 0;
 
-   if(state->message_state == MSG_FROM && strlen(state->from) > 3){
+   if(state->message_state == MSG_FROM && strlen(state->from) > 3)
       addnode(state->token_hash, state->from, DEFAULT_SPAMICITY, 0);
-   }
 
    return 0;
 }
@@ -773,6 +680,8 @@ struct _state parse_message(char *spamfile, struct session_data *sdata, struct _
    }
 
    fclose(f);
+
+   free_boundary(state.boundaries);
 
    return state;
 }

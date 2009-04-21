@@ -1,5 +1,16 @@
 0.4.1-rc1:
 
+2009.04.21, SJ
+
+Added a graphical representation of the per user statitics by
+the JpGraph project (http://www.aditus.nu/jpgraph/)
+(webui/stat.php, webui/graph.php, webui/jpgraph)
+
+2009.04.17, SJ
+
+Modified boundary handling in the parser.
+(configure*, Makefile.in, boundary.c, boundary.h, parser.c, defs.h)
+
 2009.04.15, SJ
 
 Added a command line utility called smtpscanner. It can be used

@@ -1,5 +1,5 @@
 /*
- * defs.h, 2009.02.27, SJ
+ * defs.h, 2009.04.17, SJ
  */
 
 #ifndef _DEFS_H
@@ -26,6 +26,7 @@
 #define MSG_CONTENT_TYPE 5
 #define MSG_CONTENT_TRANSFER_ENCODING 6
 #define MSG_CONTENT_DISPOSITION 7
+
 
 #define MYDB_HEADER_SIZE 8
 #define N_SIZE 16
@@ -79,16 +80,19 @@ struct url {
    struct url *r;
 };
 
+struct boundary {
+   char boundary_str[BOUNDARY_LEN];
+   struct boundary *r;
+};
+
 struct _state {
    int message_state;
    int is_header;
-   int has_boundary;
-   int has_boundary2;
-   int has_base64;
    int cnt_type;
    int textplain;
    int texthtml;
    int base64;
+   int has_base64;
    int utf8;
    int iso_8859_2;
    int qp;
@@ -96,7 +100,6 @@ struct _state {
    int base64_text;
    int base64_lines;
    int ipcnt;
-   int check_attachment;
    int has_to_dump;
    int fd;
    int num_of_msword;
@@ -106,8 +109,6 @@ struct _state {
    unsigned long l_shit;
    unsigned long line_num;
    char ctype[MAXBUFSIZE];
-   char boundary[BOUNDARY_LEN];
-   char boundary2[BOUNDARY_LEN];
    char ip[SMALLBUFSIZE];
    char miscbuf[MAX_TOKEN_LEN];
    char qpbuf[MAX_TOKEN_LEN];
@@ -120,6 +121,8 @@ struct _state {
    struct url *urls;
 
    int found_our_signo;
+
+   struct boundary *boundaries;
 
    int n_attachments;
    struct attachment attachments[MAX_ATTACHMENTS];

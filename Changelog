@@ -3,8 +3,14 @@
 2009.04.21, SJ
 
 Added a graphical representation of the per user statitics by
-the JpGraph project (http://www.aditus.nu/jpgraph/)
+the JpGraph project (http://www.aditus.nu/jpgraph/).
+You need PHP 5.x for the 2.x series of JpGraph.
+If you stuck with PHP4, then download the 1.x version
+of JpGraph.
 (webui/stat.php, webui/graph.php, webui/jpgraph)
+
+Pipelining support for the smtp receiving side of clapf.
+(smtpcodes.h)
 
 2009.04.17, SJ
 

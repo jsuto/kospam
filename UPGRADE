@@ -21,7 +21,18 @@ field. If it's not than apply this statement:
 
 alter table t_policy add column store_metadata tinyint default 0;
 
-6. Make sure your users exist in t_white_list and t_black_list tables.
+6. Make sure you have the t_black_list table, if not then apply
+this statement:
+
+create table if not exists t_black_list (
+        uid int unsigned not null primary key,
+        blacklist blob default null
+);
+
+create index t_black_list_idx on t_black_list (uid);
+
+
+7. Make sure your users exist in t_white_list and t_black_list tables.
 If not, then create such an SQL commands:
 
 insert t_white_list (uid, whitelist) values(0, '');

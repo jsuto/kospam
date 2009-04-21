@@ -35,56 +35,7 @@ if(isset($_GET['timespan'])) $timespan = $_GET['timespan'];
 
 ?>
 
-<table border="0"><tr valign="top"><td>
-<table border="1">
-
-<?php
-   print "<tr align=\"center\"><th>$DATE</th><th>HAM</th><th>SPAM</th></tr>\n";
-
-   /* determine your uid */
-
-   $conn = webui_connect() or nice_error($err_connect_db);
-
-   $stmt = "SELECT uid FROM $user_table WHERE username='$username'";
-   $r = mysql_query($stmt) or nice_error($err_sql_error);
-   list($uid) = mysql_fetch_row($r);
-   mysql_free_result($r);
-
-   if($uid){
-   if($timespan == 0)
-      $stmt = "SELECT ts, SUM(nham), SUM(nspam) FROM $stat_table WHERE uid=$uid GROUP BY ts ORDER BY ts DESC LIMIT 24";
-   else
-      $stmt = "SELECT FROM_UNIXTIME(ts, '%Y.%m.%d.'), SUM(nham), SUM(nspam) FROM $stat_table WHERE uid=$uid GROUP BY FROM_UNIXTIME(ts, '%Y.%m.%d.') ORDER BY ts DESC LIMIT 30";
-
-   $r = mysql_query($stmt) or nice_error($err_sql_error);
-   while(list($ts, $ham, $spam) = mysql_fetch_row($r)){
-
-      $nham += $ham;
-      $nspam += $spam;
-
-      if($timespan == 0){
-         $ts += 70;
-         //$ts = date("Y.m.d. H:i:s", $ts);
-         $d1 = date("m.d.", $ts);
-         $d2 = date("H:i", $ts);
-         print "<tr align=\"center\"><td>$d1&nbsp;$d2</td><td>$ham</td><td>$spam</td></tr>\n";
-      }
-      else
-         print "<tr align=\"center\"><td>$ts</td><td>$ham</td><td>$spam</td></tr>\n";
-
-   }
-   mysql_free_result($r);
-   }
-
-   webui_close($conn);
-
-   print "<tr align=\"center\"><td><b>$TOTAL</b></td><td><b>$nham</b></td><td><b>$nspam</b></td></tr>\n";
-
-?>
-
-</table></td>
-
-   <td><img src="graph.php?timespan=<?php print $timespan; ?>" /></td></tr></table>
+   <img src="graph.php?timespan=<?php print $timespan; ?>" />
 
 </p>
 

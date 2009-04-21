@@ -16,6 +16,12 @@ performance installations.
 
 Flexible webui authentication.
 
+Email address blacklist feature similare to the whitelist.
+
+SpamAssassin's spamd support.
+
+You can specify what uid/gid clapf will run.
+
 0.4.0:
 ------
 

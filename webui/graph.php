@@ -17,7 +17,7 @@ $username = get_authenticated_username();
 if($username == "") show_auth_popup();
 
 $title = $GRAPH['ham_and_spam_messages'];
-$size_x = 600;
+$size_x = 800;
 $size_y = 480;
 $color_ham = "#d03080";
 $color_spam = "#1ac090";
@@ -26,6 +26,7 @@ $timespan = 0;
 
 $ydata = array();
 $ydata2 = array();
+$ydata3 = array();
 $dates = array();
 
 if(isset($_GET['timespan'])) $timespan = $_GET['timespan'];
@@ -57,7 +58,7 @@ if($uid){
 
       array_push($ydata, $ham);
       array_push($ydata2, $spam);
-
+      array_push($ydata3, 100*$spam/($ham+$spam));
    }
    mysql_free_result($r);
 }
@@ -66,6 +67,7 @@ webui_close($conn);
 
 $ydata = array_reverse($ydata);
 $ydata2 = array_reverse($ydata2);
+$ydata3 = array_reverse($ydata3);
 $dates = array_reverse($dates);
 
 $graph = new Graph($size_x, $size_y, "auto");
@@ -73,6 +75,7 @@ $graph = new Graph($size_x, $size_y, "auto");
 $graph->img->SetImgFormat("png");
 $graph->SetShadow();
 $graph->SetScale("textlin");
+//$graph->SetY2Scale("lin");
 
 $graph->xaxis->SetTickLabels($dates);
 $graph->xaxis->SetTextLabelInterval(4);
@@ -82,7 +85,7 @@ $lineplot = new LinePlot($ydata);
 $lineplot->SetColor($color_ham);
 $lineplot->SetWeight(5);
 
-$graph->img->SetMargin(100, 40, 40, 40);
+$graph->img->SetMargin(140, 40, 40, 40);
 $graph->title->Set($title);
 
 
@@ -96,13 +99,18 @@ $lineplot2 = new LinePlot($ydata2);
 $lineplot2->SetFillColor($color_spam);
 $lineplot2->mark->SetWidth(4);
 
+$lineplot3 = new LinePlot($ydata3);
+$lineplot3->SetColor("blue");
+$lineplot3->SetWeight(5);
+
 $lineplot->SetLegend("HAM");
 $lineplot2->SetLegend("SPAM");
+//$lineplot3->SetLegend("spam ratio");
+
 
 $graph->Add($lineplot2);
 $graph->Add($lineplot);
-
-
+//$graph->AddY2($lineplot3);
 
 $graph->legend->Pos(0.07, 0.95, "center", "bottom");
 

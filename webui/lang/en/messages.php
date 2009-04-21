@@ -11,6 +11,9 @@ $TITLE['/users.php'] = 'User management';
 $TITLE['/policy.php'] = 'Policy';
 $TITLE['/logout.php'] = 'Logout';
 
+$GRAPH['ham_and_spam_messages'] = 'Ham & spam messages';
+$GRAPH['spam_ratio'] = 'Spam ratio';
+
 $ALIAS = "alias";
 
 $ADD = "Add";
@@ -22,7 +25,7 @@ $BACK = "Back";
 $BLACKLIST = "Blacklist";
 $BLACKLIST_SETTINGS = "Blacklist settings";
 $BULK_EDIT_SELECTED_UIDS = "Bulk edit selected uids";
-$BULK_USER_UPDATE = "Bulk update selected users";
+$BULK_USER_UPDATE = "Bulk update selected uids";
 
 $CANCEL = "Cancel";
 $CGI_DAILY_REPORT = "Daily report";

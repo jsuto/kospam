@@ -11,6 +11,9 @@ $TITLE['/users.php'] = 'Felhasználó menedzselés';
 $TITLE['/policy.php'] = 'Házirend';
 $TITLE['/logout.php'] = 'Kijelentkezés';
 
+$GRAPH['ham_and_spam_messages'] = 'Ham & spam üzenetek száma';
+$GRAPH['spam_ratio'] = 'Spam arány';
+
 $ALIAS = "álnév";
 
 $ADD = "Felvesz";
@@ -22,7 +25,7 @@ $BACK = "Vissza";
 $BLACKLIST = "Feketelista";
 $BLACKLIST_SETTINGS = "Feketelista beállítások";
 $BULK_EDIT_SELECTED_UIDS = "Kiválasztott azonosítók szerkesztése";
-$BULK_USER_UPDATE = "Kiválasztott felhasználók módosítása";
+$BULK_USER_UPDATE = "Kiválasztott azonosítók szerkesztése";
 
 $CANCEL = "Mégse";
 $CGI_DAILY_REPORT = "Napi riport";

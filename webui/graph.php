@@ -7,8 +7,7 @@ include_once("auth.php");
 include_once("mysql.php");
 include_once("lang/$lang/messages.php");
 
-include_once('jpgraph/src/jpgraph.php');
-include_once('jpgraph/src/jpgraph_line.php');
+include_once("libchart/classes/libchart.php");
 
 session_start();
 $username = get_authenticated_username();
@@ -26,8 +25,12 @@ $timespan = 0;
 
 $ydata = array();
 $ydata2 = array();
-$ydata3 = array();
 $dates = array();
+
+$chart = new LineChart($size_x, $size_y);
+$line1 = new XYDataSet();
+$line2 = new XYDataSet();
+
 
 if(isset($_GET['timespan'])) $timespan = $_GET['timespan'];
 
@@ -44,8 +47,11 @@ if($uid){
    else
       $stmt = "SELECT ts, SUM(nham), SUM(nspam) FROM $stat_table WHERE uid=$uid GROUP BY FROM_UNIXTIME(ts, '%Y.%m.%d.') ORDER BY ts DESC LIMIT 30";
 
+   $i = 0;
+
    $r = mysql_query($stmt) or nice_error($err_sql_error);
    while(list($ts, $ham, $spam) = mysql_fetch_row($r)){
+      $i++;
 
       if($timespan == 0){
          $ts += 70;
@@ -54,11 +60,12 @@ if($uid){
       else
          $ts = date("m.d.", $ts);
 
-      array_push($dates, $ts);
+      if($i % 3) $ts = "";
 
       array_push($ydata, $ham);
       array_push($ydata2, $spam);
-      array_push($ydata3, 100*$spam/($ham+$spam));
+      array_push($dates, $ts);
+ 
    }
    mysql_free_result($r);
 }
@@ -67,54 +74,27 @@ webui_close($conn);
 
 $ydata = array_reverse($ydata);
 $ydata2 = array_reverse($ydata2);
-$ydata3 = array_reverse($ydata3);
 $dates = array_reverse($dates);
 
-$graph = new Graph($size_x, $size_y, "auto");
+for($i=0; $i<count($ydata); $i++){
+   $ham = $ydata[$i];
+   $spam = $ydata2[$i];
+   $ts = $dates[$i];
+   $line1->addPoint(new Point("$ts", $ham));
+   $line2->addPoint(new Point("$ts", $spam));
 
-$graph->img->SetImgFormat("png");
-$graph->SetShadow();
-$graph->SetScale("textlin");
-//$graph->SetY2Scale("lin");
+}
 
-$graph->xaxis->SetTickLabels($dates);
-$graph->xaxis->SetTextLabelInterval(4);
-$graph->xaxis->SetLabelAngle(0);
+$dataSet = new XYSeriesDataSet();
+$dataSet->addSerie("HAM", $line1);
+$dataSet->addSerie("SPAM", $line2);
 
-$lineplot = new LinePlot($ydata);
-$lineplot->SetColor($color_ham);
-$lineplot->SetWeight(5);
+$chart->setDataSet($dataSet);
 
-$graph->img->SetMargin(140, 40, 40, 40);
-$graph->title->Set($title);
+$chart->setTitle($title);
+$chart->getPlot()->setGraphCaptionRatio(0.80);
+$chart->render();
 
-
-$lineplot = new LinePlot($ydata);
-$lineplot->SetColor($color_ham);
-$lineplot->SetWeight(5);
-
-
-$lineplot2 = new LinePlot($ydata2);
-
-$lineplot2->SetFillColor($color_spam);
-$lineplot2->mark->SetWidth(4);
-
-$lineplot3 = new LinePlot($ydata3);
-$lineplot3->SetColor("blue");
-$lineplot3->SetWeight(5);
-
-$lineplot->SetLegend("HAM");
-$lineplot2->SetLegend("SPAM");
-//$lineplot3->SetLegend("spam ratio");
-
-
-$graph->Add($lineplot2);
-$graph->Add($lineplot);
-//$graph->AddY2($lineplot3);
-
-$graph->legend->Pos(0.07, 0.95, "center", "bottom");
-
-$graph->Stroke();
 
 ?>
 

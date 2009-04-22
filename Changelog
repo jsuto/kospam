@@ -1,5 +1,11 @@
 0.4.1-rc1:
 
+2009.04.22, SJ
+
+The jpgraph library was huge, so I replaced it with libchart
+http://naku.dohcrew.com/libchart/pages/introduction/.
+(webui/libchart)
+
 2009.04.21, SJ
 
 Added a graphical representation of the per user statitics by

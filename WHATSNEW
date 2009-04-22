@@ -18,9 +18,9 @@ Flexible webui authentication.
 
 Email address blacklist feature similare to the whitelist.
 
-SpamAssassin's spamd support.
-
 You can specify what uid/gid clapf will run.
+
+Added a graphical representation of the per user statistics.
 
 0.4.0:
 ------

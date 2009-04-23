@@ -70,7 +70,7 @@ function mark_all(x){
 
   <h3><?php print $QUARANTINE; ?></h3>
 
-  <!--div id="body"-->
+  <div id="body">
 
 <p>
 

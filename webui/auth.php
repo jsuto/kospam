@@ -44,6 +44,8 @@ function check_user_from_sql_table(){
 
    $u = $_SERVER['PHP_AUTH_USER'];
 
+   webui_connect() or nice_error($err_connect_db);
+
    $stmt = "SELECT password FROM $user_table WHERE username='$u'";
    $r = mysql_query($stmt) or nice_error($err_sql_error);
    list($p) = mysql_fetch_row($r);
@@ -59,17 +61,26 @@ function check_user_from_sql_table(){
 
 
 function get_authenticated_username(){
+   global $password_file;
+
    if(isset($_SESSION['username'])) return $_SESSION['username'];
 
    if(isset($_SERVER['PHP_AUTH_USER']) && isset($_SERVER['PHP_AUTH_PW']) && !empty($_SESSION['auth'])){
 
       /* check whether the given username + password is ok */
 
-      if(check_user_from_password_file() == 1){
-         $_SESSION['username'] = $_SERVER['PHP_AUTH_USER'];
-         return $_SERVER['PHP_AUTH_USER'];
+      if($password_file){
+         if(check_user_from_password_file() == 1){
+            $_SESSION['username'] = $_SERVER['PHP_AUTH_USER'];
+            return $_SERVER['PHP_AUTH_USER'];
+         }
       }
-
+      else {
+         if(check_user_from_sql_table() == 1){
+            $_SESSION['username'] = $_SERVER['PHP_AUTH_USER'];
+            return $_SERVER['PHP_AUTH_USER'];
+         }
+      }
    }
    else return "";
 }

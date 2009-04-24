@@ -1,3 +1,14 @@
+0.4.1-rc2:
+
+2009.04.24, SJ
+
+Added a password field to the sql schemas, and an extra
+field (isadmin) to determine if the user is admin or not.
+(db-*sql, ldap/qmail.schema, ldap/example.ldif)
+
+
+
+
 0.4.1-rc1:
 
 2009.04.22, SJ

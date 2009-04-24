@@ -36,3 +36,16 @@ mailAlternateAddress: jim@mail.aaaa.fu
 mailMessageStore: x
 filtersender:
 
+dn: cn=admin,ou=billing,dc=aaaa,dc=fu
+cn: admin
+sn: whatever
+objectClass: top
+objectClass: person
+objectClass: qmailUser
+objectClass: qmailGroup
+uid: 1
+mail: admin@yourdomain.com
+mailMessageStore: x
+filtersender:
+isAdmin: 1
+

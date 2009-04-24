@@ -25,11 +25,14 @@ create table if not exists user (
 	uid int unsigned not null,
         email char(128) not null,
         username char(32) not null,
+	password char(48) default null,
 	policy_group int(4) default 0,
+	isadmin tinyint default 0,
 	unique (uid, email)
 );
 
 create index user_idx on user (uid, email);
+insert into user (uid, email, username, password, policy_group, isadmin) values (1, 'admin@yourdomain.com', 'admin', '$1$kkBnp0$L/MILe67UGcvHeFlTAQjR1', 0, 1);
 
 create table if not exists t_white_list (
 	uid int unsigned not null primary key,

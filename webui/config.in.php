@@ -13,16 +13,15 @@ $lang = "en";
  */
 $directory = "/webui";
 
-$password_file = $_SERVER['DOCUMENT_ROOT'] . "$directory/.htpasswd";
+/* possible values are: mysql, sqlite3, ldap */
+$userdb = "mysql";
 
 include_once($_SERVER['DOCUMENT_ROOT'] . "$directory/.htdb.php");
 include_once($_SERVER['DOCUMENT_ROOT'] . "$directory/funcs.php");
-include_once($_SERVER['DOCUMENT_ROOT'] . "$directory/auth.php");
+include_once($_SERVER['DOCUMENT_ROOT'] . "$directory/webui.php");
 include_once($_SERVER['DOCUMENT_ROOT'] . "$directory/lang/$lang/messages.php");
 
-include_once($_SERVER['DOCUMENT_ROOT'] . "$directory/mysql.php");
-//include_once($_SERVER['DOCUMENT_ROOT'] . "$directory/ldap.php");
-//include_once($_SERVER['DOCUMENT_ROOT'] . "$directory/sqlite3.php");
+include_once($_SERVER['DOCUMENT_ROOT'] . "$directory/$userdb.php");
 
 $queue_directory = "/var/lib/clapf/queue";
 
@@ -43,9 +42,6 @@ $fromaddr = "noreply@$yourdomain";
 
 $base_url = "http://" . $_SERVER['SERVER_NAME'] . $directory;
 
-// list of admin users
-
-$ADMIN['admin'] = 1;
 
 $admin_user = 0;
 

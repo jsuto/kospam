@@ -1,10 +1,18 @@
 0.4.1-rc2:
 
+2009.04.29, SJ
+
+Added the password and 'isadmin' fields to the webui. From now
+the .htpasswd authentication is no longer available. Webui passwords
+are stored in the corresponding database or ldap directory.
+(webui/ldap.php, webui/mysql.php, webui/sqlite3.php, webui/webui.php, ...)
+
 2009.04.24, SJ
 
 Added a password field to the sql schemas, and an extra
 field (isadmin) to determine if the user is admin or not.
-(db-*sql, ldap/qmail.schema, ldap/example.ldif)
+The webui is extended for these features.
+(db-*sql, ldap/qmail.schema, ldap/example.ldif, webui/ldap.php)
 
 
 

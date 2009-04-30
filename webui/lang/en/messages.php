@@ -19,6 +19,7 @@ $ALIAS = "alias";
 $ADD = "Add";
 $ADD_NEW_POLICY = "Add new policy";
 $ADD_NEW_USER = "Add new user/$ALIAS";
+$ADMIN_USER = "Admin user";
 $ALIASES = "Aliases";
 
 $BACK = "Back";
@@ -64,6 +65,7 @@ $NO_SENDER = "no sender";
 $NO_SUBJECT = "no subject";
 $NUMBER_OF_SPAM_MESSAGES_IN_QUARANTINE = "Number of spam messages in the quarantine";
 
+$PASSWORD = "Password";
 $PREVIOUS = "Previous";
 $PURGE_ALL_MESSAGES_FROM_QUARANTINE = "Purge all messages from quarantine";
 $PURGE_SELECTED_MESSAGES = "Purge selected messages";

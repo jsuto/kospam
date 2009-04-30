@@ -151,12 +151,6 @@ struct __config {
    char qcache_socket[MAXVAL];
    int qcache_update;
 
-   // Store
-
-   char store_addr[MAXVAL];
-   int store_port;
-   char store_secret[MAXVAL];
-
    char spam_smtp_addr[MAXVAL];
    int spam_smtp_port;
 

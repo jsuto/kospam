@@ -1,6 +1,18 @@
 <?php
 
-$backend = "mysql";
+function extract_mysql_dsn($dsn){
+   $host = $u = $p = $db = "";
+
+   $aa = substr($dsn, strlen("mysql://"), strlen($dsn));
+
+   list($a1, $a2) = explode("@", $aa);
+
+   list($u, $p) = explode(":", $a1);
+   list($host, $db) = explode("/", $a2);
+
+   return array ($host, $u, $p, $db);
+}
+
 
 function webui_connect(){
    global $dsn, $err_connect_db;
@@ -131,6 +143,50 @@ function set_blacklist($blacklist, $username){
 /*** users ***/
 
 
+function check_user_auth(){
+   global $user_table, $err_sql_error;
+   $p = "";
+   $ok = 0;
+
+   $u = $_SERVER['PHP_AUTH_USER'];
+
+   webui_connect() or nice_error($err_connect_db);
+
+   $stmt = "SELECT password FROM $user_table WHERE username='$u'";
+   $r = mysql_query($stmt) or nice_error($err_sql_error);
+   list($p) = mysql_fetch_row($r);
+   mysql_free_result($r);
+
+   if($p){
+      $pass = crypt($_SERVER['PHP_AUTH_PW'], $p);
+      if($pass == $p) $ok = 1;
+   }
+
+   webui_close($conn);
+
+   return $ok;
+}
+
+
+function is_admin_user(){
+   global $user_table, $err_sql_error;
+   $isadmin = 0;
+
+   $u = $_SERVER['PHP_AUTH_USER'];
+
+   $conn = webui_connect() or nice_error($err_connect_db);
+
+   $stmt = "SELECT isadmin FROM $user_table WHERE username='$u'";
+   $r = mysql_query($stmt) or nice_error($err_sql_error);
+   list($isadmin) = mysql_fetch_row($r);
+   mysql_free_result($r);
+
+   webui_close($conn);
+
+   return $isadmin;
+}
+
+
 function get_users_email_address($username){
    global $user_table, $err_sql_error;
    $to = "";
@@ -144,35 +200,6 @@ function get_users_email_address($username){
 }
 
 
-function print_user($x, $ro_uid = 0){
-   global $EMAIL_ADDRESS, $USERNAME, $USERID, $POLICY_GROUP, $WHITELIST, $BLACKLIST, $default_policy;
-
-   $len = 30;
-
-   print "<tr><td>$EMAIL_ADDRESS:</td><td><input type=\"text\" name=\"email\" value=\"$x[0]\"></td></tr>\n";
-   print "<tr><td>$USERNAME:</td><td><input type=\"text\" name=\"username\" value=\"$x[1]\"></td></tr>\n";
-
-   if($ro_uid == 1)
-      print "<tr><td>$USERID:</td><td>$x[2]</td></tr>\n";
-   else
-      print "<tr><td>$USERID:</td><td><input type=\"text\" name=\"uid\" value=\"$x[2]\"></td></tr>\n";
-
-   print "<tr><td>$POLICY_GROUP:</td><td>\n";
-
-   print "<select name=\"policy_group\">\n";
-   print "<option value=\"0\">$default_policy</option>\n";
-   show_existing_policy_groups($x[3]);
-   print "</select>\n";
-
-   print "<tr valign=\"top\"><td>$WHITELIST:</td><td><textarea name=\"whitelist\" cols=\"$len\" rows=\"5\">$x[4]</textarea></td></tr>\n";
-
-   print "<tr valign=\"top\"><td>$BLACKLIST:</td><td><textarea name=\"blacklist\" cols=\"$len\" rows=\"5\">$x[5]</textarea></td></tr>\n";
-
-   print "</td></tr>\n";
-
-}
-
-
 function get_user_entry($uid, $email = ""){
    global $user_table, $whitelist_table, $blacklist_table, $err_sql_error;
 
@@ -183,7 +210,7 @@ function get_user_entry($uid, $email = ""){
    $email = mysql_real_escape_string($email);
    if($email) $EMAIL = " AND email='$email'";
 
-   $stmt = "SELECT email, username, uid, policy_group FROM $user_table WHERE uid=$uid $EMAIL ORDER by uid, email";
+   $stmt = "SELECT email, username, uid, policy_group, isadmin FROM $user_table WHERE uid=$uid $EMAIL ORDER by uid, email";
    $r = mysql_query($stmt) or nice_error($err_sql_error);
    $x = mysql_fetch_row($r);
    mysql_free_result($r);
@@ -201,6 +228,43 @@ function get_user_entry($uid, $email = ""){
    array_push($x, $whitelist, $blacklist);
 
    return $x;
+}
+
+
+function print_user($x, $ro_uid = 0){
+   global $EMAIL_ADDRESS, $USERNAME, $PASSWORD, $USERID, $POLICY_GROUP, $ADMIN_USER, $WHITELIST, $BLACKLIST, $default_policy;
+
+   $len = 30;
+
+   print "<tr><td>$EMAIL_ADDRESS:</td><td><input type=\"text\" name=\"email\" value=\"$x[0]\"></td></tr>\n";
+   print "<tr><td>$USERNAME:</td><td><input type=\"text\" name=\"username\" value=\"$x[1]\"></td></tr>\n";
+   print "<tr><td>$PASSWORD:</td><td><input type=\"password\" name=\"password\" value=\"$x[6]\"></td></tr>\n";
+
+   if($ro_uid == 1)
+      print "<tr><td>$USERID:</td><td>$x[2]</td></tr>\n";
+   else
+      print "<tr><td>$USERID:</td><td><input type=\"text\" name=\"uid\" value=\"$x[2]\"></td></tr>\n";
+
+   print "<tr><td>$POLICY_GROUP:</td><td>\n";
+
+   print "<select name=\"policy_group\">\n";
+   print "<option value=\"0\">$default_policy</option>\n";
+   show_existing_policy_groups($x[3]);
+   print "</select>\n";
+
+   print "</td></tr>\n";
+
+   print "<tr><td>$ADMIN_USER:</td><td>\n";
+
+   print "<select name=\"isadmin\">\n";
+   show_yes_or_no($x[4]);
+   print "</select>\n";
+
+   print "</td></tr>\n";
+
+   print "<tr valign=\"top\"><td>$WHITELIST:</td><td><textarea name=\"whitelist\" cols=\"$len\" rows=\"5\">$x[5]</textarea></td></tr>\n";
+   print "<tr valign=\"top\"><td>$BLACKLIST:</td><td><textarea name=\"blacklist\" cols=\"$len\" rows=\"5\">$x[6]</textarea></td></tr>\n";
+
 }
 
 
@@ -286,7 +350,7 @@ function add_user_entry($uid){
 
    $uid = mysql_real_escape_string($uid);
 
-   $stmt = "INSERT INTO $user_table (uid, username, email, policy_group) VALUES($uid, '$username', '$email', $policy_group)";
+   $stmt = "INSERT INTO $user_table (uid, username, password, email, policy_group, isadmin) VALUES($uid, '$username', ENCRYPT('$password'), '$email', $policy_group, $isadmin)";
    if(!mysql_query($stmt)) nice_error($err_existing_user . ". <a href=\"users.php\">$BACK.</a>");
 
    $stmt = "INSERT INTO $whitelist_table (uid, whitelist) VALUES($uid, '$whitelist')";
@@ -303,9 +367,13 @@ function add_user_entry($uid){
 function update_user($uid){
    global $user_table, $whitelist_table, $blacklist_table, $err_sql_error;
 
+   $PWD = "";
+
    while(list($k, $v) = each($_POST)) $$k = mysql_real_escape_string($v);
 
-   $stmt = "UPDATE $user_table SET username='$username', email='$email', policy_group=$policy_group WHERE uid=$uid AND email='$email_orig'";
+   if($password) $PWD = ", password=ENCRYPT('$password')";
+
+   $stmt = "UPDATE $user_table SET username='$username', email='$email', policy_group=$policy_group, isadmin=$isadmin $PWD WHERE uid=$uid AND email='$email_orig'";
    mysql_query($stmt) or nice_error($err_sql_error);
 
    $uuid = mysql_result(mysql_query("SELECT COUNT(*) AS `uid` FROM $whitelist_table WHERE `uid` = '$uid'"), 0, 'uid');
@@ -394,33 +462,6 @@ function get_new_policy_group_id(){
    return $n;
 }
 
-
-function print_policy($x){
-   global $POLICY, $POLICY_NAME, $INTEGER, $FLOAT, $STRING;
-
-   print "<tr><td>$POLICY_NAME</td><td><b><input type=\"text\" name=\"name\" value=\"$x[0]\" size=\"30\"></b></td><td>&nbsp;</td></tr>\n";
-
-   print "<tr><td>deliver_infected_email</td><td><input name=\"deliver_infected_email\" value=\"$x[1]\" size=\"3\"></td><td>0|1</td></tr>\n";
-   print "<tr><td>silently_discard_infected_email</td><td><input name=\"silently_discard_infected_email\" value=\"$x[2]\" size=\"3\"></td><td>0|1</td></tr>\n";
-   print "<tr><td>use_antispam</td><td><input name=\"use_antispam\" value=\"$x[3]\" size=\"3\"></td><td>0|1</td></tr>\n";
-   print "<tr><td>spam_subject_prefix</td><td><input name=\"spam_subject_prefix\" value=\"$x[4]\" size=\"30\"></td><td>[$STRING]</td></tr>\n";
-   print "<tr><td>enable_auto_white_list</td><td><input name=\"enable_auto_white_list\" value=\"$x[5]\" size=\"1\"></td><td>0|1</td></tr>\n";
-   print "<tr><td>max_message_size_to_filter</td><td><input name=\"max_message_size_to_filter\" value=\"$x[6]\" size=\"6\"></td><td>$INTEGER</td></tr>\n";
-   print "<tr><td>rbl_domain</td><td><input name=\"rbl_domain\" value=\"$x[7]\" size=\"30\"></td><td>$STRING</td></tr>\n";
-   print "<tr><td>surbl_domain</td><td><input name=\"surbl_domain\" value=\"$x[8]\" size=\"30\"></td><td>$STRING</td></tr>\n";
-   print "<tr><td>spam_overall_limit</td><td><input name=\"spam_overall_limit\" value=\"$x[9]\" size=\"3\"></td><td>$FLOAT</td></tr>\n";
-   print "<tr><td>spaminess_oblivion_limit</td><td><input name=\"spaminess_oblivion_limit\" value=\"" . sprintf("%.2f", $x[10]) . "\" size=\"3\"></td><td>$FLOAT</td></tr>\n";
-   print "<tr><td>replace_junk_characters</td><td><input name=\"replace_junk_characters\" value=\"$x[11]\" size=\"3\"><td>0|1</td></td></tr>\n";
-   print "<tr><td>invalid_junk_limit</td><td><input name=\"invalid_junk_limit\" value=\"$x[12]\" size=\"3\"></td><td>$INTEGER</td></tr>\n";
-   print "<tr><td>invalid_junk_line</td><td><input name=\"invalid_junk_line\" value=\"$x[13]\" size=\"3\"></td><td>$INTEGER</td></tr>\n";
-   print "<tr><td>penalize_images</td><td><input name=\"penalize_images\" value=\"$x[14]\" size=\"3\"></td><td>0|1</td></tr>\n";
-   print "<tr><td>penalize_embed_images</td><td><input name=\"penalize_embed_images\" value=\"$x[15]\" size=\"3\"></td><td>0|1</td></tr>\n";
-   print "<tr><td>penalize_octet_stream</td><td><input name=\"penalize_octet_stream\" value=\"$x[16]\" size=\"3\"></td><td>0|1</td></tr>\n";
-   print "<tr><td>training_mode</td><td><input name=\"training_mode\" value=\"$x[17]\" size=\"3\"></td><td>0|1</td></tr>\n";
-   print "<tr><td>initial_1000_learning</td><td><input name=\"initial_1000_learning\" value=\"$x[18]\" size=\"3\"></td><td>0|1</td></tr>\n";
-   print "<tr><td>store_metadata</td><td><input name=\"store_metadata\" value=\"$x[19]\" size=\"3\"></td><td>0|1</td></tr>\n";
-
-}
 
 function show_policy($policy_group){
    global $policy_group_table, $err_sql_error, $POLICY, $MODIFY, $CANCEL;

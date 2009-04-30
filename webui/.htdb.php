@@ -2,7 +2,7 @@
 
 // mysql stuff
 
-$dsn = "mysql://clapf:changeme@localhost/clapf";
+$dsn = "mysql://clapf:xxxxxxx@localhost/clapf";
 
 $user_table = "user";
 $misc_table = "t_misc";

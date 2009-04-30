@@ -1,7 +1,5 @@
 <?php
 
-$backend = "ldap";
-
 function webui_connect(){
    global $ldaphost, $binddn, $bindpw, $err_connect_db;
 
@@ -16,6 +14,48 @@ function webui_connect(){
 
 function webui_close($conn){
    ldap_unbind($conn);
+}
+
+
+function check_user_auth(){
+   global $ldaphost, $user_base_dn, $err_connect_db;
+
+   $binddn = "cn=" . $_SERVER['PHP_AUTH_USER'] . ",$user_base_dn";
+   $bindpw = $_SERVER['PHP_AUTH_PW'];
+
+   $ldapconn = ldap_connect($ldaphost) or nice_error($err_connect_db);
+   ldap_set_option($ldapconn, LDAP_OPT_PROTOCOL_VERSION, 3);
+
+   if(!ldap_bind($ldapconn, $binddn, $bindpw)) return 0;
+
+   ldap_unbind($ldapconn);
+
+   return 1;
+}
+
+
+function is_admin_user(){
+   global $basedn, $user_base_dn;
+
+   $x = 0;
+
+   $u = $_SERVER['PHP_AUTH_USER'];
+
+   $filter="cn=$u";
+   $justthese = array("isadmin");
+
+   $conn = webui_connect() or nice_error($err_connect_db);
+
+   $sr = ldap_search($conn, $user_base_dn, $filter, $justthese);
+
+   $info = ldap_get_entries($conn, $sr);
+
+   if($info){
+      $x = $info[0]["isadmin"][0];
+   }
+
+   webui_close($conn);
+   return $x;
 }
 
 
@@ -182,7 +222,7 @@ function show_existing_users($what, $page, $page_len){
 
 
 function print_user($x, $ro_uid = 0){
-   global $EMAIL_ADDRESS, $USERNAME, $USERID, $POLICY_GROUP, $ALIASES, $WHITELIST, $default_policy;
+   global $EMAIL_ADDRESS, $USERNAME, $PASSWORD, $USERID, $POLICY_GROUP, $ADMIN_USER, $ALIASES, $WHITELIST, $BLACKLIST, $default_policy;
 
    $len = 30;
    $aliases = "";
@@ -191,6 +231,7 @@ function print_user($x, $ro_uid = 0){
    print "<input type=\"hidden\" name=\"cn\" value=\"$x[1]\">\n";
 
    print "<tr><td>$USERNAME:</td><td><input type=\"text\" name=\"username\" value=\"$x[1]\" size=\"$len\"></td></tr>\n";
+   print "<tr><td>$PASSWORD:</td><td><input type=\"password\" name=\"password\" value=\"\"></td></tr>\n";
 
    if($ro_uid == 1)
       print "<tr><td>$USERID:</td><td>$x[2]</td></tr>\n";
@@ -206,24 +247,39 @@ function print_user($x, $ro_uid = 0){
 
    print "</td></tr>\n";
 
+   print "<tr><td>$ADMIN_USER:</td><td>\n";
+
+   print "<select name=\"isadmin\">\n";
+   show_yes_or_no($x[4]);
+   print "</select>\n";
+
+   print "</td></tr>\n";
+
    print "<tr><td>$EMAIL_ADDRESS:</td><td><input type=\"text\" name=\"email\" value=\"$x[0]\" size=\"$len\"></td></tr>\n";
 
-   if($x[4]){
-      array_shift($x[4]);
-      while(list($k, $v) = each($x[4])) $aliases .= "$v\n";
+   if($x[5]){
+      array_shift($x[5]);
+      while(list($k, $v) = each($x[5])) $aliases .= "$v\n";
       $aliases = preg_replace("/\n$/", "", $aliases);
    }
 
    print "<tr valign=\"top\"><td>$ALIASES:</td><td><textarea name=\"mailAlternateAddress\" cols=\"$len\" rows=\"5\">$aliases</textarea></td></tr>\n";
 
-   if($x[5]){
-      array_shift($x[5]);
-      while(list($k, $v) = each($x[5])) $whitelist .= "$v\n";
+   if($x[6]){
+      array_shift($x[6]);
+      while(list($k, $v) = each($x[6])) $whitelist .= "$v\n";
       $whitelist = preg_replace("/\n$/", "", $whitelist);
    }
 
    print "<tr valign=\"top\"><td>$WHITELIST:</td><td><textarea name=\"filtersender\" cols=\"$len\" rows=\"5\">$whitelist</textarea></td></tr>\n";
 
+   if($x[7]){
+      array_shift($x[7]);
+      while(list($k, $v) = each($x[6])) $blacklist .= "$v\n";
+      $whitelist = preg_replace("/\n$/", "", $blacklist);
+   }
+
+   print "<tr valign=\"top\"><td>$BLACKLIST:</td><td><textarea name=\"blacklist\" cols=\"$len\" rows=\"5\">$blacklist</textarea></td></tr>\n";
 }
 
 
@@ -243,7 +299,7 @@ function get_user_entry($uid){
    $a = array();
 
    $filter="uid=$uid";
-   $justthese = array("uid", "cn", "sn", "mail", "filtersender", "mailMessageStore", "mailAlternateAddress", "policygroupid");
+   $justthese = array("uid", "cn", "sn", "mail", "filtersender", "mailMessageStore", "mailAlternateAddress", "policygroupid", "isAdmin");
 
    $sr = ldap_search($conn, $user_base_dn, $filter, $justthese);
 
@@ -254,8 +310,10 @@ function get_user_entry($uid){
       $a[1] = $info[0]["cn"][0];
       $a[2] = $info[0]["uid"][0];
       $a[3] = $info[0]["policygroupid"][0];
-      $a[4] = $info[0]["mailalternateaddress"];
-      $a[5] = $info[0]["filtersender"];
+      $a[4] = $info[0]["isadmin"][0];
+      $a[5] = $info[0]["mailalternateaddress"];
+      $a[6] = $info[0]["filtersender"];
+      $a[7] = $info[0]["blacklist"];
    }
 
    return $a;
@@ -274,6 +332,7 @@ function add_user_entry($uid){
 
    $c = trim_to_array($_POST['mailAlternateAddress']);
    $b = trim_to_array($_POST['filtersender']);
+   $d = trim_to_array($_POST['blacklist']);
 
    $user = $_POST['username'];
 
@@ -282,12 +341,21 @@ function add_user_entry($uid){
    $entry["sn"] = "x";
    $entry["mail"] = $_POST['email'];
    $entry["uid"] = $uid;
+
    if(count($b) > 0) $entry["filtersender"] = $b;
    else $entry["filtersender"] = "";
+
    $entry["mailMessageStore"] = "";
+
    if(count($c) > 0) $entry["mailAlternateAddress"] = $c;
    else $entry["mailAlternateAddress"] = "";
+
+   if(count($d) > 0) $entry["blacklist"] = $d;
+   else $entry["blacklist"] = "";
+
    $entry["policyGroupId"] = $_POST['policy_group'];
+   $entry["userPassword"] = $_POST['password'];
+   $entry["isAdmin"] = $_POST["isadmin"];
 
 
    $dn = "cn=$user,$user_base_dn";
@@ -303,12 +371,18 @@ function update_user($uid){
 
    $a = trim_to_array($_POST['mailAlternateAddress']);
    $b = trim_to_array($_POST['filtersender']);
+   $c = trim_to_array($_POST['blacklist']);
 
    $entry["cn"] = $_POST['username'];
    $entry["mail"] = $_POST['email'];
    $entry["policyGroupId"] = $_POST['policy_group'];
    $entry["mailAlternateAddress"] = $a;
    $entry["filtersender"] = $b;
+   $entry["blacklist"] = $c;
+
+   if(isset($_POST['password']) && strlen($_POST['password']) > 3) $entry["userPassword"] = $_POST['password'];
+
+   $entry["isAdmin"] = $_POST['isadmin'];
 
    $dn = "cn=" . $_POST['cn'] . ",$user_base_dn";
 
@@ -376,33 +450,6 @@ function show_existing_policy_groups($id = 0){
       else
          print "<option value=\"$policy_group\">$name</option>\n";
    }
-}
-
-
-function print_policy($x){
-   global $POLICY, $POLICY_NAME, $INTEGER, $FLOAT, $STRING;
-
-   print "<tr><td>$POLICY_NAME</td><td><b><input type=\"text\" name=\"name\" value=\"$x[0]\" size=\"30\"></b></td><td>&nbsp;</td></tr>\n";
-
-   print "<tr><td>deliver_infected_email</td><td><input name=\"deliver_infected_email\" value=\"$x[1]\" size=\"3\"></td><td>0|1</td></tr>\n";
-   print "<tr><td>silently_discard_infected_email</td><td><input name=\"silently_discard_infected_email\" value=\"$x[2]\" size=\"3\"></td><td>0|1</td></tr>\n";
-   print "<tr><td>use_antispam</td><td><input name=\"use_antispam\" value=\"$x[3]\" size=\"3\"></td><td>0|1</td></tr>\n";
-   print "<tr><td>spam_subject_prefix</td><td><input name=\"spam_subject_prefix\" value=\"$x[4]\" size=\"30\"></td><td>[$STRING]</td></tr>\n";
-   print "<tr><td>enable_auto_white_list</td><td><input name=\"enable_auto_white_list\" value=\"$x[5]\" size=\"1\"></td><td>0|1</td></tr>\n";
-   print "<tr><td>max_message_size_to_filter</td><td><input name=\"max_message_size_to_filter\" value=\"$x[6]\" size=\"6\"></td><td>$INTEGER</td></tr>\n";
-   print "<tr><td>rbl_domain</td><td><input name=\"rbl_domain\" value=\"$x[7]\" size=\"30\"></td><td>$STRING</td></tr>\n";
-   print "<tr><td>surbl_domain</td><td><input name=\"surbl_domain\" value=\"$x[8]\" size=\"30\"></td><td>$STRING</td></tr>\n";
-   print "<tr><td>spam_overall_limit</td><td><input name=\"spam_overall_limit\" value=\"$x[9]\" size=\"3\"></td><td>$FLOAT</td></tr>\n";
-   print "<tr><td>spaminess_oblivion_limit</td><td><input name=\"spaminess_oblivion_limit\" value=\"" . sprintf("%.2f", $x[10]) . "\" size=\"3\"></td><td>$FLOAT</td></tr>\n";
-   print "<tr><td>replace_junk_characters</td><td><input name=\"replace_junk_characters\" value=\"$x[11]\" size=\"3\"><td>0|1</td></td></tr>\n";
-   print "<tr><td>invalid_junk_limit</td><td><input name=\"invalid_junk_limit\" value=\"$x[12]\" size=\"3\"></td><td>$INTEGER</td></tr>\n";
-   print "<tr><td>invalid_junk_line</td><td><input name=\"invalid_junk_line\" value=\"$x[13]\" size=\"3\"></td><td>$INTEGER</td></tr>\n";
-   print "<tr><td>penalize_images</td><td><input name=\"penalize_images\" value=\"$x[14]\" size=\"3\"></td><td>0|1</td></tr>\n";
-   print "<tr><td>penalize_embed_images</td><td><input name=\"penalize_embed_images\" value=\"$x[15]\" size=\"3\"></td><td>0|1</td></tr>\n";
-   print "<tr><td>penalize_octet_stream</td><td><input name=\"penalize_octet_stream\" value=\"$x[16]\" size=\"3\"></td><td>0|1</td></tr>\n";
-   print "<tr><td>training_mode</td><td><input name=\"training_mode\" value=\"$x[17]\" size=\"3\"></td><td>0|1</td></tr>\n";
-   print "<tr><td>initial_1000_learning</td><td><input name=\"initial_1000_learning\" value=\"$x[18]\" size=\"3\"></td><td>0|1</td></tr>\n";
-
 }
 
 

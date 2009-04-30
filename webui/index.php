@@ -5,9 +5,9 @@ include_once("config.php");
 session_start();
 $username = get_authenticated_username();
 
-include_once("header.php");
-
 if($username == "") show_auth_popup();
+
+include_once("header.php");
 
 if(isset($_GET['pagelen'])){
    Header("Set-Cookie: pagelen=" . $_GET['pagelen'] . "; path=/");

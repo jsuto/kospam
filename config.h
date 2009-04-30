@@ -1,5 +1,5 @@
 /*
- * config.h, 2009.03.18, SJ
+ * config.h, 2009.04.29, SJ
  */
 
 #ifndef _CONFIG_H
@@ -11,7 +11,7 @@
 #define PROGNAME "clapf"
 #define OOOPNAME "ooop"
 
-#define VERSION "0.4.1-rc1"
+#define VERSION "0.4.1-rc2"
 
 #define HOSTID "av-engine.localhost"
 
@@ -48,9 +48,6 @@
 #define CLAMD_PORT 3310
 #define CLAMD_SOCKET "/tmp/clamd"
 
-
-#define STORE_ADDR "127.0.0.1"
-#define CLAPFSTORE_PORT 29771
 
 #define WORK_DIR DATADIR "/clapf"
 #define PIDFILE WORK_DIR "/clapf.pid"

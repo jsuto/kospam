@@ -1,5 +1,5 @@
 /*
- * spam.c, 2009.02.05, SJ
+ * spam.c, 2009.04.29, SJ
  */
 
 #include <stdio.h>
@@ -39,6 +39,11 @@ void do_training(struct session_data *sdata, char *email, char *acceptbuf, struc
    train_mode = extract_id_from_message(sdata->ttmpfile, cfg->clapf_header_field, ID);
 
    syslog(LOG_PRIORITY, "%s: training request for %s by uid: %ld", sdata->ttmpfile, ID, sdata->uid);
+
+   if(strlen(ID) < 5){
+      syslog(LOG_PRIORITY, "%s: not found a valid message id (%s)", sdata->ttmpfile, ID);
+      return;
+   }
 
    if(is_spam == 1)
       snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s/h.%s", USER_QUEUE_DIR, sdata->name[0], sdata->name, ID);

@@ -5,9 +5,9 @@ include_once("config.php");
 session_start();
 $username = get_authenticated_username();
 
-include_once("header.php");
-
 if($username == "") show_auth_popup();
+
+include_once("header.php");
 
 if($admin_user != 1) nice_error($err_you_are_not_admin);
 
@@ -21,6 +21,7 @@ $uid = -1;
 $username = "";
 $email = "";
 $policy_group = 0;
+$password = "";
 
 $page = 0;
 $add = 0;
@@ -34,6 +35,7 @@ if(isset($_POST['uid'])) $uid = $_POST['uid'];
 if(isset($_POST['username'])) $username = $_POST['username'];
 if(isset($_POST['email'])) $email = $_POST['email'];
 if(isset($_POST['policy_group'])) $policy_group = $_POST['policy_group'];
+if(isset($_POST['password'])) $password = $_POST['password'];
 if(isset($_POST['modify'])) $modify = $_POST['modify'];
 if(isset($_POST['add'])) $add = $_POST['add'];
 if(isset($_POST['what'])) $what = $_POST['what'];
@@ -99,7 +101,7 @@ else if($add == 1){
 
    $next_uid = get_next_uid();
 
-   $x = array('', '', $next_uid, 0, '', '');
+   $x = array('', '', $next_uid, 0, '', '', 0);
    print_user($x);
 
    print "<tr colspan=\"2\"><td><input type=\"submit\" value=\"$ADD\"></td></tr>\n";

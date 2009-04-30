@@ -19,6 +19,7 @@ $ALIAS = "álnév";
 $ADD = "Felvesz";
 $ADD_NEW_POLICY = "Új házirend";
 $ADD_NEW_USER = "Új felhasználó/$ALIAS hozzáadása";
+$ADMIN_USER = "Admin felhasználó";
 $ALIASES = "Email álnevek";
 
 $BACK = "Vissza";
@@ -64,6 +65,7 @@ $NO_SENDER = "nincs feladó";
 $NO_SUBJECT = "nincs tárgy";
 $NUMBER_OF_SPAM_MESSAGES_IN_QUARANTINE = "A spam üzenetek száma a karanténban";
 
+$PASSWORD = "Jelszó";
 $PREVIOUS = "Elõzõ";
 $PURGE_ALL_MESSAGES_FROM_QUARANTINE = "Összes üzenet törlése a karanténból";
 $PURGE_SELECTED_MESSAGES = "Kiválasztott üzenetek eltávolítása";

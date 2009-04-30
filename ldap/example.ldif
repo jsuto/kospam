@@ -10,32 +10,6 @@ ou: billing
 objectClass: top
 objectClass: organizationalUnit
 
-dn: cn=joe,ou=billing,dc=aaaa,dc=fu
-cn: joe
-sn: whatever
-objectClass: top
-objectClass: person
-objectClass: qmailUser
-objectClass: qmailGroup
-uid: 1000
-mail: joe@aaaa.fu
-mailAlternateAddress:
-mailMessageStore: x
-filtersender:
-
-dn: cn=jim,ou=billing,dc=aaaa,dc=fu
-cn: jim
-sn: whatever
-objectClass: top
-objectClass: person
-objectClass: qmailUser
-objectClass: qmailGroup
-uid: 1001
-mail: jim@aaaa.fu
-mailAlternateAddress: jim@mail.aaaa.fu
-mailMessageStore: x
-filtersender:
-
 dn: cn=admin,ou=billing,dc=aaaa,dc=fu
 cn: admin
 sn: whatever
@@ -44,8 +18,10 @@ objectClass: person
 objectClass: qmailUser
 objectClass: qmailGroup
 uid: 1
-mail: admin@yourdomain.com
+mail: admin@aaaa.fu
+mailAlternateAddress:
 mailMessageStore: x
 filtersender:
+policyGroupId: 0
 isAdmin: 1
-
+userPassword: admin

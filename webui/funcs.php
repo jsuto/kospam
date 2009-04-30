@@ -73,7 +73,24 @@ function trim_to_array($x){
       if($v) array_push($a, $v);
    }
 
+   if(count($a) == 0) array_push($a, "");
+
    return $a;
+}
+
+
+function show_yes_or_no($id = 0){
+   $a = array();
+   $a[0] = 0;
+   $a[1] = 1;
+
+   for($i=0; $i<2; $i++){
+      if($i == $id)
+         print "<option value=\"$i\" selected>$a[$i]</option>\n";
+      else
+         print "<option value=\"$i\">$a[$i]</option>\n";
+   }
+
 }
 
 

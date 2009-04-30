@@ -69,9 +69,6 @@ struct __config read_config(char *configfile){
 
    strncpy(cfg.clamd_socket, CLAMD_SOCKET, MAXVAL-1);
 
-   strncpy(cfg.store_addr, STORE_ADDR, MAXVAL-1);
-   cfg.store_port = CLAPFSTORE_PORT;
-
    cfg.max_connections = MAXCONN;
    cfg.backlog = BACKLOG;
 
@@ -204,15 +201,6 @@ struct __config read_config(char *configfile){
 
                   if(strcmp(key, "always_scan_message") == 0)
                      cfg.always_scan_message = atoi(val);
-
-                  if(strcmp(key, "store_addr") == 0)
-                     memcpy(cfg.store_addr, val, MAXVAL-1);
-
-                  if(strcmp(key, "store_port") == 0)
-                     cfg.store_port = atoi(val);
-
-                  if(strcmp(key, "store_secret") == 0)
-                     memcpy(cfg.store_secret, val, MAXVAL-1);
 
                   if(strcmp(key, "max_connections") == 0)
                      cfg.max_connections = atoi(val);

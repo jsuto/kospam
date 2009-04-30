@@ -1,4 +1,6 @@
-#
+###
+### last modification: 2009.04.30, SJ
+###
 # qmail-ldap (20030901) ldapv3 directory schema
 #
 # The offical qmail-ldap OID assigned by IANA is 7914

@@ -403,6 +403,26 @@ function update_user($uid){
 }
 
 
+function change_password(){
+   global $user_table, $username, $err_user_failed_to_modify;
+
+   $c_pwd = crypt($_POST['password']);
+
+   $stmt = "UPDATE $user_table SET password=:password" WHERE username=:username";
+
+   $conn = webui_connect() or nice_error($err_connect_db);
+
+   $r = $conn->prepare($stmt);
+   $r->bindParam(':username', $username, PDO::PARAM_STR);
+   $r->bindParam(':password', $c_pwd, PDO::PARAM_STR);
+
+   $r->execute() or nice_error($err_sql_error);
+
+   webui_close($conn);
+
+   return 1;
+}
+
 
 /*** policy groups ***/
 

@@ -395,6 +395,23 @@ function update_user($uid){
 }
 
 
+function change_password(){
+   global $user_table, $username, $err_user_failed_to_modify;
+
+   $c_pwd = crypt($_POST['password']);
+
+   $stmt = "UPDATE $user_table SET password='$c_pwd' WHERE username='$username'";
+
+   $conn = webui_connect() or nice_error($err_connect_db);
+
+   mysql_query($stmt) or nice_error($err_sql_error);
+
+   webui_close($conn);
+
+   return 1;
+}
+
+
 function bulk_update_user($uidlist){
    global $user_table, $whitelist_table, $blacklist_table, $err_sql_error;
 

@@ -45,4 +45,6 @@ $base_url = "http://" . $_SERVER['SERVER_NAME'] . $directory;
 
 $admin_user = 0;
 
+$min_password_len = 6;
+
 ?>

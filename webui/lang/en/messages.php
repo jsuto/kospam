@@ -66,6 +66,7 @@ $NO_SUBJECT = "no subject";
 $NUMBER_OF_SPAM_MESSAGES_IN_QUARANTINE = "Number of spam messages in the quarantine";
 
 $PASSWORD = "Password";
+$PASSWORD_AGAIN = "Password again";
 $PREVIOUS = "Previous";
 $PURGE_ALL_MESSAGES_FROM_QUARANTINE = "Purge all messages from quarantine";
 $PURGE_SELECTED_MESSAGES = "Purge selected messages";
@@ -88,6 +89,7 @@ $SET = "Set";
 $STATS = "Statistics";
 $STRING = "string";
 $SUBJECT = "Subject";
+$SUBMIT = "Submit";
 $SUCCESSFULLY_REMOVED = "Successfully removed";
 
 $TOTAL = "Total";
@@ -140,4 +142,10 @@ $err_this_feature_is_not_available = "This feature is not available for this bac
 $err_you_are_logged_out = "You are logged out";
 
 $err_please_select_uids = "Please select some uids first";
+
+$err_password_mismatch = "Password mismatch";
+$err_too_short_password = "Too short password";
+$err_password_changed = "Password changed";
+$err_failed_to_change_password = "Failed to change password";
+
 ?>

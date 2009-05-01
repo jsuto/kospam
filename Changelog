@@ -1,5 +1,10 @@
 0.4.1-rc2:
 
+2009.05.01, SJ
+
+Users may change their passwords.
+(webui/ldap.php, webui/mysql.php, webui/sqlite3.php, lang/*, webui/index.php)
+
 2009.04.30, SJ
 
 Added the password and 'isadmin' fields to the webui. From now

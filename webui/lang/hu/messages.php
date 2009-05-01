@@ -66,6 +66,7 @@ $NO_SUBJECT = "nincs tárgy";
 $NUMBER_OF_SPAM_MESSAGES_IN_QUARANTINE = "A spam üzenetek száma a karanténban";
 
 $PASSWORD = "Jelszó";
+$PASSWORD_AGAIN = "Jelszó ismét";
 $PREVIOUS = "Elõzõ";
 $PURGE_ALL_MESSAGES_FROM_QUARANTINE = "Összes üzenet törlése a karanténból";
 $PURGE_SELECTED_MESSAGES = "Kiválasztott üzenetek eltávolítása";
@@ -88,6 +89,7 @@ $SET = "Beállít";
 $STATS = "Statisztika";
 $STRING = "string";
 $SUBJECT = "Tárgy";
+$SUBMIT = "Mehet";
 $SUCCESSFULLY_REMOVED = "A törlés sikerült";
 
 $TOTAL = "Összes";
@@ -140,4 +142,10 @@ $err_this_feature_is_not_available = "Ez a funkció nem érhetõ el a használt adat
 $err_you_are_logged_out = "Ön sikeresen kijelentkezett";
 
 $err_please_select_uids = "Kérem, válasszon felhasználói azonosítókat";
+
+$err_password_mismatch = "A jelszavak nem egyeznek meg";
+$err_too_short_password = "Túl rövid jelszó";
+$err_password_changed = "Jelszó megváltoztatva";
+$err_failed_to_change_password = "Nem sikerült megváltoztatni a jelszót";
+
 ?>

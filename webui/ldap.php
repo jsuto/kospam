@@ -391,6 +391,24 @@ function update_user($uid){
 }
 
 
+function change_password(){
+   global $basedn, $user_base_dn, $username, $err_user_failed_to_modify;
+
+   $entry = array();
+
+   $entry["cn"] = $username;
+   $entry["userPassword"] = $_POST['password'];
+
+   $dn = "cn=" . $username . ",$user_base_dn";
+
+   $conn = webui_connect() or nice_error($err_connect_db);
+   $sr = ldap_modify($conn, $dn, $entry) or nice_error($err_user_failed_to_modify);
+   webui_close($conn);
+
+   return 1;
+}
+
+
 /*** policy groups ***/
 
 function get_policy_group_name_by_id($id){

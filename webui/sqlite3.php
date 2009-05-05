@@ -114,7 +114,10 @@ function check_user_auth($username, $password){
 
    if($p){
       $pass = crypt($password, $p);
-      if($pass == $p) $ok = 1;
+      if($pass == $p){
+         $ok = 1;
+         $_SESSION['username'] = $username;
+      }
    }
 
    webui_close($conn);
@@ -404,7 +407,7 @@ function change_password(){
 
    $c_pwd = crypt($_POST['password']);
 
-   $stmt = "UPDATE $user_table SET password=:password" WHERE username=:username";
+   $stmt = "UPDATE $user_table SET password=:password WHERE username=:username";
 
    $conn = webui_connect() or nice_error($err_connect_db);
 

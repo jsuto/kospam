@@ -1,5 +1,11 @@
 0.4.1-rc2:
 
+2009.05.05, SJ
+
+Modified the webui to support login via a HTML form instead the
+popup login window.
+(webui/*)
+
 2009.05.01, SJ
 
 Users may change their passwords.

@@ -5,9 +5,9 @@ include_once("config.php");
 session_start();
 $username = get_authenticated_username();
 
-if($username == "") show_auth_popup();
-
 include_once("header.php");
+
+if($username == "") show_auth_popup();
 
 if(isset($_COOKIE['pagelen'])){
    if($_COOKIE['pagelen'] >= 10 && $_COOKIE['pagelen'] <= 50) $page_len = $_COOKIE['pagelen'];

@@ -16,6 +16,9 @@ $directory = "/webui";
 /* possible values are: mysql, sqlite3, ldap */
 $userdb = "mysql";
 
+$base_url = "http://" . $_SERVER['SERVER_NAME'] . $directory;
+
+
 include_once($_SERVER['DOCUMENT_ROOT'] . "$directory/.htdb.php");
 include_once($_SERVER['DOCUMENT_ROOT'] . "$directory/funcs.php");
 include_once($_SERVER['DOCUMENT_ROOT'] . "$directory/webui.php");
@@ -38,9 +41,6 @@ $smtpport = 10026;
 $yourdomain = "xxxxx.com";
 $ham_train_address = "ham@$yourdomain";
 $fromaddr = "noreply@$yourdomain";
-
-
-$base_url = "http://" . $_SERVER['SERVER_NAME'] . $directory;
 
 
 $admin_user = 0;

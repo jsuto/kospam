@@ -143,23 +143,26 @@ function set_blacklist($blacklist, $username){
 /*** users ***/
 
 
-function check_user_auth(){
+function check_user_auth($username, $password){
    global $user_table, $err_sql_error;
    $p = "";
    $ok = 0;
 
-   $u = $_SERVER['PHP_AUTH_USER'];
-
    webui_connect() or nice_error($err_connect_db);
 
-   $stmt = "SELECT password FROM $user_table WHERE username='$u'";
+   $username = mysql_real_escape_string($username);
+
+   $stmt = "SELECT password FROM $user_table WHERE username='$username'";
    $r = mysql_query($stmt) or nice_error($err_sql_error);
    list($p) = mysql_fetch_row($r);
    mysql_free_result($r);
 
    if($p){
-      $pass = crypt($_SERVER['PHP_AUTH_PW'], $p);
-      if($pass == $p) $ok = 1;
+      $pass = crypt($password, $p);
+      if($pass == $p){
+         $ok = 1;
+         $_SESSION['username'] = $username;
+      }
    }
 
    webui_close($conn);
@@ -168,15 +171,17 @@ function check_user_auth(){
 }
 
 
-function is_admin_user(){
+function is_admin_user($username){
    global $user_table, $err_sql_error;
    $isadmin = 0;
 
-   $u = $_SERVER['PHP_AUTH_USER'];
+   if($username == "") return $isadmin;
 
    $conn = webui_connect() or nice_error($err_connect_db);
 
-   $stmt = "SELECT isadmin FROM $user_table WHERE username='$u'";
+   $username = mysql_real_escape_string($username);
+
+   $stmt = "SELECT isadmin FROM $user_table WHERE username='$username'";
    $r = mysql_query($stmt) or nice_error($err_sql_error);
    list($isadmin) = mysql_fetch_row($r);
    mysql_free_result($r);

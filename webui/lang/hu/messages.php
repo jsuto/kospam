@@ -55,6 +55,7 @@ $HOME = "Kezdõlap";
 $INTEGER = "integer";
 
 $LAST = "Utolsó";
+$LOGIN = "Bejelentkezés";
 $LOGOUT = "Kijelentkezés";
 
 $MESSAGES = "levelek";
@@ -109,7 +110,7 @@ $YOU_ARE = "Ön";
 
 // error messages
 
-$err_not_authenticated = "Ön nem azonosította magát";
+$err_not_authenticated = "Ön nem azonosította magát, kérjük, <a href=\"$base_url/login.php\">jelentkezzen be</a>";
 $err_connect_db = "Adatbázis kapcsolat hiba";
 $err_sql_error = "SQL hiba";
 $err_NaN = "Nem szám";

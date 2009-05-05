@@ -2,16 +2,11 @@
 
 $lang = "en";
 
-include_once(".htdb.php");
-include_once("auth.php");
-include_once("mysql.php");
-include_once("lang/$lang/messages.php");
-
+include_once("config.php");
 include_once("libchart/classes/libchart.php");
 
 session_start();
 $username = get_authenticated_username();
-
 
 if($username == "") show_auth_popup();
 

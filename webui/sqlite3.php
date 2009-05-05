@@ -99,23 +99,21 @@ function set_whitelist($whitelist, $username){
 /*** users ***/
 
 
-function check_user_auth(){
+function check_user_auth($username, $password){
    global $user_table, $err_sql_error;
    $p = "";
    $ok = 0;
 
-   $u = $_SERVER['PHP_AUTH_USER'];
-
    $conn = webui_connect() or nice_error($err_connect_db);
 
-   $stmt = "SELECT password FROM $user_table WHERE username='$u'";
+   $stmt = "SELECT password FROM $user_table WHERE username='$username'";
    $result = $conn->query($stmt);
    $r = $result->fetch();
 
    $p = $r[0];
 
    if($p){
-      $pass = crypt($_SERVER['PHP_AUTH_PW'], $p);
+      $pass = crypt($password, $p);
       if($pass == $p) $ok = 1;
    }
 
@@ -125,15 +123,13 @@ function check_user_auth(){
 }
 
 
-function is_admin_user(){
+function is_admin_user($username){
    global $user_table, $err_sql_error;
    $isadmin = 0;
 
-   $u = $_SERVER['PHP_AUTH_USER'];
-
    $conn = webui_connect() or nice_error($err_connect_db);
 
-   $stmt = "SELECT isadmin FROM $user_table WHERE username='$u'";
+   $stmt = "SELECT isadmin FROM $user_table WHERE username='$username'";
    $result = $conn->query($stmt);
    $r = $result->fetch();
 

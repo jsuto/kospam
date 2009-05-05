@@ -17,11 +17,11 @@ function webui_close($conn){
 }
 
 
-function check_user_auth(){
+function check_user_auth($username, $password){
    global $ldaphost, $user_base_dn, $err_connect_db;
 
-   $binddn = "cn=" . $_SERVER['PHP_AUTH_USER'] . ",$user_base_dn";
-   $bindpw = $_SERVER['PHP_AUTH_PW'];
+   $binddn = "cn=$username,$user_base_dn";
+   $bindpw = $password;
 
    $ldapconn = ldap_connect($ldaphost) or nice_error($err_connect_db);
    ldap_set_option($ldapconn, LDAP_OPT_PROTOCOL_VERSION, 3);
@@ -34,14 +34,12 @@ function check_user_auth(){
 }
 
 
-function is_admin_user(){
+function is_admin_user($username){
    global $basedn, $user_base_dn;
 
    $x = 0;
 
-   $u = $_SERVER['PHP_AUTH_USER'];
-
-   $filter="cn=$u";
+   $filter="cn=$username";
    $justthese = array("isadmin");
 
    $conn = webui_connect() or nice_error($err_connect_db);

@@ -55,6 +55,7 @@ $HOME = "Home";
 $INTEGER = "integer";
 
 $LAST = "Last";
+$LOGIN = "Login";
 $LOGOUT = "Logout";
 
 $MESSAGES = "messages";
@@ -109,7 +110,7 @@ $YOU_ARE = "You are";
 
 // error messages
 
-$err_not_authenticated = "You are not authenticated";
+$err_not_authenticated = "You are not authenticated, please <a href=\"$base_url/login.php\">log in</a>";
 $err_connect_db = "Database connection error";
 $err_sql_error = "SQL error";
 $err_NaN = "Not a number";

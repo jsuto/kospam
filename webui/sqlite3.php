@@ -107,6 +107,8 @@ function check_user_auth($username, $password){
    $conn = webui_connect() or nice_error($err_connect_db);
 
    $stmt = "SELECT password FROM $user_table WHERE username='$username'";
+
+   $r = $conn->prepare($stmt);
    $result = $conn->query($stmt);
    $r = $result->fetch();
 

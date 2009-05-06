@@ -26,9 +26,11 @@ function check_user_auth($username, $password){
    $ldapconn = ldap_connect($ldaphost) or nice_error($err_connect_db);
    ldap_set_option($ldapconn, LDAP_OPT_PROTOCOL_VERSION, 3);
 
-   if(!ldap_bind($ldapconn, $binddn, $bindpw)) return 0;
+   if(!@ldap_bind($ldapconn, $binddn, $bindpw)) return 0;
 
    ldap_unbind($ldapconn);
+
+   $_SESSION['username'] = $username;
 
    return 1;
 }

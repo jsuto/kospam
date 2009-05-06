@@ -96,6 +96,37 @@ function set_whitelist($whitelist, $username){
 }
 
 
+function get_blacklist_by_name($username){
+   global $conn, $blacklist_table, $err_sql_error;
+   $blacklist = "";
+
+   $uid = get_uid_by_name($username);
+
+   $stmt = "SELECT blacklist FROM $blacklist_table WHERE uid=$uid";
+
+   $result = $conn->query($stmt);
+   $r = $result->fetch();
+   $whitelist = $r[0];
+
+   return $blacklist;
+}
+
+
+function set_blacklist($blacklist, $username){
+   global $conn, $blacklist_table, $err_sql_error;
+
+   $uid = get_uid_by_name($username);
+
+   $stmt = "UPDATE $blacklist_table SET blacklist=:blacklist WHERE uid=:uid";
+
+   $r = $conn->prepare($stmt);
+   $r->bindParam(':uid', $uid, PDO::PARAM_INT);
+   $r->bindParam(':blacklist', $blacklist, PDO::PARAM_STR);
+   $r->execute();
+}
+
+
+
 /*** users ***/
 
 

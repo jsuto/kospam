@@ -68,10 +68,8 @@
 
 			// Colors for the lines
 			$this->lineColorSet = new ColorSet(array(
-					//new Color(172, 172, 210),
-					new Color(208, 48, 128),
-					//new Color(2, 78, 0),
 					new Color(26, 192, 144),
+					new Color(208, 48, 128),
 					new Color(148, 170, 36),
 					new Color(233, 191, 49),
 					new Color(240, 127, 41),

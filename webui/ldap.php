@@ -138,6 +138,46 @@ function set_whitelist($whitelist, $username){
 }
 
 
+function get_blacklist_by_name($username){
+   global $basedn, $conn;
+   $blacklist = "";
+
+   $filter="cn=$username";
+   $justthese = array("blacklist");
+
+   $sr = ldap_search($conn, $basedn, $filter, $justthese);
+
+   $info = ldap_get_entries($conn, $sr);
+
+   for($i=0; $i<$info["count"]; $i++){
+      $c = $info[$i]["count"];
+      for($j=0; $j<$c; $j++){
+         $attr_name = $info[$i][$j];
+         $c2 = $info[$i][$attr_name]["count"];
+         for($k=0; $k<$c2; $k++){
+            $blacklist = $info[$i][$attr_name][$k];
+            break;
+         }
+      }
+   }
+
+   return $blacklist;
+}
+
+
+function set_blacklist($blacklist, $username){
+   global $basedn, $conn;
+   $entry = array();
+
+   $dn = get_db_by_name($username);
+
+   $entry["filtersender"] = $blacklist;
+
+   ldap_mod_replace($conn, $dn, $entry);
+
+}
+
+
 function get_users_email_address($username){
    global $basedn, $conn;
    $to = "";

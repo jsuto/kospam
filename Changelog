@@ -1,5 +1,15 @@
 0.4.1-rc2:
 
+2009.05.14, SJ
+
+Added clapf message id to the logging of the training part.
+(bayes.c)
+
+2009.05.12, SJ
+
+Fixed a bug preventing the proper handling of users with uid=0.
+(webui/mysql.php, webui/sqlite3.php, webui/users.php)
+
 2009.05.05, SJ
 
 Modified the webui to support login via a HTML form instead the

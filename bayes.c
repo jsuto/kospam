@@ -1,5 +1,5 @@
 /*
- * bayes.c, 2009.04.14, SJ
+ * bayes.c, 2009.05.14, SJ
  */
 
 #include <stdio.h>
@@ -389,7 +389,7 @@ int train_message(struct session_data *sdata, struct _state *state, int rounds, 
       close_mydb(sdata->mhash);
    #endif
 
-      if(cfg->verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "training round: %d, spaminess: %0.4f", i, spaminess);
+      if(cfg->verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: training round: %d, spaminess: %0.4f", sdata->ttmpfile, i, spaminess);
 
       if(is_spam == 1 && spaminess > 0.99) return i;
       if(is_spam == 0 && spaminess < 0.1) return i;

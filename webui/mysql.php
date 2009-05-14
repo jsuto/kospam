@@ -210,7 +210,7 @@ function get_user_entry($uid, $email = ""){
 
    $x = array();
 
-   if(!is_numeric($uid) || $uid < 1) return $x;
+   if(!is_numeric($uid) || $uid < 0) return $x;
 
    $email = mysql_real_escape_string($email);
    if($email) $EMAIL = " AND email='$email'";

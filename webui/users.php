@@ -72,7 +72,7 @@ else if($modify == 1 && $uid >= 0 && is_numeric($uid) && $email && $username){
    nice_screen("$err_modified_user. <a href=\"users.php\">$BACK.</a>");
 }
 
-else if($edit == 1 && $uid >= 1 && is_numeric($uid)){
+else if($edit == 1 && $uid >= 0 && is_numeric($uid)){
    $x = get_user_entry($uid, $email);
 
    print "<form action=\"users.php\" name=\"modifyuser\" method=\"post\">\n";

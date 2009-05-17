@@ -184,6 +184,8 @@ int get_user_from_email(struct session_data *sdata, char *email, struct __config
             SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_EMAIL_TABLE, email);
    }
 
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: user data stmt: %s", sdata->ttmpfile, buf);
+
    if(sqlite3_prepare_v2(sdata->db, buf, -1, &pStmt, pzTail) == SQLITE_OK){
       if(sqlite3_step(pStmt) == SQLITE_ROW){
          //sdata->uid = sqlite3_column_int(pStmt, 0);
@@ -205,6 +207,8 @@ int get_user_from_email(struct session_data *sdata, char *email, struct __config
    //snprintf(buf, MAXBUFSIZE-1, "SELECT uid, username FROM %s WHERE email='%s'", SQL_USER_TABLE, p);
    snprintf(buf, MAXBUFSIZE-1, "SELECT %s.uid, %s.username FROM %s,%s WHERE %s.uid=%s.uid AND %s.email='%s'",
       SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_EMAIL_TABLE, p);
+
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: user data stmt: %s", sdata->ttmpfile, buf);
 
    if(sqlite3_prepare_v2(sdata->db, buf, -1, &pStmt, pzTail) == SQLITE_OK){
       if(sqlite3_step(pStmt) == SQLITE_ROW){

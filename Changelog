@@ -1,5 +1,14 @@
 0.4.1-rc2:
 
+2009.05.17, SJ
+
+Modified the database schema: introduced a new table storing
+uid <-> email address relations for the MySQL and SQLite3 backend.
+Please note that --with-userdb=ldap users are not affected.
+
+Be sure to read the 0th point in the UPGRADE file!
+(db-*.sql, util/db-update-*.sql, users.c, config.h, webui/.htdb.php, webui/lang/*, webui/*)
+
 2009.05.14, SJ
 
 Added clapf message id to the logging of the training part.

@@ -1,3 +1,22 @@
+0. Attention to all current clapf users storing user data in either
+MySQL or SQLite3 table (LDAP users are not affected)!
+
+From 17th, May 2009, the database schemas are modified. I have written
+an sql script to update your user table. See util/db-update-mysql.sql
+or (...-sqlite3.sql).
+
+Basically it creates a temporary table 'bbbb' from the user table,
+then creates the 't_email' table and copies email addresses there,
+then renames 'user' to 'user_old', and 'bbbb' to 'user'.
+
+To execute it, issue the following command _before_ you have backed up
+yout clapf database:
+
+mysql -u clapf -p clapf < util/db-update-mysql.sql
+(or sqlite /var/lib/clapf/data/tokens.sdb < util/db-update-sqlite3.sql)
+
+
+
 1. Always backup your current clapf.conf file and the clapf database.
 
 2. Do a "make install" to replace your old binaries, and other stuff.

@@ -118,8 +118,10 @@ $err_successfully_modified = "Successfully modified";
 $err_invalid_message_id = "Invalid message id";
 
 $err_existing_user = "User already exists";
+$err_existing_email = "Email already exists";
 $err_added_user_successfully = "User added successfully";
 $err_failed_to_remove_user = "User failed to remove";
+$err_failed_to_remove_email = "Email failed to remove";
 $err_removed_user_successfully = "User(s) removed successfully";
 $err_modified_user = "Modified user";
 $err_failed_to_add_user = "User failed to add";

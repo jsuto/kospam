@@ -1,5 +1,5 @@
 /*
- * session.c, 2009.04.14, SJ
+ * session.c, 2009.05.17, SJ
  */
 
 #include <stdio.h>
@@ -12,7 +12,6 @@
 #include <unistd.h>
 #include <signal.h>
 #include <syslog.h>
-#include "mime.h"
 #include "av.h"
 #include <clapf.h>
 

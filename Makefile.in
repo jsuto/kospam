@@ -35,8 +35,8 @@ LIBCLAPF_VERSION=$(CLAPF_VERSION).$(CLAPF_REVISION).$(CLAPF_RELEASE)
 
 INSTALL = @INSTALL@
 
-all: clapf-lib clapf @spamsum@ @clapfstore@ splitmbox @parsembox@ @spamdrop@ @preparesql@ @test@ ui
-install: install-clapf @clapfstore_install@ install-splitmbox install-man @parsembox_install@ @spamsum_install@ @spamdrop_install@ @db_install@
+all: clapf-lib clapf @spamsum@ splitmbox @parsembox@ @spamdrop@ @preparesql@ @test@ ui
+install: install-clapf install-splitmbox install-man @parsembox_install@ @spamsum_install@ @spamdrop_install@ @db_install@
 
 
 clapf.conf:
@@ -79,9 +79,6 @@ aphash: % : %.o misc.o
 
 prepare-sql : % : %.o misc.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^
-
-clapfstore:	% : %.o cfg.o misc.o ssl_util.o
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR) -lssl -lcrypto -ldl -lpthread
 
 mydb_stat mydb_compress mydb_export:	%: %.o mydb.o misc.o hash.o chi.o score.o cfg.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
@@ -171,10 +168,6 @@ install-spamsum:
 	(cd contrib/spamsum; make install)
 
 
-intall-clapfstore: clapfstore
-	$(INSTALL) -d $(DESTDIR)$(libexecdir)/clapf
-	$(INSTALL) -m 0755 clapfstore $(DESTDIR)$(libexecdir)/clapf
-
 install-spamdrop: spamdrop
 	$(INSTALL) -m 0755 spamdrop $(DESTDIR)$(bindir)
 	$(INSTALL) -m 0755 aphash $(DESTDIR)$(bindir)
@@ -235,7 +228,7 @@ clean_db:
 	rm -f ham.tmp spam.tmp num_of_spam.tmp num_of_ham.tmp tokens.mydb temp.*
 
 clean:
-	rm -f *.o *.a libclapf.so* qcache db.sql clapf clapfstore clapf.conf parsembox splitmbox spamtest spamdrop spamstat smtpscanner aphash prepare-sql mydb_stat mydb_compress mydb_export
+	rm -f *.o *.a libclapf.so* qcache db.sql clapf clapf.conf parsembox splitmbox spamtest spamdrop spamstat smtpscanner aphash prepare-sql mydb_stat mydb_compress mydb_export
 	(cd $(srcdir)/contrib/spamsum; make clean)
 	rm -f webui/config.php
 

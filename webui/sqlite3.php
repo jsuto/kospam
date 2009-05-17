@@ -192,15 +192,15 @@ function get_users_email_address($username){
 
 
 function get_user_entry($uid, $email = ""){
-   global $conn, $user_table, $whitelist_table, $blacklist_table, $err_sql_error;
+   global $conn, $user_table, $email_table, $whitelist_table, $blacklist_table, $err_sql_error;
 
    $x = array();
 
    if(!is_numeric($uid) || $uid < 0) return $x;
 
-   if($email) $EMAIL = " AND email=:email";
+   if($email) $EMAIL = " AND $email_table.email=:email";
 
-   $stmt = "SELECT email, username, uid, policy_group, isadmin FROM $user_table WHERE uid=:uid $EMAIL ORDER by uid, email";
+   $stmt = "SELECT $email_table.email, $user_table.username, $user_table.uid, $user_table.policy_group, $user_table.isadmin FROM $user_table, $email_table WHERE $user_table.uid=:uid $EMAIL";
 
    $r = $conn->prepare($stmt);
    $r->bindParam(':uid', $uid, PDO::PARAM_INT);
@@ -275,16 +275,16 @@ function print_user($x, $ro_uid = 0){
 
 
 function show_existing_users($what, $page, $page_len){
-   global $conn, $user_table, $err_sql_error, $EDIT_OR_VIEW;
-   $where_cond = "";
+   global $conn, $user_table, $email_table, $err_sql_error, $EDIT_OR_VIEW;
+   $where_cond = " WHERE $user_table.uid=$email_table.uid ";
    $n_users = 0;
    $from = $page * $page_len;
 
    if($what){
-      $where_cond = "WHERE username LIKE '%$what%' OR email LIKE '%$what%' ";
+      $where_cond .= "AND $user_table.username LIKE '%$what%' OR $email_table.email LIKE '%$what%' ";
    }
 
-   $stmt = "SELECT COUNT(*) AS aaa FROM $user_table $where_cond";
+   $stmt = "SELECT COUNT(*) AS aaa FROM $user_table,$email_table $where_cond";
    $result = $conn->query($stmt);
    $r = $result->fetchAll();
 
@@ -292,7 +292,8 @@ function show_existing_users($what, $page, $page_len){
    $n_users = $v['aaa']; 
 
 
-   $stmt = "SELECT uid, username, email, policy_group FROM $user_table $where_cond ORDER by uid, email LIMIT $from, $page_len";
+   //$stmt = "SELECT uid, username, email, policy_group FROM $user_table $where_cond ORDER by uid, email LIMIT $from, $page_len";
+   $stmt = "SELECT $user_table.uid, $user_table.username, $user_table.policy_group, $email_table.email FROM $user_table, $email_table  $where_cond ORDER by $user_table.uid LIMIT $from, $page_len";
 
    $result = $conn->query($stmt);
    $r = $result->fetchAll();
@@ -314,11 +315,11 @@ function show_existing_users($what, $page, $page_len){
 
 
 function delete_existing_user_entry($uid, $email){
-   global $conn, $user_table, $whitelist_table, $blacklist_table, $misc_table, $err_sql_error, $BACK, $err_failed_to_remove_user;
+   global $conn, $user_table, $email_table, $whitelist_table, $blacklist_table, $misc_table, $err_sql_error, $BACK, $err_failed_to_remove_user;
 
    /* determine if this is the last user entry */
 
-   $stmt = "SELECT COUNT(*) FROM $user_table WHERE uid=:uid";
+   $stmt = "SELECT COUNT(*) FROM $email_table WHERE uid=:uid";
 
    $r = $conn->prepare($stmt);
    $r->bindParam(':uid', $uid, PDO::PARAM_INT);
@@ -327,14 +328,19 @@ function delete_existing_user_entry($uid, $email){
 
    $n = $R[0];
 
-   $stmt = "DELETE FROM $user_table WHERE uid=:uid AND email=:email";
+   $stmt = "DELETE FROM $email_table WHERE uid=:uid AND email=:email";
 
    $r = $conn->prepare($stmt);
    $r->bindParam(':uid', $uid, PDO::PARAM_INT);
    $r->bindParam(':email', $email, PDO::PARAM_STR);
-   $r->execute() or nice_error($err_failed_to_remove_user . ". <a href=\"users.php\">$BACK.</a>");
+   $r->execute() or nice_error($err_failed_to_remove_email . ". <a href=\"users.php\">$BACK.</a>");
 
    if($n == 1 && $uid > 0){
+      $stmt = "DELETE FROM $user_table WHERE uid=:uid";
+      $r = $conn->prepare($stmt);
+      $r->bindParam(':uid', $uid, PDO::PARAM_INT);
+      $r->execute();
+
       $stmt = "DELETE FROM $whitelist_table WHERE uid=:uid";
       $r = $conn->prepare($stmt);
       $r->bindParam(':uid', $uid, PDO::PARAM_INT);
@@ -354,11 +360,11 @@ function delete_existing_user_entry($uid, $email){
 
 
 function add_user_entry($uid){
-   global $conn, $user_table, $whitelist_table, $blacklist_table, $misc_table, $err_sql_error, $err_existing_user, $BACK;
+   global $conn, $user_table, $email_table, $whitelist_table, $blacklist_table, $misc_table, $err_sql_error, $err_existing_user, $BACK;
 
    while(list($k, $v) = each($_POST)) $$k = $v;
 
-   $stmt = "INSERT INTO $user_table (uid, username, password, email, policy_group, isadmin) VALUES(:uid, :username, :password, :email, :policy_group, :isadmin)";
+   $stmt = "INSERT INTO $user_table (uid, username, password, policy_group, isadmin) VALUES(:uid, :username, :password, :policy_group, :isadmin)";
 
    $c_pwd = crypt($password);
 
@@ -366,11 +372,19 @@ function add_user_entry($uid){
    $r->bindParam(':uid', $uid, PDO::PARAM_INT);
    $r->bindParam(':username', $username, PDO::PARAM_STR);
    $r->bindParam(':password', $c_pwd, PDO::PARAM_STR);
-   $r->bindParam(':email', $email, PDO::PARAM_STR);
    $r->bindParam(':policy_group', $policy_group, PDO::PARAM_INT);
    $r->bindParam(':isadmin', $isadmin, PDO::PARAM_INT);
 
    $r->execute() or nice_error($err_existing_user . ". <a href=\"users.php\">$BACK.</a>");
+
+   $stmt = "INSERT INTO $email_table (uid, email) VALUES(:uid, :email)";
+
+   $r = $conn->prepare($stmt);
+   $r->bindParam(':uid', $uid, PDO::PARAM_INT);
+   $r->bindParam(':email', $email, PDO::PARAM_STR);
+   $r->execute();
+
+
 
    $stmt = "INSERT INTO $whitelist_table (uid, whitelist) VALUES(:uid, :whitelist)";
 
@@ -396,7 +410,7 @@ function add_user_entry($uid){
 
 
 function update_user($uid){
-   global $conn, $user_table, $whitelist_table, $blacklist_table, $err_sql_error;
+   global $conn, $user_table, $email_table, $email_table, $whitelist_table, $blacklist_table, $err_sql_error;
 
    $PWD = "";
 
@@ -407,16 +421,24 @@ function update_user($uid){
       $c_pwd = crypt($password);
    }
 
-   $stmt = "UPDATE $user_table SET username=:username, email=:email, policy_group=:policy_group, isadmin=:isadmin $PWD WHERE uid=:uid AND email=:email_orig";
+   $stmt = "UPDATE $user_table SET username=:username, policy_group=:policy_group, isadmin=:isadmin $PWD WHERE uid=:uid";
 
    $r = $conn->prepare($stmt);
    $r->bindParam(':username', $username, PDO::PARAM_STR);
-   $r->bindParam(':email', $email, PDO::PARAM_STR);
    $r->bindParam(':policy_group', $policy_group, PDO::PARAM_INT);
    $r->bindParam(':isadmin', $isadmin, PDO::PARAM_INT);
    $r->bindParam(':uid', $uid, PDO::PARAM_INT);
-   $r->bindParam(':email_orig', $email_orig, PDO::PARAM_STR);
    if($password) $r->bindParam(':password', $c_pwd, PDO::PARAM_STR);
+
+   $r->execute() or nice_error($err_sql_error);
+
+
+   $stmt = "UPDATE $email_table SET email=:email WHERE uid=:uid AND email=:email_orig";
+
+   $r = $conn->prepare($stmt);
+   $r->bindParam(':uid', $uid, PDO::PARAM_INT);
+   $r->bindParam(':email', $email, PDO::PARAM_STR);
+   $r->bindParam(':email_orig', $email_orig, PDO::PARAM_STR);
 
    $r->execute() or nice_error($err_sql_error);
 

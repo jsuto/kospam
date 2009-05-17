@@ -206,16 +206,16 @@ function get_users_email_address($username){
 
 
 function get_user_entry($uid, $email = ""){
-   global $user_table, $whitelist_table, $blacklist_table, $err_sql_error;
+   global $user_table, $email_table, $whitelist_table, $blacklist_table, $err_sql_error;
 
    $x = array();
 
    if(!is_numeric($uid) || $uid < 0) return $x;
 
    $email = mysql_real_escape_string($email);
-   if($email) $EMAIL = " AND email='$email'";
+   if($email) $EMAIL = " AND $email_table.email='$email'";
 
-   $stmt = "SELECT email, username, uid, policy_group, isadmin FROM $user_table WHERE uid=$uid $EMAIL ORDER by uid, email";
+   $stmt = "SELECT $email_table.email, $user_table.username, $user_table.uid, $user_table.policy_group, $user_table.isadmin FROM $user_table, $email_table WHERE $user_table.uid=$uid $EMAIL ORDER by uid, email";
    $r = mysql_query($stmt) or nice_error($err_sql_error);
    $x = mysql_fetch_row($r);
    mysql_free_result($r);
@@ -274,24 +274,24 @@ function print_user($x, $ro_uid = 0){
 
 
 function show_existing_users($what, $page, $page_len){
-   global $user_table, $err_sql_error, $EDIT_OR_VIEW;
-   $where_cond = "";
+   global $user_table, $email_table, $err_sql_error, $EDIT_OR_VIEW;
+   $where_cond = "WHERE $user_table.uid=$email_table.uid ";
    $n_users = 0;
    $from = $page * $page_len;
 
    if($what){
       $what = mysql_real_escape_string($what);
-      $where_cond = "WHERE username LIKE '%$what%' OR email LIKE '%$what%' ";
+      $where_cond .= "AND $user_table.username LIKE '%$what%' OR $email_table.email LIKE '%$what%' ";
    }
 
-   $stmt = "SELECT COUNT(*) FROM $user_table $where_cond";
+   $stmt = "SELECT COUNT(*) FROM $user_table,$email_table $where_cond";
    $r = mysql_query($stmt) or nice_error($err_sql_error);
    list ($n_users) = mysql_fetch_row($r);
    mysql_free_result($r);
 
-   $stmt = "SELECT uid, username, email, policy_group FROM $user_table $where_cond ORDER by uid, email LIMIT $from, $page_len";
+   $stmt = "SELECT $user_table.uid, $user_table.username, $user_table.policy_group, $email_table.email FROM $user_table, $email_table  $where_cond ORDER by $user_table.uid LIMIT $from, $page_len";
    $r = mysql_query($stmt) or nice_error($err_sql_error);
-   while(list($uid, $username, $email, $policy_group) = mysql_fetch_row($r)){
+   while(list($uid, $username, $policy_group, $email) = mysql_fetch_row($r)){
       $policy_group = get_policy_group_name_by_id($policy_group);
 
       print "<tr align=\"left\"><td><input type=\"checkbox\" name=\"aa_$uid\"></td><td>$uid</td><td>$username</td><td>$email</td><td>$policy_group</td><td><a href=\"users.php?uid=$uid&email=$email&edit=1\">$EDIT_OR_VIEW</a></td></tr>\n";
@@ -303,22 +303,24 @@ function show_existing_users($what, $page, $page_len){
 
 
 function delete_existing_user_entry($uid, $email){
-   global $user_table, $whitelist_table, $blacklist_table, $misc_table, $err_sql_error, $BACK, $err_failed_to_remove_user;
+   global $user_table, $email_table, $whitelist_table, $blacklist_table, $misc_table, $err_sql_error, $BACK, $err_failed_to_remove_user;
 
    $uid = mysql_real_escape_string($uid);
    $email = mysql_real_escape_string($email);
 
    /* determine if this is the last user entry */
 
-   $stmt = "SELECT COUNT(*) FROM $user_table WHERE uid=$uid";
+   $stmt = "SELECT COUNT(*) FROM $email_table WHERE uid=$uid";
    $r = mysql_query($stmt) or nice_error($err_sql_error);
    list($n) = mysql_fetch_row($r);
    mysql_free_result($r);
 
-   $stmt = "DELETE FROM $user_table WHERE uid=$uid AND email='$email'";
-   if(!mysql_query($stmt)) nice_error($err_failed_to_remove_user . ". <a href=\"users.php\">$BACK.</a>");
+   $stmt = "DELETE FROM $email_table WHERE uid=$uid AND email='$email'";
+   if(!mysql_query($stmt)) nice_error($err_failed_to_remove_email . ". <a href=\"users.php\">$BACK.</a>");
 
    if($n == 1 && $uid > 0){
+      $stmt = "DELETE FROM $user_table WHERE uid=$uid";
+      mysql_query($stmt);
       $stmt = "DELETE FROM $whitelist_table WHERE uid=$uid";
       mysql_query($stmt);
       $stmt = "DELETE FROM $blacklist_table WHERE uid=$uid";
@@ -337,6 +339,9 @@ function bulk_delete_user($uidlist){
 
    $uidlist = mysql_real_escape_string($uidlist);
 
+   $stmt = "DELETE FROM $email_table WHERE uid IN ($uidlist)";
+   mysql_query($stmt) or nice_error($err_sql_error);
+
    $stmt = "DELETE FROM $user_table WHERE uid IN ($uidlist)";
    mysql_query($stmt) or nice_error($err_sql_error);
 
@@ -349,14 +354,17 @@ function bulk_delete_user($uidlist){
 
 
 function add_user_entry($uid){
-   global $user_table, $whitelist_table, $blacklist_table, $misc_table, $err_sql_error, $err_existing_user, $BACK;
+   global $user_table, $email_table, $whitelist_table, $blacklist_table, $misc_table, $err_sql_error, $err_existing_user, $BACK;
 
    while(list($k, $v) = each($_POST)) $$k = mysql_real_escape_string($v);
 
    $uid = mysql_real_escape_string($uid);
 
-   $stmt = "INSERT INTO $user_table (uid, username, password, email, policy_group, isadmin) VALUES($uid, '$username', ENCRYPT('$password'), '$email', $policy_group, $isadmin)";
+   $stmt = "INSERT INTO $user_table (uid, username, password, policy_group, isadmin) VALUES($uid, '$username', ENCRYPT('$password'), $policy_group, $isadmin)";
    if(!mysql_query($stmt)) nice_error($err_existing_user . ". <a href=\"users.php\">$BACK.</a>");
+
+   $stmt = "INSERT INTO $email_table (uid, email) VALUES($uid, '$email')";
+   if(!mysql_query($stmt)) nice_error($err_existing_email . ". <a href=\"users.php\">$BACK.</a>");
 
    $stmt = "INSERT INTO $whitelist_table (uid, whitelist) VALUES($uid, '$whitelist')";
    mysql_query($stmt);
@@ -370,7 +378,7 @@ function add_user_entry($uid){
 
 
 function update_user($uid){
-   global $user_table, $whitelist_table, $blacklist_table, $err_sql_error;
+   global $user_table, $email_table, $whitelist_table, $blacklist_table, $err_sql_error;
 
    $PWD = "";
 
@@ -378,7 +386,10 @@ function update_user($uid){
 
    if($password) $PWD = ", password=ENCRYPT('$password')";
 
-   $stmt = "UPDATE $user_table SET username='$username', email='$email', policy_group=$policy_group, isadmin=$isadmin $PWD WHERE uid=$uid AND email='$email_orig'";
+   $stmt = "UPDATE $user_table SET username='$username', policy_group=$policy_group, isadmin=$isadmin $PWD WHERE uid=$uid";
+   mysql_query($stmt) or nice_error($err_sql_error);
+
+   $stmt = "UPDATE $email_table SET email='$email' WHERE uid=$uid AND email='$email_orig'";
    mysql_query($stmt) or nice_error($err_sql_error);
 
    $uuid = mysql_result(mysql_query("SELECT COUNT(*) AS `uid` FROM $whitelist_table WHERE `uid` = '$uid'"), 0, 'uid');

@@ -1,5 +1,5 @@
 /*
- * users.c, 2009.03.18, SJ
+ * users.c, 2009.05.17, SJ
  */
 
 #include <stdio.h>
@@ -42,18 +42,30 @@ int get_user_from_email(struct session_data *sdata, char *email, struct __config
 
    if(email == NULL) return 0;
 
+
+   /* TODO: escape the email address */
+
+
    if((p = strcasestr(email, "+spam"))){
       *p = '\0';
-      snprintf(buf, MAXBUFSIZE-1, "SELECT uid, username FROM %s WHERE email='%s%s'", SQL_USER_TABLE, email, p+5);
+      snprintf(buf, MAXBUFSIZE-1, "SELECT %s.uid, %s.username FROM %s,%s WHERE %s.uid=%s.uid AND %s.email='%s%s'",
+         SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_EMAIL_TABLE, email, p+5);
+
       *p = '+';
    }
    else if((p = strcasestr(email, "+ham"))){
       *p = '\0';
-      snprintf(buf, MAXBUFSIZE-1, "SELECT uid, username FROM %s WHERE email='%s%s'", SQL_USER_TABLE, email, p+4);
+      snprintf(buf, MAXBUFSIZE-1, "SELECT %s.uid, %s.username FROM %s,%s WHERE %s.uid=%s.uid AND %s.email='%s%s'",
+         SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_EMAIL_TABLE, email, p+4);
       *p = '+';
    }
-   else
-      snprintf(buf, MAXBUFSIZE-1, "SELECT uid, username, policy_group FROM %s WHERE email='%s'", SQL_USER_TABLE, email);
+   else {
+      snprintf(buf, MAXBUFSIZE-1, "SELECT %s.uid, %s.username, %s.policy_group FROM %s,%s WHERE %s.uid=%s.uid AND %s.email='%s'",
+            SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_EMAIL_TABLE, email);
+   }
+
+
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: user data stmt: %s", sdata->ttmpfile, buf);
 
 
    if(mysql_real_query(&(sdata->mysql), buf, strlen(buf)) == 0){
@@ -72,10 +84,16 @@ int get_user_from_email(struct session_data *sdata, char *email, struct __config
 
    if(rc == 1) return 0;
 
+
+   /* if no email was found, then try to lookup the domain */
+
    p = strchr(email, '@');
    if(!p) return 0;
 
-   snprintf(buf, MAXBUFSIZE-1, "SELECT uid, username, policy_group FROM %s WHERE email='%s'", SQL_USER_TABLE, p);
+   snprintf(buf, MAXBUFSIZE-1, "SELECT %s.uid, %s.username, %s.policy_group FROM %s,%s WHERE %s.uid=%s.uid AND %s.email='%s'",
+      SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_EMAIL_TABLE, p);
+
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: user data stmt2: %s", sdata->ttmpfile, buf);
 
    if(mysql_real_query(&(sdata->mysql), buf, strlen(buf)) == 0){
       res = mysql_store_result(&(sdata->mysql));
@@ -148,17 +166,23 @@ int get_user_from_email(struct session_data *sdata, char *email, struct __config
 
    if((p = strcasestr(email, "+spam"))){
       *p = '\0';
-      snprintf(buf, MAXBUFSIZE-1, "SELECT uid, username FROM %s WHERE email='%s%s'", SQL_USER_TABLE, email, p+5);
+      //snprintf(buf, MAXBUFSIZE-1, "SELECT uid, username FROM %s WHERE email='%s%s'", SQL_USER_TABLE, email, p+5);
+      snprintf(buf, MAXBUFSIZE-1, "SELECT %s.uid, %s.username FROM %s,%s WHERE %s.uid=%s.uid AND %s.email='%s%s'",
+         SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_EMAIL_TABLE, email, p+5);
       *p = '+';
    }
    else if((p = strcasestr(email, "+ham"))){
       *p = '\0';
-      snprintf(buf, MAXBUFSIZE-1, "SELECT uid, username FROM %s WHERE email='%s%s'", SQL_USER_TABLE, email, p+4);
+      //snprintf(buf, MAXBUFSIZE-1, "SELECT uid, username FROM %s WHERE email='%s%s'", SQL_USER_TABLE, email, p+4);
+      snprintf(buf, MAXBUFSIZE-1, "SELECT %s.uid, %s.username FROM %s,%s WHERE %s.uid=%s.uid AND %s.email='%s%s'",
+         SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_EMAIL_TABLE, email, p+4);
       *p = '+';
    }
-   else
-      snprintf(buf, MAXBUFSIZE-1, "SELECT uid, username FROM %s WHERE email='%s'", SQL_USER_TABLE, email);
-
+   else {
+      //snprintf(buf, MAXBUFSIZE-1, "SELECT uid, username FROM %s WHERE email='%s'", SQL_USER_TABLE, email);
+      snprintf(buf, MAXBUFSIZE-1, "SELECT %s.uid, %s.username FROM %s,%s WHERE %s.uid=%s.uid AND %s.email='%s'",
+            SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_EMAIL_TABLE, email);
+   }
 
    if(sqlite3_prepare_v2(sdata->db, buf, -1, &pStmt, pzTail) == SQLITE_OK){
       if(sqlite3_step(pStmt) == SQLITE_ROW){
@@ -173,10 +197,14 @@ int get_user_from_email(struct session_data *sdata, char *email, struct __config
    if(rc == 1) return 0;
 
 
+   /* if no email was found, then try to lookup the domain */
+
    p = strchr(email, '@');
    if(!p) return 0;
 
-   snprintf(buf, MAXBUFSIZE-1, "SELECT uid, username FROM %s WHERE email='%s'", SQL_USER_TABLE, p);
+   //snprintf(buf, MAXBUFSIZE-1, "SELECT uid, username FROM %s WHERE email='%s'", SQL_USER_TABLE, p);
+   snprintf(buf, MAXBUFSIZE-1, "SELECT %s.uid, %s.username FROM %s,%s WHERE %s.uid=%s.uid AND %s.email='%s'",
+      SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_EMAIL_TABLE, p);
 
    if(sqlite3_prepare_v2(sdata->db, buf, -1, &pStmt, pzTail) == SQLITE_OK){
       if(sqlite3_step(pStmt) == SQLITE_ROW){

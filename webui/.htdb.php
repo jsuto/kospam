@@ -5,6 +5,7 @@
 $dsn = "mysql://clapf:xxxxxxx@localhost/clapf";
 
 $user_table = "user";
+$email_table = "t_email";
 $misc_table = "t_misc";
 $whitelist_table = "t_white_list";
 $blacklist_table = "t_black_list";

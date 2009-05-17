@@ -118,8 +118,10 @@ $err_successfully_modified = "Sikeresen módosítva";
 $err_invalid_message_id = "Helytelen üzenet azonosító";
 
 $err_existing_user = "A felhasználó már létezik";
+$err_existing_email = "Az email cím már létezik";
 $err_added_user_successfully = "Felhasználó hozzáadása sikerült";
 $err_failed_to_remove_user = "Nem sikerült a felhasználó törlése";
+$err_failed_to_remove_email = "Nem sikerült az email törlése";
 $err_removed_user_successfully = "Felhasználó törlése sikerült";
 $err_modified_user = "Felhasználó módosítva";
 $err_failed_to_add_user = "Nem sikerült a felhasználó felvétele";

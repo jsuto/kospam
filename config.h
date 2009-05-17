@@ -1,5 +1,5 @@
 /*
- * config.h, 2009.04.29, SJ
+ * config.h, 2009.05.16, SJ
  */
 
 #ifndef _CONFIG_H
@@ -71,7 +71,6 @@
 
 #define MYDB_MIN_SIZE 1000000
 
-#define MAX_THREADS 30
 
 /* this should be at least header_size_limit, see the output of postconf, 2006.08.21, SJ */
 #define MAX_MAIL_HEADER_SIZE 128000
@@ -150,6 +149,7 @@
 #define SQL_TOKEN_TABLE "t_token"
 #define SQL_MISC_TABLE "t_misc"
 #define SQL_USER_TABLE "user"
+#define SQL_EMAIL_TABLE "t_email"
 #define SQL_WHITE_LIST "t_white_list"
 #define SQL_BLACK_LIST "t_black_list"
 #define SQL_QUEUE_TABLE "t_queue"

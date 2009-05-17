@@ -101,7 +101,9 @@ else if($add == 1){
 
    $next_uid = get_next_uid();
 
-   $x = array('', '', $next_uid, 0, '', '', 0);
+   $x = array('', '', $next_uid, 0, 0, '', '', '');
+   //(email, username, userid, policy_group, is_admin, white, black, password)
+
    print_user($x);
 
    print "<tr colspan=\"2\"><td><input type=\"submit\" value=\"$ADD\"></td></tr>\n";

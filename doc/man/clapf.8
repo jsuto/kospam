@@ -1,5 +1,5 @@
-.\" Manual is created by Janos SUTO, 2006.01.31
-.TH "CLAPF" "8" "August 21, 2007" "Janos SUTO" "Clapf network filter"
+.\" Manual is created by Janos SUTO, 2009.05.17\"
+.TH "CLAPF" "8" "May 17, 2009" "Janos SUTO" "Clapf network filter"
 .SH "NAME"
 .LP 
 clapf \- a modular network filter for postfix
@@ -11,7 +11,7 @@ clapf [options]
 
 clapf is a modular network filter for postfix. It includes a statistical
 (inverse chi-square) antispam module, the blackhole feature and antivirus
-support (libclamav, AVG Linux, Dr.Web, avast! and Kasperky) preventing virus
+support (libclamav, clamd, Dr.Web, avast! and Kasperky) preventing virus
 infection as well as a spam quarantine.
 
 
@@ -21,6 +21,15 @@ infection as well as a spam quarantine.
 .TP
 \fB\-d\fR
 Go to daemon mode (ie. to the background) immediately.
+
+.TP
+\fB\-u\fR
+Numeric uid to run clapf.
+
+.TP
+\fB\-g\fR
+Numeric gid to run clapf.
+
 
 .TP
 \fB\-h\fR

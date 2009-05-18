@@ -1,5 +1,5 @@
 /*
- * misc.c, 2009.03.04, SJ
+ * misc.c, 2009.05.18, SJ
  */
 
 #include <stdio.h>
@@ -740,7 +740,11 @@ int extract_id_from_message(char *messagefile, char *clapf_header_field, char *I
       do {
          p = split(p, '\n', puf, SMALLBUFSIZE-1);
 
+      #ifdef OUTLOOK_HACK
+         q = strstr(puf, "Received: ");
+      #else
          q = strstr(puf, clapf_header_field);
+      #endif
          if(q){
             trim(puf);
             r = strchr(puf, ' ');

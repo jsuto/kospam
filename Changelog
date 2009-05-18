@@ -1,5 +1,11 @@
 0.4.1-rc2:
 
+2009.05.18, SJ
+
+Added the '--enable-outlook-hack' configure option to workaround
+the nasty habit of Outlook 12 (not Outlook Express).
+(misc.c, smtop.c, configure*)
+
 2009.05.17, SJ
 
 Modified the database schema: introduced a new table storing

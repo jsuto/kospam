@@ -20,7 +20,7 @@
 
 
 
-int send_headers(int sd, char *bigbuf, int n, char *spaminessbuf, int put_subject_spam_prefix, struct __config *cfg){
+int send_headers(int sd, char *bigbuf, int n, char *spaminessbuf, int put_subject_spam_prefix, char *tmpfile, struct __config *cfg){
    int i=0, x, N, is_header=1, remove_hdr=0, remove_folded_hdr=0, hdr_field_name_len, sent_subject_spam_prefix=0, has_subject=0;
    char *p, *q, *hdr_ptr, buf[MAXBUFSIZE], headerbuf[MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE];
 
@@ -101,6 +101,15 @@ int send_headers(int sd, char *bigbuf, int n, char *spaminessbuf, int put_subjec
 
    } while(p && p < q);
 
+
+   /* Microsoft Outlook mailer is a dumb crapware, that it won't include all the headers
+      when forwarding the email as attachment, so we need to fix this situation */
+
+#ifdef OUTLOOK_HACK
+   strncat(headerbuf, "Received: ", MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE-1);
+   strncat(headerbuf, tmpfile, MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE-1);
+   strncat(headerbuf, "\r\n", MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE-1);
+#endif
 
    if(has_subject == 0){
       if(put_subject_spam_prefix == 1 && sent_subject_spam_prefix == 0){
@@ -310,7 +319,7 @@ int inject_mail(struct session_data *sdata, int msg, char *smtpaddr, int smtppor
          if(num_of_reads == 1){
 
             /* send the header lines first */
-            i = send_headers(psd, bigbuf, n, spaminessbuf, put_subject_spam_prefix, cfg);
+            i = send_headers(psd, bigbuf, n, spaminessbuf, put_subject_spam_prefix, sdata->ttmpfile, cfg);
 
             /* then the rest of the first read */
             send(psd, &bigbuf[i], n-i, 0);

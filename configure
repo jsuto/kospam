@@ -740,6 +740,7 @@ enable_language_detection
 enable_spamsum
 enable_spamc_emul
 with_clapf_user
+enable_outlook_hack
 enable_spamdrop_helper
 '
       ac_precious_vars='build_alias
@@ -1387,6 +1388,7 @@ Optional Features:
   --enable-language-detection use the language detection feature (experimental)
   --enable-spamsum        enable spamsum support (experimental)
   --enable-spamc-emul     enable spamc emulation to use spamd of SpamAssassin
+  --enable-outlook-hack   enable Outlook hack to overcome its dumbness
   --enable-spamdrop-helper use external spamdrop helper program
 
 Optional Packages:
@@ -5983,6 +5985,22 @@ if test "${with_clapf_user+set}" = set; then
 else
    CLAPF_USER=clapf
 
+fi
+
+
+
+
+
+# Check whether --enable-outlook-hack was given.
+if test "${enable_outlook_hack+set}" = set; then
+  enableval=$enable_outlook_hack; want_outlook_hack=$enableval
+else
+  want_outlook_hack="no"
+fi
+
+
+if test "$want_outlook_hack" = "yes"; then
+   defs="$defs -DOUTLOOK_HACK"
 fi
 
 

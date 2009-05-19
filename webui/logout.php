@@ -1,9 +1,10 @@
 <?php
 
 include_once("config.php");
-include_once("header.php");
 
 session_start();
+
+include_once("header.php");
 
 logout();
 

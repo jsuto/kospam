@@ -1,5 +1,10 @@
 0.4.1-rc2:
 
+2009.05.19, SJ
+
+Webui fixes.
+(webui/*)
+
 2009.05.18, SJ
 
 Added the '--enable-outlook-hack' configure option to workaround

@@ -110,7 +110,10 @@ if($_SERVER['REQUEST_METHOD'] == "GET"){
          $id = preg_replace("/s./", "", $train);
 
          $m2 = "From: $fromaddr\r\nTo: $ham_train_address\r\nSubject: training a spam as ham\r\n\r\n\r\n";
-         $m2 .= "$clapf_header_field$id\r\n" . $m;
+         if($enable_outlook_hack == 1)
+            $m2 .= "Received: $id\r\n" . $m;
+         else
+            $m2 .= "$clapf_header_field$id\r\n" . $m;
 
          $x = send_smtp_email($smtphost, $clapfport, $yourdomain, $fromaddr, $ham_train_address, $m2);
          if(!$x) nice_error("$err_message_failed_to_train");

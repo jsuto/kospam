@@ -178,10 +178,10 @@ function is_admin_user($username){
 
 
 function get_users_email_address($username){
-   global $conn, $user_table, $err_sql_error;
+   global $conn, $user_table, $email_table, $err_sql_error;
    $to = "";
 
-   $stmt = "SELECT email FROM $user_table WHERE username='$username' LIMIT 1";
+   $stmt = "SELECT $email_table.email FROM $email_table, $user_table WHERE $email_table.uid=$user_table.uid AND $user_table.username='$username' LIMIT 1";
 
    $result = $conn->query($stmt);
    $r = $result->fetch();
@@ -281,7 +281,7 @@ function show_existing_users($what, $page, $page_len){
    $from = $page * $page_len;
 
    if($what){
-      $where_cond .= "AND $user_table.username LIKE '%$what%' OR $email_table.email LIKE '%$what%' ";
+      $where_cond .= "AND ($user_table.username LIKE '%$what%' OR $email_table.email LIKE '%$what%') ";
    }
 
    $stmt = "SELECT COUNT(*) AS aaa FROM $user_table,$email_table $where_cond";

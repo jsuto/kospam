@@ -42,6 +42,7 @@ $yourdomain = "xxxxx.com";
 $ham_train_address = "ham@$yourdomain";
 $fromaddr = "noreply@$yourdomain";
 
+$enable_outlook_hack = 0;
 
 $admin_user = 0;
 

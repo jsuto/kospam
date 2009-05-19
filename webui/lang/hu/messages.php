@@ -17,6 +17,7 @@ $GRAPH['spam_ratio'] = 'Spam arány';
 $ALIAS = "álnév";
 
 $ADD = "Felvesz";
+$ADD_NEW_EMAIL = "Új email cím";
 $ADD_NEW_POLICY = "Új házirend";
 $ADD_NEW_USER = "Új felhasználó/$ALIAS hozzáadása";
 $ADMIN_USER = "Admin felhasználó";
@@ -62,6 +63,7 @@ $MESSAGES = "levelek";
 $MODIFY = "Módosít";
 
 $NEXT = "Következõ";
+$NEW_EMAIL_ADDRESS = "Új email cím";
 $NO_SENDER = "nincs feladó";
 $NO_SUBJECT = "nincs tárgy";
 $NUMBER_OF_SPAM_MESSAGES_IN_QUARANTINE = "A spam üzenetek száma a karanténban";
@@ -85,6 +87,7 @@ $REMOVE_POLICY = "Házirend törlése";
 $REMOVE_SELECTED_UIDS = "Kijelölt azonosítók törlése";
 $REMOVE_USER = "Felhasználó/$ALIAS törlése";
 
+$SEARCH = "Keresés";
 $SELECT_ALL = "Mindegyik kijelölése";
 $SET = "Beállít";
 $STATS = "Statisztika";
@@ -120,6 +123,7 @@ $err_invalid_message_id = "Helytelen üzenet azonosító";
 $err_existing_user = "A felhasználó már létezik";
 $err_existing_email = "Az email cím már létezik";
 $err_added_user_successfully = "Felhasználó hozzáadása sikerült";
+$err_added_email_successfully = "Email cím hozzáadása sikerült";
 $err_failed_to_remove_user = "Nem sikerült a felhasználó törlése";
 $err_failed_to_remove_email = "Nem sikerült az email törlése";
 $err_removed_user_successfully = "Felhasználó törlése sikerült";

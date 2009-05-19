@@ -17,6 +17,7 @@ $GRAPH['spam_ratio'] = 'Spam ratio';
 $ALIAS = "alias";
 
 $ADD = "Add";
+$ADD_NEW_EMAIL = "Add new email address";
 $ADD_NEW_POLICY = "Add new policy";
 $ADD_NEW_USER = "Add new user/$ALIAS";
 $ADMIN_USER = "Admin user";
@@ -62,6 +63,7 @@ $MESSAGES = "messages";
 $MODIFY = "Modify";
 
 $NEXT = "Next";
+$NEW_EMAIL_ADDRESS = "New email address";
 $NO_SENDER = "no sender";
 $NO_SUBJECT = "no subject";
 $NUMBER_OF_SPAM_MESSAGES_IN_QUARANTINE = "Number of spam messages in the quarantine";
@@ -85,6 +87,7 @@ $REMOVE_POLICY = "Remove this policy";
 $REMOVE_SELECTED_UIDS = "Remove selected uids";
 $REMOVE_USER = "Remove this user/$ALIAS";
 
+$SEARCH = "Search";
 $SELECT_ALL = "Select all";
 $SET = "Set";
 $STATS = "Statistics";
@@ -120,6 +123,7 @@ $err_invalid_message_id = "Invalid message id";
 $err_existing_user = "User already exists";
 $err_existing_email = "Email already exists";
 $err_added_user_successfully = "User added successfully";
+$err_added_email_successfully = "Email added successfully";
 $err_failed_to_remove_user = "User failed to remove";
 $err_failed_to_remove_email = "Email failed to remove";
 $err_removed_user_successfully = "User(s) removed successfully";

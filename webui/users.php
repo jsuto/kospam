@@ -22,12 +22,13 @@ $username = "";
 $email = "";
 $policy_group = 0;
 $password = "";
-
+$password2 = "";
 $page = 0;
 $add = 0;
 $edit = 0;
 $remove = 0;
 $modify = 0;
+$alias = 0;
 
 $what = "";
 
@@ -36,6 +37,7 @@ if(isset($_POST['username'])) $username = $_POST['username'];
 if(isset($_POST['email'])) $email = $_POST['email'];
 if(isset($_POST['policy_group'])) $policy_group = $_POST['policy_group'];
 if(isset($_POST['password'])) $password = $_POST['password'];
+if(isset($_POST['password2'])) $password2 = $_POST['password2'];
 if(isset($_POST['modify'])) $modify = $_POST['modify'];
 if(isset($_POST['add'])) $add = $_POST['add'];
 if(isset($_POST['what'])) $what = $_POST['what'];
@@ -45,6 +47,7 @@ if(isset($_GET['email'])) $email = $_GET['email'];
 if(isset($_GET['remove'])) $remove = 1;
 if(isset($_GET['edit'])) $edit = $_GET['edit'];
 if(isset($_GET['add'])) $add = $_GET['add'];
+if(isset($_GET['alias'])) $alias = $_GET['alias'];
 if(isset($_GET['page'])) $page = $_GET['page'];
 if(isset($_GET['what'])) $what = $_GET['what'];
 
@@ -62,8 +65,10 @@ $conn = webui_connect() or nice_error($err_connect_db);
 
 <?php
 
-if($add == 1 && uid >= 0 && is_numeric($uid) && $email && $username){
-   add_user_entry($uid); //, $username, $email, $policy_group);
+if($add == 1 && $uid >= 0 && is_numeric($uid) && $email && $username){
+   if($password != $password2) nice_screen($err_password_mismatch);
+
+   add_user_entry($uid);
    nice_screen($err_added_user_successfully . ". <a href=\"users.php\">$BACK.</a>");
 }
 
@@ -102,7 +107,6 @@ else if($add == 1){
    $next_uid = get_next_uid();
 
    $x = array('', '', $next_uid, 0, 0, '', '', '');
-   //(email, username, userid, policy_group, is_admin, white, black, password)
 
    print_user($x);
 
@@ -124,6 +128,8 @@ else {
 
    /* list current users/aliases */
 
+   print "<p><a href=\"users.php?add=1\">$ADD_NEW_USER</a></p>\n";
+
    print "<h4>$EXISTING_USERS</h4>\n";
 
    print "<form method=\"post\" name=\"search1\" action=\"users.php\">\n";
@@ -133,7 +139,8 @@ else {
    print "<form method=\"post\" name=\"massedit\" action=\"massusers.php\">\n";
    print "<input type=\"hidden\" name=\"bulkedit\" value=\"1\">\n";
    print "<table border=\"1\">\n";
-   print "<tr align=\"center\"><th>&nbsp;</th><th>UID</th><th>$USERNAME</th><th>$EMAIL_ADDRESS</th><th>$POLICY_GROUP</th><th>&nbsp;</th></tr>\n";
+   if($userdb != "ldap") print "<tr align=\"center\"><th>&nbsp;</th><th>UID</th><th>$USERNAME</th><th>$EMAIL_ADDRESS</th><th>$POLICY_GROUP</th><th>&nbsp;</th><th>&nbsp;</th></tr>\n";
+   else print "<tr align=\"center\"><th>&nbsp;</th><th>UID</th><th>$USERNAME</th><th>$EMAIL_ADDRESS</th><th>$POLICY_GROUP</th><th>&nbsp;</th></tr>\n";
 
    $n_users = show_existing_users($what, $page, $page_len);
 
@@ -160,8 +167,6 @@ else {
 
 
    print "<input type=\"submit\" value=\"$BULK_EDIT_SELECTED_UIDS\"></form>\n";
-
-   print "<p><a href=\"users.php?add=1\">$ADD_NEW_USER</a></p>\n";
 
 }
 

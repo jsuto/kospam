@@ -237,13 +237,15 @@ function get_user_entry($uid, $email = ""){
 
 
 function print_user($x, $ro_uid = 0){
-   global $EMAIL_ADDRESS, $USERNAME, $PASSWORD, $USERID, $POLICY_GROUP, $ADMIN_USER, $WHITELIST, $BLACKLIST, $default_policy;
+   global $EMAIL_ADDRESS, $USERNAME, $PASSWORD, $PASSWORD_AGAIN, $USERID, $POLICY_GROUP, $ADMIN_USER, $WHITELIST, $BLACKLIST, $default_policy;
 
    $len = 30;
 
    print "<tr><td>$EMAIL_ADDRESS:</td><td><input type=\"text\" name=\"email\" value=\"$x[0]\"></td></tr>\n";
+   //print "<tr><td>$EMAIL_ADDRESS:</td><td><textarea name=\"email\">$x[0]</textarea>\n";
    print "<tr><td>$USERNAME:</td><td><input type=\"text\" name=\"username\" value=\"$x[1]\"></td></tr>\n";
    print "<tr><td>$PASSWORD:</td><td><input type=\"password\" name=\"password\" value=\"$x[6]\"></td></tr>\n";
+   print "<tr><td>$PASSWORD_AGAIN:</td><td><input type=\"password\" name=\"password2\" value=\"$x[6]\"></td></tr>\n";
 
    if($ro_uid == 1)
       print "<tr><td>$USERID:</td><td>$x[2]</td></tr>\n";
@@ -274,7 +276,8 @@ function print_user($x, $ro_uid = 0){
 
 
 function show_existing_users($what, $page, $page_len){
-   global $user_table, $email_table, $err_sql_error, $EDIT_OR_VIEW;
+   global $user_table, $email_table, $err_sql_error, $NEW_EMAIL_ADDRESS, $EDIT_OR_VIEW;
+
    $where_cond = "WHERE $user_table.uid=$email_table.uid ";
    $n_users = 0;
    $from = $page * $page_len;
@@ -294,7 +297,7 @@ function show_existing_users($what, $page, $page_len){
    while(list($uid, $username, $policy_group, $email) = mysql_fetch_row($r)){
       $policy_group = get_policy_group_name_by_id($policy_group);
 
-      print "<tr align=\"left\"><td><input type=\"checkbox\" name=\"aa_$uid\"></td><td>$uid</td><td>$username</td><td>$email</td><td>$policy_group</td><td><a href=\"users.php?uid=$uid&email=$email&edit=1\">$EDIT_OR_VIEW</a></td></tr>\n";
+      print "<tr align=\"left\"><td><input type=\"checkbox\" name=\"aa_$uid\"></td><td>$uid</td><td>$username</td><td>$email</td><td>$policy_group</td><td><a href=\"users.php?uid=$uid&email=$email&edit=1\">$EDIT_OR_VIEW</a></td><td><a href=\"emails.php?uid=$uid&username=$username&add=1\">$NEW_EMAIL_ADDRESS</a></td></tr>\n";
    }
    mysql_free_result($r);
 
@@ -332,7 +335,7 @@ function delete_existing_user_entry($uid, $email){
 
 
 function bulk_delete_user($uidlist){
-   global $user_table, $whitelist_table, $blacklist_table, $err_sql_error;
+   global $user_table, $email_table, $whitelist_table, $blacklist_table, $err_sql_error;
 
    reset($_POST);
    while(list($k, $v) = each($_POST)) $$k = mysql_real_escape_string($v);
@@ -445,6 +448,28 @@ function bulk_update_user($uidlist){
    $stmt = "UPDATE $blacklist_table SET blacklist='$blacklist' WHERE uid IN ($uidlist)";
    mysql_query($stmt) or nice_error($err_sql_error);
 
+}
+
+
+function print_alias($x, $ro_username = 0){
+   global $USERNAME, $EMAIL_ADDRESS;
+
+   if($ro_username == 1)
+      print "<tr><td>$USERNAME:</td><td>$x[0]</td></tr>\n";
+   else
+      print "<tr><td>$USERNAME:</td><td><input type=\"text\" name=\"username\" value=\"$x[0]\"></td></tr>\n";
+
+   print "<tr><td>$EMAIL_ADDRESS:</td><td><input type=\"text\" name=\"email\" value=\"$x[1]\"></td></tr>\n";
+}
+
+
+function add_email_entry(){
+   global $email_table, $err_sql_error, $err_existing_email, $BACK;
+
+   while(list($k, $v) = each($_POST)) $$k = mysql_real_escape_string($v);
+
+   $stmt = "INSERT INTO $email_table (uid, email) VALUES($uid, '$email')";
+   if(!mysql_query($stmt)) nice_error($err_existing_email . ". <a href=\"users.php\">$BACK.</a>");
 }
 
 

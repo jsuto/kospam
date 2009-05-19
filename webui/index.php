@@ -5,6 +5,8 @@ include_once("config.php");
 session_start();
 $username = get_authenticated_username();
 
+if(isset($_GET['pagelen'])) Header("Set-Cookie: pagelen=" . $_GET['pagelen'] . "; path=/");
+
 include_once("header.php");
 
 if($username == "") show_auth_popup();
@@ -17,10 +19,6 @@ if(isset($_POST['password']) && isset($_POST['password2'])){
    else nice_error($err_failed_to_change_password);
 }
 
-
-if(isset($_GET['pagelen'])){
-   Header("Set-Cookie: pagelen=" . $_GET['pagelen'] . "; path=/");
-}
 
 ?>
 

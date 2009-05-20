@@ -134,7 +134,7 @@ else {
 
    print "<form method=\"post\" name=\"search1\" action=\"users.php\">\n";
    print "<input type=\"text\" name=\"what\" value=\"$what\">\n";
-   print "<input type=\"submit\" value=\"search\"></form><p/>\n";
+   print "<input type=\"submit\" value=\"$SEARCH\"></form><p/>\n";
 
    print "<form method=\"post\" name=\"massedit\" action=\"massusers.php\">\n";
    print "<input type=\"hidden\" name=\"bulkedit\" value=\"1\">\n";

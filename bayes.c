@@ -1,5 +1,5 @@
 /*
- * bayes.c, 2009.05.14, SJ
+ * bayes.c, 2009.05.17, SJ
  */
 
 #include <stdio.h>
@@ -175,6 +175,7 @@ float bayes_file(struct session_data *sdata, struct _state *state, struct __conf
    char buf[MAXBUFSIZE], *p;
    float ham_from=0, spam_from=0;
    float spaminess = DEFAULT_SPAMICITY;
+   int saved_uid = sdata->uid;
 
 #ifdef HAVE_MYSQL
    struct te TE;
@@ -245,6 +246,7 @@ float bayes_file(struct session_data *sdata, struct _state *state, struct __conf
 
    if((sdata->Nham + sdata->Nspam == 0) && cfg->initial_1000_learning == 0){
       if(cfg->verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: %s", p, ERR_SQL_DATA);
+      sdata->uid = saved_uid;
       return DEFAULT_SPAMICITY;
    }
 
@@ -300,6 +302,9 @@ float bayes_file(struct session_data *sdata, struct _state *state, struct __conf
 
    /* evaluate the tokens */
    spaminess = eval_tokens(sdata, state, cfg);
+
+   /* restore saved uid */
+   sdata->uid = saved_uid;
 
    return spaminess;
 }

@@ -1,5 +1,5 @@
 /*
- * policy.c, 2009.01.22, SJ
+ * policy.c, 2009.05.19, SJ
  */
 
 #include <stdio.h>
@@ -30,7 +30,7 @@ int get_policy(struct session_data *sdata, struct __config *cfg, struct __config
 
    snprintf(buf, SMALLBUFSIZE-1, "SELECT deliver_infected_email, silently_discard_infected_email, use_antispam, spam_subject_prefix, enable_auto_white_list, max_message_size_to_filter, rbl_domain, surbl_domain, spam_overall_limit, spaminess_oblivion_limit, replace_junk_characters, invalid_junk_limit, invalid_junk_line, penalize_images, penalize_embed_images, penalize_octet_stream, training_mode, initial_1000_learning, store_metadata FROM %s WHERE policy_group=%d", SQL_POLICY_TABLE, sdata->policy_group);
 
-   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "policy sql: %s", buf);
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: policy sql: %s", sdata->ttmpfile, buf);
 
    if(mysql_real_query(&(sdata->mysql), buf, strlen(buf)) == 0){
       res = mysql_store_result(&(sdata->mysql));

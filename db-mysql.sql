@@ -31,7 +31,7 @@ create table if not exists user (
 );
 
 create index user_idx on user (uid);
-insert into user (uid, username, password, policy_group, isadmin) values (1, 'admin', '$1$kkBnp0$L/MILe67UGcvHeFlTAQjR1', 0, 1);
+insert into user (uid, username, password, policy_group, isadmin) values (0, 'admin', '$1$kkBnp0$L/MILe67UGcvHeFlTAQjR1', 0, 1);
 
 create table if not exists t_email (
 	uid int unsigned not null,
@@ -39,7 +39,7 @@ create table if not exists t_email (
 );
 
 create index t_email_idx on t_email(email);
-insert into t_email (uid, email) values(1, 'admin@yourdomain.com');
+insert into t_email (uid, email) values(0, 'admin@yourdomain.com');
 
 create table if not exists t_white_list (
 	uid int unsigned not null primary key,

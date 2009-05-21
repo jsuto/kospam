@@ -18,32 +18,21 @@ function webui_close($conn){
 }
 
 
-function print_email_addresses_for_user($conn, $username){
-   global $user_table, $err_sql_error;
-
-   $stmt = "SELECT email FROM $user_table WHERE username='$username' ORDER BY email";
-
-   $result = $conn->query($stmt);
-   $r = $result->fetchAll();
-
-   while(list($k, $v) = each($r)){
-      print "<tr><td>$v[0]</td></tr>\n";
-   }
-
-}
-
-
 function get_uid_by_name($username){
    global $conn, $user_table, $err_sql_error;
    $uid = -1;
 
    if($admin_user == 1) return 0;
 
-   $stmt = "SELECT uid FROM $user_table WHERE username='$username'";
+   $stmt = "SELECT uid FROM $user_table WHERE username=:username";
 
-   $result = $conn->query($stmt);
-   $r = $result->fetch();
-   $uid = $r[0];
+   $r = $conn->prepare($stmt);
+   $r->bindParam(':username', $username, PDO::PARAM_STR);
+   $r->execute();
+
+   $R = $r->fetch();
+
+   $uid = $R['uid'];
 
    return $uid;
 }
@@ -72,12 +61,16 @@ function get_whitelist_by_name($username){
 
    $uid = get_uid_by_name($username);
 
-   $stmt = "SELECT whitelist FROM $whitelist_table WHERE uid=$uid";
+   $stmt = "SELECT whitelist FROM $whitelist_table WHERE uid=:uid";
 
-   $result = $conn->query($stmt);
-   $r = $result->fetch();
-   $whitelist = $r[0];
+   $r = $conn->prepare($stmt);
+   $r->bindParam(':uid', $uid, PDO::PARAM_INT);
+   $r->execute();
 
+   $R = $r->fetch();
+
+   $whitelist = $R['whitelist'];
+   
    return $whitelist;
 }
 
@@ -102,11 +95,15 @@ function get_blacklist_by_name($username){
 
    $uid = get_uid_by_name($username);
 
-   $stmt = "SELECT blacklist FROM $blacklist_table WHERE uid=$uid";
+   $stmt = "SELECT blacklist FROM $blacklist_table WHERE uid=:uid";
 
-   $result = $conn->query($stmt);
-   $r = $result->fetch();
-   $whitelist = $r[0];
+   $r = $conn->prepare($stmt);
+   $r->bindParam(':uid', $uid, PDO::PARAM_INT);
+   $r->execute();
+
+   $R = $r->fetch();
+
+   $blacklist = $R['blacklist'];
 
    return $blacklist;
 }
@@ -137,13 +134,15 @@ function check_user_auth($username, $password){
 
    $conn = webui_connect() or nice_error($err_connect_db);
 
-   $stmt = "SELECT password FROM $user_table WHERE username='$username'";
+   $stmt = "SELECT password FROM $user_table WHERE username=:username";
 
    $r = $conn->prepare($stmt);
-   $result = $conn->query($stmt);
-   $r = $result->fetch();
+   $r->bindParam(':username', $username, PDO::PARAM_STR);
+   $r->execute();
 
-   $p = $r[0];
+   $R = $r->fetch();
+
+   $p = $R['password'];
 
    if($p){
       $pass = crypt($password, $p);
@@ -165,11 +164,15 @@ function is_admin_user($username){
 
    $conn = webui_connect() or nice_error($err_connect_db);
 
-   $stmt = "SELECT isadmin FROM $user_table WHERE username='$username'";
-   $result = $conn->query($stmt);
-   $r = $result->fetch();
+   $stmt = "SELECT isadmin FROM $user_table WHERE username=:username";
 
-   $isadmin = $r[0];
+   $r = $conn->prepare($stmt);
+   $r->bindParam(':username', $username, PDO::PARAM_STR);
+   $r->execute();
+
+   $R = $r->fetch();
+
+   $isadmin = $R['isadmin'];
 
    webui_close($conn);
 
@@ -181,11 +184,15 @@ function get_users_email_address($username){
    global $conn, $user_table, $email_table, $err_sql_error;
    $to = "";
 
-   $stmt = "SELECT $email_table.email FROM $email_table, $user_table WHERE $email_table.uid=$user_table.uid AND $user_table.username='$username' LIMIT 1";
+   $stmt = "SELECT $email_table.email FROM $email_table, $user_table WHERE $email_table.uid=$user_table.uid AND $user_table.username=:username LIMIT 1";
 
-   $result = $conn->query($stmt);
-   $r = $result->fetch();
-   $to = $r[0];
+   $r = $conn->prepare($stmt);
+   $r->bindParam(':username', $username, PDO::PARAM_STR);
+   $r->execute();
+
+   $R = $r->fetch();
+
+   $to = $R['email'];
 
    return $to;
 }
@@ -291,7 +298,6 @@ function show_existing_users($what, $page, $page_len){
 
    list($k, $v) = each($r);
    $n_users = $v['aaa']; 
-
 
    $stmt = "SELECT $user_table.uid, $user_table.username, $user_table.policy_group, $email_table.email FROM $user_table, $email_table  $where_cond ORDER by $user_table.uid LIMIT $from, $page_len";
 

@@ -1,5 +1,5 @@
 /*
- * bayes.c, 2009.05.17, SJ
+ * bayes.c, 2009.05.21, SJ
  */
 
 #include <stdio.h>
@@ -294,6 +294,7 @@ float bayes_file(struct session_data *sdata, struct _state *state, struct __conf
          /* we query the spaminess of the token pairs in order to have their timestamp updated */
          qry_spaminess(sdata, state, 1, cfg);
 
+         sdata->uid = saved_uid;
          return REAL_HAM_TOKEN_PROBABILITY;
       }
    }

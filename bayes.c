@@ -1,5 +1,5 @@
 /*
- * bayes.c, 2009.05.21, SJ
+ * bayes.c, 2009.05.22, SJ
  */
 
 #include <stdio.h>
@@ -175,7 +175,6 @@ float bayes_file(struct session_data *sdata, struct _state *state, struct __conf
    char buf[MAXBUFSIZE], *p;
    float ham_from=0, spam_from=0;
    float spaminess = DEFAULT_SPAMICITY;
-   int saved_uid = sdata->uid;
 
 #ifdef HAVE_MYSQL
    struct te TE;
@@ -210,15 +209,11 @@ float bayes_file(struct session_data *sdata, struct _state *state, struct __conf
 #endif
 
 
-   /* fix uid and sql statement if this is a shared group */
+   /* assemble sql statement group */
 
-   if(cfg->group_type == GROUP_SHARED){
-      sdata->uid = 0;
+   if(cfg->group_type == GROUP_SHARED)
       snprintf(buf, MAXBUFSIZE-1, "SELECT nham, nspam FROM %s WHERE uid=0", SQL_MISC_TABLE);
-   }
-
-   /* fix sql statement if we use a merged group */
-   if(cfg->group_type == GROUP_MERGED)
+   else
       snprintf(buf, MAXBUFSIZE-1, "SELECT nham, nspam FROM %s WHERE uid=0 OR uid=%ld", SQL_MISC_TABLE, sdata->uid);
 
    if(cfg->debug == 1)
@@ -246,7 +241,6 @@ float bayes_file(struct session_data *sdata, struct _state *state, struct __conf
 
    if((sdata->Nham + sdata->Nspam == 0) && cfg->initial_1000_learning == 0){
       if(cfg->verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: %s", p, ERR_SQL_DATA);
-      sdata->uid = saved_uid;
       return DEFAULT_SPAMICITY;
    }
 
@@ -294,18 +288,20 @@ float bayes_file(struct session_data *sdata, struct _state *state, struct __conf
          /* we query the spaminess of the token pairs in order to have their timestamp updated */
          qry_spaminess(sdata, state, 1, cfg);
 
-         sdata->uid = saved_uid;
          return REAL_HAM_TOKEN_PROBABILITY;
       }
    }
 
 
+   int saved_uid = sdata->uid;
+
+   if(cfg->group_type == GROUP_SHARED) sdata->uid = 0;
 
    /* evaluate the tokens */
    spaminess = eval_tokens(sdata, state, cfg);
 
    /* restore saved uid */
-   sdata->uid = saved_uid;
+   if(cfg->group_type == GROUP_SHARED) sdata->uid = saved_uid;
 
    return spaminess;
 }

@@ -1,5 +1,11 @@
 0.4.1-rc2:
 
+2009.05.22, SJ
+
+The train_message() function also needed a similar fix.
+(credits: Attila Bergsmann)
+(bayes.c)
+
 2009.05.20, SJ
 
 Fixed an issue caused by the bayes_file() function overwrites the uid if you are using a

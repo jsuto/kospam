@@ -318,7 +318,7 @@ int train_message(struct session_data *sdata, struct _state *state, int rounds, 
 #ifdef HAVE_MYDB
    int rc;
 #endif
-   int i, tm=train_mode;
+   int i=0, tm=train_mode, saved_uid = sdata->uid;
    char buf[SMALLBUFSIZE];
    float spaminess = DEFAULT_SPAMICITY;
 
@@ -333,9 +333,9 @@ int train_message(struct session_data *sdata, struct _state *state, int rounds, 
    cfg->penalize_octet_stream = 0;
 
 
-   if(cfg->group_type == 0) sdata->uid = 0;
+   if(cfg->group_type == GROUP_SHARED) sdata->uid = 0;
 
-   for(i=1; i<=rounds; i++){
+   for(i=0; i<rounds; i++){
    #ifdef HAVE_MYSQL
       my_walk_hash(sdata->mysql, is_spam, sdata->uid, state->token_hash, tm);
    #endif
@@ -393,13 +393,15 @@ int train_message(struct session_data *sdata, struct _state *state, int rounds, 
 
       if(cfg->verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: training round: %d, spaminess: %0.4f", sdata->ttmpfile, i, spaminess);
 
-      if(is_spam == 1 && spaminess > 0.99) return i;
-      if(is_spam == 0 && spaminess < 0.1) return i;
+      if(is_spam == 1 && spaminess > 0.99) break;
+      if(is_spam == 0 && spaminess < 0.1) break;
 
 
       tm = T_TOE;
    }
 
-   return 0;
+   sdata->uid = saved_uid;
+
+   return i;
 }
 

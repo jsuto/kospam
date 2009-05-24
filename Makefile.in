@@ -36,7 +36,7 @@ LIBCLAPF_VERSION=$(CLAPF_VERSION).$(CLAPF_REVISION).$(CLAPF_RELEASE)
 INSTALL = @INSTALL@
 
 all: clapf-lib clapf @spamsum@ splitmbox @parsembox@ @spamdrop@ @preparesql@ @test@ ui
-install: install-clapf install-splitmbox install-man @parsembox_install@ @spamsum_install@ @spamdrop_install@ @db_install@
+install: install-clapf install-splitmbox @parsembox_install@ @spamsum_install@ @spamdrop_install@ @db_install@
 
 
 clapf.conf:
@@ -192,16 +192,6 @@ install-parsembox:
 	$(INSTALL) -m 0755 $(srcdir)/util/db_init_mydb.sh $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 $(srcdir)/util/db_init_mysql.sh $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 $(srcdir)/util/db_init_sqlite3.sh $(DESTDIR)$(libexecdir)/clapf
-
-install-man:
-	$(INSTALL) -d $(DESTDIR)$(mandir)/man1
-	$(INSTALL) -m 0644 $(srcdir)/doc/man/parsembox.1 $(DESTDIR)$(mandir)/man1
-	$(INSTALL) -m 0644 $(srcdir)/doc/man/spamdrop.1 $(DESTDIR)$(mandir)/man1
-	$(INSTALL) -m 0644 $(srcdir)/doc/man/spamtest.1 $(DESTDIR)$(mandir)/man1
-	$(INSTALL) -m 0644 $(srcdir)/doc/man/splitmbox.1 $(DESTDIR)$(mandir)/man1
-	$(INSTALL) -d $(DESTDIR)$(mandir)/man8
-	$(INSTALL) -m 0644 $(srcdir)/doc/man/clapf.8 $(DESTDIR)$(mandir)/man8
-
 
 uninstall:
 	rm -f $(DESTDIR)$(bindir)/parsembox

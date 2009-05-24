@@ -1,5 +1,14 @@
 0.4.1-rc2:
 
+2009.05.24, SJ
+
+Removed the man pages. They were not up-to-date, and maintaining
+docs at two places are draining.
+(doc/ Makefile.in)
+
+Changed the webui encoding to utf-8.
+(webui/lang/hu/messages.php)
+
 2009.05.22, SJ
 
 The train_message() function also needed a similar fix.

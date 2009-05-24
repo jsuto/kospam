@@ -15,7 +15,7 @@ $admin_user = is_admin($username);
 
 <head>
     <title><?php print $title; ?></title>
-    <meta http-equiv="content-type" content="text/html; charset=iso-8859-2" />
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
     <meta name="keywords" content="spam, anti-spam, email, e-mail, mail, unsolicited commercial bulk email, blacklist, software, filtering, service, Bayes, bayesian, bayes-i, minden a spamről" />
     <meta name="description" content="spam, anti-spam, antispam, pop3, gateway, proxy, gw" />
     <meta name="rating" content="general" />

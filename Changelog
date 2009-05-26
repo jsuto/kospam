@@ -1,5 +1,11 @@
 0.4.1-rc2:
 
+2009.05.26, SJ
+
+Modified the webui to display the formatted email. You can
+see the raw email as an option in the menu.
+(webui/q.php, webui/funcs.php, webui/lang/*)
+
 2009.05.24, SJ
 
 Removed the man pages. They were not up-to-date, and maintaining

@@ -105,6 +105,9 @@ $USERNAME = "Felhasználónév";
 $USERID = "Felhasználó azonosító";
 $USER_MANAGEMENT = "Felhasználó menedzselés";
 
+$VIEW_FORMATTED_EMAIL = "Formázott levél megtekintése";
+$VIEW_RAW_EMAIL = "Formázatlan levél megtekintése";
+
 $WHITELIST = "Fehérlista";
 $WHITELIST_SETTINGS = "Fehérlista beállítása";
 

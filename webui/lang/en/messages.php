@@ -105,6 +105,9 @@ $USERNAME = "Username";
 $USERID = "User id";
 $USER_MANAGEMENT = "User management";
 
+$VIEW_FORMATTED_EMAIL = "View formatted email";
+$VIEW_RAW_EMAIL = "View raw email";
+
 $WHITELIST = "Whitelist";
 $WHITELIST_SETTINGS = "Whitelist settings";
 

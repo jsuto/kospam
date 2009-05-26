@@ -20,6 +20,7 @@ $user = "";
 $from = "";
 $subj = "";
 $id = "";
+$rid = "";
 $remove = "";
 $deliver = "";
 $train = "";
@@ -32,6 +33,7 @@ if(isset($_GET['user'])) $user = $_GET['user'];
 if(isset($_GET['from'])) $from = $_GET['from'];
 if(isset($_GET['subj'])) $subj = $_GET['subj'];
 if(isset($_GET['id'])) $id = $_GET['id'];
+if(isset($_GET['rid'])) $rid = $_GET['rid'];
 if(isset($_GET['remove'])) $remove = $_GET['remove'];
 if(isset($_GET['deliver'])) $deliver = $_GET['deliver'];
 if(isset($_GET['train'])) $train = $_GET['train'];
@@ -89,10 +91,15 @@ if($_SERVER['REQUEST_METHOD'] == "GET"){
    /* show selected message ... */
 
    else if($id){
-      print "<p><a href=\"$meurl?remove=$id&user=$username\">$REMOVE</a> <a href=\"$meurl?deliver=$id&user=$username\">$DELIVER</a> <a href=\"$meurl?train=$id&user=$username\">$TRAIN_AND_DELIVER</a></p>\n";
+      print "<p><a href=\"$meurl?remove=$id&user=$username\">$REMOVE</a> <a href=\"$meurl?deliver=$id&user=$username\">$DELIVER</a> <a href=\"$meurl?train=$id&user=$username\">$TRAIN_AND_DELIVER</a> <a href=\"$meurl?rid=$id&user=$username\">$VIEW_RAW_EMAIL</a></p>\n";
 
-      print "<pre>\n";
       show_message($my_q_dir, $id);
+   }
+
+   else if($rid){
+      print "<p><a href=\"$meurl?remove=$id&user=$username\">$REMOVE</a> <a href=\"$meurl?deliver=$id&user=$username\">$DELIVER</a> <a href=\"$meurl?train=$id&user=$username\">$TRAIN_AND_DELIVER</a> <a href=\"$meurl?id=$rid&user=$username\">$VIEW_FORMATTED_EMAIL</a></p>\n";
+      print "<pre>\n";
+      show_raw_message($my_q_dir, $rid);
       print "</pre>\n";
    }
 
@@ -110,10 +117,7 @@ if($_SERVER['REQUEST_METHOD'] == "GET"){
          $id = preg_replace("/s./", "", $train);
 
          $m2 = "From: $fromaddr\r\nTo: $ham_train_address\r\nSubject: training a spam as ham\r\n\r\n\r\n";
-         if($enable_outlook_hack == 1)
-            $m2 .= "Received: $id\r\n" . $m;
-         else
-            $m2 .= "$clapf_header_field$id\r\n" . $m;
+         $m2 .= "$clapf_header_field$id\r\n" . $m;
 
          $x = send_smtp_email($smtphost, $clapfport, $yourdomain, $fromaddr, $ham_train_address, $m2);
          if(!$x) nice_error("$err_message_failed_to_train");

@@ -372,7 +372,7 @@ function check_directory($dir, $username, $page, $from, $subj){
 }
 
 
-function show_message($dir, $id){
+function show_raw_message($dir, $id){
 
    $fp = fopen($dir . "/" . $id, "r");
    if($fp){
@@ -384,6 +384,184 @@ function show_message($dir, $id){
       fclose($fp);
    }
 
+}
+
+
+function show_message($dir, $id){
+   $header = "";
+   $body_chunk = "";
+   $is_header = 1;
+   $state = "UNDEF";
+   $b = array();
+   $boundary = array();
+   $text_plain = 0;
+   $text_html = 0;
+   $charset = "";
+   $qp = $base64 = 0;
+
+   $fp = fopen($dir . "/" . $id, "r");
+   if($fp){
+      while(($l = fgets($fp, 4096))){
+         if($l[0] == "\r" && $l[1] == "\n" && $is_header == 1){
+            print "<pre>$header</pre>\n\n";
+            $is_header = 0;
+         }
+
+         if(preg_match("/^Content-Type:/i", $l)) $state = "CONTENT_TYPE";
+         if(preg_match("/^Content-Transfer-Encoding:/i", $l)) $state = "CONTENT_TRANSFER_ENCODING";
+
+         if($state == "CONTENT_TYPE"){
+            $x = strstr($l, "boundary");
+            if($x){
+               $x = preg_replace("/\"/", "", $x);
+               $x = preg_replace("/\'/", "", $x);
+               $x = preg_replace("/ /", "", $x);
+
+               $b = explode("boundary=", $x);
+               array_push($boundary, rtrim($b[1]));
+            }
+
+            if(preg_match("/charset/i", $l)){
+               $l = preg_replace("/\'/", "\"", $l);
+               $x = explode("\"", $l);
+               $charset = $x[1];
+            }
+
+            if(strstr($l, "text/plain")) $text_plain = 1;
+            if(strstr($l, "text/html")) $text_html = 1;
+
+         }
+
+         if($state == "CONTENT_TRANSFER_ENCODING"){
+            if(strstr($l, "quoted-printable")) $qp = 1;
+            if(strstr($l, "base64")) $base64 = 1;
+         }
+
+
+         if($is_header == 1){
+            if($l[0] != " " && $l[0] != "\t") $state = "UNDEF";
+            if(preg_match("/^From:/", $l)) $state = "FROM";
+            if(preg_match("/^To:/", $l)) $state = "TO";
+            if(preg_match("/^Date:/", $l)) $state = "DATE";
+            if(preg_match("/^Subject:/", $l)) $state = "SUBJECT";
+            if(preg_match("/^Content-Type:/", $l)) $state = "CONTENT_TYPE";
+
+            $l = preg_replace("/</", "&lt;", $l);
+            $l = preg_replace("/>/", "&gt;", $l);
+
+            if($state == "FROM" || $state == "TO" || $state == "SUBJECT" || $state == "DATE")
+               $header .= decode_my_str($l) . "\r\n";
+
+         }
+         else {
+
+            if(check_boundary($boundary, $l) == 1){
+               flush_body_chunk($body_chunk, $charset, $qp, $text_plain, $text_html);
+
+               $text_plain = $text_html = $qp = $base64 = 0;
+
+               $charset = $body_chunk = "";
+
+               continue;
+            }
+
+            else if($l[0] == "\r" && $l[1] == "\n"){
+               $state = "BODY";
+               $body_chunk .= $l;
+            }
+
+            else if($state == "BODY"){
+               if($text_plain == 1 || $text_html == 1) $body_chunk .= $l;
+
+            }
+
+         }
+
+
+      }
+      fclose($fp);
+   }
+
+   if($body_chunk) flush_body_chunk($body_chunk, $charset, $qp, $text_plain, $text_html);
+
+}
+
+
+function check_boundary($boundary, $line){
+
+   for($i=0; $i<count($boundary); $i++){
+      if(strstr($line, $boundary[$i])) return 1;
+   }
+
+   return 0;
+}
+
+
+function flush_body_chunk($chunk, $charset, $qp, $text_plain, $text_html){
+   if($qp == 1) $chunk = qp_decode($chunk);
+   if(!preg_match("/utf-8/i", $charset)) $chunk = utf8_encode($chunk);
+
+   if($text_plain == 1){
+      $chunk = preg_replace("/</", "&lt;", $chunk);
+      $chunk = preg_replace("/>/", "&gt;", $chunk);
+
+      print "<pre>\n";
+      print_nicely($chunk);
+      print "</pre>\n";
+   }
+
+   if($text_html == 1){
+      $chunk = preg_replace("/\<style\>([\w\W]+)\<\/style\>/i", "", $chunk);
+      $chunk = preg_replace("/\<body ([\w\s\;\"\'\#\d\:\-\=]+)\>/i", "<body>", $chunk);
+
+      print $chunk;
+   }
+}
+
+
+function print_nicely($chunk){
+   $k = 0;
+
+   $x = explode(" ", $chunk);
+   for($i=0; $i<count($x); $i++){
+      print "$x[$i] ";
+      $k += strlen($x[$i]);
+
+      if(strstr($x[$i], "\n")) $k = 0;
+
+      if($k > 70){ print "\n"; $k = 0; }
+   }
+
+}
+
+
+function qp_decode($l){
+   $res = "";
+   $c = "";
+
+   if($l == "") return "";
+
+   /* remove soft breaks at the end of lines */
+   if(preg_match("/\=\r\n/", $l)) $l = preg_replace("/\=\r\n/", "", $l);
+   if(preg_match("/\=\n/", $l)) $l = preg_replace("/\=\n/", "", $l);
+
+   for($i=0; $i<strlen($l); $i++){
+      $c = $l[$i];
+
+      if($c == '=' && ctype_xdigit($l[$i+1]) && ctype_xdigit($l[$i+2])){
+         $a = $l[$i+1];
+         $b = $l[$i+2];
+
+         $c = chr(16*hexdec($a) + hexdec($b));
+
+         $i += 2;
+      }
+
+      $res .= $c;
+
+   }
+
+   return $res;
 }
 
 

@@ -373,15 +373,17 @@ function check_directory($dir, $username, $page, $from, $subj){
 
 
 function show_raw_message($dir, $id){
+   $m = "";
 
    $fp = fopen($dir . "/" . $id, "r");
    if($fp){
-      while(($l = fgets($fp, 4096))){
-         $l = preg_replace("/</", "&lt;", $l);
-         $l = preg_replace("/>/", "&gt;", $l);
-         print $l;
-      }
+      while(($l = fgets($fp, 4096))) $m .= $l;
       fclose($fp);
+
+      $m = preg_replace("/</", "&lt;", $m);
+      $m = preg_replace("/>/", "&gt;", $m);
+
+      print_nicely($m);
    }
 
 }

@@ -1,5 +1,5 @@
 /*
- * avir.c, 2009.02.27, SJ
+ * avir.c, 2009.05.27, SJ
  */
 
 #include <stdio.h>
@@ -13,14 +13,14 @@
 #include "config.h"
 
 #ifdef HAVE_LIBCLAMAV
-int do_av_check(struct session_data *sdata, char *email, char *email2, struct cl_limits limits, struct cl_node *root, struct __config *cfg){
+int do_av_check(struct session_data *sdata, char *email, char *email2, struct cl_engine *engine, struct __config *cfg){
 #else
 int do_av_check(struct session_data *sdata, char *email, char *email2, struct __config *cfg){
 #endif
    int ret, rav = AVIR_OK; /* antivirus result is ok by default */
    struct timezone tz;
    struct timeval tv_rcvd, tv_scnd;
-   char buf[MAXBUFSIZE], engine[SMALLBUFSIZE], virusinfo[SMALLBUFSIZE];
+   char buf[MAXBUFSIZE], avengine[SMALLBUFSIZE], virusinfo[SMALLBUFSIZE];
 
    if(sdata->need_scan == 0) return rav;
 
@@ -40,36 +40,33 @@ int do_av_check(struct session_data *sdata, char *email, char *email2, struct __
    /* whether to mark encrypted archives as viruses */
    if(cfg->clamav_block_encrypted_archives == 1) options |= CL_SCAN_BLOCKENCRYPTED;
 
-   /* whether to enable phishing stuff */
-   //if(cfg->clamav_use_phishing_db == 1) options |= CL_SCAN_PHISHING_DOMAINLIST;
-
-   ret = cl_scanfile(sdata->ttmpfile, &virname, NULL, root, &limits, options);
+   ret = cl_scanfile(sdata->ttmpfile, &virname, NULL, engine, options);
 
    if(ret == CL_VIRUS){
       memset(virusinfo, 0, SMALLBUFSIZE);
       strncpy(virusinfo, virname, SMALLBUFSIZE-1);
       rav = AVIR_VIRUS;
-      snprintf(engine, SMALLBUFSIZE-1, "libClamAV");
+      snprintf(avengine, SMALLBUFSIZE-1, "libClamAV");
    }
 #endif
 
 #ifdef HAVE_AVAST
-   if(avast_scan(sdata.ttmpfile, engine, virusinfo, cfg) == AV_VIRUS) rav = AVIR_VIRUS;
+   if(avast_scan(sdata.ttmpfile, avengine, virusinfo, cfg) == AV_VIRUS) rav = AVIR_VIRUS;
 #endif
 
 #ifdef HAVE_KAV
-   if(kav_scan(sdata.ttmpfile, engine, virusinfo, &cfg) == AV_VIRUS) rav = AVIR_VIRUS;
+   if(kav_scan(sdata.ttmpfile, avengine, virusinfo, &cfg) == AV_VIRUS) rav = AVIR_VIRUS;
 #endif
 
 #ifdef HAVE_DRWEB
-   if(drweb_scan(sdata.ttmpfile, engine, virusinfo, &cfg) == AV_VIRUS) rav = AVIR_VIRUS;
+   if(drweb_scan(sdata.ttmpfile, avengine, virusinfo, &cfg) == AV_VIRUS) rav = AVIR_VIRUS;
 #endif
 
 #ifdef HAVE_CLAMD
    if(strlen(cfg->clamd_addr) > 3){
-      if(clamd_net_scan(sdata->ttmpfile, engine, virusinfo, cfg) == AV_VIRUS) rav = AVIR_VIRUS;
+      if(clamd_net_scan(sdata->ttmpfile, avengine, virusinfo, cfg) == AV_VIRUS) rav = AVIR_VIRUS;
    } else {
-      if(clamd_scan(sdata->ttmpfile, engine, virusinfo, cfg) == AV_VIRUS) rav = AVIR_VIRUS;
+      if(clamd_scan(sdata->ttmpfile, avengine, virusinfo, cfg) == AV_VIRUS) rav = AVIR_VIRUS;
    }
 #endif
 
@@ -95,7 +92,7 @@ int do_av_check(struct session_data *sdata, char *email, char *email2, struct __
          memset(email, 0, SMALLBUFSIZE);
          extract_email(sdata->rcptto[0], email);
 
-         if(get_template(VIRUS_TEMPLATE, buf, cfg->localpostmaster, email, email2, virusinfo, engine) == 1){
+         if(get_template(VIRUS_TEMPLATE, buf, cfg->localpostmaster, email, email2, virusinfo, avengine) == 1){
 
             snprintf(sdata->rcptto[0], SMALLBUFSIZE-1, "RCPT TO: <%s>\r\n", cfg->localpostmaster);
             sdata->num_of_rcpt_to = 1;

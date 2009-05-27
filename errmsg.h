@@ -1,5 +1,5 @@
 /*
- * errmsg.h, 2008.04.05, SJ
+ * errmsg.h, 2009.05.27, SJ
  */
 
 #ifndef _ERRMSG_H
@@ -24,6 +24,7 @@
 
 // clamav error messages
 
+#define ERR_INIT_ERROR "ERR: cl_init()"
 #define ERR_STAT_INI_DIR "ERR: cl_statinidir()"
 #define ERR_NO_DB_DIR "ERR: no clamav database dir found"
 #define ERR_BUILD_TRIE "ERR: building trie"

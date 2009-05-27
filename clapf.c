@@ -1,5 +1,5 @@
 /*
- * clapf.c, 2009.02.16, SJ
+ * clapf.c, 2009.05.27, SJ
  */
 
 #include <stdio.h>
@@ -41,7 +41,6 @@ void fatal(char *s);
 
 #ifdef HAVE_LIBCLAMAV
    struct cl_stat dbstat;
-   struct cl_limits limits;
    struct cl_engine *engine = NULL;
    const char *dbdir;
    unsigned int options=0;
@@ -52,8 +51,13 @@ void fatal(char *s);
 
       /* release old structure */
       if(engine){
-         cl_free(engine);
+         cl_engine_free(engine);
+         cl_statfree(&dbstat);
          engine = NULL;
+      }
+
+      if((retval = cl_init(CL_INIT_DEFAULT)) != CL_SUCCESS){
+         fatal(ERR_INIT_ERROR);
       }
 
       /* get default database directory */
@@ -66,16 +70,27 @@ void fatal(char *s);
       if(cl_statinidir(dbdir, &dbstat) != 0)
          fatal(ERR_STAT_INI_DIR);
 
+
+      if(!(engine = cl_engine_new())){
+         fatal("Can't create new engine");
+      }
+
       /* load virus signatures from database(s) */
 
-      if((retval = cl_load(cl_retdbdir(), &engine, &sigs, options))){
+
+      if(cfg.clamav_use_phishing_db == 1){
+         options |= CL_DB_PHISHING;
+         options |= CL_DB_PHISHING_URLS;
+      }
+
+      if((retval = cl_load(cl_retdbdir(), engine, &sigs, options)) != CL_SUCCESS){
          syslog(LOG_PRIORITY, "reloading db failed: %s", cl_strerror(retval));
          clean_exit();
       }
 
-      if((retval = cl_build(engine)) != 0){
+      if((retval = cl_engine_compile(engine)) != CL_SUCCESS){
          syslog(LOG_PRIORITY, "Database initialization error: can't build engine: %s", cl_strerror(retval));
-         cl_free(engine);
+         cl_engine_free(engine);
          clean_exit();
       }
 
@@ -95,7 +110,7 @@ void clean_exit(){
 
 #ifdef HAVE_LIBCLAMAV
    if(engine)
-      cl_free(engine);
+      cl_engine_free(engine);
 #endif
 
    free_list(blackhole);
@@ -132,16 +147,13 @@ void reload_config(){
 
 #ifdef HAVE_LIBCLAMAV
 
-    /* set up archive limits */
+    /* set up limits */
 
-    memset(&limits, 0, sizeof(struct cl_limits));
-
-    limits.maxfiles = cfg.clamav_maxfile;                   /* maximum number of files to be scanned
-                                                               within a single archive */
-    limits.maxfilesize = cfg.clamav_max_archived_file_size; /* compressed files will only be decompressed
-                                                               and scanned up to this size */
-    limits.maxreclevel = cfg.clamav_max_recursion_level;    /* maximum recursion level for archives */
-    limits.archivememlim = cfg.clamav_archive_mem_limit;    /* limit memory usage for some unpackers */
+    cl_engine_set_num(engine, CL_ENGINE_MAX_FILES, cfg.clamav_maxfile);                    /* maximum number of files to be scanned
+                                                                                              within a single archive */
+    cl_engine_set_num(engine, CL_ENGINE_MAX_FILESIZE, cfg.clamav_max_archived_file_size);  /* compressed files will only be decompressed
+                                                                                              and scanned up to this size */
+    cl_engine_set_num(engine, CL_ENGINE_MAX_RECURSION, cfg.clamav_max_recursion_level);    /* maximum recursion level for archives */
 
 
     if(cfg.clamav_use_phishing_db == 1)
@@ -313,7 +325,7 @@ int main(int argc, char **argv){
            /* handle session */
 
            #ifdef HAVE_LIBCLAMAV
-              postfix_to_clapf(new_sd, blackhole, limits, engine, &cfg);
+              postfix_to_clapf(new_sd, blackhole, engine, &cfg);
            #else
               postfix_to_clapf(new_sd, blackhole, &cfg);
            #endif

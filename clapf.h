@@ -1,5 +1,5 @@
 /*
- * clapf.h, 2009.03.18, SJ
+ * clapf.h, 2009.05.27, SJ
  */
 
 #include <misc.h>
@@ -28,7 +28,7 @@
 
 #ifdef HAVE_ANTIVIRUS
 #ifdef HAVE_LIBCLAMAV
-   int do_av_check(struct session_data *sdata, char *email, char *email2, struct cl_limits limits, struct cl_node *root, struct __config *cfg);
+   int do_av_check(struct session_data *sdata, char *email, char *email2, struct cl_engine *engine, struct __config *cfg);
 #else
    int do_av_check(struct session_data *sdata, char *email, char *email2, struct __config *cfg);
 #endif

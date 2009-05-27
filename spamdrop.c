@@ -93,6 +93,7 @@ int main(int argc, char **argv, char **envp){
    char *lang="unknown";
 #endif
 #ifdef HAVE_SPAMDROP_HELPER
+   struct stat st;
    char envvar[SMALLBUFSIZE];
    char *eeenv[] = { NULL, (char *) 0 };
 #endif

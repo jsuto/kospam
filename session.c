@@ -1,5 +1,5 @@
 /*
- * session.c, 2009.05.17, SJ
+ * session.c, 2009.05.27, SJ
  */
 
 #include <stdio.h>
@@ -74,7 +74,7 @@ void init_session_data(struct session_data *sdata){
 
 
 #ifdef HAVE_LIBCLAMAV
-   void postfix_to_clapf(int new_sd, struct url *blackhole, struct cl_limits limits, struct cl_node *root, struct __config *cfg){
+   void postfix_to_clapf(int new_sd, struct url *blackhole, struct cl_engine *engine, struct __config *cfg){
 #else
    void postfix_to_clapf(int new_sd, struct url *blackhole, struct __config *cfg){
 #endif
@@ -214,7 +214,7 @@ void init_session_data(struct session_data *sdata){
 
             #ifdef HAVE_ANTIVIRUS
                #ifdef HAVE_LIBCLAMAV
-                  rav = do_av_check(&sdata, email, email2, limits, root, cfg);
+                  rav = do_av_check(&sdata, email, email2, engine, cfg);
                #else
                   rav = do_av_check(&sdata, email, email2, cfg);
                #endif

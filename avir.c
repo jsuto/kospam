@@ -24,7 +24,7 @@ int do_av_check(struct session_data *sdata, char *email, char *email2, struct __
 
    if(sdata->need_scan == 0) return rav;
 
-   memset(engine, 0, SMALLBUFSIZE);
+   memset(avengine, 0, SMALLBUFSIZE);
 
    gettimeofday(&tv_rcvd, &tz);
 

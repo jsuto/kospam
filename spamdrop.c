@@ -361,7 +361,6 @@ int main(int argc, char **argv, char **envp){
          while(fgets(trainbuf, SMALLBUFSIZE-1, f)){
             if(strncmp(trainbuf, "To:", 3) == 0 && (strcasestr(trainbuf, "+ham@") || strcasestr(trainbuf, "+spam@")) ){
                trim(trainbuf);
-               syslog(LOG_PRIORITY, "%s: training request: %s", sdata.ttmpfile, trainbuf);
                training_request = 1;
                break;
             }
@@ -410,8 +409,6 @@ int main(int argc, char **argv, char **envp){
          snprintf(sdata.name, SMALLBUFSIZE-1, "%s", pwd->pw_name);
       }
    }
-
-   if(cfg.verbosity >= _LOG_DEBUG && debug == 0) syslog(LOG_PRIORITY, "%s: username: %s, uid: %ld", sdata.ttmpfile, sdata.name, sdata.uid);
 
 
    /* fix database path if we need it */
@@ -468,6 +465,10 @@ int main(int argc, char **argv, char **envp){
       /* determine the queue file from the message */
       train_mode = extract_id_from_message(sdata.ttmpfile, cfg.clapf_header_field, ID);
 
+      if(!recipient) recipient = trainbuf;
+
+      syslog(LOG_PRIORITY, "%s: training request for %s (username: %s, uid: %ld), found id: %s", sdata.ttmpfile, recipient, sdata.name, sdata.uid, ID);
+
       /* determine the path of the original file */
 
       if(is_spam == 1)
@@ -495,6 +496,8 @@ int main(int argc, char **argv, char **envp){
 
 
    memset(trainbuf, 0, SMALLBUFSIZE);
+
+   if(cfg.verbosity >= _LOG_DEBUG && debug == 0) syslog(LOG_PRIORITY, "%s: username: %s, uid: %ld", sdata.ttmpfile, sdata.name, sdata.uid);
 
 
    /* parse message */

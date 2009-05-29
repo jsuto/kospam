@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2009.04.02, SJ
+ * spamdrop.c, 2009.05.29, SJ
  */
 
 #include <stdio.h>
@@ -19,6 +19,8 @@
 extern char *optarg;
 extern int optind;
 
+int deliver_message=0;
+
 
 #ifdef HAVE_MYSQL
    MYSQL_RES *res;
@@ -31,6 +33,7 @@ extern int optind;
 #ifdef HAVE_MYDB
    #include "mydb.h"
 #endif
+
 
 /* open database connection */
 
@@ -70,25 +73,99 @@ int open_db(struct session_data *sdata, struct __config *cfg){
 }
 
 
-int main(int argc, char **argv, char **envp){
+/* close database connection and free lists */
+
+void close_db(struct session_data *sdata, struct _state *state){
+
+#ifdef HAVE_MYSQL
+   mysql_close(&(sdata->mysql));
+#endif
+#ifdef HAVE_SQLITE3
+   sqlite3_close(sdata->db);
+#endif
+#ifdef HAVE_MYDB
+   close_mydb(sdata->mhash);
+#endif
+
+   free_list(state->urls);
+   clearhash(state->token_hash, 0);
+}
+
+
+/* print message to stdout/pipe */
+
+int print_message_stdout(struct session_data *sdata, char *clapf_info, float spaminess, struct __config *cfg){
    FILE *f, *ofile=stdout;
-   int i, n, fd, tot_len=0, rc=0, is_header=1, rounds=1, deliver_message=0;
-   int print_message=1, print_summary_only=0, put_subject_spam_prefix=0, sent_subject_spam_prefix=0;
+   int put_subject_spam_prefix=0, sent_subject_spam_prefix=0, is_header=1;
+   char buf[MAXBUFSIZE];
+
+
+   f = fopen(sdata->ttmpfile, "r");
+   if(!f){
+      syslog(LOG_PRIORITY, "cannot read: %s", sdata->ttmpfile);
+      return EX_TEMPFAIL;
+   }
+
+   if(spaminess >= cfg->spam_overall_limit && spaminess < 1.01 && strlen(cfg->spam_subject_prefix) > 1) put_subject_spam_prefix = 1;
+
+
+   if(deliver_message == 1){
+      snprintf(buf, MAXBUFSIZE-1, "%s %s %s", cfg->delivery_agent, sdata->mailfrom, sdata->rcptto[0]);
+      ofile = popen(buf, "w");
+   }
+
+   if(clapf_info) fprintf(ofile, "%s", clapf_info);
+
+
+   while(fgets(buf, MAXBUFSIZE-1, f)){
+
+      /* tag the Subject line if we have to, 2007.08.21, SJ */
+
+      if(is_header == 1 && put_subject_spam_prefix == 1 && strncmp(buf, "Subject:", 8) == 0 && !strstr(buf, cfg->spam_subject_prefix)){
+         fprintf(ofile, "Subject: ");
+         fprintf(ofile, "%s", cfg->spam_subject_prefix);
+         fprintf(ofile, "%s", &buf[9]);
+         sent_subject_spam_prefix = 1;
+
+         continue;
+      }
+
+      if(is_header == 1 && (buf[0] == '\n' || buf[0] == '\r')){
+         is_header = 0;
+
+         /* if we did not find a Subject line, add one - if we have to */
+
+         if(sent_subject_spam_prefix == 0 && put_subject_spam_prefix == 1 && spaminess >= cfg->spam_overall_limit && spaminess < 1.01)
+            fprintf(ofile, "Subject: %s\r\n", cfg->spam_subject_prefix);
+
+      }
+
+      if(strncmp(buf, cfg->clapf_header_field, strlen(cfg->clapf_header_field)))
+         fprintf(ofile, "%s", buf);
+   }
+
+   fclose(stdout);
+
+   return 0;
+}
+
+
+
+int main(int argc, char **argv, char **envp){
+   int i, n, fd, rc=0, rounds=1, debug=0;
+   int print_message=1;
    int is_spam=0, train_as_ham=0, train_as_spam=0, blackhole_request=0, training_request=0;
    int train_mode=T_TOE;
    int u=-1;
    char buf[MAXBUFSIZE], qpath[SMALLBUFSIZE], trainbuf[SMALLBUFSIZE], ID[RND_STR_LEN+1], whitelistbuf[SMALLBUFSIZE], clapf_info[MAXBUFSIZE];
    char *configfile=CONFIG_FILE, *username=NULL, *from=NULL, *recipient=NULL;
-   struct timezone tz;
-   struct timeval tv_start, tv_stop;
    struct passwd *pwd;
    struct session_data sdata;
+   struct timezone tz;
+   struct timeval tv_start, tv_stop;
    struct _state state;
    struct __config cfg;
    float spaminess=DEFAULT_SPAMICITY;
-#ifdef MY_TEST
-   char rblbuf[SMALLBUFSIZE];
-#endif
 #ifdef HAVE_LANG_DETECT
    char *lang="unknown";
 #endif
@@ -103,7 +180,7 @@ int main(int argc, char **argv, char **envp){
 #endif
 
 
-   while((i = getopt(argc, argv, "c:u:U:f:r:SHsdh?")) > 0){
+   while((i = getopt(argc, argv, "c:u:U:f:r:SHDdh?")) > 0){
        switch(i){
 
          case 'c' :
@@ -130,10 +207,6 @@ int main(int argc, char **argv, char **envp){
                     deliver_message = 1;
                     break;
 
-         case 's' :
-                    print_summary_only = 1;
-                    break;
-
          case 'S' :
                     train_as_spam = 1;
                     print_message = 0;
@@ -142,6 +215,10 @@ int main(int argc, char **argv, char **envp){
          case 'H' :
                     train_as_ham = 1;
                     print_message = 0;
+                    break;
+
+         case 'D' :
+                    debug = 1;
                     break;
 
          case 'h' :
@@ -169,83 +246,60 @@ int main(int argc, char **argv, char **envp){
 
    cfg = read_config(configfile);
 
+   if(debug == 1){
+      print_message = 0;
+      cfg.debug = 1;
+   }
+
+
    setlocale(LC_ALL, cfg.locale);
 
-   if(u < 0) u = getuid();
 
-   /* do not query the username if we got it from the command line, 2008.03.10, SJ */
-
-   if(username == NULL){
-
-      /* maildrop exports the LOGNAME environment variable */
-
-      username = getenv("LOGNAME");
-      if(!username){
-         pwd = getpwuid(getuid());
-         username = pwd->pw_name;
-      }
-   }
-
-#ifdef HAVE_SQLITE3
-   if(strlen(cfg.sqlite3) < 4)
-      snprintf(cfg.sqlite3, MAXVAL-1, "%s/%s/%c/%s/%s", cfg.chrootdir, USER_DATA_DIR, username[0], username, PER_USER_SQLITE3_DB_FILE);
-#endif
-#ifdef HAVE_MYDB
-   if(strlen(cfg.mydbfile) < 4)
-      snprintf(cfg.mydbfile, MAXVAL-1, "%s/%s/%c/%s/%s", cfg.chrootdir, USER_DATA_DIR, username[0], username, MYDB_FILE);
-#endif
-
-
-   /* check for the queue directory, and run the helper script, if we have to */
-
-#ifdef HAVE_SPAMDROP_HELPER
-   snprintf(buf, MAXBUFSIZE-1, "%s/%s/%c/%s", cfg.chrootdir, USER_QUEUE_DIR, username[0], username);
-
-   if(stat(buf, &st) != 0){
-      syslog(LOG_PRIORITY, "running spamdrop helper script: %s, for user: %s", SPAMDROP_HELPER_PROGRAM, username);
-
-      snprintf(envvar, SMALLBUFSIZE-1, "YOURUSERNAME=%s", username);
-      putenv(envvar);
-      eeenv[0] = &envvar[0];
-
-      execl(SPAMDROP_HELPER_PROGRAM, envvar, (char*)0);
-
-      if(stat(buf, &st) != 0){
-         syslog(LOG_PRIORITY, "missing user directory: %s", buf);
-         return EX_TEMPFAIL;
-      }
-   }
-#endif
-
-   /* do not go to the workdir if this is a cmdline training request */
-
-   if(train_as_ham == 0 && train_as_spam == 0)
-      chdir(cfg.workdir);
-
+   /* read the 'FROM' environment variable if you have
+      not specified the -f cmdline switch */
 
    if(!from) from = getenv("FROM");
 
-   sdata.num_of_rcpt_to = 1;
-   sdata.uid = u;
-   sdata.Nham = sdata.Nspam = 0;
-   if(from) snprintf(sdata.mailfrom, SMALLBUFSIZE-1, "%s", from);
-   memset(sdata.rcptto[0], 0, SMALLBUFSIZE);
-   memset(whitelistbuf, 0, SMALLBUFSIZE);
+
+   /* initialise session data */
+
+   sdata.fd = -1;
+
    memset(sdata.ttmpfile, 0, SMALLBUFSIZE);
    make_rnd_string(&(sdata.ttmpfile[0]));
+   unlink(sdata.ttmpfile);
+
+   memset(sdata.mailfrom, 0, SMALLBUFSIZE);
+   memset(sdata.client_addr, 0, IPLEN);
+
+   sdata.uid = 0;
+   sdata.tot_len = 0;
+   sdata.num_of_rcpt_to = 1;
+   sdata.skip_id_check = 0;
+   sdata.unknown_client = 0;
+   sdata.blackhole = 0;
+   sdata.need_signo_check = 0;
+
+   sdata.Nham = sdata.Nspam = 0;
+   memset(whitelistbuf, 0, SMALLBUFSIZE);
+   memset(sdata.name, 0, SMALLBUFSIZE);
+
+   for(i=0; i<MAX_RCPT_TO; i++) memset(sdata.rcptto[i], 0, SMALLBUFSIZE);
+
+   if(recipient) snprintf(sdata.rcptto[0], SMALLBUFSIZE-1, recipient);
 
    memset(qpath, 0, SMALLBUFSIZE);
-
-   if(from && (strcasecmp(from, "MAILER-DAEMON") == 0 || strcmp(from, "<>") == 0) && strlen(cfg.our_signo) > 3){
-      if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: from: %s, we should really see our signo", sdata.ttmpfile, from);
-      sdata.need_signo_check = 1;
-   }
-
-#ifdef HAVE_SQLITE3
-   sdata.uid = 0;
-#endif
-
    memset(trainbuf, 0, SMALLBUFSIZE);
+   memset(clapf_info, 0, MAXBUFSIZE);
+
+
+   /* do not go to the workdir if this is a cmdline training request
+      or a debug run */
+
+   if(train_as_ham == 0 && train_as_spam == 0 && debug == 0) chdir(cfg.workdir);
+
+
+   /* read message from standard input */
 
 
    fd = open(sdata.ttmpfile, O_CREAT|O_EXCL|O_RDWR|O_TRUNC, S_IRUSR|S_IWUSR);
@@ -255,10 +309,8 @@ int main(int argc, char **argv, char **envp){
       return EX_TEMPFAIL;
    }
 
-   /* read message from standard input */
-
    while((n = read(0, buf, MAXBUFSIZE)) > 0){
-      tot_len += n;
+      sdata.tot_len += n;
       write(fd, buf, n);
    }
 
@@ -272,8 +324,11 @@ int main(int argc, char **argv, char **envp){
 
    close(fd);
 
+
    gettimeofday(&tv_start, &tz);
 
+
+   /* do antivirus check if we have to */
 
 #ifdef HAVE_ANTIVIRUS
    if(do_av_check(&sdata, recipient, from, &cfg) == AVIR_VIRUS){
@@ -284,34 +339,112 @@ int main(int argc, char **argv, char **envp){
 
 
    /* skip spamicity check if message is too long */
-   if( (print_message == 1 || print_summary_only == 1) && tot_len > cfg.max_message_size_to_filter){
+
+   if(print_message == 1 && sdata.tot_len > cfg.max_message_size_to_filter){
       gettimeofday(&tv_stop, &tz);
       goto ENDE_SPAMDROP;
    }
 
-   /*******************************************************************************/
-   /* check whether this is a training request with user+spam@... or user+ham@... */
-   /***************************************************************************** */
 
-   f = fopen(sdata.ttmpfile, "r");
-   if(f){
-      while(fgets(buf, MAXBUFSIZE-1, f)){
-         if(strncmp(buf, "To:", 3) == 0 && (strcasestr(buf, "+ham@") || strcasestr(buf, "+spam@")) ){
-            trim(buf);
-            syslog(LOG_PRIORITY, "training request: %s", buf);
-            training_request = 1;
-            break;
+
+   /* 
+    * check whether this is a training request with user+spam@... or user+ham@...
+    */
+
+   if(recipient && (strcasestr(recipient, "+ham@") || strcasestr(recipient, "+spam@"))){
+      training_request = 1;
+   }
+   else {
+      FILE *f;
+      f = fopen(sdata.ttmpfile, "r");
+      if(f){
+         while(fgets(trainbuf, SMALLBUFSIZE-1, f)){
+            if(strncmp(trainbuf, "To:", 3) == 0 && (strcasestr(trainbuf, "+ham@") || strcasestr(trainbuf, "+spam@")) ){
+               trim(trainbuf);
+               syslog(LOG_PRIORITY, "%s: training request: %s", sdata.ttmpfile, trainbuf);
+               training_request = 1;
+               break;
+            }
+
+            if(trainbuf[0] == '\r' || trainbuf[0] == '\n') break;
          }
-
-         if(buf[0] == '\r' || buf[0] == '\n') break;
+         fclose(f);
       }
-      fclose(f);
+
+   }
+
+   /* we must have a FROM address for training */
+
+   if(training_request == 1 && from == NULL){
+      syslog(LOG_PRIORITY, "%s: no FROM address detected for training", sdata.ttmpfile);
+      unlink(sdata.ttmpfile);
+      return 0;
    }
 
 
    /* open database connection */
-   if(open_db(&sdata, &cfg) == 0)
-      goto ENDE;
+
+   if(open_db(&sdata, &cfg) == 0){
+      rc = print_message_stdout(&sdata, NULL, spaminess, &cfg);
+      unlink(sdata.ttmpfile);
+      if(rc)
+         return EX_TEMPFAIL;
+      else
+         return 0;
+   }
+
+
+   /* fix username and uid */
+
+   if(recipient) get_user_from_email(&sdata, recipient, &cfg);
+   else {
+      username = getenv("LOGNAME");
+      if(username){
+         snprintf(sdata.name, SMALLBUFSIZE-1, "%s", username);
+         pwd = getpwnam(username);
+         sdata.uid = pwd->pw_uid;
+      }
+      else {
+         sdata.uid = getuid();
+         pwd = getpwuid(sdata.uid);
+         snprintf(sdata.name, SMALLBUFSIZE-1, "%s", pwd->pw_name);
+      }
+   }
+
+   if(cfg.verbosity >= _LOG_DEBUG && debug == 0) syslog(LOG_PRIORITY, "%s: username: %s, uid: %ld", sdata.ttmpfile, sdata.name, sdata.uid);
+
+
+   /* fix database path if we need it */
+
+#ifdef HAVE_SQLITE3
+   if(strlen(cfg.sqlite3) < 4)
+      snprintf(cfg.sqlite3, MAXVAL-1, "%s/%s/%c/%s/%s", cfg.chrootdir, USER_DATA_DIR, sdata.name[0], sdata.name, PER_USER_SQLITE3_DB_FILE);
+#endif
+#ifdef HAVE_MYDB
+   if(strlen(cfg.mydbfile) < 4)
+      snprintf(cfg.mydbfile, MAXVAL-1, "%s/%s/%c/%s/%s", cfg.chrootdir, USER_DATA_DIR, sdata.name[0], sdata.name, MYDB_FILE);
+#endif
+
+#ifdef HAVE_SPAMDROP_HELPER
+   snprintf(buf, MAXBUFSIZE-1, "%s/%s/%c/%s", cfg.chrootdir, USER_QUEUE_DIR, sdata.name[0], sdata.name);
+
+   if(stat(buf, &st) != 0){
+      syslog(LOG_PRIORITY, "%s: running spamdrop helper script: %s, for user: %s", sdata.ttmpfile, SPAMDROP_HELPER_PROGRAM, sdata.name);
+
+      snprintf(envvar, SMALLBUFSIZE-1, "YOURUSERNAME=%s", sdata.name);
+      putenv(envvar);
+      eeenv[0] = &envvar[0];
+
+      execl(SPAMDROP_HELPER_PROGRAM, envvar, (char*)0);
+
+      if(stat(buf, &st) != 0){
+         syslog(LOG_PRIORITY, "%s: missing user directory: %s", buf, sdata.ttmpfile);
+         return EX_TEMPFAIL;
+      }
+   }
+#endif
+
+
 
 
    /****************************/
@@ -319,13 +452,18 @@ int main(int argc, char **argv, char **envp){
    /****************************/
 
 
-   if(training_request == 1){
+   if(training_request == 1 && (recipient || strlen(trainbuf) > 3)){
       rounds = MAX_ITERATIVE_TRAIN_LOOPS;
 
-      if(!from) goto CLOSE_DB;
+      /* we don't have to qry the from address, as
+       * the user sends his email to user+spam@domain
+       * what postfix will write as user@domain
+       */
+      //get_user_from_email(&sdata, from, &cfg);
 
       is_spam = 0;
-      if(strcasestr(buf, "+spam@")) is_spam = 1;
+      if(recipient && strcasestr(recipient, "+spam@")) is_spam = 1;
+      if(strlen(trainbuf) > 3 && strcasestr(trainbuf, "+spam@")) is_spam = 1;
 
       /* determine the queue file from the message */
       train_mode = extract_id_from_message(sdata.ttmpfile, cfg.clapf_header_field, ID);
@@ -333,9 +471,9 @@ int main(int argc, char **argv, char **envp){
       /* determine the path of the original file */
 
       if(is_spam == 1)
-         snprintf(buf, MAXBUFSIZE-1, "%s/%s/%c/%s/h.%s", cfg.chrootdir, USER_QUEUE_DIR, username[0], username, ID);
+         snprintf(buf, MAXBUFSIZE-1, "%s/%s/%c/%s/h.%s", cfg.chrootdir, USER_QUEUE_DIR, sdata.name[0], sdata.name, ID);
       else
-         snprintf(buf, MAXBUFSIZE-1, "%s/%s/%c/%s/s.%s", cfg.chrootdir, USER_QUEUE_DIR, username[0], username, ID);
+         snprintf(buf, MAXBUFSIZE-1, "%s/%s/%c/%s/s.%s", cfg.chrootdir, USER_QUEUE_DIR, sdata.name[0], sdata.name, ID);
 
 
       state = parse_message(buf, &sdata, &cfg);
@@ -349,8 +487,14 @@ int main(int argc, char **argv, char **envp){
 
       train_message(&sdata, &state, rounds, is_spam, train_mode, &cfg);
 
-      goto CLOSE_DB;
+      close_db(&sdata, &state);
+      unlink(sdata.ttmpfile);
+
+      return 0;
    }
+
+
+   memset(trainbuf, 0, SMALLBUFSIZE);
 
 
    /* parse message */
@@ -371,14 +515,28 @@ int main(int argc, char **argv, char **envp){
          train_mode=T_TUM;
 
    #ifdef HAVE_USERS
+
+   /*
+       cmdline training (as spam in these examples) can be done several ways:
+
+       spamdrop -S -f email@address < message
+       FROM=email@address spamdrop -S < message
+       spamdrop -S -U uid < message
+       TODO: spamdrop -S -u username < message (????)
+
+    */
+
       if(from) get_user_from_email(&sdata, from, &cfg);
-   #else
-      sdata.uid = 0;
+      else if(u >= 0) sdata.uid = u;
+
    #endif
 
-      if(cfg.group_type == GROUP_SHARED) sdata.uid = 0;
-
       train_message(&sdata, &state, rounds, is_spam, train_mode, &cfg);
+
+      close_db(&sdata, &state);
+      unlink(sdata.ttmpfile);
+
+      return 0;
    }
 
 
@@ -388,12 +546,22 @@ int main(int argc, char **argv, char **envp){
 
    else {
 
+      /* is this a bounce message? */
+
+      if(from && (strcasecmp(from, "MAILER-DAEMON") == 0 || strcmp(from, "<>") == 0) && strlen(cfg.our_signo) > 3){
+         if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: from: %s, we should really see our signo", sdata.ttmpfile, from);
+         sdata.need_signo_check = 1;
+      }
+
+
       /* whitelist check first */
 
    #ifdef HAVE_WHITELIST
       if(is_sender_on_black_or_white_list(&sdata, from, SQL_WHITE_FIELD_NAME, SQL_WHITE_LIST, &cfg)){
          syslog(LOG_PRIORITY, "%s: sender (%s) found on whitelist", sdata.ttmpfile, from);
          snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on whitelist\r\n", cfg.clapf_header_field);
+         strncat(clapf_info, whitelistbuf, MAXBUFSIZE-1);
+         is_spam = 0;
          goto ENDE_SPAMDROP;
       }
    #endif
@@ -404,6 +572,7 @@ int main(int argc, char **argv, char **envp){
       if(is_sender_on_black_or_white_list(&sdata, from, SQL_BLACK_FIELD_NAME, SQL_BLACK_LIST, &cfg) == 1){
          syslog(LOG_PRIORITY, "%s: sender (%s) found on blacklist", sdata.ttmpfile, from);
          snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on blacklist\r\n", cfg.clapf_header_field);
+         is_spam = 1;
          goto ENDE;
       }
    #endif
@@ -429,6 +598,12 @@ int main(int argc, char **argv, char **envp){
 
    #ifdef HAVE_LANG_DETECT
       lang = check_lang(state.token_hash);
+
+      strncat(clapf_info, cfg.clapf_header_field, MAXBUFSIZE-1);
+      strncat(clapf_info, lang, MAXBUFSIZE-1);
+      strncat(clapf_info, "\r\n", MAXBUFSIZE-1);
+
+      if(cfg.debug == 1) fprintf(stderr, "lang detected: %s\n", lang);
    #endif
 
    #ifdef HAVE_SPAMSUM
@@ -441,6 +616,7 @@ int main(int argc, char **argv, char **envp){
             spamsum_score = spamsum_match_db(cfg.sig_db, sum, 55);
             if(spamsum_score >= 50) spaminess = 0.9988;
             snprintf(spamsum_buf, SMALLBUFSIZE-1, "%sspamsum=%d\r\n", cfg.clapf_header_field, spamsum_score);
+            strncat(clapf_info, spamsum_buf, MAXBUFSIZE-1);
             free(sum);
          }
       }
@@ -451,7 +627,7 @@ int main(int argc, char **argv, char **envp){
             syslog(LOG_PRIORITY, "%s: looks like a bounce, but our signo is missing", sdata.ttmpfile);
          }
          else {
-            syslog(LOG_PRIORITY, "found our signo, this should be a real bounce message");
+            syslog(LOG_PRIORITY, "%s: found our signo, this should be a real bounce message", sdata.ttmpfile);
             spaminess = DEFAULT_SPAMICITY;
          }
       }
@@ -463,10 +639,11 @@ int main(int argc, char **argv, char **envp){
          is_spam = 0;
 
 
-      /* don't TUM train if this is a blackhole message */
+
+      /* don't TUM train if this is a blackhole message or we are just spamtest'ing */
 
       if(
-         (blackhole_request == 0 && cfg.training_mode == T_TUM && ( (spaminess >= cfg.spam_overall_limit && spaminess < 0.99) || (spaminess < cfg.max_ham_spamicity && spaminess > 0.1) )) ||
+         (blackhole_request == 0 && debug == 0 && cfg.training_mode == T_TUM && ( (spaminess >= cfg.spam_overall_limit && spaminess < 0.99) || (spaminess < cfg.max_ham_spamicity && spaminess > 0.1) )) ||
          (cfg.initial_1000_learning == 1 && (sdata.Nham < NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED || sdata.Nspam < NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED))
         )
       {
@@ -483,9 +660,11 @@ int main(int argc, char **argv, char **envp){
 
    }
 
-   /****************************************************************************************************/
+
+
+
    /* if this is a blackhole request and spaminess < 0.99, then learn the message in an iterative loop */
-   /****************************************************************************************************/
+
 
    if(blackhole_request == 1){
       if(spaminess < 0.99){
@@ -504,38 +683,38 @@ int main(int argc, char **argv, char **envp){
    }
 
 
-   /* close db handles */
-
-CLOSE_DB:
-
-#ifdef HAVE_MYSQL
-   mysql_close(&(sdata.mysql));
-#endif
-#ifdef HAVE_SQLITE3
-   sqlite3_close(sdata.db);
-#endif
-#ifdef HAVE_MYDB
-   close_mydb(sdata.mhash);
-#endif
-
-   /* free structures */
-   free_list(state.urls);
-   clearhash(state.token_hash, 0);
-
    gettimeofday(&tv_stop, &tz);
+
+   if(cfg.debug == 1){
+      fprintf(stderr, "spaminess: %.4f in %ld [ms]\n", spaminess, tvdiff(tv_stop, tv_start)/1000);
+      fprintf(stderr, "%ld %ld\n", state.c_shit, state.l_shit);
+   }
 
 
    /* save email for later retraining and/or spam quarantine */
 
 #ifdef HAVE_STORE
-   if(tot_len <= cfg.max_message_size_to_filter && blackhole_request == 0)
+   if(sdata.tot_len <= cfg.max_message_size_to_filter && blackhole_request == 0 && debug == 0){
+
+      /* add trailing dot to the file, 2008.09.08, SJ */
+
+      if(debug == 0){
+         fd = open(sdata.ttmpfile, O_EXCL|O_RDWR, S_IRUSR|S_IWUSR);
+         if(fd != -1){
+            lseek(fd, 0, SEEK_END);
+            write(fd, SMTP_CMD_PERIOD, strlen(SMTP_CMD_PERIOD));
+            close(fd);
+         }
+      }
+
       save_email_to_queue(&sdata, spaminess, &cfg);
+   }
 #endif
 
 
 ENDE_SPAMDROP:
 
-   syslog(LOG_PRIORITY, "%s: %.4f %d in %ld [ms]", sdata.ttmpfile, spaminess, tot_len, tvdiff(tv_stop, tv_start)/1000);
+   if(cfg.debug == 0) syslog(LOG_PRIORITY, "%s: %.4f %d in %ld [ms]", sdata.ttmpfile, spaminess, sdata.tot_len, tvdiff(tv_stop, tv_start)/1000);
 
 
    /********************************/
@@ -543,30 +722,11 @@ ENDE_SPAMDROP:
    /********************************/
 
    if(print_message == 1){
-      f = fopen(sdata.ttmpfile, "r");
-      if(!f){
-         syslog(LOG_PRIORITY, "cannot read: %s", sdata.ttmpfile);
-         return EX_TEMPFAIL;
-      }
 
-      if(spaminess >= cfg.spam_overall_limit && spaminess < 1.01 && strlen(cfg.spam_subject_prefix) > 1) put_subject_spam_prefix = 1;
-
-   #ifdef MY_TEST
-      memset(rblbuf, 0, SMALLBUFSIZE);
-      reverse_ipv4_addr(state.ip);
-      if(rbl_list_check("zen.spamhaus.org", state.ip, cfg.verbosity) == 1)
-         snprintf(rblbuf, SMALLBUFSIZE-1, "%sZEN=1\r\n", cfg.clapf_header_field);
-      else
-         snprintf(rblbuf, SMALLBUFSIZE-1, "%sZEN=0\r\n", cfg.clapf_header_field);
-
-   #endif
-
-      /* assemble clapf header info */
-
-      memset(clapf_info, 0, MAXBUFSIZE);
-
-      snprintf(clapf_info, MAXBUFSIZE-1, "%s%s\r\n%s%s%.4f\r\n%s%ld ms\r\n",
+      snprintf(buf, MAXBUFSIZE-1, "%s%s\r\n%s%s%.4f\r\n%s%ld ms\r\n",
               cfg.clapf_header_field, sdata.ttmpfile, trainbuf, cfg.clapf_header_field, spaminess, cfg.clapf_header_field, tvdiff(tv_stop, tv_start)/1000);
+
+      strncat(clapf_info, buf, MAXBUFSIZE-1);
 
       if(spaminess > 0.9999){
          strncat(clapf_info, cfg.clapf_header_field, MAXBUFSIZE-1);
@@ -579,104 +739,36 @@ ENDE_SPAMDROP:
          strncat(clapf_info, "Yes\r\n", MAXBUFSIZE-1);
       }
 
-
    #ifdef MY_TEST
+      char rblbuf[SMALLBUFSIZE];
+
+      memset(rblbuf, 0, SMALLBUFSIZE);
+      reverse_ipv4_addr(state.ip);
+      if(rbl_list_check("zen.spamhaus.org", state.ip, cfg.verbosity) == 1)
+         snprintf(rblbuf, SMALLBUFSIZE-1, "%sZEN=1\r\n", cfg.clapf_header_field);
+      else
+         snprintf(rblbuf, SMALLBUFSIZE-1, "%sZEN=0\r\n", cfg.clapf_header_field);
+
       strncat(clapf_info, rblbuf, MAXBUFSIZE-1);
    #endif
-   #ifdef HAVE_SPAMSUM
-      strncat(clapf_info, spamsum_buf, MAXBUFSIZE-1);
-   #endif
-   #ifdef HAVE_LANG_DETECT
-      strncat(clapf_info, cfg.clapf_header_field, MAXBUFSIZE-1);
-      strncat(clapf_info, lang, MAXBUFSIZE-1);
-      strncat(clapf_info, "\r\n", MAXBUFSIZE-1);
-   #endif
-   #ifdef HAVE_WHITELIST
-      strncat(clapf_info, whitelistbuf, MAXBUFSIZE-1);
-   #endif
 
-
-      if(deliver_message == 1){
-         snprintf(buf, MAXBUFSIZE-1, "%s %s %s", cfg.delivery_agent, from, recipient);
-         ofile = popen(buf, "w");
-      }
-
-      fprintf(ofile, "%s", clapf_info);
-
-      while(fgets(buf, MAXBUFSIZE-1, f)){
-
-         /* tag the Subject line if we have to, 2007.08.21, SJ */
-
-         if(is_header == 1 && put_subject_spam_prefix == 1 && strncmp(buf, "Subject:", 8) == 0 && !strstr(buf, cfg.spam_subject_prefix)){
-            fprintf(ofile, "Subject: ");
-            fprintf(ofile, "%s", cfg.spam_subject_prefix);
-            fprintf(ofile, "%s", &buf[9]);
-            sent_subject_spam_prefix = 1;
-
-            continue;
-         }
-
-         if(is_header == 1 && (buf[0] == '\n' || buf[0] == '\r')){
-            is_header = 0;
-
-            /* if we did not find a Subject line, add one - if we have to */
-
-            if(sent_subject_spam_prefix == 0 && put_subject_spam_prefix == 1 && spaminess >= cfg.spam_overall_limit && spaminess < 1.01)
-               fprintf(ofile, "Subject: %s\r\n", cfg.spam_subject_prefix);
-
-         }
-
-         if(strncmp(buf, cfg.clapf_header_field, strlen(cfg.clapf_header_field)))
-            fprintf(ofile, "%s", buf);
-      }
-
-      fclose(stdout);
-
+      rc = print_message_stdout(&sdata, clapf_info, spaminess, &cfg);
+      if(rc) return rc;
    }
+
+
 
 
    snprintf(buf, MAXBUFSIZE-1, "%ld", sdata.uid);
+   if(cfg.debug == 0) log_ham_spam_per_email(sdata.ttmpfile, buf, is_spam);
 
-   /*******************************/
-   /* print summary if we have to */
-   /*******************************/
 
-   if(spaminess >= cfg.spam_overall_limit){
-      rc = 1;
-      if(print_summary_only == 1)
-         printf("S %.4f\n", spaminess);
-
-      log_ham_spam_per_email(sdata.ttmpfile, buf, 1);
-   }
-   else {
-      rc = 0;
-      if(print_summary_only == 1){
-         if(spaminess <= cfg.max_ham_spamicity)
-            printf("H %.4f\n", spaminess);
-         else
-            printf("U %.4f\n", spaminess);
-      }
-
-      log_ham_spam_per_email(sdata.ttmpfile, buf, 0);
-   }
-
+   close_db(&sdata, &state);
 
 ENDE:
-
-   /* unlink temp file */
    unlink(sdata.ttmpfile);
 
 
-   /* add trailing dot to the file, 2008.09.08, SJ */
-
-   if(strlen(qpath) > 3){
-      fd = open(qpath, O_EXCL|O_RDWR, S_IRUSR|S_IWUSR);
-      if(fd != -1){
-         lseek(fd, 0, SEEK_END);
-         write(fd, SMTP_CMD_PERIOD, strlen(SMTP_CMD_PERIOD));
-         close(fd);
-      }
-   }
 
    if(print_message == 0 && spaminess >= cfg.spam_overall_limit && spaminess < 1.01)
       return 1;

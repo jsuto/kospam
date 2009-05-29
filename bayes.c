@@ -1,5 +1,5 @@
 /*
- * bayes.c, 2009.05.22, SJ
+ * bayes.c, 2009.05.29, SJ
  */
 
 #include <stdio.h>
@@ -217,7 +217,7 @@ float bayes_file(struct session_data *sdata, struct _state *state, struct __conf
       snprintf(buf, MAXBUFSIZE-1, "SELECT nham, nspam FROM %s WHERE uid=0 OR uid=%ld", SQL_MISC_TABLE, sdata->uid);
 
    if(cfg->debug == 1)
-      fprintf(stderr, "uid: %ld\n", sdata->uid);
+      fprintf(stderr, "username: %s, uid: %ld\n", sdata->name, sdata->uid);
 
    /*
     * select the number of ham and spam messages, and return error if less than 1

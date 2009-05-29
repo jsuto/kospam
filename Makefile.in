@@ -35,7 +35,7 @@ LIBCLAPF_VERSION=$(CLAPF_VERSION).$(CLAPF_REVISION).$(CLAPF_RELEASE)
 
 INSTALL = @INSTALL@
 
-all: clapf-lib clapf @spamsum@ splitmbox @parsembox@ @spamdrop@ @preparesql@ @test@ ui
+all: clapf-lib clapf @spamsum@ splitmbox @parsembox@ @spamdrop@ @preparesql@ ui
 install: install-clapf install-splitmbox @parsembox_install@ @spamsum_install@ @spamdrop_install@ @db_install@
 
 

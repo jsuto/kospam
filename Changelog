@@ -1,5 +1,14 @@
 0.4.1:
 
+2009.05.29, SJ
+
+Modified the spamdrop utility to able to handle
+virtual users, and provide the functionality of
+the spamtest utility if using the -D command line
+option, ie. 'spamdrop -D < message' or
+'spamdrop -D -r jim@aaaa.fu < message'
+(Makefile.in, maildroprc, spamdrop.c)
+
 2009.05.27, SJ
 
 Updated the libclamav related stuff due to change in the

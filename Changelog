@@ -1,5 +1,12 @@
 0.4.1:
 
+2009.06.01, SJ
+
+Put the add_penalties() function after the token
+update function to prevent overwriting a special
+token.
+(parser.c, bayes.c, hash.c, hash.h)
+
 2009.05.29, SJ
 
 Modified the spamdrop utility to able to handle

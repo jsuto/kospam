@@ -1,5 +1,5 @@
 /*
- * hash.c, 2009.01.15, SJ
+ * hash.c, 2009.06.01, SJ
  */
 
 #include <stdio.h>
@@ -46,6 +46,25 @@ void clearhash(struct node *xhash[], int print){
       }
       xhash[i] = NULL;
    }
+}
+
+
+void printhash(struct node *xhash[]){
+   int i;
+   struct node *p, *q;
+
+   for(i=0;i<MAXHASH;i++){
+      q = xhash[i];
+      while(q != NULL){
+         p = q;
+
+         fprintf(stderr, "%s (%llu) = %.4f\n", p->str, p->key, p->spaminess);
+
+         q = q->r;
+      }
+   }
+
+   fprintf(stderr, "\n\n");
 }
 
 

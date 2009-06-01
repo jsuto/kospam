@@ -1,5 +1,5 @@
 /*
- * bayes.c, 2009.05.29, SJ
+ * bayes.c, 2009.06.01, SJ
  */
 
 #include <stdio.h>
@@ -112,11 +112,6 @@ double eval_tokens(struct session_data *sdata, struct _state *state, struct __co
    int has_embed_image=0, found_on_rbl=0, surbl_match=0;
 
 
-
-   /* apply some penalties, 2009.01.04, SJ */
-   add_penalties(sdata, state, cfg);
-
-
    if(cfg->penalize_embed_images == 1 && findnode(state->token_hash, "src+cid")){
       addnode(state->token_hash, "EMBED*", REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
       has_embed_image = 1;
@@ -126,8 +121,14 @@ double eval_tokens(struct session_data *sdata, struct _state *state, struct __co
    /* calculate spaminess based on the token pairs and other special tokens */
 
    qry_spaminess(sdata, state, 1, cfg);
+
+   /* apply some penalties, 2009.06.01, SJ */
+   add_penalties(sdata, state, cfg);
+
    spaminess = calc_score_chi2(state->token_hash, cfg);
+
    if(cfg->debug == 1) fprintf(stderr, "phrase: %.4f\n", spaminess);
+
    if(spaminess >= cfg->spam_overall_limit || spaminess <= cfg->max_ham_spamicity) goto END_OF_EVALUATION;
 
    /* query the single tokens, then use the 'mix' for calculation */

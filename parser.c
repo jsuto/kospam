@@ -1,5 +1,5 @@
 /*
- * parser.c, 2009.04.20, SJ
+ * parser.c, 2009.06.01, SJ
  */
 
 #include <stdio.h>
@@ -149,6 +149,8 @@ int extract_boundary(char *p, struct _state *state){
 int parse(char *buf, struct _state *state, struct session_data *sdata, struct __config *cfg){
    char *p, *q, *c, huf[MAXBUFSIZE], puf[MAXBUFSIZE], muf[MAXBUFSIZE], tuf[MAXBUFSIZE], u[SMALLBUFSIZE], token[MAX_TOKEN_LEN], phrase[MAX_TOKEN_LEN], ipbuf[IPLEN];
    int x, b64_len;
+
+   memset(token, 0, MAX_TOKEN_LEN);
 
    state->line_num++;
 

@@ -1,5 +1,5 @@
 /*
- * hash.h, 2009.01.15, SJ
+ * hash.h, 2009.06.01, SJ
  */
 
 #ifndef _HASH_H
@@ -11,6 +11,7 @@
 
 void inithash(struct node *xhash[]);
 void clearhash(struct node *xhash[], int print);
+void printhash(struct node *xhash[]);
 int counthash(struct node *xhash[]);
 struct node *makenewnode(struct node *xhash[], char *s, double spaminess, double deviation);
 int addnode(struct node *xhash[], char *s, double spaminess, double deviation);

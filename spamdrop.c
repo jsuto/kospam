@@ -333,7 +333,8 @@ int main(int argc, char **argv, char **envp){
 #ifdef HAVE_ANTIVIRUS
    if(do_av_check(&sdata, recipient, from, &cfg) == AVIR_VIRUS){
       syslog(LOG_PRIORITY, "%s: dropping infected message", sdata.ttmpfile);
-      goto ENDE;
+      unlink(sdata.ttmpfile);
+      return 0;
    }
 #endif
 
@@ -576,7 +577,8 @@ int main(int argc, char **argv, char **envp){
          syslog(LOG_PRIORITY, "%s: sender (%s) found on blacklist", sdata.ttmpfile, from);
          snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on blacklist\r\n", cfg.clapf_header_field);
          is_spam = 1;
-         goto ENDE;
+         unlink(sdata.ttmpfile);
+         return 0;
       }
    #endif
 
@@ -768,7 +770,6 @@ ENDE_SPAMDROP:
 
    close_db(&sdata, &state);
 
-ENDE:
    unlink(sdata.ttmpfile);
 
 

@@ -66,6 +66,8 @@ int main(int argc, char **argv){
    while(fgets(buf, MAXBUFSIZE-1, f)){
       //email@address 5 2
 
+      //printf("**%s\n", buf);
+
       uid = nham = nspam = 0;
 
       p = strrchr(buf, ' ');
@@ -84,8 +86,9 @@ int main(int argc, char **argv){
 
          /* get uid if we have to */
 
-         if(!strchr(buf, '@')){
+         if(strchr(buf, '@')){
             snprintf(puf, MAXBUFSIZE-1, "SELECT uid FROM %s WHERE email='%s'", SQL_EMAIL_TABLE, buf);
+            //printf("%s\n", puf);
 
          #ifdef HAVE_MYSQL
 
@@ -119,6 +122,7 @@ int main(int argc, char **argv){
 
          #ifdef HAVE_MYSQL
             mysql_real_query(&mysql, puf, strlen(puf));
+            //printf("%s\n", puf);
          #endif
          #ifdef HAVE_SQLITE3
             sqlite3_prepare_v2(db, puf, -1, &pStmt, ppzTail);

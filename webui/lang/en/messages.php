@@ -158,4 +158,6 @@ $err_too_short_password = "Too short password";
 $err_password_changed = "Password changed";
 $err_failed_to_change_password = "Failed to change password";
 
+$err_empty_quarantine_directory_structure = "Empty quarantine directory structure";
+
 ?>

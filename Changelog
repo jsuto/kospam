@@ -6,7 +6,7 @@ Updated the spamstat utility according to the sql schema modifications.
 (spamstat.c)
 
 Minor enhancements in the webui.
-(webui/lang/*, webui/login.php, webui/webui.php)
+(webui/lang/*, webui/login.php, webui/webui.php, webui/funcs.php, webui/q.php)
 
 A comment warns you in config.in.php to edit the proper configuration
 file (config.php) in the webui.

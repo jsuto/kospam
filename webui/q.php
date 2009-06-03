@@ -85,7 +85,7 @@ if($_SERVER['REQUEST_METHOD'] == "GET"){
    if($admin_user == 1 && $user == ""){
       print "<h4>$USERLIST</h4>\n";
 
-      show_users($queue_directory);
+      if(show_users($queue_directory) == 0) nice_error($err_empty_quarantine_directory_structure);
    }
 
    /* show selected message ... */

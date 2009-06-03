@@ -568,6 +568,7 @@ function qp_decode($l){
 
 
 function show_users($queuedir){
+   $i = 0;
 
    if($queuedir == "")
       return 0;
@@ -583,6 +584,7 @@ function show_users($queuedir){
                while(($file2 = readdir($dh2)) !== false){
                   if($file2 != "." && $file2 != ".."){
                      print "<a href=\"q.php?user=$file2\">$file2</a><br>\n";
+                     $i++;
                   }
                }
             }
@@ -592,7 +594,7 @@ function show_users($queuedir){
       closedir($dh);
    }
 
-   return 1;
+   return $i;
 }
 
 ?>

@@ -85,6 +85,8 @@ if($_SERVER['REQUEST_METHOD'] == "GET"){
    if($admin_user == 1 && $user == ""){
       print "<h4>$USERLIST</h4>\n";
 
+      if(!file_exists($queue_directory)) nice_error($err_non_existent_queue_directory . ": $queue_directory");
+
       if(show_users($queue_directory) == 0) nice_error($err_empty_quarantine_directory_structure);
    }
 

@@ -80,13 +80,11 @@ int main(int argc, char **argv){
          }
       }
 
-      if(atoi(buf) > 0) uid = atoi(buf);
-
-      if(nham > 0 || nspam > 0){
+      if(nham + nspam > 0){
 
          /* get uid if we have to */
 
-         if(uid == 0){
+         if(!strchr(buf, '@')){
             snprintf(puf, MAXBUFSIZE-1, "SELECT uid FROM %s WHERE email='%s'", SQL_EMAIL_TABLE, buf);
 
          #ifdef HAVE_MYSQL
@@ -112,9 +110,12 @@ int main(int argc, char **argv){
             sqlite3_finalize(pStmt);
          #endif
          }
+         else {
+            uid = atoi(buf);
+         }
 
-         if(uid > 0){
-            snprintf(puf, MAXBUFSIZE-1, "INSERT INTO %s (uid, ts, nham, nspam) VALUES(%ld, %ld, %ld, %ld)", SQL_STAT_TABLE, uid, now, nham, nspam);
+
+         snprintf(puf, MAXBUFSIZE-1, "INSERT INTO %s (uid, ts, nham, nspam) VALUES(%ld, %ld, %ld, %ld)", SQL_STAT_TABLE, uid, now, nham, nspam);
 
          #ifdef HAVE_MYSQL
             mysql_real_query(&mysql, puf, strlen(puf));
@@ -125,7 +126,6 @@ int main(int argc, char **argv){
             sqlite3_finalize(pStmt);
          #endif
 
-         }
       }
    }
 

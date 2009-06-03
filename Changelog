@@ -8,6 +8,11 @@ Updated the spamstat utility according to the sql schema modifications.
 Minor enhancements in the webui.
 (webui/lang/*, webui/login.php, webui/webui.php)
 
+A comment warns you in config.in.php to edit the proper configuration
+file (config.php) in the webui.
+
+(webui/config.in.php, Makefile.in)
+
 2009.06.01, SJ
 
 Put the add_penalties() function after the token

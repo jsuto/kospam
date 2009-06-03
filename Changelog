@@ -5,6 +5,9 @@
 Updated the spamstat utility according to the sql schema modifications.
 (spamstat.c)
 
+Minor enhancements in the webui.
+(webui/lang/*, webui/login.php, webui/webui.php)
+
 2009.06.01, SJ
 
 Put the add_penalties() function after the token

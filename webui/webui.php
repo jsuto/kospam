@@ -23,9 +23,11 @@ function is_admin(){
 
 
 function show_auth_popup(){
-   global $err_not_authenticated;
+   /*global $err_not_authenticated;
 
-   nice_error($err_not_authenticated);
+   nice_error($err_not_authenticated);*/
+
+   header("Location: login.php");
 }
 
 

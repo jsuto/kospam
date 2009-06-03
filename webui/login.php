@@ -17,7 +17,7 @@ if($login && $pwd){
 
    webui_close($conn);
 
-   if($ok == 1) header("Location: $base_url");
+   if($ok == 1) header("Location: $base_url" . "/q.php");
 }
 
 

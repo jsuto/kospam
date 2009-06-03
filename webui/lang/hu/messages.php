@@ -149,7 +149,7 @@ $err_policy_failed_to_remove = "Házirendet nem sikerült törölni";
 
 $err_this_feature_is_not_available = "Ez a funkció nem érhető el a használt adatbázissal";
 
-$err_you_are_logged_out = "Ön sikeresen kijelentkezett";
+$err_you_are_logged_out = "Ön sikeresen kijelentkezett. <a href=\"login.php\">$LOGIN</a>";
 
 $err_please_select_uids = "Kérem, válasszon felhasználói azonosítókat";
 

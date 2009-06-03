@@ -149,7 +149,7 @@ $err_policy_failed_to_remove = "Policy failed to remove";
 
 $err_this_feature_is_not_available = "This feature is not available for this backend";
 
-$err_you_are_logged_out = "You are logged out";
+$err_you_are_logged_out = "You are logged out. <a href=\"login.php\">$LOGIN</a>";
 
 $err_please_select_uids = "Please select some uids first";
 

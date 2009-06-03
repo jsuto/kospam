@@ -1,5 +1,5 @@
 /*
- * spamstat.c, 2007.09.05, SJ
+ * spamstat.c, 2009.06.03, SJ
  */
 
 #include <stdio.h>
@@ -87,7 +87,7 @@ int main(int argc, char **argv){
          /* get uid if we have to */
 
          if(uid == 0){
-            snprintf(puf, MAXBUFSIZE-1, "SELECT uid FROM %s WHERE email='%s'", SQL_USER_TABLE, buf);
+            snprintf(puf, MAXBUFSIZE-1, "SELECT uid FROM %s WHERE email='%s'", SQL_EMAIL_TABLE, buf);
 
          #ifdef HAVE_MYSQL
 

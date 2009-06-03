@@ -58,13 +58,13 @@ void printhash(struct node *xhash[]){
       while(q != NULL){
          p = q;
 
-         fprintf(stderr, "%s (%llu) = %.4f\n", p->str, p->key, p->spaminess);
+         printf("%s (%llu) = %.4f\n", p->str, p->key, p->spaminess);
 
          q = q->r;
       }
    }
 
-   fprintf(stderr, "\n\n");
+   printf("\n\n");
 }
 
 

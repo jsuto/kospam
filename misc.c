@@ -172,13 +172,13 @@ void reassemble_token(char *p){
          p[k] = *(p+i+2); k++;
          p[k] = *(p+i+4); k++;
 
-         //fprintf(stderr, "%c*%c*", *(p+i), *(p+i+2));
+         //printf("%c*%c*", *(p+i), *(p+i+2));
          i += 5;
       }
       else {
          p[k] = *(p+i);
          k++;
-         //fprintf(stderr, "%c", *(p+i));
+         //printf("%c", *(p+i));
       }
    }
 

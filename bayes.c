@@ -127,7 +127,7 @@ double eval_tokens(struct session_data *sdata, struct _state *state, struct __co
 
    spaminess = calc_score_chi2(state->token_hash, cfg);
 
-   if(cfg->debug == 1) fprintf(stderr, "phrase: %.4f\n", spaminess);
+   if(cfg->debug == 1) printf("phrase: %.4f\n", spaminess);
 
    if(spaminess >= cfg->spam_overall_limit || spaminess <= cfg->max_ham_spamicity) goto END_OF_EVALUATION;
 
@@ -135,7 +135,7 @@ double eval_tokens(struct session_data *sdata, struct _state *state, struct __co
 
    qry_spaminess(sdata, state, 0, cfg);
    spaminess = calc_score_chi2(state->token_hash, cfg);
-   if(cfg->debug == 1) fprintf(stderr, "mix: %.4f\n", spaminess);
+   if(cfg->debug == 1) printf("mix: %.4f\n", spaminess);
    if(spaminess >= cfg->spam_overall_limit || spaminess <= cfg->max_ham_spamicity) goto END_OF_EVALUATION;
 
 
@@ -146,7 +146,7 @@ double eval_tokens(struct session_data *sdata, struct _state *state, struct __co
 #endif
 
    spaminess = calc_score_chi2(state->token_hash, cfg);
-   if(cfg->debug == 1) fprintf(stderr, "mix after blacklists: %.4f\n", spaminess);
+   if(cfg->debug == 1) printf("mix after blacklists: %.4f\n", spaminess);
 
 
 
@@ -218,7 +218,7 @@ float bayes_file(struct session_data *sdata, struct _state *state, struct __conf
       snprintf(buf, MAXBUFSIZE-1, "SELECT nham, nspam FROM %s WHERE uid=0 OR uid=%ld", SQL_MISC_TABLE, sdata->uid);
 
    if(cfg->debug == 1)
-      fprintf(stderr, "username: %s, uid: %ld\n", sdata->name, sdata->uid);
+      printf("username: %s, uid: %ld\n", sdata->name, sdata->uid);
 
    /*
     * select the number of ham and spam messages, and return error if less than 1
@@ -246,7 +246,7 @@ float bayes_file(struct session_data *sdata, struct _state *state, struct __conf
    }
 
    if(cfg->debug == 1)
-      fprintf(stderr, "nham: %.0f, nspam: %.0f\n", sdata->Nham, sdata->Nspam);
+      printf("nham: %.0f, nspam: %.0f\n", sdata->Nham, sdata->Nspam);
 
    /*
     * auto whitelist test, 2007.06.21, SJ
@@ -281,7 +281,7 @@ float bayes_file(struct session_data *sdata, struct _state *state, struct __conf
    #endif
 
       if(cfg->debug == 1)
-         fprintf(stderr, "from: %.0f, %.0f\n", ham_from, spam_from);
+         printf("from: %.0f, %.0f\n", ham_from, spam_from);
 
       if(ham_from > NUMBER_OF_GOOD_FROM && spam_from == 0){
          if(cfg->verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: sender is statistically whitelisted", sdata->ttmpfile);

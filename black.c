@@ -41,7 +41,7 @@ unsigned long blackness(char *dir, char *ip, struct __config *cfg){
 
       gettimeofday(&tv_spam_stop, &tz);
 
-      if(cfg->debug == 1) fprintf(stderr, "blackhole check for %s: %ld in %ld [ms]\n", ip, blackhole_timestamp, tvdiff(tv_spam_stop, tv_spam_start)/1000);
+      if(cfg->debug == 1) printf("blackhole check for %s: %ld in %ld [ms]\n", ip, blackhole_timestamp, tvdiff(tv_spam_stop, tv_spam_start)/1000);
       if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "checking %s in the blackhole list %ld us", ip, tvdiff(tv_spam_stop, tv_spam_start));
    }
 

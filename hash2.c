@@ -69,7 +69,7 @@ void check_lists(struct session_data *sdata, struct _state *state, int *found_on
       *found_on_rbl = rbl_list_check(cfg->rbl_domain, state->ip, cfg->debug);
       gettimeofday(&tv2, &tz);
 
-      if(cfg->debug == 1) fprintf(stderr, "rbl check took %ld ms\n", tvdiff(tv2, tv1)/1000);
+      if(cfg->debug == 1) printf("rbl check took %ld ms\n", tvdiff(tv2, tv1)/1000);
       if(cfg->verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: rbl check took %ld ms", sdata->ttmpfile, tvdiff(tv2, tv1)/1000);
 
       for(i=0; i<*found_on_rbl; i++){
@@ -89,7 +89,7 @@ void check_lists(struct session_data *sdata, struct _state *state, int *found_on
          i = rbl_list_check(cfg->surbl_domain, url->url_str+4, cfg->debug);
          gettimeofday(&tv2, &tz);
 
-         if(cfg->debug == 1) fprintf(stderr, "surbl check for %s (%d) took %ld ms\n", url->url_str+4, i, tvdiff(tv2, tv1)/1000);
+         if(cfg->debug == 1) printf("surbl check for %s (%d) took %ld ms\n", url->url_str+4, i, tvdiff(tv2, tv1)/1000);
          if(cfg->verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: surbl check took %ld ms", sdata->ttmpfile, tvdiff(tv2, tv1)/1000);
 
          *surbl_match += i;

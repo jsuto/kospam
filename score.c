@@ -54,7 +54,7 @@ double calc_score_chi2(struct node *xhash[], struct __config *cfg){
                l++;
 
                if(cfg->debug == 1)
-                  fprintf(stderr, "%s (%llu) %.4f %ld\n", q->str, APHash(q->str), q->spaminess, q->num);
+                  printf("%s (%llu) %.4f %ld\n", q->str, APHash(q->str), q->spaminess, q->num);
             }
          }
 
@@ -82,7 +82,7 @@ double calc_score_chi2(struct node *xhash[], struct __config *cfg){
    I = (1 + H - S) / 2.0;
 
    if(cfg->debug == 1)
-      fprintf(stderr, "with esf_h: %f, esf_s: %f\n", cfg->esf_h, cfg->esf_s);
+      printf("with esf_h: %f, esf_s: %f\n", cfg->esf_h, cfg->esf_s);
 
    return I;
 }
@@ -98,14 +98,14 @@ double apply_fixes(double spaminess, int found_on_rbl, int surbl_match, int has_
 #ifdef HAVE_RBL
    if(surbl_match > 0){
       if(cfg->debug == 1)
-         fprintf(stderr, "caught by surbl\n");
+         printf("caught by surbl\n");
 
       return cfg->spaminess_of_caught_by_surbl;
    }
 
    if(spaminess > DEFAULT_SPAMICITY && found_on_rbl > 0){
       if(cfg->debug == 1)
-         fprintf(stderr, "caught by rbl\n");
+         printf("caught by rbl\n");
 
       return cfg->spaminess_of_caught_by_surbl;
    }
@@ -119,14 +119,14 @@ double apply_fixes(double spaminess, int found_on_rbl, int surbl_match, int has_
 
    if(cfg->invalid_junk_limit > 0 && c_shit > cfg->invalid_junk_limit && spaminess < cfg->spam_overall_limit){
       if(cfg->debug == 1)
-         fprintf(stderr, "invalid junk characters: %ld (limit: %d)\n", c_shit, cfg->invalid_junk_limit);
+         printf("invalid junk characters: %ld (limit: %d)\n", c_shit, cfg->invalid_junk_limit);
 
       return cfg->spaminess_of_strange_language_stuff;
    }
 
    if(cfg->invalid_junk_line > 0 && l_shit >= cfg->invalid_junk_line && spaminess < cfg->spam_overall_limit){
       if(cfg->debug == 1)
-         fprintf(stderr, "invalid junk lines: %ld (limit: %d)\n", l_shit, cfg->invalid_junk_line);
+         printf("invalid junk lines: %ld (limit: %d)\n", l_shit, cfg->invalid_junk_line);
 
       return cfg->spaminess_of_strange_language_stuff;
    }

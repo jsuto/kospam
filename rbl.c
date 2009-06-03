@@ -25,7 +25,7 @@ int rbl_check(char *rbldomain, char *host, int debug){
    snprintf(domainname, SMALLBUFSIZE-1, "%s.%s", host, rbldomain);
 
    if(debug == 1)
-      fprintf(stderr, "RBL checking: %s\n", domainname);
+      printf("RBL checking: %s\n", domainname);
 
    h = gethostbyname(domainname);
    if(h)

@@ -179,7 +179,7 @@ float mydbqry(struct session_data *sdata, char *p, struct __config *cfg){
    if(q == NULL) return spamicity;
 
    spamicity = calc_spamicity(sdata->Nham, sdata->Nspam, q->nham, q->nspam, cfg->rob_s, cfg->rob_x);
-   //fprintf(stderr, "%s %d %d %.4f\n", p, q->nham, q->nspam, spamicity);
+   //printf("%s %d %d %.4f\n", p, q->nham, q->nspam, spamicity);
 
    return spamicity;
 }
@@ -350,7 +350,7 @@ int update_tokens(char *mydbfile, struct mydb_node *xhash[], struct node *thash[
       while(q != NULL){
          Q = findmydb_node(xhash, q->key);
          if(Q){
-            //fprintf(stderr, "updating timestamp of %s %llu\n", q->str, q->key);
+            //printf("updating timestamp of %s %llu\n", q->str, q->key);
             lseek(fd, MYDB_HEADER_SIZE + (Q->pos * N_SIZE) + 12, SEEK_SET);
             write(fd, &now, 4);
             n++;

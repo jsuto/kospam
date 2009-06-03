@@ -165,7 +165,7 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
 
       if(state->is_header == 1) state->is_header = 0;
 
-      if(cfg->debug == 1) fprintf(stderr, "\n");
+      if(cfg->debug == 1) printf("\n");
 
       return 0;
    }
@@ -380,7 +380,7 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
       state->utf8 = 0; state->iso_8859_2 = 1;
       // state->qp = 0;
 
-      //fprintf(stderr, "skipping found boundary: %s", buf);
+      //printf("skipping found boundary: %s", buf);
       return 0;      
    }
 
@@ -524,7 +524,7 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
             *q = '\0';
 
             if(cfg->debug == 1)
-               fprintf(stderr, "DISCARDED HTML: %s", ++q);
+               printf("DISCARDED HTML: %s", ++q);
          }
       }
    }
@@ -565,8 +565,8 @@ DECOMPOSE:
    if(state->is_header == 1) p = strchr(buf, ' ');
    else p = buf;
 
-   if(cfg->debug == 1) fprintf(stderr, "%s\n", buf);
-   //if(cfg->debug == 1) fprintf(stderr, "%d %ld %s\n", state->base64, state->c_shit, buf);
+   if(cfg->debug == 1) printf("%s\n", buf);
+   //if(cfg->debug == 1) printf("%d %ld %s\n", state->base64, state->c_shit, buf);
 
    do {
       p = split(p, DELIMITER, puf, MAXBUFSIZE-1);

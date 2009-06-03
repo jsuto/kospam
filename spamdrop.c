@@ -608,7 +608,7 @@ int main(int argc, char **argv, char **envp){
       strncat(clapf_info, lang, MAXBUFSIZE-1);
       strncat(clapf_info, "\r\n", MAXBUFSIZE-1);
 
-      if(cfg.debug == 1) fprintf(stderr, "lang detected: %s\n", lang);
+      if(cfg.debug == 1) printf("lang detected: %s\n", lang);
    #endif
 
    #ifdef HAVE_SPAMSUM
@@ -691,8 +691,8 @@ int main(int argc, char **argv, char **envp){
    gettimeofday(&tv_stop, &tz);
 
    if(cfg.debug == 1){
-      fprintf(stderr, "spaminess: %.4f in %ld [ms]\n", spaminess, tvdiff(tv_stop, tv_start)/1000);
-      fprintf(stderr, "%ld %ld\n", state.c_shit, state.l_shit);
+      printf("spaminess: %.4f in %ld [ms]\n", spaminess, tvdiff(tv_stop, tv_start)/1000);
+      printf("%ld %ld\n", state.c_shit, state.l_shit);
    }
 
 

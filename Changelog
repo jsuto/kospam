@@ -10,8 +10,10 @@ Minor enhancements in the webui.
 
 A comment warns you in config.in.php to edit the proper configuration
 file (config.php) in the webui.
-
 (webui/config.in.php, Makefile.in)
+
+Modified the spamdrop utility to print most of its stuff to stdout instead of stderr.
+(lots of *.c files)
 
 2009.06.01, SJ
 

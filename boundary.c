@@ -87,7 +87,7 @@ void free_boundary(struct boundary *b){
    while(b){
       p = b->r;
 
-      //fprintf(stderr, "free boundary: %s\n", b->boundary_str);
+      //printf("free boundary: %s\n", b->boundary_str);
       if(b)
          free(b);
 

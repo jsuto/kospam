@@ -145,7 +145,7 @@ install-clapf: clapf
 	$(INSTALL) -m 0755 $(srcdir)/stat/clapf-rrd-update.sh $(DESTDIR)$(libexecdir)/clapf
 
 	$(INSTALL) -d $(DESTDIR)$(localstatedir)/lib/clapf/data
-	$(INSTALL) -d -m 711 $(DESTDIR)$(localstatedir)/lib/clapf/queue
+	$(INSTALL) -d -m 755 $(DESTDIR)$(localstatedir)/lib/clapf/queue
 	$(INSTALL) -d $(DESTDIR)$(localstatedir)/lib/clapf/blackhole
 	$(INSTALL) -d -m 711 $(DESTDIR)$(localstatedir)/lib/clapf/tmp
 	$(INSTALL) -d $(DESTDIR)$(localstatedir)/lib/clapf/stat

@@ -1,5 +1,10 @@
 0.4.1:
 
+2009.06.04, SJ
+
+Fixed minor quarantine related issue in the webui.
+(webui/q.php, webui/funcs.php, webui/lang/*)
+
 2009.06.03, SJ
 
 Updated the spamstat utility according to the sql schema modifications.

@@ -285,6 +285,8 @@ function check_directory($dir, $username, $page, $from, $subj){
 
    if($dir == "") return 0;
 
+   if(!file_exists($dir)) return 0;
+
    $meurl = $_SERVER['PHP_SELF'];
 
    $files = scandir($dir, 1);
@@ -316,6 +318,7 @@ function check_directory($dir, $username, $page, $from, $subj){
       }
    }
 
+   if($n_msgs == 0) return $n_msgs;
 
    print "<form action=\"$meurl\" name=\"aaa1\" method=\"post\">\n";
    print "<input type=\"hidden\" name=\"topurge\" value=\"1\">\n";

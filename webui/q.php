@@ -165,6 +165,8 @@ if($_SERVER['REQUEST_METHOD'] == "GET"){
 
       $nspam = check_directory($my_q_dir, $username, $page, $from, $subj);
 
+      if($nspam == 0) print "<p>$err_no_spam_message_in_the_quarantine_yet</p>";
+
       print "<p>\n";
       $prev_page = $page - 1;
       $next_page = $page + 1;

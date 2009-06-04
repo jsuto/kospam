@@ -161,4 +161,6 @@ $err_failed_to_change_password = "Nem sikerült megváltoztatni a jelszót";
 $err_empty_quarantine_directory_structure = "Üres karantén könyvtár struktúra";
 $err_non_existent_queue_directory = "A megadott karantén könyvtár nem létezik";
 
+$err_no_spam_message_in_the_quarantine_yet = "Nincs spam levél a karanténban";
+
 ?>

@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2009.05.29, SJ
+ * spamdrop.c, 2009.06.09, SJ
  */
 
 #include <stdio.h>
@@ -587,9 +587,9 @@ int main(int argc, char **argv, char **envp){
 
       spaminess = bayes_file(&sdata, &state, &cfg);
 
-      /* update tokens */
+      /* update tokens unless we are in debug mode */
 
-      if(cfg.update_tokens == 1){
+      if(cfg.update_tokens == 1 && debug == 0){
       #ifdef HAVE_MYSQL
          update_mysql_tokens(sdata.mysql, state.token_hash, sdata.uid);
       #endif

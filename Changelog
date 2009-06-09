@@ -1,5 +1,10 @@
 0.4.1:
 
+2009.06.09, SJ
+
+Skip updating the tokens if we are in debug mode.
+(spamdrop.c)
+
 2009.06.04, SJ
 
 Fixed minor quarantine related issue in the webui.

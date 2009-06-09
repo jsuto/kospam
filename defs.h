@@ -1,5 +1,5 @@
 /*
- * defs.h, 2009.04.17, SJ
+ * defs.h, 2009.06.09, SJ
  */
 
 #ifndef _DEFS_H
@@ -133,10 +133,9 @@ struct _state {
 struct session_data {
    char ttmpfile[SMALLBUFSIZE], deliveryinfo[SMALLBUFSIZE];
    char mailfrom[SMALLBUFSIZE], rcptto[MAX_RCPT_TO][SMALLBUFSIZE], client_addr[IPLEN], name[SMALLBUFSIZE];
-   char blackhole;
    unsigned long uid;
    int fd, tot_len, num_of_rcpt_to, skip_id_check, need_signo_check, unknown_client;
-   int policy_group;
+   int policy_group, blackhole;
    int need_scan;
    float Nham, Nspam;
 #ifdef NEED_MYSQL

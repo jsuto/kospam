@@ -334,8 +334,8 @@ void init_session_data(struct session_data *sdata){
                   /* force spamcheck if the message sent to the blackhole */
                   if(sdata.blackhole == 1) my_cfg.use_antispam = 1;
 
-                  /* run statistical antispam check */
 
+                  /* run statistical antispam check */
 
                   if(my_cfg.use_antispam == 1 && (my_cfg.max_message_size_to_filter == 0 || sdata.tot_len < my_cfg.max_message_size_to_filter) ){
 

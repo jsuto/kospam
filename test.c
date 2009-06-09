@@ -1,5 +1,5 @@
 /*
- * test.c, 2009.01.20, SJ
+ * test.c, 2009.06.09, SJ
  */
 
 #include <stdio.h>
@@ -105,12 +105,6 @@ int main(int argc, char **argv){
       spaminess = bayes_file(&sdata, &state, &cfg);
    }
    close_mydb(sdata.mhash);
-#endif
-
-#ifdef MY_TEST
-   reverse_ipv4_addr(state.ip);
-   if(rbl_list_check("zen.spamhaus.org", state.ip, cfg.verbosity) == 1)
-      printf("%s: ZEN=1\r\n", state.ip);
 #endif
 
 #ifdef HAVE_LANG_DETECT

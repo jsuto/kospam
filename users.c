@@ -1,5 +1,5 @@
 /*
- * users.c, 2009.05.19, SJ
+ * users.c, 2009.06.09, SJ
  */
 
 #include <stdio.h>
@@ -31,7 +31,7 @@
 int get_user_from_email(struct session_data *sdata, char *email, struct __config *cfg){
    MYSQL_RES *res;
    MYSQL_ROW row;
-   char *p, buf[MAXBUFSIZE], _email[2*SMALLBUFSIZE+1];
+   char *p, *q, buf[MAXBUFSIZE], _email[2*SMALLBUFSIZE+1];
    int rc=0;
 
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: query user data from %s", sdata->ttmpfile, email);
@@ -47,17 +47,17 @@ int get_user_from_email(struct session_data *sdata, char *email, struct __config
    mysql_real_escape_string(&(sdata->mysql), _email, email, strlen(email));
 
 
-   if((p = strcasestr(_email, "+spam"))){
-      *p = '\0';
-      snprintf(buf, MAXBUFSIZE-1, "SELECT %s.uid, %s.username FROM %s,%s WHERE %s.uid=%s.uid AND %s.email='%s%s'",
-         SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_EMAIL_TABLE, _email, p+5);
+   /* skip the +... part from the email */
 
-      *p = '+';
-   }
-   else if((p = strcasestr(_email, "+ham"))){
+   if((p = strcasestr(_email, "+"))){
       *p = '\0';
-      snprintf(buf, MAXBUFSIZE-1, "SELECT %s.uid, %s.username FROM %s,%s WHERE %s.uid=%s.uid AND %s.email='%s%s'",
-         SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_EMAIL_TABLE, _email, p+4);
+      q = strchr(p+1, '@');
+
+      if(!q) return 0;
+
+      snprintf(buf, MAXBUFSIZE-1, "SELECT %s.uid, %s.username, %s.policy_group FROM %s,%s WHERE %s.uid=%s.uid AND %s.email='%s%s'",
+         SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_EMAIL_TABLE, _email, q);
+
       *p = '+';
    }
    else {

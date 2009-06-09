@@ -49,7 +49,7 @@ int get_user_from_email(struct session_data *sdata, char *email, struct __config
 
    /* skip the +... part from the email */
 
-   if((p = strcasestr(_email, "+"))){
+   if((p = strchr(_email, '+'))){
       *p = '\0';
       q = strchr(p+1, '@');
 
@@ -154,7 +154,7 @@ int is_sender_on_black_or_white_list(struct session_data *sdata, char *email, ch
 int get_user_from_email(struct session_data *sdata, char *email, struct __config *cfg){
    sqlite3_stmt *pStmt;
    const char **pzTail=NULL;
-   char *p, buf[MAXBUFSIZE];
+   char *p, *q, buf[MAXBUFSIZE];
    int rc=0;
 
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: query user data from %s", sdata->ttmpfile, email);
@@ -165,22 +165,20 @@ int get_user_from_email(struct session_data *sdata, char *email, struct __config
 
    if(email == NULL) return 0;
 
-   if((p = strcasestr(email, "+spam"))){
+   /* skip the +... part from the email */
+
+   if((p = strchr(email, '+'))){
       *p = '\0';
-      //snprintf(buf, MAXBUFSIZE-1, "SELECT uid, username FROM %s WHERE email='%s%s'", SQL_USER_TABLE, email, p+5);
+      q = strchr(p+1, '@');
+
+      if(!q) return 0;
+
       snprintf(buf, MAXBUFSIZE-1, "SELECT %s.uid, %s.username FROM %s,%s WHERE %s.uid=%s.uid AND %s.email='%s%s'",
-         SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_EMAIL_TABLE, email, p+5);
-      *p = '+';
-   }
-   else if((p = strcasestr(email, "+ham"))){
-      *p = '\0';
-      //snprintf(buf, MAXBUFSIZE-1, "SELECT uid, username FROM %s WHERE email='%s%s'", SQL_USER_TABLE, email, p+4);
-      snprintf(buf, MAXBUFSIZE-1, "SELECT %s.uid, %s.username FROM %s,%s WHERE %s.uid=%s.uid AND %s.email='%s%s'",
-         SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_EMAIL_TABLE, email, p+4);
+         SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_EMAIL_TABLE, email, q);
+
       *p = '+';
    }
    else {
-      //snprintf(buf, MAXBUFSIZE-1, "SELECT uid, username FROM %s WHERE email='%s'", SQL_USER_TABLE, email);
       snprintf(buf, MAXBUFSIZE-1, "SELECT %s.uid, %s.username FROM %s,%s WHERE %s.uid=%s.uid AND %s.email='%s'",
             SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_EMAIL_TABLE, email);
    }
@@ -296,7 +294,7 @@ LDAP *do_bind_ldap(char *ldap_host, char *binddn, char *bindpw, int usetls){
 
 int get_user_from_email(struct session_data *sdata, char *email, struct __config *cfg){
    int rc=0;
-   char filter[SMALLBUFSIZE], *attrs[] = { NULL }, **vals, *p;
+   char filter[SMALLBUFSIZE], *attrs[] = { NULL }, **vals, *p, *q;
    LDAPMessage *res, *e;
 
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: query user data from %s", sdata->ttmpfile, email);
@@ -309,7 +307,18 @@ int get_user_from_email(struct session_data *sdata, char *email, struct __config
 
    if(sdata->ldap == NULL) return 0;
 
-   snprintf(filter, SMALLBUFSIZE-1, "(|(%s=%s)(%s=%s))", cfg->email_address_attribute_name, email, cfg->email_alias_attribute_name, email);
+   if((p = strchr(email, '+'))){
+      *p = '\0';
+      q = strchr(p+1, '@');
+
+      if(!q) return 0;
+
+      snprintf(filter, SMALLBUFSIZE-1, "(|(%s=%s%s)(%s=%s%s))", cfg->email_address_attribute_name, email, q, cfg->email_alias_attribute_name, email, q);
+
+      *p = '+';
+   }
+   else
+      snprintf(filter, SMALLBUFSIZE-1, "(|(%s=%s)(%s=%s))", cfg->email_address_attribute_name, email, cfg->email_alias_attribute_name, email);
 
    rc = ldap_search_s(sdata->ldap, cfg->ldap_base, LDAP_SCOPE, filter, attrs, 0, &res);
 
@@ -360,7 +369,7 @@ int get_user_from_email(struct session_data *sdata, char *email, struct __config
 }
 
 
-int is_sender_on_black_or_white_list(struct session_data *sdata, char *email, char *table, struct __config *cfg){
+int is_sender_on_black_or_white_list(struct session_data *sdata, char *email, char *fieldname, char *table, struct __config *cfg){
    int i, rc, ret=0;
    char filter[SMALLBUFSIZE], *attrs[] = { NULL }, **vals;
    LDAPMessage *res, *e;

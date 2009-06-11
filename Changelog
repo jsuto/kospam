@@ -1,5 +1,10 @@
 0.4.1:
 
+2009.06.11, SJ
+
+LDAP fixes in both schema and webui.
+(webui/ldap.php)
+
 2009.06.09, SJ
 
 Skip updating the tokens if we are in debug mode.

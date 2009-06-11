@@ -17,11 +17,12 @@ objectClass: top
 objectClass: person
 objectClass: qmailUser
 objectClass: qmailGroup
-uid: 1
+uid: 0
 mail: admin@aaaa.fu
 mailAlternateAddress:
 mailMessageStore: x
 filtersender:
+blackList:
 policyGroupId: 0
 isAdmin: 1
 userPassword: admin

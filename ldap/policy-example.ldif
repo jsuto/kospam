@@ -3,12 +3,28 @@ ou: clapfpolicies
 objectClass: top
 objectClass: organizationalUnit
 
-dn: policygroup=1,ou=clapfpolicies,dc=yourdomain,dc=com
+dn: policyGroup=1,ou=clapfpolicies,dc=yourdomain,dc=com
 objectClass: top
 objectClass: clapfPolicyGroup
 policyGroup: 1
-policyName: test2
+policyName: test1
+deliverInfectedEmail: 0
+silentlyDiscardInfectedEmail: 1
+useAntispam: 1
+spamSubjectPrefix: [SPAM]
+enableAutoWhitelist: 1
 maxMessageSizeToFilter: 128000
-spamoveralllimit: 0.92
-spamsubjectprefix: [SPAM]
+rblDomain:
+surblDomain:
+spamOverallLimit: 0.92
+spaminessOblivionLimit: 1.01
+replaceJunkCharacters: 1
+invalidJunkLimit: 5
+invalidJunkLine: 1
+penalizeImages: 0
+penalizeEmbedImages: 0
+penalizeOctetStream: 0
+trainingMode: 0
+initial1000Learning: 0
+storeMetaData: 1
 

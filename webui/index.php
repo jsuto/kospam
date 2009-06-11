@@ -7,9 +7,9 @@ $username = get_authenticated_username();
 
 if(isset($_GET['pagelen'])) Header("Set-Cookie: pagelen=" . $_GET['pagelen'] . "; path=/");
 
-include_once("header.php");
-
 if($username == "") show_auth_popup();
+
+include_once("header.php");
 
 if(isset($_POST['password']) && isset($_POST['password2'])){
    if($_POST['password'] != $_POST['password2']) nice_error($err_password_mismatch);

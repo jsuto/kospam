@@ -279,11 +279,11 @@ objectclass ( 1.3.6.1.4.1.7914.1.3.2.1 NAME 'qmailGroup'
 	DESC 'QMail-LDAP Group'
 	SUP top
 	AUXILIARY
-	MUST ( mail $ mailAlternateAddress $ mailMessageStore $ blackList )
+	MUST ( mail $ mailAlternateAddress $ mailMessageStore )
 	MAY ( dnmember $ rfc822member $ filtermember $ senderconfirm $
 	      membersonly $ confirmtext $ dnmoderator $ rfc822moderator $
 	      moderatortext $ dnsender $ rfc822sender $ filtersender $
-	      bounceadmin) )
+	      bounceadmin $ blackList) )
 
 objectclass ( 1.3.6.1.4.1.7914.1.4.2.1 NAME 'qldapAdmin'
 	DESC 'QMail-LDAP Subtree Admin'

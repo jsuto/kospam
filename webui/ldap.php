@@ -229,7 +229,7 @@ function get_next_uid(){
 
 
 function show_existing_users($what, $page, $page_len){
-   global $basedn, $conn, $EDIT_OR_VIEW;
+   global $user_base_dn, $conn, $EDIT_OR_VIEW;
    $n_users = 0;
    $from = $page * $page_len;
    $to = ($page+1) * $page_len;
@@ -238,7 +238,7 @@ function show_existing_users($what, $page, $page_len){
 
    $justthese = array("uid", "mail", "cn", "policygroupid");
 
-   $sr = ldap_search($conn, $basedn, $filter, $justthese);
+   $sr = ldap_search($conn, $user_base_dn, $filter, $justthese);
 
    $info = ldap_get_entries($conn, $sr);
 
@@ -262,7 +262,7 @@ function show_existing_users($what, $page, $page_len){
 
 
 function print_user($x, $ro_uid = 0){
-   global $EMAIL_ADDRESS, $USERNAME, $PASSWORD, $USERID, $POLICY_GROUP, $ADMIN_USER, $ALIASES, $WHITELIST, $BLACKLIST, $default_policy;
+   global $EMAIL_ADDRESS, $USERNAME, $PASSWORD, $PASSWORD_AGAIN, $USERID, $POLICY_GROUP, $ADMIN_USER, $ALIASES, $WHITELIST, $BLACKLIST, $default_policy;
 
    $len = 30;
    $aliases = "";
@@ -272,6 +272,7 @@ function print_user($x, $ro_uid = 0){
 
    print "<tr><td>$USERNAME:</td><td><input type=\"text\" name=\"username\" value=\"$x[1]\" size=\"$len\"></td></tr>\n";
    print "<tr><td>$PASSWORD:</td><td><input type=\"password\" name=\"password\" value=\"\"></td></tr>\n";
+   print "<tr><td>$PASSWORD_AGAIN:</td><td><input type=\"password\" name=\"password2\" value=\"\"></td></tr>\n";
 
    if($ro_uid == 1)
       print "<tr><td>$USERID:</td><td>$x[2]</td></tr>\n";
@@ -394,7 +395,7 @@ function add_user_entry($uid){
    else $entry["blacklist"] = "";
 
    $entry["policyGroupId"] = $_POST['policy_group'];
-   $entry["userPassword"] = $_POST['password'];
+   $entry["userPassword"] = "{MD5}" . base64_encode(md5($_POST['password'], TRUE));
    $entry["isAdmin"] = $_POST["isadmin"];
 
 
@@ -420,7 +421,7 @@ function update_user($uid){
    $entry["filtersender"] = $b;
    $entry["blacklist"] = $c;
 
-   if(isset($_POST['password']) && strlen($_POST['password']) > 3) $entry["userPassword"] = $_POST['password'];
+   if(isset($_POST['password']) && strlen($_POST['password']) > 3) $entry["userPassword"] = "{MD5}" . base64_encode(md5($_POST['password'], TRUE));
 
    $entry["isAdmin"] = $_POST['isadmin'];
 
@@ -437,7 +438,8 @@ function change_password(){
    $entry = array();
 
    $entry["cn"] = $username;
-   $entry["userPassword"] = $_POST['password'];
+   //$entry["userPassword"] = $_POST['password'];
+   $entry["userPassword"] = "{MD5}" . base64_encode(md5($_POST['password'], TRUE));
 
    $dn = "cn=" . $username . ",$user_base_dn";
 
@@ -517,7 +519,7 @@ function show_policy($policy_group){
    $x = array();
 
    $filter="policyGroup=$policy_group";
-   $justthese = array("policyName", "deliverinfectedemail", "silentlydiscardinfectedemail", "useantispam", "spamsubjectprefix", "enableautowhitelist", "maxmessagesizetofilter", "rbldomain", "surbldomain", "spamoveralllimit", "spaminessoblivionlimit", "replacejunkcharacters", "invalidjunklimit", "invalidjunkline", "penalizeimages", "penalizeembedimages", "penalizeoctetstream", "trainingmode", "initial1000learning");
+   $justthese = array("policyName", "deliverinfectedemail", "silentlydiscardinfectedemail", "useantispam", "spamsubjectprefix", "enableautowhitelist", "maxmessagesizetofilter", "rbldomain", "surbldomain", "spamoveralllimit", "spaminessoblivionlimit", "replacejunkcharacters", "invalidjunklimit", "invalidjunkline", "penalizeimages", "penalizeembedimages", "penalizeoctetstream", "trainingmode", "initial1000learning", "storemetadata");
 
    $sr = ldap_search($conn, $policy_base_dn, $filter, $justthese);
    $info = ldap_get_entries($conn, $sr);
@@ -544,6 +546,7 @@ function show_policy($policy_group){
       $x[16] = $info[$i]["penalizeoctetstream"][0];
       $x[17] = $info[$i]["trainingmode"][0];
       $x[18] = $info[$i]["initial1000learning"][0];
+      $x[19] = $info[$i]["storemetadata"][0];
 
    }
 
@@ -585,7 +588,7 @@ function add_policy(){
    $entry["penalizeoctetstream"] = $_POST['penalize_octet_stream'];
    $entry["trainingmode"] = $_POST['training_mode'];
    $entry["initial1000learning"] = $_POST['initial_1000_learning'];
-
+   $entry["storemetadata"] = $_POST['store_metadata'];
 
    $dn = "policyGroup=$policy_group,$policy_base_dn";
 
@@ -617,6 +620,7 @@ function update_policy($policy_group){
    $entry["penalizeoctetstream"] = $_POST['penalize_octet_stream'];
    $entry["trainingmode"] = $_POST['training_mode'];
    $entry["initial1000learning"] = $_POST['initial_1000_learning'];
+   $entry["storemetadata"] = $_POST['store_metadata'];
 
    $dn = "policyGroup=$policy_group,$policy_base_dn";
 

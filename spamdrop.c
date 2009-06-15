@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2009.06.09, SJ
+ * spamdrop.c, 2009.06.15, SJ
  */
 
 #include <stdio.h>
@@ -331,11 +331,13 @@ int main(int argc, char **argv, char **envp){
    /* do antivirus check if we have to */
 
 #ifdef HAVE_ANTIVIRUS
+#ifndef HAVE_LIBCLAMAV
    if(do_av_check(&sdata, recipient, from, &cfg) == AVIR_VIRUS){
       syslog(LOG_PRIORITY, "%s: dropping infected message", sdata.ttmpfile);
       unlink(sdata.ttmpfile);
       return 0;
    }
+#endif
 #endif
 
 

@@ -12,11 +12,12 @@ include_once("header.php");
 if($userdb != "mysql") nice_error($err_this_feature_is_not_available);
 
 $timespan = 0;
-
+$uid = "";
 $nham = 0;
 $nspam = 0;
 
 if(isset($_GET['timespan'])) $timespan = $_GET['timespan'];
+if(isset($_GET['uid'])) $uid = $_GET['uid'];
 
 ?>
 
@@ -35,7 +36,7 @@ if(isset($_GET['timespan'])) $timespan = $_GET['timespan'];
 
 ?>
 
-   <img src="graph.php?timespan=<?php print $timespan; ?>" />
+   <img src="graph.php?timespan=<?php print $timespan; ?>&uid=<?php print $uid; ?>" />
 
 </p>
 

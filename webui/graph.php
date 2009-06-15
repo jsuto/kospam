@@ -1,6 +1,9 @@
 <?php
 
 $lang = "en";
+$WHERE = "";
+$uid = "";
+
 
 include_once("config.php");
 include_once("libchart/classes/libchart.php");
@@ -10,11 +13,13 @@ $username = get_authenticated_username();
 
 if($username == "") show_auth_popup();
 
+$admin_user = is_admin($username);
+
 $title = $GRAPH['ham_and_spam_messages'];
 $size_x = 800;
 $size_y = 480;
-$color_ham = "#d03080";
-$color_spam = "#1ac090";
+$color_ham = "#1ac090";
+$color_spam = "#d03080";
 
 $timespan = 0;
 
@@ -28,19 +33,27 @@ $line2 = new XYDataSet();
 
 
 if(isset($_GET['timespan'])) $timespan = $_GET['timespan'];
+if(isset($_GET['uid'])) $uid = $_GET['uid'];
 
 $conn = webui_connect() or nice_error($err_connect_db);
 
-$stmt = "SELECT uid FROM $user_table WHERE username='$username'";
-$r = mysql_query($stmt) or nice_error($err_sql_error);
-list($uid) = mysql_fetch_row($r);
-mysql_free_result($r);
+if($admin_user == 0){
+   $stmt = "SELECT uid FROM $user_table WHERE username='$username'";
+   $r = mysql_query($stmt) or nice_error($err_sql_error);
+   list($uid) = mysql_fetch_row($r);
+   mysql_free_result($r);
 
-if($uid){
+   $WHERE = "WHERE uid=$uid";
+}
+else if($uid){
+   if(!is_numeric($uid)) nice_error($err_NaN);
+   $WHERE = "WHERE uid=$uid";
+}
+
    if($timespan == 0)
-      $stmt = "SELECT ts, SUM(nham), SUM(nspam) FROM $stat_table WHERE uid=$uid GROUP BY ts ORDER BY ts DESC LIMIT 24";
+      $stmt = "SELECT ts, SUM(nham), SUM(nspam) FROM $stat_table $WHERE GROUP BY ts ORDER BY ts DESC LIMIT 24";
    else
-      $stmt = "SELECT ts, SUM(nham), SUM(nspam) FROM $stat_table WHERE uid=$uid GROUP BY FROM_UNIXTIME(ts, '%Y.%m.%d.') ORDER BY ts DESC LIMIT 30";
+      $stmt = "SELECT ts, SUM(nham), SUM(nspam) FROM $stat_table $WHERE GROUP BY FROM_UNIXTIME(ts, '%Y.%m.%d.') ORDER BY ts DESC LIMIT 30";
 
    $i = 0;
 
@@ -63,7 +76,7 @@ if($uid){
  
    }
    mysql_free_result($r);
-}
+
 
 webui_close($conn);
 

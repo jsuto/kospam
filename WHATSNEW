@@ -4,14 +4,17 @@
 PIPELINING support.
 
 Enhanced webui supporting mass operations (message delivery,
-training, user editing, etc.)
+training, user editing, etc.).
+
+The webui displays a formatted view of the email. The raw
+email is also available as an option.
 
 Optimized antivirus engine utilization.
 
 Revised and smarter message store even in a distributed
 environment.
 
-Added some onfiguration file options suitable for high
+Added some configuration file options suitable for high
 performance installations.
 
 Flexible webui authentication.
@@ -21,6 +24,11 @@ Email address blacklist feature similare to the whitelist.
 You can specify what uid/gid clapf will run.
 
 Added a graphical representation of the per user statistics.
+
+Updated libclamav interface due to changes in the clamav API.
+
+An Outlook hack is added to support the training of Outlook
+users.
 
 0.4.0:
 ------

@@ -178,7 +178,6 @@ install-splitmbox: splitmbox
 
 install-parsembox:
 	$(INSTALL) -m 0755 parsembox $(DESTDIR)$(bindir)
-	$(INSTALL) -m 0755 spamtest $(DESTDIR)$(bindir)
 	$(INSTALL) -d $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 $(srcdir)/prepare-sql $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 $(srcdir)/stat/spamstat.pl $(DESTDIR)$(libexecdir)/clapf
@@ -195,7 +194,6 @@ install-parsembox:
 
 uninstall:
 	rm -f $(DESTDIR)$(bindir)/parsembox
-	rm -f $(DESTDIR)$(bindir)/spamtest
 	rm -f $(DESTDIR)$(bindir)/splitmbox
 	rm -f $(DESTDIR)$(bindir)/blackhole
 	rm -f $(DESTDIR)$(bindir)/spamdrop
@@ -205,7 +203,6 @@ uninstall:
 	rm -f $(DESTDIR)$(sysconfdir)/clapf.conf
 	rm -f $(DESTDIR)$(mandir)/man1/parsembox.1
 	rm -f $(DESTDIR)$(mandir)/man1/spamdrop.1
-	rm -f $(DESTDIR)$(mandir)/man1/spamtest.1
 	rm -f $(DESTDIR)$(mandir)/man1/splitmbox.1
 	rm -f $(DESTDIR)$(mandir)/man8/clapf.8
 

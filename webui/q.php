@@ -122,7 +122,7 @@ if($_SERVER['REQUEST_METHOD'] == "GET"){
          $m2 .= "$clapf_header_field$id\r\n" . $m;
 
          $x = send_smtp_email($smtphost, $clapfport, $yourdomain, $fromaddr, $ham_train_address, $m2);
-         if(!$x) nice_error("$err_message_failed_to_train");
+         if(!$x) nice_error("$err_message_failed_to_train <a href=\"$meurl?user=$username\">BACK.</a>\n");
       }
 
 
@@ -134,9 +134,9 @@ if($_SERVER['REQUEST_METHOD'] == "GET"){
 
       if($x == 1){
          @unlink($my_q_dir . "/" . $deliver);
-         nice_screen("$err_message_delivered $to");
+         nice_screen("$err_message_delivered $to <a href=\"$meurl?user=$username\">BACK.</a>\n");
       }
-      else nice_error("$err_message_failed_to_deliver $to");
+      else nice_error("$err_message_failed_to_deliver $to <a href=\"$meurl?user=$username\">BACK.</a>\n");
    }
 
 

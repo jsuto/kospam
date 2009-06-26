@@ -105,3 +105,36 @@ int avast_scan(char *tmpfile, char *engine, char *avinfo, struct __config *cfg){
    return AV_OK;
 }
 
+
+int avast_cmd_scan(char *tmpfile, char *engine, char *avinfo, struct __config *cfg){
+   FILE *f;
+   char *q, buf[SMALLBUFSIZE];
+
+   snprintf(buf, SMALLBUFSIZE-1, "%s -t=A %s", cfg->avast_home_cmd_line, tmpfile);
+
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: running: %s", tmpfile, buf);
+
+   f = popen(buf, "r");
+   if(f){
+      while(fgets(buf, SMALLBUFSIZE-1, f)){
+         q = strstr(buf, "infected by: ");
+         if(q){
+            strncpy(avinfo, q+1, SMALLBUFSIZE-1);
+            avinfo[strlen(avinfo)-1] = '\0';
+
+            snprintf(engine, SMALLBUFSIZE-1, "Avast Home");
+
+            pclose(f);
+            return AV_VIRUS;
+         }
+
+         if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: AVAST DEBUG: %s", tmpfile, buf);
+      }
+      pclose(f);
+   }
+   else return AV_ERROR;
+
+   return AV_OK;
+}
+
+

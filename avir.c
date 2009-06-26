@@ -1,5 +1,5 @@
 /*
- * avir.c, 2009.05.27, SJ
+ * avir.c, 2009.06.26, SJ
  */
 
 #include <stdio.h>
@@ -51,15 +51,19 @@ int do_av_check(struct session_data *sdata, char *email, char *email2, struct __
 #endif
 
 #ifdef HAVE_AVAST
-   if(avast_scan(sdata.ttmpfile, avengine, virusinfo, cfg) == AV_VIRUS) rav = AVIR_VIRUS;
+   if(avast_scan(sdata->ttmpfile, avengine, virusinfo, cfg) == AV_VIRUS) rav = AVIR_VIRUS;
+#endif
+
+#ifdef HAVE_AVAST_HOME
+   if(avast_cmd_scan(sdata->ttmpfile, avengine, virusinfo, cfg) == AV_VIRUS) rav = AVIR_VIRUS;
 #endif
 
 #ifdef HAVE_KAV
-   if(kav_scan(sdata.ttmpfile, avengine, virusinfo, &cfg) == AV_VIRUS) rav = AVIR_VIRUS;
+   if(kav_scan(sdata->ttmpfile, avengine, virusinfo, &cfg) == AV_VIRUS) rav = AVIR_VIRUS;
 #endif
 
 #ifdef HAVE_DRWEB
-   if(drweb_scan(sdata.ttmpfile, avengine, virusinfo, &cfg) == AV_VIRUS) rav = AVIR_VIRUS;
+   if(drweb_scan(sdata->ttmpfile, avengine, virusinfo, &cfg) == AV_VIRUS) rav = AVIR_VIRUS;
 #endif
 
 #ifdef HAVE_CLAMD
@@ -72,7 +76,7 @@ int do_av_check(struct session_data *sdata, char *email, char *email2, struct __
 
    gettimeofday(&tv_scnd, &tz);
 
-   syslog(LOG_PRIORITY, "%s: virus scanning done in %ld [ms]", sdata->ttmpfile, tvdiff(tv_scnd, tv_rcvd)/1000);
+   if(cfg->verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: virus scanning done in %ld [ms]", sdata->ttmpfile, tvdiff(tv_scnd, tv_rcvd)/1000);
 
 
    /* if a virus has found */

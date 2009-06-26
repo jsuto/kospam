@@ -1,5 +1,20 @@
 0.4.2-rc1:
 
+
+
+2009.06.26, SJ
+
+Fixing some typos resulting compile errors in avir.c
+(avir.c)
+
+Added avast! home personal edition support. As its name suggests
+it may be suitable for very small networks since it spawns the
+avast binary to do the dirty job.
+
+(avir.c, avast.c, configure*, cfg*, example.conf)
+
+2009.06.25, SJ
+
 Removed the spamtest utility from the installation.
 (Makefile.in)
 

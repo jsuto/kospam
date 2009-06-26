@@ -1,5 +1,5 @@
 /*
- * cfg.c, 2009.02.16, SJ
+ * cfg.c, 2009.06.26, SJ
  */
 
 #include <stdio.h>
@@ -183,6 +183,9 @@ struct __config read_config(char *configfile){
 
                   if(strcmp(key, "avast_port") == 0)
                      cfg.avast_port = atoi(val);
+
+                  if(strcmp(key, "avast_home_cmd_line") == 0)
+                     memcpy(cfg.avast_home_cmd_line, val, MAXVAL-1);
 
                   if(strcmp(key, "kav_socket") == 0)
                      memcpy(cfg.kav_socket, val, MAXVAL-1);

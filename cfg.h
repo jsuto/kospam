@@ -1,5 +1,5 @@
 /*
- * cfg.h, 2009.02.16, SJ
+ * cfg.h, 2009.06.26, SJ
  */
 
 #ifndef _CFG_H
@@ -25,6 +25,8 @@ struct __config {
 
    char avast_addr[MAXVAL];
    int avast_port;
+
+   char avast_home_cmd_line;
 
    char kav_socket[MAXVAL];
 

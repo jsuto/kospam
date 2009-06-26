@@ -1375,6 +1375,7 @@ Optional Features:
   --enable-libclamav      build libclamav antivirus support
   --enable-clamd          build clamd antivirus support
   --enable-avast          build avast! antivirus support
+  --enable-avast-home     build avast! home personal edition antivirus support
   --enable-kav            build Kaspersky antivirus support
   --enable-drweb          build Dr.Web antivirus support
   --enable-whitelist      use whitelist
@@ -3858,6 +3859,7 @@ have_libclamav="no"
 have_clamd="no"
 have_avg="no"
 have_avast="no"
+have_avast_home="no"
 have_kav="no"
 have_drweb="no"
 
@@ -4234,6 +4236,23 @@ fi
        have_avast="yes"
        have_antivirus="yes"
     fi
+
+
+
+
+# Check whether --enable-avast was given.
+if test "${enable_avast+set}" = set; then
+  enableval=$enable_avast; want_avast_home=$enableval
+else
+  want_avast_home="no"
+fi
+
+
+    if test "$want_avast_home" = "yes"; then
+       have_avast_home="yes"
+       have_antivirus="yes"
+    fi
+
 
 
 
@@ -6416,7 +6435,7 @@ if test "$os" = "Linux"; then
 fi
 
 
-if test "$have_libclamav" = "yes" || test "$have_clamd" = "yes" || test "$have_avg" = "yes" || test "$have_avast" = "yes" || test "$have_kav" = "yes"  || test "$have_drweb" = "yes" ; then
+if test "$have_libclamav" = "yes" || test "$have_clamd" = "yes" || test "$have_avast" = "yes" || test "$have_avast_home" = "yes" || test "$have_kav" = "yes"  || test "$have_drweb" = "yes" ; then
    defs="$defs -DHAVE_ANTIVIRUS"
    objs="$objs avir.o"
 fi
@@ -6451,6 +6470,12 @@ if test "$have_avast" = "yes"; then
    echo "avast! support: yes"
    objs="$objs avast.o"
    defs="$defs -DHAVE_AVAST"
+fi
+
+if test "$have_avast_home" = "yes"; then
+   echo "avast! home personal edition support: yes"
+   objs="$objs avast.o"
+   defs="$defs -DHAVE_AVAST_HOME"
 fi
 
 if test "$have_kav" = "yes"; then
@@ -6618,7 +6643,7 @@ fi
 id -u $CLAPF_USER 2>/dev/null 1>/dev/null
 if test $? -eq 1; then echo "the user \"$CLAPF_USER\" does not exists, please create it, first with adduser..."; exit 1; fi
 
-if test "$have_libclamav" = "no" && test "$have_clamd" = "no" && test "$have_avg" = "no" && test "$have_avast" = "no" && test "$have_kav" = "no" && test "$have_drweb" = "no" ; then
+if test "$have_libclamav" = "no" && test "$have_clamd" = "no" && test "$have_avg" = "no" && test "$have_avast" = "no" && test "$have_avast_home" = "no" && test "$have_kav" = "no" && test "$have_drweb" = "no" ; then
    echo; echo
    echo "You have not selected any antivirus support."
    echo "clapf will not protect you from hostile code coming in e-mail"

@@ -1,5 +1,5 @@
 /*
- * av.h, 2009.01.12, SJ
+ * av.h, 2009.06.26, SJ
  */
 
 #ifndef _AV_H
@@ -44,6 +44,7 @@ int drweb_scan(char *tmpfile, char *engine, char *avinfo, struct __config *cfg);
 #define AVAST_RESP_INFECTED "[L]"
 
 int avast_scan(char *tmpfile, char *engine, char *avinfo, struct __config *cfg);
+int avast_cmd_scan(char *tmpfile, char *engine, char *avinfo, struct __config *cfg);
 
 // Kaspersky stuff
 

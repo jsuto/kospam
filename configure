@@ -723,6 +723,7 @@ enable_static_build
 enable_libclamav
 enable_clamd
 enable_avast
+enable_avast_home
 enable_kav
 enable_drweb
 enable_whitelist
@@ -4240,9 +4241,9 @@ fi
 
 
 
-# Check whether --enable-avast was given.
-if test "${enable_avast+set}" = set; then
-  enableval=$enable_avast; want_avast_home=$enableval
+# Check whether --enable-avast-home was given.
+if test "${enable_avast_home+set}" = set; then
+  enableval=$enable_avast_home; want_avast_home=$enableval
 else
   want_avast_home="no"
 fi

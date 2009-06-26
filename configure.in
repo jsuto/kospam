@@ -129,7 +129,7 @@ AC_ARG_ENABLE(avast,
 
 dnl avast! home personal edition
 
-AC_ARG_ENABLE(avast,
+AC_ARG_ENABLE(avast-home,
          [  --enable-avast-home     build avast! home personal edition antivirus support], want_avast_home=$enableval, want_avast_home="no")
 
     if test "$want_avast_home" = "yes"; then

@@ -26,7 +26,7 @@ struct __config {
    char avast_addr[MAXVAL];
    int avast_port;
 
-   char avast_home_cmd_line;
+   char avast_home_cmd_line[MAXVAL];
 
    char kav_socket[MAXVAL];
 

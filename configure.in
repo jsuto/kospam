@@ -390,7 +390,7 @@ AC_ARG_WITH(tokendb,
             have_spamdrop="yes"
             parsembox="$parsembox"
             preparesql="prepare-sql aphash "
-	    spamdrop="spamdrop"
+	    spamdrop="spamdrop spamstat"
 	    spamdrop_install="install-spamdrop"
             db_install="install-mysql-new"
 

@@ -183,11 +183,11 @@ function fix_encoded_string($what){
          $s = base64_decode($x);
       }
 
-      if(preg_match("/utf-8/i", $enc)) $s = utf8_decode($s);
+      //if(preg_match("/utf-8/i", $enc)) $s = utf8_decode($s);
 
    }
    else
-      $s = $what;
+      $s = utf8_encode($what);
 
    return $s;
 }
@@ -399,7 +399,7 @@ function show_message($dir, $id){
    $state = "UNDEF";
    $b = array();
    $boundary = array();
-   $text_plain = 0;
+   $text_plain = 1;
    $text_html = 0;
    $charset = "";
    $qp = $base64 = 0;
@@ -407,7 +407,7 @@ function show_message($dir, $id){
    $fp = fopen($dir . "/" . $id, "r");
    if($fp){
       while(($l = fgets($fp, 4096))){
-         if($l[0] == "\r" && $l[1] == "\n" && $is_header == 1){
+         if(($l[0] == "\r" && $l[1] == "\n" && $is_header == 1) || ($l[0] == "\n" && $is_header == 1) ){
             print "<pre>$header</pre>\n\n";
             $is_header = 0;
          }
@@ -420,7 +420,7 @@ function show_message($dir, $id){
             if($x){
                $x = preg_replace("/\"/", "", $x);
                $x = preg_replace("/\'/", "", $x);
-               $x = preg_replace("/ /", "", $x);
+               //$x = preg_replace("/ /", "", $x);
 
                $b = explode("boundary=", $x);
                array_push($boundary, rtrim($b[1]));
@@ -433,7 +433,7 @@ function show_message($dir, $id){
             }
 
             if(strstr($l, "text/plain")) $text_plain = 1;
-            if(strstr($l, "text/html")) $text_html = 1;
+            if(strstr($l, "text/html")){ $text_html = 1; $text_plain = 0; }
 
          }
 
@@ -470,7 +470,7 @@ function show_message($dir, $id){
                continue;
             }
 
-            else if($l[0] == "\r" && $l[1] == "\n"){
+            else if(($l[0] == "\r" && $l[1] == "\n") || $l[0] == "\n"){
                $state = "BODY";
                $body_chunk .= $l;
             }

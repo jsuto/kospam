@@ -1,0 +1,78 @@
+#!/bin/sh
+###
+### clapf_admin.sh
+###
+
+MYSQL='MYSQLBINPROG --defaults-file=YOUR_DATAROOTDIR/clapf/.my.cnf'
+
+
+if [ $# -lt 2 ]; then
+	echo; echo "usage: $0 <action> <uid> <username> <encrypted password> <email address> <policy group id>"; echo
+	echo "eg. #1: $0 add 1001 jim '"'$1$AQ9XPn$k9zHvBRo.AXPQRkM7HkX2.'"' jim@aaaa.fu 0"
+	echo "eg. #2: $0 del 1001"; echo
+	exit 1;
+fi
+
+action=$1
+uid=$2
+username=$3
+encrypted_password=$4
+email=$5
+poliy_group_id=$6
+
+CMD=""
+
+
+
+
+### check parameters ###
+
+# uid and policy group id must be numeric
+
+x=`echo $uid | tr -cd [:digit:]`
+if [ "$x" != "$uid" ]; then echo "invalid uid: $uid"; exit; fi
+
+x=`echo $poliy_group_id | tr -cd [:digit:]`
+if [ "$x" != "$poliy_group_id" ]; then echo "invalid policy group id: $poliy_group_id"; exit; fi
+
+# username may contain alphanumeric characters
+
+x=`echo $username | tr -cd [:alnum:]`
+if [ "$x" != "$username" ]; then echo "invalid username: $username"; exit; fi
+
+# email may contain alphanumeric characters + '.', '@', '-', '_'
+
+x=`echo $email | tr -cd -- -[:alnum:][@_.]`
+if [ "$x" != "$email" ]; then echo "invalid email: $email"; exit; fi
+
+# encrypted password may contain alphanumeric characters + '$', '/', '.'
+
+x=`echo $encrypted_password | tr -cd [:alnum:][\/\$\.]`
+if [ "$x" != "$encrypted_password" ]; then echo "invalid encrypted password: $encrypted_password"; exit; fi
+
+
+
+
+
+if test $# -eq 6 && test "$action" = "add" ; then
+	CMD=`( echo "INSERT INTO t_misc (nham, nspam, uid) VALUES (0, 0, $uid);" 
+	echo "INSERT INTO user (uid, username, password, policy_group, isadmin) VALUES ($uid, '$username', '$encrypted_password', $poliy_group_id, 0);" 
+	echo "INSERT INTO t_email (uid, email) VALUES ($uid, '$email');" 
+	echo "INSERT INTO t_white_list (uid) VALUES ($uid);" 
+	echo "INSERT INTO t_black_list (uid) VALUES ($uid);" )`
+fi
+
+
+if test $# -eq 2 && test "$action" = "del" ; then
+	CMD=`( echo "DELETE FROM t_misc WHERE uid=$uid;"
+	echo "DELETE FROM user WHERE uid=$uid;"
+	echo "DELETE FROM t_email WHERE uid=$uid;"
+	echo "DELETE FROM t_white_list WHERE uid=$uid;"
+	echo "DELETE FROM t_black_list WHERE uid=$uid;" )`
+fi
+
+
+if test "x" != "x$CMD"; then
+	echo $CMD | $MYSQL
+fi
+

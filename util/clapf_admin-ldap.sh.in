@@ -1,0 +1,70 @@
+#!/bin/sh
+###
+### clapf_admin.sh
+###
+
+if [ $# -lt 2 ]; then
+	echo; echo "usage: $0 <action> <uid> <username> <encrypted password by slappasswd> <email address> <policy group id> <basedn>"; echo
+	echo "eg: $0 add 1001 jim '"'{SSHA}iHtdvh+qyBb5BCYblly9qEQ1BHTcoOqA'"' jim@aaaa.fu 0 ou=clapfusers,dc=yourdomain,dc=com"
+	exit 1;
+fi
+
+action=$1
+uid=$2
+username=$3
+encrypted_password=$4
+email=$5
+poliy_group_id=$6
+basedn=$7
+
+
+### check parameters ###
+
+# uid and policy group id must be numeric
+
+x=`echo $uid | tr -cd [:digit:]`
+if [ "$x" != "$uid" ]; then echo "invalid uid: $uid"; exit; fi
+
+x=`echo $poliy_group_id | tr -cd [:digit:]`
+if [ "$x" != "$poliy_group_id" ]; then echo "invalid policy group id: $poliy_group_id"; exit; fi
+
+# username may contain alphanumeric characters
+
+x=`echo $username | tr -cd [:alnum:]`
+if [ "$x" != "$username" ]; then echo "invalid username: $username"; exit; fi
+
+# email may contain alphanumeric characters + '.', '@', '-', '_'
+
+x=`echo $email | tr -cd -- -[:alnum:][@_.]`
+if [ "$x" != "$email" ]; then echo "invalid email: $email"; exit; fi
+
+# encrypted password may contain alphanumeric characters + '$', '/', '.'
+
+x=`echo $encrypted_password | tr -cd [:alnum:][\/\$\.\+\{\}]`
+if [ "$x" != "$encrypted_password" ]; then echo "invalid encrypted password: $encrypted_password"; exit; fi
+
+
+
+
+
+if test $# -eq 7 && test "$action" = "add" ; then
+	echo "dn: $username,$basedn";
+	echo "cn: $username";
+	echo "sn: whatever";
+	echo "objectClass: top";
+	echo "objectClass: person";
+	echo "objectClass: qmailUser";
+	echo "objectClass: qmailGroup";
+	echo "uid: $uid";
+	echo "mail: $email";
+	echo "mailAlternateAddress:";
+	echo "mailMessageStore: x";
+	echo "filtersender:";
+	echo "blackList:";
+	echo "policyGroupId: $poliy_group_id";
+	echo "isAdmin: 0";
+	echo "userPassword: $encrypted_password";
+	echo;
+
+fi
+

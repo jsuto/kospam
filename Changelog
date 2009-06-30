@@ -1,6 +1,15 @@
 0.4.2-rc1:
 
+2009.06.30, SJ
 
+Fixed an encoding bug caused improper view of iso-8859-2 messages
+(webui/funcs.php)
+
+Added the clapf_admin.sh utility to do batch user add or removal.
+(util/clapf_admin-sql.sh.in, util/clapf_admin-ldap.sh.in, Makefile.in)
+
+Removed the clapf_admin binary
+(clapf_admin.c)
 
 2009.06.26, SJ
 

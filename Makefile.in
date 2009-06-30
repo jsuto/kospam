@@ -143,6 +143,7 @@ install-clapf: clapf
 	$(INSTALL) -m 0755 $(srcdir)/stat/clapf-rrd-graph-oneline.sh $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 $(srcdir)/stat/clapf-rrd-graph.sh $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 $(srcdir)/stat/clapf-rrd-update.sh $(DESTDIR)$(libexecdir)/clapf
+	if [ -f "$(srcdir)/spamstat" ]; then $(INSTALL) -m 0755 $(srcdir)/spamstat $(DESTDIR)$(libexecdir)/clapf; fi
 
 	$(INSTALL) -d $(DESTDIR)$(localstatedir)/lib/clapf/data
 	$(INSTALL) -d -m 755 $(DESTDIR)$(localstatedir)/lib/clapf/queue
@@ -188,9 +189,11 @@ install-parsembox:
 	cat $(srcdir)/util/db_init_mydb.sh.in | sed -e "s%YOUR_LIBEXECDIR%$(libexecdir)/clapf%" -e "s%YOUR_BINDIR%$(bindir)%" -e "s%YOUR_SHAREDIR%$(datarootdir)/clapf%" > $(srcdir)/util/db_init_mydb.sh
 	cat $(srcdir)/util/db_init_mysql.sh.in | sed -e "s%YOUR_LIBEXECDIR%$(libexecdir)/clapf%" -e "s%YOUR_BINDIR%$(bindir)%" -e "s%YOUR_SHAREDIR%$(datarootdir)/clapf%" > $(srcdir)/util/db_init_mysql.sh
 	cat $(srcdir)/util/db_init_sqlite3.sh.in | sed -e "s%YOUR_LIBEXECDIR%$(libexecdir)/clapf%" -e "s%YOUR_BINDIR%$(bindir)%" -e "s%YOUR_SHAREDIR%$(datarootdir)/clapf%" > $(srcdir)/util/db_init_sqlite3.sh
+	if test `echo $(DEFS) | grep -c USERS_IN_LDAP ` -eq 1 ; then cat $(srcdir)/util/clapf_admin-ldap.sh.in > $(srcdir)/util/clapf_admin.sh; else cat $(srcdir)/util/clapf_admin-sql.sh.in | sed -e "s%MYSQLBINPROG%`which mysql`%" -e "s%YOUR_DATAROOTDIR%$(datarootdir)/clapf%" > $(srcdir)/util/clapf_admin.sh; fi
 	$(INSTALL) -m 0755 $(srcdir)/util/db_init_mydb.sh $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 $(srcdir)/util/db_init_mysql.sh $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 $(srcdir)/util/db_init_sqlite3.sh $(DESTDIR)$(libexecdir)/clapf
+	$(INSTALL) -m 0755 $(srcdir)/util/clapf_admin.sh $(DESTDIR)$(libexecdir)/clapf
 
 uninstall:
 	rm -f $(DESTDIR)$(bindir)/parsembox

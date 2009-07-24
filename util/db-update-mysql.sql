@@ -12,6 +12,8 @@ create table if not exists bbbb (
         unique (uid, username)
 );
 
+alter table user add column password char(48) default null;
+
 insert into bbbb (uid, username, password, policy_group, isadmin) select distinct uid, username, password, policy_group, isadmin from user;
 
 alter table user rename to user_old;

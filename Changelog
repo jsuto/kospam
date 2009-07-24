@@ -1,5 +1,24 @@
 0.4.2-rc1:
 
+2009.07.24, SJ
+
+Rewritten the whole webui using the model-view-controller (MVC) method.
+
+The MVC method isolates business logic from the user interface,
+permitting one to be freely modified without affecting the other. The
+controller collects user input, the model manipulates application data,
+and the view presents results to the user.
+
+The new webui features an installer. Please note that the old config.php
+is not compatible with the new webui, so run setup/setup.php.
+
+Please note that the new webui support only the sqlite3 and the mysql
+user db. The LDAP support is on the way.
+
+If you are using sqlite3, then update the database schema (see db-sqlite3.sql)
+and add the t_policy table.
+(webui/*)
+
 2009.06.30, SJ
 
 Fixed an encoding bug caused improper view of iso-8859-2 messages

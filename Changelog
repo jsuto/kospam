@@ -1,5 +1,10 @@
 0.4.2-rc1:
 
+2009.07.27, SJ
+
+Finished ldap support for the brand new webui.
+(webui/*)
+
 2009.07.24, SJ
 
 Rewritten the whole webui using the model-view-controller (MVC) method.

@@ -14,10 +14,6 @@ require_once("config.php");
 
 require(DIR_SYSTEM . "/startup.php");
 
-$db = new DB(DB_DRIVER, DB_HOSTNAME, DB_USERNAME, DB_PASSWORD, DB_DATABASE, DB_PREFIX);
-Registry::set('db', $db);
-
-
 
 $request = new Request();
 Registry::set("request", $request);

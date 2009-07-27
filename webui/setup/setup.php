@@ -32,7 +32,8 @@ define('CONFIG_FILE', "config.php");
 define('CRLF', "\n");
 
 
-define('WEBUI_DIRECTORY', preg_replace("/\/setup\/setup\.php/", "", $_SERVER['SCRIPT_NAME']));
+define('WEBUI_DIRECTORY', preg_replace("/\/setup\/setup\.php/", "", $_SERVER['SCRIPT_NAME']) );
+define('BASEDIR', preg_replace("/\/$/", "", $_SERVER['DOCUMENT_ROOT']) );
 
 
 function write_line($fp, $key = '', $val = '') {
@@ -87,31 +88,50 @@ function write_stuff() {
    write_line($fp);
 
 
-   write_line($fp, "DIR_SYSTEM", $_SERVER['DOCUMENT_ROOT'] . WEBUI_DIRECTORY ."/system/");
-   write_line($fp, "DIR_MODEL", $_SERVER['DOCUMENT_ROOT'] . WEBUI_DIRECTORY . "/model/");
-   write_line($fp, "DIR_DATABASE", $_SERVER['DOCUMENT_ROOT'] . WEBUI_DIRECTORY . "/system/database/");
-   write_line($fp, "DIR_IMAGE", $_SERVER['DOCUMENT_ROOT'] . WEBUI_DIRECTORY . "/image/");
-   write_line($fp, "DIR_LANGUAGE", $_SERVER['DOCUMENT_ROOT'] . WEBUI_DIRECTORY . "/language/");
-   write_line($fp, "DIR_APPLICATION", $_SERVER['DOCUMENT_ROOT'] . WEBUI_DIRECTORY . "/controller/");
-   write_line($fp, "DIR_TEMPLATE", $_SERVER['DOCUMENT_ROOT'] . WEBUI_DIRECTORY . "/view/theme/" . $_POST['THEME'] . "/templates/");
+   write_line($fp, "DIR_SYSTEM", BASEDIR . WEBUI_DIRECTORY . "/system/");
+
+   if($_POST['DB_DRIVER'] == "ldap") {
+      write_line($fp, "DIR_MODEL", BASEDIR . WEBUI_DIRECTORY . "/model-ldap/");
+   }
+   else {
+      write_line($fp, "DIR_MODEL", BASEDIR . WEBUI_DIRECTORY . "/model/");
+   }
+
+   write_line($fp, "DIR_DATABASE", BASEDIR . WEBUI_DIRECTORY . "/system/database/");
+   write_line($fp, "DIR_IMAGE", BASEDIR . WEBUI_DIRECTORY . "/image/");
+   write_line($fp, "DIR_LANGUAGE", BASEDIR . WEBUI_DIRECTORY . "/language/");
+   write_line($fp, "DIR_APPLICATION", BASEDIR . WEBUI_DIRECTORY . "/controller/");
+   write_line($fp, "DIR_TEMPLATE", BASEDIR . WEBUI_DIRECTORY . "/view/theme/" . $_POST['THEME'] . "/templates/");
    write_line($fp);
 
 
    write_line($fp, "DB_DRIVER", $_POST['DB_DRIVER']);
-   write_line($fp, "DB_HOSTNAME", $_POST['DB_HOSTNAME']);
-   write_line($fp, "DB_USERNAME", $_POST['DB_USERNAME']);
-   write_line($fp, "DB_PASSWORD", $_POST['DB_PASSWORD']);
-   write_line($fp, "DB_DATABASE", $_POST['DB_DATABASE']);
-   write_line($fp, "DB_PREFIX", "");
-   write_line($fp);
 
-   write_line($fp, "TABLE_USER", "user");
-   write_line($fp, "TABLE_EMAIL", "t_email");
-   write_line($fp, "TABLE_MISC", "t_misc");
-   write_line($fp, "TABLE_WHITELIST", "t_white_list");
-   write_line($fp, "TABLE_BLACKLIST", "t_black_list");
-   write_line($fp, "TABLE_POLICY", "t_policy");
-   write_line($fp, "TABLE_STAT", "t_stat");
+   if($_POST['DB_DRIVER'] == "ldap") {
+      write_line($fp, "LDAP_HOST", $_POST['LDAP_HOST']);
+      write_line($fp, "LDAP_BINDDN", $_POST['LDAP_BINDDN']);
+      write_line($fp, "LDAP_BINDPW", $_POST['LDAP_BINDPW']);
+      write_line($fp, "LDAP_USER_BASEDN", $_POST['LDAP_USER_BASEDN']);
+      write_line($fp, "LDAP_POLICY_BASEDN", $_POST['LDAP_POLICY_BASEDN']);
+      write_line($fp);
+   }
+   else {
+      write_line($fp, "DB_HOSTNAME", $_POST['DB_HOSTNAME']);
+      write_line($fp, "DB_USERNAME", $_POST['DB_USERNAME']);
+      write_line($fp, "DB_PASSWORD", $_POST['DB_PASSWORD']);
+      write_line($fp, "DB_DATABASE", $_POST['DB_DATABASE']);
+      write_line($fp, "DB_PREFIX", "");
+      write_line($fp);
+
+      write_line($fp, "TABLE_USER", "user");
+      write_line($fp, "TABLE_EMAIL", "t_email");
+      write_line($fp, "TABLE_MISC", "t_misc");
+      write_line($fp, "TABLE_WHITELIST", "t_white_list");
+      write_line($fp, "TABLE_BLACKLIST", "t_black_list");
+      write_line($fp, "TABLE_POLICY", "t_policy");
+      write_line($fp, "TABLE_STAT", "t_stat");
+   }
+
    write_line($fp);
 
    write_line($fp, "SITE_URL", "http://" . $_SERVER['SERVER_NAME'] . WEBUI_DIRECTORY . "/");

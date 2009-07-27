@@ -83,25 +83,19 @@ class ControllerQuarantineQuarantine extends Controller {
          exit;
       }
 
-      if($this->request->server['REQUEST_METHOD'] == 'POST'){
-         $ret = $this->model_user_user->setWhitelist($_SESSION['username'], $this->request->post['whitelist']);
 
-         if($ret == 1){
-            $this->data['x'] = $this->data['text_successfully_updated'];
-         } else {
-            $this->data['x'] = $this->data['text_failed_to_update'];
-         }
-      }
-      else {
-         list ($this->data['n_spam'], $this->data['spam_total_size'], $this->data['messages']) = 
-                 $this->model_quarantine_message->getMessages($my_q_dir, $this->data['username'], $this->data['page'], $this->data['page_len'], $this->data['from'], $this->data['subj']);
+      /* get messages from qurantine */
 
-         $this->data['prev_page'] = $this->data['page'] - 1;
-         $this->data['next_page'] = $this->data['page'] + 1;
+      list ($this->data['n_spam'], $this->data['spam_total_size'], $this->data['messages']) =
+              $this->model_quarantine_message->getMessages($my_q_dir, $this->data['username'], $this->data['page'], $this->data['page_len'], $this->data['from'], $this->data['subj']);
 
-         $this->data['total_pages'] = floor($this->data['n_spam'] / $this->data['page_len']);
+      /* print paging info */
 
-      }
+      $this->data['prev_page'] = $this->data['page'] - 1;
+      $this->data['next_page'] = $this->data['page'] + 1;
+
+      $this->data['total_pages'] = floor($this->data['n_spam'] / $this->data['page_len']);
+
 
       $this->render();
    }

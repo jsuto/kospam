@@ -19,12 +19,14 @@
 <table border="1">
    <tr align="center">
       <th>&nbsp;</th>
-      <th>UID</th>
-      <th>Username</th>
-      <th>Email address</th>
-      <th>Policy group</th>
+      <th><?php print $text_user_id; ?></th>
+      <th><?php print $text_username; ?></th>
+      <th><?php print $text_email; ?></th>
+      <th><?php print $text_policy_group; ?></th>
       <th>&nbsp;</th>
+<?php if(DB_DRIVER != 'ldap') { ?>
       <th>&nbsp;</th>
+<?php } ?>
       <th>&nbsp;</th>
    </tr>
 
@@ -36,7 +38,9 @@
       <td><?php print $user['email']; ?></td>
       <td><?php print $user['policy_group']; ?></td>
       <td><a href="index.php?route=user/edit&uid=<?php print $user['uid']; ?>&email=<?php print $user['email']; ?>"><?php print $text_edit_or_view; ?></a></td>
+<?php if(DB_DRIVER != 'ldap') { ?>
       <td><a href="index.php?route=user/email&uid=<?php print $user['uid']; ?>&username=<?php print $user['username']; ?>"><?php print $text_add_new_email_address; ?></a></td>
+<?php } ?>
       <td><a href="index.php?route=quarantine/quarantine&user=<?php print $user['username']; ?>"><?php print $text_view_user_quarantine; ?></a></td>
    </tr>
 <?php } ?>

@@ -43,6 +43,7 @@ $_['text_home'] = "Home";
 
 $_['text_invalid_data'] = "Invalid data";
 $_['text_invalid_email'] = "Invalid email";
+$_['text_email_aliases'] = "Email aliases";
 $_['text_invalid_password'] = "Invalid password";
 $_['text_invalid_policy_group'] = "Invalid policy group";
 $_['text_invalid_policy_name'] = "Invalid policy name";

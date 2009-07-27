@@ -8,6 +8,9 @@
 <form action="index.php?route=user/add" name="adduser" method="post">
    <table border="0">
       <tr><td><?php print $text_email; ?>:</td><td><input type="text" name="email" value=""></td></tr>
+<?php if(DB_DRIVER == 'ldap') { ?>
+      <tr valign="top"><td><?php print $text_email_aliases; ?>:</td><td><textarea name="mailalternateaddress" cols="30" rows="5"></textarea></td></tr>
+<?php } ?>
       <tr><td><?php print $text_username; ?>:</td><td><input type="text" name="username" value=""></td></tr>
       <tr><td><?php print $text_password; ?>:</td><td><input type="password" name="password" value=""></td></tr>
       <tr><td><?php print $text_password_again; ?>:</td><td><input type="password" name="password2" value=""></td></tr>

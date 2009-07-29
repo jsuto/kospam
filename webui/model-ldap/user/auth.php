@@ -4,7 +4,10 @@ class ModelUserAuth extends Model {
 
    public function checkLogin($username = '', $password = '') {
 
-      $ldap = @new LDAP(LDAP_HOST, "cn=$username," . LDAP_USER_BASEDN, $password);
+      $ldap = new LDAP(LDAP_HOST, "cn=$username," . LDAP_USER_BASEDN, $password);
+
+      if($ldap->is_bind_ok() == 0) { return 0; }
+
       $query = $ldap->query(LDAP_USER_BASEDN, "cn=$username", array("isadmin") );
 
       $_SESSION['username'] = $username;

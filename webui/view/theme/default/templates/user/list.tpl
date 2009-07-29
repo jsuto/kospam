@@ -14,6 +14,8 @@
 
 
 <p>
+<?php if(isset($users)){ ?>
+
 <form method="post" name="massedit" action="index.php?route=user/massedit">
 
 <table border="1">
@@ -67,6 +69,11 @@
 
 <input type="submit" value="<?php print $text_bulk_edit_selected_uids; ?>"></form>
 
+<?php } else { ?>
+&nbsp;</p>
+<p>
+<?php print $text_not_found; ?>
+<?php } ?>
 
 </p>
 

@@ -14,30 +14,28 @@ class DB {
    }
 
 
-   /***** ldap related stuff ***********/
-
    public function ldap_query($basedn, $filter, $justthese) {
       return $this->driver->query($basedn, $filter, $justthese);
    }
 
 
    public function ldap_add($dn, $entry) {
-      return $this->driver->add($dn, $entry);
+      return @$this->driver->add($dn, $entry);
    }
 
 
    public function ldap_modify($dn, $entry) {
-      return $this->driver->modify($dn, $entry);
+      return @$this->driver->modify($dn, $entry);
    }
 
 
    public function ldap_replace($dn, $entry) {
-      return $this->driver->replace($dn, $entry);
+      return @$this->driver->replace($dn, $entry);
    }
 
 
    public function ldap_delete($dn) {
-      return $this->driver->delete($dn);
+      return @$this->driver->delete($dn);
    }
 
 

@@ -4,15 +4,26 @@
 class LDAP {
 
    private $link;
+   private $bind;
 
    public function __construct($ldaphost, $binddn, $bindpw) {
 
       $this->link = ldap_connect($ldaphost) or exit('Error: ldap_connect()');
       ldap_set_option($this->link, LDAP_OPT_PROTOCOL_VERSION, 3);
 
-      ldap_bind($this->link, $binddn, $bindpw) or exit('Error: ldap_bind()');
+      if(@ldap_bind($this->link, $binddn, $bindpw)) {
+         $this->bind = 1;
+      }
+      else {
+         $this->bind = 0;
+      }
 
       return $this->link;
+   }
+
+
+   public function is_bind_ok() {
+      return $this->bind;
    }
 
 

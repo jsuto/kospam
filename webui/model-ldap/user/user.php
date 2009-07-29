@@ -9,7 +9,12 @@ class ModelUserUser extends Model {
       $from = $page * $page_len;
       $to = ($page+1) * $page_len;
 
-      $query = $this->db->ldap_query(LDAP_USER_BASEDN, "(|(cn=$search*)(mail=$search*))", array("uid", "mail", "cn", "policygroupid") );
+      if($search) {
+         $query = $this->db->ldap_query(LDAP_USER_BASEDN, "(|(cn=*$search*)(mail=*$search*))", array("uid", "mail", "cn", "policygroupid") );
+      }
+      else {
+         $query = $this->db->ldap_query(LDAP_USER_BASEDN, "(|(cn=*)(mail=*))", array("uid", "mail", "cn", "policygroupid") );
+      }
 
       foreach ($query->rows as $result) {
 

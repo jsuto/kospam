@@ -69,6 +69,7 @@ $_['text_no_subject'] = "no subject";
 $_['text_no_such_policy'] = "No such policy";
 $_['text_non_existent_queue_directory'] = "The queue directory you have specified does not exist";
 $_['text_non_existing_user'] = "Non existing user";
+$_['text_not_found'] = "Not found";
 $_['title_not_found'] = "Page not found";
 $_['text_number_of_spam_messages_in_quarantine'] = "Number of spam messages in the quarantine matching your search criteria";
 

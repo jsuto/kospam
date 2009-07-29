@@ -69,6 +69,7 @@ $_['text_no_subject'] = "nincs tárgy";
 $_['text_no_such_policy'] = "Nincs ilyen házirend";
 $_['text_non_existent_queue_directory'] = "A megadott queue könyvtár nem létezik";
 $_['text_non_existing_user'] = "Nem létező felhasználó";
+$_['text_not_found'] = "Nincs találat";
 $_['title_not_found'] = "Az oldal nem található";
 $_['text_number_of_spam_messages_in_quarantine'] = "A keresési feltételnek megfelelő spam üzenetek száma a karanténban";
 

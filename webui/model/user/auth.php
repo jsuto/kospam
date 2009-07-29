@@ -28,7 +28,7 @@ class ModelUserAuth extends Model {
    }
 
 
-   public function QQchangePassword($username = '', $password = '') {
+   public function changePassword($username = '', $password = '') {
       if($username == "" || $password == ""){ return 0; }
 
       $query = $this->db->query("UPDATE " . TABLE_USER . " SET password='" . $this->db->escape(crypt($password)) . "' WHERE username='" . $this->db->escape($username) . "'");

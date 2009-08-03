@@ -2,7 +2,7 @@
 
 $_['text_add'] = "Felvesz";
 $_['text_add_new_email_address'] = "Új email cím";
-$_['text_add_new_user_alias'] = "Új felhasználó/álnév";
+$_['text_add_new_user_alias'] = "Új felhasználó";
 $_['text_add_policy'] = "Új házirend";
 $_['text_admin_user'] = "Admin felhasználó";
 
@@ -92,7 +92,7 @@ $_['text_remove'] = "Törlés";
 $_['text_remove_selected_uids'] = "Kijelölt azonosítók törlése";
 $_['text_remove_policy'] = "Házirend törlése";
 $_['text_remove_this_policy'] = "Házirend törlése";
-$_['text_remove_this_user'] = "Felhasználó/álnév törlése";
+$_['text_remove_this_user'] = "Felhasználó törlése";
 
 $_['text_search'] = "Keresés";
 $_['text_select_all'] = "Mindegyik kijelölése";

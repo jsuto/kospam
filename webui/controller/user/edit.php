@@ -62,6 +62,9 @@ class ControllerUserEdit extends Controller {
             $this->data['user']['blacklist'] = $this->model_user_user->getBlacklist($this->data['user']['username']);
 
             $this->data['policies'] = $this->model_policy_policy->getPolicies();
+
+            $this->data['emails'] = $this->model_user_user->getEmails($this->data['user']['username']);
+
          }
       }
       else {
@@ -98,8 +101,16 @@ class ControllerUserEdit extends Controller {
          $this->error['uid'] = $this->data['text_invalid_uid'];
       }
 
-      if(checkemail(@$this->request->post['email']) == 0 || checkemail(@$this->request->post['email_orig']) == 0) {
+      if(strlen(@$this->request->post['email']) < 4 || checkemail(@$this->request->post['email_orig']) == 0) {
          $this->error['email'] = $this->data['text_invalid_email'];
+      } else {
+         $emails = explode("\n", $this->request->post['email']);
+         foreach ($emails as $email) {
+            $email = rtrim($email);
+            if(checkemail($email) == 0) {
+               $this->error['email'] = $this->data['text_invalid_email'] . ": $email";
+            }
+         }
       }
 
       if(!isset($this->request->post['username']) || strlen($this->request->post['username']) < 2 ) {

@@ -2,7 +2,7 @@
 
 $_['text_add'] = "Add";
 $_['text_add_new_email_address'] = "New email address";
-$_['text_add_new_user_alias'] = "Add new user/alias";
+$_['text_add_new_user_alias'] = "Add new user";
 $_['text_add_policy'] = "Add new policy";
 $_['text_admin_user'] = "Admin user";
 

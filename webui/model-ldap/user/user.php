@@ -136,6 +136,9 @@ class ModelUserUser extends Model {
    }
 
 
+   public function getEmails($username = '') {
+   }
+
 
    public function addUser($user) {
       $entry = array();

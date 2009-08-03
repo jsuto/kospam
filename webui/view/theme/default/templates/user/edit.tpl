@@ -8,9 +8,14 @@
    <input type="hidden" name="email_orig" value="<?php print $email; ?>">
 
    <table border="0">
-      <tr><td><?php print $text_email; ?>:</td><td><input type="text" name="email" value="<?php print $email; ?>"></td></tr>
 <?php if(DB_DRIVER == 'ldap') { ?>
+      <tr><td><?php print $text_email; ?>:</td><td><input type="text" name="email" value="<?php print $email; ?>"></td></tr>
       <tr valign="top"><td><?php print $text_email_aliases; ?>:</td><td><textarea name="mailalternateaddress" cols="30" rows="5"><?php print $user['aliases']; ?></textarea></td></tr>
+<?php } else { ?>
+      <tr valign="top">
+         <td><?php print $text_email; ?>:</td>
+         <td><textarea name="email" cols="30" rows="5"><?php print $emails; ?></textarea></td>
+      </tr>
 <?php } ?>
       <tr><td><?php print $text_username; ?>:</td><td><input type="text" name="username" value="<?php print $user['username']; ?>"></td></tr>
       <tr><td><?php print $text_password; ?>:</td><td><input type="password" name="password" value=""></td></tr>
@@ -41,7 +46,7 @@
 </form>
 
 <p>&nbsp;</p>
-<p><a href="index.php?route=user/remove&uid=<?php print $user['uid']; ?>&email=<?php print $email; ?>">Remove this user/alias</a></p>
+<p><a href="index.php?route=user/remove&uid=<?php print $user['uid']; ?>&email=<?php print $email; ?>"><?php print $text_remove_this_user; ?></a></p>
 <p>&nbsp;</p>
 
 <p>

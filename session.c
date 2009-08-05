@@ -206,8 +206,6 @@ void init_session_data(struct session_data *sdata){
                /* parse message */
                sstate = parse_message(sdata.ttmpfile, &sdata, cfg);
 
-               if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: number of tokens: %ld/%ld/%ld", sdata.ttmpfile, sstate.n_token, sstate.n_chain_token, sstate.n_body_token);
-
                if(sstate.has_base64 == 0 && cfg->always_scan_message == 0) sdata.need_scan = 0;
                else sdata.need_scan = 1;
 

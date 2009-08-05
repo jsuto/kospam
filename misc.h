@@ -1,5 +1,5 @@
 /*
- * misc.h, 2009.01.14, SJ
+ * misc.h, 2009.08.05, SJ
  */
 
 #ifndef _MISC_H
@@ -29,6 +29,7 @@ int search_in_buf(char *s, int len1, char *what, int len2);
 int count_char_in_buffer(char *p, char c);
 void degenerate(unsigned char *p);
 void fix_url(char *url);
+void tld_from_url(char *url);
 void fix_fqdn(char *fqdn);
 char *split(char *row, int ch, char *s, int size);
 char *split_str(char *row, char *what, char *s, int size);

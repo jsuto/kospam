@@ -1,5 +1,5 @@
 /*
- * misc.c, 2009.05.18, SJ
+ * misc.c, 2009.08.05, SJ
  */
 
 #include <stdio.h>
@@ -389,6 +389,23 @@ void fix_url(char *url){
             strcpy(url, fixed_url);
          }
       }
+   }
+
+}
+
+
+/*
+   extract the .tld from the URL
+ */
+
+void tld_from_url(char *url){
+   char *p, fixed_url[SMALLBUFSIZE];;
+
+   p = strrchr(url, '.');
+
+   if(p){
+      snprintf(fixed_url, SMALLBUFSIZE-1, "URL*%s", p+1);
+      strcpy(url, fixed_url);
    }
 
 }

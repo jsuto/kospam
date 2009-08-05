@@ -581,10 +581,17 @@ DECOMPOSE:
                fix_url(muf);
 
                addnode(state->token_hash, muf, DEFAULT_SPAMICITY, 0);
-
                append_list(&(state->urls), muf);
-
                state->n_token++;
+
+               /* create a .tld token, suitable for http://whatever.cn/ URIs, 2009.08.05, SJ */
+
+               tld_from_url(muf);
+
+               addnode(state->token_hash, muf, DEFAULT_SPAMICITY, 0);
+               append_list(&(state->urls), muf);
+               state->n_token++;
+                
             }
          } while(q);
 

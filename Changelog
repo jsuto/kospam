@@ -13,6 +13,11 @@ By default max_number_of_tokens_to_filter=2000.
 
 (example.conf, cfg.c, cfg.h, session.c, spamdrop.c)
 
+The parser create .tld domains as well, ie. URL*chinaspammer.cn, and URL*.cn, too.
+
+(misc.c, misc.h, parser.c)
+
+
 2009.08.03, SJ
 
 Modified the user listing if using sql backend. Now the webui lists the users

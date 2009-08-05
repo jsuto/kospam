@@ -1,5 +1,5 @@
 /*
- * cfg.c, 2009.06.26, SJ
+ * cfg.c, 2009.08.05, SJ
  */
 
 #include <stdio.h>
@@ -116,6 +116,7 @@ struct __config read_config(char *configfile){
    cfg.exclusion_radius = EXCLUSION_RADIUS;
 
    cfg.max_message_size_to_filter = 65535;
+   cfg.max_number_of_tokens_to_filter = 2000;
 
    cfg.always_scan_message = 1;
 
@@ -284,6 +285,9 @@ struct __config read_config(char *configfile){
 
                   if(strcmp(key, "max_message_size_to_filter") == 0)
                      cfg.max_message_size_to_filter = atol(val);
+
+                  if(strcmp(key, "max_number_of_tokens_to_filter") == 0)
+                     cfg.max_number_of_tokens_to_filter = atoi(val);
 
                   if(strcmp(key, "surbl_domain") == 0)
                      memcpy(cfg.surbl_domain, val, MAXVAL-1);

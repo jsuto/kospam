@@ -1,5 +1,18 @@
 0.4.2-rc1:
 
+2009.08.05, SJ
+
+Introduced a new configuration variable 'max_number_of_tokens_to_filter'.
+Though some spams have a few words they may be bigger than 'max_message_size_to_filter'
+due to their binary (pdf, mp3, gif, ...) attachment. I have introduced a new
+configuration variable, 'max_number_of_tokens_to_filter', so clapf will still
+check a message if its size is greater then 'max_message_size_to_filter' AND
+has fewer tokens than 'max_number_of_tokens_to_filter'.
+
+By default max_number_of_tokens_to_filter=2000.
+
+(example.conf, cfg.c, cfg.h, session.c, spamdrop.c)
+
 2009.08.03, SJ
 
 Modified the user listing if using sql backend. Now the webui lists the users

@@ -1,5 +1,5 @@
 /*
- * session.c, 2009.05.27, SJ
+ * session.c, 2009.08.05, SJ
  */
 
 #include <stdio.h>
@@ -206,6 +206,8 @@ void init_session_data(struct session_data *sdata){
                /* parse message */
                sstate = parse_message(sdata.ttmpfile, &sdata, cfg);
 
+               if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: number of tokens: %ld/%ld/%ld", sdata.ttmpfile, sstate.n_token, sstate.n_chain_token, sstate.n_body_token);
+
                if(sstate.has_base64 == 0 && cfg->always_scan_message == 0) sdata.need_scan = 0;
                else sdata.need_scan = 1;
 
@@ -337,7 +339,7 @@ void init_session_data(struct session_data *sdata){
 
                   /* run statistical antispam check */
 
-                  if(my_cfg.use_antispam == 1 && (my_cfg.max_message_size_to_filter == 0 || sdata.tot_len < my_cfg.max_message_size_to_filter) ){
+                  if(my_cfg.use_antispam == 1 && (my_cfg.max_message_size_to_filter == 0 || sdata.tot_len < my_cfg.max_message_size_to_filter || sstate.n_token < my_cfg.max_number_of_tokens_to_filter) ){
 
                   #ifdef SPAMC_EMUL
                      rc = spamc_emul(sdata.ttmpfile, sdata.tot_len, cfg);

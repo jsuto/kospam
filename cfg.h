@@ -1,5 +1,5 @@
 /*
- * cfg.h, 2009.06.26, SJ
+ * cfg.h, 2009.08.05, SJ
  */
 
 #ifndef _CFG_H
@@ -74,6 +74,7 @@ struct __config {
    float exclusion_radius;
 
    unsigned long max_message_size_to_filter;
+   int max_number_of_tokens_to_filter;
 
    char rbl_domain[MAXVAL];
    char surbl_domain[MAXVAL];

@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2009.06.15, SJ
+ * spamdrop.c, 2009.08.05, SJ
  */
 
 #include <stdio.h>
@@ -341,15 +341,6 @@ int main(int argc, char **argv, char **envp){
 #endif
 
 
-   /* skip spamicity check if message is too long */
-
-   if(print_message == 1 && sdata.tot_len > cfg.max_message_size_to_filter){
-      gettimeofday(&tv_stop, &tz);
-      goto ENDE_SPAMDROP;
-   }
-
-
-
    /* 
     * check whether this is a training request with user+spam@... or user+ham@...
     */
@@ -374,6 +365,16 @@ int main(int argc, char **argv, char **envp){
       }
 
    }
+
+
+   /* skip spamicity check if message is too long, and we are not debugging nor training */
+
+   if(print_message == 1 && sdata.tot_len > cfg.max_message_size_to_filter && cfg.debug == 0 && training_request == 0 && train_as_ham == 0 && train_as_spam == 0){
+      gettimeofday(&tv_stop, &tz);
+      goto ENDE_SPAMDROP;
+   }
+
+
 
    /* we must have a FROM address for training */
 
@@ -695,6 +696,7 @@ int main(int argc, char **argv, char **envp){
    if(cfg.debug == 1){
       printf("spaminess: %.4f in %ld [ms]\n", spaminess, tvdiff(tv_stop, tv_start)/1000);
       printf("%ld %ld\n", state.c_shit, state.l_shit);
+      printf("number of tokens: %ld/%ld/%ld\n", state.n_token, state.n_chain_token, state.n_body_token);
    }
 
 

@@ -1,5 +1,11 @@
 0.4.2-rc1:
 
+2009.08.13, SJ
+
+Force sdata.uid=0 if the message landed on the minefield (blackhole)
+(spamdrop.c, session.c)
+
+
 2009.08.05, SJ
 
 Introduced a new configuration variable 'max_number_of_tokens_to_filter'.

@@ -1,5 +1,5 @@
 /*
- * session.c, 2009.08.05, SJ
+ * session.c, 2009.08.13, SJ
  */
 
 #include <stdio.h>
@@ -406,6 +406,10 @@ void init_session_data(struct session_data *sdata){
                      #endif
 
                         if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: running Bayesian test", sdata.ttmpfile);
+
+                        /* fix uid if it's a blackhole request */
+                        if(sdata.blackhole == 1) sdata.uid = 0;
+
                         spaminess = bayes_file(&sdata, &sstate, &my_cfg);
 
                         if(spaminess > 0.9999) snprintf(reason, SMALLBUFSIZE-1, "%s%s\r\n", cfg->clapf_header_field, MSG_ABSOLUTELY_SPAM);

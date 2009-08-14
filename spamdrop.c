@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2009.08.05, SJ
+ * spamdrop.c, 2009.08.13, SJ
  */
 
 #include <stdio.h>
@@ -681,6 +681,7 @@ int main(int argc, char **argv, char **envp){
          syslog(LOG_PRIORITY, "%s: training on a blackhole message", sdata.ttmpfile);
          snprintf(trainbuf, SMALLBUFSIZE-1, "%sTUM on blackhole\r\n", cfg.clapf_header_field);
 
+         sdata.uid = 0;
          train_message(&sdata, &state, rounds, 1, T_TOE, &cfg);
       }
 

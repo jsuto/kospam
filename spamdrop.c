@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2009.08.13, SJ
+ * spamdrop.c, 2009.08.21, SJ
  */
 
 #include <stdio.h>
@@ -159,10 +159,12 @@ int main(int argc, char **argv, char **envp){
    int u=-1;
    char buf[MAXBUFSIZE], qpath[SMALLBUFSIZE], trainbuf[SMALLBUFSIZE], ID[RND_STR_LEN+1], whitelistbuf[SMALLBUFSIZE], clapf_info[MAXBUFSIZE];
    char *configfile=CONFIG_FILE, *username=NULL, *from=NULL, *recipient=NULL;
+   char *p, path[SMALLBUFSIZE];
    struct passwd *pwd;
    struct session_data sdata;
    struct timezone tz;
    struct timeval tv_start, tv_stop;
+   struct stat st;
    struct _state state;
    struct __config cfg;
    float spaminess=DEFAULT_SPAMICITY;
@@ -466,6 +468,7 @@ int main(int argc, char **argv, char **envp){
       if(recipient && strcasestr(recipient, "+spam@")) is_spam = 1;
       if(strlen(trainbuf) > 3 && strcasestr(trainbuf, "+spam@")) is_spam = 1;
 
+
       /* determine the queue file from the message */
       train_mode = extract_id_from_message(sdata.ttmpfile, cfg.clapf_header_field, ID);
 
@@ -473,12 +476,28 @@ int main(int argc, char **argv, char **envp){
 
       syslog(LOG_PRIORITY, "%s: training request for %s (username: %s, uid: %ld), found id: %s", sdata.ttmpfile, recipient, sdata.name, sdata.uid, ID);
 
+      if(strlen(ID) < 5){
+         syslog(LOG_PRIORITY, "%s: not found a valid message id (%s)", sdata.ttmpfile, ID);
+         return 0;
+      }
+
       /* determine the path of the original file */
 
-      if(is_spam == 1)
-         snprintf(buf, MAXBUFSIZE-1, "%s/%s/%c/%s/h.%s", cfg.chrootdir, USER_QUEUE_DIR, sdata.name[0], sdata.name, ID);
-      else
-         snprintf(buf, MAXBUFSIZE-1, "%s/%s/%c/%s/s.%s", cfg.chrootdir, USER_QUEUE_DIR, sdata.name[0], sdata.name, ID);
+      p = &path[0];
+      get_path_by_uid(sdata.uid, &p);
+
+
+      if(is_spam == 1){
+         snprintf(buf, MAXBUFSIZE-1, "%s/h.%s", path, ID);
+         if(cfg.enable_old_queue_compat == 1 && stat(buf, &st))
+            snprintf(buf, MAXBUFSIZE-1, "%s/%c/%s/h.%s", USER_QUEUE_DIR, sdata.name[0], sdata.name, ID);
+      }
+      else {
+         snprintf(buf, MAXBUFSIZE-1, "%s/s.%s", path, ID);
+         if(cfg.enable_old_queue_compat == 1 && stat(buf, &st) == 0)
+            snprintf(buf, MAXBUFSIZE-1, "%s/%c/%s/s.%s", USER_QUEUE_DIR, sdata.name[0], sdata.name, ID);
+      }
+
 
 
       state = parse_message(buf, &sdata, &cfg);

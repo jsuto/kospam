@@ -1,5 +1,15 @@
 0.4.2-rc1:
 
+2009.08.21, SJ
+
+Changed the way clapf organises the queue directory. Now we query the uid of the
+given user, create a path like 10000/100/95/h|s.<message-id>, instead the old
+method using j/jack.
+If you have an existing install, just enable the enable_old_queue_compat variable
+(disabled by default) in clapf.conf until all the per user queue files are purged
+from the old directory structure (~7 days).
+(spam.c, clapf.h, spamdrop.c, example.conf, webui)
+
 2009.08.13, SJ
 
 Force sdata.uid=0 if the message landed on the minefield (blackhole)

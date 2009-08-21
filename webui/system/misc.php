@@ -69,4 +69,32 @@ function first_n_characters($what, $n){
 }
 
 
+function get_per_user_queue_dir($uid = 0){
+
+   if(!is_numeric($uid) || $uid <= 0) return "";
+
+   $h = $uid;
+
+   $i = $h % 10000;
+   if($i > 0) {
+      $plus1 = 1;
+   }
+   else {
+      $plus1 = 0;
+   }
+
+   $i = $h % 100;
+   if($i > 0){
+      $plus1b = 1;
+   }
+   else {
+      $plus1b = 0;
+   }
+
+   snprintf($my_q_dir, "%s/%d/%d/%d", USER_QUEUE_DIR, 10000 * (($h / 10000) + $plus1), 100 * (($h / 100) + $plus1b), $uid);
+
+   return $my_q_dir;
+}
+
+
 ?>

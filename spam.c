@@ -1,5 +1,5 @@
 /*
- * spam.c, 2009.04.29, SJ
+ * spam.c, 2009.08.21, SJ
  */
 
 #include <stdio.h>
@@ -22,6 +22,45 @@
 
 
 /*
+ * create path from numeric uid 
+ */
+
+void get_path_by_uid(unsigned int uid, char **path){
+   unsigned int h, i, plus1, plus1b;
+   struct stat st;
+
+   if(uid <= 0) return;
+
+   h = uid;
+
+   i = h % 10000;
+   if(i > 0) plus1 = 1;
+   else plus1 = 0;
+
+   i = h % 100;
+   if(i > 0) plus1b = 1;
+   else plus1b = 0;
+
+   snprintf(*path, SMALLBUFSIZE-1, "%s/%d/%d/%d", USER_QUEUE_DIR, 10000 * ((h / 10000) + plus1), 100 * ((h / 100) + plus1b), uid);
+
+   /* create target directory if it doesn't exist */
+
+   if(stat(*path, &st) != 0){
+      snprintf(*path, SMALLBUFSIZE-1, "%s/%d", USER_QUEUE_DIR, 10000 * ((h / 10000) + plus1));
+      mkdir(*path, 0755);
+
+      snprintf(*path, SMALLBUFSIZE-1, "%s/%d/%d", USER_QUEUE_DIR, 10000 * ((h / 10000) + plus1), 100 * ((h / 100) + plus1b));
+      mkdir(*path, 0755);
+
+      snprintf(*path, SMALLBUFSIZE-1, "%s/%d/%d/%d", USER_QUEUE_DIR, 10000 * ((h / 10000) + plus1), 100 * ((h / 100) + plus1b), uid);
+      mkdir(*path, 0755);
+
+      chmod(*path, S_IRUSR|S_IWUSR|S_IXUSR|S_IRGRP|S_IWGRP|S_IXGRP);
+   }
+}
+
+
+/*
  * train this message
  */
 
@@ -29,7 +68,8 @@ void do_training(struct session_data *sdata, char *email, char *acceptbuf, struc
 #ifndef HAVE_MYDB
    int is_spam = 0;
    int train_mode;
-   char qpath[SMALLBUFSIZE], ID[RND_STR_LEN+1];
+   char qpath[SMALLBUFSIZE], *p, path[SMALLBUFSIZE], ID[RND_STR_LEN+1];
+   struct stat st;
    struct _state sstate2;
 
 
@@ -45,10 +85,21 @@ void do_training(struct session_data *sdata, char *email, char *acceptbuf, struc
       return;
    }
 
-   if(is_spam == 1)
-      snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s/h.%s", USER_QUEUE_DIR, sdata->name[0], sdata->name, ID);
-   else
-      snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s/s.%s", USER_QUEUE_DIR, sdata->name[0], sdata->name, ID);
+
+   p = &path[0];
+   get_path_by_uid(sdata->uid, &p);
+
+
+   if(is_spam == 1){
+      snprintf(qpath, SMALLBUFSIZE-1, "%s/h.%s", path, ID);
+      if(cfg->enable_old_queue_compat == 1 && stat(qpath, &st))
+         snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s/h.%s", USER_QUEUE_DIR, sdata->name[0], sdata->name, ID);
+   }
+   else {
+      snprintf(qpath, SMALLBUFSIZE-1, "%s/s.%s", path, ID);
+      if(cfg->enable_old_queue_compat == 1 && stat(qpath, &st) == 0)
+         snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s/s.%s", USER_QUEUE_DIR, sdata->name[0], sdata->name, ID);
+   }
 
    sstate2 = parse_message(qpath, sdata, cfg);
 
@@ -67,6 +118,7 @@ void do_training(struct session_data *sdata, char *email, char *acceptbuf, struc
 
 #ifdef HAVE_STORE
 void save_email_to_queue(struct session_data *sdata, float spaminess, struct __config *cfg){
+   char *p, path[SMALLBUFSIZE];
    struct stat st;
    struct timezone tz;
    struct timeval tv1, tv2;
@@ -77,37 +129,24 @@ void save_email_to_queue(struct session_data *sdata, float spaminess, struct __c
 
    gettimeofday(&tv1, &tz);
 
+   p = &path[0];
+   get_path_by_uid(sdata->uid, &p);
+
 #ifdef STORE_FS
    char qpath[SMALLBUFSIZE];
 
-   snprintf(qpath, SMALLBUFSIZE-1, "%s/%c", USER_QUEUE_DIR, sdata->name[0]);
-   if(stat(qpath, &st)) mkdir(qpath, QUEUE_DIR_PERMISSION);
 
-   snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s", USER_QUEUE_DIR, sdata->name[0], sdata->name);
-   if(stat(qpath, &st)){
-      mkdir(qpath, QUEUE_DIR_PERMISSION);
+   if(spaminess >= cfg->spam_overall_limit)
+      snprintf(qpath, SMALLBUFSIZE-1, "%s/s.%s", path, sdata->ttmpfile);
+   else
+      snprintf(qpath, SMALLBUFSIZE-1, "%s/h.%s", path, sdata->ttmpfile);
 
-      /*
-       * the web server must have write permissions on the user's queue directory.
-       * you have to either extend these rights the to world, ie. 777 or
-       * change group-id of clapf to the web server, ie. usermod -g www-data clapf.
-       * 2008.10.27, SJ
-       */
+   link(sdata->ttmpfile, qpath);
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: try to link to %s", sdata->ttmpfile, qpath);
 
-       chmod(qpath, S_IRUSR|S_IWUSR|S_IXUSR|S_IRGRP|S_IWGRP|S_IXGRP);
-    }
-
-    if(spaminess >= cfg->spam_overall_limit)
-       snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s/s.%s", USER_QUEUE_DIR, sdata->name[0], sdata->name, sdata->ttmpfile);
-    else
-       snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s/h.%s", USER_QUEUE_DIR, sdata->name[0], sdata->name, sdata->ttmpfile);
-
-    link(sdata->ttmpfile, qpath);
-    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: try to link to %s", sdata->ttmpfile, qpath);
-
-    if(stat(qpath, &st) == 0){
-       if(S_ISREG(st.st_mode) == 1) chmod(qpath, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
-    }
+   if(stat(qpath, &st) == 0){
+      if(S_ISREG(st.st_mode) == 1) chmod(qpath, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+   }
 #endif
 
 #ifdef STORE_NFS
@@ -115,27 +154,11 @@ void save_email_to_queue(struct session_data *sdata, float spaminess, struct __c
    char buf[MAXBUFSIZE];
    int n, fd, fd2;
 
-   snprintf(qpath, SMALLBUFSIZE-1, "%s/%c", USER_QUEUE_DIR, sdata->name[0]);
-   if(stat(qpath, &st)) mkdir(qpath, QUEUE_DIR_PERMISSION);
 
-   snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s", USER_QUEUE_DIR, sdata->name[0], sdata->name);
-   if(stat(qpath, &st)){
-      mkdir(qpath, QUEUE_DIR_PERMISSION);
-
-      /*
-       * the web server must have write permissions on the user's queue directory.
-       * you have to either extend these rights the to world, ie. 777 or
-       * change group-id of clapf to the web server, ie. usermod -g www-data clapf.
-       * 2008.10.27, SJ
-       */
-
-       chmod(qpath, S_IRUSR|S_IWUSR|S_IXUSR|S_IRGRP|S_IWGRP|S_IXGRP);
-   }
-
-    if(spaminess >= cfg->spam_overall_limit)
-       snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s/s.%s", USER_QUEUE_DIR, sdata->name[0], sdata->name, sdata->ttmpfile);
-    else
-       snprintf(qpath, SMALLBUFSIZE-1, "%s/%c/%s/h.%s", USER_QUEUE_DIR, sdata->name[0], sdata->name, sdata->ttmpfile);
+   if(spaminess >= cfg->spam_overall_limit)
+      snprintf(qpath, SMALLBUFSIZE-1, "%s/s.%s", path, sdata->ttmpfile);
+   else
+      snprintf(qpath, SMALLBUFSIZE-1, "%s/h.%s", path, sdata->ttmpfile);
 
    /* copy here */
 

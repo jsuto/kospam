@@ -1,5 +1,5 @@
 /*
- * clapf.h, 2009.05.27, SJ
+ * clapf.h, 2009.08.21, SJ
  */
 
 #include <misc.h>
@@ -34,6 +34,7 @@
 #endif
 #endif
 
+void get_path_by_uid(unsigned int uid, char **path);
 void do_training(struct session_data *sdata, char *email, char *acceptbuf, struct __config *cfg);
 void save_email_to_queue(struct session_data *sdata, float spaminess, struct __config *cfg);
 int is_sender_on_black_or_white_list(struct session_data *sdata, char *email,  char *fieldname, char *table, struct __config *cfg);

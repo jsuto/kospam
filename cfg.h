@@ -1,5 +1,5 @@
 /*
- * cfg.h, 2009.08.05, SJ
+ * cfg.h, 2009.08.21, SJ
  */
 
 #ifndef _CFG_H
@@ -115,6 +115,7 @@ struct __config {
 
    int store_metadata;
    int store_only_spam;
+   int enable_old_queue_compat;
 
    int always_scan_message;
 

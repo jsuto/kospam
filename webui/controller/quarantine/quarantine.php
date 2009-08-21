@@ -71,7 +71,8 @@ class ControllerQuarantineQuarantine extends Controller {
           exit;
       }
 
-      $my_q_dir = QUEUE_DIRECTORY . "/" . substr($this->data['username'], 0, 1) . "/" . $this->data['username'];
+      //$my_q_dir = QUEUE_DIRECTORY . "/" . substr($this->data['username'], 0, 1) . "/" . $this->data['username'];
+      $my_q_dir = get_per_user_queue_dir($this->model_user_user->getUidByName($this->data['username']));
 
       /* check if he's a valid user */
 

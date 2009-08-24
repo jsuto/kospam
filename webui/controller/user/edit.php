@@ -96,12 +96,11 @@ class ControllerUserEdit extends Controller {
          }
       }
 
-
       if(!isset($this->request->post['uid']) || !is_numeric($this->request->post['uid']) || (int)$this->request->post['uid'] < 0) {
          $this->error['uid'] = $this->data['text_invalid_uid'];
       }
 
-      if(strlen(@$this->request->post['email']) < 4 || checkemail(@$this->request->post['email_orig']) == 0) {
+      if(strlen(@$this->request->post['email']) < 4) {
          $this->error['email'] = $this->data['text_invalid_email'];
       } else {
          $emails = explode("\n", $this->request->post['email']);

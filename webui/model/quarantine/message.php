@@ -102,10 +102,12 @@ class ModelQuarantineMessage extends Model {
       $text_html = 0;
       $charset = "";
       $qp = $base64 = 0;
+      $images = array();
+      $n_image = -1;
 
       $message = "";
 
-      if($dir == "" || $id == "" || !$this->checkId($id) || !file_exists($dir . "/" . $id)){ return ""; }
+      if($dir == "" || $id == "" || !$this->checkId($id) || !file_exists($dir . "/" . $id) || !is_readable($dir . "/" . $id) ){ return ""; }
 
       $fp = fopen($dir . "/" . $id, "r");
       if($fp){
@@ -143,6 +145,11 @@ class ModelQuarantineMessage extends Model {
 
                if(strstr($l, "text/plain")){ $text_plain = 1; }
                if(strstr($l, "text/html")){ $text_html = 1; $text_plain = 0; }
+
+               if(strstr($l, "image/jpeg") || strstr($l, "image/png") || strstr($l, "image/gif") ){
+                  array_push($images, "");
+                  $n_image++;
+               }
 
             }
 
@@ -190,6 +197,10 @@ class ModelQuarantineMessage extends Model {
 
                }
 
+               if($state == "BODY" && $base64 == 1 && !preg_match("/^[\r\n]/", $l) ) {
+                  $images[$n_image] .= rtrim($l);
+               }
+
             }
 
 
@@ -200,6 +211,29 @@ class ModelQuarantineMessage extends Model {
       if($body_chunk){
          $message .= $this->flush_body_chunk($body_chunk, $charset, $qp, $text_plain, $text_html);
       }
+
+      /* write images to the cache dir, if possible */
+
+      if(file_exists(DIR_CACHE)) {
+         $n = 0;
+
+         foreach ($images as $image) {
+            $f = DIR_CACHE . "$id-$n";
+
+            if(!file_exists($f)) {
+               $fp = fopen($f, "w+");
+               if($fp){
+                  fputs($fp, base64_decode($image));
+                  fclose($fp);
+               }
+            }
+
+            $message .= "\n<p><img src=\"/cache/$id-$n\" alt=\"spam image\" /></p>\n";
+
+            $n++;
+         }
+      }
+
 
       return $message;
    }
@@ -301,6 +335,7 @@ class ModelQuarantineMessage extends Model {
 
       $i = 0;
 
+      if(!is_readable($dir . "/" . $f)) { return array ($from, $subj); }
 
       $fp = fopen($dir . "/" . $f, "r");
       if($fp){

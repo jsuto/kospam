@@ -102,6 +102,8 @@ function write_stuff() {
    write_line($fp, "DIR_LANGUAGE", BASEDIR . WEBUI_DIRECTORY . "/language/");
    write_line($fp, "DIR_APPLICATION", BASEDIR . WEBUI_DIRECTORY . "/controller/");
    write_line($fp, "DIR_TEMPLATE", BASEDIR . WEBUI_DIRECTORY . "/view/theme/" . $_POST['THEME'] . "/templates/");
+   write_line($fp, "DIR_CACHE", BASEDIR . "/cache/");
+
    write_line($fp);
 
 
@@ -140,6 +142,9 @@ function write_stuff() {
    write_line($fp, "DATE_FORMAT", "(Y.m.d.)");
    write_line($fp);
 
+   write_line($fp, "CGI_INPUT_FIELD_WIDTH", 50);
+   write_line($fp, "CGI_INPUT_FIELD_HEIGHT", 7);
+   write_line($fp);
 
    fputs($fp, "?>\n");
 

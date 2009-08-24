@@ -23,6 +23,7 @@ $_['text_deliver_selected_messages'] = "Kiválasztott üzenetek kézbesítése";
 
 $_['text_edit_or_view'] = "Szerkeszt/Megnéz";
 $_['text_email'] = "Email cím";
+$_['text_email_addresses'] = "Email cím(ek)";
 $_['text_email_aliases'] = "Email álcímek";
 $_['text_empty_quarantine_directory_structure'] = "Üres karantén könyvtár";
 $_['text_error'] = "Hiba";

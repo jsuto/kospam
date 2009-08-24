@@ -79,8 +79,17 @@ class ControllerUserAdd extends Controller {
          $this->error['uid'] = $this->data['text_invalid_uid'];
       }
 
-      if(checkemail(@$this->request->post['email']) == 0) {
+      if(!isset($this->request->post['email']) || strlen($this->request->post['email']) < 3) {
          $this->error['email'] = $this->data['text_invalid_email'];
+      }
+      else {
+         $emails = explode("\n", $this->request->post['email']);
+         foreach ($emails as $email) {
+            $email = rtrim($email);
+            if(checkemail($email) == 0) {
+               $this->error['email'] = $this->data['text_invalid_email'] . ": $email";
+            }
+         }
       }
 
       if(!isset($this->request->post['username']) || strlen($this->request->post['username']) < 2 ) {

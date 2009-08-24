@@ -15,6 +15,7 @@ class ControllerQuarantineRemove extends Controller {
       $db = Registry::get('db');
 
       $this->load->model('quarantine/message');
+      $this->load->model('user/user');
 
       $this->document->title = $this->data['text_quarantine'];
 

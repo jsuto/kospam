@@ -23,6 +23,7 @@ $_['text_deliver_selected_messages'] = "Deliver selected messages";
 
 $_['text_edit_or_view'] = "Edit/view";
 $_['text_email'] = "Email address";
+$_['text_email_addresses'] = "Email address(es)";
 $_['text_empty_quarantine_directory_structure'] = "Empty quarantine directory structure";
 $_['text_error'] = "Error";
 $_['text_existing_policies'] = "Existing policies";

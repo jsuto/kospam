@@ -1,5 +1,23 @@
 0.4.2-rc1:
 
+2009.08.24, SJ
+
+Enhanced the webui to show the image(s) if the spam has any.
+Please create a "cache/" directory under your webui, and let the web
+server has write permissions on it. I recommend you to extend the quarantine
+purge script to the cache directory to remove aged spam images.
+
+The webui lets you to add email aliases too when adding a new user. You
+don't have to add user then edit him to define additional email addresses.
+
+You can also define the size attribute of the user section in the config.php.
+Add the following two lines to your config.php (or rerun the setup script):
+
+define('CGI_INPUT_FIELD_WIDTH', 50);
+define('CGI_INPUT_FIELD_HEIGHT', 7);
+
+(webui/*)
+
 2009.08.21, SJ
 
 Changed the way clapf organises the queue directory. Now we query the uid of the

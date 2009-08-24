@@ -158,8 +158,13 @@ class ModelUserUser extends Model {
 
       if($this->db->countAffected() == 0){ return -1; }
 
+      $emails = explode("\n", $user['email']);
+      foreach ($emails as $email) {
+         $email = rtrim($email);
+         $query = $this->db->query("INSERT INTO " . TABLE_EMAIL . " (uid, email) VALUES(" . (int)$user['uid'] . ", '" . $this->db->escape($email) . "')");
+      }
 
-      $query = $this->db->query("INSERT INTO " . TABLE_EMAIL . " (uid, email) VALUES(" . (int)$user['uid'] . ", '" . $this->db->escape($user['email']) . "')");
+      //$query = $this->db->query("INSERT INTO " . TABLE_EMAIL . " (uid, email) VALUES(" . (int)$user['uid'] . ", '" . $this->db->escape($user['email']) . "')");
 
       if($this->db->countAffected() == 0){ return -2; }
 

@@ -71,7 +71,7 @@ function first_n_characters($what, $n){
 
 function get_per_user_queue_dir($uid = 0){
 
-   if(!is_numeric($uid) || $uid <= 0) return "";
+   if(!is_numeric($uid) || $uid <= 0){ return ""; }
 
    $h = $uid;
 
@@ -91,9 +91,8 @@ function get_per_user_queue_dir($uid = 0){
       $plus1b = 0;
    }
 
-   snprintf($my_q_dir, "%s/%d/%d/%d", USER_QUEUE_DIR, 10000 * (($h / 10000) + $plus1), 100 * (($h / 100) + $plus1b), $uid);
 
-   return $my_q_dir;
+   return QUEUE_DIRECTORY . "/" . 10000 * (floor($h / 10000) + $plus1) . "/" . 100 * (floor($h / 100) + $plus1b) . "/" . $uid;
 }
 
 

@@ -1,5 +1,5 @@
 /*
- * cfg.c, 2009.08.21, SJ
+ * cfg.c, 2009.08.25, SJ
  */
 
 #include <stdio.h>
@@ -107,7 +107,6 @@ struct __config read_config(char *configfile){
    cfg.enable_auto_white_list = 1;
 
    cfg.store_metadata = 1;
-   cfg.enable_old_queue_compat = 0;
 
    cfg.rob_s = 1.0;
    cfg.rob_x = 0.5;
@@ -374,9 +373,6 @@ struct __config read_config(char *configfile){
 
                   if(strcmp(key, "store_only_spam") == 0)
                      cfg.store_only_spam = atoi(val);
-
-                  if(strcmp(key, "enable_old_queue_compat") == 0)
-                     cfg.enable_old_queue_compat = atoi(val);
 
                   if(strcmp(key, "use_libclamav_block_max_feature") == 0)
                      cfg.use_libclamav_block_max_feature = atoi(val);

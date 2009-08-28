@@ -26,3 +26,9 @@ blackList:
 policyGroupId: 0
 isAdmin: 1
 userPassword: admin
+
+dn: ou=remote,dc=aaaa,dc=fu
+ou: remote
+objectClass: top
+objectClass: organizationalUnit
+

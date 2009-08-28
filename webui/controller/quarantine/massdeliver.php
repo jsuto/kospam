@@ -30,8 +30,7 @@ class ControllerQuarantineMassdeliver extends Controller {
          $this->data['username'] = $this->request->get['user'];
       }
 
-      //$my_q_dir = QUEUE_DIRECTORY . "/" . substr($this->data['username'], 0, 1) . "/" . $this->data['username'];
-      $my_q_dir = get_per_user_queue_dir($this->model_user_user->getUidByName($this->data['username']));
+      $my_q_dir = get_per_user_queue_dir($this->data['username'], $this->model_user_user->getUidByName($this->data['username']));
 
 
       $this->data['to'] = $this->model_user_user->getEmailAddress($this->data['username']);

@@ -164,6 +164,9 @@ class ModelUserUser extends Model {
       $entry["filtersender"] = $user['whitelist'];
       $entry["blacklist"] = $user['blacklist'];
 
+      if(isset($user['proxydn'])) { $entry["proxydn"] = $user['proxydn']; }
+      if(isset($user['domain'])) { $entry["domain"] = $user['domain']; }
+
       $entry["mailMessageStore"] = "";
 
       if($this->db->ldap_add("cn=" . $user['username'] . "," .  LDAP_USER_BASEDN, $entry) == TRUE) {

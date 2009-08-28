@@ -115,6 +115,7 @@ function write_stuff() {
       write_line($fp, "LDAP_BINDPW", $_POST['LDAP_BINDPW']);
       write_line($fp, "LDAP_USER_BASEDN", $_POST['LDAP_USER_BASEDN']);
       write_line($fp, "LDAP_POLICY_BASEDN", $_POST['LDAP_POLICY_BASEDN']);
+      write_line($fp, "LDAP_REMOTE_BASEDN", 'ou=remote,dc=aaaa,dc=fu');
       write_line($fp);
    }
    else {
@@ -134,6 +135,12 @@ function write_stuff() {
       write_line($fp, "TABLE_STAT", "t_stat");
    }
 
+   write_line($fp);
+
+   write_line($fp, "QUEUE_DIR_SPLITTING", $_POST['QUEUE_DIR_SPLITTING']);
+   write_line($fp);
+
+   write_line($fp, "ENTERPRISE_VERSION", 0);
    write_line($fp);
 
    write_line($fp, "SITE_URL", "http://" . $_SERVER['SERVER_NAME'] . WEBUI_DIRECTORY . "/");

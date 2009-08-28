@@ -472,6 +472,15 @@ if test "$want_outlook_hack" = "yes"; then
 fi
 
 
+dnl uid splitting
+
+AC_ARG_ENABLE(uid-splitting,
+   [  --enable-uid-splitting  enable splitting quarantine direcory path by numeric uid], want_uid_splitting=$enableval, want_uid_splitting="no")
+
+if test "$want_uid_splitting" = "yes"; then
+   defs="$defs -DHAVE_UID_SPLITTING"
+fi
+
 
 dnl configure config directory
 

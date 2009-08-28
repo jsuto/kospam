@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2009.08.21, SJ
+ * spamdrop.c, 2009.08.28, SJ
  */
 
 #include <stdio.h>
@@ -157,14 +157,13 @@ int main(int argc, char **argv, char **envp){
    int is_spam=0, train_as_ham=0, train_as_spam=0, blackhole_request=0, training_request=0;
    int train_mode=T_TOE;
    int u=-1;
-   char buf[MAXBUFSIZE], qpath[SMALLBUFSIZE], trainbuf[SMALLBUFSIZE], ID[RND_STR_LEN+1], whitelistbuf[SMALLBUFSIZE], clapf_info[MAXBUFSIZE];
+   char buf[MAXBUFSIZE], trainbuf[SMALLBUFSIZE], ID[RND_STR_LEN+1], whitelistbuf[SMALLBUFSIZE], clapf_info[MAXBUFSIZE];
    char *configfile=CONFIG_FILE, *username=NULL, *from=NULL, *recipient=NULL;
    char *p, path[SMALLBUFSIZE];
    struct passwd *pwd;
    struct session_data sdata;
    struct timezone tz;
    struct timeval tv_start, tv_stop;
-   struct stat st;
    struct _state state;
    struct __config cfg;
    float spaminess=DEFAULT_SPAMICITY;
@@ -290,7 +289,6 @@ int main(int argc, char **argv, char **envp){
 
    if(recipient) snprintf(sdata.rcptto[0], SMALLBUFSIZE-1, recipient);
 
-   memset(qpath, 0, SMALLBUFSIZE);
    memset(trainbuf, 0, SMALLBUFSIZE);
    memset(clapf_info, 0, MAXBUFSIZE);
 
@@ -484,18 +482,14 @@ int main(int argc, char **argv, char **envp){
       /* determine the path of the original file */
 
       p = &path[0];
-      get_path_by_uid(sdata.uid, &p);
+      get_queue_path(&sdata, &p);
 
 
       if(is_spam == 1){
          snprintf(buf, MAXBUFSIZE-1, "%s/h.%s", path, ID);
-         if(cfg.enable_old_queue_compat == 1 && stat(buf, &st))
-            snprintf(buf, MAXBUFSIZE-1, "%s/%c/%s/h.%s", USER_QUEUE_DIR, sdata.name[0], sdata.name, ID);
       }
       else {
          snprintf(buf, MAXBUFSIZE-1, "%s/s.%s", path, ID);
-         if(cfg.enable_old_queue_compat == 1 && stat(buf, &st) == 0)
-            snprintf(buf, MAXBUFSIZE-1, "%s/%c/%s/s.%s", USER_QUEUE_DIR, sdata.name[0], sdata.name, ID);
       }
 
 

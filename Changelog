@@ -1,5 +1,15 @@
 0.4.2-rc1:
 
+2009.08.25, SJ
+
+Changed the per user quarantine path splitting. The default is the
+old one created by the username. However you can change to the new
+uid splitting by the '--enable-uid-splitting' configure option. 
+
+If you choose the new uid splitting be sure to select the the same
+in the webui setup script.
+(spam.c, clapf.h, spamdrop.c, example.conf, webui)
+
 2009.08.24, SJ
 
 Enhanced the webui to show the image(s) if the spam has any.
@@ -16,7 +26,11 @@ Add the following two lines to your config.php (or rerun the setup script):
 define('CGI_INPUT_FIELD_WIDTH', 50);
 define('CGI_INPUT_FIELD_HEIGHT', 7);
 
+Polished the HTML code to be more w3 standard friendly.
 (webui/*)
+
+Extract the .tld from the long hostnames in the "Received: from" lines.
+(misc.c, misc.h, parser.c)
 
 2009.08.21, SJ
 

@@ -92,6 +92,16 @@ function ShowOption(what, value) {
    </tr>
 
    <tr>
+      <td>Queue directory splitting: </td>
+      <td>
+          <select name="QUEUE_DIR_SPLITTING" id="QUEUE_DIR_SPLITTING">
+             <option value="0">by username</option>
+             <option value="1">by uid</option>
+          </select>
+      </td>
+   </tr>
+
+   <tr>
       <td>SMTP host: </td>
       <td><input type="text" name="SMTP_HOST" value="127.0.0.1" size="30" /></td>
    </tr>

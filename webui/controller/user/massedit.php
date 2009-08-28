@@ -38,7 +38,7 @@ class ControllerUserMassedit extends Controller {
             if((int)@$this->request->post['edit'] == 1 && $this->validate() == true) {
                $ret = $this->model_user_bulk->bulkUpdateUser($this->request->post['policy_group'], $this->request->post['whitelist'], $this->request->post['blacklist']);
 
-               if($ret == 1){
+               if($ret >= 1){
                   $this->data['x'] = $this->data['text_successfully_modified'];
                }
                else {
@@ -54,7 +54,7 @@ class ControllerUserMassedit extends Controller {
             else if((int)@$this->request->post['remove'] == 1) {
                $ret = $this->model_user_bulk->bulkDeleteUser();
 
-               if($ret == 1){
+               if($ret >= 1){
                   $this->data['x'] = $this->data['text_successfully_removed'];
                }
                else {

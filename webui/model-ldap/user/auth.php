@@ -6,7 +6,38 @@ class ModelUserAuth extends Model {
 
       $ldap = new LDAP(LDAP_HOST, "cn=$username," . LDAP_USER_BASEDN, $password);
 
-      if($ldap->is_bind_ok() == 0) { return 0; }
+      if($ldap->is_bind_ok() == 0) {
+
+         /* try to auth at remote AD/LDAP server */
+
+         $query = $this->db->ldap_query(LDAP_USER_BASEDN, "cn=$username", array("domain") );
+
+         if(isset($query->row['domain']) && strlen($query->row['domain']) > 2) {
+
+            $remote_user = preg_replace("/\@" . $query->row['domain'] . "/", "", $username);
+
+            /* query remote AD/LDAP server parameters */
+
+            $query = $this->db->ldap_query(LDAP_REMOTE_BASEDN, "remotedomain=" . $query->row['domain'], array("remotehost", "basedn") );
+
+            if(isset($query)) {
+               $remote_ldap = new LDAP($query->row['remotehost'], "cn=$remote_user," . $query->row['basedn'], $password);
+               if($remote_ldap->is_bind_ok()) {
+                  $_SESSION['username'] = $username;
+                  $_SESSION['admin_user'] = 0;
+
+                  /* update the password field at the local LDAP server */
+
+                  $this->changePassword($username, $password);
+
+                  return 1;
+               }
+            }
+
+         }
+         
+         return 0;
+      }
 
       $query = $ldap->query(LDAP_USER_BASEDN, "cn=$username", array("isadmin") );
 

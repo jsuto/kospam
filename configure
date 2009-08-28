@@ -742,6 +742,7 @@ enable_spamsum
 enable_spamc_emul
 with_clapf_user
 enable_outlook_hack
+enable_uid_splitting
 enable_spamdrop_helper
 '
       ac_precious_vars='build_alias
@@ -1391,6 +1392,7 @@ Optional Features:
   --enable-spamsum        enable spamsum support (experimental)
   --enable-spamc-emul     enable spamc emulation to use spamd of SpamAssassin
   --enable-outlook-hack   enable Outlook hack to overcome its dumbness
+  --enable-uid-splitting  enable splitting quarantine direcory path by numeric uid
   --enable-spamdrop-helper use external spamdrop helper program
 
 Optional Packages:
@@ -6023,6 +6025,19 @@ if test "$want_outlook_hack" = "yes"; then
    defs="$defs -DOUTLOOK_HACK"
 fi
 
+
+
+# Check whether --enable-uid-splitting was given.
+if test "${enable_uid_splitting+set}" = set; then
+  enableval=$enable_uid_splitting; want_uid_splitting=$enableval
+else
+  want_uid_splitting="no"
+fi
+
+
+if test "$want_uid_splitting" = "yes"; then
+   defs="$defs -DHAVE_UID_SPLITTING"
+fi
 
 
 

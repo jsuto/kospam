@@ -69,30 +69,36 @@ function first_n_characters($what, $n){
 }
 
 
-function get_per_user_queue_dir($uid = 0){
+function get_per_user_queue_dir($username = '', $uid = 0){
 
-   if(!is_numeric($uid) || $uid <= 0){ return ""; }
+   if(QUEUE_DIR_SPLITTING == 1) {
+      if(!is_numeric($uid) || $uid <= 0){ return ""; }
 
-   $h = $uid;
+      $h = $uid;
 
-   $i = $h % 10000;
-   if($i > 0) {
-      $plus1 = 1;
+      $i = $h % 10000;
+      if($i > 0) {
+         $plus1 = 1;
+      }
+      else {
+         $plus1 = 0;
+      }
+
+      $i = $h % 100;
+      if($i > 0){
+         $plus1b = 1;
+      }
+      else {
+         $plus1b = 0;
+      }
+
+      return QUEUE_DIRECTORY . "/" . 10000 * (floor($h / 10000) + $plus1) . "/" . 100 * (floor($h / 100) + $plus1b) . "/" . $uid;
+
    }
    else {
-      $plus1 = 0;
+      return QUEUE_DIRECTORY . "/" . substr($username, 0, 1) . "/" . $username;
    }
 
-   $i = $h % 100;
-   if($i > 0){
-      $plus1b = 1;
-   }
-   else {
-      $plus1b = 0;
-   }
-
-
-   return QUEUE_DIRECTORY . "/" . 10000 * (floor($h / 10000) + $plus1) . "/" . 100 * (floor($h / 100) + $plus1b) . "/" . $uid;
 }
 
 

@@ -1,5 +1,5 @@
 /*
- * parser.c, 2009.06.01, SJ
+ * parser.c, 2009.08.24, SJ
  */
 
 #include <stdio.h>
@@ -601,8 +601,14 @@ DECOMPOSE:
       /* if we have a long string in the Received: lines, let's truncate it, 
          and it may be a domain name, 2008.07.22 */
 
-      if(state->message_state == MSG_RECEIVED && strlen(puf) > MAX_WORD_LEN)
+      if(state->message_state == MSG_RECEIVED && strlen(puf) > MAX_WORD_LEN){
          fix_fqdn(puf);
+
+         snprintf(muf, MAXBUFSIZE-1, "%s", puf);
+         tld_from_fqdn(muf);
+         addnode(state->token_hash, muf, DEFAULT_SPAMICITY, 0);
+         state->n_token++;
+      }
 
       /* skip too short or long or numeric only tokens */
 

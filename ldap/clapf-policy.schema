@@ -126,3 +126,4 @@ objectclass ( 1.3.6.1.1.123456.2.0 NAME 'clapfPolicyGroup'
 	trainingmode $ initial1000learning $ storemetadata
         ) )
 
+

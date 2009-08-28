@@ -22,15 +22,16 @@ create table if not exists t_token (
 create index t_token_idx on t_token(token, uid);
 
 create table if not exists user (
-	uid int unsigned not null,
-        username char(32) not null,
+	uid int unsigned not null unique,
+	username char(32) not null unique,
 	password char(48) default null,
+	domain char(64) default null,
+	dn char(64) default null,
 	policy_group int(4) default 0,
-	isadmin tinyint default 0,
-	unique (uid)
+	isadmin tinyint default 0
 );
 
-create index user_idx on user (uid);
+create index user_idx on user (uid, domain);
 insert into user (uid, username, password, policy_group, isadmin) values (0, 'admin', '$1$kkBnp0$L/MILe67UGcvHeFlTAQjR1', 0, 1);
 
 create table if not exists t_email (
@@ -40,6 +41,15 @@ create table if not exists t_email (
 
 create index t_email_idx on t_email(email);
 insert into t_email (uid, email) values(0, 'admin@yourdomain.com');
+
+create table t_domain (
+        domain char(64) not null,
+        mapped char(64) not null,
+        unique(domain)
+);
+
+insert into t_domain (domain, mapped) values('', ''), ('yourdomain.com','yourdomain.com');
+create index t_domain_idx on t_domain (domain);
 
 create table if not exists t_white_list (
 	uid int unsigned not null primary key,
@@ -108,4 +118,14 @@ create table if not exists t_policy (
 );
 
 create index t_policy_idx on t_policy(policy_group);
+
+
+create table t_remote (
+	remotedomain char(64) not null,
+	remotehost char(64) not null,
+	basedn char(64) not null,
+	sitedescription char(64) default null
+);
+
+create index t_remote_idx on t_remote(remotedomain);
 

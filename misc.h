@@ -1,5 +1,5 @@
 /*
- * misc.h, 2009.08.05, SJ
+ * misc.h, 2009.08.24, SJ
  */
 
 #ifndef _MISC_H
@@ -31,6 +31,7 @@ void degenerate(unsigned char *p);
 void fix_url(char *url);
 void tld_from_url(char *url);
 void fix_fqdn(char *fqdn);
+void tld_from_fqdn(char *fqdn);
 char *split(char *row, int ch, char *s, int size);
 char *split_str(char *row, char *what, char *s, int size);
 unsigned long long APHash(char *p);

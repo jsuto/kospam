@@ -1,5 +1,5 @@
 /*
- * misc.c, 2009.08.05, SJ
+ * misc.c, 2009.08.24, SJ
  */
 
 #include <stdio.h>
@@ -395,7 +395,7 @@ void fix_url(char *url){
 
 
 /*
-   extract the .tld from the URL
+ *  extract the .tld from the URL
  */
 
 void tld_from_url(char *url){
@@ -443,6 +443,23 @@ void fix_fqdn(char *fqdn){
    }
 
    strcpy(fqdn, fixed_fqdn);
+}
+
+
+/*
+ *  extract the .tld from the Received lines
+ */
+
+void tld_from_fqdn(char *fqdn){
+   char *p, fixed_fqdn[SMALLBUFSIZE];;
+
+   p = strrchr(fqdn, '.');
+
+   if(p){
+      snprintf(fixed_fqdn, SMALLBUFSIZE-1, "HEADER*%s", p+1);
+      strcpy(fqdn, fixed_fqdn);
+   }
+
 }
 
 

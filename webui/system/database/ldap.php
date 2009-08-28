@@ -48,6 +48,7 @@ class LDAP {
 
          }
 
+         $data[$i]['dn'] = $results[$i]['dn'];
       }
 
 

@@ -31,7 +31,7 @@ class ControllerQuarantineMessage extends Controller {
          $this->data['username'] = $this->request->get['user'];
       }
 
-      $my_q_dir = get_per_user_queue_dir($this->model_user_user->getUidByName($this->data['username']));
+      $my_q_dir = get_per_user_queue_dir($this->data['username'], $this->model_user_user->getUidByName($this->data['username']));
 
 
       if($this->data['raw'] == 1){

@@ -31,6 +31,7 @@ class ControllerUserEdit extends Controller {
          $this->data['email'] = $this->request->get['email'];
       }
 
+
       /* check if we are admin */
 
       if(Registry::get('admin_user') == 1) {
@@ -64,7 +65,6 @@ class ControllerUserEdit extends Controller {
             $this->data['policies'] = $this->model_policy_policy->getPolicies();
 
             $this->data['emails'] = $this->model_user_user->getEmails($this->data['user']['username']);
-
          }
       }
       else {

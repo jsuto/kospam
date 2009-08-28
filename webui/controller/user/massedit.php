@@ -3,6 +3,7 @@
 
 class ControllerUserMassedit extends Controller {
    private $error = array();
+   private $domains = array();
 
    public function index(){
       $this->data['uid'] = -1;
@@ -17,6 +18,7 @@ class ControllerUserMassedit extends Controller {
       $db = Registry::get('db');
       $language = Registry::get('language');
 
+      $this->load->model('user/user');
       $this->load->model('user/bulk');
       $this->load->model('policy/policy');
 
@@ -29,14 +31,16 @@ class ControllerUserMassedit extends Controller {
 
       /* check if we are admin */
 
-      if(Registry::get('admin_user') == 1) {
+      if(Registry::get('admin_user') == 1 || Registry::get('domain_admin') == 1) {
+
+         $this->data['domains'] = $this->model_user_user->getDomains();
 
          if($this->request->server['REQUEST_METHOD'] == 'POST') {
 
             /* bulk update */
 
-            if((int)@$this->request->post['edit'] == 1 && $this->validate() == true) {
-               $ret = $this->model_user_bulk->bulkUpdateUser($this->request->post['policy_group'], $this->request->post['whitelist'], $this->request->post['blacklist']);
+            if((int)@$this->request->post['edit'] == 1 && $this->validate() == true && $this->validate_uid_list() == true) {
+               $ret = $this->model_user_bulk->bulkUpdateUser($this->request->post['domain'], $this->request->post['policy_group'], $this->request->post['whitelist'], $this->request->post['blacklist']);
 
                if($ret >= 1){
                   $this->data['x'] = $this->data['text_successfully_modified'];
@@ -51,7 +55,7 @@ class ControllerUserMassedit extends Controller {
 
             /* bulk remove */
 
-            else if((int)@$this->request->post['remove'] == 1) {
+            else if((int)@$this->request->post['remove'] == 1 && $this->validate_uid_list() == true) {
                $ret = $this->model_user_bulk->bulkDeleteUser();
 
                if($ret >= 1){
@@ -99,6 +103,33 @@ class ControllerUserMassedit extends Controller {
 
    }
 
+
+   private function validate_uid_list() {
+      $uids = array();
+
+      if(Registry::get('domain_admin') == 1) {
+
+         /* check uid list */
+
+         $uids = explode(",", $this->model_user_bulk->createUidList() );
+
+         foreach ($uids as $uid) {
+            if($this->model_user_user->isUidInMyDomain((int)$uid) == 0) {
+               $this->error['uid'] = $this->data['text_invalid_uid'];
+            }
+
+         }
+
+
+      }
+
+      if (!$this->error) {
+         return true;
+      } else {
+         return false;
+      }
+
+   }
 
 
 }

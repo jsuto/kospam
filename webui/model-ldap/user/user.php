@@ -203,7 +203,7 @@ class ModelUserUser extends Model {
 
 
    public function deleteUser($uid = 0, $email = '') {
-      if($uid < 1 || $email == ""){ return 0; }
+      if($uid < 1){ return 0; }
 
       $username = $this->getNameByUid((int)$uid);
 

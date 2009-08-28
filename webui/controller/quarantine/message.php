@@ -27,11 +27,13 @@ class ControllerQuarantineMessage extends Controller {
 
       /* fix username if we are admin */
 
-      if(Registry::get('admin_user') == 1 && isset($this->request->get['user']) && strlen($this->request->get['user']) > 1) {
+      if(isset($this->request->get['user']) && strlen($this->request->get['user']) > 1 && (Registry::get('admin_user') == 1 || $this->model_user_user->isUserInMyDomain($this->request->get['user']) == 1) ) {
          $this->data['username'] = $this->request->get['user'];
       }
 
-      $my_q_dir = get_per_user_queue_dir($this->data['username'], $this->model_user_user->getUidByName($this->data['username']));
+      $uid = $this->model_user_user->getUidByName($this->data['username']);
+      $domain = $this->model_user_user->getDomainsByUid($uid);
+      $my_q_dir = get_per_user_queue_dir($domain[0], $this->data['username'], $uid);
 
 
       if($this->data['raw'] == 1){

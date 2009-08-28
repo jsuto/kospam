@@ -15,6 +15,7 @@ class ControllerImportQuery extends Controller {
       $db = Registry::get('db');
       $language = Registry::get('language');
 
+      $this->load->model('user/user');
       $this->load->model('user/import');
       $this->load->model('policy/policy');
 
@@ -26,13 +27,15 @@ class ControllerImportQuery extends Controller {
 
       /* check if we are admin */
 
-      if(Registry::get('admin_user') == 1) {
+      if(Registry::get('admin_user') == 1 || Registry::get('domain_admin') == 1) {
 
          if($this->request->server['REQUEST_METHOD'] == 'POST' && $this->validate() == true) {
             $this->template = "import/import.tpl";
 
             $this->data['users'] = $this->model_user_import->queryRemoteUsers($this->request->post);
             $this->data['policies'] = $this->model_policy_policy->getPolicies();
+
+            $this->data['domains'] = $this->model_user_user->getDomains();
 
             $this->data['request'] = $this->request->post;
          }

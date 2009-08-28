@@ -15,6 +15,17 @@
       <tr>
          <td><?php print $text_uids; ?>: <?php print $uidlist; ?></td>
       </tr>
+
+      <tr>
+       <td><?php print $text_domain; ?>:</td><td>
+         <select name="domain">
+<?php foreach ($domains as $domain) { ?>
+            <option value="<?php if(is_array($domain)){ print $domain['mapped']; } else { print $domain; } ?>"><?php if(is_array($domain)){ print $domain['mapped']; } else { print $domain; } ?></option>
+<?php } ?>
+         </select>
+       </td>
+      </tr>
+
       <tr>
        <td><?php print $text_policy_group; ?>:</td><td>
          <select name="policy_group">

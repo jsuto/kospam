@@ -16,6 +16,13 @@ function isAdminUser() {
 }
 
 
+function isDomainAdmin() {
+   if(isset($_SESSION['admin_user']) && $_SESSION['admin_user'] == 2){ return 1; }
+
+   return 0;
+}
+
+
 function logout() {
    $_SESSION['username'] = "";
    $_SESSION['admin_user'] = 0;
@@ -42,13 +49,19 @@ function getPageLength() {
 }
 
 
-function checkemail($email) {
+function checkemail($email, $domains) {
    if($email == ""){
       return 0;
    }
 
    if (eregi('^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,4})$', $email)) {
-      return 1;
+
+      list($u, $d) = explode('@', $email);
+
+      foreach ($domains as $domain) {
+         if($domain == $d){ return 1; }
+      }
+
    }
 
    return 0;
@@ -69,7 +82,7 @@ function first_n_characters($what, $n){
 }
 
 
-function get_per_user_queue_dir($username = '', $uid = 0){
+function get_per_user_queue_dir($domain = '', $username = '', $uid = 0){
 
    if(QUEUE_DIR_SPLITTING == 1) {
       if(!is_numeric($uid) || $uid <= 0){ return ""; }
@@ -96,7 +109,7 @@ function get_per_user_queue_dir($username = '', $uid = 0){
 
    }
    else {
-      return QUEUE_DIRECTORY . "/" . substr($username, 0, 1) . "/" . $username;
+      return QUEUE_DIRECTORY . "/$domain/" . substr($username, 0, 1) . "/" . $username;
    }
 
 }

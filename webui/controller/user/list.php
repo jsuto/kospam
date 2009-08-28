@@ -24,6 +24,8 @@ class ControllerUserList extends Controller {
       $this->data['page'] = 0;
       $this->data['page_len'] = getPageLength();
 
+      $this->data['total_users'] = 0;
+
       $users = array();
 
 
@@ -47,7 +49,7 @@ class ControllerUserList extends Controller {
 
       /* check if we are admin */
 
-      if(Registry::get('admin_user') == 1) {
+      if(Registry::get('admin_user') == 1 || Registry::get('domain_admin') == 1) {
 
          $users = $this->model_user_user->getUsers($this->data['search'], $this->data['page'], $this->data['page_len']);
 
@@ -67,6 +69,7 @@ class ControllerUserList extends Controller {
                                           'uid'          => $user['uid'],
                                           'username'     => $user['username'],
                                           'email'        => $user['email'],
+                                          'domain'       => $user['domain'],
                                           'policy_group' => $policy_group
                                         );
          }

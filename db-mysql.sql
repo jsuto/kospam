@@ -43,9 +43,8 @@ create index t_email_idx on t_email(email);
 insert into t_email (uid, email) values(0, 'admin@yourdomain.com');
 
 create table t_domain (
-        domain char(64) not null,
-        mapped char(64) not null,
-        unique(domain)
+        domain char(64) not null unique,
+        mapped char(64) not null
 );
 
 insert into t_domain (domain, mapped) values('', ''), ('yourdomain.com','yourdomain.com');

@@ -23,6 +23,7 @@
       <th><?php print $text_user_id; ?></th>
       <th><?php print $text_username; ?></th>
       <th><?php print $text_email; ?></th>
+      <th><?php print $text_domain; ?></th>
       <th><?php print $text_policy_group; ?></th>
       <th>&nbsp;</th>
       <th>&nbsp;</th>
@@ -34,6 +35,7 @@
       <td><?php print $user['uid']; ?></td>
       <td><?php print $user['username']; ?></td>
       <td><?php print $user['email']; ?></td>
+      <td><?php print $user['domain']; ?></td>
       <td><?php print $user['policy_group']; ?></td>
       <td><a href="index.php?route=user/edit&amp;uid=<?php print $user['uid']; ?>&amp;email=<?php print $user['email']; ?>"><?php print $text_edit_or_view; ?></a></td>
       <td><a href="index.php?route=quarantine/quarantine&amp;user=<?php print $user['username']; ?>"><?php print $text_view_user_quarantine; ?></a></td>

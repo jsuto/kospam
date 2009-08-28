@@ -37,6 +37,7 @@ Registry::set('language', $language);
 
 Registry::set('username', getAuthenticatedUsername());
 Registry::set('admin_user', isAdminUser());
+Registry::set('domain_admin', isDomainAdmin());
 
 
 if(Registry::get('username')) {

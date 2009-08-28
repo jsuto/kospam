@@ -88,6 +88,94 @@ class ModelUserUser extends Model {
    }
 
 
+   public function getDomains() {
+      $data = array();
+
+      if(Registry::get('domain_admin') == 1) {
+         $query = $this->db->query("SELECT domain FROM " . TABLE_USER . " WHERE username='" . $this->db->escape($_SESSION['username']) . "'");
+      }
+      else {
+         $query = $this->db->query("SELECT DISTINCT mapped AS domain FROM " . TABLE_DOMAIN);
+      }
+
+      foreach ($query->rows as $q) {
+         array_push($data, $q['domain']);
+      }
+
+      return $data;
+   }
+
+
+   public function getDomainsByUid($uid = 0) {
+      $data = array();
+
+      $query = $this->db->query("SELECT domain FROM " . TABLE_USER . " WHERE uid=" . (int)$uid);
+
+      foreach ($query->rows as $q) {
+         array_push($data, $q['domain']);
+      }
+
+      return $data;
+   }
+
+
+   public function getEmailDomains() {
+      $data = array();
+
+      if(Registry::get('domain_admin') == 1) {
+         $my_domain = $this->getDomains();
+         $query = $this->db->query("SELECT domain FROM " . TABLE_DOMAIN . " WHERE mapped='" . $this->db->escape($my_domain[0]) . "'");
+      }
+      else {
+         $query = $this->db->query("SELECT domain FROM " . TABLE_DOMAIN);
+      }
+
+      foreach ($query->rows as $q) {
+         array_push($data, $q['domain']);
+      }
+
+      return $data;
+   }
+
+
+   public function isUserInMyDomain($username = '') {
+      if($username == "") { return 0; }
+
+      /* query my domain */
+
+      $query = $this->db->query("SELECT domain FROM " . TABLE_USER . " WHERE username='" . $this->db->escape($_SESSION['username']) . "'");
+      if(!isset($query->row['domain'])) { return 0; }
+
+      /* query user's domain */
+
+      $query2 = $this->db->query("SELECT domain FROM " . TABLE_USER . " WHERE username='" . $this->db->escape($username) . "'");
+      if(!isset($query2->row['domain'])) { return 0; }
+
+      if($query->row['domain'] == $query2->row['domain']) { return 1; }
+
+      return 0;
+   }
+
+
+   public function isUidInMyDomain($uid = 0) {
+      if($uid == 0) { return 0; }
+
+      /* query my domain */
+
+      $query = $this->db->query("SELECT domain FROM " . TABLE_USER . " WHERE username='" . $this->db->escape($_SESSION['username']) . "'");
+      if(!isset($query->row['domain'])) { return 0; }
+
+      /* query user's domain */
+
+      $query2 = $this->db->query("SELECT domain FROM " . TABLE_USER . " WHERE uid=" . (int)$uid);
+      if(!isset($query2->row['domain'])) { return 0; }
+
+      if($query->row['domain'] == $query2->row['domain']) { return 1; }
+
+      return 0;
+   }
+
+
    public function getUserByUid($uid = 0) {
       if(!is_numeric($uid) || (int)$uid < 0){
          return array();
@@ -102,6 +190,7 @@ class ModelUserUser extends Model {
    public function getUsers($search = '', $page = 0, $page_len = 0) {
       $where_cond = "";
       $users = array();
+      $my_domain = array();
 
       $from = (int)$page * (int)$page_len;
 
@@ -109,16 +198,26 @@ class ModelUserUser extends Model {
          $where_cond .= " WHERE uid IN (SELECT DISTINCT uid FROM " . TABLE_USER . " WHERE username LIKE '%" . $this->db->escape($search) . "%') OR uid IN (SELECT DISTINCT uid FROM " . TABLE_EMAIL . " WHERE email LIKE '%" . $this->db->escape($search) . "%')";
       }
 
-      $query = $this->db->query("SELECT uid, username, policy_group FROM " . TABLE_USER . " $where_cond LIMIT " . (int)$from . ", " . (int)$page_len);
+      if(Registry::get('domain_admin') == 1) {
+         $my_domain = $this->getDomains();
+      }
+
+
+      $query = $this->db->query("SELECT uid, username, domain, policy_group FROM " . TABLE_USER . " $where_cond LIMIT " . (int)$from . ", " . (int)$page_len);
 
       foreach ($query->rows as $q) {
          $email = $this->db->query("SELECT email FROM " . TABLE_EMAIL . " WHERE uid=" . (int)$q['uid'] . " LIMIT 1");
-         $users[] = array(
-                          'uid' => $q['uid'],
-                          'username' => $q['username'],
+
+         if(Registry::get('admin_user') == 1 || $q['domain'] == $my_domain[0]) {
+            $users[] = array(
+                          'uid'          => $q['uid'],
+                          'username'     => $q['username'],
+                          'domain'       => $q['domain'],
                           'policy_group' => $q['policy_group'],
-                          'email' => $email->row['email']
+                          'email'        => $email->row['email']
                          );
+         }
+
       }
 
       return $users;
@@ -154,7 +253,7 @@ class ModelUserUser extends Model {
 
       $encrypted_password = crypt($user['password']);
 
-      $query = $this->db->query("INSERT INTO " . TABLE_USER . " (uid, username, password, policy_group, isadmin) VALUES(" . (int)$user['uid'] . ", '" . $this->db->escape($user['username']) . "', '" . $this->db->escape($encrypted_password) . "', " . (int)$user['policy_group'] . ", " . (int)$user['isadmin'] . ")");
+      $query = $this->db->query("INSERT INTO " . TABLE_USER . " (uid, username, password, domain, dn, policy_group, isadmin) VALUES(" . (int)$user['uid'] . ", '" . $this->db->escape($user['username']) . "', '" . $this->db->escape($encrypted_password) . "', '" . $this->db->escape($user['domain']) . "', '" . $this->db->escape(@$user['dn']) . "', " . (int)$user['policy_group'] . ", " . (int)$user['isadmin'] . ")");
 
       if($this->db->countAffected() == 0){ return -1; }
 
@@ -197,7 +296,7 @@ class ModelUserUser extends Model {
          if($this->db->countAffected() != 1) { return 0; }
       }
 
-      $query = $this->db->query("UPDATE " . TABLE_USER . " SET username='" . $this->db->escape($user['username']) ."', policy_group=" . (int)$user['policy_group'] . ", isadmin=" . $user['isadmin'] . " WHERE uid=" . (int)$user['uid']);
+      $query = $this->db->query("UPDATE " . TABLE_USER . " SET username='" . $this->db->escape($user['username']) ."', domain='" . $this->db->escape($user['domain']) . "', policy_group=" . (int)$user['policy_group'] . ", isadmin=" . $user['isadmin'] . " WHERE uid=" . (int)$user['uid']);
 
 
       /* first, remove all his email addresses */
@@ -217,7 +316,7 @@ class ModelUserUser extends Model {
 
 
    public function deleteUser($uid = 0, $email = '') {
-      if($uid < 1 || $email == ""){ return 0; }
+      if($uid < 1){ return 0; }
 
       $query = $this->db->query("DELETE FROM " . TABLE_EMAIL . " WHERE uid=" . (int)$uid);
       $query = $this->db->query("DELETE FROM " . TABLE_USER . " WHERE uid=" . (int)$uid);

@@ -22,12 +22,12 @@ class ModelUserBulk extends Model {
    }
 
 
-   public function bulkUpdateUser($policy_group = 0, $whitelist = '', $blacklist = '') {
+   public function bulkUpdateUser($domain = '', $policy_group = 0, $whitelist = '', $blacklist = '') {
       $uidlist = $this->createUidList();
 
       if($uidlist == ""){ return 0; }
 
-      $query = $this->db->query("UPDATE " . TABLE_USER . " SET policy_group=" . (int)$policy_group . " WHERE uid IN ($uidlist)");
+      $query = $this->db->query("UPDATE " . TABLE_USER . " SET domain='" . $this->db->escape($domain) . "', policy_group=" . (int)$policy_group . " WHERE uid IN ($uidlist)");
       $query = $this->db->query("UPDATE " . TABLE_WHITELIST . " SET whitelist='" . $this->db->escape($whitelist) . "' WHERE uid IN ($uidlist)");
       $query = $this->db->query("UPDATE " . TABLE_BLACKLIST . " SET blacklist='" . $this->db->escape($blacklist) . "' WHERE uid IN ($uidlist)");
 

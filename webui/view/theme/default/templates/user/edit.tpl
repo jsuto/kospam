@@ -1,5 +1,4 @@
 
-<p/>
 
 <?php if(isset($user)) { ?>
 
@@ -16,7 +15,19 @@
          <td><textarea name="email" cols="<?php print CGI_INPUT_FIELD_WIDTH; ?>" rows="<?php print CGI_INPUT_FIELD_HEIGHT; ?>"><?php print $emails; ?></textarea></td>
       </tr>
 <?php } ?>
+
       <tr><td><?php print $text_username; ?>:</td><td><input type="text" name="username" value="<?php print $user['username']; ?>" size="<?php print CGI_INPUT_FIELD_WIDTH; ?>" /></td></tr>
+
+      <tr>
+       <td><?php print $text_domain; ?>:</td><td>
+         <select name="domain">
+<?php foreach ($domains as $domain) { ?>
+            <option value="<?php print $domain; ?>"<?php if($domain == $user['domain']){ ?> selected="selected"<?php } ?>><?php print $domain; ?></option>
+<?php } ?>
+         </select>
+       </td>
+      </tr>
+
       <tr><td><?php print $text_password; ?>:</td><td><input type="password" name="password" value="" size="<?php print CGI_INPUT_FIELD_WIDTH; ?>" /></td></tr>
       <tr><td><?php print $text_password_again; ?>:</td><td><input type="password" name="password2" value="" size="<?php print CGI_INPUT_FIELD_WIDTH; ?>" /></td></tr>
       <tr><td><?php print $text_user_id; ?>:</td><td><?php print $uid; ?></td></tr>
@@ -33,8 +44,9 @@
       <tr>
        <td><?php print $text_admin_user; ?>:</td><td>
          <select name="isadmin">
-            <option value="0"<?php if($user['isadmin'] == 0){ ?> selected="selected"<?php } ?>>0</option>
-            <option value="1"<?php if($user['isadmin'] == 1){ ?> selected="selected"<?php } ?>>1</option>
+            <option value="0"<?php if($user['isadmin'] == 0){ ?> selected="selected"<?php } ?>><?php print $text_user_regular; ?></option>
+            <?php if(Registry::get('admin_user') == 1) { ?><option value="1"<?php if($user['isadmin'] == 1){ ?> selected="selected"<?php } ?>><?php print $text_user_masteradmin; ?></option><?php } ?>
+            <option value="2"<?php if($user['isadmin'] == 2){ ?> selected="selected"<?php } ?>><?php print $text_user_domainadmin; ?></option>
          </select>
        </td>
       </tr>

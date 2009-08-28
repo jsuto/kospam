@@ -128,11 +128,13 @@ function write_stuff() {
 
       write_line($fp, "TABLE_USER", "user");
       write_line($fp, "TABLE_EMAIL", "t_email");
+      write_line($fp, "TABLE_DOMAIN", "t_domain");
       write_line($fp, "TABLE_MISC", "t_misc");
       write_line($fp, "TABLE_WHITELIST", "t_white_list");
       write_line($fp, "TABLE_BLACKLIST", "t_black_list");
       write_line($fp, "TABLE_POLICY", "t_policy");
       write_line($fp, "TABLE_STAT", "t_stat");
+      write_line($fp, "TABLE_REMOTE", "t_remote");
    }
 
    write_line($fp);

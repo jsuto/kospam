@@ -3,6 +3,8 @@
 
 class ControllerUserRemove extends Controller {
    private $error = array();
+   private $domains = array();
+   private $d = array();
 
    public function index(){
 
@@ -24,6 +26,10 @@ class ControllerUserRemove extends Controller {
       $this->data['uid'] = (int)@$this->request->get['uid'];
       $this->data['email'] = @$this->request->get['email'];
       $this->data['confirmed'] = (int)@$this->request->get['confirmed'];
+
+      $this->data['domains'] = $this->model_user_user->getDomains();
+
+      $this->domains = $this->model_user_user->getEmailDomains();
 
       if($this->validate() == true) {
 
@@ -50,16 +56,27 @@ class ControllerUserRemove extends Controller {
 
    private function validate() {
 
-      if(Registry::get('admin_user') == 0) {
+      if(Registry::get('admin_user') == 0 && Registry::get('domain_admin') == 0) {
          $this->error['admin'] = $this->data['text_you_are_not_admin'];
       }
 
-      if(checkemail(@$this->request->get['email']) == 0) {
+      if(checkemail(@$this->request->get['email'], $this->domains) == 0) {
          $this->error['email'] = $this->data['text_invalid_email'];
       }
 
       if(!isset($this->request->get['uid']) || !is_numeric($this->request->get['uid']) || $this->request->get['uid'] < 1 ) {
          $this->error['username'] = $this->data['text_invalid_uid'];
+      }
+
+
+
+      /* apply additional restrictions on domain admins */
+
+      if(Registry::get('domain_admin') == 1) {
+         if($this->model_user_user->isUidInMyDomain((int)@$this->request->get['uid']) == 0) {
+            $this->error['uid'] = $this->data['text_invalid_uid'];
+         }
+
       }
 
 

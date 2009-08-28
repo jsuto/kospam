@@ -12,6 +12,7 @@ class ControllerCommonMenu extends Controller {
       $db = Registry::get('db');
 
       $this->data['admin_user'] = Registry::get('admin_user');
+      $this->data['domain_admin'] = Registry::get('domain_admin');
 
       $this->render();
 

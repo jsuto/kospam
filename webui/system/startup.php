@@ -18,6 +18,7 @@ if(DB_DRIVER == "ldap") {
 }
 else {
    require(DIR_SYSTEM . "/db.php");
+   require_once(DIR_SYSTEM . "/database/ldap.php");
 }
 
 

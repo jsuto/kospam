@@ -25,10 +25,12 @@ class ControllerImportImport extends Controller {
 
       /* check if we are admin */
 
-      if(Registry::get('admin_user') == 1) {
+      if(Registry::get('domain_admin') == 1) {
 
          if($this->request->server['REQUEST_METHOD'] == 'POST' && $this->validate() == true) {
             $this->template = "import/imported.tpl";
+
+            $my_mapped_domain = 
             $this->data['n'] = $this->model_user_import->importUsers($this->request->post);
          }
 
@@ -68,7 +70,6 @@ class ControllerImportImport extends Controller {
       if(!isset($this->request->post['policy_group']) || !is_numeric($this->request->post['policy_group']) || $this->request->post['policy_group'] < 0) {
          $this->error['policy_group'] = $this->data['text_invalid_policy_group'];
       }
-
 
 
       if (!$this->error) {

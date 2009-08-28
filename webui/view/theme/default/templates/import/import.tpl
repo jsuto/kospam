@@ -1,8 +1,4 @@
 
-<p/>
-
-<h4><?php print $text_import_users; ?></h4>
-
 <p>&nbsp;</p>
 
 <?php if(isset($users) && count($users) > 1){ ?>
@@ -16,8 +12,13 @@
 
 <table border="0">
    <tr>
-      <td><?php print $text_domainname; ?>:</td>
-      <td><input type="text" name="domain" value="" /></td>
+      <td><?php print $text_domainname; ?>:</td><td>
+         <select name="domain">
+<?php foreach ($domains as $domain) { ?>
+            <option value="<?php if(is_array($domain)){ print $domain['mapped']; } else { print $domain; } ?>"><?php if(is_array($domain)){ print $domain['mapped']; } else { print $domain; } ?></option>
+<?php } ?>
+         </select>
+      </td>
    </tr>
    <tr>
       <td><?php print $text_policy_group; ?>:</td><td>

@@ -1,6 +1,4 @@
 
-<p/>
-
 <h4><?php print $text_add_new_user_alias; ?></h4>
 
 <?php if(isset($policies)) { ?>
@@ -14,6 +12,18 @@
       <tr valign="top"><td><?php print $text_email_addresses; ?>:</td><td><textarea name="email" cols="<?php print CGI_INPUT_FIELD_WIDTH; ?>" rows="<?php print CGI_INPUT_FIELD_HEIGHT; ?>"></textarea></td></tr>
 <?php } ?>
       <tr><td><?php print $text_username; ?>:</td><td><input type="text" name="username" value="" size="<?php print CGI_INPUT_FIELD_WIDTH; ?>" /></td></tr>
+      <tr>
+       <td><?php print $text_domain; ?>:</td><td>
+         <select name="domain">
+<?php foreach ($domains as $domain) { ?>
+            <option value="<?php if(is_array($domain)){ print $domain['mapped']; } else { print $domain; } ?>"><?php if(is_array($domain)){ print $domain['mapped']; } else { print $domain; } ?></option>
+<?php } ?>
+         </select>
+       </td>
+      </tr>
+
+      <tr><td>LDAP DN:</td><td><input type="text" name="dn" value="" size="<?php print CGI_INPUT_FIELD_WIDTH; ?>" /></td></tr>
+
       <tr><td><?php print $text_password; ?>:</td><td><input type="password" name="password" value="" size="<?php print CGI_INPUT_FIELD_WIDTH; ?>" /></td></tr>
       <tr><td><?php print $text_password_again; ?>:</td><td><input type="password" name="password2" value="" size="<?php print CGI_INPUT_FIELD_WIDTH; ?>" /></td></tr>
       <tr><td><?php print $text_user_id; ?>:</td><td><input type="text" name="uid" value="<?php print $next_user_id; ?>" /></td></tr>
@@ -30,8 +40,9 @@
       <tr>
        <td><?php print $text_admin_user; ?>:</td><td>
          <select name="isadmin">
-            <option value="0" selected="selected">0</option>
-            <option value="1">1</option>
+            <option value="0" selected="selected"><?php print $text_user_regular; ?></option>
+            <?php if(Registry::get('admin_user') == 1) { ?><option value="1"><?php print $text_user_masteradmin; ?></option><?php } ?>
+            <option value="2"><?php print $text_user_domainadmin; ?></option>
          </select>
        </td>
       </tr>

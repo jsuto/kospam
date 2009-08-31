@@ -10,20 +10,22 @@ class ModelUserUser extends Model {
       $to = ($page+1) * $page_len;
 
       if($search) {
-         $query = $this->db->ldap_query(LDAP_USER_BASEDN, "(|(cn=*$search*)(mail=*$search*))", array("uid", "mail", "cn", "policygroupid") );
+         $query = $this->db->ldap_query(LDAP_USER_BASEDN, "(|(cn=*$search*)(mail=*$search*))", array("uid", "mail", "cn", "policygroupid", "domain") );
       }
       else {
-         $query = $this->db->ldap_query(LDAP_USER_BASEDN, "(|(cn=*)(mail=*))", array("uid", "mail", "cn", "policygroupid") );
+         $query = $this->db->ldap_query(LDAP_USER_BASEDN, "(|(cn=*)(mail=*))", array("uid", "mail", "cn", "policygroupid", "domain") );
       }
 
       foreach ($query->rows as $result) {
 
          if($n_users >= $from && $n_users < $to) {
+
             $data[] = array(
                           'uid'          => $result['uid'],
                           'username'     => $result['cn'],
                           'email'        => $result['mail'],
-                          'policy_group' => $result['policygroupid']
+                          'policy_group' => $result['policygroupid'],
+                          'domain'       => isset($result['domain']) ? $result['domain'] : ""
                           );
 
 
@@ -56,7 +58,6 @@ class ModelUserUser extends Model {
          $aliases = rtrim($aliases);
       }
 
-
       $data = array(
                     'uid'          => $result['uid'],
                     'username'     => $result['cn'],
@@ -65,7 +66,8 @@ class ModelUserUser extends Model {
                     'isadmin'      => $result['isadmin'],
                     'aliases'      => $aliases,
                     'whitelist'    => $result['filtersender'],
-                    'blacklist'    => $result['blacklist']
+                    'blacklist'    => $result['blacklist'],
+                    'domain'       => isset($result['domain']) ? $result['domain'] : ""
                    );
 
 
@@ -136,6 +138,43 @@ class ModelUserUser extends Model {
    }
 
 
+   public function getEmailDomains() {
+      $data = array();
+
+      if(Registry::get('domain_admin') == 1) {
+         $my_domain = $this->getDomains();
+         //$query = $this->db->ldap_query("SELECT domain FROM " . TABLE_DOMAIN . " WHERE mapped='" . $this->db->escape($my_domain[0]) . "'");
+      }
+      else {
+         $query = $this->db->ldap_query(LDAP_DOMAIN_BASEDN, "maildomain=*", array("maildomain") );
+      }
+
+      foreach ($query->rows as $q) {
+         array_push($data, $q['maildomain']);
+      }
+
+      return $data;
+   }
+
+
+   public function getDomains(){
+      $data = array();
+
+      if(Registry::get('domain_admin') == 1) {
+         //$query = $this->db->query("SELECT domain FROM " . TABLE_USER . " WHERE username='" . $this->db->escape($_SESSION['username']) . "'");
+      }
+      else {
+         $query = $this->db->ldap_query(LDAP_DOMAIN_BASEDN, "maildomain=*", array("maildomain") );
+      }
+
+      foreach ($query->rows as $q) {
+         array_push($data, $q['maildomain']);
+      }
+
+      return $data;
+   }
+
+
    public function getEmails($username = '') {
    }
 
@@ -202,7 +241,7 @@ class ModelUserUser extends Model {
    }
 
 
-   public function deleteUser($uid = 0, $email = '') {
+   public function deleteUser($uid = 0) {
       if($uid < 1){ return 0; }
 
       $username = $this->getNameByUid((int)$uid);

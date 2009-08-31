@@ -1,5 +1,10 @@
 0.4.2-rc1:
 
+2009.08.31, SJ
+
+Added policy support for sqlite3 too.
+(policy.c)
+
 2009.08.25, SJ
 
 Changed the per user quarantine path splitting. The default is the

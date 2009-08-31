@@ -77,6 +77,11 @@ class ControllerUserEdit extends Controller {
 
             $this->data['policies'] = $this->model_policy_policy->getPolicies();
             $this->data['emails'] = $this->model_user_user->getEmails($this->data['user']['username']);
+
+            if(DB_DRIVER == 'ldap') {
+               $this->data['email'] = $this->data['user']['email'];
+            }
+
          }
       }
       else {

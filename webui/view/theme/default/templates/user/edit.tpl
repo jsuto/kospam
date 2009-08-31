@@ -57,7 +57,7 @@
 </form>
 
 <p>&nbsp;</p>
-<p><a href="index.php?route=user/remove&amp;uid=<?php print $user['uid']; ?>&amp;email=<?php print $email; ?>"><?php print $text_remove_this_user; ?></a></p>
+<p><a href="index.php?route=user/remove&amp;uid=<?php print $user['uid']; ?>&amp;user=<?php print $user['username']; ?>"><?php print $text_remove_this_user; ?>: <?php print $user['username']; ?></a></p>
 <p>&nbsp;</p>
 
 <p>

@@ -315,7 +315,7 @@ class ModelUserUser extends Model {
    }
 
 
-   public function deleteUser($uid = 0, $email = '') {
+   public function deleteUser($uid = 0) {
       if($uid < 1){ return 0; }
 
       $query = $this->db->query("DELETE FROM " . TABLE_EMAIL . " WHERE uid=" . (int)$uid);

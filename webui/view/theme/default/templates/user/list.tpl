@@ -37,7 +37,7 @@
       <td><?php print $user['email']; ?></td>
       <td><?php print $user['domain']; ?></td>
       <td><?php print $user['policy_group']; ?></td>
-      <td><a href="index.php?route=user/edit&amp;uid=<?php print $user['uid']; ?>&amp;email=<?php print $user['email']; ?>"><?php print $text_edit_or_view; ?></a></td>
+      <td><a href="index.php?route=user/edit&amp;uid=<?php print $user['uid']; ?>"><?php print $text_edit_or_view; ?></a></td>
       <td><a href="index.php?route=quarantine/quarantine&amp;user=<?php print $user['username']; ?>"><?php print $text_view_user_quarantine; ?></a></td>
    </tr>
 <?php } ?>

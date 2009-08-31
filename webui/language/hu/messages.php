@@ -2,7 +2,6 @@
 
 $_['text_add'] = "Felvesz";
 $_['text_add_new_email_address'] = "Új email cím";
-$_['text_add_new_domain'] = "Új domain";
 $_['text_add_new_user_alias'] = "Új felhasználó";
 $_['text_add_policy'] = "Új házirend";
 $_['text_admin_user'] = "Admin felhasználó";
@@ -21,17 +20,13 @@ $_['text_deliver'] = "Kézbesítés";
 $_['text_delivered'] = "Kézbesített";
 $_['text_deliver_and_train_selected_messages'] = "Kiválasztott üzenetek tanítása és kézbesítése";
 $_['text_deliver_selected_messages'] = "Kiválasztott üzenetek kézbesítése";
-$_['text_domain'] = "Domain";
-$_['text_domainname'] = "Domainnév";
 
-$_['text_edit'] = "Szerkeszt";
 $_['text_edit_or_view'] = "Szerkeszt/Megnéz";
 $_['text_email'] = "Email cím";
 $_['text_email_addresses'] = "Email cím(ek)";
 $_['text_email_aliases'] = "Email álcímek";
 $_['text_empty_quarantine_directory_structure'] = "Üres karantén könyvtár";
 $_['text_error'] = "Hiba";
-$_['text_existing_domains'] = "Létező domainek";
 $_['text_existing_policies'] = "Létező házirendek";
 $_['text_existing_users'] = "Létező felhasználók";
 
@@ -48,8 +43,6 @@ $_['text_from'] = "Feladó";
 $_['text_ham_and_spam_messages'] = "Ham & spam üzenetek";
 $_['text_home'] = "Kezdőlap";
 
-$_['text_import'] = "Import";
-$_['text_import_users'] = "Import users";
 $_['text_invalid_data'] = "Érvénytelen adat(ok)";
 $_['text_invalid_email'] = "Érvénytelen email cím";
 $_['text_invalid_password'] = "Érvénytelen jelszó";
@@ -60,18 +53,12 @@ $_['text_invalid_uid'] = "Érvénytelen felhasználóazonosító";
 $_['text_invalid_username'] = "Érvénytelen felhasználónév";
 
 $_['text_last'] = "Utolsó";
-$_['text_ldap_basedn'] = "LDAP alapértelmezett DN";
-$_['text_ldap_binddn'] = "LDAP csatlakozási DN";
-$_['text_ldap_bindpw'] = "LDAP csatlakozási jelszó";
-$_['text_ldap_host'] = "LDAP kiszolgáló";
 $_['text_logged_out'] = "Ön kijelentkezett";
 $_['text_login'] = "Bejelentkezés";
 $_['text_logout'] = "Kijelentkezés";
 
 $_['text_main_title'] = "clapf web UI";
-$_['text_mapped_domain'] = "Hozzárendelt domain";
 $_['text_messages'] = "üzenet";
-$_['text_missing_data'] = "Hiányzó adat";
 $_['text_missing_password'] = "Hiányzó jelszó";
 $_['text_modify'] = "Módosítás";
 $_['text_monthly_report'] = "Havi jelentés";
@@ -103,7 +90,6 @@ $_['text_purged'] = "Eltávolítva";
 $_['text_quarantine'] = "Karantén";
 
 $_['text_remove'] = "Törlés";
-$_['text_remove_domain'] = "Domain törlése";
 $_['text_remove_selected_uids'] = "Kijelölt azonosítók törlése";
 $_['text_remove_policy'] = "Házirend törlése";
 $_['text_remove_this_policy'] = "Házirend törlése";
@@ -126,13 +112,9 @@ $_['text_train_and_deliver'] = "Tanítás és kézbesítés";
 $_['text_trained'] = "Tanítva";
 
 $_['text_uids'] = "Felhasználó azonosítók";
-$_['text_unauthorized_domain'] = "Nem megengedett domain";
 $_['text_update_selected_uids'] = "Kijelölt azonosítók módosítása";
 $_['text_user_id'] = "Felhasználó azonosító";
-$_['text_user_domainadmin'] = "Domain admin";
 $_['text_user_management'] = "Felhasználó menedzselés";
-$_['text_user_masteradmin'] = "Mester admin";
-$_['text_user_regular'] = "Sima felhasználó";
 $_['text_userlist'] = "Felhasználók listája";
 $_['text_username'] = "Felhasználónév";
 $_['text_users_quarantine'] = "Felhasználók karanténja";

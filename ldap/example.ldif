@@ -1,16 +1,27 @@
-dn: dc=aaaa,dc=fu
-dc: aaaa
+dn: dc=yourdomain,dc=com
+dc: yourdomain
 objectClass: top
 objectClass: dcObject
 objectClass: organization
-o: aaaa.fu
+o: yourdomain.com
 
-dn: ou=billing,dc=aaaa,dc=fu
-ou: billing
+dn: ou=clapfusers,dc=yourdomain,dc=com
+ou: clapfusers
 objectClass: top
 objectClass: organizationalUnit
 
-dn: cn=admin,ou=billing,dc=aaaa,dc=fu
+dn: ou=clapfpolicies,dc=yourdomain,dc=com
+ou: clapfpolicies
+objectClass: top
+objectClass: organizationalUnit
+
+dn: ou=clapfdomains,dc=yourdomain,dc=com
+ou: clapfdomains
+objectClass: top
+objectClass: organizationalUnit
+
+
+dn: cn=admin,ou=clapfusers,dc=yourdomain,dc=com
 cn: admin
 sn: whatever
 objectClass: top
@@ -18,7 +29,7 @@ objectClass: person
 objectClass: qmailUser
 objectClass: qmailGroup
 uid: 0
-mail: admin@aaaa.fu
+mail: admin@yourdomain.com
 mailAlternateAddress:
 mailMessageStore: x
 filtersender:
@@ -26,9 +37,4 @@ blackList:
 policyGroupId: 0
 isAdmin: 1
 userPassword: admin
-
-dn: ou=remote,dc=aaaa,dc=fu
-ou: remote
-objectClass: top
-objectClass: organizationalUnit
 

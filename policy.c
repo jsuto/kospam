@@ -1,5 +1,5 @@
 /*
- * policy.c, 2009.05.19, SJ
+ * policy.c, 2009.08.31, SJ
  */
 
 #include <stdio.h>
@@ -60,6 +60,51 @@ int get_policy(struct session_data *sdata, struct __config *cfg, struct __config
          mysql_free_result(res);
       }
    }
+
+   return 1;
+}
+
+#endif
+
+
+#ifdef USERS_IN_SQLITE3
+int get_policy(struct session_data *sdata, struct __config *cfg, struct __config *my_cfg){
+   char buf[SMALLBUFSIZE];
+   sqlite3_stmt *pStmt;
+   const char **pzTail=NULL;
+
+#ifndef HAVE_LMTP
+   if(sdata->num_of_rcpt_to != 1) return 0;
+#endif
+
+   snprintf(buf, SMALLBUFSIZE-1, "SELECT deliver_infected_email, silently_discard_infected_email, use_antispam, spam_subject_prefix, enable_auto_white_list, max_message_size_to_filter, rbl_domain, surbl_domain, spam_overall_limit, spaminess_oblivion_limit, replace_junk_characters, invalid_junk_limit, invalid_junk_line, penalize_images, penalize_embed_images, penalize_octet_stream, training_mode, initial_1000_learning, store_metadata FROM %s WHERE policy_group=%d", SQL_POLICY_TABLE, sdata->policy_group);
+
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: policy sql: %s", sdata->ttmpfile, buf);
+
+   if(sqlite3_prepare_v2(sdata->db, buf, -1, &pStmt, pzTail) == SQLITE_OK){
+      if(sqlite3_step(pStmt) == SQLITE_ROW){
+         my_cfg->deliver_infected_email = sqlite3_column_int(pStmt, 0);
+         my_cfg->silently_discard_infected_email = sqlite3_column_int(pStmt, 1);
+         my_cfg->use_antispam = sqlite3_column_int(pStmt, 2);
+         if(sqlite3_column_blob(pStmt, 3)) snprintf(my_cfg->spam_subject_prefix, MAXVAL-1, "%s ", (char *)sqlite3_column_blob(pStmt, 3));
+         my_cfg->enable_auto_white_list = sqlite3_column_int(pStmt, 4);
+         my_cfg->max_message_size_to_filter = sqlite3_column_int(pStmt, 5);
+         if(sqlite3_column_blob(pStmt, 6)) snprintf(my_cfg->rbl_domain, MAXVAL-1, "%s ", (char *)sqlite3_column_blob(pStmt, 6));
+         if(sqlite3_column_blob(pStmt, 7)) snprintf(my_cfg->surbl_domain, MAXVAL-1, "%s ", (char *)sqlite3_column_blob(pStmt, 7));
+         my_cfg->spam_overall_limit = sqlite3_column_double(pStmt, 8);
+         my_cfg->spaminess_oblivion_limit = sqlite3_column_double(pStmt, 9);
+         my_cfg->replace_junk_characters = sqlite3_column_int(pStmt, 10);
+         my_cfg->invalid_junk_limit = sqlite3_column_int(pStmt, 11); 
+         my_cfg->invalid_junk_line = sqlite3_column_int(pStmt, 12);
+         my_cfg->penalize_images = sqlite3_column_int(pStmt, 13);
+         my_cfg->penalize_embed_images = sqlite3_column_int(pStmt, 14);
+         my_cfg->penalize_octet_stream = sqlite3_column_int(pStmt, 15);
+         my_cfg->training_mode = sqlite3_column_int(pStmt, 16);
+         my_cfg->initial_1000_learning = sqlite3_column_int(pStmt, 17);
+         my_cfg->store_metadata = sqlite3_column_int(pStmt, 18);
+      }
+   }
+   sqlite3_finalize(pStmt);
 
    return 1;
 }

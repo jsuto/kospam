@@ -115,7 +115,7 @@ function write_stuff() {
       write_line($fp, "LDAP_BINDPW", $_POST['LDAP_BINDPW']);
       write_line($fp, "LDAP_USER_BASEDN", $_POST['LDAP_USER_BASEDN']);
       write_line($fp, "LDAP_POLICY_BASEDN", $_POST['LDAP_POLICY_BASEDN']);
-      write_line($fp, "LDAP_REMOTE_BASEDN", 'ou=remote,dc=aaaa,dc=fu');
+      write_line($fp, "LDAP_DOMAIN_BASEDN", $_POST['LDAP_DOMAIN_BASEDN']);
       write_line($fp);
    }
    else {

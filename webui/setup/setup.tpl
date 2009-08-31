@@ -39,6 +39,7 @@ function fix1() {
       ShowOption('LDAP_BINDPW', 1);
       ShowOption('LDAP_USER_BASEDN', 1);
       ShowOption('LDAP_POLICY_BASEDN', 1);
+      ShowOption('LDAP_DOMAIN_BASEDN', 1);
    }
    else {
       ShowOption('LDAP_HOST', 0);
@@ -46,6 +47,7 @@ function fix1() {
       ShowOption('LDAP_BINDPW', 0);
       ShowOption('LDAP_USER_BASEDN', 0);
       ShowOption('LDAP_POLICY_BASEDN', 0);
+      ShowOption('LDAP_DOMAIN_BASEDN', 0);
    }
 
 }
@@ -179,6 +181,10 @@ function ShowOption(what, value) {
       <td><input type="text" name="LDAP_POLICY_BASEDN" id="LDAP_POLICY_BASEDN" value="ou=clapfpolicies,dc=yourdomain.dc=com" size="30" /></td>
    </tr>
 
+   <tr id="DIV_LDAP_DOMAIN_BASEDN" style="display:none">
+      <td>Base DN of the domains: </td>
+      <td><input type="text" name="LDAP_DOMAIN_BASEDN" id="LDAP_DOMAIN_BASEDN" value="ou=clapfdomains,dc=yourdomain.dc=com" size="30" /></td>
+   </tr>
 
    <tr>
       <td colspan="2"><input type="submit" value="Submit"> <input type="reset" value="Cancel"> </td>

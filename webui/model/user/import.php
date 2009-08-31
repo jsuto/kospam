@@ -6,6 +6,7 @@ class ModelUserImport extends Model {
 
    public function queryRemoteUsers($host) {
       $data = array();
+      $n_users = 0;
 
       $ldap = new LDAP($host['ldap_host'], $host['ldap_binddn'], $host['ldap_bindpw']);
       if($ldap->is_bind_ok() == 0) { return 0; }
@@ -32,6 +33,24 @@ class ModelUserImport extends Model {
                           'dn'           => $result['dn'],
                           'emails'       => $emails
                           );
+
+            $n_users++;
+
+         }
+
+      }
+
+
+      /* if the 't_remote' table has no entry for your domain and we read some users
+         let's put the connection info to the 't_remote' table needed for proxying
+         the authentication requests */
+
+      if($n_users > 0) {
+         $my_domain = $this->model_user_user->getDomains();
+         $query = $this->db->query("SELECT COUNT(*) AS num FROM " . TABLE_REMOTE . " WHERE remotedomain='" . $this->db->escape($my_domain[0]) . "'");
+
+         if(isset($query->row['num']) && $query->row['num'] == 0) {
+            $query = $this->db->query("INSERT INTO " . TABLE_REMOTE . " (remotedomain, remotehost, basedn) VALUES('" . $this->db->escape($my_domain[0]) . "', '" . $this->db->escape($host['ldap_host']) . "', '" . $this->db->escape($host['ldap_binddn']) . "')");
          }
 
       }

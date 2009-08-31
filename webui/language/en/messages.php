@@ -140,6 +140,7 @@ $_['text_users_quarantine'] = "User's quarantine";
 $_['text_view_formatted_email'] = "View formatted email";
 $_['text_view_raw_email'] = "View raw email";
 $_['text_view_user_quarantine'] = "View user's quarantine";
+
 $_['text_warning_about_default_policy'] = "The default policy can be set in clapf.conf";
 $_['text_whitelist'] = "Whitelist";
 $_['text_whitelist_settings'] = "Whitelist settings";

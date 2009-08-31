@@ -1,5 +1,5 @@
 /*
- * users.c, 2009.08.28, SJ
+ * users.c, 2009.08.31, SJ
  */
 
 #include <stdio.h>
@@ -76,8 +76,8 @@ int get_user_from_email(struct session_data *sdata, char *email, struct __config
          row = mysql_fetch_row(res);
          if(row){
             sdata->uid = atol(row[0]);
-            strncpy(sdata->name, (char *)row[1], SMALLBUFSIZE-1);
-            if(row[2]) strncpy(sdata->domain, (char *)row[2], SMALLBUFSIZE-1);
+            if(row[1]) snprintf(sdata->name, SMALLBUFSIZE-1, "%s", (char *)row[1]);
+            if(row[2]) snprintf(sdata->domain, SMALLBUFSIZE-1, "%s", (char *)row[2]);
             sdata->policy_group = atoi(row[3]);
             rc = 1;
          }               
@@ -104,8 +104,8 @@ int get_user_from_email(struct session_data *sdata, char *email, struct __config
          row = mysql_fetch_row(res);
          if(row){
             sdata->uid = atol(row[0]);
-            strncpy(sdata->name, (char *)row[1], SMALLBUFSIZE-1);
-            if(row[2]) strncpy(sdata->domain, (char *)row[2], SMALLBUFSIZE-1);
+            if(row[1]) snprintf(sdata->name, SMALLBUFSIZE-1, "%s", (char *)row[1]);
+            if(row[2]) snprintf(sdata->domain, SMALLBUFSIZE-1, "%s", (char *)row[2]);
             sdata->policy_group = atoi(row[3]);
          }
          mysql_free_result(res);
@@ -177,23 +177,24 @@ int get_user_from_email(struct session_data *sdata, char *email, struct __config
 
       if(!q) return 0;
 
-      snprintf(buf, MAXBUFSIZE-1, "SELECT %s.uid, %s.username %s.domain FROM %s,%s WHERE %s.uid=%s.uid AND %s.email='%s%s'",
-         SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_EMAIL_TABLE, email, q);
+      snprintf(buf, MAXBUFSIZE-1, "SELECT %s.uid, %s.username, %s.domain, %s.policy_group FROM %s,%s WHERE %s.uid=%s.uid AND %s.email='%s%s'",
+         SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_EMAIL_TABLE, email, q);
 
       *p = '+';
    }
    else {
-      snprintf(buf, MAXBUFSIZE-1, "SELECT %s.uid, %s.username, %s.domain FROM %s,%s WHERE %s.uid=%s.uid AND %s.email='%s'",
-            SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_EMAIL_TABLE, email);
+      snprintf(buf, MAXBUFSIZE-1, "SELECT %s.uid, %s.username, %s.domain, %s.policy_group FROM %s,%s WHERE %s.uid=%s.uid AND %s.email='%s'",
+            SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_EMAIL_TABLE, email);
    }
 
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: user data stmt: %s", sdata->ttmpfile, buf);
 
    if(sqlite3_prepare_v2(sdata->db, buf, -1, &pStmt, pzTail) == SQLITE_OK){
       if(sqlite3_step(pStmt) == SQLITE_ROW){
-         //sdata->uid = sqlite3_column_int(pStmt, 0);
-         strncpy(sdata->name, (char *)sqlite3_column_blob(pStmt, 1), SMALLBUFSIZE-1);
-         strncpy(sdata->domain, (char *)sqlite3_column_blob(pStmt, 2), SMALLBUFSIZE-1);
+         sdata->uid = sqlite3_column_int(pStmt, 0);
+         if(sqlite3_column_blob(pStmt, 1)) strncpy(sdata->name, (char *)sqlite3_column_blob(pStmt, 1), SMALLBUFSIZE-1);
+         if(sqlite3_column_blob(pStmt, 2)) strncpy(sdata->domain, (char *)sqlite3_column_blob(pStmt, 2), SMALLBUFSIZE-1);
+         sdata->policy_group = sqlite3_column_int(pStmt, 3);
 
          rc = 1;
       }
@@ -215,9 +216,10 @@ int get_user_from_email(struct session_data *sdata, char *email, struct __config
 
    if(sqlite3_prepare_v2(sdata->db, buf, -1, &pStmt, pzTail) == SQLITE_OK){
       if(sqlite3_step(pStmt) == SQLITE_ROW){
-         //sdata->uid = sqlite3_column_int(pStmt, 0);
-         strncpy(sdata->name, (char *)sqlite3_column_blob(pStmt, 1), SMALLBUFSIZE-1);
-         strncpy(sdata->domain, (char *)sqlite3_column_blob(pStmt, 2), SMALLBUFSIZE-1);
+         sdata->uid = sqlite3_column_int(pStmt, 0);
+         if(sqlite3_column_blob(pStmt, 1)) strncpy(sdata->name, (char *)sqlite3_column_blob(pStmt, 1), SMALLBUFSIZE-1);
+         if(sqlite3_column_blob(pStmt, 2)) strncpy(sdata->domain, (char *)sqlite3_column_blob(pStmt, 2), SMALLBUFSIZE-1);
+         sdata->policy_group = sqlite3_column_int(pStmt, 3);
       }
    }
    sqlite3_finalize(pStmt);

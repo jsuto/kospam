@@ -27,11 +27,8 @@
 
 <?php if(isset($domains)){ ?>
 
-<form method="post" name="massedit" action="index.php?route=user/massedit">
-
 <table border="1">
    <tr align="center">
-      <th>&nbsp;</th>
       <th><?php print $text_domain; ?></th>
       <th><?php print $text_mapped_domain; ?></th>
       <th>&nbsp;</th>
@@ -39,7 +36,6 @@
 
 <?php foreach($domains as $domain) { ?>
    <tr align="left">
-      <td><input type="checkbox" name="aa_<?php print $domain['domain']; ?>" /></td>
       <td><?php print $domain['domain']; ?></td>
       <td><?php print $domain['mapped']; ?></td>
       <td><a href="index.php?route=domain/remove&amp;domain=<?php print urlencode($domain['domain']); ?>"><?php print $text_remove; ?></a></td>
@@ -65,8 +61,6 @@
 </p>
 <?php } ?>
 
-
-<input type="submit" value="<?php print $text_bulk_edit_selected_uids; ?>" /></form>
 
 <?php } else { ?>
 <?php print $text_not_found; ?>

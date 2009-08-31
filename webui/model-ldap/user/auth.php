@@ -4,13 +4,15 @@ class ModelUserAuth extends Model {
 
    public function checkLogin($username = '', $password = '') {
 
-      $ldap = new LDAP(LDAP_HOST, "cn=$username," . LDAP_USER_BASEDN, $password);
+      $query = $this->db->ldap_query(LDAP_USER_BASEDN, "(|(mail=$username)(mailalternateaddress=$username))", array("cn", "isadmin") );
+
+      if(!isset($query->row['cn'])){ return 0; }
+
+      $ldap = new LDAP(LDAP_HOST, "cn=" . $query->row['cn'] . "," . LDAP_USER_BASEDN, $password);
 
       if($ldap->is_bind_ok() == 0) {
          return 0;
       }
-
-      $query = $ldap->query(LDAP_USER_BASEDN, "cn=$username", array("isadmin") );
 
       $_SESSION['username'] = $username;
       $_SESSION['admin_user'] = (int)$query->row['isadmin'];

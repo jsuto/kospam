@@ -16,11 +16,17 @@ class ModelUserUser extends Model {
          $query = $this->db->ldap_query(LDAP_USER_BASEDN, "(|(cn=*)(mail=*))", array("uid", "mail", "cn", "policygroupid", "domain") );
       }
 
+      if(Registry::get('domain_admin') == 1) {
+         $my_domain = $this->getDomains();
+      }
+
       foreach ($query->rows as $result) {
 
-         if($n_users >= $from && $n_users < $to) {
+         if(Registry::get('admin_user') == 1 || (isset($result['domain']) && $result['domain'] == $my_domain[0] )) {
 
-            $data[] = array(
+            if($n_users >= $from && $n_users < $to) {
+
+               $data[] = array(
                           'uid'          => $result['uid'],
                           'username'     => $result['cn'],
                           'email'        => $result['mail'],
@@ -29,9 +35,10 @@ class ModelUserUser extends Model {
                           );
 
 
-         }
+            }
 
-         $n_users++;
+            $n_users++;
+         }
       }
 
 
@@ -138,12 +145,25 @@ class ModelUserUser extends Model {
    }
 
 
+   public function getDomainsByUid($uid = 0) {
+      $data = array();
+
+      $query = $this->db->ldap_query(LDAP_USER_BASEDN, "uid=$uid", array("domain") );
+
+      foreach ($query->rows as $q) {
+         array_push($data, $q['domain']);
+      }
+
+      return $data;
+   }
+
+
    public function getEmailDomains() {
       $data = array();
 
       if(Registry::get('domain_admin') == 1) {
          $my_domain = $this->getDomains();
-         //$query = $this->db->ldap_query("SELECT domain FROM " . TABLE_DOMAIN . " WHERE mapped='" . $this->db->escape($my_domain[0]) . "'");
+         $query = $this->db->ldap_query(LDAP_DOMAIN_BASEDN, "(&(maildomain=*)(mapped=$my_domain[0]))", array("maildomain") );
       }
       else {
          $query = $this->db->ldap_query(LDAP_DOMAIN_BASEDN, "maildomain=*", array("maildomain") );
@@ -159,19 +179,57 @@ class ModelUserUser extends Model {
 
    public function getDomains(){
       $data = array();
+      $z = array();
 
       if(Registry::get('domain_admin') == 1) {
-         //$query = $this->db->query("SELECT domain FROM " . TABLE_USER . " WHERE username='" . $this->db->escape($_SESSION['username']) . "'");
+         $query = $this->db->ldap_query(LDAP_USER_BASEDN, "(|(mail=" . $_SESSION['username'] . ")(mailalternateaddress=" . $_SESSION['username'] . "))", array("domain") );
+         if(isset($query->row['domain'])) { array_push($data, $query->row['domain']); }
       }
       else {
-         $query = $this->db->ldap_query(LDAP_DOMAIN_BASEDN, "maildomain=*", array("maildomain") );
-      }
+         $query = $this->db->ldap_query(LDAP_DOMAIN_BASEDN, "mapped=*", array("mapped") );
 
-      foreach ($query->rows as $q) {
-         array_push($data, $q['maildomain']);
+         foreach ($query->rows as $q) {
+            if(!isset($z[$q['mapped']])) {
+               array_push($data, $q['mapped']);
+            }
+
+            $z[$q['mapped']] = 1;
+         }
+
       }
 
       return $data;
+   }
+
+
+   public function isUserInMyDomain($username = '') {
+      if($username == "") { return 0; }
+
+      $query = $this->db->ldap_query(LDAP_USER_BASEDN, "(|(mail=" . $_SESSION['username'] . ")(mailalternateaddress=" . $_SESSION['username'] . "))", array("domain") );
+      if(!isset($query->row['domain'])) { return 0; }
+
+      $query2 = $this->db->ldap_query(LDAP_USER_BASEDN, "cn=$username", array("domain") );
+      if(!isset($query2->row['domain'])) { return 0; }
+
+      if($query->row['domain'] == $query2->row['domain']) { return 1; }
+
+      return 0;
+   }
+
+
+   public function isUidInMyDomain($uid = 0) {
+      if($uid == 0) { return 0; }
+
+
+      $query = $this->db->ldap_query(LDAP_USER_BASEDN, "(|(mail=" . $_SESSION['username'] . ")(mailalternateaddress=" . $_SESSION['username'] . "))", array("domain") );
+      if(!isset($query->row['domain'])) { return 0; }
+
+      $query2 = $this->db->ldap_query(LDAP_USER_BASEDN, "uid=" . (int)$uid, array("domain") );
+      if(!isset($query2->row['domain'])) { return 0; }
+
+      if($query->row['domain'] == $query2->row['domain']) { return 1; }
+
+      return 0;
    }
 
 
@@ -224,6 +282,9 @@ class ModelUserUser extends Model {
       $entry["mail"] = $user['email'];
       $entry["policygroupid"] = (int)$user['policy_group'];
       $entry["isadmin"] = (int)$user['isadmin'];
+
+      if(isset($user['proxydn'])) { $entry["proxydn"] = $user['proxydn']; }
+      if(isset($user['domain'])) { $entry["domain"] = $user['domain']; }
 
       if(strlen($user['password']) > 6) {
          $entry["userPassword"] = "{MD5}" . base64_encode(md5($user['password'], TRUE));

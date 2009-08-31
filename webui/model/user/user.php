@@ -208,11 +208,11 @@ class ModelUserUser extends Model {
       foreach ($query->rows as $q) {
          $email = $this->db->query("SELECT email FROM " . TABLE_EMAIL . " WHERE uid=" . (int)$q['uid'] . " LIMIT 1");
 
-         if(Registry::get('admin_user') == 1 || $q['domain'] == $my_domain[0]) {
+         if(Registry::get('admin_user') == 1 || (isset($q['domain']) && $q['domain'] == $my_domain[0]) ) {
             $users[] = array(
                           'uid'          => $q['uid'],
                           'username'     => $q['username'],
-                          'domain'       => $q['domain'],
+                          'domain'       => isset($q['domain']) ? $q['domain'] : "",
                           'policy_group' => $q['policy_group'],
                           'email'        => $email->row['email']
                          );

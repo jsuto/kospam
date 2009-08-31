@@ -75,6 +75,11 @@ class LDAP {
    }
 
 
+   public function rename($dn, $newrdn, $newparent) {
+      return ldap_rename($this->link, $dn, $newrdn, $newparent, TRUE);
+   }
+
+
    public function replace($dn, $entry) {
       return ldap_mod_replace($this->link, $dn, $entry);
    }

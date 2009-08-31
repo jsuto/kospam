@@ -29,6 +29,11 @@ class DB {
    }
 
 
+   public function ldap_rename($dn, $newrdn, $newparent) {
+      return @$this->driver->rename($dn, $newrdn, $newparent);
+   }
+
+
    public function ldap_replace($dn, $entry) {
       return @$this->driver->replace($dn, $entry);
    }

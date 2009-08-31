@@ -93,8 +93,8 @@ class ModelUserUser extends Model {
    public function getUidByName($username = '') {
       if($username == ""){ return -1; }
 
-      $query = $this->db->ldap_query(LDAP_USER_BASEDN, "cn=$username", array("uid") );
-
+      //$query = $this->db->ldap_query(LDAP_USER_BASEDN, "(|(mail=" . $_SESSION['username'] . ")(mailalternateaddress=" . $_SESSION['username'] . "))", array("uid") );
+      $query = $this->db->ldap_query(LDAP_USER_BASEDN, "cn=" . $_SESSION['username'], array("uid") );
       if(isset($query->row['uid'])){
          return $query->row['uid'];
       }
@@ -182,7 +182,8 @@ class ModelUserUser extends Model {
       $z = array();
 
       if(Registry::get('domain_admin') == 1) {
-         $query = $this->db->ldap_query(LDAP_USER_BASEDN, "(|(mail=" . $_SESSION['username'] . ")(mailalternateaddress=" . $_SESSION['username'] . "))", array("domain") );
+         //$query = $this->db->ldap_query(LDAP_USER_BASEDN, "(|(mail=" . $_SESSION['username'] . ")(mailalternateaddress=" . $_SESSION['username'] . "))", array("domain") );
+         $query = $this->db->ldap_query(LDAP_USER_BASEDN, "cn=" . $_SESSION['username'], array("domain") );
          if(isset($query->row['domain'])) { array_push($data, $query->row['domain']); }
       }
       else {
@@ -205,7 +206,8 @@ class ModelUserUser extends Model {
    public function isUserInMyDomain($username = '') {
       if($username == "") { return 0; }
 
-      $query = $this->db->ldap_query(LDAP_USER_BASEDN, "(|(mail=" . $_SESSION['username'] . ")(mailalternateaddress=" . $_SESSION['username'] . "))", array("domain") );
+      //$query = $this->db->ldap_query(LDAP_USER_BASEDN, "(|(mail=" . $_SESSION['username'] . ")(mailalternateaddress=" . $_SESSION['username'] . "))", array("domain") );
+      $query = $this->db->ldap_query(LDAP_USER_BASEDN, "cn=" . $_SESSION['username'], array("domain") );
       if(!isset($query->row['domain'])) { return 0; }
 
       $query2 = $this->db->ldap_query(LDAP_USER_BASEDN, "cn=$username", array("domain") );
@@ -221,7 +223,8 @@ class ModelUserUser extends Model {
       if($uid == 0) { return 0; }
 
 
-      $query = $this->db->ldap_query(LDAP_USER_BASEDN, "(|(mail=" . $_SESSION['username'] . ")(mailalternateaddress=" . $_SESSION['username'] . "))", array("domain") );
+      //$query = $this->db->ldap_query(LDAP_USER_BASEDN, "(|(mail=" . $_SESSION['username'] . ")(mailalternateaddress=" . $_SESSION['username'] . "))", array("domain") );
+      $query = $this->db->ldap_query(LDAP_USER_BASEDN, "cn=" . $_SESSION['username'], array("domain") );
       if(!isset($query->row['domain'])) { return 0; }
 
       $query2 = $this->db->ldap_query(LDAP_USER_BASEDN, "uid=" . (int)$uid, array("domain") );
@@ -277,8 +280,7 @@ class ModelUserUser extends Model {
    public function updateUser($user) {
       $entry = array();
 
-
-      $entry["cn"] = $user['username'];
+      $entry['uid'] = $user['uid'];
       $entry["mail"] = $user['email'];
       $entry["policygroupid"] = (int)$user['policy_group'];
       $entry["isadmin"] = (int)$user['isadmin'];
@@ -293,6 +295,13 @@ class ModelUserUser extends Model {
       $entry["mailalternateaddress"] = $this->trim_to_array($user['mailalternateaddress']);
       $entry["filtersender"] = $user['whitelist'];
       $entry["blacklist"] = $user['blacklist'];
+
+
+      $old_user = $this->getUserByUid($user['uid']);
+
+      if($old_user['username'] != $user['username']) {
+         $this->db->ldap_rename("cn=" . $old_user['username'] . "," .  LDAP_USER_BASEDN, "cn=" . $user['username'], LDAP_USER_BASEDN);
+      }
 
       if($this->db->ldap_modify("cn=" . $user['username'] . "," .  LDAP_USER_BASEDN, $entry) == TRUE) {
          return 1;

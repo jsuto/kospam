@@ -120,7 +120,7 @@ create index t_policy_idx on t_policy(policy_group);
 
 
 create table t_remote (
-	remotedomain char(64) not null,
+	remotedomain char(64) not null unique,
 	remotehost char(64) not null,
 	basedn char(64) not null,
 	sitedescription char(64) default null

@@ -77,7 +77,7 @@ int get_user_from_email(struct session_data *sdata, char *email, struct __config
          if(row){
             sdata->uid = atol(row[0]);
             strncpy(sdata->name, (char *)row[1], SMALLBUFSIZE-1);
-            strncpy(sdata->domain, (char *)row[2], SMALLBUFSIZE-1);
+            if(row[2]) strncpy(sdata->domain, (char *)row[2], SMALLBUFSIZE-1);
             sdata->policy_group = atoi(row[3]);
             rc = 1;
          }               
@@ -105,7 +105,7 @@ int get_user_from_email(struct session_data *sdata, char *email, struct __config
          if(row){
             sdata->uid = atol(row[0]);
             strncpy(sdata->name, (char *)row[1], SMALLBUFSIZE-1);
-            strncpy(sdata->domain, (char *)row[2], SMALLBUFSIZE-1);
+            if(row[2]) strncpy(sdata->domain, (char *)row[2], SMALLBUFSIZE-1);
             sdata->policy_group = atoi(row[3]);
          }
          mysql_free_result(res);

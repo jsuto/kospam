@@ -119,7 +119,7 @@ create index t_domain_idx on t_domain (domain);
 
 
 create table t_remote (
-	remotedomain char(64) not null,
+	remotedomain char(64) not null unique,
 	remotehost char(64) not null,
 	basedn char(64) not null,
 	sitedescription char(64) default null

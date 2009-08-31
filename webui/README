@@ -29,3 +29,46 @@ create table if not exists t_policy (
 
 create index t_policy_idx on t_policy(policy_group);
 
+********************************************************
+
+Note for both mysql and sqlite3 users:
+
+i) create the following tables:
+
+create table if not exists t_domain (
+        domain char(64) not null,
+        mapped char(64) not null,
+        unique(domain)
+);
+
+insert into t_domain (domain, mapped) values('', '');
+create index t_domain_idx on t_domain (domain);
+
+
+create table if not exists t_remote (
+        remotedomain char(64) not null unique,
+        remotehost char(64) not null,
+        basedn char(64) not null,
+        sitedescription char(64) default null
+);
+
+create index t_remote_idx on t_remote(remotedomain);
+
+
+ii) alter the 'user' table:
+
+alter table user add column domain char(64) default null;
+alter table user add column dn char(64) default null;
+
+************************************************************
+
+Note for ldap users:
+
+update the clapf-policy.conf file, and add the following ldap entry
+(replace dc=yourdomain,dc=com with your real domain):
+
+dn: ou=clapfdomains,dc=yourdomain,dc=com
+ou: clapfdomains
+objectClass: top
+objectClass: organizationalUnit
+

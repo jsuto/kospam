@@ -108,7 +108,7 @@ create table if not exists t_policy (
 
 create index t_policy_idx on t_policy(policy_group);
 
-create table t_domain (
+create table if not exists t_domain (
 	domain char(64) not null,
 	mapped char(64) not null,
 	unique(domain)
@@ -118,7 +118,7 @@ insert into t_domain (domain, mapped) values('', '');
 create index t_domain_idx on t_domain (domain);
 
 
-create table t_remote (
+create table if not exists t_remote (
 	remotedomain char(64) not null unique,
 	remotehost char(64) not null,
 	basedn char(64) not null,

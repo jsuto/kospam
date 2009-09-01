@@ -24,14 +24,14 @@ create table if not exists user (
         username char(32) not null,
 	password char(48) default null,
 	domain char(64) default null,
-	dn char(64) default null,
+	dn char(64) default '*',
 	policy_group integer(4) default 0,
 	isadmin tinyint default 0,
         unique (uid), unique (username)
 );
 
 create index user_idx on user (uid, domain);
-insert into user (uid, username, password, policy_group, isadmin) values (0, 'admin', '$1$kkBnp0$L/MILe67UGcvHeFlTAQjR1', 0, 1);
+insert into user (uid, username, password, policy_group, isadmin, domain) values (0, 'admin', '$1$kkBnp0$L/MILe67UGcvHeFlTAQjR1', 0, 1, 'local');
 
 create table if not exists t_email (
 	uid int unsigned not null,
@@ -39,7 +39,7 @@ create table if not exists t_email (
 );
 
 create index t_email_idx on t_email(email);
-insert into t_email (uid, email) values(0, 'admin@yourdomain.com');
+insert into t_email (uid, email) values(0, 'admin@local');
 
 create table if not exists t_white_list (
         uid int unsigned not null primary key,
@@ -114,7 +114,7 @@ create table if not exists t_domain (
 	unique(domain)
 );
 
-insert into t_domain (domain, mapped) values('', '');
+insert into t_domain (domain, mapped) values('local', 'local');
 create index t_domain_idx on t_domain (domain);
 
 

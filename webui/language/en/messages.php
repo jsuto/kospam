@@ -21,6 +21,7 @@ $_['text_deliver'] = "Deliver";
 $_['text_delivered'] = "Delivered";
 $_['text_deliver_and_train_selected_messages'] = "Deliver and train selected messages";
 $_['text_deliver_selected_messages'] = "Deliver selected messages";
+$_['text_dn_asterisk_means_skip_sync'] = "Asterisk (*) means this user entry will be not part of AD synchronisation";
 $_['text_domain'] = "Domain";
 $_['text_domainname'] = "Domain name";
 

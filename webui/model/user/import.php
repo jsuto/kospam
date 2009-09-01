@@ -97,7 +97,7 @@ class ModelUserImport extends Model {
       foreach ($old_list as $user) {
          $dn = $user['dn'];
          if(!isset($new_list[$dn]['new'])) {
-            if($this->model_user_user->deleteUser($user['uid']) == 1) {
+            if($user['dn'] != '*' && $user['dn'] != '' && $this->model_user_user->deleteUser($user['uid']) == 1) {
                array_push($saved_uids, $user['uid']);
             }
          }

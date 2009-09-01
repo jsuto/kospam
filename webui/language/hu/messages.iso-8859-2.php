@@ -21,6 +21,7 @@ $_['text_deliver'] = "Kézbesítés";
 $_['text_delivered'] = "Kézbesített";
 $_['text_deliver_and_train_selected_messages'] = "Kiválasztott üzenetek tanítása és kézbesítése";
 $_['text_deliver_selected_messages'] = "Kiválasztott üzenetek kézbesítése";
+$_['text_dn_asterisk_means_skip_sync'] = "A csillag (*) azt jelenti, hogy ez a felhasználó nem része az AD szerverrõl szinkronizálásnak";
 $_['text_domain'] = "Domain";
 $_['text_domainname'] = "Domainnév";
 

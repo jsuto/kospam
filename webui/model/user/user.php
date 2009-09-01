@@ -296,7 +296,7 @@ class ModelUserUser extends Model {
          if($this->db->countAffected() != 1) { return 0; }
       }
 
-      $query = $this->db->query("UPDATE " . TABLE_USER . " SET username='" . $this->db->escape($user['username']) ."', domain='" . $this->db->escape($user['domain']) . "', policy_group=" . (int)$user['policy_group'] . ", isadmin=" . $user['isadmin'] . " WHERE uid=" . (int)$user['uid']);
+      $query = $this->db->query("UPDATE " . TABLE_USER . " SET username='" . $this->db->escape($user['username']) ."', domain='" . $this->db->escape($user['domain']) . "', dn='" . @$this->db->escape($user['dn']) . "', policy_group=" . (int)$user['policy_group'] . ", isadmin=" . $user['isadmin'] . " WHERE uid=" . (int)$user['uid']);
 
 
       /* first, remove all his email addresses */

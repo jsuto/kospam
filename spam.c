@@ -1,5 +1,5 @@
 /*
- * spam.c, 2009.08.25, SJ
+ * spam.c, 2009.09.02, SJ
  */
 
 #include <stdio.h>
@@ -138,14 +138,10 @@ void do_training(struct session_data *sdata, char *email, char *acceptbuf, struc
 void save_email_to_queue(struct session_data *sdata, float spaminess, struct __config *cfg){
    char *p, path[SMALLBUFSIZE];
    struct stat st;
-   struct timezone tz;
-   struct timeval tv1, tv2;
 
    if(cfg->store_metadata == 0 || strlen(sdata->name) <= 1) return;
 
    if(cfg->store_only_spam == 1 && spaminess < cfg->spam_overall_limit) return;
-
-   gettimeofday(&tv1, &tz);
 
    p = &path[0];
    get_queue_path(sdata, &p);
@@ -160,7 +156,8 @@ void save_email_to_queue(struct session_data *sdata, float spaminess, struct __c
       snprintf(qpath, SMALLBUFSIZE-1, "%s/h.%s", path, sdata->ttmpfile);
 
    link(sdata->ttmpfile, qpath);
-   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: try to link to %s", sdata->ttmpfile, qpath);
+
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: saving to queue: %s", sdata->ttmpfile, qpath);
 
    if(stat(qpath, &st) == 0){
       if(S_ISREG(st.st_mode) == 1) chmod(qpath, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
@@ -202,7 +199,7 @@ void save_email_to_queue(struct session_data *sdata, float spaminess, struct __c
    close(fd);
    close(fd2);
 
-   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: try to copy to %s", sdata->ttmpfile, qpath);
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: saving to queue: %s", sdata->ttmpfile, qpath);
 
    if(stat(qpath, &st) == 0){
       if(S_ISREG(st.st_mode) == 1) chmod(qpath, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
@@ -259,8 +256,6 @@ ENDE:
 
 #endif
 
-    gettimeofday(&tv2, &tz);
-    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: saved to queue: %ld [ms]", sdata->ttmpfile, tvdiff(tv2, tv1)/1000);
 }
 #endif
 

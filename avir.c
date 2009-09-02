@@ -1,5 +1,5 @@
 /*
- * avir.c, 2009.06.26, SJ
+ * avir.c, 2009.09.02, SJ
  */
 
 #include <stdio.h>
@@ -13,20 +13,16 @@
 #include "config.h"
 
 #ifdef HAVE_LIBCLAMAV
-int do_av_check(struct session_data *sdata, char *email, char *email2, struct cl_engine *engine, struct __config *cfg){
+int do_av_check(struct session_data *sdata, char *email, char *email2, char *virusinfo, struct cl_engine *engine, struct __config *cfg){
 #else
-int do_av_check(struct session_data *sdata, char *email, char *email2, struct __config *cfg){
+int do_av_check(struct session_data *sdata, char *email, char *email2, char *virusinfo, struct __config *cfg){
 #endif
    int ret, rav = AVIR_OK; /* antivirus result is ok by default */
-   struct timezone tz;
-   struct timeval tv_rcvd, tv_scnd;
-   char buf[MAXBUFSIZE], avengine[SMALLBUFSIZE], virusinfo[SMALLBUFSIZE];
+   char buf[MAXBUFSIZE], avengine[SMALLBUFSIZE];
 
    if(sdata->need_scan == 0) return rav;
 
    memset(avengine, 0, SMALLBUFSIZE);
-
-   gettimeofday(&tv_rcvd, &tz);
 
 #ifdef HAVE_LIBCLAMAV
    const char *virname;
@@ -74,15 +70,9 @@ int do_av_check(struct session_data *sdata, char *email, char *email2, struct __
    }
 #endif
 
-   gettimeofday(&tv_scnd, &tz);
-
-   if(cfg->verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: virus scanning done in %ld [ms]", sdata->ttmpfile, tvdiff(tv_scnd, tv_rcvd)/1000);
-
-
    /* if a virus has found */
 
    if(rav == AVIR_VIRUS){
-      syslog(LOG_PRIORITY, "%s: Virus found %s", sdata->ttmpfile, virusinfo);
 
       /* move to quarantine, if we have to */
 
@@ -100,7 +90,7 @@ int do_av_check(struct session_data *sdata, char *email, char *email2, struct __
 
             snprintf(sdata->rcptto[0], SMALLBUFSIZE-1, "RCPT TO: <%s>\r\n", cfg->localpostmaster);
             sdata->num_of_rcpt_to = 1;
-            ret = inject_mail(sdata, 0, cfg->postfix_addr, cfg->postfix_port, NULL, cfg, buf);
+            ret = inject_mail(sdata, 0, cfg->postfix_addr, cfg->postfix_port, NULL, &buf[0], cfg, buf);
 
             if(ret == 0)
                syslog(LOG_PRIORITY, "notification about %s to %s failed", sdata->ttmpfile, cfg->localpostmaster);

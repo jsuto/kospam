@@ -1,5 +1,5 @@
 /*
- * defs.h, 2009.08.25, SJ
+ * defs.h, 2009.09.02, SJ
  */
 
 #ifndef _DEFS_H
@@ -138,6 +138,7 @@ struct session_data {
    int policy_group, blackhole;
    int need_scan;
    float Nham, Nspam;
+   float __parsed, __av, __user, __policy, __training, __as, __update, __store, __inject;
 #ifdef NEED_MYSQL
    MYSQL mysql;
 #endif

@@ -1,5 +1,5 @@
 /*
- * session.h, 2009.05.27, SJ
+ * session.h, 2009.09.02, SJ
  */
 
 #include "defs.h"
@@ -15,5 +15,5 @@ void init_child();
    void postfix_to_clapf(int new_sd, struct url *blackhole, struct __config *cfg);
 #endif
 
-int inject_mail(struct session_data *sdata, int msg, char *smtpaddr, int smtpport, char *spaminessbuf, struct __config *cfg, char *notify);
+int inject_mail(struct session_data *sdata, int msg, char *smtpaddr, int smtpport, char *spaminessbuf, char *buf, struct __config *cfg, char *notify);
 

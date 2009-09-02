@@ -1,5 +1,5 @@
 /*
- * misc.c, 2009.08.24, SJ
+ * misc.c, 2009.09.02, SJ
  */
 
 #include <stdio.h>
@@ -739,18 +739,6 @@ int is_valid_id(char *p){
    }
 
    return 1;
-}
-
-
-/*
- * syslog ham/spam status per email addresses
- */
-
-void log_ham_spam_per_email(char *tmpfile, char *email, int ham_or_spam){
-   if(ham_or_spam == 0)
-      syslog(LOG_PRIORITY, "%s: %s got HAM", tmpfile, email);
-   else
-      syslog(LOG_PRIORITY, "%s: %s got SPAM", tmpfile, email);
 }
 
 

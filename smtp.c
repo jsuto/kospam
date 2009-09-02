@@ -1,5 +1,5 @@
 /*
- * smtp.c, 2009.06.09, SJ
+ * smtp.c, 2009.09.02, SJ
  */
 
 #include <stdio.h>
@@ -181,21 +181,17 @@ READ:
  * inject mail back to postfix
  */
 
-int inject_mail(struct session_data *sdata, int msg, char *smtpaddr, int smtpport, char *spaminessbuf, struct __config *cfg, char *notify){
+int inject_mail(struct session_data *sdata, int msg, char *smtpaddr, int smtpport, char *spaminessbuf, char *buf, struct __config *cfg, char *notify){
    int i, n, psd, has_pipelining=0, ncmd=0;
-   char buf[MAXBUFSIZE], puf[MAXBUFSIZE], bigbuf[MAX_MAIL_HEADER_SIZE], oursigno[SMALLBUFSIZE];
+   char puf[MAXBUFSIZE], bigbuf[MAX_MAIL_HEADER_SIZE], oursigno[SMALLBUFSIZE];
    struct in_addr addr;
    struct sockaddr_in postfix_addr;
-   struct timezone tz;
-   struct timeval tv_start, tv_sent;
    int fd;
    int num_of_reads=0;
    int put_subject_spam_prefix=0;
    char *recipient=NULL;
 
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: trying to inject back", sdata->ttmpfile);
-
-   gettimeofday(&tv_start, &tz);
 
 
    memset(oursigno, 0, SMALLBUFSIZE);
@@ -349,14 +345,8 @@ int inject_mail(struct session_data *sdata, int msg, char *smtpaddr, int smtppor
 
    buf[n-2] = '\0';
 
-   gettimeofday(&tv_sent, &tz);
-
-   if(strncmp(buf, "250", 3) == 0)
-      /* our mail was accepted */
-      syslog(LOG_PRIORITY, "%s: injected back, sent: %ld [ms] -> %s", sdata->ttmpfile, tvdiff(tv_sent, tv_start)/1000, buf);
-
-   else
-      /* our messages was not rejected with 550 but inject failed */
+   /* if our message was not accepted */
+   if(strncmp(buf, "250", 3))
       syslog(LOG_PRIORITY, "%s: injecting failed (%s)", sdata->ttmpfile, buf);
 
 

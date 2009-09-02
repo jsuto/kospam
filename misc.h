@@ -1,5 +1,5 @@
 /*
- * misc.h, 2009.08.24, SJ
+ * misc.h, 2009.09.02, SJ
  */
 
 #ifndef _MISC_H
@@ -44,7 +44,6 @@ int recvtimeout(int s, char *buf, int len, int timeout);
 int recvtimeout2(int s, unsigned char *buf, int len, int timeout);
 int make_rnd_string(char *res);
 int is_valid_id(char *p);
-void log_ham_spam_per_email(char *tmpfile, char *email, int ham_or_spam);
 int extract_id_from_message(char *messagefile, char *clapf_header_field, char *ID);
 void write_delivery_info(struct session_data *sdata, char *dir);
 int move_message_to_quarantine(struct session_data *sdata, char *quarantine_dir);

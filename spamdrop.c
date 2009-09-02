@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2009.08.28, SJ
+ * spamdrop.c, 2009.09.02, SJ
  */
 
 #include <stdio.h>
@@ -159,7 +159,7 @@ int main(int argc, char **argv, char **envp){
    int u=-1;
    char buf[MAXBUFSIZE], trainbuf[SMALLBUFSIZE], ID[RND_STR_LEN+1], whitelistbuf[SMALLBUFSIZE], clapf_info[MAXBUFSIZE];
    char *configfile=CONFIG_FILE, *username=NULL, *from=NULL, *recipient=NULL;
-   char *p, path[SMALLBUFSIZE];
+   char *p, path[SMALLBUFSIZE], virusinfo[SMALLBUFSIZE];
    struct passwd *pwd;
    struct session_data sdata;
    struct timezone tz;
@@ -332,7 +332,7 @@ int main(int argc, char **argv, char **envp){
 
 #ifdef HAVE_ANTIVIRUS
 #ifndef HAVE_LIBCLAMAV
-   if(do_av_check(&sdata, recipient, from, &cfg) == AVIR_VIRUS){
+   if(do_av_check(&sdata, recipient, from, &virusinfo[0], &cfg) == AVIR_VIRUS){
       syslog(LOG_PRIORITY, "%s: dropping infected message", sdata.ttmpfile);
       unlink(sdata.ttmpfile);
       return 0;
@@ -782,8 +782,14 @@ ENDE_SPAMDROP:
 
 
 
-   snprintf(buf, MAXBUFSIZE-1, "%ld", sdata.uid);
-   if(cfg.debug == 0) log_ham_spam_per_email(sdata.ttmpfile, buf, is_spam);
+   if(cfg.debug == 0){
+      snprintf(buf, MAXBUFSIZE-1, "%ld", sdata.uid);
+
+      if(is_spam == 1)
+         syslog(LOG_PRIORITY, "%s: %s got SPAM", sdata.ttmpfile, buf);
+      else
+         syslog(LOG_PRIORITY, "%s: %s got HAM", sdata.ttmpfile, buf);
+   }
 
 
    close_db(&sdata, &state);

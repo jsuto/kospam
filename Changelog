@@ -8,7 +8,7 @@ bottlenecks. You can see how many seconds (sic!) takes to parse the
 email, the statistical decision, updating the tokens, and inject back
 to postfix. You will be surprised to see that handing the email back
 to postfix takes the most time...
-(avir.c, misc.c, session.c, spamdrop.c, smtp.c)
+(avir.c, misc.c, session.c, spamdrop.c, smtp.c, stat/spamstat.pl, stat/process_syslog.pl)
 
 2009.09.01, SJ
 

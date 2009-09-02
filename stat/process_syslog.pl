@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 ##
-## process_syslog.pl, 2007.05.18, SJ
+## process_syslog.pl, 2009.09.02, SJ
 ##
 
 $spam_limit = 0.92;
@@ -24,12 +24,14 @@ $avg_spam_time = 0;
 die "usage: $0 <mon> <day> <hour>" unless ( ($MON = $ARGV[0]) && ($DAY = $ARGV[1]) && ($HOUR = $ARGV[2]) );
 
 while(<STDIN>){
-   if(/^$MON\ / && /$DAY\ $HOUR\:/ && (/clapf/ || /spamdrop/) && /\:\ 0\./){
+   #if(/^$MON\ / && /$DAY\ $HOUR\:/ && (/clapf/ || /spamdrop/) && /\:\ 0\./){
+   if(/^$MON\ / && /$DAY\ $HOUR\:/ && (/clapf/ || /spamdrop/) && /\ delay\=/){
       $_ =~ s/\s{1,}/ /g;
 
       @x = split(/ /, $_);
-      #Feb  7 09:56:21 thorium clapf[20117]: 1e444677176339a7c766d47db982a8: 0.5086 3490 in 291443 [usec]
       #Mar  7 11:32:06 thorium clapf[3987]: 8f7d96b0517f1e47db1e40851a86ac: 1.0000 3226 in 12 [ms]
+      #Sep  2 16:07:52 thorium clapf[27064]: 4a9e7c37498924467325498cbc8c3e: sj@acts.hu got HAM, 0.0001, 86612, delay=0.49, delays=0.08/0.06/0.00/0.00/0.00/0.00/0.33/0.00/0.02, relay said: 250 2.0.0 Ok: queued as AB1541F23D
+
       $spamicity = $x[6];
       $size = $x[7];
       $time = $x[9];

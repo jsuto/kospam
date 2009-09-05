@@ -15,6 +15,7 @@
    <?php if($admin_user == 1) { ?>
           <li><a href="index.php?route=domain/domain"<?php if(strstr($_SERVER['QUERY_STRING'], "domain/")){ print ' id="active"'; } ?>><?php print $text_domain; ?></a></li>
           <li><a href="index.php?route=policy/policy"<?php if(strstr($_SERVER['QUERY_STRING'], "policy/")){ print ' id="active"'; } ?>><?php print $text_policy; ?></a></li>
+          <li><a href="index.php?route=history/history"<?php if(strstr($_SERVER['QUERY_STRING'], "history/")){ print ' id="active"'; } ?>><?php print $text_history; ?></a></li>
    <?php } ?>
           <li><a href="index.php?route=login/logout"<?php if(strstr($_SERVER['QUERY_STRING'], "login/logout")){ print ' id="active"'; } ?>><?php print $text_logout; ?></a></li>
 

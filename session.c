@@ -1,5 +1,5 @@
 /*
- * session.c, 2009.09.02, SJ
+ * session.c, 2009.09.04, SJ
  */
 
 #include <stdio.h>
@@ -627,11 +627,11 @@ void init_session_data(struct session_data *sdata){
                                        sdata.__update/1000000.0, sdata.__store/1000000.0, sdata.__inject/1000000.0);
 
                   if(spaminess >= cfg->spam_overall_limit){
-                     syslog(LOG_PRIORITY, "%s: %s got SPAM, %.4f, %d, %s, relay said: %s", sdata.ttmpfile, email, spaminess, sdata.tot_len, reason, resp);
+                     syslog(LOG_PRIORITY, "%s: %s got SPAM, %.4f, %d, relay=%s:%d, %s, status=%s", sdata.ttmpfile, email, spaminess, sdata.tot_len, my_cfg.spam_smtp_addr, my_cfg.spam_smtp_port, reason, resp);
                   } else if(rav == AVIR_VIRUS) {
-                     syslog(LOG_PRIORITY, "%s: %s got VIRUS (%s), %.4f, %d, %s, relay said: %s", sdata.ttmpfile, email, virusinfo, spaminess, sdata.tot_len, reason, resp);
+                     syslog(LOG_PRIORITY, "%s: %s got VIRUS (%s), %.4f, %d, relay=%s:%d, %s, status=%s", sdata.ttmpfile, email, virusinfo, spaminess, sdata.tot_len, my_cfg.postfix_addr, my_cfg.postfix_port, reason, resp);
                   } else {
-                     syslog(LOG_PRIORITY, "%s: %s got HAM, %.4f, %d, %s, relay said: %s", sdata.ttmpfile, email, spaminess, sdata.tot_len, reason, resp);
+                     syslog(LOG_PRIORITY, "%s: %s got HAM, %.4f, %d, relay=%s:%d, %s, status=%s", sdata.ttmpfile, email, spaminess, sdata.tot_len, my_cfg.postfix_addr, my_cfg.postfix_port, reason, resp);
                   }
 
             #ifdef HAVE_LMTP

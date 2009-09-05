@@ -47,6 +47,7 @@ $_['text_first'] = "Első";
 $_['text_from'] = "Feladó";
 
 $_['text_ham_and_spam_messages'] = "Ham & spam üzenetek";
+$_['text_history'] = "Történet";
 $_['text_home'] = "Kezdőlap";
 
 $_['text_import'] = "Import";
@@ -109,11 +110,14 @@ $_['text_remove_selected_uids'] = "Kijelölt azonosítók törlése";
 $_['text_remove_policy'] = "Házirend törlése";
 $_['text_remove_this_policy'] = "Házirend törlése";
 $_['text_remove_this_user'] = "Felhasználó törlése";
+$_['text_result'] = "Eredmény";
 
 $_['text_search'] = "Keresés";
 $_['text_select_all'] = "Mindegyik kijelölése";
 $_['text_set'] = "Beállít";
+$_['text_size'] = "Méret";
 $_['text_statistics'] = "Statisztika";
+$_['text_status'] = "Státusz";
 $_['text_subject'] = "Tárgy";
 $_['text_submit'] = "Mehet";
 $_['text_successfully_added'] = "Sikeresen felvéve";
@@ -122,6 +126,8 @@ $_['text_successfully_modified'] = "Sikeresen módosítva";
 $_['text_successfully_removed'] = "Sikeresen eltávolítva";
 $_['text_successfully_updated'] = "Sikeresen módosítva";
 
+$_['text_time'] = "Időpont";
+$_['text_to'] = "Címzett";
 $_['text_too_short_password'] = "Túl rövid jelszó";
 $_['text_train_and_deliver'] = "Tanítás és kézbesítés";
 $_['text_trained'] = "Tanítva";

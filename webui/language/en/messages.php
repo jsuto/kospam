@@ -47,6 +47,7 @@ $_['text_first'] = "First";
 $_['text_from'] = "From";
 
 $_['text_ham_and_spam_messages'] = "Ham & spam messages";
+$_['text_history'] = "History";
 $_['text_home'] = "Home";
 
 $_['text_import'] = "Import";
@@ -109,11 +110,14 @@ $_['text_remove_selected_uids'] = "Remove selected uids";
 $_['text_remove_policy'] = "Remove policy";
 $_['text_remove_this_policy'] = "Remove this policy";
 $_['text_remove_this_user'] = "Remove this user";
+$_['text_result'] = "Result";
 
 $_['text_search'] = "Search";
 $_['text_select_all'] = "Select all";
 $_['text_set'] = "Set";
+$_['text_size'] = "Size";
 $_['text_statistics'] = "Statistics";
+$_['text_status'] = "Status";
 $_['text_subject'] = "Subject";
 $_['text_submit'] = "Submit";
 $_['text_successfully_added'] = "Successfully added";
@@ -122,6 +126,8 @@ $_['text_successfully_modified'] = "Successfully modified";
 $_['text_successfully_removed'] = "Successfully removed";
 $_['text_successfully_updated'] = "Successfully modified";
 
+$_['text_time'] = "Time";
+$_['text_to'] = "To";
 $_['text_too_short_password'] = "Too short password";
 $_['text_train_and_deliver'] = "Train and deliver";
 $_['text_trained'] = "Trained";

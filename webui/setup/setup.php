@@ -149,7 +149,17 @@ function write_stuff() {
    write_line($fp);
 
    write_line($fp, "DATE_FORMAT", "(Y.m.d.)");
+   write_line($fp, "TIMEZONE", 'Europe/Budapest');
    write_line($fp);
+
+
+   fputs($fp, "define('HISTORY_WORKER_URL', SITE_URL . 'index.php?route=history/worker');" . CRLF);
+   fputs($fp, "define('HISTORY_HELPER_URL', SITE_URL . 'index.php?route=history/helper');" . CRLF);
+   write_line($fp, "HISTORY_DATA", '/var/lib/clapf/data/log.sdb');
+   write_line($fp, "HISTORY_REFRESH", 5);
+   write_line($fp, "HISTORY_ENTRIES_PER_PAGE", 15);
+
+
 
    write_line($fp, "CGI_INPUT_FIELD_WIDTH", 50);
    write_line($fp, "CGI_INPUT_FIELD_HEIGHT", 7);

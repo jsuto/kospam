@@ -263,6 +263,18 @@
 		margin: 0; padding: 4px 6px;
 		}
 
+	table.hist {
+		margin-bottom: 15px;
+		font: normal 10px Arial, Helvetica, sans-serif;
+	}
+
+	td.HAM {
+		color: green;
+	}
+
+	td.SPAM {
+		color: red;
+	}
 
 /* Quote */
 

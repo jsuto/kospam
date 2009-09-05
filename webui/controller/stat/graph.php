@@ -96,6 +96,8 @@ class ControllerStatGraph extends Controller {
 
       $chart->setTitle($title);
       $chart->getPlot()->setGraphCaptionRatio(0.80);
+
+      header("Content-type: image/png");
       $chart->render();
 
    }

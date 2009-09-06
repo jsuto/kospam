@@ -66,6 +66,7 @@ $_['text_ldap_basedn'] = "LDAP base DN";
 $_['text_ldap_binddn'] = "LDAP bind DN";
 $_['text_ldap_bindpw'] = "LDAP bind password";
 $_['text_ldap_host'] = "LDAP host";
+$_['text_loading'] = "loading";
 $_['text_logged_out'] = "You are logged out";
 $_['text_login'] = "Login";
 $_['text_logout'] = "Logout";

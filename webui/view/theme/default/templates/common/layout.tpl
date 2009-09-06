@@ -18,6 +18,8 @@
 
 <body>
 
+   <script type="text/javascript" src="view/javascript/wz_tooltip.js"></script>
+   <script type="text/javascript" src="view/javascript/tip_balloon.js"></script>
 
 <div id="wrap">
 

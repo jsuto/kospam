@@ -1,1 +1,1 @@
-<span id="A1"></span>
+<span id="A1"><?php print $text_loading; ?> . . .</span>

@@ -21,3 +21,21 @@
 
 </table>
 
+
+<?php if($total > $page_len){ ?>
+<p>
+<?php if($page > 0){ ?>
+   <a href="index.php?route=history/history&amp;page=0&amp;search=<?php print $search; ?>"><?php print $text_first; ?></a>
+   <a href="index.php?route=history/<?php if($prev_page > 0) { ?>archive<?php } else { ?>history<?php } ?>&amp;page=<?php print $prev_page; ?>&amp;search=<?php print $search; ?>"><?php print $text_previous; ?></a>
+<?php } ?>
+
+<?php if($total >= $page_len*($page+1) && $total > $page_len){ ?>
+   <a href="index.php?route=history/archive&amp;page=<?php print $next_page; ?>&amp;search=<?php print $search; ?>"><?php print $text_next; ?></a>
+<?php } ?>
+
+<?php if($page < $total_pages){ ?>
+   <a href="index.php?route=history/archive&amp;page=<?php print $total_pages; ?>&amp;search=<?php print $search; ?>"><?php print $text_last; ?></a>
+<?php } ?>
+</p>
+<?php } ?>
+

@@ -1,12 +1,12 @@
 <?php
 
-class ControllerHistoryWorker extends Controller {
+class ControllerHistoryArchive extends Controller {
 
    public function index(){
 
       $this->id = "content";
       $this->template = "history/worker.tpl";
-      $this->layout = "common/layout-empty";
+      $this->layout = "common/layout";
 
 
       $request = Registry::get('request');
@@ -23,6 +23,24 @@ class ControllerHistoryWorker extends Controller {
       $this->data['search'] = @$this->request->get['search'];
 
 
+      /* get search term if there's any */
+
+      if($this->request->server['REQUEST_METHOD'] == 'POST'){
+         $this->data['search'] = @$this->request->post['search'];
+      }
+      else {
+         $this->data['search'] = @$this->request->get['search'];
+      }
+
+
+      /* get page */
+
+      if(isset($this->request->get['page']) && is_numeric($this->request->get['page']) && $this->request->get['page'] > 0) {
+         $this->data['page'] = $this->request->get['page'];
+      }
+
+
+
       /* check if we are admin */
 
       if(Registry::get('admin_user') == 1) {
@@ -37,7 +55,7 @@ class ControllerHistoryWorker extends Controller {
          $query = $db->query("select count(*) as total from clapf where result='SPAM'");
          $this->data['total'] = $query->row['total'];
 
-         $query = $db->query("select queue_id, result, spaminess, relay, delay, queue_id2 from clapf order by ts desc limit " . HISTORY_ENTRIES_PER_PAGE);
+         $query = $db->query("select queue_id, result, spaminess, relay, delay, queue_id2 from clapf order by ts desc limit " . (int)$this->data['page'] * (int)$this->data['page_len'] . ", " . HISTORY_ENTRIES_PER_PAGE);
 
          //print_r($query);
 

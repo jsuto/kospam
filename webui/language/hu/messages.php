@@ -66,6 +66,7 @@ $_['text_ldap_basedn'] = "LDAP alapértelmezett DN";
 $_['text_ldap_binddn'] = "LDAP csatlakozási DN";
 $_['text_ldap_bindpw'] = "LDAP csatlakozási jelszó";
 $_['text_ldap_host'] = "LDAP kiszolgáló";
+$_['text_loading'] = "töltődik";
 $_['text_logged_out'] = "Ön kijelentkezett";
 $_['text_login'] = "Bejelentkezés";
 $_['text_logout'] = "Kijelentkezés";

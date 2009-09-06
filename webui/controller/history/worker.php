@@ -52,6 +52,7 @@ class ControllerHistoryWorker extends Controller {
             $__smtp2 = $db->query("select * from smtp where result like '%" . $db->escape($__clapf['queue_id']) . "%'");
             $__qmgr = $db->query("select * from qmgr where queue_id='" . $db->escape($__smtp2->row['queue_id']) . "'");
             $__cleanup = $db->query("select message_id from cleanup where queue_id='" . $db->escape($__smtp2->row['queue_id']) . "'");
+            $__smtpd = $db->query("select client_ip from smtpd where queue_id='" . $db->escape($__smtp2->row['queue_id']) . "'");
 
             $i++;
 
@@ -70,6 +71,7 @@ class ControllerHistoryWorker extends Controller {
 
                $this->data['entries'][] = array(
                                                'timedate'       => date("Y.m.d. H:i:s", $__smtp->row['ts']),
+                                               'client'         => @$__smtpd->row['client_ip'],
                                                'queue_id1'      => $__qmgr->row['queue_id'],
                                                'message_id'     => $__cleanup->row['message_id'],
                                                'shortfrom'      => strlen($__qmgr->row['from']) > 30 ? substr($__qmgr->row['from'], 0, 30) . "..." : $__qmgr->row['from'],

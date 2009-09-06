@@ -1,3 +1,12 @@
+drop table if exists smtpd;
+create table if not exists smtpd (
+	ts int default 0,
+	queue_id char(16) not null,
+	client_ip char(64) not null
+);
+
+create index smtpd_idx on smtpd(queue_id);
+
 drop table if exists cleanup;
 create table if not exists cleanup (
 	ts int default 0,

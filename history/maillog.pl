@@ -13,8 +13,10 @@ $dsn = "dbi:SQLite:dbname=$dbfile";
 $file = File::Tail->new(name => $maillog, maxinterval=> 5) or die "cannot read $maillog";
 
 
-#$dbh = DBI->connect($dsn, $u, $p) || die "cannot connect to database conn";
-$dbh = DBI->connect($dsn,"","");
+$dbh = DBI->connect($dsn, "", "") or die "cannot open database: $dbfile";
+
+$stmt = "INSERT INTO smtpd (ts, queue_id, client_ip) VALUES(?, ?, ?)";
+$sth_smtpd = $dbh->prepare($stmt);
 
 $stmt = "INSERT INTO cleanup (ts, queue_id, message_id) VALUES(?, ?, ?)";
 $sth_cleanup = $dbh->prepare($stmt);
@@ -32,7 +34,7 @@ $sth_clapf = $dbh->prepare($stmt);
 
 while (defined($line = $file->read)) {
 
-   if($line =~ /\ postfix\/cleanup\[/ || $line =~ /\ postfix\/qmgr\[/ || $line =~ /\ postfix\/smtp\[/ || $line =~ /\ postfix\/local\[/ || $line =~ /\ clapf\[/ || $line =~ /\ postfix\/virtual\[/ ) {
+   if($line =~ /\ postfix\/smtpd\[/ || $line =~ /\ postfix\/cleanup\[/ || $line =~ /\ postfix\/qmgr\[/ || $line =~ /\ postfix\/smtp\[/ || $line =~ /\ postfix\/local\[/ || $line =~ /\ clapf\[/ || $line =~ /\ postfix\/virtual\[/ ) {
       chomp($line);
       ##print "xx: " . $line;
 
@@ -44,6 +46,19 @@ while (defined($line = $file->read)) {
 
       $ts = str2time($l[0] . " " . $l[1] . " " . $l[2]);
       $hostname = $l[3];
+
+
+      # ... postfix/smtpd[12038]: 0561617020: client=unknown[92.84.77.34]
+
+      if($line =~ /\ postfix\/smtpd\[/ && $line =~ /client=/) {
+         ($queue_id, undef) = split(/\:/, $l[5]);
+
+         (undef, $client_ip) = split(/client=/, $line);
+         ($client_ip, undef) = split(/,/, $client_ip);
+
+         $sth_smtpd->execute($ts, $queue_id, $client_ip);
+      }
+
 
       #Sep  3 09:30:22 thorium postfix/cleanup[2311]: D20E617022: message-id=<f14f01c89af3$8a784f50$3bc40658@acts.hu>
 

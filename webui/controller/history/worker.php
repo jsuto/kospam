@@ -60,14 +60,11 @@ class ControllerHistoryWorker extends Controller {
                   $status_the_rest = $smtp['relay'] . ", " . $status_the_rest;
                }
 
-               if(strlen($__qmgr->row['from']) > 30) { $shortfrom = substr($__qmgr->row['from'], 0, 30) . "..."; }
-                                                     else { $shortfrom = $__qmgr->row['from']; }
                $this->data['entries'][] = array(
                                                'timedate'       => date("Y.m.d. H:i:s", $__smtp->row['ts']),
-                                               'shorttime'      => date("Y.m.d. H:i:s", $__smtp->row['ts']),
                                                'queue_id1'      => $__qmgr->row['queue_id'],
                                                'message_id'     => $__cleanup->row['message_id'],
-                                               'shortfrom'      => $shortfrom,
+                                               'shortfrom'      => strlen($__qmgr->row['from']) > 30 ? substr($__qmgr->row['from'], 0, 30) . "..." : $__qmgr->row['from'],
                                                'from'           => $__qmgr->row['from'],
                                                'to'             => $smtp['to'],
                                                'size'           => $__qmgr->row['size'],

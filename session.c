@@ -1,5 +1,5 @@
 /*
- * session.c, 2009.09.04, SJ
+ * session.c, 2009.09.06, SJ
  */
 
 #include <stdio.h>
@@ -463,7 +463,7 @@ void init_session_data(struct session_data *sdata){
                         gettimeofday(&tv1, &tz);
                         spaminess = bayes_file(&sdata, &sstate, &my_cfg);
                         gettimeofday(&tv2, &tz);
-                        sdata.__as = tvdiff(tv1, tv1);
+                        sdata.__as = tvdiff(tv2, tv1);
 
                         if(spaminess > 0.9999) snprintf(reason, SMALLBUFSIZE-1, "%s%s\r\n", cfg->clapf_header_field, MSG_ABSOLUTELY_SPAM);
 

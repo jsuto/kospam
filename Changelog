@@ -1,5 +1,16 @@
 0.4.2-rc1:
 
+2009.09.06, SJ
+
+Added a message history view to the webui. It supports sqlite3 backend
+currently. To use it create a database according to the history/mail.sql
+schema, then run the history/maillog.pl script that reads the maillog
+and collects data available for the webui.
+
+The maillog.pl script needs the File::Tail, Date::Parse abd DBD::SQLite3
+moduls. You can get them from the CPAN site.
+(history/*, webui)
+
 2009.09.02, SJ
 
 Simplified logging. clapf will syslog a single line if verbosity=1.

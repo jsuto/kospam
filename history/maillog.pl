@@ -5,17 +5,12 @@ use Date::Parse;
 
 use DBI;
 
-$MAILLOG = "/var/log/maillog";
+die "usage: $0 <logfile> <sqlite3 db file>\n" unless ( ($maillog = $ARGV[0]) && ($dbfile = $ARGV[1]) );
 
-$dbfile = "/opt/jail/www/data/clapf.acts.hu/webui/aaa/log.sdb";
-
-#$dsn = 'DBI:mysql:database=mytest;host=localhost;port=';
-#$u = 'mytest';
-#$p = 'xxxxxxx';
 
 $dsn = "dbi:SQLite:dbname=$dbfile";
 
-$file = File::Tail->new(name => $MAILLOG, maxinterval=> 5) or die "cannot read $MAILLOG";
+$file = File::Tail->new(name => $maillog, maxinterval=> 5) or die "cannot read $maillog";
 
 
 #$dbh = DBI->connect($dsn, $u, $p) || die "cannot connect to database conn";

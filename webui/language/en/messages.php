@@ -32,6 +32,7 @@ $_['text_email_addresses'] = "Email address(es)";
 $_['text_email_aliases'] = "Email aliases";
 $_['text_empty_quarantine_directory_structure'] = "Empty quarantine directory structure";
 $_['text_error'] = "Error";
+$_['text_exclude'] = "Exclude";
 $_['text_existing_domains'] = "Existing domains";
 $_['text_existing_policies'] = "Existing policies";
 $_['text_existing_users'] = "Existing users";

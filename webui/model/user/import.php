@@ -64,6 +64,14 @@ class ModelUserImport extends Model {
 
       $this->load->model('user/user');
 
+      /* build a list of DNs to exclude from the import */
+
+      while (list($k, $v) = each($data)) {
+         if(preg_match("/^reject_/", $k)) {
+            $exclude[$v] = 1;
+         }
+      }
+
       /* query the domain of the domain admin user from 'user' table */
 
       $my_domain = $this->model_user_user->getDomains();
@@ -78,7 +86,7 @@ class ModelUserImport extends Model {
       $new_list = array();
 
       foreach ($query->rows as $result) {
-          if(isset($result['proxyaddresses']) && isset($result['dn']) ) {
+          if(isset($result['proxyaddresses']) && isset($result['dn']) && !isset($exclude[$result['dn']]) ) {
 
               $new_list[$result['dn']]['new'] = 1;
               $new_list[$result['dn']]['uid'] = -1;

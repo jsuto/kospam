@@ -30,7 +30,6 @@ class ControllerImportImport extends Controller {
          if($this->request->server['REQUEST_METHOD'] == 'POST' && $this->validate() == true) {
             $this->template = "import/imported.tpl";
 
-            $my_mapped_domain = 
             $this->data['n'] = $this->model_user_import->importUsers($this->request->post);
          }
 

@@ -1,5 +1,11 @@
 0.4.2-rc1:
 
+2009.09.07, SJ
+
+Added a check to import from Active Directory, and skip adding already
+exsiting email addresses.
+(webui/)
+
 2009.09.06, SJ
 
 Added a message history view to the webui. It supports sqlite3 backend

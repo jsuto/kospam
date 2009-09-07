@@ -172,7 +172,13 @@ class ModelUserImport extends Model {
             $__emails = explode("\n", $emails);
             foreach ($__emails as $email) {
                $email = rtrim($email);
-               $query = $this->db->query("INSERT INTO " . TABLE_EMAIL . " (uid, email) VALUES(" . (int)$result['uid'] . ", '" . $this->db->escape($email) . "')");
+
+               $query = $this->db->query("SELECT COUNT(*) AS count FROM " . TABLE_EMAIL . " WHERE email='" . $this->db->escape($email) . "'");
+
+               if($query->row['count'] == 0) {
+                  $query = $this->db->query("INSERT INTO " . TABLE_EMAIL . " (uid, email) VALUES(" . (int)$result['uid'] . ", '" . $this->db->escape($email) . "')");
+               }
+
             }
             
          }

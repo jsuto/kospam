@@ -44,7 +44,7 @@ class ControllerHistoryWorker extends Controller {
          foreach ($query->rows as $__clapf) {
 
             // smtp/local/virtual records after content filter
-            $__smtp = $db->query("select * from smtp where queue_id='" . $db->escape($__clapf['queue_id2']) . "'");
+            $__smtp = $db->query("select * from smtp where queue_id='" . $db->escape($__clapf['queue_id2']) . "' order by ts desc");
 
             if($i == 0) { $last_update = $__smtp->row['ts']; }
 
@@ -63,10 +63,10 @@ class ControllerHistoryWorker extends Controller {
                $status_the_rest = join(" ", $x);
 
                if(preg_match("/\[/", $smtp['relay'])) {
-                  $status_the_rest = $smtp['relay'] . "<br/>" . $status_the_rest . "<br/>" . date("Y.m.d. H:i:s", $__smtp->row['ts']);
+                  $status_the_rest = $smtp['relay'] . "<br/>" . $status_the_rest . "<br/>" . date("Y.m.d. H:i:s", $smtp['ts']);
                }
                else {
-                  $status_the_rest = $smtp['relay'] . ", " . $status_the_rest . "<br/>" . date("Y.m.d. H:i:s", $__smtp->row['ts']);
+                  $status_the_rest = $smtp['relay'] . ", " . $status_the_rest . "<br/>" . date("Y.m.d. H:i:s", $smtp['ts']);
                }
 
                $this->data['entries'][] = array(
@@ -76,6 +76,7 @@ class ControllerHistoryWorker extends Controller {
                                                'message_id'     => $__cleanup->row['message_id'],
                                                'shortfrom'      => strlen($__qmgr->row['from']) > FROM_LENGTH_TO_SHOW ? substr($__qmgr->row['from'], 0, FROM_LENGTH_TO_SHOW) . "..." : $__qmgr->row['from'],
                                                'from'           => $__qmgr->row['from'],
+                                               'shortto'        => strlen($smtp['to']) > FROM_LENGTH_TO_SHOW ? substr($smtp['to'], 0, FROM_LENGTH_TO_SHOW) . "..." : $smtp['to'],
                                                'to'             => $smtp['to'],
                                                'size'           => $__qmgr->row['size'],
                                                'content_filter' => $__smtp2->row['relay'],

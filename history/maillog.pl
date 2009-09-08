@@ -85,6 +85,11 @@ while (defined($line = $file->read)) {
          $from = ""; $size = 0;
 
          ($queue_id, undef) = split(/\:/, $l[5]);
+
+         if($line =~ /from=\<([\w\W]+)\>/){
+            $from = $1;
+         }
+
          (undef, $from) = split(/=/, $l[6]);
          (undef, $size) = split(/=/, $l[7]);
 

@@ -157,8 +157,7 @@ function write_stuff() {
    fputs($fp, "define('HISTORY_HELPER_URL', SITE_URL . 'index.php?route=history/helper');" . CRLF);
    write_line($fp, "HISTORY_DATA", '/var/lib/clapf/data/log.sdb');
    write_line($fp, "HISTORY_REFRESH", 5);
-   write_line($fp, "HISTORY_ENTRIES_PER_PAGE", 15);
-   write_line($fp, "FROM_LENGTH_TO_SHOW", 30);
+   write_line($fp, "FROM_LENGTH_TO_SHOW", 28);
    write_line($fp);
 
 

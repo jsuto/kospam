@@ -34,12 +34,12 @@
 
 <table border="1">
    <tr align="center">
-      <th><?php print $text_reject; ?></th>
+      <th><?php print $text_exclude; ?></th>
       <th><?php print $text_username; ?></th>
       <th><?php print $text_email_addresses; ?></th>
    </tr>
 
-<?php foreach($users as $user) { ?>
+<?php $i = 0; foreach($users as $user) { $i++; ?>
    <tr align="left" valign="top">
       <td><input type="checkbox" name="reject_<?php print $i; ?>" value="<?php print $user['dn']; ?>" /></td>
       <td><?php print $user['dn']; ?></td>

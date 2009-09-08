@@ -52,12 +52,11 @@ class ControllerHistoryArchive extends Controller {
 
          $i = 0;
 
-         $query = $db->query("select count(*) as total from clapf where result='SPAM'");
+         $query = $db->query("select count(*) as total from clapf");
          $this->data['total'] = $query->row['total'];
 
-         $query = $db->query("select queue_id, result, spaminess, relay, delay, queue_id2 from clapf order by ts desc limit " . (int)$this->data['page'] * (int)$this->data['page_len'] . ", " . HISTORY_ENTRIES_PER_PAGE);
+         $query = $db->query("select queue_id, result, spaminess, relay, delay, queue_id2 from clapf order by ts desc limit " . (int)$this->data['page'] * (int)$this->data['page_len'] . ", " . $this->data['page_len']);
 
-         //print_r($query);
 
          foreach ($query->rows as $__clapf) {
 

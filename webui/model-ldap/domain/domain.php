@@ -39,18 +39,25 @@ class ModelDomainDomain extends Model {
       $a[0] = "top";
       $a[1] = "clapfdomain";
 
-      $entry = array();
+      $domains = explode("\n", $domain);
 
-      $entry["objectClass"] = $a;
+      foreach ($domains as $domain) {
+         $domain = rtrim($domain);
 
-      $entry["maildomain"] = $domain;
-      $entry["mapped"] = $mapped;
+         $entry = array();
 
-      if($this->db->ldap_add("maildomain=" . $domain . "," .  LDAP_DOMAIN_BASEDN, $entry) == TRUE) {
-         return 1;
+         $entry["objectClass"] = $a;
+
+         $entry["maildomain"] = $domain;
+         $entry["mapped"] = $mapped;
+
+         if($this->db->ldap_add("maildomain=" . $domain . "," .  LDAP_DOMAIN_BASEDN, $entry) != TRUE) {
+            return 0;
+         }
+
       }
 
-      return 0;
+      return 1;
    }
 
 

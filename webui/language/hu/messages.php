@@ -23,6 +23,7 @@ $_['text_deliver_and_train_selected_messages'] = "Kiválasztott üzenetek tanít
 $_['text_deliver_selected_messages'] = "Kiválasztott üzenetek kézbesítése";
 $_['text_dn_asterisk_means_skip_sync'] = "A csillag (*) azt jelenti, hogy ez a felhasználó nem része az AD szerverről szinkronizálásnak";
 $_['text_domain'] = "Domain";
+$_['text_domains'] = "Domain(ek)";
 $_['text_domainname'] = "Domainnév";
 
 $_['text_edit'] = "Szerkeszt";
@@ -55,6 +56,7 @@ $_['text_import'] = "Import";
 $_['text_import_users'] = "Import users";
 $_['text_invalid_data'] = "Érvénytelen adat(ok)";
 $_['text_invalid_email'] = "Érvénytelen email cím";
+$_['text_invalid_email_or_password'] = "Érvénytelen email cím vagy jelszó";
 $_['text_invalid_password'] = "Érvénytelen jelszó";
 $_['text_invalid_policy_group'] = "Érvénytelen házirend szonosító";
 $_['text_invalid_policy_name'] = "Érvénytelen házirend név";
@@ -81,6 +83,7 @@ $_['text_modify'] = "Módosítás";
 $_['text_monthly_report'] = "Havi jelentés";
 
 $_['text_next'] = "Következő";
+$_['text_no_records'] = "nincs találat";
 $_['text_no_sender'] = "nincs feladó";
 $_['text_no_spam_message_in_the_quarantine_yet'] = "Nincs spam a karanténban";
 $_['text_no_subject'] = "nincs tárgy";

@@ -23,6 +23,7 @@ $_['text_deliver_and_train_selected_messages'] = "Deliver and train selected mes
 $_['text_deliver_selected_messages'] = "Deliver selected messages";
 $_['text_dn_asterisk_means_skip_sync'] = "Asterisk (*) means this user entry will be not part of AD synchronisation";
 $_['text_domain'] = "Domain";
+$_['text_domains'] = "Domain(s)";
 $_['text_domainname'] = "Domain name";
 
 $_['text_edit'] = "Edit";
@@ -55,6 +56,7 @@ $_['text_import'] = "Import";
 $_['text_import_users'] = "Import users";
 $_['text_invalid_data'] = "Invalid data";
 $_['text_invalid_email'] = "Invalid email";
+$_['text_invalid_email_or_password'] = "Invalid email or password";
 $_['text_invalid_password'] = "Invalid password";
 $_['text_invalid_policy_group'] = "Invalid policy group";
 $_['text_invalid_policy_name'] = "Invalid policy name";
@@ -81,6 +83,7 @@ $_['text_modify'] = "Modify";
 $_['text_monthly_report'] = "Monthly report";
 
 $_['text_next'] = "Next";
+$_['text_no_records'] = "No records";
 $_['text_no_sender'] = "no sender";
 $_['text_no_spam_message_in_the_quarantine_yet'] = "No spam message in the quarantine yet";
 $_['text_no_subject'] = "no subject";

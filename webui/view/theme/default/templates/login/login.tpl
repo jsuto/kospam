@@ -10,5 +10,7 @@
    </table>
 </form>
 
+<?php if(isset($x)){ ?><p class="loginfailed"><?php print $x; ?></p><?php } ?>
+
 <?php } ?>
 

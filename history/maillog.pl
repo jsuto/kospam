@@ -36,6 +36,10 @@ while (defined($line = $file->read)) {
 
    if($line =~ /\ postfix\/smtpd\[/ || $line =~ /\ postfix\/cleanup\[/ || $line =~ /\ postfix\/qmgr\[/ || $line =~ /\ postfix\/smtp\[/ || $line =~ /\ postfix\/local\[/ || $line =~ /\ clapf\[/ || $line =~ /\ postfix\/virtual\[/ ) {
       chomp($line);
+
+      $queue_id = $to = $orig_to = $relay = $status = $result = $queue_id2 = "";
+      $delay = 0;
+
       ##print "xx: " . $line;
 
       $line =~ s/\ {1,}/ /g;
@@ -63,6 +67,8 @@ while (defined($line = $file->read)) {
       #Sep  3 09:30:22 thorium postfix/cleanup[2311]: D20E617022: message-id=<f14f01c89af3$8a784f50$3bc40658@acts.hu>
 
       if($line =~ /\ postfix\/cleanup\[/) {
+         $message_id = "";
+
          ($queue_id, undef) = split(/\:/, $l[5]);
          (undef, $message_id) = split(/=/, $l[6]);
 
@@ -76,6 +82,8 @@ while (defined($line = $file->read)) {
       # Sep 3 09:30:22 thorium postfix/qmgr[3010]: D20E617022: from=<aaa@freemail.hu>, size=2731, nrcpt=1 (queue active)
 
       if($line =~ /\ postfix\/qmgr\[/ && $line =~ /from=/) {
+         $from = ""; $size = 0;
+
          ($queue_id, undef) = split(/\:/, $l[5]);
          (undef, $from) = split(/=/, $l[6]);
          (undef, $size) = split(/=/, $l[7]);
@@ -106,21 +114,6 @@ while (defined($line = $file->read)) {
          if($line =~ /status=([\w\ ]+) \(([\w\W]+)\)/){
             $status = "$1 $2";
          }
-
-         #(undef, $status) = split(/status=/, $line);
-         #($status, undef) = split(/ /, $status);
-
-         #(undef, $x) = split(/status=$status/, $line);
-         #@x = split(/ /, $x);
-
-         #if($x =~ /queued as /){
-         #   (undef, $q2) = split(/queued as /, $x);
-         #}
-         #else {
-         #   $q2 = $x[3];
-         #}
-
-         #$q2 =~ s/\)//;
 
          $sth_smtp->execute($ts, $queue_id, $to, $orig_to, $relay, $delay, $status);
       }
@@ -153,7 +146,6 @@ while (defined($line = $file->read)) {
          if($line =~ /status=([\w\ ]+) \(([\w\W]+)\)/){
             $status = "$1 $2";
          }
-         #(undef, $status) = split(/status=/, $line);
 
          $sth_smtp->execute($ts, $queue_id, $to, $orig_to, $relay, $delay, $status);
       }
@@ -162,6 +154,8 @@ while (defined($line = $file->read)) {
       # Sep  3 10:00:07 thorium clapf[2578]: 4a9f7787c9b56ae1a646fd8ca6cc5b: sj@acts.hu got SPAM, 1.0000, 2731, relay=127.0.0.1:10026, delay=0.06, delays=0.00/0.00/0.00/0.00/0.00/0.00/0.01/0.00/0.04, status=250 2.0.0 Ok: queued as E691917023
 
       if($line =~ /\ clapf\[/ && $line =~ /status=/) {
+         $spaminess = 0.5;
+
          ($queue_id, undef) = split(/\:/, $l[5]);
 
          (undef, $relay) = split(/relay=/, $line);

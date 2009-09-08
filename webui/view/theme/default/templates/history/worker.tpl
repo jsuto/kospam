@@ -1,3 +1,5 @@
+<?php if(count($entries) > 0){ ?>
+
 <table border="1">
    <tr align="center">
    <th><?php print $text_time; ?></th>
@@ -37,5 +39,9 @@
    <a href="index.php?route=history/archive&amp;page=<?php print $total_pages; ?>&amp;search=<?php print $search; ?>"><?php print $text_last; ?></a>
 <?php } ?>
 </p>
+<?php } ?>
+
+<?php } else { ?>
+<p><?php print $text_no_records; ?></p>
 <?php } ?>
 

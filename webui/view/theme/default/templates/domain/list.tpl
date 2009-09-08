@@ -3,11 +3,11 @@
 
 <form method="post" name="add1" action="index.php?route=domain/domain">
    <table border="0">
-      <tr>
-         <td><?php print $text_domain; ?>: </td><td><input type="text" name="domain" /></td>
+      <tr valign="top">
+         <td><?php print $text_domain; ?>: </td><td><textarea name="domain" cols="<?php print CGI_INPUT_FIELD_WIDTH; ?>" rows="<?php print CGI_INPUT_FIELD_HEIGHT; ?>"></textarea></td>
       </tr>
       <tr>
-         <td><?php print $text_mapped_domain; ?>: </td><td><input type="text" name="mapped" /></td>
+         <td><?php print $text_mapped_domain; ?>: </td><td><input type="text" name="mapped" size="<?php print CGI_INPUT_FIELD_WIDTH; ?>" /></td>
       </tr>
       <tr>
          <td>&nbsp;</td><td><input type="submit" value="<?php print $text_add; ?>" /> <input type="reset" value="<?php print $text_cancel; ?>" /></td>

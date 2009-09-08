@@ -1,5 +1,14 @@
 0.4.2-rc1:
 
+2009.09.08, SJ
+
+Added an errorstring if login has failed.
+You can add multiple domains in the domain menu.
+Give a correct error message if no entries in the history log
+instead of an thrown php error.
+
+(webui/)
+
 2009.09.07, SJ
 
 Added a check to import from Active Directory, and skip adding already

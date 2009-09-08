@@ -62,7 +62,7 @@ class ControllerHistoryArchive extends Controller {
          foreach ($query->rows as $__clapf) {
 
             // smtp/local/virtual records after content filter
-            $__smtp = $db->query("select * from smtp where queue_id='" . $db->escape($__clapf['queue_id2']) . "'");
+            $__smtp = $db->query("select * from smtp where queue_id='" . $db->escape($__clapf['queue_id2']) . "' order by ts desc");
 
             if($i == 0) { $last_update = $__smtp->row['ts']; }
 
@@ -70,6 +70,7 @@ class ControllerHistoryArchive extends Controller {
             $__smtp2 = $db->query("select * from smtp where result like '%" . $db->escape($__clapf['queue_id']) . "%'");
             $__qmgr = $db->query("select * from qmgr where queue_id='" . $db->escape($__smtp2->row['queue_id']) . "'");
             $__cleanup = $db->query("select message_id from cleanup where queue_id='" . $db->escape($__smtp2->row['queue_id']) . "'");
+            $__smtpd = $db->query("select client_ip from smtpd where queue_id='" . $db->escape($__smtp2->row['queue_id']) . "'");
 
             $i++;
 
@@ -80,17 +81,18 @@ class ControllerHistoryArchive extends Controller {
                $status_the_rest = join(" ", $x);
 
                if(preg_match("/\[/", $smtp['relay'])) {
-                  $status_the_rest = $smtp['relay'] . "<br/>" . $status_the_rest;
+                  $status_the_rest = $smtp['relay'] . "<br/>" . $status_the_rest  . "<br/>" . date("Y.m.d. H:i:s", $__smtp->row['ts']);
                }
                else {
-                  $status_the_rest = $smtp['relay'] . ", " . $status_the_rest;
+                  $status_the_rest = $smtp['relay'] . ", " . $status_the_rest . "<br/>" . date("Y.m.d. H:i:s", $__smtp->row['ts']);
                }
 
                $this->data['entries'][] = array(
-                                               'timedate'       => date("Y.m.d. H:i:s", $__smtp->row['ts']),
+                                               'timedate'       => date("Y.m.d. H:i:s", $__smtp2->row['ts']),
+                                               'client'         => @$__smtpd->row['client_ip'],
                                                'queue_id1'      => $__qmgr->row['queue_id'],
                                                'message_id'     => $__cleanup->row['message_id'],
-                                               'shortfrom'      => strlen($__qmgr->row['from']) > 30 ? substr($__qmgr->row['from'], 0, 30) . "..." : $__qmgr->row['from'],
+                                               'shortfrom'      => strlen($__qmgr->row['from']) > FROM_LENGTH_TO_SHOW ? substr($__qmgr->row['from'], 0, FROM_LENGTH_TO_SHOW) . "..." : $__qmgr->row['from'],
                                                'from'           => $__qmgr->row['from'],
                                                'to'             => $smtp['to'],
                                                'size'           => $__qmgr->row['size'],

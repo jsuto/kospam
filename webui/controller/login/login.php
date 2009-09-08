@@ -23,6 +23,9 @@ class ControllerLoginLogin extends Controller {
             header("Location: " . SITE_URL . "index.php?route=quarantine/quarantine");
             exit;
          }
+
+         $this->data['x'] = $this->data['text_invalid_email_or_password'];
+
       }
 
 

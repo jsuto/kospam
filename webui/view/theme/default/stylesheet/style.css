@@ -220,8 +220,8 @@
 	/* Body styles */
 
 	#body, #noquote {
-		/*width: 580px;*/
-		width: 730px;
+		/*width: 730px;*/
+		width: 760px;
 		float: left;
 		margin-right: 20px;
 		clear: both;
@@ -326,6 +326,12 @@
 
 	.multi p {
 		padding-bottom: 40px;
+	}
+
+
+	.loginfailed {
+		color: red;
+		font: normal 11px/1.6em Verdana, Arial, Helvetica, sans-serif;
 	}
 
 

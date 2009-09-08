@@ -51,14 +51,20 @@ class ControllerDomainDomain extends Controller {
 
       if(Registry::get('admin_user') == 1) {
 
-         if($this->request->server['REQUEST_METHOD'] == 'POST' && $this->validate() == true) {
-            if($this->model_domain_domain->addDomain($this->request->post['domain'], $this->request->post['mapped']) == 1) {
-               $this->data['x'] = $this->data['text_successfully_added'];
-            } else {
-               $this->template = "common/error.tpl";
-               $this->data['errorstring'] = $this->data['text_failed_to_add'];
+         if($this->request->server['REQUEST_METHOD'] == 'POST') {
+            if($this->validate() == true) {
+
+               if($this->model_domain_domain->addDomain($this->request->post['domain'], $this->request->post['mapped']) == 1) {
+                  $this->data['x'] = $this->data['text_successfully_added'];
+               } else {
+                  $this->template = "common/error.tpl";
+                  $this->data['errorstring'] = $this->data['text_failed_to_add'];
+               }
             }
-            
+            else {
+               $this->template = "common/error.tpl";
+               $this->data['errorstring'] = array_pop($this->error);
+            } 
          }
 
          /* get list of current policies */
@@ -84,12 +90,25 @@ class ControllerDomainDomain extends Controller {
 
    private function validate() {
 
-      if(!isset($this->request->post['domain']) || strlen($this->request->post['domain']) < 3 || !eregi('^[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,5})$', $this->request->post['domain']) ) {
+      /*if(!isset($this->request->post['domain']) || strlen($this->request->post['domain']) < 3 || !eregi('^[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,5})$', $this->request->post['domain']) ) {
          $this->error['domain'] = $this->data['text_invalid_data'];
+      }*/
+
+      if(!isset($this->request->post['domain']) || strlen($this->request->post['domain']) < 3) {
+         $this->error['email'] = $this->data['text_invalid_data'];
+      }
+      else {
+         $domains = explode("\n", $this->request->post['domain']);
+         foreach ($domains as $domain) {
+            $domain = rtrim($domain);
+            if(!eregi('^[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,5})$', $domain) ) {
+               $this->error['email'] = $this->data['text_invalid_data'] . ": $domain";
+            }
+         }
       }
 
       if(!isset($this->request->post['mapped']) || strlen($this->request->post['mapped']) < 3 || !eregi('^[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,5})$', $this->request->post['mapped']) ) {
-         $this->error['domain'] = $this->data['text_invalid_data'];
+         $this->error['domain'] = $this->data['text_invalid_data'] . ": " . $this->request->post['mapped'];
       }
 
       if (!$this->error) {

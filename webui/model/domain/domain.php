@@ -21,9 +21,16 @@ class ModelDomainDomain extends Model {
    public function addDomain($domain = '', $mapped = '') {
       if($domain == "" || $mapped == "") { return 0; }
 
-      $query = $this->db->query("INSERT INTO " . TABLE_DOMAIN . " (domain, mapped) VALUES ('" . $this->db->escape($domain) . "', '" . $this->db->escape($mapped) . "')");
+      $domains = explode("\n", $domain);
 
-      return $this->db->countAffected();
+      foreach ($domains as $domain) {
+         $domain = rtrim($domain);
+         $query = $this->db->query("INSERT INTO " . TABLE_DOMAIN . " (domain, mapped) VALUES ('" . $this->db->escape($domain) . "', '" . $this->db->escape($mapped) . "')");
+
+         if($this->db->countAffected() != 1){ return 0; }
+      }
+
+      return 1;
    }
 
 

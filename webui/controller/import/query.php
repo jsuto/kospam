@@ -40,6 +40,10 @@ class ControllerImportQuery extends Controller {
             $this->data['request'] = $this->request->post;
          }
 
+         if($this->request->server['REQUEST_METHOD'] == 'GET') {
+            $this->data['ldap'] = $this->model_user_import->getLdapParameters();
+         }
+
       }
       else {
          $this->template = "common/error.tpl";

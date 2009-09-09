@@ -4,6 +4,14 @@
 class ModelUserImport extends Model {
 
 
+   public function getLdapParameters() {
+      $my_domain = $this->model_user_user->getDomains();
+      $query = $this->db->query("SELECT remotehost, basedn, binddn FROM " . TABLE_REMOTE . " WHERE remotedomain='" . $this->db->escape($my_domain[0]) . "'");
+
+      return $query->row;
+   }
+
+
    public function queryRemoteUsers($host) {
       $data = array();
       $n_users = 0;
@@ -49,8 +57,16 @@ class ModelUserImport extends Model {
          $my_domain = $this->model_user_user->getDomains();
          $query = $this->db->query("SELECT COUNT(*) AS num FROM " . TABLE_REMOTE . " WHERE remotedomain='" . $this->db->escape($my_domain[0]) . "'");
 
-         if(isset($query->row['num']) && $query->row['num'] == 0) {
-            $query = $this->db->query("INSERT INTO " . TABLE_REMOTE . " (remotedomain, remotehost, basedn) VALUES('" . $this->db->escape($my_domain[0]) . "', '" . $this->db->escape($host['ldap_host']) . "', '" . $this->db->escape($host['ldap_binddn']) . "')");
+         if(isset($query->row['num'])) {
+
+            if($query->row['num'] == 0) {
+               $query = $this->db->query("INSERT INTO " . TABLE_REMOTE . " (remotedomain, remotehost, basedn, binddn) VALUES('" . $this->db->escape($my_domain[0]) . "', '" . $this->db->escape($host['ldap_host']) . "', '" . $this->db->escape($host['ldap_basedn']) . "', '" . $this->db->escape($host['ldap_binddn']) . "')");
+            }
+
+            if($query->row['num'] == 1) {
+               $query = $this->db->query("UPDATE " . TABLE_REMOTE . " SET remotehost='" . $this->db->escape($host['ldap_host']) . "', basedn='" . $this->db->escape($host['ldap_basedn']) . "', binddn='" . $this->db->escape($host['ldap_binddn']) . "' WHERE remotedomain='" . $this->db->escape($my_domain[0]) . "'");
+            }
+
          }
 
       }

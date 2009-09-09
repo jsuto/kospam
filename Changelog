@@ -6,6 +6,12 @@ Removed the history/archive controller. The history/worker is smart
 enough to do the job alone.
 (webui/)
 
+Added a feature to AD import: the webui import/query routine saves
+the ldap connection info (except the ldap password) to the 't_remote'
+table, and is able to recall it later. So you have to type the bind
+password only.
+(webui/)
+
 2009.09.08, SJ
 
 Added an errorstring if login has failed.

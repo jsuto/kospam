@@ -122,6 +122,7 @@ create table if not exists t_remote (
 	remotedomain char(64) not null unique,
 	remotehost char(64) not null,
 	basedn char(64) not null,
+	binddn char(64) not null,
 	sitedescription char(64) default null
 );
 

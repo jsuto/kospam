@@ -17,7 +17,7 @@
 
 </head>
 
-<body onload="loadHistory('<?php print HISTORY_WORKER_URL; ?><?php if(isset($_GET['page'])) { ?>&page=<?php print $_GET['page']; } ?>'); <?php if(!isset($_GET['page'])) { ?>setInterval('checkHistory()', <?php print HISTORY_REFRESH; ?> * 1000)<?php } ?>">
+<body onload="loadHistory('<?php print HISTORY_WORKER_URL; ?><?php if(isset($_GET['page']) && $_GET['page'] > 0) { ?>&page=<?php print $_GET['page']; } ?>'); <?php if(!isset($_GET['page']) || $_GET['page'] == 0) { ?>setInterval('checkHistory()', <?php print HISTORY_REFRESH; ?> * 1000)<?php } ?>">
 
    <script type="text/javascript" src="view/javascript/wz_tooltip.js"></script>
    <script type="text/javascript" src="view/javascript/tip_balloon.js"></script>

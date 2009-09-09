@@ -20,7 +20,23 @@ class ControllerHistoryWorker extends Controller {
       $this->data['page_len'] = getPageLength();
 
       $this->data['total'] = 0;
-      $this->data['search'] = @$this->request->get['search'];
+
+      /* get search term if there's any */
+
+      if($this->request->server['REQUEST_METHOD'] == 'POST'){
+         $this->data['search'] = @$this->request->post['search'];
+      }
+      else {
+         $this->data['search'] = @$this->request->get['search'];
+      }
+
+
+      /* get page */
+
+      if(isset($this->request->get['page']) && is_numeric($this->request->get['page']) && $this->request->get['page'] > 0) {
+         $this->data['page'] = $this->request->get['page'];
+      }
+
 
       $this->data['entries'] = array();
 
@@ -38,7 +54,7 @@ class ControllerHistoryWorker extends Controller {
          $query = $db->query("select count(*) as total from clapf");
          $this->data['total'] = $query->row['total'];
 
-         $query = $db->query("select queue_id, result, spaminess, relay, delay, queue_id2 from clapf order by ts desc limit " . $this->data['page_len']);
+         $query = $db->query("select queue_id, result, spaminess, relay, delay, queue_id2 from clapf order by ts desc limit " . (int)$this->data['page'] * (int)$this->data['page_len'] . ", " . $this->data['page_len']);
 
 
          foreach ($query->rows as $__clapf) {

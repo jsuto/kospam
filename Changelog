@@ -1,5 +1,11 @@
 0.4.2-rc1:
 
+2009.09.09, SJ
+
+Removed the history/archive controller. The history/worker is smart
+enough to do the job alone.
+(webui/)
+
 2009.09.08, SJ
 
 Added an errorstring if login has failed.

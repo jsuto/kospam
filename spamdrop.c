@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2009.09.02, SJ
+ * spamdrop.c, 2009.09.10, SJ
  */
 
 #include <stdio.h>
@@ -277,7 +277,7 @@ int main(int argc, char **argv, char **envp){
    sdata.tot_len = 0;
    sdata.num_of_rcpt_to = 1;
    sdata.skip_id_check = 0;
-   sdata.unknown_client = 0;
+   sdata.unknown_client = sdata.trapped_client = 0;
    sdata.blackhole = 0;
    sdata.need_signo_check = 0;
 
@@ -697,11 +697,6 @@ int main(int argc, char **argv, char **envp){
          sdata.uid = 0;
          train_message(&sdata, &state, rounds, 1, T_TOE, &cfg);
       }
-
-   #ifdef HAVE_BLACKHOLE
-      state.ip[strlen(state.ip)-1] = '\0';
-      put_ip_to_dir(cfg.blackhole_path, state.ip);
-   #endif
    }
 
 

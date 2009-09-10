@@ -108,6 +108,13 @@ create table if not exists t_policy (
 
 create index t_policy_idx on t_policy(policy_group);
 
+create table if not exists t_minefield (
+	ip char(15) not null unique,
+	ts int default 0
+);
+
+create index t_minefield_idx on t_minefield(ip);
+
 create table if not exists t_domain (
 	domain char(64) not null,
 	mapped char(64) not null,

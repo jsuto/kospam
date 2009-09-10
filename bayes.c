@@ -1,5 +1,5 @@
 /*
- * bayes.c, 2009.06.01, SJ
+ * bayes.c, 2009.09.10, SJ
  */
 
 #include <stdio.h>
@@ -192,16 +192,6 @@ float bayes_file(struct session_data *sdata, struct _state *state, struct __conf
       p = sdata->ttmpfile;
 
 
-   /* evaluate the blackhole result, 2006.10.02, SJ */
-
-#ifdef HAVE_BLACKHOLE
-   if(strlen(cfg->blackhole_path) > 3 && blackness(cfg->blackhole_path, state->ip, cfg) > 100){
-      syslog(LOG_PRIORITY, "%s: found %s on our blackhole", p, state->ip);
-
-      return cfg->spaminess_of_blackholed_mail;
-   }
-#endif
-
 #ifdef HAVE_MYDB
    cfg->group_type = GROUP_SHARED;
 #endif
@@ -378,6 +368,11 @@ int train_message(struct session_data *sdata, struct _state *state, int rounds, 
       #endif
       }
 
+
+      /* break the training loop in case of TOE mode, 2009.09.10, SJ */
+      if(train_mode == T_TOE) break;
+
+
       /* query the new spamicity value in this round */
 
    #ifdef HAVE_MYSQL
@@ -400,6 +395,7 @@ int train_message(struct session_data *sdata, struct _state *state, int rounds, 
 
       tm = T_TOE;
    }
+
 
    sdata->uid = saved_uid;
 

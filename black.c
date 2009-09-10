@@ -1,71 +1,102 @@
 /*
- * black.c, 2009.01.09, SJ
+ * black.c, 2009.09.10, SJ
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
+#include <time.h>
 #include <syslog.h>
 #include <unistd.h>
 #include "misc.h"
 #include "config.h"
 
 
-/*
- * lookup the timestamp of this IP-address
- */
+#ifdef HAVE_MYSQL
 
-unsigned long blackness(char *dir, char *ip, struct __config *cfg){
-   char ipfile[SMALLBUFSIZE];
-   unsigned long blackhole_timestamp = 0;
-   struct timeval tv_spam_start, tv_spam_stop;
-   struct timezone tz;
-   struct stat st;
+int store_minefield_ip(struct session_data *sdata, struct __config *cfg){
+   char stmt[SMALLBUFSIZE], _ip[2*IPLEN+1];
+   time_t cclock;
+   unsigned long now;
 
-   if(strlen(ip) < 7)
-      return blackhole_timestamp;
+   time(&cclock);
+   now = cclock;
 
-   /* skip localhost and private IP addresses */
+   mysql_real_escape_string(&(sdata->mysql), _ip, sdata->client_addr, strlen(sdata->client_addr));
 
-   if( strncmp(ip, "127.", 4) && strncmp(ip, "192.168.", 8) && strncmp(ip, "10.", 3) && strncmp(ip, "172.16.", 7) ){
+   snprintf(stmt, SMALLBUFSIZE-1, "REPLACE INTO %s (ip, ts) VALUES('%s', %ld)", SQL_MINEFIELD_TABLE, _ip, now);
 
-      gettimeofday(&tv_spam_start, &tz);
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: minefield store: %s", sdata->ttmpfile, stmt);
 
-      snprintf(ipfile, SMALLBUFSIZE-1, "%s/%s", dir, ip);
+   if(mysql_real_query(&(sdata->mysql), stmt, strlen(stmt)) == 0)
+      return 1;
 
-      if(stat(ipfile, &st) == 0)
-         blackhole_timestamp = st.st_atime;
-
-      gettimeofday(&tv_spam_stop, &tz);
-
-      if(cfg->debug == 1) printf("blackhole check for %s: %ld in %ld [ms]\n", ip, blackhole_timestamp, tvdiff(tv_spam_stop, tv_spam_start)/1000);
-      if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "checking %s in the blackhole list %ld us", ip, tvdiff(tv_spam_stop, tv_spam_start));
-   }
-
-   return blackhole_timestamp;
+   return 0;
 }
 
-void put_ip_to_dir(char *dir, char *ip){
-   struct timeval tv1, tv2;
-   struct timezone tz;
-   char ipfile[SMALLBUFSIZE];
-   int fd;
 
-   gettimeofday(&tv1, &tz);
+void is_sender_on_minefield(struct session_data *sdata, char *ip, struct __config *cfg){
+   char stmt[SMALLBUFSIZE], _ip[2*IPLEN+1];
+   MYSQL_RES *res;
+   MYSQL_ROW row;
 
-   snprintf(ipfile, SMALLBUFSIZE-1, "%s/%s", dir, ip);
-   unlink(ipfile);
+   mysql_real_escape_string(&(sdata->mysql), _ip, ip, strlen(ip));
+   
+   snprintf(stmt, MAXBUFSIZE-1, "SELECT ts FROM %s WHERE ip='%s'", SQL_MINEFIELD_TABLE, _ip);
 
-   fd = open(ipfile, O_RDWR|O_CREAT, S_IRUSR|S_IRGRP|S_IROTH);
-   if(fd != -1){
-      close(fd);
-      gettimeofday(&tv2, &tz);
-      syslog(LOG_PRIORITY, "putting %s to blackhole in %ld [us]", ip, tvdiff(tv2, tv1));
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: minefield query: %s", sdata->ttmpfile, stmt);
+
+   if(mysql_real_query(&(sdata->mysql), stmt, strlen(stmt)) == 0){
+      res = mysql_store_result(&(sdata->mysql));
+      if(res != NULL){
+         row = mysql_fetch_row(res);
+         if(row){
+            sdata->trapped_client = 1;
+            syslog(LOG_PRIORITY, "%s: %s is trapped on minefield", sdata->ttmpfile, ip);
+         }
+         mysql_free_result(res);
+      }
    }
-   else syslog(LOG_PRIORITY, "failed to put %s to blackhole", ip);
-
 }
 
+#endif
+
+
+#ifdef HAVE_SQLITE3
+
+int store_minefield_ip(struct session_data *sdata, struct __config *cfg){
+   char stmt[SMALLBUFSIZE], *err=NULL;
+   time_t cclock;
+   unsigned long now;
+
+   time(&cclock);
+   now = cclock;
+
+   snprintf(stmt, SMALLBUFSIZE-1, "REPLACE INTO %s (ip, ts) VALUES('%s', %ld)", SQL_MINEFIELD_TABLE, sdata->client_addr, now);
+
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: minefield store: %s", sdata->ttmpfile, stmt);
+
+   if((sqlite3_exec(sdata->db, stmt, NULL, NULL, &err)) != SQLITE_OK)
+      return 0;
+
+   return 1;
+}
+
+
+void is_sender_on_minefield(struct session_data *sdata, char *ip, struct __config *cfg){
+   char stmt[SMALLBUFSIZE];
+   sqlite3_stmt *pStmt;
+   const char **pzTail=NULL;
+
+   snprintf(stmt, MAXBUFSIZE-1, "SELECT ts FROM %s WHERE ip='%s'", SQL_MINEFIELD_TABLE, ip);
+
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: minefield query: %s", sdata->ttmpfile, stmt);
+
+   if(sqlite3_prepare_v2(sdata->db, stmt, -1, &pStmt, pzTail) != SQLITE_OK) return ts;
+
+   if(sqlite3_step(pStmt) == SQLITE_ROW) sdata->trapped_client = 1;
+
+   sqlite3_finalize(pStmt);
+}
+
+#endif

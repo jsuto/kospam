@@ -1,5 +1,30 @@
 0.4.2-rc1:
 
+2009.09.10, SJ
+
+Modified the training routine to break after the first round
+before the spaminess check in case of a TOE mode.
+(bayes.c)
+
+Removed the DHA stuff. The blackhole/minefield feature should take
+care of it. The postfix will probably catch invalid recipients and
+not letting the to clapf.
+(cfg.c, cfg.h, example.conf, session.c)
+
+Revised the blackhole/minefield feature. Since most of the hosts are
+rather grey instead of being black or white, than marking a message
+as spam merely on the base that it sent us spam to the trap address
+is probably a bad idea. (Hint: shared websites)
+
+So clapf will generate a special spammy token if the sender host is
+on our minefield.
+
+Also note that I have changed the way clapf stores the IP-addresses.
+Scanning a large directory takes a considerable time so clapf will
+put entries to a mysql table (t_minefield). Look at db-*sql, and be
+sure to create it before upgrade.
+(black.c, session.c, spamdrop.c)
+
 2009.09.09, SJ
 
 Removed the history/archive controller. The history/worker is smart

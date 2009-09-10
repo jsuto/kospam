@@ -1,5 +1,5 @@
 /*
- * config.h, 2009.06.25, SJ
+ * config.h, 2009.09.10, SJ
  */
 
 #ifndef _CONFIG_H
@@ -155,6 +155,7 @@
 #define SQL_QUEUE_TABLE "t_queue"
 #define SQL_STAT_TABLE "t_stat"
 #define SQL_POLICY_TABLE "t_policy"
+#define SQL_MINEFIELD_TABLE "t_minefield"
 #define SQL_SMAP_KEY_TABLE "t_smap_key"
 
 #define SQL_WHITE_FIELD_NAME "whitelist"

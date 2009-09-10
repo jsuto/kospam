@@ -758,17 +758,6 @@ AFTER_PERIOD:
                   }
                }
 
-               /* check against DHA trap address list, 2007.11.06, SJ */
-
-            #ifdef HAVE_BLACKHOLE
-               if(strlen(cfg->dha_trap_address_list) > 4){
-                  if(strstr(cfg->dha_trap_address_list, email)){
-                     syslog(LOG_PRIORITY, "%s: %s trapped with %s on my DHA list", sdata.ttmpfile, sdata.client_addr, email);
-                     put_ip_to_dir(cfg->blackhole_path, sdata.client_addr);
-                  }
-               }
-            #endif
-
                strncat(resp, SMTP_RESP_250_OK, MAXBUFSIZE-1);
             }
             else {

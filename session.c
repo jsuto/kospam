@@ -1,5 +1,5 @@
 /*
- * session.c, 2009.09.06, SJ
+ * session.c, 2009.09.10, SJ
  */
 
 #include <stdio.h>
@@ -64,11 +64,11 @@ void init_session_data(struct session_data *sdata){
    sdata->tot_len = 0;
    sdata->skip_id_check = 0;
    sdata->num_of_rcpt_to = 0;
-   sdata->unknown_client = 0;
+   sdata->unknown_client = sdata->trapped_client = 0;
    sdata->blackhole = 0;
    sdata->need_signo_check = 0;
 
-   sdata->__parsed = sdata->__av = sdata->__user = sdata->__policy = sdata->__as = 0;
+   sdata->__parsed = sdata->__av = sdata->__user = sdata->__policy = sdata->__as = sdata->__minefield = 0;
    sdata->__training = sdata->__update = sdata->__store = sdata->__inject = 0;
 
    for(i=0; i<MAX_RCPT_TO; i++) memset(sdata->rcptto[i], 0, SMALLBUFSIZE);
@@ -101,7 +101,6 @@ void init_session_data(struct session_data *sdata){
       int train_mode=T_TOE, utokens;
       spaminess=DEFAULT_SPAMICITY;
    #endif
-
 
 #ifdef HAVE_LIBCLAMAV
    /* http://www.clamav.net/doc/latest/html/node47.html */
@@ -380,6 +379,18 @@ void init_session_data(struct session_data *sdata){
 
                   if(my_cfg.use_antispam == 1 && (my_cfg.max_message_size_to_filter == 0 || sdata.tot_len < my_cfg.max_message_size_to_filter || sstate.n_token < my_cfg.max_number_of_tokens_to_filter) ){
 
+                     /* evaluate the blackhole result, 2009.09.10, SJ */
+
+                  #ifdef HAVE_BLACKHOLE
+                     gettimeofday(&tv1, &tz);
+
+                     is_sender_on_minefield(&sdata, sdata.client_addr, cfg);
+
+                     gettimeofday(&tv2, &tz);
+                     sdata.__minefield += tvdiff(tv2, tv1);
+                 #endif
+
+
                   #ifdef SPAMC_EMUL
                      gettimeofday(&tv1, &tz);
 
@@ -621,10 +632,10 @@ void init_session_data(struct session_data *sdata){
 
                   /* syslog at the end */
 
-                  snprintf(reason, SMALLBUFSIZE-1, "delay=%.2f, delays=%.2f/%.2f/%.2f/%.2f/%.2f/%.2f/%.2f/%.2f/%.2f", 
-                               (sdata.__parsed+sdata.__av+sdata.__user+sdata.__policy+sdata.__as+sdata.__training+sdata.__update+sdata.__store+sdata.__inject)/1000000.0,
-                                   sdata.__parsed/1000000.0, sdata.__av/1000000.0, sdata.__user/1000000.0, sdata.__policy/1000000.0, sdata.__as/1000000.0, sdata.__training/1000000.0,
-                                       sdata.__update/1000000.0, sdata.__store/1000000.0, sdata.__inject/1000000.0);
+                  snprintf(reason, SMALLBUFSIZE-1, "delay=%.2f, delays=%.2f/%.2f/%.2f/%.2f/%.2f/%.2f/%.2f/%.2f/%.2f/%.2f", 
+                               (sdata.__parsed+sdata.__av+sdata.__user+sdata.__policy+sdata.__minefield+sdata.__as+sdata.__training+sdata.__update+sdata.__store+sdata.__inject)/1000000.0,
+                                   sdata.__parsed/1000000.0, sdata.__av/1000000.0, sdata.__user/1000000.0, sdata.__policy/1000000.0, sdata.__minefield/1000000.0, sdata.__as/1000000.0,
+                                       sdata.__training/1000000.0, sdata.__update/1000000.0, sdata.__store/1000000.0, sdata.__inject/1000000.0);
 
                   if(spaminess >= cfg->spam_overall_limit){
                      syslog(LOG_PRIORITY, "%s: %s got SPAM, %.4f, %d, relay=%s:%d, %s, status=%s", sdata.ttmpfile, email, spaminess, sdata.tot_len, my_cfg.spam_smtp_addr, my_cfg.spam_smtp_port, reason, resp);
@@ -821,24 +832,23 @@ AFTER_PERIOD:
 
                   while(a){
                      if(strcmp(a->url_str, email) == 0){
-                        syslog(LOG_PRIORITY, "we have %s on the blacklist", email);
+                        syslog(LOG_PRIORITY, "%s: we have %s on the blacklist", sdata.ttmpfile, email);
                         sdata.blackhole = 1;
+
+                     #ifdef HAVE_BLACKHOLE
+                        gettimeofday(&tv1, &tz);
+                        store_minefield_ip(&sdata, cfg);
+
+                        gettimeofday(&tv2, &tz);
+                        sdata.__minefield = tvdiff(tv2, tv1);
+                     #endif
+
                         break;
                      }
                      a = a->r;
                   }
                }
 
-               /* check against DHA trap address list, 2007.11.06, SJ */
-
-            #ifdef HAVE_BLACKHOLE
-               if(strlen(cfg->dha_trap_address_list) > 4){
-                  if(strstr(cfg->dha_trap_address_list, email)){
-                     syslog(LOG_PRIORITY, "%s: %s trapped with %s on my DHA list", sdata.ttmpfile, sdata.client_addr, email);
-                     put_ip_to_dir(cfg->blackhole_path, sdata.client_addr);
-                  }
-               }
-            #endif
 
                strncat(resp, SMTP_RESP_250_OK, MAXBUFSIZE-1);
             }

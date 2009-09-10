@@ -1,5 +1,5 @@
 /*
- * clapf.h, 2009.09.02, SJ
+ * clapf.h, 2009.09.10, SJ
  */
 
 #include <misc.h>
@@ -42,4 +42,7 @@ int is_sender_on_black_or_white_list(struct session_data *sdata, char *email,  c
 int spamc_emul(char *tmpfile, int size, struct __config *cfg);
 
 char *check_lang(struct node *xhash[]);
+
+int store_minefield_ip(struct session_data *sdata, struct __config *cfg);
+void is_sender_on_minefield(struct session_data *sdata, char *ip, struct __config *cfg);
 

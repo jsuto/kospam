@@ -1,5 +1,5 @@
 /*
- * hash2.c, 2009.01.04, SJ
+ * hash2.c, 2009.09.10, SJ
  */
 
 
@@ -49,6 +49,11 @@ void add_penalties(struct session_data *sdata, struct _state *state, struct __co
    /* use XFORWARD info */
    if(sdata->unknown_client == 1 && sdata->Nham > NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED)
       addnode(state->token_hash, "UNKNOWN_CLIENT*", REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
+
+
+   /* blackhole IP-address info */
+   if(sdata->trapped_client == 1)
+      addnode(state->token_hash, "TRAPPED_CLIENT*", REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
 
 }
 

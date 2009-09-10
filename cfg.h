@@ -42,7 +42,6 @@ struct __config {
    char chrootdir[MAXVAL];
    char workdir[MAXVAL];
    char quarantine_dir[MAXVAL];
-   char blackhole_path[MAXVAL];
 
    char our_signo[MAXVAL];
    char mydomains[MAXVAL];

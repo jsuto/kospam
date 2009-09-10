@@ -41,7 +41,6 @@ install: install-clapf install-splitmbox @parsembox_install@ @spamsum_install@ @
 
 clapf.conf:
 	sed -e 's%pidfile=.*%pidfile=$(localstatedir)/lib/clapf/clapf.pid%' \
-	-e 's%blackhole_path=.*%blackhole_path=$(localstatedir)/lib/clapf/blackhole%' \
 	-e 's%sqlite3=.*%sqlite3=$(localstatedir)/lib/clapf/data/tokens.sdb%' \
 	-e 's%workdir=.*%workdir=$(localstatedir)/lib/clapf/tmp%' \
 	-e 's%mydbfile=.*%mydbfile=$(localstatedir)/lib/clapf/tokens.mydb%' < $(srcdir)/example.conf >$@
@@ -145,7 +144,6 @@ install-clapf: clapf
 
 	$(INSTALL) -d $(DESTDIR)$(localstatedir)/lib/clapf/data
 	$(INSTALL) -d -m 755 $(DESTDIR)$(localstatedir)/lib/clapf/queue
-	$(INSTALL) -d $(DESTDIR)$(localstatedir)/lib/clapf/blackhole
 	$(INSTALL) -d -m 711 $(DESTDIR)$(localstatedir)/lib/clapf/tmp
 	$(INSTALL) -d $(DESTDIR)$(localstatedir)/lib/clapf/stat
 	$(INSTALL) -d $(DESTDIR)$(localstatedir)/lib/clapf/hold

@@ -221,9 +221,6 @@ struct __config read_config(char *configfile){
                   if(strcmp(key, "quarantine_dir") == 0)
                      memcpy(cfg.quarantine_dir, val, MAXVAL-1);
 
-                  if(strcmp(key, "blackhole_path") == 0)
-                     memcpy(cfg.blackhole_path, val, MAXVAL-1);
-
                   if(strcmp(key, "our_signo") == 0)
                      memcpy(cfg.our_signo, val, MAXVAL-1);
 

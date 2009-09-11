@@ -228,7 +228,7 @@ class ModelQuarantineMessage extends Model {
                }
             }
 
-            $message .= "\n<p><img src=\"/cache/$id-$n\" alt=\"spam image\" /></p>\n";
+            $message .= "\n<p><img src=\"" . WEBUI_DIRECTORY . "/cache/$id-$n\" alt=\"spam image\" /></p>\n";
 
             $n++;
          }

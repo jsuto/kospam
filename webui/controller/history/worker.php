@@ -98,6 +98,8 @@ class ControllerHistoryWorker extends Controller {
                   $status_the_rest = $smtp['relay'] . ", " . $status_the_rest . "<br/>" . date("Y.m.d. H:i:s", $smtp['ts']);
                }
 
+               if(strlen($smtp['orig_to']) > 3) { $smtp['to'] = $smtp['orig_to']; }
+
                $this->data['entries'][] = array(
                                                'timedate'       => date("Y.m.d. H:i:s", $__smtp2->row['ts']),
                                                'client'         => @$__smtpd->row['client_ip'],

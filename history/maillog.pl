@@ -90,10 +90,8 @@ while (defined($line = $file->read)) {
             $from = $1;
          }
 
-         (undef, $from) = split(/=/, $l[6]);
          (undef, $size) = split(/=/, $l[7]);
 
-         $from =~ s/\<|\>|\,//g;
          $size =~ s/\,//;
 
          ##print "qmgr: $ts $hostname $queue_id from: $from ** size: $size\n";

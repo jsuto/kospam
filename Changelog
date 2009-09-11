@@ -4,6 +4,8 @@
 
 Fixed a bug in the history prevented to show dropped emails
 (ie. viruses).
+
+Administrators can view the user's graphical statistics too.
 (history/*, webui/)
 
 2009.09.10, SJ

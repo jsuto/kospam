@@ -27,6 +27,7 @@
       <th><?php print $text_policy_group; ?></th>
       <th>&nbsp;</th>
       <th>&nbsp;</th>
+      <th>&nbsp;</th>
    </tr>
 
 <?php foreach($users as $user) { ?>
@@ -38,7 +39,8 @@
       <td><?php print $user['domain']; ?></td>
       <td><?php print $user['policy_group']; ?></td>
       <td><a href="index.php?route=user/edit&amp;uid=<?php print $user['uid']; ?>"><?php print $text_edit_or_view; ?></a></td>
-      <td><a href="index.php?route=quarantine/quarantine&amp;user=<?php print $user['username']; ?>"><?php print $text_view_user_quarantine; ?></a></td>
+      <td><a href="index.php?route=quarantine/quarantine&amp;user=<?php print $user['username']; ?>"><?php print $text_quarantine; ?></a></td>
+      <td><a href="index.php?route=stat/stat&amp;uid=<?php print $user['uid']; ?>"><?php print $text_statistics; ?></a></td>
    </tr>
 <?php } ?>
 

@@ -54,7 +54,7 @@ class ControllerHistoryWorker extends Controller {
          $query = $db->query("select count(*) as total from clapf");
          $this->data['total'] = $query->row['total'];
 
-         $query = $db->query("select queue_id, result, spaminess, relay, delay, queue_id2 from clapf order by ts desc limit " . (int)$this->data['page'] * (int)$this->data['page_len'] . ", " . $this->data['page_len']);
+         $query = $db->query("select queue_id, result, spaminess, relay, delay, queue_id2, virus from clapf order by ts desc limit " . (int)$this->data['page'] * (int)$this->data['page_len'] . ", " . $this->data['page_len']);
 
 
          foreach ($query->rows as $__clapf) {
@@ -71,6 +71,19 @@ class ControllerHistoryWorker extends Controller {
             $__smtpd = $db->query("select client_ip from smtpd where queue_id='" . $db->escape($__smtp2->row['queue_id']) . "'");
 
             $i++;
+
+
+            /* if there's no smtp record after clapf (ie. a dropped VIRUS), then fake an smtp entry */
+
+            if(!isset($__smtp->row['to'])) {
+               $__smtp->rows[] = array(
+                                      'to'     => $__smtp2->row['to'],
+                                      'result' => 'dropped',
+                                      'relay'  => 'Virus: ' . $__clapf['virus'],
+                                      'ts'     => $__smtp2->row['ts'],
+                                      
+               );
+            }
 
             foreach ($__smtp->rows as $smtp) {
                $x = explode(" ", $smtp['result']);

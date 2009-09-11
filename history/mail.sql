@@ -49,7 +49,8 @@ create table if not exists clapf (
 	relay char(64) default null,
 	delay float default 0.0,
 	result char(16) default null,
-	spaminess float default 0.5
+	spaminess float default 0.5,
+	virus char(32) default null
 );
 
 create index clapf_idx on clapf(queue_id);

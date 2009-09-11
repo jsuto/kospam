@@ -1,5 +1,11 @@
 0.4.2-rc1:
 
+2009.09.11, SJ
+
+Fixed a bug in the history prevented to show dropped emails
+(ie. viruses).
+(history/*, webui/)
+
 2009.09.10, SJ
 
 Modified the training routine to break after the first round

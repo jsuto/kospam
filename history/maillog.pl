@@ -27,7 +27,7 @@ $sth_qmgr = $dbh->prepare($stmt);
 $stmt = "INSERT INTO smtp (ts, queue_id, `to`, orig_to, relay, delay, result) VALUES(?, ?, ?, ?, ?, ?, ?)";
 $sth_smtp = $dbh->prepare($stmt);
 
-$stmt = "INSERT INTO clapf (ts, queue_id, result, spaminess, relay, delay, queue_id2) VALUES(?, ?, ?, ?, ?, ?, ?)";
+$stmt = "INSERT INTO clapf (ts, queue_id, result, spaminess, relay, delay, queue_id2, virus) VALUES(?, ?, ?, ?, ?, ?, ?, ?)";
 $sth_clapf = $dbh->prepare($stmt);
 
 
@@ -160,6 +160,7 @@ while (defined($line = $file->read)) {
 
       if($line =~ /\ clapf\[/ && $line =~ /status=/) {
          $spaminess = 0.5;
+         $virus = "";
 
          ($queue_id, undef) = split(/\:/, $l[5]);
 
@@ -168,6 +169,11 @@ while (defined($line = $file->read)) {
 
          $result = $l[8];
          $spaminess = $l[9];
+
+         if($line =~ /VIRUS\ \(([\w\W]+)\)\,\ ([\w\.]+),/){
+            $virus = $1;
+            $spaminess = $2;
+         }
 
          (undef, $x) = split(/delay=/, $line);
          ($delay, undef) = split(/ /, $x);
@@ -182,7 +188,7 @@ while (defined($line = $file->read)) {
          }
 
          ##print "clapf: $ts $hostname $queue_id delay: $delay, result: $result, q2: $queue_id2\n";
-         $sth_clapf->execute($ts, $queue_id, $result, $spaminess, $relay, $delay, $queue_id2);
+         $sth_clapf->execute($ts, $queue_id, $result, $spaminess, $relay, $delay, $queue_id2, $virus);
 
       }
 

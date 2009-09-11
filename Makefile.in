@@ -150,6 +150,7 @@ install-clapf: clapf
 
 	$(INSTALL) -d $(DESTDIR)$(datarootdir)/clapf
 	$(INSTALL) -m 0644 $(srcdir)/templates/template.virus $(DESTDIR)$(datarootdir)/clapf
+	$(INSTALL) -m 0644 $(srcdir)/history/mail.sql $(DESTDIR)$(datarootdir)/clapf
 
 	chown -R $(CLAPF_USER):$(CLAPF_GROUP) $(DESTDIR)$(localstatedir)/lib/clapf
 	cat $(srcdir)/util/check_clapf.sh.in | sed -e "s%YOUR_PATH%$(sbindir)%" -e "s%YOUR_QUEUE%$(localstatedir)/lib/clapf/queue%" -e "s%USER%$(CLAPF_USER)%g" > $(srcdir)/util/check_clapf.sh
@@ -190,6 +191,7 @@ install-parsembox:
 	$(INSTALL) -m 0755 $(srcdir)/util/db_init_mysql.sh $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 $(srcdir)/util/db_init_sqlite3.sh $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 $(srcdir)/util/clapf_admin.sh $(DESTDIR)$(libexecdir)/clapf
+	$(INSTALL) -m 0755 $(srcdir)/history/maillog.pl $(DESTDIR)$(libexecdir)/clapf
 
 uninstall:
 	rm -f $(DESTDIR)$(bindir)/parsembox

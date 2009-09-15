@@ -251,3 +251,31 @@ inline int hash(unsigned long long key){
 }
 
 
+/*
+ * add the tokens of a node to another
+ */
+
+int roll_tokens(struct node *uhash[], struct node *xhash[]){
+   int i, n=0;
+   struct node *p, *q;
+
+   if(counthash(xhash) <= 0) return 0;
+
+   for(i=0; i<MAXHASH; i++){
+      q = xhash[i];
+      while(q != NULL){
+         p = q;
+
+         if(p->spaminess != DEFAULT_SPAMICITY){
+            addnode(uhash, p->str, 0.99, 0.49);
+            n++;
+         }
+
+         q = q->r;
+      }
+   }
+
+
+   return n;
+}
+

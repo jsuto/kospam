@@ -832,7 +832,7 @@ AFTER_PERIOD:
 
                   while(a){
                      if(strcmp(a->url_str, email) == 0){
-                        syslog(LOG_PRIORITY, "%s: we have %s on the blacklist", sdata.ttmpfile, email);
+                        if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: we have %s on the blacklist", sdata.ttmpfile, email);
                         sdata.blackhole = 1;
 
                      #ifdef HAVE_BLACKHOLE

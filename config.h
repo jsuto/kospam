@@ -1,5 +1,5 @@
 /*
- * config.h, 2009.09.10, SJ
+ * config.h, 2009.09.15, SJ
  */
 
 #ifndef _CONFIG_H
@@ -11,7 +11,7 @@
 #define PROGNAME "clapf"
 #define OOOPNAME "ooop"
 
-#define VERSION "0.4.2-rc1"
+#define VERSION "0.4.2"
 
 #define HOSTID "av-engine.localhost"
 
@@ -136,6 +136,8 @@
 #define MAX_ATTACHMENTS 8
 #define MAX_ITERATIVE_TRAIN_LOOPS 5
 #define NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED 1000
+
+#define ROLLING_TOKENS 4096
 
 #define MAX_CGI_SUBJECT_LEN 50
 #define MAX_CGI_FROM_LEN 50

@@ -32,10 +32,6 @@
    #include "mydb.h"
 #endif
 
-#ifdef HAVE_MEMCACHED
-   #include <memcached.h>
-#endif
-
 
 /*
  * kill child if it works too long or is frozen

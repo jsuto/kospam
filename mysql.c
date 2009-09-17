@@ -26,10 +26,6 @@
 #include "defs.h"
 #include "config.h"
 
-#ifdef HAVE_MEMCACHED
-  #include <memcached.h>
-#endif
-
 
 /*
  * get uid of the user included in the sql query

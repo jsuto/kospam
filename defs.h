@@ -1,5 +1,5 @@
 /*
- * defs.h, 2009.09.10, SJ
+ * defs.h, 2009.09.17, SJ
  */
 
 #ifndef _DEFS_H
@@ -15,7 +15,7 @@
   #include <ldap.h>
 #endif
 #ifdef HAVE_MEMCACHED
-  #include <memcached.h>
+  #include <libmemcached/memcached.h>
 #endif
 
 #include "config.h"

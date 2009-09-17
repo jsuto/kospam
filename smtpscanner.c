@@ -482,10 +482,10 @@ int main(int argc, char **argv){
                      if(cfg->update_tokens == 1){
                         gettimeofday(&tv1, &tz);
                      #ifdef HAVE_MYSQL
-                        utokens = update_mysql_tokens(sdata.mysql, sstate.token_hash, sdata.uid);
+                        utokens = update_mysql_tokens(&sdata, sstate.token_hash);
                      #endif
                      #ifdef HAVE_SQLITE3
-                        utokens = update_sqlite3_tokens(sdata.db, sstate.token_hash);
+                        utokens = update_sqlite3_tokens(&sdata, sstate.token_hash);
                      #endif
                         gettimeofday(&tv2, &tz);
                         if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: updated %d/%ld tokens: %ld [ms]", sdata.ttmpfile, utokens, sstate.n_token, tvdiff(tv2, tv1)/1000);

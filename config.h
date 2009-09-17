@@ -1,5 +1,5 @@
 /*
- * config.h, 2009.09.15, SJ
+ * config.h, 2009.09.17, SJ
  */
 
 #ifndef _CONFIG_H
@@ -71,6 +71,9 @@
 
 #define MYDB_MIN_SIZE 1000000
 
+#define MEMCACHED_KEY_NAME "clapf:pos"
+#define MEMCACHED_KEY_LENGTH 9
+#define MEMCACHED_MESSAGE_NAME "clapf_msg:"
 
 /* this should be at least header_size_limit, see the output of postconf, 2006.08.21, SJ */
 #define MAX_MAIL_HEADER_SIZE 128000

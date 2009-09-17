@@ -80,7 +80,7 @@ int update_hash(sqlite3 *db, char *qry, struct node *xhash[], struct __config *c
  * update the token timestamps
  */
 
-int update_sqlite3_tokens(sqlite3 *db, struct node *xhash[]){
+int update_sqlite3_tokens(struct session_data *sdata, struct node *xhash[]){
    int i, n=0;
    unsigned long now;
    time_t cclock;
@@ -119,7 +119,7 @@ int update_sqlite3_tokens(sqlite3 *db, struct node *xhash[]){
    snprintf(buf, SMALLBUFSIZE-1, "0)");
    buffer_cat(query, buf);
 
-   if((sqlite3_exec(db, query->data, NULL, NULL, &err)) != SQLITE_OK)
+   if((sqlite3_exec(sdata->db, query->data, NULL, NULL, &err)) != SQLITE_OK)
       n = -1;
 
    buffer_destroy(query);

@@ -1,5 +1,5 @@
 /*
- * cfg.c, 2009.09.10, SJ
+ * cfg.c, 2009.09.17, SJ
  */
 
 #include <stdio.h>
@@ -202,6 +202,9 @@ struct __config read_config(char *configfile){
 
                   if(strcmp(key, "clamd_socket") == 0)
                      memcpy(cfg.clamd_socket, val, MAXVAL-1);
+
+                  if(strcmp(key, "memcached_servers") == 0)
+                     memcpy(cfg.memcached_servers, val, MAXVAL-1);
 
                   if(strcmp(key, "always_scan_message") == 0)
                      cfg.always_scan_message = atoi(val);

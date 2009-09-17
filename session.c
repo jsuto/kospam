@@ -1,5 +1,5 @@
 /*
- * session.c, 2009.09.10, SJ
+ * session.c, 2009.09.17, SJ
  */
 
 #include <stdio.h>
@@ -30,6 +30,10 @@
 
 #ifdef HAVE_MYDB
    #include "mydb.h"
+#endif
+
+#ifdef HAVE_MEMCACHED
+   #include <memcached.h>
 #endif
 
 
@@ -119,6 +123,24 @@ void init_session_data(struct session_data *sdata){
 
 #ifdef HAVE_MYDB
    init_mydb(cfg->mydbfile, &sdata);
+#endif
+
+
+#ifdef HAVE_MEMCACHED
+   memcached_server_st *servers;
+
+   sdata.memc = memcached_create(NULL);
+
+   if(sdata.memc != NULL){
+      servers = memcached_servers_parse(cfg->memcached_servers);
+
+      if(memcached_server_push(sdata.memc, servers) != MEMCACHED_SUCCESS){
+         memcached_free(sdata.memc);
+         sdata.memc = NULL;
+      }
+
+      memcached_server_list_free(servers);
+   }
 #endif
 
 
@@ -532,10 +554,10 @@ void init_session_data(struct session_data *sdata){
                      if(cfg->update_tokens == 1){
                         gettimeofday(&tv1, &tz);
                      #ifdef HAVE_MYSQL
-                        utokens = update_mysql_tokens(sdata.mysql, sstate.token_hash, sdata.uid);
+                        utokens = update_mysql_tokens(&sdata, sstate.token_hash);
                      #endif
                      #ifdef HAVE_SQLITE3
-                        utokens = update_sqlite3_tokens(sdata.db, sstate.token_hash);
+                        utokens = update_sqlite3_tokens(&sdata, sstate.token_hash);
                      #endif
                         gettimeofday(&tv2, &tz);
                         sdata.__update = tvdiff(tv2, tv1);
@@ -967,6 +989,9 @@ QUITTING:
 #endif
 #ifdef NEED_MYSQL
    mysql_close(&(sdata.mysql));
+#endif
+#ifdef HAVE_MEMCACHED
+   if(sdata.memc != NULL) memcached_free(sdata.memc);
 #endif
 
    if(cfg->verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "child has finished");

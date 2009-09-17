@@ -19,12 +19,12 @@
 
 #ifdef HAVE_MYSQL
    #include <mysql.h>
-   int update_mysql_tokens(MYSQL mysql, struct node *xhash[], unsigned long uid);
+   int update_mysql_tokens(struct session_data *sdata, struct node *xhash[]);
 #endif
 
 #ifdef HAVE_SQLITE3
    #include <sqlite3.h>
-   int update_sqlite3_tokens(sqlite3 *db, struct node *xhash[]);
+   int update_sqlite3_tokens(struct session_data *sdata, struct node *xhash[]);
 #endif
 
 #ifdef HAVE_ANTIVIRUS

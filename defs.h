@@ -14,6 +14,9 @@
 #ifdef NEED_LDAP
   #include <ldap.h>
 #endif
+#ifdef HAVE_MEMCACHED
+  #include <memcached.h>
+#endif
 
 #include "config.h"
 
@@ -150,6 +153,9 @@ struct session_data {
 #endif
 #ifdef HAVE_MYDB
    struct mydb_node *mhash[MAX_MYDB_HASH];
+#endif
+#ifdef HAVE_MEMCACHED
+   memcached_st *memc;
 #endif
 };
 

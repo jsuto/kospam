@@ -607,10 +607,10 @@ int main(int argc, char **argv, char **envp){
 
       if(cfg.update_tokens == 1 && debug == 0){
       #ifdef HAVE_MYSQL
-         update_mysql_tokens(sdata.mysql, state.token_hash, sdata.uid);
+         update_mysql_tokens(&sdata, state.token_hash);
       #endif
       #ifdef HAVE_SQLITE3
-         update_sqlite3_tokens(sdata.db, state.token_hash);
+         update_sqlite3_tokens(&sdata, state.token_hash);
       #endif
       #ifdef HAVE_MYDB
          update_tokens(cfg.mydbfile, sdata.mhash, state.token_hash);

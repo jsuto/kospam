@@ -1,5 +1,5 @@
 /*
- * mysql.c, 2009.02.17, SJ
+ * mysql.c, 2009.09.17, SJ
  */
 
 #include <stdio.h>
@@ -25,6 +25,10 @@
 #include "score.h"
 #include "defs.h"
 #include "config.h"
+
+#ifdef HAVE_MEMCACHED
+  #include <memcached.h>
+#endif
 
 
 /*
@@ -154,7 +158,7 @@ int update_hash(MYSQL mysql, char *qry, struct node *xhash[], struct __config *c
  * update the token timestamps
  */
 
-int update_mysql_tokens(MYSQL mysql, struct node *xhash[], unsigned long uid){
+int update_mysql_tokens(struct session_data *sdata, struct node *xhash[]){
    int i, n=0;
    unsigned long now;
    time_t cclock;
@@ -190,15 +194,58 @@ int update_mysql_tokens(MYSQL mysql, struct node *xhash[], unsigned long uid){
    }
 
 
-   if(uid > 0)
-      snprintf(s, SMALLBUFSIZE-1, "0) AND (uid=0 OR uid=%ld)", uid);
+   if(sdata->uid > 0)
+      snprintf(s, SMALLBUFSIZE-1, "0) AND (uid=0 OR uid=%ld)", sdata->uid);
    else
       snprintf(s, SMALLBUFSIZE-1, "0) AND uid=0");
 
    buffer_cat(query, s);
 
-   if(mysql_real_query(&mysql, query->data, strlen(query->data)) != 0)
-      n = -1;
+#ifdef HAVE_MEMCACHED
+   int memcached_ok=0;
+   char memcached_queue_id[BUFLEN];
+   uint32_t flags=0;
+   uint64_t qid;
+
+   struct timezone tz;
+   struct timeval tv1, tv2;
+
+   gettimeofday(&tv1, &tz);
+
+   if(sdata->memc != NULL){
+
+      if(memcached_increment(sdata->memc, MEMCACHED_KEY_NAME, MEMCACHED_KEY_LENGTH, 1, &qid) != MEMCACHED_SUCCESS){
+
+         if(memcached_add(sdata->memc, MEMCACHED_KEY_NAME, MEMCACHED_KEY_LENGTH, "1", 1, 0, flags) == MEMCACHED_SUCCESS){
+            memcached_ok = 1;
+            qid = 1;
+         }
+      }
+      else {
+         memcached_ok = 1;
+      }
+
+      if(memcached_ok == 1){
+         snprintf(memcached_queue_id, BUFLEN-1, "%s%llu", MEMCACHED_MESSAGE_NAME, qid);
+
+         if(memcached_add(sdata->memc, memcached_queue_id, strlen(memcached_queue_id), query->data, strlen(query->data), 0, flags) != MEMCACHED_SUCCESS){
+            memcached_ok = 0;
+         }
+      }
+   }
+
+   gettimeofday(&tv2, &tz);
+   syslog(LOG_PRIORITY, "%s: memcached exec time: %ld ms", sdata->ttmpfile, tvdiff(tv2, tv1)/1000);
+
+   if(memcached_ok == 0){
+      syslog(LOG_PRIORITY, "%s: exec()ing sql update", sdata->ttmpfile);
+#endif
+      if(mysql_real_query(&(sdata->mysql), query->data, strlen(query->data)) != 0){
+         n = -1;
+      }
+#ifdef HAVE_MEMCACHED
+   }
+#endif
 
    buffer_destroy(query);
 

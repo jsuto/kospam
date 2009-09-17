@@ -1,3 +1,14 @@
+0.4.2:
+
+2009.09.17, SJ
+
+Removed the CLAMAV_EXTRA_LIBS definition from Makefile.in. Earlier
+--enable-libclamav installations needed if. Now it appears that we
+are fine without it.
+
+(credits: Tamas Papp)
+(Makefile.in)
+
 0.4.2-rc1:
 
 2009.09.11, SJ

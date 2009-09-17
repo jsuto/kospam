@@ -4626,7 +4626,7 @@ ac_cv_lib_m=ac_cv_lib_m_main
 
 
 
-    antispam_libs="-lm"
+    antispam_libs="-lm -ldl"
 
 
 

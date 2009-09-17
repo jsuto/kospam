@@ -207,7 +207,7 @@ dnl  if test "$want_antispam" = "yes"; then
 
     dnl have_antispam="yes"
 
-    antispam_libs="-lm"
+    antispam_libs="-lm -ldl"
 
     dnl mysql database
 

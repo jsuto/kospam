@@ -1,5 +1,12 @@
 0.4.2:
 
+2009.09.18, SJ
+
+The webui will write the correct error message in case of a short
+password. Additionally you can specify the minimum password length
+in config.php (MIN_PASSWORD_LENGTH)
+(webui/)
+
 2009.09.17, SJ
 
 Removed the CLAMAV_EXTRA_LIBS definition from Makefile.in. Earlier

@@ -160,6 +160,8 @@ function write_stuff() {
    write_line($fp, "FROM_LENGTH_TO_SHOW", 28);
    write_line($fp);
 
+   write_line($fp, "MIN_PASSWORD_LENGTH", 6);
+   write_line($fp);
 
    write_line($fp, "CGI_INPUT_FIELD_WIDTH", 50);
    write_line($fp, "CGI_INPUT_FIELD_HEIGHT", 7);

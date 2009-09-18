@@ -76,8 +76,8 @@ class ControllerUserAdd extends Controller {
          $this->error['password'] = $this->data['text_missing_password'];
       }
 
-      if(strlen(@$this->request->post['password']) < 8 || strlen(@$this->request->post['password2']) < 8) {
-         $this->error['password'] = $this->data['text_invalid_password'];
+      if(strlen(@$this->request->post['password']) < MIN_PASSWORD_LENGTH || strlen(@$this->request->post['password2']) < MIN_PASSWORD_LENGTH) {
+         $this->error['password'] = $this->data['text_too_short_password'];
       }
 
       if($this->request->post['password'] != $this->request->post['password2']) {

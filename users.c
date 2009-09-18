@@ -150,6 +150,39 @@ int is_sender_on_black_or_white_list(struct session_data *sdata, char *email, ch
    return r;
 }
 
+
+/*
+ * is it a valid and known email?
+ */
+
+int is_valid_email(struct session_data *sdata, char *email, struct __config *cfg){
+   MYSQL_RES *res;
+   MYSQL_ROW row;
+   char buf[SMALLBUFSIZE], _email[2*SMALLBUFSIZE+1];
+   int rc=0;
+
+   if(email == NULL) return rc;
+
+   mysql_real_escape_string(&(sdata->mysql), _email, email, strlen(email));
+
+   snprintf(buf, MAXBUFSIZE-1, "SELECT COUNT(*) FROM %s WHERE email='%s'", SQL_EMAIL_TABLE, _email);
+
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: is valid email sql: %s", sdata->ttmpfile, buf);
+
+   if(mysql_real_query(&(sdata->mysql), buf, strlen(buf)) == 0){
+      res = mysql_store_result(&(sdata->mysql));
+      if(res != NULL){
+         row = mysql_fetch_row(res);
+         if(row && atoi(row[0]) == 1){
+            rc = 1;
+         }
+         mysql_free_result(res);
+      }
+   }
+
+   return rc;
+}
+
 #endif
 
 

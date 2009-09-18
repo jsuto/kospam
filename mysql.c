@@ -1,5 +1,5 @@
 /*
- * mysql.c, 2009.09.17, SJ
+ * mysql.c, 2009.09.18, SJ
  */
 
 #include <stdio.h>
@@ -190,17 +190,10 @@ int update_mysql_tokens(struct session_data *sdata, struct node *xhash[]){
    }
 
 
-   if(sdata->uid > 0)
-      snprintf(s, SMALLBUFSIZE-1, "0) AND (uid=0 OR uid=%ld)", sdata->uid);
-   else
-      snprintf(s, SMALLBUFSIZE-1, "0) AND uid=0");
-
-   buffer_cat(query, s);
-
 #ifdef HAVE_MEMCACHED
    int memcached_ok=0;
-   char memcached_queue_id[BUFLEN];
-   uint32_t flags=0;
+   char *qry, memcached_queue_id[BUFLEN];
+   uint32_t flags = sdata->uid;
    uint64_t qid;
 
    struct timezone tz;
@@ -224,8 +217,14 @@ int update_mysql_tokens(struct session_data *sdata, struct node *xhash[]){
       if(memcached_ok == 1){
          snprintf(memcached_queue_id, BUFLEN-1, "%s%llu", MEMCACHED_MESSAGE_NAME, qid);
 
-         if(memcached_add(sdata->memc, memcached_queue_id, strlen(memcached_queue_id), query->data, strlen(query->data), 0, flags) != MEMCACHED_SUCCESS){
-            memcached_ok = 0;
+         qry = strstr(query->data, "(0,");
+         if(qry && strlen(qry) > 8){
+            if(memcached_add(sdata->memc, memcached_queue_id, strlen(memcached_queue_id), qry+3, strlen(qry)-3, 0, flags) != MEMCACHED_SUCCESS){
+               memcached_ok = 0;
+            }
+         }
+         else {
+            memcached_ok = 1;
          }
       }
    }
@@ -236,6 +235,14 @@ int update_mysql_tokens(struct session_data *sdata, struct node *xhash[]){
    if(memcached_ok == 0){
       syslog(LOG_PRIORITY, "%s: exec()ing sql update", sdata->ttmpfile);
 #endif
+
+      if(sdata->uid > 0)
+         snprintf(s, SMALLBUFSIZE-1, "0) AND (uid=0 OR uid=%ld)", sdata->uid);
+      else
+         snprintf(s, SMALLBUFSIZE-1, "0) AND uid=0");
+
+      buffer_cat(query, s);
+
       if(mysql_real_query(&(sdata->mysql), query->data, strlen(query->data)) != 0){
          n = -1;
       }

@@ -1,5 +1,5 @@
 /*
- * users.h, 2009.01.22, SJ
+ * users.h, 2009.09.18, SJ
  */
 
 #ifndef _USERS_H
@@ -28,6 +28,7 @@
 #endif
 
 int get_user_from_email(struct session_data *sdata, char *email, struct __config *cfg);
+int is_valid_email(struct session_data *sdata, char *email, struct __config *cfg);
 
 #endif /* _USERS_H */
 

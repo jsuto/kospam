@@ -834,7 +834,6 @@ AFTER_PERIOD:
 
             if(state == SMTP_STATE_MAIL_FROM || state == SMTP_STATE_RCPT_TO){
                if(sdata.num_of_rcpt_to < MAX_RCPT_TO){
-                  //memcpy(sdata.rcptto[sdata.num_of_rcpt_to], buf, SMALLBUFSIZE-1);
                   snprintf(sdata.rcptto[sdata.num_of_rcpt_to], SMALLBUFSIZE-1, "%s\r\n", buf);
                   sdata.num_of_rcpt_to++;
                }

@@ -1,5 +1,5 @@
 /*
- * smtpcodes.h, 2009.03.03, SJ
+ * smtpcodes.h, 2009.09.18, SJ
  */
 
 // SMTP states
@@ -47,6 +47,7 @@
 #define SMTP_RESP_503_ERR "503 Bad command sequence\r\n"
 #define SMTP_RESP_550_ERR "550 Access denied.\r\n"
 #define SMTP_RESP_550_ERR_PREF "550 Access denied."
+#define SMTP_RESP_550_INVALID_RECIPIENT "550 Unknown recipient\r\n"
 #define SMTP_RESP_552_ERR "552 Too many recipients\r\n"
 
 

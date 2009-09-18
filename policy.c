@@ -1,5 +1,5 @@
 /*
- * policy.c, 2009.08.31, SJ
+ * policy.c, 2009.09.18, SJ
  */
 
 #include <stdio.h>
@@ -34,7 +34,7 @@ int get_policy(struct session_data *sdata, struct __config *cfg, struct __config
 
    if(mysql_real_query(&(sdata->mysql), buf, strlen(buf)) == 0){
       res = mysql_store_result(&(sdata->mysql));
-      if(res != NULL){
+      if(res != NULL && mysql_num_fields(res) == 19){
          row = mysql_fetch_row(res);
          if(row){
             my_cfg->deliver_infected_email = atoi(row[0]);

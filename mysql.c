@@ -1,5 +1,5 @@
 /*
- * mysql.c, 2009.09.18, SJ
+ * mysql.c, 2009.09.20, SJ
  */
 
 #include <stdio.h>
@@ -230,7 +230,7 @@ int update_mysql_tokens(struct session_data *sdata, struct node *xhash[]){
    }
 
    gettimeofday(&tv2, &tz);
-   syslog(LOG_PRIORITY, "%s: memcached exec time: %ld ms", sdata->ttmpfile, tvdiff(tv2, tv1)/1000);
+   //syslog(LOG_PRIORITY, "%s: memcached exec time: %ld ms", sdata->ttmpfile, tvdiff(tv2, tv1)/1000);
 
    if(memcached_ok == 0){
       syslog(LOG_PRIORITY, "%s: exec()ing sql update", sdata->ttmpfile);

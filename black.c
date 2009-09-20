@@ -1,5 +1,5 @@
 /*
- * black.c, 2009.09.10, SJ
+ * black.c, 2009.09.20, SJ
  */
 
 #include <stdio.h>
@@ -42,7 +42,7 @@ void is_sender_on_minefield(struct session_data *sdata, char *ip, struct __confi
 
    mysql_real_escape_string(&(sdata->mysql), _ip, ip, strlen(ip));
    
-   snprintf(stmt, MAXBUFSIZE-1, "SELECT ts FROM %s WHERE ip='%s'", SQL_MINEFIELD_TABLE, _ip);
+   snprintf(stmt, SMALLBUFSIZE-1, "SELECT ts FROM %s WHERE ip='%s'", SQL_MINEFIELD_TABLE, _ip);
 
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: minefield query: %s", sdata->ttmpfile, stmt);
 

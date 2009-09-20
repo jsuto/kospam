@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2009.09.10, SJ
+ * spamdrop.c, 2009.09.20, SJ
  */
 
 #include <stdio.h>
@@ -287,7 +287,7 @@ int main(int argc, char **argv, char **envp){
 
    for(i=0; i<MAX_RCPT_TO; i++) memset(sdata.rcptto[i], 0, SMALLBUFSIZE);
 
-   if(recipient) snprintf(sdata.rcptto[0], SMALLBUFSIZE-1, recipient);
+   if(recipient) snprintf(sdata.rcptto[0], SMALLBUFSIZE-1, "%s", recipient);
 
    memset(trainbuf, 0, SMALLBUFSIZE);
    memset(clapf_info, 0, MAXBUFSIZE);

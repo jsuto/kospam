@@ -1,5 +1,5 @@
 /*
- * users.c, 2009.09.18, SJ
+ * users.c, 2009.09.20, SJ
  */
 
 #include <stdio.h>
@@ -165,7 +165,7 @@ int is_valid_email(struct session_data *sdata, char *email, struct __config *cfg
 
    mysql_real_escape_string(&(sdata->mysql), _email, email, strlen(email));
 
-   snprintf(buf, MAXBUFSIZE-1, "SELECT COUNT(*) FROM %s WHERE email='%s'", SQL_EMAIL_TABLE, _email);
+   snprintf(buf, SMALLBUFSIZE-1, "SELECT COUNT(*) FROM %s WHERE email='%s'", SQL_EMAIL_TABLE, _email);
 
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: is valid email sql: %s", sdata->ttmpfile, buf);
 

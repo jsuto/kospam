@@ -1,5 +1,5 @@
 /*
- * session.c, 2009.09.17, SJ
+ * session.c, 2009.09.20, SJ
  */
 
 #include <stdio.h>
@@ -769,7 +769,7 @@ AFTER_PERIOD:
             trim(buf);
             q = strstr(buf, "ADDR=");
             if(q){
-               snprintf(sdata.client_addr, IPLEN-1, q+5);
+               snprintf(sdata.client_addr, IPLEN-1, "%s", q+5);
                if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: client address: %s", sdata.ttmpfile, sdata.client_addr);
             }
 

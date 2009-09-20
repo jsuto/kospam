@@ -1,5 +1,5 @@
 /*
- * misc.c, 2009.09.02, SJ
+ * misc.c, 2009.09.20, SJ
  */
 
 #include <stdio.h>
@@ -807,9 +807,9 @@ void write_delivery_info(struct session_data *sdata, char *dir){
 
    f = fopen(sdata->deliveryinfo, "w+");
    if(f){
-      fprintf(f, sdata->mailfrom);
+      fprintf(f, "%s", sdata->mailfrom);
          for(i=0; i<sdata->num_of_rcpt_to; i++)
-            fprintf(f, sdata->rcptto[i]);
+            fprintf(f, "%s", sdata->rcptto[i]);
 
       fclose(f);
    }

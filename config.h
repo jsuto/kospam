@@ -1,5 +1,5 @@
 /*
- * config.h, 2009.09.17, SJ
+ * config.h, 2009.09.21, SJ
  */
 
 #ifndef _CONFIG_H
@@ -9,7 +9,6 @@
 #include "clapf-config.h"
 
 #define PROGNAME "clapf"
-#define OOOPNAME "ooop"
 
 #define VERSION "0.4.2"
 
@@ -28,14 +27,8 @@
 #define LISTEN_ADDR "127.0.0.1"
 #define LISTEN_PORT 10025
 
-#define POP3_LISTEN_PORT 110
-#define POP3_LISTEN_SSL_PORT 995
-
 #define POSTFIX_ADDR "127.0.0.1"
 #define POSTFIX_PORT 10026
-
-#define AVG_ADDR "127.0.0.1"
-#define AVG_PORT 55555
 
 #define AVAST_ADDR "127.0.0.1"
 #define AVAST_PORT 5036
@@ -51,16 +44,12 @@
 
 #define WORK_DIR DATADIR "/clapf"
 #define PIDFILE WORK_DIR "/clapf.pid"
-#define PER_USER_DIR ".clapf"
 #define QUARANTINELEN 255
 #define BACKLOG 20
 #define MAXCONN 30
 #define TIMEOUT 60
 #define TIMEOUT_USEC 500000
-#define SMAP_TIMEOUT 15
-#define SMAP_TIMEOUT_USEC 0
 #define SESSION_TIMEOUT 420
-#define STORE_TIMEOUT 3
 #define MAXBUFSIZE 8192
 #define SMALLBUFSIZE 512
 #define RANDOM_POOL "/dev/urandom"
@@ -82,7 +71,6 @@
 
 #define SPAMDROPUSAGE "usage: spamdrop [-c <config file>] [-u <username>] [-s] [-p] [-H | -S] < message"
 
-#define POP3_PROGNAME "clapf-pop3"
 
 #define LOG_PRIORITY LOG_INFO
 
@@ -99,11 +87,6 @@
 
 #define DEVIATION(n) fabs((n)-0.5f)
 
-#define MAX_PHRASES_TO_CHOOSE 15
-#define MAX_TOKENS_TO_CHOOSE 15
-
-#define PROB_CALC_CHI2 0
-#define PROB_CALC_BAYES 1
 
 #ifdef HAVE_SQLITE3
    #define MAX_KEY_VAL  9223372036854775807ULL
@@ -134,7 +117,6 @@
 #define JUNK_REPLACEMENT_CHAR 'j'
 #define DATE_STR_LEN 15
 #define EXCLUSION_RADIUS 0.375
-#define TUM_LIMIT 50
 #define NUMBER_OF_GOOD_FROM 10
 #define MAX_ATTACHMENTS 8
 #define MAX_ITERATIVE_TRAIN_LOOPS 5
@@ -161,7 +143,6 @@
 #define SQL_STAT_TABLE "t_stat"
 #define SQL_POLICY_TABLE "t_policy"
 #define SQL_MINEFIELD_TABLE "t_minefield"
-#define SQL_SMAP_KEY_TABLE "t_smap_key"
 
 #define SQL_WHITE_FIELD_NAME "whitelist"
 #define SQL_BLACK_FIELD_NAME "blacklist"
@@ -186,15 +167,8 @@
 
 #define ERR_INJECT 20
 #define ERR_REJECT 21
-#define ERR_MOVED 23
-#define ERR_VIRUS 24
 #define ERR_DROP_SPAM 27
 
-#define ERR_BAYES_OPEN_SPAM_FILE 26
-#define ERR_STAT_SPAM_FILE 28
-#define ERR_BAYES_MMAP 29
-#define ERR_SQLITE_ERR 30
-#define ERR_MALLOC 31
 
 #define AVIR_OK 0
 #define AVIR_VIRUS 1

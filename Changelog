@@ -2,7 +2,9 @@
 
 2009.09.20, SJ
 
-Bugfixes.
+A few bugfixes causing clapf to crash on some x64 platforms.
+
+(credits: Tamas Papp)
 (users.c, misc.c, session.c, black.c, spamdrop.c)
 
 2009.09.18, SJ

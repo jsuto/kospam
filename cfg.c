@@ -1,5 +1,5 @@
 /*
- * cfg.c, 2009.09.17, SJ
+ * cfg.c, 2009.09.21, SJ
  */
 
 #include <stdio.h>
@@ -49,16 +49,12 @@ struct __config read_config(char *configfile){
 
    strncpy(cfg.listen_addr, LISTEN_ADDR, MAXVAL-1);
    cfg.listen_port = LISTEN_PORT;
-   cfg.listen_ssl_port = POP3_LISTEN_SSL_PORT;
 
    strncpy(cfg.postfix_addr, POSTFIX_ADDR, MAXVAL-1);
    cfg.postfix_port = POSTFIX_PORT;
 
    strncpy(cfg.spam_smtp_addr, POSTFIX_ADDR, MAXVAL-1);
    cfg.spam_smtp_port = POSTFIX_PORT;
-
-   strncpy(cfg.avg_addr, AVG_ADDR, MAXVAL-1);
-   cfg.avg_port = AVG_PORT;
 
    strncpy(cfg.avast_addr, AVAST_ADDR, MAXVAL-1);
    cfg.avast_port = AVAST_PORT;

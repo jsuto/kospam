@@ -1,5 +1,5 @@
 /*
- * misc.c, 2009.09.20, SJ
+ * misc.c, 2009.09.21, SJ
  */
 
 #include <stdio.h>
@@ -838,7 +838,7 @@ int move_message_to_quarantine(struct session_data *sdata, char *quarantine_dir)
    }
    else {
       syslog(LOG_PRIORITY, "failed to put %s into quarantine: %s", sdata->ttmpfile, qfile);
-      return ERR_MOVED;
+      return ERR;
    }
 
 }

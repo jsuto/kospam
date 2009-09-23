@@ -6,7 +6,18 @@ clapf emits the "child exited" syslog message only in debug mode.
 Added the memcached stuff to the source tree.
 (memcached_cleaner.c, mysql.c)
 
+Added a default setlocale() call before (re)loading the configuration.
+Let's you have set locale=hu_HU. clapf starts, and reads variables as
+the default locale value (probably) en_US. Then later you change the
+configuration and send a HUP signal to let clapf re-read its config.
+It will, however with the current (hu_HU) locality. Thus all your float
+variables are toasted if you have written them as 0.92 (and not 0,92).
 
+To prevent nasty things to happen I included a setlocale(LC_ALL, "en_US")
+system call before any configuration read.
+
+Workaround: stop and start clapf after any configuration changes.
+(clapf.c)
 
 0.4.2:
 

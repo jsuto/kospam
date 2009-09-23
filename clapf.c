@@ -140,6 +140,8 @@ void fatal(char *s){
 void reload_config(){
    char *p, puf[SMALLBUFSIZE];
 
+   setlocale(LC_ALL, "en_US");
+
    cfg = read_config(configfile);
 
    if(chdir(cfg.workdir))

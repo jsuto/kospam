@@ -35,7 +35,7 @@ LIBCLAPF_VERSION=$(CLAPF_VERSION).$(CLAPF_REVISION).$(CLAPF_RELEASE)
 
 INSTALL = @INSTALL@
 
-all: clapf-lib clapf @spamsum@ splitmbox @parsembox@ @spamdrop@ @preparesql@
+all: clapf-lib clapf @memcached@ @spamsum@ splitmbox @parsembox@ @spamdrop@ @preparesql@
 install: install-clapf install-splitmbox @parsembox_install@ @spamsum_install@ @spamdrop_install@ @db_install@
 
 
@@ -161,6 +161,7 @@ install-clapf: clapf
 	$(INSTALL) -m 0755 util/check_clapf.sh $(DESTDIR)$(libexecdir)/clapf
 	cat $(srcdir)/util/spamdrop_helper.in | sed -e "s%YOUR_STATE_DIR%$(localstatedir)%" > $(srcdir)/util/spamdrop_helper
 	$(INSTALL) -m 0755 util/spamdrop_helper $(DESTDIR)$(libexecdir)/clapf
+	if [ -f "$(srcdir)/memcached_cleaner" ]; then $(INSTALL) -m 0755 $(srcdir)/memcached_cleaner $(DESTDIR)$(libexecdir)/clapf; fi
 	$(INSTALL) -m 0755 clapf $(DESTDIR)$(sbindir)
 	$(INSTALL) -d $(DESTDIR)$(sysconfdir)
 	rm -f clapf.conf; make clapf.conf

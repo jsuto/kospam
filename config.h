@@ -1,5 +1,5 @@
 /*
- * config.h, 2009.09.21, SJ
+ * config.h, 2009.09.22, SJ
  */
 
 #ifndef _CONFIG_H
@@ -10,7 +10,7 @@
 
 #define PROGNAME "clapf"
 
-#define VERSION "0.4.2"
+#define VERSION "0.4.3-rc1"
 
 #define HOSTID "av-engine.localhost"
 

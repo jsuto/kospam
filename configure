@@ -640,6 +640,7 @@ LIBOBJS
 DATADIR
 CFGDIR
 MYSQL_CONFIG
+memcached
 libclamav_extra_libs
 qcache
 spamsum_install
@@ -735,6 +736,7 @@ enable_blackhole
 with_userdb
 with_store
 enable_policy
+enable_memcached
 with_tokendb
 enable_lmtp
 enable_language_detection
@@ -1387,6 +1389,7 @@ Optional Features:
   --enable-all-received   check all the IP-addresses from "Received: from ..." lines against blacklists
   --enable-blackhole      build the blackhole feature
   --enable-policy         enable the policy feature
+  --enable-memcached      build memcached support
   --enable-lmtp           use LMTP local delivery (default: SMTP)
   --enable-language-detection use the language detection feature (experimental)
   --enable-spamsum        enable spamsum support (experimental)
@@ -3860,7 +3863,6 @@ done
 
 have_libclamav="no"
 have_clamd="no"
-have_avg="no"
 have_avast="no"
 have_avast_home="no"
 have_kav="no"
@@ -4626,7 +4628,7 @@ ac_cv_lib_m=ac_cv_lib_m_main
 
 
 
-    antispam_libs="-lm -ldl"
+    antispam_libs="$antispam_libs -lm -ldl"
 
 
 
@@ -5116,6 +5118,7 @@ fi
 
 
 
+
 # Check whether --with-userdb was given.
 if test "${with_userdb+set}" = set; then
   withval=$with_userdb;
@@ -5553,6 +5556,174 @@ fi
 if test "$want_policy" = "yes"; then
     have_policy="yes"
 fi
+
+
+
+
+    # Check whether --enable-memcached was given.
+if test "${enable_memcached+set}" = set; then
+  enableval=$enable_memcached; want_memcached=$enableval
+else
+  want_memcached="no"
+fi
+
+
+    if test "$want_memcached" = "yes"; then
+
+for ac_header in libmemcached/memcached.h
+do
+as_ac_Header=`$as_echo "ac_cv_header_$ac_header" | $as_tr_sh`
+if { as_var=$as_ac_Header; eval "test \"\${$as_var+set}\" = set"; }; then
+  { $as_echo "$as_me:$LINENO: checking for $ac_header" >&5
+$as_echo_n "checking for $ac_header... " >&6; }
+if { as_var=$as_ac_Header; eval "test \"\${$as_var+set}\" = set"; }; then
+  $as_echo_n "(cached) " >&6
+fi
+ac_res=`eval 'as_val=${'$as_ac_Header'}
+		 $as_echo "$as_val"'`
+	       { $as_echo "$as_me:$LINENO: result: $ac_res" >&5
+$as_echo "$ac_res" >&6; }
+else
+  # Is the header compilable?
+{ $as_echo "$as_me:$LINENO: checking $ac_header usability" >&5
+$as_echo_n "checking $ac_header usability... " >&6; }
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+$ac_includes_default
+#include <$ac_header>
+_ACEOF
+rm -f conftest.$ac_objext
+if { (ac_try="$ac_compile"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval ac_try_echo="\"\$as_me:$LINENO: $ac_try_echo\""
+$as_echo "$ac_try_echo") >&5
+  (eval "$ac_compile") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  $as_echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } && {
+	 test -z "$ac_c_werror_flag" ||
+	 test ! -s conftest.err
+       } && test -s conftest.$ac_objext; then
+  ac_header_compiler=yes
+else
+  $as_echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+	ac_header_compiler=no
+fi
+
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+{ $as_echo "$as_me:$LINENO: result: $ac_header_compiler" >&5
+$as_echo "$ac_header_compiler" >&6; }
+
+# Is the header present?
+{ $as_echo "$as_me:$LINENO: checking $ac_header presence" >&5
+$as_echo_n "checking $ac_header presence... " >&6; }
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+#include <$ac_header>
+_ACEOF
+if { (ac_try="$ac_cpp conftest.$ac_ext"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval ac_try_echo="\"\$as_me:$LINENO: $ac_try_echo\""
+$as_echo "$ac_try_echo") >&5
+  (eval "$ac_cpp conftest.$ac_ext") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  $as_echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } >/dev/null && {
+	 test -z "$ac_c_preproc_warn_flag$ac_c_werror_flag" ||
+	 test ! -s conftest.err
+       }; then
+  ac_header_preproc=yes
+else
+  $as_echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+  ac_header_preproc=no
+fi
+
+rm -f conftest.err conftest.$ac_ext
+{ $as_echo "$as_me:$LINENO: result: $ac_header_preproc" >&5
+$as_echo "$ac_header_preproc" >&6; }
+
+# So?  What about this header?
+case $ac_header_compiler:$ac_header_preproc:$ac_c_preproc_warn_flag in
+  yes:no: )
+    { $as_echo "$as_me:$LINENO: WARNING: $ac_header: accepted by the compiler, rejected by the preprocessor!" >&5
+$as_echo "$as_me: WARNING: $ac_header: accepted by the compiler, rejected by the preprocessor!" >&2;}
+    { $as_echo "$as_me:$LINENO: WARNING: $ac_header: proceeding with the compiler's result" >&5
+$as_echo "$as_me: WARNING: $ac_header: proceeding with the compiler's result" >&2;}
+    ac_header_preproc=yes
+    ;;
+  no:yes:* )
+    { $as_echo "$as_me:$LINENO: WARNING: $ac_header: present but cannot be compiled" >&5
+$as_echo "$as_me: WARNING: $ac_header: present but cannot be compiled" >&2;}
+    { $as_echo "$as_me:$LINENO: WARNING: $ac_header:     check for missing prerequisite headers?" >&5
+$as_echo "$as_me: WARNING: $ac_header:     check for missing prerequisite headers?" >&2;}
+    { $as_echo "$as_me:$LINENO: WARNING: $ac_header: see the Autoconf documentation" >&5
+$as_echo "$as_me: WARNING: $ac_header: see the Autoconf documentation" >&2;}
+    { $as_echo "$as_me:$LINENO: WARNING: $ac_header:     section \"Present But Cannot Be Compiled\"" >&5
+$as_echo "$as_me: WARNING: $ac_header:     section \"Present But Cannot Be Compiled\"" >&2;}
+    { $as_echo "$as_me:$LINENO: WARNING: $ac_header: proceeding with the preprocessor's result" >&5
+$as_echo "$as_me: WARNING: $ac_header: proceeding with the preprocessor's result" >&2;}
+    { $as_echo "$as_me:$LINENO: WARNING: $ac_header: in the future, the compiler will take precedence" >&5
+$as_echo "$as_me: WARNING: $ac_header: in the future, the compiler will take precedence" >&2;}
+
+    ;;
+esac
+{ $as_echo "$as_me:$LINENO: checking for $ac_header" >&5
+$as_echo_n "checking for $ac_header... " >&6; }
+if { as_var=$as_ac_Header; eval "test \"\${$as_var+set}\" = set"; }; then
+  $as_echo_n "(cached) " >&6
+else
+  eval "$as_ac_Header=\$ac_header_preproc"
+fi
+ac_res=`eval 'as_val=${'$as_ac_Header'}
+		 $as_echo "$as_val"'`
+	       { $as_echo "$as_me:$LINENO: result: $ac_res" >&5
+$as_echo "$ac_res" >&6; }
+
+fi
+as_val=`eval 'as_val=${'$as_ac_Header'}
+		 $as_echo "$as_val"'`
+   if test "x$as_val" = x""yes; then
+  cat >>confdefs.h <<_ACEOF
+#define `$as_echo "HAVE_$ac_header" | $as_tr_cpp` 1
+_ACEOF
+ have_memcached=yes
+else
+  echo "libmemcached/memcached.h is not found"; exit 1
+fi
+
+done
+
+
+       defs="$defs -DHAVE_MEMCACHED"
+       antispam_libs="$antispam_libs -lmemcached"
+
+       memcached="memcached_cleaner"
+    fi
+
 
 
 
@@ -6476,12 +6647,6 @@ if test "$have_clamd" = "yes"; then
    defs="$defs -DHAVE_CLAMD"
 fi
 
-if test "$have_avg" = "yes"; then
-   echo "AVG support: yes"
-   objs="$objs avg.o"
-   defs="$defs -DHAVE_AVG"
-fi
-
 if test "$have_avast" = "yes"; then
    echo "avast! support: yes"
    objs="$objs avast.o"
@@ -6659,7 +6824,7 @@ fi
 id -u $CLAPF_USER 2>/dev/null 1>/dev/null
 if test $? -eq 1; then echo "the user \"$CLAPF_USER\" does not exists, please create it, first with adduser..."; exit 1; fi
 
-if test "$have_libclamav" = "no" && test "$have_clamd" = "no" && test "$have_avg" = "no" && test "$have_avast" = "no" && test "$have_avast_home" = "no" && test "$have_kav" = "no" && test "$have_drweb" = "no" ; then
+if test "$have_libclamav" = "no" && test "$have_clamd" = "no" && test "$have_avast" = "no" && test "$have_avast_home" = "no" && test "$have_kav" = "no" && test "$have_drweb" = "no" ; then
    echo; echo
    echo "You have not selected any antivirus support."
    echo "clapf will not protect you from hostile code coming in e-mail"

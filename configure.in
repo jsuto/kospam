@@ -37,11 +37,10 @@ AC_SUBST(spamsum)
 AC_SUBST(spamsum_install)
 AC_SUBST(qcache)
 AC_SUBST(libclamav_extra_libs)
-
+AC_SUBST(memcached)
 
 have_libclamav="no"
 have_clamd="no"
-have_avg="no"
 have_avast="no"
 have_avast_home="no"
 have_kav="no"
@@ -207,7 +206,7 @@ dnl  if test "$want_antispam" = "yes"; then
 
     dnl have_antispam="yes"
 
-    antispam_libs="-lm -ldl"
+    antispam_libs="$antispam_libs -lm -ldl"
 
     dnl mysql database
 
@@ -262,6 +261,7 @@ dnl  if test "$want_antispam" = "yes"; then
        have_blackhole="yes"
        echo "So you've selected the blackhole feature ... good"
     fi
+
 
 
 AC_ARG_WITH(userdb,
@@ -341,6 +341,23 @@ AC_ARG_ENABLE(policy,
 if test "$want_policy" = "yes"; then
     have_policy="yes"
 fi
+
+
+
+    dnl memcached support
+
+    AC_ARG_ENABLE(memcached,
+          [  --enable-memcached      build memcached support], want_memcached=$enableval, want_memcached="no")
+
+    if test "$want_memcached" = "yes"; then
+       AC_CHECK_HEADERS(libmemcached/memcached.h, have_memcached=yes, echo "libmemcached/memcached.h is not found"; exit 1)
+
+       defs="$defs -DHAVE_MEMCACHED"
+       antispam_libs="$antispam_libs -lmemcached"
+
+       memcached="memcached_cleaner"
+    fi
+
 
 
 AC_ARG_WITH(tokendb,
@@ -626,12 +643,6 @@ if test "$have_clamd" = "yes"; then
    defs="$defs -DHAVE_CLAMD"
 fi
 
-if test "$have_avg" = "yes"; then
-   echo "AVG support: yes"
-   objs="$objs avg.o"
-   defs="$defs -DHAVE_AVG"
-fi
-
 if test "$have_avast" = "yes"; then
    echo "avast! support: yes"
    objs="$objs avast.o"
@@ -809,7 +820,7 @@ fi
 id -u $CLAPF_USER 2>/dev/null 1>/dev/null
 if test $? -eq 1; then echo "the user \"$CLAPF_USER\" does not exists, please create it, first with adduser..."; exit 1; fi
 
-if test "$have_libclamav" = "no" && test "$have_clamd" = "no" && test "$have_avg" = "no" && test "$have_avast" = "no" && test "$have_avast_home" = "no" && test "$have_kav" = "no" && test "$have_drweb" = "no" ; then
+if test "$have_libclamav" = "no" && test "$have_clamd" = "no" && test "$have_avast" = "no" && test "$have_avast_home" = "no" && test "$have_kav" = "no" && test "$have_drweb" = "no" ; then
    echo; echo
    echo "You have not selected any antivirus support."
    echo "clapf will not protect you from hostile code coming in e-mail"

@@ -1,5 +1,5 @@
 /*
- * session.c, 2009.09.20, SJ
+ * session.c, 2009.09.22, SJ
  */
 
 #include <stdio.h>
@@ -989,7 +989,7 @@ QUITTING:
    if(sdata.memc != NULL) memcached_free(sdata.memc);
 #endif
 
-   if(cfg->verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "child has finished");
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "child has finished");
 
    _exit(0);
 }

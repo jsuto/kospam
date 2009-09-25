@@ -1,5 +1,12 @@
 0.4.3-rc1:
 
+2009.09.25, SJ
+
+Added the store_only_spam config variable to the policy.
+(db-*sql, ldap/clapf-policy.schema, policy.c, webui/*)
+
+2009.09.23, SJ
+
 clapf emits the "child exited" syslog message only in debug mode.
 (session.c)
 

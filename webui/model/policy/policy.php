@@ -47,7 +47,7 @@ class ModelPolicyPolicy extends Model {
          ", invalid_junk_limit=" . (int)$policy['invalid_junk_limit'] . ", invalid_junk_line=" . (int)$policy['invalid_junk_line'] . ", penalize_images=" .
          (int)$policy['penalize_images'] . ", penalize_embed_images=" . (int)$policy['penalize_embed_images'] . ", penalize_octet_stream=" .
          (int)$policy['penalize_octet_stream'] . ", training_mode=" . (int)$policy['training_mode'] . ", initial_1000_learning=" .
-         (int)$policy['initial_1000_learning'] . ", store_metadata=" . (int)$policy['store_metadata'] .
+         (int)$policy['initial_1000_learning'] . ", store_metadata=" . (int)$policy['store_metadata'] . ", store_only_spam=" . (int)$policy['store_only_spam'] .
          " WHERE policy_group=" . (int)$policy['policy_group']
       );
 
@@ -64,14 +64,14 @@ class ModelPolicyPolicy extends Model {
          "INSERT INTO " . TABLE_POLICY . " (policy_group, name, deliver_infected_email, silently_discard_infected_email, use_antispam, " .
          "spam_subject_prefix, enable_auto_white_list, max_message_size_to_filter, rbl_domain, surbl_domain, spam_overall_limit, spaminess_oblivion_limit, " .
          "replace_junk_characters, invalid_junk_limit, invalid_junk_line, penalize_images, penalize_embed_images, penalize_octet_stream, training_mode, " .
-         "initial_1000_learning, store_metadata) VALUES (" .
+         "initial_1000_learning, store_metadata, store_only_spam) VALUES (" .
 
          (int)$policy['policy_group'] . ",'" . $this->db->escape($policy['name']) . "'," . (int)$policy['deliver_infected_email'] . "," . (int)$policy['silently_discard_infected_email'] . "," .
          (int)$policy['use_antispam'] . ",'" . $this->db->escape($policy['spam_subject_prefix']) . "'," . (int)$policy['enable_auto_white_list']  . "," .
          (int)$policy['max_message_size_to_filter'] . ",'" . $this->db->escape($policy['rbl_domain']) . "','" . $this->db->escape($policy['surbl_domain']) . "'," .
          (double)$policy['spam_overall_limit'] . "," . (double)$policy['spaminess_oblivion_limit'] . "," . (int)$policy['replace_junk_characters'] . "," . (int)$policy['invalid_junk_limit'] . "," .
          (int)$policy['invalid_junk_line'] . "," . (int)$policy['penalize_images'] . "," . (int)$policy['penalize_embed_images'] . "," . (int)$policy['penalize_octet_stream'] . "," .
-         (int)$policy['training_mode'] . "," . (int)$policy['initial_1000_learning'] . "," . (int)$policy['store_metadata'] .
+         (int)$policy['training_mode'] . "," . (int)$policy['initial_1000_learning'] . "," . (int)$policy['store_metadata'] . "," . (int)$policy['store_only_spam'] .
 
          ")"
       );

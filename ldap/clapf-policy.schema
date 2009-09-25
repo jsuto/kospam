@@ -112,6 +112,10 @@ attributetype ( 1.3.6.1.1.123456.1.21 NAME 'storeMetaData'
         EQUALITY integerMatch
         SYNTAX 1.3.6.1.4.1.1466.115.121.1.27 SINGLE-VALUE )
 
+attributetype ( 1.3.6.1.1.123456.1.22 NAME 'storeOnlySpam'
+	DESC 'Whether to store only spam emails (1) or not (0)'
+	EQUALITY integerMatch
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.27 SINGLE-VALUE )
 
 
 objectclass ( 1.3.6.1.1.123456.2.0 NAME 'clapfPolicyGroup'
@@ -123,7 +127,7 @@ objectclass ( 1.3.6.1.1.123456.2.0 NAME 'clapfPolicyGroup'
 	rbldomain $ surbldomain $ spamoveralllimit $ spaminessoblivionlimit $
 	replacejunkcharacters $ invalidjunklimit $ invalidjunkline $
 	penalizeimages $ penalizeembedimages $ penalizeoctetstream $
-	trainingmode $ initial1000learning $ storemetadata
+	trainingmode $ initial1000learning $ storemetadata $ storeonlyspam
         ) )
 
 

@@ -26,6 +26,7 @@
       <tr><td>training_mode</td><td><input name="training_mode" value="<?php print $policy['training_mode']; ?>" size="3" /></td><td>0|1</td></tr>
       <tr><td>initial_1000_learning</td><td><input name="initial_1000_learning" value="<?php print $policy['initial_1000_learning']; ?>" size="3" /></td><td>0|1</td></tr>
       <tr><td>store_metadata</td><td><input name="store_metadata" value="<?php print $policy['store_metadata']; ?>" size="3" /></td><td>0|1</td></tr>
+      <tr><td>store_only_spam</td><td><input name="store_only_spam" value="<?php print $policy['store_only_spam']; ?>" size="3" /></td><td>0|1</td></tr>
       <tr><td><input type="submit" value="<?php print $text_modify; ?>" /> <input type="reset" value="<?php print $text_cancel; ?>" /></td><td></td></tr>
    </table>
 

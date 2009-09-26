@@ -1,5 +1,5 @@
 /*
- * defs.h, 2009.09.17, SJ
+ * defs.h, 2009.09.26, SJ
  */
 
 #ifndef _DEFS_H
@@ -134,12 +134,13 @@ struct _state {
 };
 
 struct session_data {
-   char ttmpfile[SMALLBUFSIZE], deliveryinfo[SMALLBUFSIZE];
+   char ttmpfile[SMALLBUFSIZE], deliveryinfo[SMALLBUFSIZE], clapf_id[SMALLBUFSIZE];
    char mailfrom[SMALLBUFSIZE], rcptto[MAX_RCPT_TO][SMALLBUFSIZE], client_addr[IPLEN], name[SMALLBUFSIZE], domain[SMALLBUFSIZE];
    unsigned long uid;
    int fd, tot_len, num_of_rcpt_to, skip_id_check, need_signo_check, unknown_client, trapped_client;
    int policy_group, blackhole;
    int need_scan;
+   int training_request;
    float Nham, Nspam;
    float __parsed, __av, __user, __policy, __training, __minefield, __as, __update, __store, __inject;
 #ifdef NEED_MYSQL

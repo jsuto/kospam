@@ -1,5 +1,31 @@
 0.4.3-rc1:
 
+2009.09.26, SJ
+
+Revised the queue file storage to let the clapf daemon
+support store-less training.
+
+If you set store_metadata=1, then clapf will store the
+metadata needed for training. In case of store_metadata=0
+clapf will store nothing, and you cannot train it by
+forwarding emails to spam@ or ham@.
+
+So with store_metadata=1 clapf is able to train messages
+even if the original message itself does not exists in
+the queue directory.
+
+If you omit the --with-store=... configure option, then
+clapf writes an empty file acting as an identifier used
+for training, no matter what store_only_spam is.
+
+If you do specify the --with-store=... option, then clapf
+saves the message itself, suitable for viewing the quarantine
+as well. If you set store_only_spam=1, then clapf stores
+the spam messages only, and writes an empty file for the
+good emails.
+
+(smtp.c, parser.c, spam.c, session.c, clapf.h, defs.h)
+
 2009.09.25, SJ
 
 Added the store_only_spam config variable to the policy.

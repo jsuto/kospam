@@ -29,6 +29,15 @@ int send_headers(int sd, char *bigbuf, int n, char *spaminessbuf, int put_subjec
 
    memset(headerbuf, 0, MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE);
 
+   /* 
+      prepend the clapf id to the mail header. This obsoletes
+      the Outlook hack, and required for store-less training.
+      2009.09.25, SJ
+    */
+
+   snprintf(headerbuf, MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE-1, "Received: %s\r\n", sdata->ttmpfile);
+
+
    /* first find the end of the mail header */
 
    x = search_in_buf(bigbuf, n, "\r\n.\r\n", 5);
@@ -107,15 +116,6 @@ int send_headers(int sd, char *bigbuf, int n, char *spaminessbuf, int put_subjec
 
    } while(p && p < q);
 
-
-   /* Microsoft Outlook mailer is a dumb crapware. It won't include all the headers
-      when forwarding the email as attachment, so we need to fix this situation */
-
-#ifdef OUTLOOK_HACK
-   strncat(headerbuf, "Received: ", MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE-1);
-   strncat(headerbuf, sdata->ttmpfile, MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE-1);
-   strncat(headerbuf, "\r\n", MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE-1);
-#endif
 
    if(has_subject == 0){
       if(put_subject_spam_prefix == 1 && sent_subject_spam_prefix == 0){

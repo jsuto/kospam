@@ -1,5 +1,5 @@
 /*
- * session.c, 2009.09.22, SJ
+ * session.c, 2009.09.26, SJ
  */
 
 #include <stdio.h>
@@ -60,6 +60,8 @@ void init_session_data(struct session_data *sdata){
    memset(sdata->mailfrom, 0, SMALLBUFSIZE);
    memset(sdata->client_addr, 0, IPLEN);
 
+   memset(sdata->clapf_id, 0, SMALLBUFSIZE);
+
    sdata->uid = 0;
    sdata->tot_len = 0;
    sdata->skip_id_check = 0;
@@ -67,6 +69,7 @@ void init_session_data(struct session_data *sdata){
    sdata->unknown_client = sdata->trapped_client = 0;
    sdata->blackhole = 0;
    sdata->need_signo_check = 0;
+   sdata->training_request = 0;
 
    sdata->__parsed = sdata->__av = sdata->__user = sdata->__policy = sdata->__as = sdata->__minefield = 0;
    sdata->__training = sdata->__update = sdata->__store = sdata->__inject = 0;
@@ -334,7 +337,7 @@ void init_session_data(struct session_data *sdata){
 
                   /* is it a training request? */
 
-                  if(sdata.num_of_rcpt_to == 1 && (strcasestr(sdata.rcptto[0], "+spam@") || strcasestr(sdata.rcptto[0], "+ham@") || strncmp(email, "spam@", 5) == 0 || strncmp(email, "ham@", 4) == 0 ) ){
+                  if(sdata.training_request == 1){
                   #ifdef HAVE_USERS
                      /* get user from 'MAIL FROM:', 2008.10.25, SJ */
 
@@ -369,7 +372,7 @@ void init_session_data(struct session_data *sdata){
 
                      gettimeofday(&tv1, &tz);
 
-                     do_training(&sdata, email, &acceptbuf[0], &my_cfg);
+                     do_training(&sdata, &sstate, email, &acceptbuf[0], &my_cfg);
 
                      gettimeofday(&tv2, &tz);
                      sdata.__training += tvdiff(tv2, tv1);
@@ -565,7 +568,6 @@ void init_session_data(struct session_data *sdata){
 
                      /* save email to queue */
 
-                  #ifdef HAVE_STORE
                      if(sdata.uid > 0){
                         gettimeofday(&tv1, &tz);
 
@@ -574,7 +576,6 @@ void init_session_data(struct session_data *sdata){
                         gettimeofday(&tv2, &tz);
                         sdata.__store = tvdiff(tv2, tv1);
                      }
-                  #endif
 
 
                      if(spaminess >= cfg->spam_overall_limit){
@@ -864,6 +865,13 @@ AFTER_PERIOD:
                      }
                      a = a->r;
                   }
+               }
+
+
+               /* is it a training request? */
+
+               if(sdata.num_of_rcpt_to == 1 && (strcasestr(sdata.rcptto[0], "+spam@") || strcasestr(sdata.rcptto[0], "+ham@") || strncmp(email, "spam@", 5) == 0 || strncmp(email, "ham@", 4) == 0 ) ){
+                  sdata.training_request = 1;
                }
 
 

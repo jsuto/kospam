@@ -1,5 +1,5 @@
 /*
- * spam.c, 2009.09.02, SJ
+ * spam.c, 2009.09.26, SJ
  */
 
 #include <stdio.h>
@@ -87,16 +87,21 @@ void get_queue_path(struct session_data *sdata, char **path){
  * train this message
  */
 
-void do_training(struct session_data *sdata, char *email, char *acceptbuf, struct __config *cfg){
+void do_training(struct session_data *sdata, struct _state *state, char *email, char *acceptbuf, struct __config *cfg){
 #ifndef HAVE_MYDB
    int is_spam = 0;
-   int train_mode;
-   char qpath[SMALLBUFSIZE], *p, path[SMALLBUFSIZE], ID[RND_STR_LEN+1];
-   struct _state sstate2;
-
+   char qpath[SMALLBUFSIZE], *p, path[SMALLBUFSIZE];
 
    snprintf(acceptbuf, MAXBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata->ttmpfile, email);
    if(strcasestr(sdata->rcptto[0], "+spam@") || strncmp(email, "spam@", 5) == 0) is_spam = 1;
+
+   p = &path[0];
+   get_queue_path(sdata, &p);
+
+#ifdef HAVE_STORE
+   int train_mode;
+   char ID[RND_STR_LEN+1];
+   struct _state sstate2;
 
    train_mode = extract_id_from_message(sdata->ttmpfile, cfg->clapf_header_field, ID);
 
@@ -106,10 +111,6 @@ void do_training(struct session_data *sdata, char *email, char *acceptbuf, struc
       syslog(LOG_PRIORITY, "%s: not found a valid message id (%s)", sdata->ttmpfile, ID);
       return;
    }
-
-
-   p = &path[0];
-   get_queue_path(sdata, &p);
 
 
    if(is_spam == 1){
@@ -125,35 +126,54 @@ void do_training(struct session_data *sdata, char *email, char *acceptbuf, struc
 
    free_list(sstate2.urls);
    clearhash(sstate2.token_hash, 0);
+#else
+   struct stat st;
+
+   if(is_spam == 1){
+      snprintf(qpath, SMALLBUFSIZE-1, "%s/h.%s", path, sdata->clapf_id);
+   } else {
+      snprintf(qpath, SMALLBUFSIZE-1, "%s/s.%s", path, sdata->clapf_id);
+   }
+
+   syslog(LOG_PRIORITY, "%s: checking %s for training", sdata->ttmpfile, qpath);
+
+   if(stat(qpath, &st) == 0 && S_ISREG(st.st_mode) == 1){
+      train_message(sdata, state, MAX_ITERATIVE_TRAIN_LOOPS, is_spam, state->train_mode, cfg);
+   }
+   else {
+      syslog(LOG_PRIORITY, "%s: invalid signature: %s", sdata->ttmpfile, qpath);
+   }
+#endif
+
 #endif
 
 }
 
 
 /*
- * save message to queue (local filesystem or mysql database)
+ * save message to queue (local or networked filesystem)
  */
 
-#ifdef HAVE_STORE
 void save_email_to_queue(struct session_data *sdata, float spaminess, struct __config *cfg){
-   char *p, path[SMALLBUFSIZE];
-   struct stat st;
+   int touch;
+   char *p, path[SMALLBUFSIZE], qpath[SMALLBUFSIZE];
 
    if(cfg->store_metadata == 0 || strlen(sdata->name) <= 1) return;
 
-   if(cfg->store_only_spam == 1 && spaminess < cfg->spam_overall_limit) return;
+   //if(cfg->store_only_spam == 1 && spaminess < cfg->spam_overall_limit) return;
+   if(cfg->store_only_spam == 1 && spaminess < cfg->spam_overall_limit) goto TOUCH;
+
 
    p = &path[0];
    get_queue_path(sdata, &p);
-
-#ifdef STORE_FS
-   char qpath[SMALLBUFSIZE];
-
 
    if(spaminess >= cfg->spam_overall_limit)
       snprintf(qpath, SMALLBUFSIZE-1, "%s/s.%s", path, sdata->ttmpfile);
    else
       snprintf(qpath, SMALLBUFSIZE-1, "%s/h.%s", path, sdata->ttmpfile);
+
+#ifdef STORE_FS
+   struct stat st;
 
    link(sdata->ttmpfile, qpath);
 
@@ -162,18 +182,14 @@ void save_email_to_queue(struct session_data *sdata, float spaminess, struct __c
    if(stat(qpath, &st) == 0){
       if(S_ISREG(st.st_mode) == 1) chmod(qpath, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
    }
+
+   return;
 #endif
 
 #ifdef STORE_NFS
-   char qpath[SMALLBUFSIZE];
    char buf[MAXBUFSIZE];
    int n, fd, fd2;
-
-
-   if(spaminess >= cfg->spam_overall_limit)
-      snprintf(qpath, SMALLBUFSIZE-1, "%s/s.%s", path, sdata->ttmpfile);
-   else
-      snprintf(qpath, SMALLBUFSIZE-1, "%s/h.%s", path, sdata->ttmpfile);
+   struct stat st;
 
    /* copy here */
 
@@ -205,57 +221,14 @@ void save_email_to_queue(struct session_data *sdata, float spaminess, struct __c
       if(S_ISREG(st.st_mode) == 1) chmod(qpath, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
    }
 
+   return;
 #endif
 
-#ifdef STORE_MYSQL
-   #include <mysql.h>
+TOUCH:
+   /* emulating 'touch' */
 
-   char *data=NULL;
-   char buf[MAXBUFSIZE], *map=NULL;
-   unsigned long now=0;
-   int fd, is_spam=0;
-   time_t clock;
-
-   time(&clock);
-   now = clock;
-
-   if(spaminess >= cfg->spam_overall_limit) is_spam = 1;
-
-   /* reading message file into memory */
-
-   if(stat(sdata->ttmpfile, &st)){
-      syslog(LOG_PRIORITY, "%s: cannot stat before putting to queue", sdata->ttmpfile);
-      return;
-   }
-
-   fd = open(sdata->ttmpfile, O_RDONLY);
-   if(fd == -1) return;
-
-   map = mmap(map, st.st_size, PROT_READ, MAP_SHARED, fd, 0);
-   close(fd);
-   if(map == NULL) return;
-
-   /* then put it into database */
-
-   data = malloc(2 * st.st_size + strlen(buf) + 1 + 1 + 1);
-   if(!data){
-      goto ENDE;
-   }
-
-   snprintf(buf, MAXBUFSIZE-1, "INSERT INTO %s (id, uid, is_spam, ts, data) VALUES('%s', %ld, %d, %ld, \"", SQL_QUEUE_TABLE, sdata->ttmpfile, sdata->uid, is_spam, now);
-   snprintf(data, 2 * st.st_size + strlen(buf) + 1, "%s", buf);
-   mysql_real_escape_string(&(sdata->mysql), data+strlen(buf), map, st.st_size);
-   strncat(data, "\")", 2 * st.st_size + strlen(buf) + 1 + 1);
-   mysql_real_query(&(sdata->mysql), data, strlen(data));
-
-   free(data);
-
-ENDE:
-
-   munmap(map, st.st_size);
-
-#endif
+   touch = open(qpath, O_CREAT|O_EXCL, S_IRUSR|S_IWUSR);
+   if(touch != -1) close(touch);
 
 }
-#endif
 

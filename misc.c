@@ -726,14 +726,14 @@ int make_rnd_string(char *res){
 
 int is_valid_id(char *p){
 
-   if(strlen(p) != 30)
+   if(strlen(p) != 30 && strlen(p) != 31)
       return 0;
 
    for(; *p; p++){
       /* 0-9: 0x30-0x39, a-f: 0x61-0x66 */
 
-      if(! ((*p >= 0x30 && *p <= 0x39) || (*p >= 0x61 && *p <= 0x66) ) ){
-         printf("%c*\n", *p);
+      if(! ((*p >= 0x30 && *p <= 0x39) || (*p >= 0x61 && *p <= 0x66) || *p == 0x0d) ){
+         //printf("%c*\n", *p);
          return 0;
       }
    }

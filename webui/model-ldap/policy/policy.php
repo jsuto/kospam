@@ -50,7 +50,8 @@ class ModelPolicyPolicy extends Model {
                        'training_mode'                   => $result['trainingmode'],
                        'initial_1000_learning'           => $result['initial1000learning'],
                        'store_metadata'                  => $result['storemetadata'],
-                       'store_only_spam'                 => $result['storeonlyspam']
+                       'store_only_spam'                 => $result['storeonlyspam'],
+                       'message_from_a_zombie'           => $result['messagefromazombie']
                      );
 
 
@@ -100,6 +101,7 @@ class ModelPolicyPolicy extends Model {
       $entry["initial1000learning"] = (int)$policy['initial_1000_learning'];
       $entry["storemetadata"] = (int)$policy['store_metadata'];
       $entry["storeonlyspam"] = (int)$policy['store_only_spam'];
+      $entry["messagefromazombie"] = (int)$policy[' message_from_a_zombie'];
 
       if($this->db->ldap_modify("policyGroup=" . (int)$policy['policy_group'] . "," . LDAP_POLICY_BASEDN, $entry) == TRUE) {
          return 1;
@@ -137,6 +139,7 @@ class ModelPolicyPolicy extends Model {
       $entry["initial1000learning"] = (int)$policy['initial_1000_learning'];
       $entry["storemetadata"] = (int)$policy['store_metadata'];
       $entry["storeonlyspam"] = (int)$policy['store_only_spam'];
+      $entry["messagefromazombie"] = (int)$policy[' message_from_a_zombie'];
 
       if($this->db->ldap_add("policyGroup=" . (int)$policy['policy_group'] . "," . LDAP_POLICY_BASEDN, $entry) == TRUE) {
          return 1;

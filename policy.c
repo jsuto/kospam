@@ -1,5 +1,5 @@
 /*
- * policy.c, 2009.09.25, SJ
+ * policy.c, 2009.09.28, SJ
  */
 
 #include <stdio.h>
@@ -28,7 +28,7 @@ int get_policy(struct session_data *sdata, struct __config *cfg, struct __config
    if(sdata->num_of_rcpt_to != 1) return 0;
 #endif
 
-   snprintf(buf, SMALLBUFSIZE-1, "SELECT deliver_infected_email, silently_discard_infected_email, use_antispam, spam_subject_prefix, enable_auto_white_list, max_message_size_to_filter, rbl_domain, surbl_domain, spam_overall_limit, spaminess_oblivion_limit, replace_junk_characters, invalid_junk_limit, invalid_junk_line, penalize_images, penalize_embed_images, penalize_octet_stream, training_mode, initial_1000_learning, store_metadata, store_only_spam FROM %s WHERE policy_group=%d", SQL_POLICY_TABLE, sdata->policy_group);
+   snprintf(buf, SMALLBUFSIZE-1, "SELECT deliver_infected_email, silently_discard_infected_email, use_antispam, spam_subject_prefix, enable_auto_white_list, max_message_size_to_filter, rbl_domain, surbl_domain, spam_overall_limit, spaminess_oblivion_limit, replace_junk_characters, invalid_junk_limit, invalid_junk_line, penalize_images, penalize_embed_images, penalize_octet_stream, training_mode, initial_1000_learning, store_metadata, store_only_spam, message_from_a_zombie FROM %s WHERE policy_group=%d", SQL_POLICY_TABLE, sdata->policy_group);
 
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: policy sql: %s", sdata->ttmpfile, buf);
 
@@ -57,6 +57,7 @@ int get_policy(struct session_data *sdata, struct __config *cfg, struct __config
             my_cfg->initial_1000_learning = atoi(row[17]);
             my_cfg->store_metadata = atoi(row[18]);
             my_cfg->store_only_spam = atoi(row[19]);
+            my_cfg->message_from_a_zombie = atoi(row[20]);
          }
          mysql_free_result(res);
       }
@@ -78,7 +79,7 @@ int get_policy(struct session_data *sdata, struct __config *cfg, struct __config
    if(sdata->num_of_rcpt_to != 1) return 0;
 #endif
 
-   snprintf(buf, SMALLBUFSIZE-1, "SELECT deliver_infected_email, silently_discard_infected_email, use_antispam, spam_subject_prefix, enable_auto_white_list, max_message_size_to_filter, rbl_domain, surbl_domain, spam_overall_limit, spaminess_oblivion_limit, replace_junk_characters, invalid_junk_limit, invalid_junk_line, penalize_images, penalize_embed_images, penalize_octet_stream, training_mode, initial_1000_learning, store_metadata, store_only_spam FROM %s WHERE policy_group=%d", SQL_POLICY_TABLE, sdata->policy_group);
+   snprintf(buf, SMALLBUFSIZE-1, "SELECT deliver_infected_email, silently_discard_infected_email, use_antispam, spam_subject_prefix, enable_auto_white_list, max_message_size_to_filter, rbl_domain, surbl_domain, spam_overall_limit, spaminess_oblivion_limit, replace_junk_characters, invalid_junk_limit, invalid_junk_line, penalize_images, penalize_embed_images, penalize_octet_stream, training_mode, initial_1000_learning, store_metadata, store_only_spam, message_from_a_zombie FROM %s WHERE policy_group=%d", SQL_POLICY_TABLE, sdata->policy_group);
 
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: policy sql: %s", sdata->ttmpfile, buf);
 
@@ -104,6 +105,7 @@ int get_policy(struct session_data *sdata, struct __config *cfg, struct __config
          my_cfg->initial_1000_learning = sqlite3_column_int(pStmt, 17);
          my_cfg->store_metadata = sqlite3_column_int(pStmt, 18);
          my_cfg->store_only_spam = sqlite3_column_int(pStmt, 19);
+         my_cfg->message_from_a_zombie = sqlite3_column_int(pStmt, 20);
       }
    }
    sqlite3_finalize(pStmt);
@@ -212,6 +214,10 @@ int get_policy(struct session_data *sdata, struct __config *cfg, struct __config
 
       vals = ldap_get_values(sdata->ldap, e, "storeonlyspam");
       if(ldap_count_values(vals) > 0) my_cfg->store_only_spam = atoi(vals[0]);
+      ldap_value_free(vals);
+
+      vals = ldap_get_values(sdata->ldap, e, "messagefromazombie");
+      if(ldap_count_values(vals) > 0) my_cfg->message_from_a_zombie = atoi(vals[0]);
       ldap_value_free(vals);
 
    }

@@ -5,6 +5,17 @@
 Modified clapf to relay the XFORWARD info.
 (defs.h, session.c, smtp.c)
 
+The verbosity level affects the info put into the mail header.
+(session.c)
+
+Skip the faked 'Received: ' line if found in the header.
+(smtp.c)
+
+If the tre library matches a zombie host, then a special spammy
+token is instantiated.
+(hash2.c)
+
+
 2009.09.27, SJ
 
 Most spam emails come from zombie networks where the infected

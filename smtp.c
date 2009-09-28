@@ -92,6 +92,17 @@ int send_headers(int sd, char *bigbuf, int n, char *spaminessbuf, int put_subjec
 
       if(remove_hdr == 0){
 
+         /* skip our fake Received: line */
+
+         hdr_ptr = strstr(buf, "Received: ");
+         if(hdr_ptr){
+            hdr_ptr += 10;
+            if(is_valid_id(hdr_ptr)){
+               continue;
+            }
+         }
+
+
          /* fix subject line if we have to */
 
          if(strncmp(buf, "Subject:", 8) == 0){

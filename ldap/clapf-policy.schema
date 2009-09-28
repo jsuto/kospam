@@ -118,6 +118,12 @@ attributetype ( 1.3.6.1.1.123456.1.22 NAME 'storeOnlySpam'
 	SYNTAX 1.3.6.1.4.1.1466.115.121.1.27 SINGLE-VALUE )
 
 
+attributetype ( 1.3.6.1.1.123456.1.23 NAME 'messageFromAZombie'
+	DESC 'What to do with a message from a zombie computer'
+	EQUALITY integerMatch
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.27 SINGLE-VALUE )
+
+
 objectclass ( 1.3.6.1.1.123456.2.0 NAME 'clapfPolicyGroup'
 	DESC 'Abstraction of a clapf policy group'
 	SUP top STRUCTURAL
@@ -127,7 +133,8 @@ objectclass ( 1.3.6.1.1.123456.2.0 NAME 'clapfPolicyGroup'
 	rbldomain $ surbldomain $ spamoveralllimit $ spaminessoblivionlimit $
 	replacejunkcharacters $ invalidjunklimit $ invalidjunkline $
 	penalizeimages $ penalizeembedimages $ penalizeoctetstream $
-	trainingmode $ initial1000learning $ storemetadata $ storeonlyspam
+	trainingmode $ initial1000learning $ storemetadata $ storeonlyspam $
+	messagefromazombie
         ) )
 
 

@@ -28,6 +28,7 @@
       <tr><td>initial_1000_learning</td><td><input name="initial_1000_learning" value="<?php print $policy['initial_1000_learning']; ?>" size="3" /></td><td>0|1</td></tr>
       <tr><td>store_metadata</td><td><input name="store_metadata" value="<?php print $policy['store_metadata']; ?>" size="3" /></td><td>0|1</td></tr>
       <tr><td>store_only_spam</td><td><input name="store_only_spam" value="<?php print $policy['store_only_spam']; ?>" size="3" /></td><td>0|1</td></tr>
+      <tr><td>message_from_a_zombie</td><td><input name="message_from_a_zombie" value="<?php print $policy['message_from_a_zombie']; ?>" size="3" /></td><td>0|1</td></tr>
       <tr><td><input type="submit" value="<?php print $text_add; ?>" /> <input type="reset" value="<?php print $text_cancel; ?>" /></td><td></td></tr>
    </table>
 

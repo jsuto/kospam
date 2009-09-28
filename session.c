@@ -85,7 +85,7 @@ void init_session_data(struct session_data *sdata){
 void postfix_to_clapf(int new_sd, struct __data *data, struct __config *cfg){
    int i, pos, n, rav=AVIR_OK, inj=ERR_REJECT, state, prevlen=0;
    char *p, *q, buf[MAXBUFSIZE], puf[MAXBUFSIZE], resp[MAXBUFSIZE], prevbuf[MAXBUFSIZE], last2buf[2*MAXBUFSIZE+1], acceptbuf[MAXBUFSIZE];
-   char email[SMALLBUFSIZE], email2[SMALLBUFSIZE], virusinfo[SMALLBUFSIZE], reason[SMALLBUFSIZE];
+   char email[SMALLBUFSIZE], email2[SMALLBUFSIZE], virusinfo[SMALLBUFSIZE], reason[SMALLBUFSIZE], tmpbuf[SMALLBUFSIZE];
    float spaminess;
    struct session_data sdata;
    struct _state sstate;
@@ -317,34 +317,6 @@ void postfix_to_clapf(int new_sd, struct __data *data, struct __config *cfg){
                #endif
 
 
-                  /* 
-                   * if this email came from a host like ip-1.2.3.4.adsl.isp.net
-                   * then we can get rid of it right here or mark it as spam
-                   */
-
-               #ifdef HAVE_TRE
-                  if(sdata.tre == '+'){
-                     snprintf(acceptbuf, MAXBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata.ttmpfile, email);
-
-                     if(my_cfg.message_from_a_zombie == 1){
-                        syslog(LOG_PRIORITY, "%s: marking message from a zombie as spam", sdata.ttmpfile);
-
-                        spaminess = 0.99;
-                        snprintf(spaminessbuf, MAXBUFSIZE-1, "%s%s\r\n%s", // !!
-                                  cfg->clapf_header_field, sdata.ttmpfile, cfg->clapf_spam_header_field);
-
-                        goto END_OF_SPAM_CHECK;
-                     }
-
-                     if(my_cfg.message_from_a_zombie == 2){
-                        syslog(LOG_PRIORITY, "%s: dropping message from a zombie as spam", sdata.ttmpfile);
-
-                        goto SEND_RESULT;
-                     } 
-                  }
-               #endif
-
-
                   if(rav == AVIR_VIRUS){
                      if(my_cfg.deliver_infected_email == 1) goto END_OF_SPAM_CHECK;
 
@@ -363,6 +335,38 @@ void postfix_to_clapf(int new_sd, struct __data *data, struct __config *cfg){
                   memset(trainbuf, 0, SMALLBUFSIZE);
                   memset(whitelistbuf, 0, SMALLBUFSIZE);
                   memset(spaminessbuf, 0, MAXBUFSIZE);
+
+                  /* create a default spaminess buffer containing the clapf id */
+
+                  snprintf(spaminessbuf, MAXBUFSIZE-1, "%s%s\r\n", cfg->clapf_header_field, sdata.ttmpfile);
+
+                  /* 
+                   * if this email came from a host like ip-1.2.3.4.adsl.isp.net
+                   * then we can get rid of it right here or mark it as spam
+                   */
+
+                 #ifdef HAVE_TRE
+                  if(sdata.tre == '+'){
+                     snprintf(acceptbuf, MAXBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata.ttmpfile, email);
+
+                     if(my_cfg.message_from_a_zombie == 1){
+                        //syslog(LOG_PRIORITY, "%s: marking message from a zombie as spam", sdata.ttmpfile);
+
+                        spaminess = 0.99;
+                        strncat(spaminessbuf, cfg->clapf_spam_header_field, MAXBUFSIZE-1);
+
+                        goto END_OF_SPAM_CHECK;
+                     }
+
+                     if(my_cfg.message_from_a_zombie == 2){
+                        syslog(LOG_PRIORITY, "%s: dropping message from a zombie as spam", sdata.ttmpfile);
+
+                        goto SEND_RESULT;
+                     }
+                  }
+                 #endif
+
+
 
 
                   /* is it a training request? */
@@ -416,7 +420,6 @@ void postfix_to_clapf(int new_sd, struct __data *data, struct __config *cfg){
                         spamdrop
                       */
 
-                     snprintf(spaminessbuf, MAXBUFSIZE-1, "%s%s\r\n%sTraining request\r\n", cfg->clapf_header_field, sdata.ttmpfile, cfg->clapf_header_field);
                      goto END_OF_SPAM_CHECK;
                   #endif
                   }
@@ -451,15 +454,13 @@ void postfix_to_clapf(int new_sd, struct __data *data, struct __config *cfg){
                      sdata.__as = tvdiff(tv2, tv1);
 
                      if(rc == 1){
-                        snprintf(spaminessbuf, MAXBUFSIZE-1, "%s%s\r\n%s%.0f ms\r\n%s", // !!
-                              cfg->clapf_header_field, sdata.ttmpfile, cfg->clapf_header_field, sdata.__as/1000.0, cfg->clapf_spam_header_field);
-
                         spaminess = 0.99;
-
+                        strncat(spaminessbuf, cfg->clapf_spam_header_field, MAXBUFSIZE-1);
                      }
-                     else {
-                        snprintf(spaminessbuf, MAXBUFSIZE-1, "%s%s\r\n%s%.0f ms\r\n",
-                              cfg->clapf_header_field, sdata.ttmpfile, cfg->clapf_header_field, sdata.__as/1000.0);
+
+                     if(cfg->verbosity >= _LOG_INFO){
+                        snprintf(tmpbuf, SMALLBUFSIZE-1, "%s%.0f ms\r\n", cfg->clapf_header_field, sdata.__as/1000.0);
+                        strncat(spaminessbuf, tmpbuf, MAXBUFSIZE-1);
                      }
 
 
@@ -607,25 +608,20 @@ void postfix_to_clapf(int new_sd, struct __data *data, struct __config *cfg){
                      }
 
 
-                     if(spaminess >= cfg->spam_overall_limit){
-                        snprintf(spaminessbuf, MAXBUFSIZE-1, "%s%.4f\r\n%s%s\r\n%s%ld ms\r\n%s%s%s%s", // !!
-                              cfg->clapf_header_field, spaminess, cfg->clapf_header_field, sdata.ttmpfile, cfg->clapf_header_field,
-                                    (long)sdata.__as/1000, reason, trainbuf, whitelistbuf, cfg->clapf_spam_header_field);
-
+                     if(cfg->verbosity >= _LOG_INFO){
+                        snprintf(tmpbuf, SMALLBUFSIZE-1, "%s%ld ms\r\n%s%s", cfg->clapf_header_field, (long)sdata.__as/1000, reason, whitelistbuf);
+                        strncat(spaminessbuf, tmpbuf, MAXBUFSIZE-1);
                      }
-                     else {
-                        snprintf(spaminessbuf, MAXBUFSIZE-1, "%s%.4f\r\n%s%s\r\n%s%ld ms\r\n%s%s%s",
-                               cfg->clapf_header_field, spaminess, cfg->clapf_header_field, sdata.ttmpfile, cfg->clapf_header_field, (long)sdata.__as/1000, reason, trainbuf, whitelistbuf);
 
+                     snprintf(tmpbuf, SMALLBUFSIZE-1, "%s%.4f\r\n%s", cfg->clapf_header_field, spaminess, trainbuf);
+                     strncat(spaminessbuf, tmpbuf, MAXBUFSIZE-1);
+
+                     if(spaminess >= cfg->spam_overall_limit){
+                        strncat(spaminessbuf, cfg->clapf_spam_header_field, MAXBUFSIZE-1);
                      }
 
 
                   } /* end of running spam check */
-
-                  else {
-                     /* set a reasonable stuff if we skipped the antispam check */
-                     snprintf(spaminessbuf, MAXBUFSIZE-1, "%s%s\r\n", cfg->clapf_header_field, sdata.ttmpfile);
-                  }
 
                END_OF_SPAM_CHECK:
 

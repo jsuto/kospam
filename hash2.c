@@ -1,5 +1,5 @@
 /*
- * hash2.c, 2009.09.10, SJ
+ * hash2.c, 2009.09.28, SJ
  */
 
 
@@ -54,6 +54,9 @@ void add_penalties(struct session_data *sdata, struct _state *state, struct __co
    /* blackhole IP-address info */
    if(sdata->trapped_client == 1)
       addnode(state->token_hash, "TRAPPED_CLIENT*", REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
+
+   if(sdata->tre == '+')
+      addnode(state->token_hash, "ZOMBIE*", REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
 
 }
 

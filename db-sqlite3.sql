@@ -103,6 +103,7 @@ create table if not exists t_policy (
         initial_1000_learning tinyint default 0,
         store_metadata tinyint default 0,
         store_only_spam tinyint default 0,
+        message_from_a_zombie tinyint default 0,
         unique(policy_group)
 );
 

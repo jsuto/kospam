@@ -48,6 +48,7 @@ class ModelPolicyPolicy extends Model {
          (int)$policy['penalize_images'] . ", penalize_embed_images=" . (int)$policy['penalize_embed_images'] . ", penalize_octet_stream=" .
          (int)$policy['penalize_octet_stream'] . ", training_mode=" . (int)$policy['training_mode'] . ", initial_1000_learning=" .
          (int)$policy['initial_1000_learning'] . ", store_metadata=" . (int)$policy['store_metadata'] . ", store_only_spam=" . (int)$policy['store_only_spam'] .
+         ", message_from_a_zombie=" . (int)$policy['message_from_a_zombie'] .
          " WHERE policy_group=" . (int)$policy['policy_group']
       );
 
@@ -72,7 +73,7 @@ class ModelPolicyPolicy extends Model {
          (double)$policy['spam_overall_limit'] . "," . (double)$policy['spaminess_oblivion_limit'] . "," . (int)$policy['replace_junk_characters'] . "," . (int)$policy['invalid_junk_limit'] . "," .
          (int)$policy['invalid_junk_line'] . "," . (int)$policy['penalize_images'] . "," . (int)$policy['penalize_embed_images'] . "," . (int)$policy['penalize_octet_stream'] . "," .
          (int)$policy['training_mode'] . "," . (int)$policy['initial_1000_learning'] . "," . (int)$policy['store_metadata'] . "," . (int)$policy['store_only_spam'] .
-
+         ", message_from_a_zombie=" . (int)$policy['message_from_a_zombie'] .
          ")"
       );
 

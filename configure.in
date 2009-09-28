@@ -222,6 +222,12 @@ dnl  if test "$want_antispam" = "yes"; then
     AC_HAVE_LIBRARY(ldap, AC_CHECK_LIB(ldap, ldap_simple_bind_s, have_ldap=yes, echo "libldap.so is not found"; have_ldap=no))
 
 
+    dnl TRE library
+
+    AC_CHECK_HEADERS(tre.h, have_tre=yes, echo "tre.h is not found")
+    AC_HAVE_LIBRARY(tre, AC_CHECK_LIB(tre, regcomp, have_tre=yes, echo "libtre.so is not found"; have_tre=no))
+
+
     dnl (su)rbl support
 
     AC_ARG_ENABLE(rbl,
@@ -552,6 +558,7 @@ dnl spamdrop helper program
 
 AC_DEFINE_UNQUOTED(SPAMDROP_HELPER_PROGRAM,"$my_prefix/libexec/clapf/spamdrop_helper",[where to look for the spamdrop helper file])
 AC_DEFINE_UNQUOTED(VIRUS_TEMPLATE, "$my_prefix/share/clapf/template.virus", [where the virus template is])
+AC_DEFINE_UNQUOTED(ZOMBIE_NET_REGEX, "$my_prefix/share/clapf/zombinets.regex", [where the virus template is])
 
 
 
@@ -805,6 +812,11 @@ else
    echo "link mode: dynamic"
 fi
 
+if test "$have_tre" = "yes"; then
+   echo "tre library: yes"
+   defs="$defs -DHAVE_TRE"
+   antispam_libs="$antispam_libs -ltre"
+fi
 
 if test "$have_mysql" = "yes"; then
    defs="$defs -DNEED_MYSQL"

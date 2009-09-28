@@ -1,5 +1,37 @@
 0.4.3-rc1:
 
+2009.09.28, SJ
+
+Modified clapf to relay the XFORWARD info.
+(defs.h, session.c, smtp.c)
+
+2009.09.27, SJ
+
+Most spam emails come from zombie networks where the infected
+hosts send the email directly instead of using their service
+providers smtp servers. Postfix can be set to pass the XFORWARD
+info that clapf can use.
+
+I have compiled a regex file (zombienets.regex) to list/match
+most of them, eg. c-98-214-27-79.hsd1.il.comcast.net. Many of
+the zombies has no (valid) PTR record, so you may append the
+word 'unknown' to match them.
+
+Currently I run this test to see how it performs. Later I will
+add a configuration variable allows you to mark these emails
+immediately as spam. Alternatively you can configure postfix
+to reject messages coming from directly end user computers.
+
+To enable this feature, install the TRE library, and copy
+zombienets.regex to /usr/local/share/clapf
+
+Finally set 'message_from_a_zombie' variable to decide what to
+do with messages from zombies. See example.conf for help. The
+default action is let is pass and let the antispam engine
+handle it.
+
+(clapf.c, defs.h, session.c, session.h, zombienets.regex, configure*, config.h, clapf-config.h.in)
+
 2009.09.26, SJ
 
 Revised the queue file storage to let the clapf daemon

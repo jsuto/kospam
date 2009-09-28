@@ -1,5 +1,5 @@
 /*
- * config.h, 2009.09.22, SJ
+ * config.h, 2009.09.27, SJ
  */
 
 #ifndef _CONFIG_H
@@ -159,6 +159,12 @@
 #define MAX_RECURSION_LEVEL 5
 #define MAX_COMPRESS_RATIO 200
 #define ARCHIVE_MEM_LIMIT 0 //disable memory limit for bzip2 scanner
+
+
+/* TRE stuff */
+
+#define NUM_OF_REGEXES 16
+
 
 /* Error codes */
 

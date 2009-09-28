@@ -1,5 +1,5 @@
 /*
- * defs.h, 2009.09.26, SJ
+ * defs.h, 2009.09.28, SJ
  */
 
 #ifndef _DEFS_H
@@ -16,6 +16,13 @@
 #endif
 #ifdef HAVE_MEMCACHED
   #include <libmemcached/memcached.h>
+#endif
+#ifdef HAVE_LIBCLAMAV
+   #include <clamav.h>
+#endif
+#ifdef HAVE_TRE
+   #include <tre.h>
+   #include <regex.h>
 #endif
 
 #include "config.h"
@@ -134,7 +141,7 @@ struct _state {
 };
 
 struct session_data {
-   char ttmpfile[SMALLBUFSIZE], deliveryinfo[SMALLBUFSIZE], clapf_id[SMALLBUFSIZE];
+   char ttmpfile[SMALLBUFSIZE], deliveryinfo[SMALLBUFSIZE], clapf_id[SMALLBUFSIZE], xforward[SMALLBUFSIZE], tre;
    char mailfrom[SMALLBUFSIZE], rcptto[MAX_RCPT_TO][SMALLBUFSIZE], client_addr[IPLEN], name[SMALLBUFSIZE], domain[SMALLBUFSIZE];
    unsigned long uid;
    int fd, tot_len, num_of_rcpt_to, skip_id_check, need_signo_check, unknown_client, trapped_client;
@@ -164,6 +171,21 @@ struct session_data {
 struct te {
    unsigned int nham;
    unsigned int nspam;
+};
+
+
+struct __data {
+   struct url *blackhole;
+
+#ifdef HAVE_LIBCLAMAV
+   struct cl_engine *engine;
+#endif
+
+#ifdef HAVE_TRE
+   regex_t pregs[NUM_OF_REGEXES];
+   int n_regex;
+#endif
+
 };
 
 

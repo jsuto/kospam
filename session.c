@@ -1,5 +1,5 @@
 /*
- * session.c, 2009.09.26, SJ
+ * session.c, 2009.09.28, SJ
  */
 
 #include <stdio.h>
@@ -59,6 +59,7 @@ void init_session_data(struct session_data *sdata){
 
    memset(sdata->mailfrom, 0, SMALLBUFSIZE);
    memset(sdata->client_addr, 0, IPLEN);
+   memset(sdata->xforward, 0, SMALLBUFSIZE);
 
    memset(sdata->clapf_id, 0, SMALLBUFSIZE);
 
@@ -71,6 +72,8 @@ void init_session_data(struct session_data *sdata){
    sdata->need_signo_check = 0;
    sdata->training_request = 0;
 
+   sdata->tre = '-';
+
    sdata->__parsed = sdata->__av = sdata->__user = sdata->__policy = sdata->__as = sdata->__minefield = 0;
    sdata->__training = sdata->__update = sdata->__store = sdata->__inject = 0;
 
@@ -79,12 +82,7 @@ void init_session_data(struct session_data *sdata){
 }
 
 
-#ifdef HAVE_LIBCLAMAV
-   void postfix_to_clapf(int new_sd, struct url *blackhole, struct cl_engine *engine, struct __config *cfg){
-#else
-   void postfix_to_clapf(int new_sd, struct url *blackhole, struct __config *cfg){
-#endif
-
+void postfix_to_clapf(int new_sd, struct __data *data, struct __config *cfg){
    int i, pos, n, rav=AVIR_OK, inj=ERR_REJECT, state, prevlen=0;
    char *p, *q, buf[MAXBUFSIZE], puf[MAXBUFSIZE], resp[MAXBUFSIZE], prevbuf[MAXBUFSIZE], last2buf[2*MAXBUFSIZE+1], acceptbuf[MAXBUFSIZE];
    char email[SMALLBUFSIZE], email2[SMALLBUFSIZE], virusinfo[SMALLBUFSIZE], reason[SMALLBUFSIZE];
@@ -103,6 +101,10 @@ void init_session_data(struct session_data *sdata){
       char spaminessbuf[MAXBUFSIZE], trainbuf[SMALLBUFSIZE], whitelistbuf[SMALLBUFSIZE];
       int train_mode=T_TOE, utokens;
       spaminess=DEFAULT_SPAMICITY;
+   #endif
+   #ifdef HAVE_TRE
+      size_t nmatch=0;
+      char *q2;
    #endif
 
 #ifdef HAVE_LIBCLAMAV
@@ -246,7 +248,7 @@ void init_session_data(struct session_data *sdata){
             #ifdef HAVE_ANTIVIRUS
                gettimeofday(&tv1, &tz);
                #ifdef HAVE_LIBCLAMAV
-                  rav = do_av_check(&sdata, email, email2, &virusinfo[0], engine, cfg);
+                  rav = do_av_check(&sdata, email, email2, &virusinfo[0], data->engine, cfg);
                #else
                   rav = do_av_check(&sdata, email, email2, &virusinfo[0], cfg);
                #endif
@@ -311,6 +313,34 @@ void init_session_data(struct session_data *sdata){
                      get_policy(&sdata, cfg, &my_cfg);
                      gettimeofday(&tv2, &tz);
                      sdata.__policy = tvdiff(tv2, tv1);
+                  }
+               #endif
+
+
+                  /* 
+                   * if this email came from a host like ip-1.2.3.4.adsl.isp.net
+                   * then we can get rid of it right here or mark it as spam
+                   */
+
+               #ifdef HAVE_TRE
+                  if(sdata.tre == '+'){
+                     snprintf(acceptbuf, MAXBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata.ttmpfile, email);
+
+                     if(my_cfg.message_from_a_zombie == 1){
+                        syslog(LOG_PRIORITY, "%s: marking message from a zombie as spam", sdata.ttmpfile);
+
+                        spaminess = 0.99;
+                        snprintf(spaminessbuf, MAXBUFSIZE-1, "%s%s\r\n%s", // !!
+                                  cfg->clapf_header_field, sdata.ttmpfile, cfg->clapf_spam_header_field);
+
+                        goto END_OF_SPAM_CHECK;
+                     }
+
+                     if(my_cfg.message_from_a_zombie == 2){
+                        syslog(LOG_PRIORITY, "%s: dropping message from a zombie as spam", sdata.ttmpfile);
+
+                        goto SEND_RESULT;
+                     } 
                   }
                #endif
 
@@ -426,7 +456,6 @@ void init_session_data(struct session_data *sdata){
 
                         spaminess = 0.99;
 
-                        syslog(LOG_PRIORITY, "%s: SPAM", sdata.ttmpfile);
                      }
                      else {
                         snprintf(spaminessbuf, MAXBUFSIZE-1, "%s%s\r\n%s%.0f ms\r\n",
@@ -765,21 +794,50 @@ AFTER_PERIOD:
 
          if(strncasecmp(buf, SMTP_CMD_XFORWARD, strlen(SMTP_CMD_XFORWARD)) == 0){
 
-            /* extract client address */
+            /*
+             * XFORWARD NAME=83-131-14-231.adsl.net.t-com.hr ADDR=83.131.14.231..
+             * XFORWARD PROTO=SMTP HELO=rhwfsvji..
+             */
+
+            if(strlen(sdata.xforward) + strlen(buf) < SMALLBUFSIZE-2){
+               strncat(sdata.xforward, buf, SMALLBUFSIZE-3);
+               strncat(sdata.xforward, "\r\n", SMALLBUFSIZE-1);
+            }
 
             trim(buf);
+
+            /* extract client name */
+
+         #ifdef HAVE_TRE
+            i = 0;
+
+            gettimeofday(&tv1, &tz);
+
+            q = strstr(buf, "NAME=");
+            if(q){
+               q2 = strchr(q+5, ' ');
+               if(q2) *q2 = '\0';
+
+               while(i < data->n_regex && sdata.tre != '+'){
+                  if(regexec(&(data->pregs[i]), q, nmatch, NULL, 0) == 0) sdata.tre = '+';
+
+                  i++;
+               }
+
+               if(q2) *q2 = ' ';
+
+               gettimeofday(&tv2, &tz);
+               syslog(LOG_PRIORITY, "%s: zombie check: %c [%d] %s in %ld us", sdata.ttmpfile, sdata.tre, i, q, tvdiff(tv2, tv1));
+            }
+         #endif
+
+            /* extract client address */
+
             q = strstr(buf, "ADDR=");
             if(q){
                snprintf(sdata.client_addr, IPLEN-1, "%s", q+5);
                if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: client address: %s", sdata.ttmpfile, sdata.client_addr);
             }
-
-            /*
-             * other possible XFORWARD variables
-             *
-             * XFORWARD NAME=83-131-14-231.adsl.net.t-com.hr ADDR=83.131.14.231..
-             * XFORWARD PROTO=SMTP HELO=rhwfsvji..
-             */
 
             /* note if the client is unknown, 2007.12.06, SJ */
 
@@ -845,8 +903,8 @@ AFTER_PERIOD:
 
                extract_email(buf, email);
 
-               if(blackhole){
-                  a = blackhole;
+               if(data->blackhole){
+                  a = data->blackhole;
 
                   while(a){
                      if(strcmp(a->url_str, email) == 0){

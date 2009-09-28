@@ -1,5 +1,5 @@
 /*
- * clapf.c, 2009.05.27, SJ
+ * clapf.c, 2009.09.27, SJ
  */
 
 #include <stdio.h>
@@ -33,7 +33,7 @@ int sd;
 int nconn = 0;
 char *configfile = CONFIG_FILE;
 struct __config cfg;
-struct url *blackhole = NULL;
+struct __data data;
 
 
 void clean_exit();
@@ -41,7 +41,6 @@ void fatal(char *s);
 
 #ifdef HAVE_LIBCLAMAV
    struct cl_stat dbstat;
-   struct cl_engine *engine = NULL;
    const char *dbdir;
    unsigned int options=0;
 
@@ -50,10 +49,10 @@ void fatal(char *s);
       unsigned int sigs = 0;
 
       /* release old structure */
-      if(engine){
-         cl_engine_free(engine);
+      if(data.engine){
+         cl_engine_free(data.engine);
          cl_statfree(&dbstat);
-         engine = NULL;
+         data.engine = NULL;
       }
 
       if((retval = cl_init(CL_INIT_DEFAULT)) != CL_SUCCESS){
@@ -71,7 +70,7 @@ void fatal(char *s);
          fatal(ERR_STAT_INI_DIR);
 
 
-      if(!(engine = cl_engine_new())){
+      if(!(data.engine = cl_engine_new())){
          fatal("Can't create new engine");
       }
 
@@ -83,14 +82,14 @@ void fatal(char *s);
          options |= CL_DB_PHISHING_URLS;
       }
 
-      if((retval = cl_load(cl_retdbdir(), engine, &sigs, options)) != CL_SUCCESS){
+      if((retval = cl_load(cl_retdbdir(), data.engine, &sigs, options)) != CL_SUCCESS){
          syslog(LOG_PRIORITY, "reloading db failed: %s", cl_strerror(retval));
          clean_exit();
       }
 
-      if((retval = cl_engine_compile(engine)) != CL_SUCCESS){
+      if((retval = cl_engine_compile(data.engine)) != CL_SUCCESS){
          syslog(LOG_PRIORITY, "Database initialization error: can't build engine: %s", cl_strerror(retval));
-         cl_engine_free(engine);
+         cl_engine_free(data.engine);
          clean_exit();
       }
 
@@ -109,11 +108,18 @@ void clean_exit(){
       close(sd);
 
 #ifdef HAVE_LIBCLAMAV
-   if(engine)
-      cl_engine_free(engine);
+   if(data.engine)
+      cl_engine_free(data.engine);
 #endif
 
-   free_list(blackhole);
+   free_list(data.blackhole);
+
+#ifdef HAVE_TRE
+   int i;
+   for(i=0; i<data.n_regex; i++){
+      regfree(&(data.pregs[i]));
+   }
+#endif
 
    syslog(LOG_PRIORITY, "%s has been terminated", PROGNAME);
 
@@ -151,11 +157,11 @@ void reload_config(){
 
     /* set up limits */
 
-    cl_engine_set_num(engine, CL_ENGINE_MAX_FILES, cfg.clamav_maxfile);                    /* maximum number of files to be scanned
+    cl_engine_set_num(data.engine, CL_ENGINE_MAX_FILES, cfg.clamav_maxfile);                    /* maximum number of files to be scanned
                                                                                               within a single archive */
-    cl_engine_set_num(engine, CL_ENGINE_MAX_FILESIZE, cfg.clamav_max_archived_file_size);  /* compressed files will only be decompressed
+    cl_engine_set_num(data.engine, CL_ENGINE_MAX_FILESIZE, cfg.clamav_max_archived_file_size);  /* compressed files will only be decompressed
                                                                                               and scanned up to this size */
-    cl_engine_set_num(engine, CL_ENGINE_MAX_RECURSION, cfg.clamav_max_recursion_level);    /* maximum recursion level for archives */
+    cl_engine_set_num(data.engine, CL_ENGINE_MAX_RECURSION, cfg.clamav_max_recursion_level);    /* maximum recursion level for archives */
 
 
     if(cfg.clamav_use_phishing_db == 1)
@@ -169,17 +175,53 @@ void reload_config(){
 
    /* (re)create blackhole list */
 
-   free_list(blackhole);
-   blackhole = NULL;
+   free_list(data.blackhole);
+   data.blackhole = NULL;
 
    p = cfg.blackhole_email_list;
    do {
       p = split(p, ' ', puf, SMALLBUFSIZE-1);
-      if(strlen(puf) > 3) append_list(&blackhole, puf);
+      if(strlen(puf) > 3) append_list(&(data.blackhole), puf);
    } while(p);
 
 
    syslog(LOG_PRIORITY, "reloaded config: %s", configfile);
+
+#ifdef HAVE_TRE
+   int i;
+   char buf[SMALLBUFSIZE];
+   FILE *f;
+
+   if(data.n_regex > 0){
+      for(i=0; i < data.n_regex; i++){
+         regfree(&(data.pregs[i]));
+      }
+   }
+
+
+   data.n_regex = 0;
+
+   f = fopen(ZOMBIE_NET_REGEX, "r");
+   if(f){
+      while(fgets(buf, SMALLBUFSIZE, f)){
+         if(buf[0] != ';' && buf[0] != '#' && buf[0] != '\r' && buf[0] != '\n'){
+            trim(buf);
+            if(regcomp(&(data.pregs[data.n_regex]), buf, REG_ICASE | REG_EXTENDED) == 0){
+               if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "compiled: %s", buf);
+               data.n_regex++;
+            }   
+            else 
+               syslog(LOG_PRIORITY, "failed to compile: %s", buf);
+         }
+
+         if(data.n_regex == NUM_OF_REGEXES-1) break;
+
+      }
+      fclose(f);
+   }
+
+#endif
+
 }
 
 
@@ -240,12 +282,21 @@ int main(int argc, char **argv){
     signal(SIGTERM, clean_exit);
     signal(SIGHUP, reload_config);
 
+
+    data.blackhole = NULL;
+
+    #ifdef HAVE_TRE
+       data.n_regex = 0;
+    #endif
     #ifdef HAVE_LIBCLAMAV
+       data.engine = NULL;
        signal(SIGALRM, reload_clamav_db);
     #endif
 
+
     sig_block(SIGCHLD);
     sig_catch(SIGCHLD, sigchld);
+
 
     reload_config();
 
@@ -326,12 +377,7 @@ int main(int argc, char **argv){
 
            /* handle session */
 
-           #ifdef HAVE_LIBCLAMAV
-              postfix_to_clapf(new_sd, blackhole, engine, &cfg);
-           #else
-              postfix_to_clapf(new_sd, blackhole, &cfg);
-           #endif
-
+           postfix_to_clapf(new_sd, &data, &cfg);
        }
 
        close(new_sd);

@@ -1,5 +1,5 @@
 /*
- * session.h, 2009.09.02, SJ
+ * session.h, 2009.09.27, SJ
  */
 
 #include "defs.h"
@@ -7,13 +7,6 @@
 
 void init_child();
 
-#ifdef HAVE_LIBCLAMAV
-   #include <clamav.h>
-
-   void postfix_to_clapf(int new_sd, struct url *blackhole, struct cl_engine *engine, struct __config *cfg);
-#else
-   void postfix_to_clapf(int new_sd, struct url *blackhole, struct __config *cfg);
-#endif
-
+void postfix_to_clapf(int new_sd, struct __data *data, struct __config *cfg);
 int inject_mail(struct session_data *sdata, int msg, char *smtpaddr, int smtpport, char *spaminessbuf, char *buf, struct __config *cfg, char *notify);
 

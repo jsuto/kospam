@@ -1,5 +1,5 @@
 /*
- * smtp.c, 2009.09.02, SJ
+ * smtp.c, 2009.09.28, SJ
  */
 
 #include <stdio.h>
@@ -241,6 +241,19 @@ int inject_mail(struct session_data *sdata, int msg, char *smtpaddr, int smtppor
 
    if(strstr(puf, "PIPELINING")) has_pipelining = 1;
 
+   ncmd = 0;
+   memset(buf, 0, MAXBUFSIZE);
+
+
+   /* pass XFORWARD info if we have any */
+
+   int n_xforward = count_char_in_buffer(sdata->xforward, '\n');
+
+   if(n_xforward > 0 && has_pipelining == 1){
+      snprintf(buf,  MAXBUFSIZE-1, "%s", sdata->xforward);
+      ncmd += n_xforward;
+   }
+
 
    /*
     * assemble a pipelined command combo (MAIL
@@ -249,7 +262,7 @@ int inject_mail(struct session_data *sdata, int msg, char *smtpaddr, int smtppor
 
    /* MAIL FROM */
 
-   snprintf(buf,  MAXBUFSIZE-1, "%s", sdata->mailfrom); ncmd = 1;
+   strncat(buf, sdata->mailfrom, MAXBUFSIZE-1); ncmd++;
    if(!has_pipelining){ if(smtp_chat(psd, buf, 1, "250", &puf[0], sdata->ttmpfile, cfg->verbosity)) return ERR_INJECT; }
 
 

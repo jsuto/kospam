@@ -1,5 +1,5 @@
 /*
- * cfg.h, 2009.09.17, SJ
+ * cfg.h, 2009.09.28, SJ
  */
 
 #ifndef _CFG_H
@@ -59,6 +59,8 @@ struct __config {
    int deliver_infected_email;
 
    char blackhole_email_list[MAXVAL];
+
+   int message_from_a_zombie;
 
    int use_antispam;
 

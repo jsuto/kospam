@@ -1,5 +1,5 @@
 /*
- * cfg.c, 2009.09.21, SJ
+ * cfg.c, 2009.09.28, SJ
  */
 
 #include <stdio.h>
@@ -99,6 +99,7 @@ struct __config read_config(char *configfile){
 
    cfg.use_antispam = 1;
 
+   cfg.message_from_a_zombie = 0;
 
    cfg.enable_auto_white_list = 1;
 
@@ -249,6 +250,9 @@ struct __config read_config(char *configfile){
 
                   if(strcmp(key, "blackhole_email_list") == 0)
                      memcpy(cfg.blackhole_email_list, val, MAXVAL-1);
+
+                  if(strcmp(key, "message_from_a_zombie") == 0)
+                     cfg.message_from_a_zombie = atoi(val);
 
                   if(strcmp(key, "use_antispam") == 0)
                      cfg.use_antispam = atoi(val);

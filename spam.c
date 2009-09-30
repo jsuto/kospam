@@ -8,7 +8,6 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <sys/mman.h>
 #include <fcntl.h>
 #include <time.h>
 #include <unistd.h>
@@ -158,11 +157,12 @@ void save_email_to_queue(struct session_data *sdata, float spaminess, struct __c
    int touch;
    char *p, path[SMALLBUFSIZE], qpath[SMALLBUFSIZE];
 
-   if(cfg->store_metadata == 0 || strlen(sdata->name) <= 1) return;
+   if(strlen(sdata->name) <= 1) return;
 
-   //if(cfg->store_only_spam == 1 && spaminess < cfg->spam_overall_limit) return;
-   if(cfg->store_only_spam == 1 && spaminess < cfg->spam_overall_limit) goto TOUCH;
-
+#ifndef HAVE_STORE
+   if(cfg->store_metadata == 0) return;
+   if(cfg->store_only_spam == 1 && spaminess < cfg->spam_overall_limit) return;
+#endif
 
    p = &path[0];
    get_queue_path(sdata, &p);
@@ -171,6 +171,11 @@ void save_email_to_queue(struct session_data *sdata, float spaminess, struct __c
       snprintf(qpath, SMALLBUFSIZE-1, "%s/s.%s", path, sdata->ttmpfile);
    else
       snprintf(qpath, SMALLBUFSIZE-1, "%s/h.%s", path, sdata->ttmpfile);
+
+#ifdef HAVE_STORE
+   if(cfg->store_metadata == 0 || (cfg->store_only_spam == 1 && spaminess < cfg->spam_overall_limit) ) goto TOUCH;
+#endif
+
 
 #ifdef STORE_FS
    struct stat st;
@@ -224,7 +229,10 @@ void save_email_to_queue(struct session_data *sdata, float spaminess, struct __c
    return;
 #endif
 
+#ifdef HAVE_STORE
 TOUCH:
+#endif
+
    /* emulating 'touch' */
 
    touch = open(qpath, O_CREAT|O_EXCL, S_IRUSR|S_IWUSR);

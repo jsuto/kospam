@@ -48,7 +48,7 @@ class ControllerPolicyAdd extends Controller {
                                      'use_antispam'                    => 1,
                                      'spam_subject_prefix'             => "",
                                      'enable_auto_white_list'          => 1,
-                                     'max_message_size_to_filter'      => 128000,
+                                     'max_message_size_to_filter'      => 65535,
                                      'rbl_domain'                      => "",
                                      'surbl_domain'                    => "",
                                      'spam_overall_limit'              => 0.92,

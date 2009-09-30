@@ -1,5 +1,10 @@
 0.4.3-rc1:
 
+2009.09.29, SJ
+
+Fixed a bug in the queue files handling.
+(spam.c)
+
 2009.09.28, SJ
 
 Modified clapf to relay the XFORWARD info.

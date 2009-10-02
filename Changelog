@@ -13,6 +13,10 @@ bug came again. Now I set only LC_MESSAGES and LC_CTYPE according to the
 current locale settings clapf.conf.
 (clapf.c, spamdrop.c)
 
+MySQL optimisations.
+(credist: cydrk)
+(db-mysql)
+
 2009.09.29, SJ
 
 Fixed a bug in the queue files handling.

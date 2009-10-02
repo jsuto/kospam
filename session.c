@@ -1,5 +1,5 @@
 /*
- * session.c, 2009.09.28, SJ
+ * session.c, 2009.10.02, SJ
  */
 
 #include <stdio.h>
@@ -823,7 +823,7 @@ AFTER_PERIOD:
                if(q2) *q2 = ' ';
 
                gettimeofday(&tv2, &tz);
-               syslog(LOG_PRIORITY, "%s: zombie check: %c [%d] %s in %ld us", sdata.ttmpfile, sdata.tre, i, q, tvdiff(tv2, tv1));
+               if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: zombie check: %c [%d] %s in %ld us", sdata.ttmpfile, sdata.tre, i, q, tvdiff(tv2, tv1));
             }
          #endif
 

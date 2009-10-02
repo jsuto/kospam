@@ -6,8 +6,6 @@ create table if not exists t_misc (
 	unique(uid)
 );
 
-create index t_misc_idx on t_misc(uid);
-
 INSERT INTO t_misc (nham, nspam, uid) VALUES(0, 0, 0);
 
 create table if not exists t_token (
@@ -16,10 +14,9 @@ create table if not exists t_token (
 	nham int default 0,
 	nspam int default 0,
 	timestamp int unsigned default 0,
-	unique(token, uid)
+	unique key(token, uid)
 ) Engine=InnoDB;
 
-create index t_token_idx on t_token(token, uid);
 
 create table if not exists user (
 	uid int unsigned not null unique,
@@ -31,7 +28,6 @@ create table if not exists user (
 	isadmin tinyint default 0
 );
 
-create index user_idx on user (uid, domain);
 insert into user (uid, username, password, policy_group, isadmin, domain) values (0, 'admin', '$1$kkBnp0$L/MILe67UGcvHeFlTAQjR1', 0, 1, 'local');
 
 create table if not exists t_email (
@@ -39,23 +35,20 @@ create table if not exists t_email (
 	email char(128) not null primary key
 );
 
-create index t_email_idx on t_email(email);
 insert into t_email (uid, email) values(0, 'admin@local');
 
 create table if not exists t_domain (
-        domain char(64) not null unique,
+        domain char(64) not null primary key,
         mapped char(64) not null
 );
 
 insert into t_domain (domain, mapped) values('local', 'local'), ('yourdomain.com','yourdomain.com');
-create index t_domain_idx on t_domain (domain);
 
 create table if not exists t_white_list (
 	uid int unsigned not null primary key,
 	whitelist blob default null
 );
 
-create index t_white_list_idx on t_white_list (uid);
 insert into t_white_list (uid) values(0);
 
 create table if not exists t_black_list (
@@ -63,19 +56,7 @@ create table if not exists t_black_list (
         blacklist blob default null
 );
 
-create index t_black_list_idx on t_black_list (uid);
 insert into t_black_list (uid) values(0);
-
-create table if not exists t_queue (
-	id char(32) not null,
-	uid int unsigned not null,
-	ts bigint unsigned not null,
-	is_spam tinyint default 0,
-	data blob not null
-) Engine=InnoDB;
-
-create index t_queue_idx on t_queue(uid, id);
-create index t_queue_idx2 on t_queue(ts);
 
 create table if not exists t_stat (
 	uid int unsigned not null,
@@ -118,22 +99,23 @@ create table if not exists t_policy (
 	unique(policy_group)
 );
 
-create index t_policy_idx on t_policy(policy_group);
 
 create table if not exists t_minefield (
-	ip char(15) not null unique,
+	ip char(15) not null primary key,
 	ts int default 0
 );
 
-create index t_minefield_idx on t_minefield(ip);
-
 create table if not exists t_remote (
-	remotedomain char(64) not null unique,
+	remotedomain char(64) not null primary key,
 	remotehost char(64) not null,
 	basedn char(64) not null,
 	binddn char(64) not null,
 	sitedescription char(64) default null
 );
 
-create index t_remote_idx on t_remote(remotedomain);
+
+create table if not exists t_transport (
+	domain char(64) not null primary key,
+	destination char(64) not null
+);
 

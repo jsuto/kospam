@@ -27,11 +27,13 @@ class ModelQuarantineMessage extends Model {
 
             list ($mailfrom, $subject) = $this->scan_message($dir, $v);
 
-            if($this->is_it_in($subject, $subj) && $this->is_it_in($mailfrom, $from)){
+            $st = stat($f);
+
+            if($this->is_it_in($subject, $subj) && $this->is_it_in($mailfrom, $from) && $st['size'] > 5){
 
                $n_spam++;
 
-               if(($st = stat($f))){ $spam_total_size += $st['size']; }
+               $spam_total_size += $st['size'];
 
                if($n_spam > $page_len*$page && $n_spam <= $page_len*($page+1)){
 

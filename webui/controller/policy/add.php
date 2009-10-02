@@ -61,7 +61,9 @@ class ControllerPolicyAdd extends Controller {
                                      'penalize_octet_stream'           => 0,
                                      'training_mode'                   => 0,
                                      'initial_1000_learning'           => 0,
-                                     'store_metadata'                  => 0
+                                     'store_metadata'                  => 0,
+                                     'store_only_spam'                 => 1,
+                                     'message_from_a_zombie'           => 0
                                     );
          }
       }

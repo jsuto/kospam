@@ -107,6 +107,13 @@ class ControllerPolicyEdit extends Controller {
          $this->error['aaa'] = $this->data['text_invalid_policy_setting'];
       }
 
+      if(isBinary(@$this->request->post['store_only_spam']) == 0) {
+         $this->error['aaa'] = $this->data['text_invalid_policy_setting'];
+      }
+
+      if(isBinary(@$this->request->post['message_from_a_zombie']) == 0) {
+         $this->error['aaa'] = $this->data['text_invalid_policy_setting'];
+      }
 
       if (!$this->error) {
          return true;

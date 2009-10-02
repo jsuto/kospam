@@ -145,6 +145,11 @@ function write_stuff() {
    write_line($fp, "ENTERPRISE_VERSION", 0);
    write_line($fp);
 
+   write_line($fp, "ENABLE_BLACKLIST", 1);
+   write_line($fp, "ENABLE_STATISTICS", 1);
+   write_line($fp);
+
+
    write_line($fp, "SITE_URL", "http://" . $_SERVER['SERVER_NAME'] . WEBUI_DIRECTORY . "/");
    write_line($fp);
 

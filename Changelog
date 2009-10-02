@@ -1,5 +1,10 @@
 0.4.3-rc1:
 
+2009.10.02, SJ
+
+Minor webui fixes.
+(webui/*)
+
 2009.09.29, SJ
 
 Fixed a bug in the queue files handling.

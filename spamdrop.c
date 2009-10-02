@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2009.09.20, SJ
+ * spamdrop.c, 2009.10.02, SJ
  */
 
 #include <stdio.h>
@@ -253,7 +253,8 @@ int main(int argc, char **argv, char **envp){
    }
 
 
-   setlocale(LC_ALL, cfg.locale);
+   setlocale(LC_MESSAGES, cfg.locale);
+   setlocale(LC_CTYPE, cfg.locale);
 
 
    /* read the 'FROM' environment variable if you have

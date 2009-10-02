@@ -1,5 +1,5 @@
 /*
- * defs.h, 2009.09.28, SJ
+ * defs.h, 2009.10.02, SJ
  */
 
 #ifndef _DEFS_H
@@ -21,8 +21,8 @@
    #include <clamav.h>
 #endif
 #ifdef HAVE_TRE
-   #include <tre.h>
-   #include <regex.h>
+   #include <tre/tre.h>
+   #include <tre/regex.h>
 #endif
 
 #include "config.h"

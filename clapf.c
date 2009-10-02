@@ -1,5 +1,5 @@
 /*
- * clapf.c, 2009.09.27, SJ
+ * clapf.c, 2009.10.02, SJ
  */
 
 #include <stdio.h>
@@ -146,8 +146,6 @@ void fatal(char *s){
 void reload_config(){
    char *p, puf[SMALLBUFSIZE];
 
-   setlocale(LC_ALL, "en_US");
-
    cfg = read_config(configfile);
 
    if(chdir(cfg.workdir))
@@ -171,7 +169,8 @@ void reload_config(){
 
 #endif
 
-   setlocale(LC_ALL, cfg.locale);
+   setlocale(LC_MESSAGES, cfg.locale);
+   setlocale(LC_CTYPE, cfg.locale);
 
    /* (re)create blackhole list */
 

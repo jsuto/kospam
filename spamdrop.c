@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2009.10.02, SJ
+ * spamdrop.c, 2009.10.04, SJ
  */
 
 #include <stdio.h>
@@ -400,8 +400,10 @@ int main(int argc, char **argv, char **envp){
 
    /* fix username and uid */
 
+#ifdef HAVE_USERS
    if(recipient) get_user_from_email(&sdata, recipient, &cfg);
    else {
+#endif
       username = getenv("LOGNAME");
       if(username){
          snprintf(sdata.name, SMALLBUFSIZE-1, "%s", username);
@@ -413,7 +415,9 @@ int main(int argc, char **argv, char **envp){
          pwd = getpwuid(sdata.uid);
          snprintf(sdata.name, SMALLBUFSIZE-1, "%s", pwd->pw_name);
       }
+#ifdef HAVE_USERS
    }
+#endif
 
 
    /* fix database path if we need it */

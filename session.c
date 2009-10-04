@@ -1,5 +1,5 @@
 /*
- * session.c, 2009.10.02, SJ
+ * session.c, 2009.10.04, SJ
  */
 
 #include <stdio.h>
@@ -15,18 +15,6 @@
 #include "av.h"
 #include <clapf.h>
 
-
-#ifdef NEED_MYSQL
-   #include <mysql.h>
-#endif
-
-#ifdef NEED_SQLITE3
-   #include <sqlite3.h>
-#endif
-
-#ifdef NEED_LDAP
-   #include <ldap.h>
-#endif
 
 #ifdef HAVE_MYDB
    #include "mydb.h"
@@ -74,8 +62,12 @@ void init_session_data(struct session_data *sdata){
 
    sdata->tre = '-';
 
+   sdata->rav = AVIR_OK;
+
    sdata->__parsed = sdata->__av = sdata->__user = sdata->__policy = sdata->__as = sdata->__minefield = 0;
    sdata->__training = sdata->__update = sdata->__store = sdata->__inject = 0;
+
+   sdata->spaminess = DEFAULT_SPAMICITY;
 
    for(i=0; i<MAX_RCPT_TO; i++) memset(sdata->rcptto[i], 0, SMALLBUFSIZE);
 
@@ -83,25 +75,19 @@ void init_session_data(struct session_data *sdata){
 
 
 void postfix_to_clapf(int new_sd, struct __data *data, struct __config *cfg){
-   int i, pos, n, rav=AVIR_OK, inj=ERR_REJECT, state, prevlen=0;
-   char *p, *q, buf[MAXBUFSIZE], puf[MAXBUFSIZE], resp[MAXBUFSIZE], prevbuf[MAXBUFSIZE], last2buf[2*MAXBUFSIZE+1], acceptbuf[MAXBUFSIZE];
-   char email[SMALLBUFSIZE], email2[SMALLBUFSIZE], virusinfo[SMALLBUFSIZE], reason[SMALLBUFSIZE], tmpbuf[SMALLBUFSIZE];
-   float spaminess;
+   int i, pos, n, inj=ERR_REJECT, state, prevlen=0;
+   char *p, *q, buf[MAXBUFSIZE], puf[MAXBUFSIZE], resp[MAXBUFSIZE], prevbuf[MAXBUFSIZE], last2buf[2*MAXBUFSIZE+1];
+   char email[SMALLBUFSIZE], email2[SMALLBUFSIZE], virusinfo[SMALLBUFSIZE], reason[SMALLBUFSIZE];
    struct session_data sdata;
    struct _state sstate;
    struct __config my_cfg;
-   int is_spam, db_conn=0;
+   int db_conn=0;
    int rc;
    struct url *a;
 
    struct timezone tz;
    struct timeval tv1, tv2;
 
-   #ifdef HAVE_ANTISPAM
-      char spaminessbuf[MAXBUFSIZE], trainbuf[SMALLBUFSIZE], whitelistbuf[SMALLBUFSIZE];
-      int train_mode=T_TOE, utokens;
-      spaminess=DEFAULT_SPAMICITY;
-   #endif
    #ifdef HAVE_TRE
       size_t nmatch=0;
       char *q2;
@@ -248,9 +234,9 @@ void postfix_to_clapf(int new_sd, struct __data *data, struct __config *cfg){
             #ifdef HAVE_ANTIVIRUS
                gettimeofday(&tv1, &tz);
                #ifdef HAVE_LIBCLAMAV
-                  rav = do_av_check(&sdata, email, email2, &virusinfo[0], data->engine, cfg);
+                  sdata.rav = do_av_check(&sdata, email, email2, &virusinfo[0], data->engine, cfg);
                #else
-                  rav = do_av_check(&sdata, email, email2, &virusinfo[0], cfg);
+                  sdata.rav = do_av_check(&sdata, email, email2, &virusinfo[0], cfg);
                #endif
                gettimeofday(&tv2, &tz);
                sdata.__av = tvdiff(tv2, tv1);
@@ -275,10 +261,6 @@ void postfix_to_clapf(int new_sd, struct __data *data, struct __config *cfg){
             #endif
 
 
-               /* copy default config from clapf.conf, to enable policy support */
-
-               memcpy(&my_cfg, cfg, sizeof(struct __config));
-
             #ifdef HAVE_LMTP
                for(i=0; i<sdata.num_of_rcpt_to; i++){
             #else
@@ -286,366 +268,37 @@ void postfix_to_clapf(int new_sd, struct __data *data, struct __config *cfg){
             #endif
                   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: round %d in injection", sdata.ttmpfile, i);
 
-                  memset(acceptbuf, 0, MAXBUFSIZE);
-                  memset(email, 0, SMALLBUFSIZE);
-
-                  strcpy(resp, "-");
-
-                  is_spam = 0;
-                  spaminess = DEFAULT_SPAMICITY;
-
                   extract_email(sdata.rcptto[i], email);
 
-                  /* get user from 'RCPT TO:', 2008.11.24, SJ */
-
-               #ifdef HAVE_USERS
-                  gettimeofday(&tv1, &tz); 
-                  get_user_from_email(&sdata, email, &my_cfg);
-                  gettimeofday(&tv2, &tz);
-                  sdata.__user += tvdiff(tv2, tv1);
-               #endif
-
-                  /* read policy, 2008.11.24, SJ */
-
-               #ifdef HAVE_POLICY
-                  if(sdata.policy_group > 0){
-                     gettimeofday(&tv1, &tz);
-                     get_policy(&sdata, cfg, &my_cfg);
-                     gettimeofday(&tv2, &tz);
-                     sdata.__policy = tvdiff(tv2, tv1);
-                  }
-               #endif
-
-
-                  if(rav == AVIR_VIRUS){
-                     if(my_cfg.deliver_infected_email == 1) goto END_OF_SPAM_CHECK;
-
-                     snprintf(acceptbuf, MAXBUFSIZE-1, "%s <%s>\r\n", SMTP_RESP_550_ERR_PREF, email);
-
-                     if(my_cfg.silently_discard_infected_email == 1)
-                        snprintf(acceptbuf, MAXBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata.ttmpfile, email);
-                     else
-                        snprintf(acceptbuf, MAXBUFSIZE-1, "550 %s %s\r\n", sdata.ttmpfile, email);
-
-                     goto SEND_RESULT;
-                  }
-
                #ifdef HAVE_ANTISPAM
-                  memset(reason, 0, SMALLBUFSIZE);
-                  memset(trainbuf, 0, SMALLBUFSIZE);
-                  memset(whitelistbuf, 0, SMALLBUFSIZE);
-                  memset(spaminessbuf, 0, MAXBUFSIZE);
-
-                  /* create a default spaminess buffer containing the clapf id */
-
-                  snprintf(spaminessbuf, MAXBUFSIZE-1, "%s%s\r\n", cfg->clapf_header_field, sdata.ttmpfile);
-
-                  /* 
-                   * if this email came from a host like ip-1.2.3.4.adsl.isp.net
-                   * then we can get rid of it right here or mark it as spam
-                   */
-
-                 #ifdef HAVE_TRE
-                  if(sdata.tre == '+'){
-                     snprintf(acceptbuf, MAXBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata.ttmpfile, email);
-
-                     if(my_cfg.message_from_a_zombie == 1){
-                        //syslog(LOG_PRIORITY, "%s: marking message from a zombie as spam", sdata.ttmpfile);
-
-                        spaminess = 0.99;
-                        strncat(spaminessbuf, cfg->clapf_spam_header_field, MAXBUFSIZE-1);
-
-                        goto END_OF_SPAM_CHECK;
-                     }
-
-                     if(my_cfg.message_from_a_zombie == 2){
-                        syslog(LOG_PRIORITY, "%s: dropping message from a zombie as spam", sdata.ttmpfile);
-
+                  if(db_conn == 1){
+                     if(process_message(&sdata, &sstate, data, email, email2, cfg, &my_cfg) == 0){
+                        /* if we have to discard the message */
                         goto SEND_RESULT;
                      }
                   }
-                 #endif
 
 
-
-
-                  /* is it a training request? */
-
-                  if(sdata.training_request == 1){
-                  #ifdef HAVE_USERS
-                     /* get user from 'MAIL FROM:', 2008.10.25, SJ */
-
-                     gettimeofday(&tv1, &tz);
-
-                     get_user_from_email(&sdata, email2, cfg);
-
-                     gettimeofday(&tv2, &tz);
-                     sdata.__user += tvdiff(tv2, tv1);
-
-                     /*
-                        If not found, then try to get it from the RCPT TO address.
-
-                        This may happen if your email address is xy@mail.domain.com,
-                        but xy@domain.com is set in your email client application as
-                        your email address.
-                        In this case send training emails to xy+spam@mail.domain.com
-
-                      */
-                     if(sdata.name[0] == 0){
-                        gettimeofday(&tv1, &tz);
-
-                        get_user_from_email(&sdata, email, cfg);
-
-                        gettimeofday(&tv2, &tz);
-                        sdata.__user += tvdiff(tv2, tv1);
-                     }
-
-                     /* if still not found, then let this email slip through clapf, 2009.03.12, SJ */
-
-                     if(sdata.name[0] == 0) goto END_OF_SPAM_CHECK;
-
-                     gettimeofday(&tv1, &tz);
-
-                     do_training(&sdata, &sstate, email, &acceptbuf[0], &my_cfg);
-
-                     gettimeofday(&tv2, &tz);
-                     sdata.__training += tvdiff(tv2, tv1);
-
-                     goto SEND_RESULT;
-
-                  #else
-
-                     /* if you have not specified --with-userdb=.... then we don't know
-                        much about the recipient, so you have to do the training with
-                        spamdrop
-                      */
-
-                     goto END_OF_SPAM_CHECK;
-                  #endif
-                  }
-
-
-                  /* force spamcheck if the message sent to the blackhole */
-                  if(sdata.blackhole == 1) my_cfg.use_antispam = 1;
-
-
-                  /* run statistical antispam check */
-
-                  if(my_cfg.use_antispam == 1 && (my_cfg.max_message_size_to_filter == 0 || sdata.tot_len < my_cfg.max_message_size_to_filter || sstate.n_token < my_cfg.max_number_of_tokens_to_filter) ){
-
-                     /* evaluate the blackhole result, 2009.09.10, SJ */
-
-                  #ifdef HAVE_BLACKHOLE
-                     gettimeofday(&tv1, &tz);
-
-                     is_sender_on_minefield(&sdata, sdata.client_addr, cfg);
-
-                     gettimeofday(&tv2, &tz);
-                     sdata.__minefield += tvdiff(tv2, tv1);
-                 #endif
-
-
-                  #ifdef SPAMC_EMUL
-                     gettimeofday(&tv1, &tz);
-
-                     rc = spamc_emul(sdata.ttmpfile, sdata.tot_len, cfg);
-
-                     gettimeofday(&tv2, &tz);
-                     sdata.__as = tvdiff(tv2, tv1);
-
-                     if(rc == 1){
-                        spaminess = 0.99;
-                        strncat(spaminessbuf, cfg->clapf_spam_header_field, MAXBUFSIZE-1);
-                     }
-
-                     if(cfg->verbosity >= _LOG_INFO){
-                        snprintf(tmpbuf, SMALLBUFSIZE-1, "%s%.0f ms\r\n", cfg->clapf_header_field, sdata.__as/1000.0);
-                        strncat(spaminessbuf, tmpbuf, MAXBUFSIZE-1);
-                     }
-
-
-                     goto END_OF_SPAM_CHECK;
-                  #endif
-
-                  #ifdef HAVE_MYDB
-                     gettimeofday(&tv1, &tz);
-
-                     spaminess = bayes_file(&sdata, &sstate, cfg);
-
-                     gettimeofday(&tv2, &tz);
-                     sdata.__as = tvdiff(tv2, tv1);
-
-                     goto END_OF_TRAINING;
-                  #endif
-
-                     /* some MTAs strip our signo from the bounce. So if we would raise the spaminess
-                      * then we may commit a false positive. Thus in case of a missing signo, let
-                      * the statistical analysis decide the fate of a dummy bounce message. 2009.01.20, SJ
-                      */
-
-                     if(sdata.need_signo_check == 1){
-                        if(sstate.found_our_signo == 1){
-                           syslog(LOG_PRIORITY, "%s: bounce message, found our signo", sdata.ttmpfile);
-                           goto END_OF_TRAINING;
-                        }
-                        else
-                           syslog(LOG_PRIORITY, "%s: looks like a bounce, but our signo is missing", sdata.ttmpfile);
-                     }
-
-
-                     if(db_conn == 1){
-
-                        /* check whitelist first */
-
-                     #ifdef HAVE_WHITELIST
-                        if(is_sender_on_black_or_white_list(&sdata, email2, SQL_WHITE_FIELD_NAME, SQL_WHITE_LIST, &my_cfg) == 1){
-                           syslog(LOG_PRIORITY, "%s: sender (%s) found on whitelist", sdata.ttmpfile, email2);
-                           snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on whitelist\r\n", cfg->clapf_header_field);
-                           goto END_OF_TRAINING;
-                        }
-                     #endif
-
-                        /* then give blacklist a try */
-
-                     #ifdef HAVE_BLACKLIST
-                        if(is_sender_on_black_or_white_list(&sdata, email2, SQL_BLACK_FIELD_NAME, SQL_BLACK_LIST, &my_cfg) == 1){
-                           syslog(LOG_PRIORITY, "%s: sender (%s) found on blacklist", sdata.ttmpfile, email2);
-                           snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on blacklist\r\n", cfg->clapf_header_field);
-
-                           snprintf(acceptbuf, MAXBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata.ttmpfile, email);
-                           goto SEND_RESULT;
-                        }
-                     #endif
-
-                        if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: running Bayesian test", sdata.ttmpfile);
-
-                        /* fix uid if it's a blackhole request */
-                        if(sdata.blackhole == 1) sdata.uid = 0;
-
-                        gettimeofday(&tv1, &tz);
-                        spaminess = bayes_file(&sdata, &sstate, &my_cfg);
-                        gettimeofday(&tv2, &tz);
-                        sdata.__as = tvdiff(tv2, tv1);
-
-                        if(spaminess > 0.9999) snprintf(reason, SMALLBUFSIZE-1, "%s%s\r\n", cfg->clapf_header_field, MSG_ABSOLUTELY_SPAM);
-
-                        /* skip TUM training on a blackhole message, unless it may learn a missed spam as a good email */
-
-                        if(
-                           (sdata.blackhole == 0 && my_cfg.training_mode == T_TUM && ( (spaminess >= my_cfg.spam_overall_limit && spaminess < 0.99) || (spaminess < my_cfg.max_ham_spamicity && spaminess > 0.1) )) ||
-                           (my_cfg.initial_1000_learning == 1 && (sdata.Nham < NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED || sdata.Nspam < NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED))
-                        )
-                        {
-
-                           if(spaminess >= my_cfg.spam_overall_limit){
-                              is_spam = 1;
-                              syslog(LOG_PRIORITY, "%s: TUM training a spam", sdata.ttmpfile);
-                           }
-                           else {
-                              is_spam = 0;
-                              syslog(LOG_PRIORITY, "%s: TUM training a ham", sdata.ttmpfile);
-                           }
-
-                           snprintf(trainbuf, SMALLBUFSIZE-1, "%sTUM\r\n", cfg->clapf_header_field);
-
-                           gettimeofday(&tv1, &tz);
-
-                           train_message(&sdata, &sstate, 1, is_spam, train_mode, &my_cfg);
-
-                           gettimeofday(&tv2, &tz);
-                           sdata.__training = tvdiff(tv2, tv1);
-                        }
-
-
-                        /* training a blackhole message as spam, if we have to */
-
-                        if(sdata.blackhole == 1){
-                           snprintf(reason, SMALLBUFSIZE-1, "%s%s\r\n", cfg->clapf_header_field, MSG_BLACKHOLED);
-
-                           if(spaminess < 0.99){
-                              syslog(LOG_PRIORITY, "%s: training on a blackhole message", sdata.ttmpfile);
-                              snprintf(trainbuf, SMALLBUFSIZE-1, "%sTUM on blackhole\r\n", cfg->clapf_header_field);
-
-                              gettimeofday(&tv1, &tz);
-
-                              train_message(&sdata, &sstate, MAX_ITERATIVE_TRAIN_LOOPS, 1, T_TOE, &my_cfg);
-
-                              gettimeofday(&tv2, &tz);
-                              sdata.__training = tvdiff(tv2, tv1);
-                           }
-                        }
-
-                     } 
-
-
-                     /* update token timestamps */
-
-                     if(cfg->update_tokens == 1){
-                        gettimeofday(&tv1, &tz);
-                     #ifdef HAVE_MYSQL
-                        utokens = update_mysql_tokens(&sdata, sstate.token_hash);
-                     #endif
-                     #ifdef HAVE_SQLITE3
-                        utokens = update_sqlite3_tokens(&sdata, sstate.token_hash);
-                     #endif
-                        gettimeofday(&tv2, &tz);
-                        sdata.__update = tvdiff(tv2, tv1);
-
-                        if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: updated %d/%ld tokens", sdata.ttmpfile, utokens, sstate.n_token);
-                     } 
-
-                  END_OF_TRAINING:
-
-                     /* save email to queue */
-
-                     if(sdata.uid > 0){
-                        gettimeofday(&tv1, &tz);
-
-                        save_email_to_queue(&sdata, spaminess, &my_cfg);
-
-                        gettimeofday(&tv2, &tz);
-                        sdata.__store = tvdiff(tv2, tv1);
-                     }
-
-
-                     if(cfg->verbosity >= _LOG_INFO){
-                        snprintf(tmpbuf, SMALLBUFSIZE-1, "%s%ld ms\r\n%s%s", cfg->clapf_header_field, (long)sdata.__as/1000, reason, whitelistbuf);
-                        strncat(spaminessbuf, tmpbuf, MAXBUFSIZE-1);
-                     }
-
-                     snprintf(tmpbuf, SMALLBUFSIZE-1, "%s%.4f\r\n%s", cfg->clapf_header_field, spaminess, trainbuf);
-                     strncat(spaminessbuf, tmpbuf, MAXBUFSIZE-1);
-
-                     if(spaminess >= cfg->spam_overall_limit){
-                        strncat(spaminessbuf, cfg->clapf_spam_header_field, MAXBUFSIZE-1);
-                     }
-
-
-                  } /* end of running spam check */
-
-               END_OF_SPAM_CHECK:
-
-                  /* then inject message back */
+                  /* inject message back */
 
                   gettimeofday(&tv1, &tz);
 
-                  if(spaminess >= my_cfg.spam_overall_limit){
+                  if(sdata.spaminess >= my_cfg.spam_overall_limit){
 
                     /* shall we redirect the message into oblivion? 2007.02.07, SJ */
-                    if(spaminess >= my_cfg.spaminess_oblivion_limit)
+                    if(sdata.spaminess >= my_cfg.spaminess_oblivion_limit)
                        inj = ERR_DROP_SPAM;
                     else
-                       inj = inject_mail(&sdata, i, cfg->spam_smtp_addr, cfg->spam_smtp_port, spaminessbuf, &resp[0], &my_cfg, NULL);
+                       inj = inject_mail(&sdata, i, cfg->spam_smtp_addr, cfg->spam_smtp_port, sdata.spaminessbuf, &resp[0], &my_cfg, NULL);
                   }
                   else {
-                     inj = inject_mail(&sdata, i, cfg->postfix_addr, cfg->postfix_port, spaminessbuf, &resp[0], &my_cfg, NULL);
+                     inj = inject_mail(&sdata, i, cfg->postfix_addr, cfg->postfix_port, sdata.spaminessbuf, &resp[0], &my_cfg, NULL);
                   }
 
                   gettimeofday(&tv2, &tz);
                   sdata.__inject = tvdiff(tv2, tv1);
 
                #else
-               END_OF_SPAM_CHECK:
                   gettimeofday(&tv1, &tz);
 
                   inj = inject_mail(&sdata, i, cfg->postfix_addr, cfg->postfix_port, NULL, &resp[0], &my_cfg, NULL);
@@ -657,20 +310,22 @@ void postfix_to_clapf(int new_sd, struct __data *data, struct __config *cfg){
                   /* set the accept buffer */
 
                   if(inj == OK || inj == ERR_DROP_SPAM){
-                     snprintf(acceptbuf, MAXBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata.ttmpfile, email);
+                     snprintf(sdata.acceptbuf, MAXBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata.ttmpfile, email);
                   }
                   else if(inj == ERR_REJECT){
-                     snprintf(acceptbuf, MAXBUFSIZE-1, "550 %s <%s>\r\n", sdata.ttmpfile, email);
+                     snprintf(sdata.acceptbuf, MAXBUFSIZE-1, "550 %s <%s>\r\n", sdata.ttmpfile, email);
                   }
                   else {
-                     snprintf(acceptbuf, MAXBUFSIZE-1, "451 %s <%s>\r\n", sdata.ttmpfile, email);
+                     snprintf(sdata.acceptbuf, MAXBUFSIZE-1, "451 %s <%s>\r\n", sdata.ttmpfile, email);
                   }
 
+            #ifdef HAVE_ANTISPAM
                SEND_RESULT:
-                  send(new_sd, acceptbuf, strlen(acceptbuf), 0);
+            #endif
+                  send(new_sd, sdata.acceptbuf, strlen(sdata.acceptbuf), 0);
 
                   if(inj == ERR_DROP_SPAM) syslog(LOG_PRIORITY, "%s: dropped spam", sdata.ttmpfile);
-                  else if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent: %s", sdata.ttmpfile, acceptbuf);
+                  else if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent: %s", sdata.ttmpfile, sdata.acceptbuf);
 
 
 
@@ -681,12 +336,12 @@ void postfix_to_clapf(int new_sd, struct __data *data, struct __config *cfg){
                                    sdata.__parsed/1000000.0, sdata.__av/1000000.0, sdata.__user/1000000.0, sdata.__policy/1000000.0, sdata.__minefield/1000000.0, sdata.__as/1000000.0,
                                        sdata.__training/1000000.0, sdata.__update/1000000.0, sdata.__store/1000000.0, sdata.__inject/1000000.0);
 
-                  if(spaminess >= cfg->spam_overall_limit){
-                     syslog(LOG_PRIORITY, "%s: %s got SPAM, %.4f, %d, relay=%s:%d, %s, status=%s", sdata.ttmpfile, email, spaminess, sdata.tot_len, my_cfg.spam_smtp_addr, my_cfg.spam_smtp_port, reason, resp);
-                  } else if(rav == AVIR_VIRUS) {
-                     syslog(LOG_PRIORITY, "%s: %s got VIRUS (%s), %.4f, %d, relay=%s:%d, %s, status=%s", sdata.ttmpfile, email, virusinfo, spaminess, sdata.tot_len, my_cfg.postfix_addr, my_cfg.postfix_port, reason, resp);
+                  if(sdata.spaminess >= cfg->spam_overall_limit){
+                     syslog(LOG_PRIORITY, "%s: %s got SPAM, %.4f, %d, relay=%s:%d, %s, status=%s", sdata.ttmpfile, email, sdata.spaminess, sdata.tot_len, my_cfg.spam_smtp_addr, my_cfg.spam_smtp_port, reason, resp);
+                  } else if(sdata.rav == AVIR_VIRUS) {
+                     syslog(LOG_PRIORITY, "%s: %s got VIRUS (%s), %.4f, %d, relay=%s:%d, %s, status=%s", sdata.ttmpfile, email, virusinfo, sdata.spaminess, sdata.tot_len, my_cfg.postfix_addr, my_cfg.postfix_port, reason, resp);
                   } else {
-                     syslog(LOG_PRIORITY, "%s: %s got HAM, %.4f, %d, relay=%s:%d, %s, status=%s", sdata.ttmpfile, email, spaminess, sdata.tot_len, my_cfg.postfix_addr, my_cfg.postfix_port, reason, resp);
+                     syslog(LOG_PRIORITY, "%s: %s got HAM, %.4f, %d, relay=%s:%d, %s, status=%s", sdata.ttmpfile, email, sdata.spaminess, sdata.tot_len, my_cfg.postfix_addr, my_cfg.postfix_port, reason, resp);
                   }
 
             #ifdef HAVE_LMTP

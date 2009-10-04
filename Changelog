@@ -1,5 +1,11 @@
 0.4.3-rc1:
 
+2009.10.04, SJ
+
+Moved the antispam part from session.c to antispam.c, and
+additional code cleanup.
+(session.c, antispam.c, defs.h, clapf.h)
+
 2009.10.02, SJ
 
 Minor webui fixes.

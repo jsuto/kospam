@@ -8,18 +8,19 @@ create table if not exists t_misc (
 
 INSERT INTO t_misc (nham, nspam, uid) VALUES(0, 0, 0);
 
+
 create table if not exists t_token (
 	token bigint unsigned not null,
-	uid smallint unsigned default 0,
+	uid smallint unsigned not null default 0,
 	nham int default 0,
 	nspam int default 0,
 	timestamp int unsigned default 0,
-	unique key(token, uid)
+	primary key(token, uid)
 ) Engine=InnoDB;
 
 
 create table if not exists user (
-	uid int unsigned not null unique,
+	uid int unsigned not null primary key,
 	username char(32) not null unique,
 	password char(48) default null,
 	domain char(64) default null,
@@ -69,7 +70,7 @@ create index t_stat_idx on t_stat(uid);
 
 
 create table if not exists t_policy (
-	policy_group int(4) not null,
+	policy_group int(4) not null primary key,
 	name char(128) not null,
 	deliver_infected_email tinyint default 0,
 	silently_discard_infected_email tinyint default 1,
@@ -94,9 +95,7 @@ create table if not exists t_policy (
 	initial_1000_learning tinyint default 0,
 	store_metadata tinyint default 0,
 	store_only_spam tinyint default 0,
-	message_from_a_zombie tinyint default 0,
-
-	unique(policy_group)
+	message_from_a_zombie tinyint default 0
 );
 
 

@@ -1,5 +1,5 @@
 /*
- * clapf.h, 2009.09.26, SJ
+ * clapf.h, 2009.10.04, SJ
  */
 
 #include <misc.h>
@@ -46,4 +46,6 @@ char *check_lang(struct node *xhash[]);
 
 int store_minefield_ip(struct session_data *sdata, struct __config *cfg);
 void is_sender_on_minefield(struct session_data *sdata, char *ip, struct __config *cfg);
+
+int process_message(struct session_data *sdata, struct _state *sstate, struct __data *data, char *email, char *email2, struct __config *cfg, struct __config *my_cfg);
 

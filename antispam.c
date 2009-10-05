@@ -43,7 +43,7 @@ int process_message(struct session_data *sdata, struct _state *sstate, struct __
 
    memcpy(my_cfg, cfg, sizeof(struct __config));
 
-   memset(sdata->acceptbuf, 0, MAXBUFSIZE);
+   memset(sdata->acceptbuf, 0, SMALLBUFSIZE);
 
    strcpy(resp, "-");
 
@@ -72,12 +72,12 @@ int process_message(struct session_data *sdata, struct _state *sstate, struct __
    if(sdata->rav == AVIR_VIRUS){
       if(my_cfg->deliver_infected_email == 1) return 1;
 
-      snprintf(sdata->acceptbuf, MAXBUFSIZE-1, "%s <%s>\r\n", SMTP_RESP_550_ERR_PREF, email);
+      snprintf(sdata->acceptbuf, SMALLBUFSIZE-1, "%s <%s>\r\n", SMTP_RESP_550_ERR_PREF, email);
 
       if(my_cfg->silently_discard_infected_email == 1)
-         snprintf(sdata->acceptbuf, MAXBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata->ttmpfile, email);
+         snprintf(sdata->acceptbuf, SMALLBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata->ttmpfile, email);
       else
-         snprintf(sdata->acceptbuf, MAXBUFSIZE-1, "550 %s %s\r\n", sdata->ttmpfile, email);
+         snprintf(sdata->acceptbuf, SMALLBUFSIZE-1, "550 %s %s\r\n", sdata->ttmpfile, email);
 
       return 0;
    }
@@ -101,7 +101,7 @@ int process_message(struct session_data *sdata, struct _state *sstate, struct __
 
 #ifdef HAVE_TRE
    if(sdata->tre == '+'){
-      snprintf(sdata->acceptbuf, MAXBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata->ttmpfile, email);
+      snprintf(sdata->acceptbuf, SMALLBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata->ttmpfile, email);
 
       if(my_cfg->message_from_a_zombie == 1){
          sdata->spaminess = 0.99;
@@ -254,7 +254,7 @@ int process_message(struct session_data *sdata, struct _state *sstate, struct __
          syslog(LOG_PRIORITY, "%s: sender (%s) found on blacklist", sdata.ttmpfile, email2);
          snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on blacklist\r\n", cfg->clapf_header_field);
 
-         snprintf(sdata->acceptbuf, MAXBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata.ttmpfile, email);
+         snprintf(sdata->acceptbuf, SMALLBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata.ttmpfile, email);
          return 0;
       }
    #endif

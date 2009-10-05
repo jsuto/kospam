@@ -48,9 +48,6 @@ clapf.conf:
 clapf: % : %.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ -lclapf $(LIBS) $(LDAP_LIBS) $(LIBDIR) @LDFLAGS@ @libclamav_extra_libs@
 
-smtpscanner:	%	: %.o
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ -lclapf $(LIBS) $(LDAP_LIBS) $(LIBDIR) @LDFLAGS@ @libclamav_extra_libs@
-
 clapf-lib:	$(OBJS) $(STORE_OBJ) $(MYSQL_OBJS)
 	ar cr libclapf.a $(OBJS) $(MYSQL_OBJS)
 	ranlib libclapf.a
@@ -218,7 +215,7 @@ clean_db:
 	rm -f ham.tmp spam.tmp num_of_spam.tmp num_of_ham.tmp tokens.mydb temp.*
 
 clean:
-	rm -f *.o *.a libclapf.so* qcache db.sql clapf clapf.conf parsembox splitmbox spamtest spamdrop spamstat smtpscanner aphash prepare-sql mydb_stat mydb_compress mydb_export
+	rm -f *.o *.a libclapf.so* qcache db.sql clapf clapf.conf parsembox splitmbox spamtest spamdrop spamstat aphash prepare-sql mydb_stat mydb_compress mydb_export
 	(cd $(srcdir)/contrib/spamsum; make clean)
 
 dist_clean distclean: clean

@@ -1,5 +1,15 @@
 0.4.3-rc1:
 
+2009.10.05, SJ
+
+Added lmtp support to history/maillog.pl
+(history/maillog.pl)
+
+Changed the size of acceptbuf 8192->512 bytes, and a single
+RCPT TO: line should fit in 256 bytes otherwise clapf sends
+an 550 too long recipient message back.
+(session.c, defs.h, spam.c)
+
 2009.10.04, SJ
 
 Moved the antispam part from session.c to antispam.c, and

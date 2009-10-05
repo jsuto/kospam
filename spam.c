@@ -91,7 +91,7 @@ void do_training(struct session_data *sdata, struct _state *state, char *email, 
    int is_spam = 0;
    char qpath[SMALLBUFSIZE], *p, path[SMALLBUFSIZE];
 
-   snprintf(acceptbuf, MAXBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata->ttmpfile, email);
+   snprintf(acceptbuf, SMALLBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata->ttmpfile, email);
    if(strcasestr(sdata->rcptto[0], "+spam@") || strncmp(email, "spam@", 5) == 0) is_spam = 1;
 
    p = &path[0];

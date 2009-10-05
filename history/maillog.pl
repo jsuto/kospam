@@ -34,7 +34,7 @@ $sth_clapf = $dbh->prepare($stmt);
 
 while (defined($line = $file->read)) {
 
-   if($line =~ /\ postfix\/smtpd\[/ || $line =~ /\ postfix\/cleanup\[/ || $line =~ /\ postfix\/qmgr\[/ || $line =~ /\ postfix\/smtp\[/ || $line =~ /\ postfix\/local\[/ || $line =~ /\ clapf\[/ || $line =~ /\ postfix\/virtual\[/ ) {
+   if($line =~ /\ postfix\/smtpd\[/ || $line =~ /\ postfix\/cleanup\[/ || $line =~ /\ postfix\/qmgr\[/ || $line =~ /\ postfix\/(l|s)mtp\[/ || $line =~ /\ postfix\/local\[/ || $line =~ /\ clapf\[/ || $line =~ /\ postfix\/virtual\[/ ) {
       chomp($line);
 
       $queue_id = $to = $orig_to = $relay = $status = $result = $queue_id2 = "";
@@ -101,7 +101,7 @@ while (defined($line = $file->read)) {
       # Sep 3 09:30:23 thorium postfix/smtp[2312]: D20E617022: to=<sj@acts.hu>, relay=127.0.0.1[127.0.0.1]:10025, delay=0.16, delays=0.01/0/0/0.14, dsn=2.0.0, status=sent (250 Ok 4a9f708ea516d9a0814a203f2e1662 <sj@acts.hu>)
       # Sep 3 10:19:34 thorium postfix/smtp[2119]: 55DDB14C32E: to=<sj@acts.hu>, relay=thorium.datanet.hu[194.149.0.116]:25, delay=0.1, delays=0.05/0.01/0.04/0.02, dsn=2.0.0, status=sent (250 2.0.0 Ok: queued as 6AE4517022)
 
-      if($line =~ /\ postfix\/smtp\[/ && $line =~ /to=/) {
+      if($line =~ /\ postfix\/(l|s)mtp\[/ && $line =~ /to=/) {
          ($queue_id, undef) = split(/\:/, $l[5]);
          (undef, $to) = split(/=/, $l[6]);
          $to =~ s/\<|\>|\,//g;

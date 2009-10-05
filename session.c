@@ -1,5 +1,5 @@
 /*
- * session.c, 2009.10.04, SJ
+ * session.c, 2009.10.05, SJ
  */
 
 #include <stdio.h>
@@ -310,13 +310,13 @@ void postfix_to_clapf(int new_sd, struct __data *data, struct __config *cfg){
                   /* set the accept buffer */
 
                   if(inj == OK || inj == ERR_DROP_SPAM){
-                     snprintf(sdata.acceptbuf, MAXBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata.ttmpfile, email);
+                     snprintf(sdata.acceptbuf, SMALLBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata.ttmpfile, email);
                   }
                   else if(inj == ERR_REJECT){
-                     snprintf(sdata.acceptbuf, MAXBUFSIZE-1, "550 %s <%s>\r\n", sdata.ttmpfile, email);
+                     snprintf(sdata.acceptbuf, SMALLBUFSIZE-1, "550 %s <%s>\r\n", sdata.ttmpfile, email);
                   }
                   else {
-                     snprintf(sdata.acceptbuf, MAXBUFSIZE-1, "451 %s <%s>\r\n", sdata.ttmpfile, email);
+                     snprintf(sdata.acceptbuf, SMALLBUFSIZE-1, "451 %s <%s>\r\n", sdata.ttmpfile, email);
                   }
 
             #ifdef HAVE_ANTISPAM
@@ -543,6 +543,11 @@ AFTER_PERIOD:
          if(strncasecmp(buf, SMTP_CMD_RCPT_TO, strlen(SMTP_CMD_RCPT_TO)) == 0){
 
             if(state == SMTP_STATE_MAIL_FROM || state == SMTP_STATE_RCPT_TO){
+               if(strlen(buf) > SMALLBUFSIZE/2){
+                  strncat(resp, SMTP_RESP_550_ERR_TOO_LONG_RCPT_TO, MAXBUFSIZE-1);
+                  continue;
+               }
+
                if(sdata.num_of_rcpt_to < MAX_RCPT_TO){
                   snprintf(sdata.rcptto[sdata.num_of_rcpt_to], SMALLBUFSIZE-1, "%s\r\n", buf);
                   sdata.num_of_rcpt_to++;

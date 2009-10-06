@@ -485,16 +485,6 @@ AC_ARG_WITH(clapf-user,
 
 
 
-dnl outlook hack
-
-AC_ARG_ENABLE(outlook-hack,
-   [  --enable-outlook-hack   enable Outlook hack to overcome its dumbness], want_outlook_hack=$enableval, want_outlook_hack="no")
-
-if test "$want_outlook_hack" = "yes"; then
-   defs="$defs -DOUTLOOK_HACK"
-fi
-
-
 dnl uid splitting
 
 AC_ARG_ENABLE(uid-splitting,

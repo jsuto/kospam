@@ -1,5 +1,5 @@
 /*
- * spam.c, 2009.09.26, SJ
+ * spam.c, 2009.10.05, SJ
  */
 
 #include <stdio.h>
@@ -89,7 +89,9 @@ void get_queue_path(struct session_data *sdata, char **path){
 void do_training(struct session_data *sdata, struct _state *state, char *email, char *acceptbuf, struct __config *cfg){
 #ifndef HAVE_MYDB
    int is_spam = 0;
-   char qpath[SMALLBUFSIZE], *p, path[SMALLBUFSIZE];
+   char *p, path[SMALLBUFSIZE], qpath[SMALLBUFSIZE];
+   struct stat st;
+
 
    snprintf(acceptbuf, SMALLBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata->ttmpfile, email);
    if(strcasestr(sdata->rcptto[0], "+spam@") || strncmp(email, "spam@", 5) == 0) is_spam = 1;
@@ -97,36 +99,6 @@ void do_training(struct session_data *sdata, struct _state *state, char *email, 
    p = &path[0];
    get_queue_path(sdata, &p);
 
-#ifdef HAVE_STORE
-   int train_mode;
-   char ID[RND_STR_LEN+1];
-   struct _state sstate2;
-
-   train_mode = extract_id_from_message(sdata->ttmpfile, cfg->clapf_header_field, ID);
-
-   syslog(LOG_PRIORITY, "%s: training request for %s by uid: %ld", sdata->ttmpfile, ID, sdata->uid);
-
-   if(strlen(ID) < 5){
-      syslog(LOG_PRIORITY, "%s: not found a valid message id (%s)", sdata->ttmpfile, ID);
-      return;
-   }
-
-
-   if(is_spam == 1){
-      snprintf(qpath, SMALLBUFSIZE-1, "%s/h.%s", path, ID);
-   }
-   else {
-      snprintf(qpath, SMALLBUFSIZE-1, "%s/s.%s", path, ID);
-   }
-
-   sstate2 = parse_message(qpath, sdata, cfg);
-
-   train_message(sdata, &sstate2, MAX_ITERATIVE_TRAIN_LOOPS, is_spam, train_mode, cfg);
-
-   free_list(sstate2.urls);
-   clearhash(sstate2.token_hash, 0);
-#else
-   struct stat st;
 
    if(is_spam == 1){
       snprintf(qpath, SMALLBUFSIZE-1, "%s/h.%s", path, sdata->clapf_id);
@@ -142,7 +114,6 @@ void do_training(struct session_data *sdata, struct _state *state, char *email, 
    else {
       syslog(LOG_PRIORITY, "%s: invalid signature: %s", sdata->ttmpfile, qpath);
    }
-#endif
 
 #endif
 

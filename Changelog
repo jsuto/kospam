@@ -10,6 +10,12 @@ RCPT TO: line should fit in 256 bytes otherwise clapf sends
 an 550 too long recipient message back.
 (session.c, defs.h, spam.c)
 
+Modified clapf to extract tokens from the training message only,
+and discard the stored message itself. This change has obsoleted
+the --enable-outlook-hack configure option, since clapf searches
+the Received: lines for valid clapf ids.
+(spam.c, misc.c, parser.c, webui/controller/quarantine/*train.php)
+
 2009.10.04, SJ
 
 Moved the antispam part from session.c to antispam.c, and

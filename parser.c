@@ -1,5 +1,5 @@
 /*
- * parser.c, 2009.09.26, SJ
+ * parser.c, 2009.10.05, SJ
  */
 
 #include <stdio.h>
@@ -673,10 +673,8 @@ DECOMPOSE:
 
 struct _state parse_message(char *spamfile, struct session_data *sdata, struct __config *cfg){
    FILE *f;
-#ifndef HAVE_STORE
    int skipped_header = 0, found_clapf_signature = 0;
    char *p, *q;
-#endif
    char buf[MAXBUFSIZE], tumbuf[SMALLBUFSIZE];
    struct _state state;
 
@@ -688,20 +686,15 @@ struct _state parse_message(char *spamfile, struct session_data *sdata, struct _
       return state;
    }
 
+
    snprintf(tumbuf, SMALLBUFSIZE-1, "%sTUM", cfg->clapf_header_field);
 
    while(fgets(buf, MAXBUFSIZE-1, f)){
 
-   #ifndef HAVE_STORE
       if(sdata->training_request == 0 || found_clapf_signature == 1){
          //syslog(LOG_PRIORITY, "parsing: %s", buf);
-   #endif
          parse(buf, &state, sdata, cfg);
-
-         if(strncmp(buf, tumbuf, strlen(tumbuf)) == 0){
-            state.train_mode = T_TUM;
-         }
-   #ifndef HAVE_STORE
+         if(strncmp(buf, tumbuf, strlen(tumbuf)) == 0) state.train_mode = T_TUM;
       }
 
       if(found_clapf_signature == 0 && sdata->training_request == 1){
@@ -726,11 +719,10 @@ struct _state parse_message(char *spamfile, struct session_data *sdata, struct _
                }
             }
          }
-
       }
-   #endif
 
    }
+ 
 
    fclose(f);
 

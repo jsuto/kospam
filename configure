@@ -743,7 +743,6 @@ enable_language_detection
 enable_spamsum
 enable_spamc_emul
 with_clapf_user
-enable_outlook_hack
 enable_uid_splitting
 enable_spamdrop_helper
 '
@@ -1394,7 +1393,6 @@ Optional Features:
   --enable-language-detection use the language detection feature (experimental)
   --enable-spamsum        enable spamsum support (experimental)
   --enable-spamc-emul     enable spamc emulation to use spamd of SpamAssassin
-  --enable-outlook-hack   enable Outlook hack to overcome its dumbness
   --enable-uid-splitting  enable splitting quarantine direcory path by numeric uid
   --enable-spamdrop-helper use external spamdrop helper program
 
@@ -6466,20 +6464,6 @@ else
 fi
 
 
-
-
-
-# Check whether --enable-outlook-hack was given.
-if test "${enable_outlook_hack+set}" = set; then
-  enableval=$enable_outlook_hack; want_outlook_hack=$enableval
-else
-  want_outlook_hack="no"
-fi
-
-
-if test "$want_outlook_hack" = "yes"; then
-   defs="$defs -DOUTLOOK_HACK"
-fi
 
 
 

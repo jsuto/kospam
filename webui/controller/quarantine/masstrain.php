@@ -46,7 +46,7 @@ class ControllerQuarantineMasstrain extends Controller {
             /* assemble training message */
 
             $training_message  = "From: " . $fromaddr . "\r\nTo: " . HAM_TRAIN_ADDRESS . "\r\nSubject: training a spam as ham\r\n\r\n\r\n";
-            $training_message .= CLAPF_HEADER_FIELD . $k . "\r\n" . $message;
+            $training_message .= "Received: " . $k . "\r\n" . $message;
 
             $x = $this->model_mail_mail->SendSmtpEmail(SMTP_HOST, CLAPF_PORT, SMTP_DOMAIN, $fromaddr, HAM_TRAIN_ADDRESS, $training_message);
 

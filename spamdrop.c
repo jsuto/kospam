@@ -311,8 +311,7 @@ int main(int argc, char **argv, char **envp){
    }
 
    while((n = read(0, buf, MAXBUFSIZE)) > 0){
-      sdata.tot_len += n;
-      write(fd, buf, n);
+      sdata.tot_len += write(fd, buf, n);
    }
 
 

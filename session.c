@@ -183,8 +183,7 @@ void postfix_to_clapf(int new_sd, struct __data *data, struct __config *cfg){
 
 
                /* write data only to (and including) the trailing period (.) */
-               write(sdata.fd, puf, pos);
-               sdata.tot_len += pos;
+               sdata.tot_len += write(sdata.fd, puf, pos);
 
 
                if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: got: (.)", sdata.ttmpfile);
@@ -392,8 +391,7 @@ void postfix_to_clapf(int new_sd, struct __data *data, struct __config *cfg){
 
             } /* PERIOD found */
             else {
-               write(sdata.fd, puf, n);
-               sdata.tot_len += n;
+               sdata.tot_len += write(sdata.fd, puf, n);
 
                memcpy(prevbuf, puf, n);
                prevlen = n;

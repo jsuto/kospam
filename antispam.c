@@ -1,5 +1,5 @@
 /*
- * antispam.c, 2009.10.04, SJ
+ * antispam.c, 2009.10.12, SJ
  */
 
 #include <stdio.h>
@@ -250,11 +250,11 @@ int process_message(struct session_data *sdata, struct _state *sstate, struct __
       /* then give blacklist a try */
 
    #ifdef HAVE_BLACKLIST
-      if(is_sender_on_black_or_white_list(&sdata, email2, SQL_BLACK_FIELD_NAME, SQL_BLACK_LIST, my_cfg) == 1){
-         syslog(LOG_PRIORITY, "%s: sender (%s) found on blacklist", sdata.ttmpfile, email2);
+      if(is_sender_on_black_or_white_list(sdata, email2, SQL_BLACK_FIELD_NAME, SQL_BLACK_LIST, my_cfg) == 1){
+         syslog(LOG_PRIORITY, "%s: sender (%s) found on blacklist", sdata->ttmpfile, email2);
          snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on blacklist\r\n", cfg->clapf_header_field);
 
-         snprintf(sdata->acceptbuf, SMALLBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata.ttmpfile, email);
+         snprintf(sdata->acceptbuf, SMALLBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata->ttmpfile, email);
          return 0;
       }
    #endif

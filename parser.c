@@ -1,5 +1,5 @@
 /*
- * parser.c, 2009.10.05, SJ
+ * parser.c, 2009.10.12, SJ
  */
 
 #include <stdio.h>
@@ -364,7 +364,9 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
 
    /* skip the boundary itself */
 
-   if(!strcasestr(buf, "boundary") && is_boundary(state->boundaries, buf) == 1){
+   /* we had strcasestr here, but I saw the "boundary" string only lowercased, 2009.10.10, SJ */
+
+   if(!strstr(buf, "boundary=") && !strstr(buf, "boundary =") && is_boundary(state->boundaries, buf) == 1){
       if(state->has_to_dump == 1){
          close(state->fd);
          if(state->n_attachments < MAX_ATTACHMENTS-1)

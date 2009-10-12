@@ -1,5 +1,5 @@
 /*
- * session.c, 2009.10.05, SJ
+ * session.c, 2009.10.12, SJ
  */
 
 #include <stdio.h>
@@ -75,7 +75,7 @@ void init_session_data(struct session_data *sdata){
 
 
 void postfix_to_clapf(int new_sd, struct __data *data, struct __config *cfg){
-   int i, pos, n, inj=ERR_REJECT, state, prevlen=0;
+   int i, ret, pos, n, inj=ERR_REJECT, state, prevlen=0;
    char *p, *q, buf[MAXBUFSIZE], puf[MAXBUFSIZE], resp[MAXBUFSIZE], prevbuf[MAXBUFSIZE], last2buf[2*MAXBUFSIZE+1];
    char email[SMALLBUFSIZE], email2[SMALLBUFSIZE], virusinfo[SMALLBUFSIZE], reason[SMALLBUFSIZE];
    struct session_data sdata;
@@ -183,7 +183,8 @@ void postfix_to_clapf(int new_sd, struct __data *data, struct __config *cfg){
 
 
                /* write data only to (and including) the trailing period (.) */
-               sdata.tot_len += write(sdata.fd, puf, pos);
+               ret = write(sdata.fd, puf, pos);
+               sdata.tot_len += ret;
 
 
                if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: got: (.)", sdata.ttmpfile);
@@ -391,7 +392,8 @@ void postfix_to_clapf(int new_sd, struct __data *data, struct __config *cfg){
 
             } /* PERIOD found */
             else {
-               sdata.tot_len += write(sdata.fd, puf, n);
+               ret = write(sdata.fd, puf, n);
+               sdata.tot_len += ret;
 
                memcpy(prevbuf, puf, n);
                prevlen = n;

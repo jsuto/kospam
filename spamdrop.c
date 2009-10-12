@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2009.10.04, SJ
+ * spamdrop.c, 2009.10.12, SJ
  */
 
 #include <stdio.h>
@@ -159,7 +159,7 @@ int main(int argc, char **argv, char **envp){
    int u=-1;
    char buf[MAXBUFSIZE], trainbuf[SMALLBUFSIZE], ID[RND_STR_LEN+1], whitelistbuf[SMALLBUFSIZE], clapf_info[MAXBUFSIZE];
    char *configfile=CONFIG_FILE, *username=NULL, *from=NULL, *recipient=NULL;
-   char *p, path[SMALLBUFSIZE], virusinfo[SMALLBUFSIZE];
+   char *p, path[SMALLBUFSIZE];
    struct passwd *pwd;
    struct session_data sdata;
    struct timezone tz;
@@ -297,7 +297,7 @@ int main(int argc, char **argv, char **envp){
    /* do not go to the workdir if this is a cmdline training request
       or a debug run */
 
-   if(train_as_ham == 0 && train_as_spam == 0 && debug == 0) chdir(cfg.workdir);
+   if(train_as_ham == 0 && train_as_spam == 0 && debug == 0) i = chdir(cfg.workdir);
 
 
    /* read message from standard input */
@@ -332,6 +332,8 @@ int main(int argc, char **argv, char **envp){
 
 #ifdef HAVE_ANTIVIRUS
 #ifndef HAVE_LIBCLAMAV
+   char virusinfo[SMALLBUFSIZE];
+
    if(do_av_check(&sdata, recipient, from, &virusinfo[0], &cfg) == AVIR_VIRUS){
       syslog(LOG_PRIORITY, "%s: dropping infected message", sdata.ttmpfile);
       unlink(sdata.ttmpfile);
@@ -724,7 +726,7 @@ int main(int argc, char **argv, char **envp){
          fd = open(sdata.ttmpfile, O_EXCL|O_RDWR, S_IRUSR|S_IWUSR);
          if(fd != -1){
             lseek(fd, 0, SEEK_END);
-            write(fd, SMTP_CMD_PERIOD, strlen(SMTP_CMD_PERIOD));
+            i = write(fd, SMTP_CMD_PERIOD, strlen(SMTP_CMD_PERIOD));
             close(fd);
          }
       }

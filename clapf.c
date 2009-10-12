@@ -1,5 +1,5 @@
 /*
- * clapf.c, 2009.10.02, SJ
+ * clapf.c, 2009.10.12, SJ
  */
 
 #include <stdio.h>
@@ -332,7 +332,7 @@ int main(int argc, char **argv){
     clen = sizeof(client_addr);
 
     /* go to the background */
-    if(daemonise == 1) daemon(1, 0);
+    if(daemonise == 1) i = daemon(1, 0);
 
     /* write pid file */
 

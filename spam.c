@@ -1,5 +1,5 @@
 /*
- * spam.c, 2009.10.05, SJ
+ * spam.c, 2009.10.12, SJ
  */
 
 #include <stdio.h>
@@ -125,7 +125,7 @@ void do_training(struct session_data *sdata, struct _state *state, char *email, 
  */
 
 void save_email_to_queue(struct session_data *sdata, float spaminess, struct __config *cfg){
-   int touch;
+   int touch, ret;
    char *p, path[SMALLBUFSIZE], qpath[SMALLBUFSIZE];
 
    if(strlen(sdata->name) <= 1) return;
@@ -151,7 +151,7 @@ void save_email_to_queue(struct session_data *sdata, float spaminess, struct __c
 #ifdef STORE_FS
    struct stat st;
 
-   link(sdata->ttmpfile, qpath);
+   ret = link(sdata->ttmpfile, qpath);
 
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: saving to queue: %s", sdata->ttmpfile, qpath);
 

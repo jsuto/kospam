@@ -60,10 +60,6 @@ class ControllerUserRemove extends Controller {
          $this->error['admin'] = $this->data['text_you_are_not_admin'];
       }
 
-      /*if(checkemail(@$this->request->get['email'], $this->domains) == 0) {
-         $this->error['email'] = $this->data['text_invalid_email'];
-      }*/
-
       if(!isset($this->request->get['uid']) || !is_numeric($this->request->get['uid']) || $this->request->get['uid'] < 1 ) {
          $this->error['username'] = $this->data['text_invalid_uid'];
       }

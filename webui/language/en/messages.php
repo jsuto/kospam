@@ -31,11 +31,13 @@ $_['text_edit_or_view'] = "Edit/view";
 $_['text_email'] = "Email address";
 $_['text_email_addresses'] = "Email address(es)";
 $_['text_email_aliases'] = "Email aliases";
+$_['text_email_in_unknown_domain'] = "Email address is in an unknown domain";
 $_['text_empty_quarantine_directory_structure'] = "Empty quarantine directory structure";
 $_['text_error'] = "Error";
 $_['text_exclude'] = "Exclude";
 $_['text_existing_domains'] = "Existing domains";
 $_['text_existing_policies'] = "Existing policies";
+$_['text_existing_user'] = "Existing user";
 $_['text_existing_users'] = "Existing users";
 
 $_['text_failed_to_add'] = "Failed to add";

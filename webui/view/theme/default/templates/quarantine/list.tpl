@@ -28,8 +28,8 @@
    <tr>
       <td>&nbsp;</td>
       <td>&nbsp;</td>
-      <td><font color="#ffffff"><?php print str_repeat("x", 3+MAX_CGI_FROM_SUBJ_LEN); ?></font></td>
-      <td><font color="#ffffff"><?php print str_repeat("x", 3+MAX_CGI_FROM_SUBJ_LEN); ?></font></td>
+      <td><img src="<?php print WEBUI_DIRECTORY; ?>/view/theme/<?php print THEME; ?>/images/line.png" alt="xxx" /></td>
+      <td><img src="<?php print WEBUI_DIRECTORY; ?>/view/theme/<?php print THEME; ?>/images/line.png" alt="xxx" /></td> 
       <td>&nbsp;</td>
    </tr>
 

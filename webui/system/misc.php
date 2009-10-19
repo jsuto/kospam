@@ -64,6 +64,7 @@ function checkemail($email, $domains) {
          if($domain == $d){ return 1; }
       }
 
+      return -1;
    }
 
    return 0;

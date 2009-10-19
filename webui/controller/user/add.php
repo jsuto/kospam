@@ -95,14 +95,22 @@ class ControllerUserAdd extends Controller {
          $emails = explode("\n", $this->request->post['email']);
          foreach ($emails as $email) {
             $email = rtrim($email);
-            if(checkemail($email, $this->domains) == 0) {
+            $ret = checkemail($email, $this->domains);
+            if($ret == 0) {
                $this->error['email'] = $this->data['text_invalid_email'] . ": $email";
+            }
+            else if($ret == -1) {
+               $this->error['email'] = $this->data['text_email_in_unknown_domain'] . ": $email";
             }
          }
       }
 
       if(!isset($this->request->post['username']) || strlen($this->request->post['username']) < 2 ) {
          $this->error['username'] = $this->data['text_invalid_username'];
+      }
+
+      if(isset($this->request->post['username']) && $this->model_user_user->getUidByName($this->request->post['username']) > 0) {
+         $this->error['username'] = $this->data['text_existing_user'];
       }
 
       if(!isset($this->request->post['domain'])) {

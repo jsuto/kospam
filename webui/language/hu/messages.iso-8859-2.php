@@ -31,11 +31,13 @@ $_['text_edit_or_view'] = "Szerkeszt/Megnéz";
 $_['text_email'] = "Email cím";
 $_['text_email_addresses'] = "Email cím(ek)";
 $_['text_email_aliases'] = "Email álcímek";
+$_['text_email_in_unknown_domain'] = "Az email cím ismeretlen domainben van";
 $_['text_empty_quarantine_directory_structure'] = "Üres karantén könyvtár";
 $_['text_error'] = "Hiba";
 $_['text_exclude'] = "Kihagy";
 $_['text_existing_domains'] = "Létezõ domainek";
 $_['text_existing_policies'] = "Létezõ házirendek";
+$_['text_existing_user'] = "Létezõ felhasználó";
 $_['text_existing_users'] = "Létezõ felhasználók";
 
 $_['text_failed_to_add'] = "Hiba a hozzáadás során";

@@ -1,5 +1,5 @@
 /*
- * bayes.c, 2009.09.10, SJ
+ * bayes.c, 2009.10.19, SJ
  */
 
 #include <stdio.h>
@@ -399,6 +399,6 @@ int train_message(struct session_data *sdata, struct _state *state, int rounds, 
 
    sdata->uid = saved_uid;
 
-   return i;
+   return i+1;
 }
 

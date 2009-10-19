@@ -1,5 +1,17 @@
 0.4.3-rc1:
 
+2009.10.19, SJ
+
+clapf syslog()'s the number of rounds it used for training
+a message.
+(bayes.c, spam.c)
+
+2009.10.16, SJ
+
+Added a new counter to the 'delays=' to show how much
+time clapf needs to acquire a message from postfix.
+(session.c, defs.h)
+
 2009.10.05, SJ
 
 Added lmtp support to history/maillog.pl

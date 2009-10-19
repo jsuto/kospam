@@ -1,5 +1,5 @@
 /*
- * antispam.c, 2009.10.12, SJ
+ * antispam.c, 2009.10.15, SJ
  */
 
 #include <stdio.h>
@@ -38,10 +38,6 @@ int process_message(struct session_data *sdata, struct _state *sstate, struct __
    char reason[SMALLBUFSIZE], resp[MAXBUFSIZE], tmpbuf[SMALLBUFSIZE], trainbuf[SMALLBUFSIZE], whitelistbuf[SMALLBUFSIZE];
    struct timezone tz;
    struct timeval tv1, tv2;
-
-   /* copy default config from clapf.conf, to enable policy support */
-
-   memcpy(my_cfg, cfg, sizeof(struct __config));
 
    memset(sdata->acceptbuf, 0, SMALLBUFSIZE);
 

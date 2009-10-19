@@ -1,5 +1,5 @@
 /*
- * session.c, 2009.10.12, SJ
+ * session.c, 2009.10.16, SJ
  */
 
 #include <stdio.h>
@@ -65,7 +65,7 @@ void init_session_data(struct session_data *sdata){
    sdata->rav = AVIR_OK;
 
    sdata->__parsed = sdata->__av = sdata->__user = sdata->__policy = sdata->__as = sdata->__minefield = 0;
-   sdata->__training = sdata->__update = sdata->__store = sdata->__inject = 0;
+   sdata->__training = sdata->__update = sdata->__store = sdata->__inject = sdata->__acquire = 0;
 
    sdata->spaminess = DEFAULT_SPAMICITY;
 
@@ -151,6 +151,8 @@ void postfix_to_clapf(int new_sd, struct __data *data, struct __config *cfg){
 
    /* send 220 SMTP/LMTP banner */
 
+   gettimeofday(&tv1, &tz);
+
 #ifdef HAVE_LMTP
    snprintf(buf, MAXBUFSIZE-1, LMTP_RESP_220_BANNER, cfg->hostid);
 #else
@@ -195,6 +197,9 @@ void postfix_to_clapf(int new_sd, struct __data *data, struct __config *cfg){
 
                rc = fsync(sdata.fd);
                close(sdata.fd);
+
+               gettimeofday(&tv2, &tz);
+               sdata.__acquire = tvdiff(tv2, tv1);
 
                if(rc){
                   syslog(LOG_PRIORITY, "failed writing data: %s", sdata.ttmpfile);
@@ -270,6 +275,9 @@ void postfix_to_clapf(int new_sd, struct __data *data, struct __config *cfg){
 
                   extract_email(sdata.rcptto[i], email);
 
+                  /* copy default config from clapf.conf, to enable policy support */
+                  memcpy(&my_cfg, cfg, sizeof(struct __config));
+
                #ifdef HAVE_ANTISPAM
                   if(db_conn == 1){
                      if(process_message(&sdata, &sstate, data, email, email2, cfg, &my_cfg) == 0){
@@ -331,10 +339,10 @@ void postfix_to_clapf(int new_sd, struct __data *data, struct __config *cfg){
 
                   /* syslog at the end */
 
-                  snprintf(reason, SMALLBUFSIZE-1, "delay=%.2f, delays=%.2f/%.2f/%.2f/%.2f/%.2f/%.2f/%.2f/%.2f/%.2f/%.2f", 
-                               (sdata.__parsed+sdata.__av+sdata.__user+sdata.__policy+sdata.__minefield+sdata.__as+sdata.__training+sdata.__update+sdata.__store+sdata.__inject)/1000000.0,
-                                   sdata.__parsed/1000000.0, sdata.__av/1000000.0, sdata.__user/1000000.0, sdata.__policy/1000000.0, sdata.__minefield/1000000.0, sdata.__as/1000000.0,
-                                       sdata.__training/1000000.0, sdata.__update/1000000.0, sdata.__store/1000000.0, sdata.__inject/1000000.0);
+                  snprintf(reason, SMALLBUFSIZE-1, "delay=%.2f, delays=%.2f/%.2f/%.2f/%.2f/%.2f/%.2f/%.2f/%.2f/%.2f/%.2f/%.2f", 
+                               (sdata.__acquire+sdata.__parsed+sdata.__av+sdata.__user+sdata.__policy+sdata.__minefield+sdata.__as+sdata.__training+sdata.__update+sdata.__store+sdata.__inject)/1000000.0,
+                                   sdata.__acquire/1000000.0, sdata.__parsed/1000000.0, sdata.__av/1000000.0, sdata.__user/1000000.0, sdata.__policy/1000000.0, sdata.__minefield/1000000.0,
+                                       sdata.__as/1000000.0, sdata.__training/1000000.0, sdata.__update/1000000.0, sdata.__store/1000000.0, sdata.__inject/1000000.0);
 
                   if(sdata.spaminess >= cfg->spam_overall_limit){
                      syslog(LOG_PRIORITY, "%s: %s got SPAM, %.4f, %d, relay=%s:%d, %s, status=%s", sdata.ttmpfile, email, sdata.spaminess, sdata.tot_len, my_cfg.spam_smtp_addr, my_cfg.spam_smtp_port, reason, resp);

@@ -1,5 +1,5 @@
 /*
- * spam.c, 2009.10.12, SJ
+ * spam.c, 2009.10.15, SJ
  */
 
 #include <stdio.h>
@@ -88,7 +88,7 @@ void get_queue_path(struct session_data *sdata, char **path){
 
 void do_training(struct session_data *sdata, struct _state *state, char *email, char *acceptbuf, struct __config *cfg){
 #ifndef HAVE_MYDB
-   int is_spam = 0;
+   int i, is_spam = 0;
    char *p, path[SMALLBUFSIZE], qpath[SMALLBUFSIZE];
    struct stat st;
 
@@ -106,10 +106,10 @@ void do_training(struct session_data *sdata, struct _state *state, char *email, 
       snprintf(qpath, SMALLBUFSIZE-1, "%s/s.%s", path, sdata->clapf_id);
    }
 
-   syslog(LOG_PRIORITY, "%s: checking %s for training", sdata->ttmpfile, qpath);
-
    if(stat(qpath, &st) == 0 && S_ISREG(st.st_mode) == 1){
-      train_message(sdata, state, MAX_ITERATIVE_TRAIN_LOOPS, is_spam, state->train_mode, cfg);
+      i = train_message(sdata, state, MAX_ITERATIVE_TRAIN_LOOPS, is_spam, state->train_mode, cfg);
+      syslog(LOG_PRIORITY, "%s: training %s in %d rounds", sdata->ttmpfile, qpath, i);
+
    }
    else {
       syslog(LOG_PRIORITY, "%s: invalid signature: %s", sdata->ttmpfile, qpath);

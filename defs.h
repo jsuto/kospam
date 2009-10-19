@@ -1,5 +1,5 @@
 /*
- * defs.h, 2009.10.05, SJ
+ * defs.h, 2009.10.16, SJ
  */
 
 #ifndef _DEFS_H
@@ -151,7 +151,7 @@ struct session_data {
    int training_request;
    float spaminess;
    float Nham, Nspam;
-   float __parsed, __av, __user, __policy, __training, __minefield, __as, __update, __store, __inject;
+   float __acquire, __parsed, __av, __user, __policy, __training, __minefield, __as, __update, __store, __inject;
 #ifdef NEED_MYSQL
    MYSQL mysql;
 #endif

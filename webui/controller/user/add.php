@@ -34,19 +34,28 @@ class ControllerUserAdd extends Controller {
 
 
          if($this->request->server['REQUEST_METHOD'] == 'POST') {
+            $ret = 0;
+
             if($this->validate() == true){
                $ret = $this->model_user_user->addUser($this->request->post);
 
                if($ret == 1){
                   $this->data['x'] = $this->data['text_successfully_added'];
                } else {
-                  $this->template = "common/error.tpl";
                   $this->data['errorstring'] = $this->data['text_failed_to_add'];
                }
             }
             else {
-               $this->template = "common/error.tpl";
                $this->data['errorstring'] = array_pop($this->error);
+
+            }
+
+            if($ret == 0) {
+
+               $this->data['policies'] = $this->model_policy_policy->getPolicies();
+               $this->data['post'] = $this->request->post;
+               $this->data['next_user_id'] = $this->model_user_user->getNextUid();
+
             }
          }
          else {
@@ -105,7 +114,7 @@ class ControllerUserAdd extends Controller {
          }
       }
 
-      if(!isset($this->request->post['username']) || strlen($this->request->post['username']) < 2 ) {
+      if(!isset($this->request->post['username']) || strlen($this->request->post['username']) < 2) {
          $this->error['username'] = $this->data['text_invalid_username'];
       }
 

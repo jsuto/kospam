@@ -1,5 +1,12 @@
 0.4.3-rc1:
 
+2009.10.21, SJ
+
+The webui will keep the entered data in case of a user add failure
+to save you typing user data again (except the password fields).
+(webui/controller/user/add.php, webui/view/theme/default/templates/user/add.tpl)
+(credits: tompos)
+
 2009.10.19, SJ
 
 clapf syslog()'s the number of rounds it used for training

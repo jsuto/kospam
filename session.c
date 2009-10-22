@@ -1,5 +1,5 @@
 /*
- * session.c, 2009.10.16, SJ
+ * session.c, 2009.10.22, SJ
  */
 
 #include <stdio.h>
@@ -377,6 +377,9 @@ void postfix_to_clapf(int new_sd, struct __data *data, struct __config *cfg){
             #ifdef NEED_IN_LDAP
                ldap_unbind_s(sdata.ldap);
             #endif
+
+               /* reset the alarm clock after processing a message, 2009.10.22, SJ */
+               alarm(cfg->session_timeout);
 
                /* if we have nothing after the trailing (.), we can read
                   the next command from the network */

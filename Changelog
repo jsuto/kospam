@@ -1,5 +1,11 @@
 0.4.3-rc1:
 
+2009.10.22, SJ
+
+Reset the alarm clock after processing a message. Thus a child process
+does not have to be killed by a forced exit after the default 420 secs.
+(session.c)
+
 2009.10.21, SJ
 
 The webui will keep the entered data in case of a user add failure

@@ -328,8 +328,6 @@ int main(int argc, char **argv){
     #endif
 
 
-    clen = sizeof(client_addr);
-
     /* go to the background */
     if(daemonise == 1) i = daemon(1, 0);
 
@@ -349,6 +347,8 @@ int main(int argc, char **argv){
        /* let new connections wait if we are too busy now */
 
        if(nconn >= cfg.max_connections) sig_pause();
+
+       clen = sizeof(client_addr);
 
        sig_unblock(SIGCHLD);
        new_sd = accept(sd, (struct sockaddr *)&client_addr, &clen);

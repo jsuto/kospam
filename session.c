@@ -1,5 +1,5 @@
 /*
- * session.c, 2009.10.22, SJ
+ * session.c, 2009.10.27, SJ
  */
 
 #include <stdio.h>
@@ -13,6 +13,7 @@
 #include <signal.h>
 #include <syslog.h>
 #include "av.h"
+#include "sig.h"
 #include <clapf.h>
 
 
@@ -100,7 +101,7 @@ void postfix_to_clapf(int new_sd, struct __data *data, struct __config *cfg){
 #endif
 
    alarm(cfg->session_timeout);
-   signal(SIGALRM, kill_child);
+   sig_catch(SIGALRM, kill_child);
 
    state = SMTP_STATE_INIT;
 

@@ -1,5 +1,5 @@
 /*
- * antispam.c, 2009.10.15, SJ
+ * antispam.c, 2009.10.27, SJ
  */
 
 #include <stdio.h>
@@ -10,7 +10,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <signal.h>
 #include <syslog.h>
 #include "av.h"
 #include <clapf.h>

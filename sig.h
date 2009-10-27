@@ -1,16 +1,17 @@
 /*
- * sig.h
+ * sig.h, 2009.10.27
  */
+
+#ifndef _SIG_H
+ #define _SIG_H
 
 #include <signal.h>
 
 void sig_block(int sig);
 void sig_unblock(int sig);
 void sig_catch(int sig, void (*f)());
+void sig_uncatch(int sig);
 void sig_pause();
 int wait_nohang(int *wstat);
 
-void (*sig_defaulthandler)() = SIG_DFL;
-
-#define sig_uncatch(s) (sig_catch((s),sig_defaulthandler))
-
+#endif

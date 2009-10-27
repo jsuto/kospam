@@ -1,5 +1,5 @@
 /*
- * sig.c
+ * sig.c, 2009.10.27
  */
 
 #include <sys/types.h>
@@ -26,6 +26,11 @@ void sig_catch(int sig, void (*f)()){
   sa.sa_flags = 0;
   sigemptyset(&sa.sa_mask);
   sigaction(sig, &sa, (struct sigaction *) 0);
+}
+
+void sig_uncatch(int sig){
+   void (*sig_defaulthandler)() = SIG_DFL;
+   sig_catch(sig, sig_defaulthandler);
 }
 
 void sig_pause(){

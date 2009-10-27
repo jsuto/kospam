@@ -1,5 +1,10 @@
 0.4.3-rc1:
 
+2009.10.27, SJ
+
+Replaced all signal() calls with sig_action().
+(clapf.c, session.c, sig.c, sig.h)
+
 2009.10.26, SJ
 
 Added a strcasestr() compatible function in case of the target system

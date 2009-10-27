@@ -1,5 +1,5 @@
 /*
- * clapf.c, 2009.10.12, SJ
+ * clapf.c, 2009.10.27, SJ
  */
 
 #include <stdio.h>
@@ -275,12 +275,11 @@ int main(int argc, char **argv){
 
     (void) openlog(PROGNAME, LOG_PID, LOG_MAIL);
 
-    signal(SIGINT, clean_exit);
-    signal(SIGQUIT, clean_exit);
-    signal(SIGKILL, clean_exit);
-    signal(SIGTERM, clean_exit);
-    signal(SIGHUP, reload_config);
-
+    sig_catch(SIGINT, clean_exit);
+    sig_catch(SIGQUIT, clean_exit);
+    sig_catch(SIGKILL, clean_exit);
+    sig_catch(SIGTERM, clean_exit);
+    sig_catch(SIGHUP, reload_config);
 
     data.blackhole = NULL;
 
@@ -289,7 +288,7 @@ int main(int argc, char **argv){
     #endif
     #ifdef HAVE_LIBCLAMAV
        data.engine = NULL;
-       signal(SIGALRM, reload_clamav_db);
+       sig_catch(SIGALRM, reload_clamav_db);
     #endif
 
 
@@ -373,6 +372,12 @@ int main(int argc, char **argv){
 
            sig_uncatch(SIGCHLD);
            sig_unblock(SIGCHLD);
+
+           sig_uncatch(SIGINT);
+           sig_uncatch(SIGQUIT);
+           sig_uncatch(SIGKILL);
+           sig_uncatch(SIGTERM);
+           sig_block(SIGHUP);
 
            /* handle session */
 

@@ -76,6 +76,7 @@ void init_session_data(struct session_data *sdata){
 
 void postfix_to_clapf(int new_sd, struct __data *data, struct __config *cfg){
    int i, ret, pos, n, inj=ERR_REJECT, state, prevlen=0;
+   int processed_emails = 0;
    char *p, *q, buf[MAXBUFSIZE], puf[MAXBUFSIZE], resp[MAXBUFSIZE], prevbuf[MAXBUFSIZE], last2buf[2*MAXBUFSIZE+1];
    char email[SMALLBUFSIZE], email2[SMALLBUFSIZE], virusinfo[SMALLBUFSIZE], reason[SMALLBUFSIZE];
    struct session_data sdata;
@@ -331,6 +332,8 @@ void postfix_to_clapf(int new_sd, struct __data *data, struct __config *cfg){
                SEND_RESULT:
             #endif
                   send(new_sd, sdata.acceptbuf, strlen(sdata.acceptbuf), 0);
+
+                  processed_emails++;
 
                   if(inj == ERR_DROP_SPAM) syslog(LOG_PRIORITY, "%s: dropped spam", sdata.ttmpfile);
                   else if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent: %s", sdata.ttmpfile, sdata.acceptbuf);
@@ -722,7 +725,9 @@ QUITTING:
    if(sdata.memc != NULL) memcached_free(sdata.memc);
 #endif
 
-   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "child has finished");
+   //if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "child has finished");
+
+   syslog(LOG_PRIORITY, "child processed %d messages", processed_emails);
 
    _exit(0);
 }

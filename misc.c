@@ -1,5 +1,5 @@
 /*
- * misc.c, 2009.10.05, SJ
+ * misc.c, 2009.10.26, SJ
  */
 
 #include <stdio.h>
@@ -917,4 +917,25 @@ int whitelist_check(char *whitelist, char *tmpfile, char *email, struct __config
    return 0;
 }
 
+
+#ifndef _GNU_SOURCE
+char *strcasestr(const char *s, const char *find){
+   char c, sc;
+   size_t len;
+
+   if((c = *find++) != 0){
+      c = tolower((unsigned char)c);
+      len = strlen(find);
+      do {
+         do {
+            if((sc = *s++) == 0)
+               return (NULL);
+         } while((char)tolower((unsigned char)sc) != c);
+      } while (strncasecmp(s, find, len) != 0);
+      s--;
+   }
+
+   return((char*)s);
+}
+#endif
 

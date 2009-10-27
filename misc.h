@@ -1,5 +1,5 @@
 /*
- * misc.h, 2009.09.02, SJ
+ * misc.h, 2009.10.26, SJ
  */
 
 #ifndef _MISC_H
@@ -65,5 +65,9 @@ char *spamsum_file(const char *fname, unsigned int flags, unsigned int block_siz
 unsigned long resolve_host(char *h);
 
 int whitelist_check(char *whitelist, char *tmpfile, char *email, struct __config *cfg);
+
+#ifndef _GNU_SOURCE
+   char *strcasestr(const char *s, const char *find);
+#endif
 
 #endif /* _MISC_H */

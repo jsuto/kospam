@@ -1,5 +1,11 @@
 0.4.3-rc1:
 
+2009.10.26, SJ
+
+Added a strcasestr() compatible function in case of the target system
+has no _GNU_SOURCE in the header files.
+(misc.c, misc.h)
+
 2009.10.22, SJ
 
 Reset the alarm clock after processing a message. Thus a child process

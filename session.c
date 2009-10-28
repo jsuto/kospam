@@ -726,9 +726,9 @@ QUITTING:
    if(sdata.memc != NULL) memcached_free(sdata.memc);
 #endif
 
-   //if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "child has finished");
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "child has finished");
 
-   syslog(LOG_PRIORITY, "child processed %d messages", processed_emails);
+   if(cfg->verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "processed %d messages", processed_emails);
 
    _exit(0);
 }

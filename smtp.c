@@ -1,5 +1,5 @@
 /*
- * smtp.c, 2009.09.28, SJ
+ * smtp.c, 2009.10.29, SJ
  */
 
 #include <stdio.h>
@@ -320,43 +320,53 @@ int inject_mail(struct session_data *sdata, int msg, char *smtpaddr, int smtppor
    if(notify == NULL){
       /* read and send stored mail */
 
-      fd = open(sdata->ttmpfile, O_RDONLY);
-      if(fd == -1)
-         return ERR_INJECT;
-
-      /* is this message spam and do we have to put [sp@m] prefix to the Subject: line? */
-
-      if(spaminessbuf && strlen(cfg->spam_subject_prefix) > 2 && strstr(spaminessbuf, cfg->clapf_spam_header_field))
-         put_subject_spam_prefix = 1;
-
-
-      /*
-        the header_size_limit variable of postfix (see the output of postconf)
-        limits the length of the message header. So we read a big one and it
-        will contain the whole header. Now we can rewrite the necessary header
-        lines. 2006.08.21, SJ
-      */
-
-      while((n = read(fd, bigbuf, MAX_MAIL_HEADER_SIZE)) > 0){
-         num_of_reads++;
-
-         /* the first read should contain all the header lines */
-
-         if(num_of_reads == 1){
-
-            /* send the header lines first */
-            i = send_headers(psd, bigbuf, n, spaminessbuf, put_subject_spam_prefix, sdata, cfg);
-
-            /* then the rest of the first read */
-            send(psd, &bigbuf[i], n-i, 0);
-
-         } /* end of first read */
-         else
-            send(psd, bigbuf, n, 0);
-
+   #ifdef HAVE_MAILBUF
+      if(sdata->mailpos > 0 && sdata->discard_mailbuf == 0){
+         i = send_headers(psd, sdata->mailbuf, sdata->mailpos, spaminessbuf, put_subject_spam_prefix, sdata, cfg);
+         send(psd, &(sdata->mailbuf[i]), sdata->mailpos-i, 0);
       }
+      else {
+   #endif
+         fd = open(sdata->ttmpfile, O_RDONLY);
+         if(fd == -1)
+            return ERR_INJECT;
 
-      close(fd);
+         /* is this message spam and do we have to put [sp@m] prefix to the Subject: line? */
+
+         if(spaminessbuf && strlen(cfg->spam_subject_prefix) > 2 && strstr(spaminessbuf, cfg->clapf_spam_header_field))
+            put_subject_spam_prefix = 1;
+
+
+         /*
+           the header_size_limit variable of postfix (see the output of postconf)
+           limits the length of the message header. So we read a big one and it
+           will contain the whole header. Now we can rewrite the necessary header
+           lines. 2006.08.21, SJ
+         */
+
+         while((n = read(fd, bigbuf, MAX_MAIL_HEADER_SIZE)) > 0){
+            num_of_reads++;
+
+            /* the first read should contain all the header lines */
+
+            if(num_of_reads == 1){
+
+               /* send the header lines first */
+               i = send_headers(psd, bigbuf, n, spaminessbuf, put_subject_spam_prefix, sdata, cfg);
+
+               /* then the rest of the first read */
+               send(psd, &bigbuf[i], n-i, 0);
+
+            } /* end of first read */
+            else
+               send(psd, bigbuf, n, 0);
+
+         }
+
+         close(fd);
+   #ifdef HAVE_MAILBUF
+      }
+   #endif
    }
    else {
       /* or send notification about the virus found */

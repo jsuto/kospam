@@ -1,5 +1,5 @@
 /*
- * session.c, 2009.10.27, SJ
+ * session.c, 2009.10.29, SJ
  */
 
 #include <stdio.h>
@@ -60,6 +60,11 @@ void init_session_data(struct session_data *sdata){
    sdata->blackhole = 0;
    sdata->need_signo_check = 0;
    sdata->training_request = 0;
+
+#ifdef HAVE_MAILBUF
+   sdata->message_size = sdata->mailpos = sdata->discard_mailbuf = 0;
+   memset(sdata->mailbuf, 0, MAILBUFSIZE);
+#endif
 
    sdata->tre = '-';
 
@@ -190,6 +195,15 @@ void postfix_to_clapf(int new_sd, struct __data *data, struct __config *cfg){
                ret = write(sdata.fd, puf, pos);
                sdata.tot_len += ret;
 
+            #ifdef HAVE_MAILBUF
+               if(sdata.message_size > 0 && sdata.message_size < MAILBUFSIZE-10){
+                  if(sdata.mailpos + pos < MAILBUFSIZE-10){
+                     memcpy(sdata.mailbuf + sdata.mailpos, puf, pos);
+                     sdata.mailpos += pos;
+                  }
+                  else sdata.discard_mailbuf = 1;
+               }
+            #endif
 
                if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: got: (.)", sdata.ttmpfile);
 
@@ -226,7 +240,12 @@ void postfix_to_clapf(int new_sd, struct __data *data, struct __config *cfg){
                /* parse message */
                gettimeofday(&tv1, &tz);
 
-               sstate = parse_message(sdata.ttmpfile, &sdata, cfg);
+            #ifdef HAVE_MAILBUF
+               if(sdata.mailpos > 0 && sdata.discard_mailbuf == 0)
+                  sstate = parse_buffer(&sdata, cfg);
+               else
+            #endif
+                  sstate = parse_message(sdata.ttmpfile, &sdata, cfg);
 
                gettimeofday(&tv2, &tz);
                sdata.__parsed = tvdiff(tv2, tv1);
@@ -410,6 +429,16 @@ void postfix_to_clapf(int new_sd, struct __data *data, struct __config *cfg){
                ret = write(sdata.fd, puf, n);
                sdata.tot_len += ret;
 
+            #ifdef HAVE_MAILBUF
+               if(sdata.message_size > 0 && sdata.message_size < MAILBUFSIZE-10){
+                  if(sdata.mailpos + n < MAILBUFSIZE-10){
+                     memcpy(sdata.mailbuf + sdata.mailpos, puf, n);
+                     sdata.mailpos += n;
+                  }
+                  else sdata.discard_mailbuf = 1;
+               }
+            #endif
+
                memcpy(prevbuf, puf, n);
                prevlen = n;
 
@@ -526,17 +555,19 @@ AFTER_PERIOD:
             else {
                state = SMTP_STATE_MAIL_FROM;
 
-               /* if we ever need the SIZE argumentum from the MAIL FROM command */
+               /* get the SIZE argumentum from the MAIL FROM command */
 
-               /*q = strstr(buf, " SIZE=");
+            #ifdef HAVE_MAILBUF
+               q = strstr(buf, " SIZE=");
                if(q){
                   *q = '\0';
                   i = strcspn(q+6, " \r\n");
                   if(i > 0){
                      *(q+6+i) = '\0';
-                     if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: size of message: *%s*", sdata.ttmpfile, q+6);
+                     sdata.message_size = atoi(q+6);
                   }
-               }*/
+               }
+            #endif
 
                snprintf(sdata.mailfrom, SMALLBUFSIZE-1, "%s\r\n", buf);
 

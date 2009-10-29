@@ -1,5 +1,5 @@
 /*
- * parser.c, 2009.10.12, SJ
+ * parser.c, 2009.10.29, SJ
  */
 
 #include <stdio.h>
@@ -732,4 +732,62 @@ struct _state parse_message(char *spamfile, struct session_data *sdata, struct _
 
    return state;
 }
+
+#ifdef HAVE_MAILBUF
+struct _state parse_buffer(struct session_data *sdata, struct __config *cfg){
+   int skipped_header = 0, found_clapf_signature = 0;
+   char *p, *q, *r;
+   char buf[MAXBUFSIZE], tumbuf[SMALLBUFSIZE];
+   struct _state state;
+
+   init_state(&state);
+
+   if(sdata->mailpos < 10 || sdata->discard_mailbuf == 1){
+      syslog(LOG_PRIORITY, "%s: invalid mail buffer", sdata->ttmpfile);
+      return state;
+   }
+
+
+   snprintf(tumbuf, SMALLBUFSIZE-1, "%sTUM", cfg->clapf_header_field);
+
+   r = sdata->mailbuf;
+
+   do {
+      r = split(r, '\n', buf, MAXBUFSIZE-1);
+
+      if(sdata->training_request == 0 || found_clapf_signature == 1){
+         parse(buf, &state, sdata, cfg);
+         if(strncmp(buf, tumbuf, strlen(tumbuf)) == 0) state.train_mode = T_TUM;
+      }
+
+      if(found_clapf_signature == 0 && sdata->training_request == 1){
+         if(buf[0] == 0 || buf[0] == '\r'){
+            skipped_header = 1;
+         }
+
+         if(skipped_header == 1){
+            q = strstr(buf, "Received: ");
+            if(q){
+               trim(buf);
+               p = strchr(buf, ' ');
+               if(p){
+                  p++;
+                  if(is_valid_id(p)){
+                     snprintf(sdata->clapf_id, SMALLBUFSIZE-1, "%s", p);
+                     if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: found id in training request: *%s*", sdata->ttmpfile, p);
+                     found_clapf_signature = 1;
+                  }
+               }
+            }
+         }
+      }
+
+   } while(r);
+
+
+   free_boundary(state.boundaries);
+
+   return state;
+}
+#endif
 

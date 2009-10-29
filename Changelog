@@ -1,5 +1,14 @@
 0.4.3-rc1:
 
+2009.10.29, SJ
+
+Added a 32kB mail buffer to skip reading the temp file for
+parsing and handing back to postfix. clapf performance gained
+only 0.6-2.1% in my tests so this code is not compiled by default.
+If you need this extra performance, then add '-DHAVE_MAILBUF' to
+the 'DEFS' line of the Makefile, and recompile clapf.
+(defs.h, parser.c, parser.h, smtp.c, session.c)
+
 2009.10.27, SJ
 
 Replaced all signal() calls with sig_action().

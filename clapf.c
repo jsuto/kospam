@@ -1,5 +1,5 @@
 /*
- * clapf.c, 2009.10.27, SJ
+ * clapf.c, 2009.10.29, SJ
  */
 
 #include <stdio.h>
@@ -218,7 +218,7 @@ void reload_config(){
       }
       fclose(f);
    }
-
+   else syslog(LOG_PRIORITY, "cannot open: %s", ZOMBIE_NET_REGEX);
 #endif
 
 }

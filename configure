@@ -6553,7 +6553,7 @@ _ACEOF
 
 
 cat >>confdefs.h <<_ACEOF
-#define ZOMBIE_NET_REGEX "$my_prefix/share/clapf/zombinets.regex"
+#define ZOMBIE_NET_REGEX "$my_prefix/share/clapf/zombienets.regex"
 _ACEOF
 
 

@@ -548,7 +548,7 @@ dnl spamdrop helper program
 
 AC_DEFINE_UNQUOTED(SPAMDROP_HELPER_PROGRAM,"$my_prefix/libexec/clapf/spamdrop_helper",[where to look for the spamdrop helper file])
 AC_DEFINE_UNQUOTED(VIRUS_TEMPLATE, "$my_prefix/share/clapf/template.virus", [where the virus template is])
-AC_DEFINE_UNQUOTED(ZOMBIE_NET_REGEX, "$my_prefix/share/clapf/zombinets.regex", [where the virus template is])
+AC_DEFINE_UNQUOTED(ZOMBIE_NET_REGEX, "$my_prefix/share/clapf/zombienets.regex", [where the virus template is])
 
 
 

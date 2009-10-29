@@ -1,5 +1,5 @@
 /*
- * test.c, 2009.06.09, SJ
+ * test.c, 2009.10.29, SJ
  */
 
 #include <stdio.h>
@@ -46,7 +46,8 @@ int main(int argc, char **argv){
 
    cfg = read_config(argv[1]);
 
-   fprintf(stderr, "locale: %s\n", setlocale(LC_ALL, cfg.locale));
+   fprintf(stderr, "locale: %s\n", setlocale(LC_MESSAGES, cfg.locale));
+   setlocale(LC_CTYPE, cfg.locale);
 
    /*
     * override training mode to make sure we will not train the token database

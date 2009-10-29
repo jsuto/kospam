@@ -224,7 +224,7 @@ dnl  if test "$want_antispam" = "yes"; then
 
     dnl TRE library
 
-    AC_CHECK_HEADERS(tre.h, have_tre=yes, echo "tre.h is not found")
+    AC_CHECK_HEADERS(tre/tre.h, have_tre=yes, echo "tre.h is not found")
     AC_HAVE_LIBRARY(tre, AC_CHECK_LIB(tre, regcomp, have_tre=yes, echo "libtre.so is not found"; have_tre=no))
 
 

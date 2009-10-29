@@ -9,6 +9,9 @@ If you need this extra performance, then add '-DHAVE_MAILBUF' to
 the 'DEFS' line of the Makefile, and recompile clapf.
 (defs.h, parser.c, parser.h, smtp.c, session.c)
 
+Fixed a configure script bug searching for the tre.h header file.
+(configure*)
+
 2009.10.27, SJ
 
 Replaced all signal() calls with sig_action().

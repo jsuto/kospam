@@ -1,5 +1,5 @@
 /*
- * cfg.h, 2009.09.28, SJ
+ * cfg.h, 2009.11.03, SJ
  */
 
 #ifndef _CFG_H
@@ -65,6 +65,7 @@ struct __config {
    int use_antispam;
 
    char spam_subject_prefix[MAXVAL];
+   char possible_spam_subject_prefix[MAXVAL];
 
    int enable_auto_white_list;
 

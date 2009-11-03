@@ -1,5 +1,16 @@
 0.4.3-rc1:
 
+2009.11.03, SJ
+
+Add a [spam???] prefix to the Subject: line if the message probability
+is 0.8 > spam_overall_limit.
+(smtp.c, cfg.c, cfg.h, example.conf)
+
+2009.11.02, SJ
+
+Code cleanup.
+(cfg.c, config.h)
+
 2009.10.29, SJ
 
 Added a 32kB mail buffer to skip reading the temp file for

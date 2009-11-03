@@ -1,5 +1,5 @@
 /*
- * smtp.c, 2009.10.29, SJ
+ * smtp.c, 2009.11.03, SJ
  */
 
 #include <stdio.h>
@@ -20,7 +20,7 @@
 
 
 
-int send_headers(int sd, char *bigbuf, int n, char *spaminessbuf, int put_subject_spam_prefix, struct session_data *sdata, struct __config *cfg){
+int send_headers(int sd, char *bigbuf, int n, char *spaminessbuf, int put_subject_spam_prefix, int put_subject_possible_spam_prefix, struct session_data *sdata, struct __config *cfg){
    int i=0, x, N, is_header=1, remove_hdr=0, remove_folded_hdr=0, hdr_field_name_len, sent_subject_spam_prefix=0, has_subject=0;
    char *p, *q, *hdr_ptr, buf[MAXBUFSIZE], headerbuf[MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE];
 
@@ -114,6 +114,12 @@ int send_headers(int sd, char *bigbuf, int n, char *spaminessbuf, int put_subjec
                strncat(headerbuf, buf+8, MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE-1);
                sent_subject_spam_prefix = 1;
             }
+            else if(put_subject_possible_spam_prefix == 1 && !strstr(buf, cfg->possible_spam_subject_prefix) ){
+               strncat(headerbuf, "Subject:", MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE-1);
+               strncat(headerbuf, cfg->possible_spam_subject_prefix, MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE-1);
+               strncat(headerbuf, buf+8, MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE-1);
+               sent_subject_spam_prefix = 1;
+            }
             else strncat(headerbuf, buf, MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE-1);
 	 }
 
@@ -129,7 +135,7 @@ int send_headers(int sd, char *bigbuf, int n, char *spaminessbuf, int put_subjec
 
 
    if(has_subject == 0){
-      if(put_subject_spam_prefix == 1 && sent_subject_spam_prefix == 0){
+      if((put_subject_spam_prefix == 1 || put_subject_possible_spam_prefix == 1) && sent_subject_spam_prefix == 0){
          strncat(headerbuf, "Subject: ", MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE-1);
          strncat(headerbuf, cfg->spam_subject_prefix, MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE-1);
          strncat(headerbuf, "\r\n", MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE-1);
@@ -199,7 +205,7 @@ int inject_mail(struct session_data *sdata, int msg, char *smtpaddr, int smtppor
    struct sockaddr_in postfix_addr;
    int fd;
    int num_of_reads=0;
-   int put_subject_spam_prefix=0;
+   int put_subject_spam_prefix=0, put_subject_possible_spam_prefix=0;
    char *recipient=NULL;
 
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: trying to inject back", sdata->ttmpfile);
@@ -322,7 +328,7 @@ int inject_mail(struct session_data *sdata, int msg, char *smtpaddr, int smtppor
 
    #ifdef HAVE_MAILBUF
       if(sdata->mailpos > 0 && sdata->discard_mailbuf == 0){
-         i = send_headers(psd, sdata->mailbuf, sdata->mailpos, spaminessbuf, put_subject_spam_prefix, sdata, cfg);
+         i = send_headers(psd, sdata->mailbuf, sdata->mailpos, spaminessbuf, put_subject_spam_prefix, put_subject_possible_spam_prefix, sdata, cfg);
          send(psd, &(sdata->mailbuf[i]), sdata->mailpos-i, 0);
       }
       else {
@@ -336,6 +342,8 @@ int inject_mail(struct session_data *sdata, int msg, char *smtpaddr, int smtppor
          if(spaminessbuf && strlen(cfg->spam_subject_prefix) > 2 && strstr(spaminessbuf, cfg->clapf_spam_header_field))
             put_subject_spam_prefix = 1;
 
+         if(sdata->spaminess < cfg->spam_overall_limit && sdata->spaminess > 0.8)
+            put_subject_possible_spam_prefix = 1;
 
          /*
            the header_size_limit variable of postfix (see the output of postconf)
@@ -352,7 +360,7 @@ int inject_mail(struct session_data *sdata, int msg, char *smtpaddr, int smtppor
             if(num_of_reads == 1){
 
                /* send the header lines first */
-               i = send_headers(psd, bigbuf, n, spaminessbuf, put_subject_spam_prefix, sdata, cfg);
+               i = send_headers(psd, bigbuf, n, spaminessbuf, put_subject_spam_prefix, put_subject_possible_spam_prefix, sdata, cfg);
 
                /* then the rest of the first read */
                send(psd, &bigbuf[i], n-i, 0);

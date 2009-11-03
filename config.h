@@ -1,5 +1,5 @@
 /*
- * config.h, 2009.10.29, SJ
+ * config.h, 2009.11.02, SJ
  */
 
 #ifndef _CONFIG_H
@@ -20,38 +20,19 @@
 #define PER_USER_SQLITE3_DB_FILE "clapf.sdb"
 #define MYDB_FILE "tokens.mydb"
 
-#define QUEUE_DIR_PERMISSION 0755
-
-#define SQLITE3_PRAGMA "PRAGMA synchronous = OFF"
-
-#define LISTEN_ADDR "127.0.0.1"
-#define LISTEN_PORT 10025
-
-#define POSTFIX_ADDR "127.0.0.1"
-#define POSTFIX_PORT 10026
-
-#define AVAST_ADDR "127.0.0.1"
-#define AVAST_PORT 5036
-
-#define KAV_SOCKET "/var/run/aveserver"
-
-#define DRWEB_SOCKET "/var/drweb/run/.daemon"
-
-#define CLAMD_ADDR "127.0.0.1"
-#define CLAMD_PORT 3310
 #define CLAMD_SOCKET "/tmp/clamd"
-
+#define DRWEB_SOCKET "/var/drweb/run/.daemon"
+#define KAV_SOCKET "/var/run/aveserver"
 
 #define WORK_DIR DATADIR "/clapf"
 #define PIDFILE WORK_DIR "/clapf.pid"
 #define QUARANTINELEN 255
-#define BACKLOG 20
-#define MAXCONN 30
 #define TIMEOUT 60
 #define TIMEOUT_USEC 500000
 #define SESSION_TIMEOUT 420
 #define MAXBUFSIZE 8192
 #define SMALLBUFSIZE 512
+#define MAXVAL 128
 #define RANDOM_POOL "/dev/urandom"
 #define RND_STR_LEN 32
 #define MESSAGE_ID_LEN 32
@@ -97,16 +78,9 @@
 #endif
 
 #define DEFAULT_SPAMICITY 0.5
-#define DEFAULT_SPAMICITY_LOW 0.4999
-#define DEFAULT_SPAMICITY_HIGH 0.5001
 
 #define REAL_HAM_TOKEN_PROBABILITY 0.0001
 #define REAL_SPAM_TOKEN_PROBABILITY 0.9999
-#define MOST_INTERESTING_DEVIATION 0.4998
-#define INVALID_JUNK_LIMIT 5
-#define INVALID_JUNK_LINE 1
-#define INVALID_HEX_JUNK_LIMIT 40
-#define MAX_HAM_SPAMICITY 0.39
 #define MIN_WORD_LEN 3
 #define MAX_WORD_LEN 25
 #define MAX_TOKEN_LEN 4*MAX_WORD_LEN
@@ -115,23 +89,11 @@
 #define SPAMINESS_HEADER_FIELD "X-Clapf-spamicity: "
 #define BOUNDARY_LEN 255
 #define MAX_NUM_OF_SAMPLES 65535
-#define MIN_PHRASE_NUMBER 20
 #define JUNK_REPLACEMENT_CHAR 'j'
-#define DATE_STR_LEN 15
-#define EXCLUSION_RADIUS 0.375
 #define NUMBER_OF_GOOD_FROM 10
 #define MAX_ATTACHMENTS 8
 #define MAX_ITERATIVE_TRAIN_LOOPS 5
 #define NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED 1000
-
-#define ROLLING_TOKENS 4096
-
-#define MAX_CGI_SUBJECT_LEN 50
-#define MAX_CGI_FROM_LEN 50
-
-/* SURBL stuff */
-
-#define SURBL_DOMAIN "multi.surbl.org"
 
 /* SQL stuff */
 
@@ -153,14 +115,6 @@
 #define _60_DAYS 60*86400
 #define _30_DAYS 30*86400
 #define _15_DAYS 15*86400
-
-/* libclamav variables */
-
-#define MAXFILES 100
-#define MAX_ARCHIVED_FILE_SIZE 30*1048576
-#define MAX_RECURSION_LEVEL 5
-#define MAX_COMPRESS_RATIO 200
-#define ARCHIVE_MEM_LIMIT 0 //disable memory limit for bzip2 scanner
 
 
 /* TRE stuff */

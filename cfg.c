@@ -1,35 +1,13 @@
 /*
- * cfg.c, 2009.09.28, SJ
+ * cfg.c, 2009.11.03, SJ
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "cfg.h"
+#include "misc.h"
 #include "config.h"
-
-
-/*
- * extract a string 's' from string 'row'
- */
-
-char *extract(char *row, int ch, char *s, int size){
-   char *r;
-   int len;
-
-   if(row == NULL) return NULL;
-
-   if((r = strchr(row, ch)) == NULL) return NULL;
-   if(s != NULL){
-       len = strlen(row) - strlen(r);
-       if(len > size) len = size;
-       strncpy(s, row, len);
-       s[len] = '\0';
-   }
-
-   r++;
-   return r;
-}
 
 
 /*
@@ -45,93 +23,135 @@ struct __config read_config(char *configfile){
 
    memset((char *)&cfg, 0, sizeof(struct __config));
 
+   cfg.verbosity = 1;
+   cfg.debug = 0;
+
    strncpy(cfg.hostid, HOSTID, MAXVAL-1);
 
-   strncpy(cfg.listen_addr, LISTEN_ADDR, MAXVAL-1);
-   cfg.listen_port = LISTEN_PORT;
+   strncpy(cfg.workdir, WORK_DIR, MAXVAL-1);
+   strncpy(cfg.pidfile, PIDFILE, MAXVAL-1);
 
-   strncpy(cfg.postfix_addr, POSTFIX_ADDR, MAXVAL-1);
-   cfg.postfix_port = POSTFIX_PORT;
 
-   strncpy(cfg.spam_smtp_addr, POSTFIX_ADDR, MAXVAL-1);
-   cfg.spam_smtp_port = POSTFIX_PORT;
+   strncpy(cfg.listen_addr, "127.0.0.1", MAXVAL-1);
+   cfg.listen_port = 10025;
 
-   strncpy(cfg.avast_addr, AVAST_ADDR, MAXVAL-1);
-   cfg.avast_port = AVAST_PORT;
+   strncpy(cfg.postfix_addr, "127.0.0.1", MAXVAL-1);
+   cfg.postfix_port = 10026;
+
+   strncpy(cfg.spam_smtp_addr, "127.0.0.1", MAXVAL-1);
+   cfg.spam_smtp_port = 10026;
+
+
+   strncpy(cfg.delivery_agent, "/usr/sbin/sendmail -oi -f", MAXVAL-1);
+
+   strncpy(cfg.avast_addr, "127.0.0.1", MAXVAL-1);
+   cfg.avast_port = 5036;
+
+   strncpy(cfg.avast_home_cmd_line, "/usr/bin/avast", MAXVAL-1);
 
    strncpy(cfg.kav_socket, KAV_SOCKET, MAXVAL-1);
-
    strncpy(cfg.drweb_socket, DRWEB_SOCKET, MAXVAL-1);
-
    strncpy(cfg.clamd_socket, CLAMD_SOCKET, MAXVAL-1);
 
-   cfg.max_connections = MAXCONN;
-   cfg.backlog = BACKLOG;
+   cfg.max_connections = 30;
+   cfg.backlog = 20;
+   cfg.session_timeout = 420;
 
-   cfg.session_timeout = SESSION_TIMEOUT;
 
+   cfg.always_scan_message = 1;
    cfg.silently_discard_infected_email = 1;
    cfg.deliver_infected_email = 0;
 
-   memset(cfg.chrootdir, 0, MAXVAL);
+   cfg.message_from_a_zombie = 0;
 
-   strncpy(cfg.workdir, WORK_DIR, MAXVAL-1);
+   strncpy(cfg.memcached_servers, "127.0.0.1", MAXVAL-1);
+   cfg.use_antispam = 1;
+
+   cfg.enable_auto_white_list = 1;
+
+
+   cfg.rob_s = 1.0;
+   cfg.rob_x = 0.52;
+   cfg.esf_h = 1.0;
+   cfg.esf_s = 1.0;
+
+   cfg.exclusion_radius = 0.375;
+
+   cfg.max_message_size_to_filter = 65535;
+   cfg.max_number_of_tokens_to_filter = 2000;
+
+
+   cfg.penalize_images = 0;
+   cfg.penalize_embed_images = 0;
+   cfg.penalize_octet_stream = 0;
+
+   //strncpy(cfg.surbl_domain, "multi.surbl.org", MAXVAL-1);
+   //strncpy(cfg.rbl_domain, "zen.spamhaus.org", MAXVAL-1);
 
    strncpy(cfg.clapf_header_field, SPAMINESS_HEADER_FIELD, MAXVAL-1);
 
+   //strncpy(cfg.spam_subject_prefix, "[sp@m]", MAXVAL-1);
+
    cfg.spam_overall_limit = 0.92;
-   cfg.spaminess_oblivion_limit=1.01;
+   cfg.spaminess_oblivion_limit = 1.01;
+   cfg.max_ham_spamicity = 0.45;
+
 
    cfg.spaminess_of_strange_language_stuff = 0.9876;
-   cfg.spaminess_of_too_much_spam_in_top15 = 0.9998;
    cfg.spaminess_of_blackholed_mail = 0.9995;
    cfg.spaminess_of_text_and_base64 = 0;
    cfg.spaminess_of_caught_by_surbl = 0.9997;
    cfg.spaminess_of_embed_image = 0.9994;
 
-   cfg.replace_junk_characters = 1;
-   cfg.invalid_junk_limit = INVALID_JUNK_LIMIT;
-   cfg.invalid_junk_line = INVALID_JUNK_LINE;
-   cfg.max_ham_spamicity = MAX_HAM_SPAMICITY;
+   cfg.group_type = 1;
+   cfg.training_mode = 0;
 
-   cfg.verbosity = 0;
-   cfg.debug = 0;
+   cfg.initial_1000_learning = 0;
 
-   cfg.use_antispam = 1;
-
-   cfg.message_from_a_zombie = 0;
-
-   cfg.enable_auto_white_list = 1;
+   cfg.update_tokens = 1;
 
    cfg.store_metadata = 1;
+   cfg.store_only_spam = 0;
 
-   cfg.rob_s = 1.0;
-   cfg.rob_x = 0.5;
-   cfg.esf_h = 1;
-   cfg.esf_s = 1;
+   cfg.replace_junk_characters = 1;
+   cfg.invalid_junk_limit = 5;
+   cfg.invalid_junk_line = 1;
 
-   cfg.exclusion_radius = EXCLUSION_RADIUS;
-
-   cfg.max_message_size_to_filter = 65535;
-   cfg.max_number_of_tokens_to_filter = 2000;
-
-   cfg.always_scan_message = 1;
 
    cfg.use_libclamav_block_max_feature = 1;
-   cfg.clamav_maxfile = MAXFILES;
-   cfg.clamav_max_archived_file_size = MAX_ARCHIVED_FILE_SIZE;
-   cfg.clamav_max_recursion_level = MAX_RECURSION_LEVEL;
-   cfg.clamav_max_compress_ratio = MAX_COMPRESS_RATIO;
-   cfg.clamav_archive_mem_limit = ARCHIVE_MEM_LIMIT;
+   cfg.clamav_maxfile = 100;
+   cfg.clamav_max_archived_file_size = 31457280;
+   cfg.clamav_max_recursion_level = 5;
+   cfg.clamav_max_compress_ratio = 200;
+   cfg.clamav_archive_mem_limit = 0;
    cfg.clamav_block_encrypted_archives = 1;
    cfg.clamav_use_phishing_db = 1;
 
+
+   strncpy(cfg.mysqlsocket, "/tmp/mysql.sock", MAXVAL-1);
+   strncpy(cfg.mysqluser, "clapf", MAXVAL-1);
+   //cfg.mysqlpwd, "");
+   strncpy(cfg.mysqldb, "clapf", MAXVAL-1);
    cfg.mysql_connect_timeout = 2;
    cfg.mysql_enable_autoreconnect = 0;
 
-   strncpy(cfg.pidfile, PIDFILE, MAXVAL-1);
 
-   cfg.update_tokens = 1;
+   snprintf(cfg.sqlite3, MAXVAL-1, "%s/tokens.sdb", USER_DATA_DIR);
+   strncpy(cfg.sqlite3_pragma, "PRAGMA synchronous = OFF", MAXVAL-1);
+
+   snprintf(cfg.mydbfile, MAXVAL-1, "%s/tokens.mydb", USER_DATA_DIR);
+
+   strncpy(cfg.ldap_host, "127.0.0.1", MAXVAL-1);
+   strncpy(cfg.ldap_base, "dc=yourdomain,dc=com", MAXVAL-1);
+   cfg.ldap_use_tls = 0;
+
+   strncpy(cfg.email_address_attribute_name, "mail", MAXVAL-1);
+   strncpy(cfg.email_alias_attribute_name, "mailAlternateAddress", MAXVAL-1);
+
+   strncpy(cfg.spamd_addr, "127.0.0.1", MAXVAL-1);
+   cfg.spamd_port = 783;
+   strncpy(cfg.spamc_user, "spamc", MAXVAL-1);
+
 
 
    /* parse the config file */
@@ -144,8 +164,8 @@ struct __config read_config(char *configfile){
                memset(key, 0, MAXVAL);
                memset(val, 0, MAXVAL);
 
-               p = extract(buf, '=', key, MAXVAL-1);
-               p = extract(p, '\n', val, MAXVAL-1);
+               p = split(buf, '=', key, MAXVAL-1);
+               p = split(p, '\n', val, MAXVAL-1);
 
 
                if(p){
@@ -261,6 +281,8 @@ struct __config read_config(char *configfile){
                   if(strcmp(key, "spam_subject_prefix") == 0)
                      memcpy(cfg.spam_subject_prefix, val, MAXVAL-1);
 
+                  if(strcmp(key, "possible_spam_subject_prefix") == 0)
+                     memcpy(cfg.possible_spam_subject_prefix, val, MAXVAL-1);
 
                   if(strcmp(key, "enable_auto_white_list") == 0)
                      cfg.enable_auto_white_list = atoi(val);

@@ -1,3 +1,21 @@
+0.4.2:
+------
+
+The Web UI has been rewritten using the MVC model
+
+The following features have been added:
+  - AD import
+  - domain admin role
+  - message history view
+
+Simplified logging
+
+Revised blackhole feature
+
+Added policy support for SQLite3 storage
+
+
+
 0.4.1:
 ------
 

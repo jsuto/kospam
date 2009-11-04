@@ -94,6 +94,7 @@ struct __config {
 
    float spam_overall_limit;
    float spaminess_oblivion_limit;
+   float possible_spam_limit;
 
    float spaminess_of_strange_language_stuff;
    float spaminess_of_too_much_spam_in_top15;

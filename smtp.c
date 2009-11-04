@@ -342,7 +342,7 @@ int inject_mail(struct session_data *sdata, int msg, char *smtpaddr, int smtppor
          if(spaminessbuf && strlen(cfg->spam_subject_prefix) > 2 && strstr(spaminessbuf, cfg->clapf_spam_header_field))
             put_subject_spam_prefix = 1;
 
-         if(sdata->spaminess < cfg->spam_overall_limit && sdata->spaminess > 0.8)
+         if(sdata->spaminess < cfg->spam_overall_limit && sdata->spaminess > cfg->possible_spam_limit)
             put_subject_possible_spam_prefix = 1;
 
          /*

@@ -94,6 +94,7 @@ struct __config read_config(char *configfile){
 
    cfg.spam_overall_limit = 0.92;
    cfg.spaminess_oblivion_limit = 1.01;
+   cfg.possible_spam_limit = 0.8;
    cfg.max_ham_spamicity = 0.45;
 
 
@@ -338,6 +339,9 @@ struct __config read_config(char *configfile){
 
                   if(strcmp(key, "spaminess_oblivion_limit") == 0)
                      cfg.spaminess_oblivion_limit = atof(val);
+
+                  if(strcmp(key, "possible_spam_limit") == 0)
+                     cfg.possible_spam_limit = atof(val);
 
                   if(strcmp(key, "spaminess_of_strange_language_stuff") == 0)
                      cfg.spaminess_of_strange_language_stuff = atof(val);

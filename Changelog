@@ -3,7 +3,8 @@
 2009.11.03, SJ
 
 Add a [spam???] prefix to the Subject: line if the message probability
-is 0.8 > spam_overall_limit.
+is greater than possible_spam_limit (0.8 by default) and less than
+spam_overall_limit (0.92 by default).
 (smtp.c, cfg.c, cfg.h, example.conf)
 
 2009.11.02, SJ

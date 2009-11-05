@@ -69,6 +69,7 @@ class ControllerUserList extends Controller {
                                           'uid'          => $user['uid'],
                                           'username'     => $user['username'],
                                           'email'        => $user['email'],
+                                          'shortemail'   => short_email($user['email']),
                                           'domain'       => $user['domain'],
                                           'policy_group' => $policy_group
                                         );

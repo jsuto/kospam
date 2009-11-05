@@ -118,4 +118,13 @@ function get_per_user_queue_dir($domain = '', $username = '', $uid = 0){
 }
 
 
+function short_email($email) {
+   if(strlen($email) > 25) {
+      return substr($email, 0, 25) . "...";
+   }
+
+   else return $email;
+}
+
+
 ?>

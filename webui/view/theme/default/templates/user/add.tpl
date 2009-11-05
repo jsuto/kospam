@@ -1,6 +1,8 @@
 
 <h4><?php print $text_add_new_user_alias; ?></h4>
 
+<?php if(isset($errorstring)){ ?><p class="loginfailed"><?php print $text_error; ?>: <?php print $errorstring; ?></p><?php } ?>
+
 <?php if(isset($policies)) { ?>
 
 <form action="index.php?route=user/add" name="adduser" method="post">
@@ -58,4 +60,3 @@
 <?php } else if(isset($x)){ print $x; ?>. <a href="index.php?route=user/list"><?php print $text_back; ?></a>
 <?php } ?>
 
-<?php if(isset($errorstring)){ ?><p class="loginfailed"><?php print $text_error; ?>: <?php print $errorstring; ?></p><?php } ?>

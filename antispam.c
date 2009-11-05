@@ -1,5 +1,5 @@
 /*
- * antispam.c, 2009.10.27, SJ
+ * antispam.c, 2009.11.05, SJ
  */
 
 #include <stdio.h>
@@ -351,6 +351,10 @@ int process_message(struct session_data *sdata, struct _state *sstate, struct __
 
       if(sdata->spaminess >= cfg->spam_overall_limit){
          strncat(sdata->spaminessbuf, cfg->clapf_spam_header_field, MAXBUFSIZE-1);
+      }
+
+      if(sdata->spaminess >= cfg->possible_spam_limit && sdata->spaminess < cfg->spam_overall_limit && strlen(cfg->clapf_possible_spam_header_field) > 5){
+         strncat(sdata->spaminessbuf, cfg->clapf_possible_spam_header_field, MAXBUFSIZE-1);
       }
 
 

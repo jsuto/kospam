@@ -1,5 +1,5 @@
 /*
- * cfg.h, 2009.11.03, SJ
+ * cfg.h, 2009.11.05, SJ
  */
 
 #ifndef _CFG_H
@@ -87,6 +87,7 @@ struct __config {
 
    char clapf_header_field[MAXVAL];
    char clapf_spam_header_field[MAXVAL];
+   char clapf_possible_spam_header_field[MAXVAL];
 
    int update_tokens;
 

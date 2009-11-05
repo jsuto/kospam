@@ -24,7 +24,4 @@ echo "DELETE FROM t_token WHERE timestamp < $_90_DAYS;" | $SQLITE3 $DB
 # purge aged entries from the t_minefield table
 echo "DELETE FROM t_minefield WHERE ts < (SELECT strftime('%s','now')-$MINEFIELD_TTL)" | $SQLITE3 $DB
 
-# clean aged queue entries from the database 
-echo "DELETE FROM t_queue WHERE ts < $_7_DAYS;" | $SQLITE3 $DB
-
 echo "VACUUM;" | $SQLITE3 $DB

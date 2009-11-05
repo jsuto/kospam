@@ -1,5 +1,16 @@
 0.4.3-rc1:
 
+2009.11.05, SJ
+
+If the messages is evaluated as a possible spam, we can put a
+special header field too. By default the followinf field is set:
+clapf_possible_spam_header_field=X-Clapf-spamicity: maybe
+(antispam.c, cfg.c, cfg.h, example.conf)
+(credits: tompos)
+
+Removed the unnecessary t_queue table reference from the purge scripts.
+(util/purge*)
+
 2009.11.03, SJ
 
 Add a [spam???] prefix to the Subject: line if the message probability

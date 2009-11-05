@@ -1,5 +1,5 @@
 /*
- * cfg.c, 2009.11.03, SJ
+ * cfg.c, 2009.11.05, SJ
  */
 
 #include <stdio.h>
@@ -330,6 +330,9 @@ struct __config read_config(char *configfile){
                      strncat(cfg.clapf_spam_header_field, val, MAXVAL-1);
                      strncat(cfg.clapf_spam_header_field, "\r\n", MAXVAL-1);
                   }
+
+                  if(strcmp(key, "clapf_possible_spam_header_field") == 0)
+                     memcpy(cfg.clapf_possible_spam_header_field, val, MAXVAL-1);
 
                   if(strcmp(key, "spam_overall_limit") == 0)
                      cfg.spam_overall_limit = atof(val);

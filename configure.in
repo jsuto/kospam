@@ -612,6 +612,11 @@ if test "$os" = "Linux"; then
    defs="$defs -D_GNU_SOURCE"
 fi
 
+if test `echo $os | grep -c CYGWIN` -eq 1; then
+   defs="$defs -DCYGWIN"
+   AC_DEFINE_UNQUOTED(ZOMBIE_NET_REGEX, "zombienets.regex", [where the virus template is])
+fi
+
 dnl whether we have antivirus support
 
 if test "$have_libclamav" = "yes" || test "$have_clamd" = "yes" || test "$have_avast" = "yes" || test "$have_avast_home" = "yes" || test "$have_kav" = "yes"  || test "$have_drweb" = "yes" ; then

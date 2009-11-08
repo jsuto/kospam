@@ -1,5 +1,5 @@
 /*
- * hash2.c, 2009.09.28, SJ
+ * hash2.c, 2009.11.08, SJ
  */
 
 
@@ -89,7 +89,7 @@ void check_lists(struct session_data *sdata, struct _state *state, int *found_on
 
    /* consult URL blacklists */
 
-   if(state->urls){
+   if(state->urls && strlen(cfg->surbl_domain) > 4){
       url = state->urls;
 
       while(url){

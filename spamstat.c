@@ -1,5 +1,5 @@
 /*
- * spamstat.c, 2009.06.03, SJ
+ * spamstat.c, 2009.11.07, SJ
  */
 
 #include <stdio.h>
@@ -14,7 +14,7 @@
 #include "cfg.h"
 #include "messages.h"
 #include "config.h"
-
+#include "clapf.h"
 
 #ifdef HAVE_MYSQL
    #include <mysql.h>

@@ -1,5 +1,17 @@
 0.4.3-rc1:
 
+2009.11.08, SJ
+
+Code cleanup. Created a brand new config file parsing utility.
+(cfg.c, cfg.h, clapf.h, clapf.c, parsembox.c, misc.c, misc.h, hash2.c,
+config.h, avir.c, example.conf, spamstat.c, Makefile.in)
+(credits: turul16)
+
+2009.11.06, SJ
+
+Removed a bug prevented clapf to train messages in multiple rounds iteratively.
+(bayes.c)
+
 2009.11.05, SJ
 
 If the messages is evaluated as a possible spam, we can put a

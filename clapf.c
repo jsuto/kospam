@@ -1,5 +1,5 @@
 /*
- * clapf.c, 2009.10.29, SJ
+ * clapf.c, 2009.11.07, SJ
  */
 
 #include <stdio.h>
@@ -25,6 +25,7 @@
 #include "errmsg.h"
 #include "session.h"
 #include "config.h"
+#include "clapf.h"
 
 extern char *optarg;
 extern int optind;

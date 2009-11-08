@@ -163,7 +163,7 @@ install-clapf: clapf
 	$(INSTALL) -m 0755 clapf $(DESTDIR)$(sbindir)
 	$(INSTALL) -d $(DESTDIR)$(sysconfdir)
 	rm -f clapf.conf; make clapf.conf
-	if [ ! -f "$(DESTDIR)$(sysconfdir)/clapf.conf" ]; then $(INSTALL) -m 0644 $(srcdir)/clapf.conf $(DESTDIR)$(sysconfdir)/clapf.conf; fi
+	if [ ! -f "$(DESTDIR)$(sysconfdir)/clapf.conf" ]; then $(INSTALL) -m 0640 $(srcdir)/clapf.conf $(DESTDIR)$(sysconfdir)/clapf.conf; chgrp $(CLAPF_GROUP) $(DESTDIR)$(sysconfdir)/clapf.conf; fi
 
 install-spamsum:
 	(cd contrib/spamsum; make install)

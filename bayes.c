@@ -1,5 +1,5 @@
 /*
- * bayes.c, 2009.10.19, SJ
+ * bayes.c, 2009.11.06, SJ
  */
 
 #include <stdio.h>
@@ -367,10 +367,6 @@ int train_message(struct session_data *sdata, struct _state *state, int rounds, 
          sqlite3_exec(sdata->db, buf, NULL, NULL, &err);
       #endif
       }
-
-
-      /* break the training loop in case of TOE mode, 2009.09.10, SJ */
-      if(train_mode == T_TOE) break;
 
 
       /* query the new spamicity value in this round */

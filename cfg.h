@@ -1,11 +1,11 @@
 /*
- * cfg.h, 2009.11.05, SJ
+ * cfg.h, 2009.11.08, SJ
  */
 
 #ifndef _CFG_H
  #define _CFG_H
 
-#define MAXVAL 128
+#include "config.h"
 
 struct __config {
    char hostid[MAXVAL];
@@ -46,7 +46,6 @@ struct __config {
    char quarantine_dir[MAXVAL];
 
    char our_signo[MAXVAL];
-   char mydomains[MAXVAL];
 
    int verbosity;
    int debug;
@@ -98,7 +97,6 @@ struct __config {
    float possible_spam_limit;
 
    float spaminess_of_strange_language_stuff;
-   float spaminess_of_too_much_spam_in_top15;
    float spaminess_of_blackholed_mail;
    float spaminess_of_text_and_base64;
    float spaminess_of_caught_by_surbl;
@@ -143,7 +141,6 @@ struct __config {
    char mysqlpwd[MAXVAL];
    char mysqldb[MAXVAL];
    int mysql_connect_timeout;
-   int mysql_enable_autoreconnect;
 
    // sqlite3 stuff
 
@@ -172,12 +169,6 @@ struct __config {
    char email_address_attribute_name[MAXVAL];
    char email_alias_attribute_name[MAXVAL];
 
-   // ssl
-
-   char ssl_cert_file[MAXVAL];
-   char ssl_key_file[MAXVAL];
-   int use_ssl;
-
    // spamsum
    char sig_db[MAXVAL];
 
@@ -187,6 +178,5 @@ struct __config {
 
 };
 
-struct __config read_config(char *configfile);
 
 #endif /* _CFG_H */

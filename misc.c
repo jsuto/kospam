@@ -843,26 +843,6 @@ int move_message_to_quarantine(struct session_data *sdata, char *quarantine_dir)
 
 
 /*
- * is the email address in our domains?
- */
-
-int is_recipient_in_our_domains(char *rawmail, struct __config *cfg){
-   char *p, email[SMALLBUFSIZE];
-
-   if(extract_email(rawmail, email) == 0) return 0;
-
-   p = strchr(email, '@');
-   if(!p) return 0;
-
-   //syslog(LOG_PRIORITY, "%s in %s", p, cfg->mydomains);
-
-   if(strstr(cfg->mydomains, p)) return 1;
-
-   return 0;
-}
-
-
-/*
  * resolve a hostname or dotted IPv4 address
  */
 

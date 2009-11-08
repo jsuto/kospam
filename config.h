@@ -1,5 +1,5 @@
 /*
- * config.h, 2009.11.03, SJ
+ * config.h, 2009.11.08, SJ
  */
 
 #ifndef _CONFIG_H
@@ -24,8 +24,8 @@
 #define DRWEB_SOCKET "/var/drweb/run/.daemon"
 #define KAV_SOCKET "/var/run/aveserver"
 
-#define WORK_DIR DATADIR "/clapf"
-#define PIDFILE WORK_DIR "/clapf.pid"
+#define WORK_DIR DATADIR "/lib/clapf/tmp"
+#define PIDFILE DATADIR "/lib/clapf/clapf.pid"
 #define QUARANTINELEN 255
 #define TIMEOUT 60
 #define TIMEOUT_USEC 500000

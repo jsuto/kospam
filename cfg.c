@@ -1,13 +1,227 @@
 /*
- * cfg.c, 2009.11.05, SJ
+ * cfg.c, 2009.11.08, SJ
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stddef.h>
 #include "cfg.h"
 #include "misc.h"
 #include "config.h"
+
+
+int string_parser(char *src, char *target, int limit){
+   snprintf(target, limit, "%s", src);
+
+   return 0;
+};
+
+int multi_line_string_parser(char *src, char *target, int limit){
+   if(strlen(src) > 0 && strlen(target) + strlen(src) + 3 < limit){
+      strncat(target, src, limit);
+      strncat(target, "\r\n", limit);
+
+      return 0;
+   }
+
+   return 1;
+};
+
+int int_parser(char *src, int *target, int limit){
+   *target = strtol(src, (char **) NULL, 10);
+
+   return 0;
+};
+
+
+int float_parser(char *src, float *target, int limit){
+   *target = strtof(src, (char **) NULL);
+
+   return 0;
+};
+
+
+struct _parse_rule {
+   char *name;
+   char *type;
+   int(*parser)(char*,void*,int);
+   size_t offset;
+   char *def_val;
+   int limit;
+};
+
+
+/*
+ * all known configuration items in order
+ */
+
+struct _parse_rule config_parse_rules[] =
+{
+   { "always_scan_message", "integer", (void*) int_parser, offsetof(struct __config, always_scan_message), "1", sizeof(int)},
+   { "avast_addr", "string", (void*) string_parser, offsetof(struct __config, avast_addr), "127.0.0.1", MAXVAL-1},
+   { "avast_home_cmd_line", "string", (void*) string_parser, offsetof(struct __config, avast_home_cmd_line), "/usr/bin/avast", MAXVAL-1},
+   { "avast_port", "integer", (void*) int_parser, offsetof(struct __config, avast_port), "5036", sizeof(int)},
+   { "backlog", "integer", (void*) int_parser, offsetof(struct __config, backlog), "20", sizeof(int)},
+   { "blackhole_email_list", "string", (void*) string_parser, offsetof(struct __config, blackhole_email_list), "", MAXVAL-1},
+   { "chrootdir", "string", (void*) string_parser, offsetof(struct __config, chrootdir), "", MAXVAL-1},
+   { "clamav_archive_mem_limit", "integer", (void*) int_parser, offsetof(struct __config, clamav_archive_mem_limit), "0", sizeof(int)},
+   { "clamav_block_encrypted_archives", "integer", (void*) int_parser, offsetof(struct __config, clamav_block_encrypted_archives), "1", sizeof(int)},
+   { "clamav_maxfile", "integer", (void*) int_parser, offsetof(struct __config, clamav_maxfile), "100", sizeof(int)},
+   { "clamav_max_archived_file_size", "integer", (void*) int_parser, offsetof(struct __config, clamav_max_archived_file_size), "31457280", sizeof(int)},
+   { "clamav_max_compress_ratio", "integer", (void*) int_parser, offsetof(struct __config, clamav_max_compress_ratio), "200", sizeof(int)},
+   { "clamav_max_recursion_level", "integer", (void*) int_parser, offsetof(struct __config, clamav_max_recursion_level), "5", sizeof(int)},
+   { "clamav_use_phishing_db", "integer", (void*) int_parser, offsetof(struct __config, clamav_use_phishing_db), "1", sizeof(int)},
+   { "clamd_addr", "string", (void*) string_parser, offsetof(struct __config, clamd_addr), "", MAXVAL-1},
+   { "clamd_port", "integer", (void*) int_parser, offsetof(struct __config, clamd_port), "0", sizeof(int)},
+   { "clamd_socket", "string", (void*) string_parser, offsetof(struct __config, clamd_socket), CLAMD_SOCKET, MAXVAL-1},
+   { "clapf_header_field", "string", (void*) string_parser, offsetof(struct __config, clapf_header_field), SPAMINESS_HEADER_FIELD, MAXVAL-1},
+   { "clapf_possible_spam_header_field", "string", (void*) string_parser, offsetof(struct __config, clapf_possible_spam_header_field), "", MAXVAL-1},
+   { "clapf_spam_header_field", "multi_line_string", (void*) multi_line_string_parser, offsetof(struct __config, clapf_spam_header_field), "", MAXVAL-1},
+   { "debug", "integer", (void*) int_parser, offsetof(struct __config, debug), "0", sizeof(int)},
+   { "deliver_infected_email", "integer", (void*) int_parser, offsetof(struct __config, deliver_infected_email), "0", sizeof(int)},
+   { "delivery_agent", "string", (void*) string_parser, offsetof(struct __config, delivery_agent), "/usr/sbin/sendmail -oi -f", MAXVAL-1},
+   { "drweb_socket", "string", (void*) string_parser, offsetof(struct __config, drweb_socket), DRWEB_SOCKET, MAXVAL-1},
+   { "email_address_attribute_name", "string", (void*) string_parser, offsetof(struct __config, email_address_attribute_name), "mail", MAXVAL-1},
+   { "email_alias_attribute_name", "string", (void*) string_parser, offsetof(struct __config, email_alias_attribute_name), "mailAlternateAddress", MAXVAL-1},
+   { "enable_auto_white_list", "integer", (void*) int_parser, offsetof(struct __config, enable_auto_white_list), "1", sizeof(int)},
+   { "esf_h", "float", (void*) float_parser, offsetof(struct __config, esf_h), "1.0", sizeof(float)},
+   { "esf_s", "float", (void*) float_parser, offsetof(struct __config, esf_s), "1.0", sizeof(float)},
+   { "exclusion_radius", "float", (void*) float_parser, offsetof(struct __config, exclusion_radius), "0.375", sizeof(float)},
+   { "group_type", "integer", (void*) int_parser, offsetof(struct __config, group_type), "1", sizeof(int)},
+   { "hostid", "string", (void*) string_parser, offsetof(struct __config, hostid), HOSTID, MAXVAL-1},
+   { "initial_1000_learning", "integer", (void*) int_parser, offsetof(struct __config, initial_1000_learning), "0", sizeof(int)},
+   { "invalid_junk_limit", "integer", (void*) int_parser, offsetof(struct __config, invalid_junk_limit), "5", sizeof(int)},
+   { "invalid_junk_line", "integer", (void*) int_parser, offsetof(struct __config, invalid_junk_line), "1", sizeof(int)},
+   { "kav_socket", "string", (void*) string_parser, offsetof(struct __config, kav_socket), KAV_SOCKET, MAXVAL-1},
+   { "ldap_host", "string", (void*) string_parser, offsetof(struct __config, ldap_host), "127.0.0.1", MAXVAL-1},
+   { "ldap_base", "string", (void*) string_parser, offsetof(struct __config, ldap_base), "dc=yourdomain,dc=com", MAXVAL-1},
+   { "ldap_user", "string", (void*) string_parser, offsetof(struct __config, ldap_user), "", MAXVAL-1},
+   { "ldap_pwd", "string", (void*) string_parser, offsetof(struct __config, ldap_pwd), "", MAXVAL-1},
+   { "ldap_use_tls", "integer", (void*) int_parser, offsetof(struct __config, ldap_use_tls), "0", sizeof(int)},
+   { "listen_addr", "string", (void*) string_parser, offsetof(struct __config, listen_addr), "127.0.0.1", MAXVAL-1},
+   { "listen_port", "integer", (void*) int_parser, offsetof(struct __config, listen_port), "10025", sizeof(int)},
+   { "locale", "string", (void*) string_parser, offsetof(struct __config, locale), "", MAXVAL-1},
+   { "localpostmaster", "string", (void*) string_parser, offsetof(struct __config, localpostmaster), "", MAXVAL-1},
+   { "max_connections", "integer", (void*) int_parser, offsetof(struct __config, max_connections), "30", sizeof(int)},
+   { "max_ham_spamicity", "float", (void*) float_parser, offsetof(struct __config, max_ham_spamicity), "0.45", sizeof(float)},
+   { "max_message_size_to_filter", "integer", (void*) int_parser, offsetof(struct __config, max_message_size_to_filter), "65535", sizeof(int)},
+   { "max_number_of_tokens_to_filter", "integer", (void*) int_parser, offsetof(struct __config, max_number_of_tokens_to_filter), "2000", sizeof(int)},
+   { "memcached_servers", "string", (void*) string_parser, offsetof(struct __config, memcached_servers), "127.0.0.1", MAXVAL-1},
+   { "message_from_a_zombie", "integer", (void*) int_parser, offsetof(struct __config, message_from_a_zombie), "0", sizeof(int)},
+   { "mydbfile", "string", (void*) string_parser, offsetof(struct __config, mydbfile), "/var/lib/clapf/data/tokens.mydb", MAXVAL-1},
+   { "mysqlhost", "string", (void*) string_parser, offsetof(struct __config, mysqlhost), "", MAXVAL-1},
+   { "mysqlport", "integer", (void*) int_parser, offsetof(struct __config, mysqlport), "", sizeof(int)},
+   { "mysqlsocket", "string", (void*) string_parser, offsetof(struct __config, mysqlsocket), "/tmp/mysql.sock", MAXVAL-1},
+   { "mysqluser", "string", (void*) string_parser, offsetof(struct __config, mysqluser), "clapf", MAXVAL-1},
+   { "mysqlpwd", "string", (void*) string_parser, offsetof(struct __config, mysqlpwd), "", MAXVAL-1},
+   { "mysqldb", "string", (void*) string_parser, offsetof(struct __config, mysqldb), "clapf", MAXVAL-1},
+   { "mysql_connect_timeout", "integer", (void*) int_parser, offsetof(struct __config, mysql_connect_timeout), "2", sizeof(int)},
+   { "our_signo", "string", (void*) string_parser, offsetof(struct __config, our_signo), "", MAXVAL-1},
+   { "penalize_embed_images", "integer", (void*) int_parser, offsetof(struct __config, penalize_embed_images), "0", sizeof(int)},
+   { "penalize_images", "integer", (void*) int_parser, offsetof(struct __config, penalize_images), "0", sizeof(int)},
+   { "penalize_octet_stream", "integer", (void*) int_parser, offsetof(struct __config, penalize_octet_stream), "0", sizeof(int)},
+   { "pidfile", "string", (void*) string_parser, offsetof(struct __config, pidfile), PIDFILE, MAXVAL-1},
+   { "possible_spam_limit", "float", (void*) float_parser, offsetof(struct __config, possible_spam_limit), "0.8", sizeof(float)},
+   { "possible_spam_subject_prefix", "string", (void*) string_parser, offsetof(struct __config, possible_spam_subject_prefix), "", MAXVAL-1},
+   { "postfix_addr", "string", (void*) string_parser, offsetof(struct __config, postfix_addr), "127.0.0.1", MAXVAL-1},
+   { "postfix_port", "integer", (void*) int_parser, offsetof(struct __config, postfix_port), "10026", sizeof(int)},
+   { "rbl_condemns_the_message", "integer", (void*) int_parser, offsetof(struct __config, rbl_condemns_the_message), "0", sizeof(int)},
+   { "rbl_domain", "string", (void*) string_parser, offsetof(struct __config, rbl_domain), "", MAXVAL-1},
+   { "replace_junk_characters", "integer", (void*) int_parser, offsetof(struct __config, replace_junk_characters), "1", sizeof(int)},
+   { "rob_s", "float", (void*) float_parser, offsetof(struct __config, rob_s), "1.0", sizeof(float)},
+   { "rob_x", "float", (void*) float_parser, offsetof(struct __config, rob_x), "0.52", sizeof(float)},
+   { "session_timeout", "integer", (void*) int_parser, offsetof(struct __config, session_timeout), "420", sizeof(int)},
+   { "sig_db", "string", (void*) string_parser, offsetof(struct __config, sig_db), "", MAXVAL-1},
+   { "silently_discard_infected_email", "integer", (void*) int_parser, offsetof(struct __config, silently_discard_infected_email), "1", sizeof(int)},
+   { "spam_smtp_addr", "string", (void*) string_parser, offsetof(struct __config, spam_smtp_addr), "127.0.0.1", MAXVAL-1},
+   { "spam_smtp_port", "integer", (void*) int_parser, offsetof(struct __config, spam_smtp_port), "10026", sizeof(int)},
+   { "quarantine_dir", "string", (void*) string_parser, offsetof(struct __config, quarantine_dir), "", MAXVAL-1},
+   { "spamc_user", "string", (void*) string_parser, offsetof(struct __config, spamc_user), "spamc", MAXVAL-1},
+   { "spamd_addr", "string", (void*) string_parser, offsetof(struct __config, spamd_addr), "127.0.0.1", MAXVAL-1},
+   { "spamd_port", "integer", (void*) int_parser, offsetof(struct __config, spamd_port), "783", sizeof(int)},
+   { "spam_overall_limit", "float", (void*) float_parser, offsetof(struct __config, spam_overall_limit), "0.92", sizeof(float)},
+   { "spaminess_oblivion_limit", "float", (void*) float_parser, offsetof(struct __config, spaminess_oblivion_limit), "1.01", sizeof(float)},
+   { "spaminess_of_blackholed_mail", "float", (void*) float_parser, offsetof(struct __config, spaminess_of_blackholed_mail), "0.9995", sizeof(float)},
+   { "spaminess_of_caught_by_surbl", "float", (void*) float_parser, offsetof(struct __config, spaminess_of_caught_by_surbl), "0.9997", sizeof(float)},
+   { "spaminess_of_embed_image", "float", (void*) float_parser, offsetof(struct __config, spaminess_of_embed_image), "0.9994", sizeof(float)},
+   { "spaminess_of_strange_language_stuff", "float", (void*) float_parser, offsetof(struct __config, spaminess_of_strange_language_stuff), "0.9876", sizeof(float)},
+   { "spaminess_of_text_and_base64", "float", (void*) float_parser, offsetof(struct __config, spaminess_of_text_and_base64), "0", sizeof(float)},
+   { "spam_subject_prefix", "string", (void*) string_parser, offsetof(struct __config, spam_subject_prefix), "", MAXVAL-1},
+   { "sqlite3", "string", (void*) string_parser, offsetof(struct __config, sqlite3), "/var/lib/clapf/data/tokens.sdb", MAXVAL-1},
+   { "sqlite3_pragma", "string", (void*) string_parser, offsetof(struct __config, sqlite3_pragma), "PRAGMA synchronous = OFF", MAXVAL-1},
+   { "store_metadata", "integer", (void*) int_parser, offsetof(struct __config, store_metadata), "1", sizeof(int)},
+   { "store_only_spam", "integer", (void*) int_parser, offsetof(struct __config, store_only_spam), "0", sizeof(int)},
+   { "surbl_domain", "string", (void*) string_parser, offsetof(struct __config, surbl_domain), "", MAXVAL-1},
+   { "surbl_condemns_the_message", "integer", (void*) int_parser, offsetof(struct __config, surbl_condemns_the_message), "0", sizeof(int)},
+   { "training_mode", "integer", (void*) int_parser, offsetof(struct __config, training_mode), "0", sizeof(int)},
+   { "update_tokens", "integer", (void*) int_parser, offsetof(struct __config, update_tokens), "1", sizeof(int)},
+   { "use_antispam", "integer", (void*) int_parser, offsetof(struct __config, use_antispam), "1", sizeof(int)},
+   { "use_libclamav_block_max_feature", "integer", (void*) int_parser, offsetof(struct __config, use_libclamav_block_max_feature), "1", sizeof(int)},
+   { "verbosity", "integer", (void*) int_parser, offsetof(struct __config, verbosity), "1", sizeof(int)},
+   { "workdir", "string", (void*) string_parser, offsetof(struct __config, workdir), WORK_DIR, MAXVAL-1},
+
+   {NULL, NULL, NULL, 0, 0}
+};
+
+
+/*
+ * parse configfile
+ */
+
+int parse_config_file(char *configfile, struct __config *target_cfg, struct _parse_rule *rules){
+   char *line = NULL, *chpos;
+   size_t size=0;
+   FILE *f;
+
+   if(!configfile) return -1;
+
+   f = fopen(configfile, "r");
+   if(!f) return -1;
+
+   while(0 < getline(&line, &size, f)){
+      if(*line == ';' || *line == '#') continue;
+
+      chpos = strchr(line, '=');
+
+      if(chpos){
+         trim(chpos+1);
+         *chpos = '\0';
+         int i = 0;
+
+         while(rules[i].name){
+            if(!strcmp(line, rules[i].name)) {
+               if(rules[i].parser(chpos+1, (char*)target_cfg + rules[i].offset, rules[i].limit)){
+                  printf("failed to parse %s: \"%s\"\n", line, chpos+1);
+               }
+               break;
+            }				
+
+            i++;
+         }
+
+         if(!rules[i].name) printf("unknown key: \"%s\" \n", line);
+      }
+   }
+
+   if(line) free(line);
+
+   fclose(f);
+
+   return 0;
+}
+
+
+int load_default_config(struct __config *cfg, struct _parse_rule *rules){
+   int i=0;
+
+   while(rules[i].name){
+      rules[i].parser(rules[i].def_val, (char*)cfg + rules[i].offset, rules[i].limit);
+      i++;
+   }
+
+   return 0;
+}
 
 
 /*
@@ -16,505 +230,123 @@
 
 struct __config read_config(char *configfile){
    struct __config cfg;
-   char *p, buf[MAXBUFSIZE], key[MAXVAL], val[MAXVAL];
-   FILE *F;
 
    /* reset config structure and fill it with defaults */
 
    memset((char *)&cfg, 0, sizeof(struct __config));
 
-   cfg.verbosity = 1;
-   cfg.debug = 0;
-
-   strncpy(cfg.hostid, HOSTID, MAXVAL-1);
-
-   strncpy(cfg.workdir, WORK_DIR, MAXVAL-1);
-   strncpy(cfg.pidfile, PIDFILE, MAXVAL-1);
-
-
-   strncpy(cfg.listen_addr, "127.0.0.1", MAXVAL-1);
-   cfg.listen_port = 10025;
-
-   strncpy(cfg.postfix_addr, "127.0.0.1", MAXVAL-1);
-   cfg.postfix_port = 10026;
-
-   strncpy(cfg.spam_smtp_addr, "127.0.0.1", MAXVAL-1);
-   cfg.spam_smtp_port = 10026;
-
-
-   strncpy(cfg.delivery_agent, "/usr/sbin/sendmail -oi -f", MAXVAL-1);
-
-   strncpy(cfg.avast_addr, "127.0.0.1", MAXVAL-1);
-   cfg.avast_port = 5036;
-
-   strncpy(cfg.avast_home_cmd_line, "/usr/bin/avast", MAXVAL-1);
-
-   strncpy(cfg.kav_socket, KAV_SOCKET, MAXVAL-1);
-   strncpy(cfg.drweb_socket, DRWEB_SOCKET, MAXVAL-1);
-   strncpy(cfg.clamd_socket, CLAMD_SOCKET, MAXVAL-1);
-
-   cfg.max_connections = 30;
-   cfg.backlog = 20;
-   cfg.session_timeout = 420;
-
-
-   cfg.always_scan_message = 1;
-   cfg.silently_discard_infected_email = 1;
-   cfg.deliver_infected_email = 0;
-
-   cfg.message_from_a_zombie = 0;
-
-   strncpy(cfg.memcached_servers, "127.0.0.1", MAXVAL-1);
-   cfg.use_antispam = 1;
-
-   cfg.enable_auto_white_list = 1;
-
-
-   cfg.rob_s = 1.0;
-   cfg.rob_x = 0.52;
-   cfg.esf_h = 1.0;
-   cfg.esf_s = 1.0;
-
-   cfg.exclusion_radius = 0.375;
-
-   cfg.max_message_size_to_filter = 65535;
-   cfg.max_number_of_tokens_to_filter = 2000;
-
-
-   cfg.penalize_images = 0;
-   cfg.penalize_embed_images = 0;
-   cfg.penalize_octet_stream = 0;
-
-   //strncpy(cfg.surbl_domain, "multi.surbl.org", MAXVAL-1);
-   //strncpy(cfg.rbl_domain, "zen.spamhaus.org", MAXVAL-1);
-
-   strncpy(cfg.clapf_header_field, SPAMINESS_HEADER_FIELD, MAXVAL-1);
-
-   //strncpy(cfg.spam_subject_prefix, "[sp@m]", MAXVAL-1);
-
-   cfg.spam_overall_limit = 0.92;
-   cfg.spaminess_oblivion_limit = 1.01;
-   cfg.possible_spam_limit = 0.8;
-   cfg.max_ham_spamicity = 0.45;
-
-
-   cfg.spaminess_of_strange_language_stuff = 0.9876;
-   cfg.spaminess_of_blackholed_mail = 0.9995;
-   cfg.spaminess_of_text_and_base64 = 0;
-   cfg.spaminess_of_caught_by_surbl = 0.9997;
-   cfg.spaminess_of_embed_image = 0.9994;
-
-   cfg.group_type = 1;
-   cfg.training_mode = 0;
-
-   cfg.initial_1000_learning = 0;
-
-   cfg.update_tokens = 1;
-
-   cfg.store_metadata = 1;
-   cfg.store_only_spam = 0;
-
-   cfg.replace_junk_characters = 1;
-   cfg.invalid_junk_limit = 5;
-   cfg.invalid_junk_line = 1;
-
-
-   cfg.use_libclamav_block_max_feature = 1;
-   cfg.clamav_maxfile = 100;
-   cfg.clamav_max_archived_file_size = 31457280;
-   cfg.clamav_max_recursion_level = 5;
-   cfg.clamav_max_compress_ratio = 200;
-   cfg.clamav_archive_mem_limit = 0;
-   cfg.clamav_block_encrypted_archives = 1;
-   cfg.clamav_use_phishing_db = 1;
-
-
-   strncpy(cfg.mysqlsocket, "/tmp/mysql.sock", MAXVAL-1);
-   strncpy(cfg.mysqluser, "clapf", MAXVAL-1);
-   //cfg.mysqlpwd, "");
-   strncpy(cfg.mysqldb, "clapf", MAXVAL-1);
-   cfg.mysql_connect_timeout = 2;
-   cfg.mysql_enable_autoreconnect = 0;
-
-
-   snprintf(cfg.sqlite3, MAXVAL-1, "%s/tokens.sdb", USER_DATA_DIR);
-   strncpy(cfg.sqlite3_pragma, "PRAGMA synchronous = OFF", MAXVAL-1);
-
-   snprintf(cfg.mydbfile, MAXVAL-1, "%s/tokens.mydb", USER_DATA_DIR);
-
-   strncpy(cfg.ldap_host, "127.0.0.1", MAXVAL-1);
-   strncpy(cfg.ldap_base, "dc=yourdomain,dc=com", MAXVAL-1);
-   cfg.ldap_use_tls = 0;
-
-   strncpy(cfg.email_address_attribute_name, "mail", MAXVAL-1);
-   strncpy(cfg.email_alias_attribute_name, "mailAlternateAddress", MAXVAL-1);
-
-   strncpy(cfg.spamd_addr, "127.0.0.1", MAXVAL-1);
-   cfg.spamd_port = 783;
-   strncpy(cfg.spamc_user, "spamc", MAXVAL-1);
-
+   load_default_config(&cfg, config_parse_rules);
 
 
    /* parse the config file */
 
-   if(configfile){
-      F = fopen(configfile, "r");
-      if(F){
-         while(fgets(buf, MAXBUFSIZE, F)){
-            if(buf[0] != ';' && buf[0] != '#'){
-               memset(key, 0, MAXVAL);
-               memset(val, 0, MAXVAL);
-
-               p = split(buf, '=', key, MAXVAL-1);
-               p = split(p, '\n', val, MAXVAL-1);
-
-
-               if(p){
-                  if(strcmp(key, "hostid") == 0)
-                     memcpy(cfg.hostid, val, MAXVAL-1);
-
-                  if(strcmp(key, "listen_addr") == 0)
-                     memcpy(cfg.listen_addr, val, MAXVAL-1);
-
-                  if(strcmp(key, "listen_port") == 0)
-                     cfg.listen_port = atoi(val);
-
-                  if(strcmp(key, "listen_ssl_port") == 0)
-                     cfg.listen_ssl_port = atoi(val);
-
-                  if(strcmp(key, "postfix_addr") == 0)
-                     memcpy(cfg.postfix_addr, val, MAXVAL-1);
-
-                  if(strcmp(key, "postfix_port") == 0)
-                     cfg.postfix_port = atoi(val);
-
-                  if(strcmp(key, "delivery_agent") == 0)
-                     memcpy(cfg.delivery_agent, val, MAXVAL-1);
-
-                  if(strcmp(key, "avg_addr") == 0)
-                     memcpy(cfg.avg_addr, val, MAXVAL-1);
-
-                  if(strcmp(key, "avg_port") == 0)
-                     cfg.avg_port = atoi(val);
-
-                  if(strcmp(key, "avast_addr") == 0)
-                     memcpy(cfg.avast_addr, val, MAXVAL-1);
-
-                  if(strcmp(key, "avast_port") == 0)
-                     cfg.avast_port = atoi(val);
-
-                  if(strcmp(key, "avast_home_cmd_line") == 0)
-                     memcpy(cfg.avast_home_cmd_line, val, MAXVAL-1);
-
-                  if(strcmp(key, "kav_socket") == 0)
-                     memcpy(cfg.kav_socket, val, MAXVAL-1);
-
-                  if(strcmp(key, "drweb_socket") == 0)
-                     memcpy(cfg.drweb_socket, val, MAXVAL-1);
-
-                  if(strcmp(key, "clamd_addr") == 0)
-                     memcpy(cfg.clamd_addr, val, MAXVAL-1);
-
-                  if(strcmp(key, "clamd_port") == 0)
-                     cfg.clamd_port = atoi(val);
-
-                  if(strcmp(key, "clamd_socket") == 0)
-                     memcpy(cfg.clamd_socket, val, MAXVAL-1);
-
-                  if(strcmp(key, "memcached_servers") == 0)
-                     memcpy(cfg.memcached_servers, val, MAXVAL-1);
-
-                  if(strcmp(key, "always_scan_message") == 0)
-                     cfg.always_scan_message = atoi(val);
-
-                  if(strcmp(key, "max_connections") == 0)
-                     cfg.max_connections = atoi(val);
-
-                  if(strcmp(key, "backlog") == 0)
-                     cfg.backlog = atoi(val);
-
-                  if(strcmp(key, "chrootdir") == 0)
-                     memcpy(cfg.chrootdir, val, MAXVAL-1);
-
-                  if(strcmp(key, "workdir") == 0)
-                     memcpy(cfg.workdir, val, MAXVAL-1);
-
-                  if(strcmp(key, "quarantine_dir") == 0)
-                     memcpy(cfg.quarantine_dir, val, MAXVAL-1);
-
-                  if(strcmp(key, "our_signo") == 0)
-                     memcpy(cfg.our_signo, val, MAXVAL-1);
-
-                  if(strcmp(key, "mydomains") == 0)
-                     memcpy(cfg.mydomains, val, MAXVAL-1);
- 
-                  if(strcmp(key, "verbosity") == 0)
-                     cfg.verbosity = atoi(val);
-
-                  if(strcmp(key, "debug") == 0)
-                     cfg.debug = atoi(val);
-
-                  if(strcmp(key, "locale") == 0)
-                     memcpy(cfg.locale, val, MAXVAL-1);
-
-                  if(strcmp(key, "session_timeout") == 0)
-                     cfg.session_timeout = atoi(val);
-
-                  if(strcmp(key, "localpostmaster") == 0)
-                     memcpy(cfg.localpostmaster, val, MAXVAL-1);
-
-                  if(strcmp(key, "silently_discard_infected_email") == 0)
-                     cfg.silently_discard_infected_email = atoi(val);
-
-                  if(strcmp(key, "deliver_infected_email") == 0)
-                     cfg.deliver_infected_email = atoi(val);
-
-                  if(strcmp(key, "blackhole_email_list") == 0)
-                     memcpy(cfg.blackhole_email_list, val, MAXVAL-1);
-
-                  if(strcmp(key, "message_from_a_zombie") == 0)
-                     cfg.message_from_a_zombie = atoi(val);
-
-                  if(strcmp(key, "use_antispam") == 0)
-                     cfg.use_antispam = atoi(val);
-
-
-                  if(strcmp(key, "spam_subject_prefix") == 0)
-                     memcpy(cfg.spam_subject_prefix, val, MAXVAL-1);
-
-                  if(strcmp(key, "possible_spam_subject_prefix") == 0)
-                     memcpy(cfg.possible_spam_subject_prefix, val, MAXVAL-1);
-
-                  if(strcmp(key, "enable_auto_white_list") == 0)
-                     cfg.enable_auto_white_list = atoi(val);
-
-                  if(strcmp(key, "rob_s") == 0)
-                     cfg.rob_s = atof(val);
-
-                  if(strcmp(key, "rob_x") == 0)
-                     cfg.rob_x = atof(val);
-
-                  if(strcmp(key, "esf_h") == 0)
-                     cfg.esf_h = atof(val);
-
-                  if(strcmp(key, "esf_s") == 0)
-                     cfg.esf_s = atof(val);
-
-                  if(strcmp(key, "exclusion_radius") == 0)
-                     cfg.exclusion_radius = atof(val);
-
-                  if(strcmp(key, "max_message_size_to_filter") == 0)
-                     cfg.max_message_size_to_filter = atol(val);
-
-                  if(strcmp(key, "max_number_of_tokens_to_filter") == 0)
-                     cfg.max_number_of_tokens_to_filter = atoi(val);
-
-                  if(strcmp(key, "surbl_domain") == 0)
-                     memcpy(cfg.surbl_domain, val, MAXVAL-1);
-
-                  if(strcmp(key, "rbl_domain") == 0)
-                     memcpy(cfg.rbl_domain, val, MAXVAL-1);
-
-                  if(strcmp(key, "rbl_condemns_the_message") == 0)
-                     cfg.rbl_condemns_the_message = atoi(val);
-
-                  if(strcmp(key, "surbl_condemns_the_message") == 0)
-                     cfg.surbl_condemns_the_message = atoi(val);
-
-                  if(strcmp(key, "clapf_header_field") == 0)
-                     memcpy(cfg.clapf_header_field, val, MAXVAL-1);
-
-                  /* allow adding multiple header lines in case of spam, credits: Mariano, 2006.08.14 */
-
-                  if(strcmp(key, "clapf_spam_header_field") == 0){
-                     strncat(cfg.clapf_spam_header_field, val, MAXVAL-1);
-                     strncat(cfg.clapf_spam_header_field, "\r\n", MAXVAL-1);
-                  }
-
-                  if(strcmp(key, "clapf_possible_spam_header_field") == 0)
-                     memcpy(cfg.clapf_possible_spam_header_field, val, MAXVAL-1);
-
-                  if(strcmp(key, "spam_overall_limit") == 0)
-                     cfg.spam_overall_limit = atof(val);
-
-                  if(strcmp(key, "update_tokens") == 0)
-                     cfg.update_tokens = atoi(val);
-
-                  if(strcmp(key, "spaminess_oblivion_limit") == 0)
-                     cfg.spaminess_oblivion_limit = atof(val);
-
-                  if(strcmp(key, "possible_spam_limit") == 0)
-                     cfg.possible_spam_limit = atof(val);
-
-                  if(strcmp(key, "spaminess_of_strange_language_stuff") == 0)
-                     cfg.spaminess_of_strange_language_stuff = atof(val);
-
-                  if(strcmp(key, "spaminess_of_too_much_spam_in_top15") == 0)
-                     cfg.spaminess_of_too_much_spam_in_top15 = atof(val);
-
-                  if(strcmp(key, "spaminess_of_blackholed_mail") == 0)
-                     cfg.spaminess_of_blackholed_mail = atof(val);
-
-                  if(strcmp(key, "spaminess_of_text_and_base64") == 0)
-                     cfg.spaminess_of_text_and_base64 = atof(val);
-
-                  if(strcmp(key, "spaminess_of_caught_by_surbl") == 0)
-                     cfg.spaminess_of_caught_by_surbl = atof(val);
-
-                  if(strcmp(key, "spaminess_of_embed_image") == 0)
-                     cfg.spaminess_of_embed_image = atof(val);
-
-                  if(strcmp(key, "replace_junk_characters") == 0)
-                     cfg.replace_junk_characters = atoi(val);
-
-                  if(strcmp(key, "invalid_junk_limit") == 0)
-                     cfg.invalid_junk_limit = atoi(val);
-
-                  if(strcmp(key, "invalid_junk_line") == 0)
-                     cfg.invalid_junk_line = atoi(val);
-
-                  if(strcmp(key, "max_ham_spamicity") == 0)
-                     cfg.max_ham_spamicity = atof(val);
-
-                  if(strcmp(key, "penalize_images") == 0)
-                     cfg.penalize_images = atoi(val);
-
-                  if(strcmp(key, "penalize_embed_images") == 0)
-                     cfg.penalize_embed_images = atoi(val);
-
-                  if(strcmp(key, "penalize_octet_stream") == 0)
-                     cfg.penalize_octet_stream = atoi(val);
-
-                  if(strcmp(key, "training_mode") == 0)
-                     cfg.training_mode = atoi(val);
-
-                  if(strcmp(key, "group_type") == 0)
-                     cfg.group_type = atoi(val);
-
-                  if(strcmp(key, "initial_1000_learning") == 0)
-                     cfg.initial_1000_learning = atoi(val);
-
-                  if(strcmp(key, "store_metadata") == 0)
-                     cfg.store_metadata = atoi(val);
-
-                  if(strcmp(key, "store_only_spam") == 0)
-                     cfg.store_only_spam = atoi(val);
-
-                  if(strcmp(key, "use_libclamav_block_max_feature") == 0)
-                     cfg.use_libclamav_block_max_feature = atoi(val);
-
-                  if(strcmp(key, "clamav_maxfile") == 0)
-                     cfg.clamav_maxfile = atoi(val);
-
-                  if(strcmp(key, "clamav_max_archived_file_size") == 0)
-                     cfg.clamav_max_archived_file_size = atol(val);
-  
-                  if(strcmp(key, "clamav_max_recursion_level") == 0) 
-                     cfg.clamav_max_recursion_level = atoi(val);
-
-                  if(strcmp(key, "clamav_max_compress_ratio") == 0)
-                     cfg.clamav_max_compress_ratio = atoi(val);
-
-                  if(strcmp(key, "clamav_archive_mem_limit") == 0)                 
-                     cfg.clamav_archive_mem_limit = atoi(val);
-
-                  if(strcmp(key, "clamav_block_encrypted_archives") == 0)
-                     cfg.clamav_block_encrypted_archives = atoi(val);
-
-                  if(strcmp(key, "clamav_use_phishing_db") == 0)
-                     cfg.clamav_use_phishing_db = atoi(val);
-
-                  if(strcmp(key, "mysqlhost") == 0)
-                     memcpy(cfg.mysqlhost, val, MAXVAL-1);
-
-                  if(strcmp(key, "mysqlport") == 0)
-                     cfg.mysqlport = atoi(val);
-
-                  if(strcmp(key, "mysqlsocket") == 0)
-                     memcpy(cfg.mysqlsocket, val, MAXVAL-1);
-
-                  if(strcmp(key, "mysqluser") == 0)
-                     memcpy(cfg.mysqluser, val, MAXVAL-1);
-
-                  if(strcmp(key, "mysqlpwd") == 0)
-                     memcpy(cfg.mysqlpwd, val, MAXVAL-1);
-
-                  if(strcmp(key, "mysqldb") == 0)
-                     memcpy(cfg.mysqldb, val, MAXVAL-1);
-
-                  if(strcmp(key, "mysql_connect_timeout") == 0)
-                     cfg.mysql_connect_timeout = atoi(val);
-
-                  if(strcmp(key, "mysql_enable_autoreconnect") == 0)
-                     cfg.mysql_enable_autoreconnect = atoi(val);
-
-                  if(strcmp(key, "sqlite3") == 0)
-                     memcpy(cfg.sqlite3, val, MAXVAL-1);
-
-                  if(strcmp(key, "sqlite3_pragma") == 0)
-                     memcpy(cfg.sqlite3_pragma, val, MAXVAL-1);
-
-                  if(strcmp(key, "mydbfile") == 0)
-                     memcpy(cfg.mydbfile, val, MAXVAL-1);
-
-                  if(strcmp(key, "spam_smtp_addr") == 0)
-                     memcpy(cfg.spam_smtp_addr, val, MAXVAL-1);
-
-                  if(strcmp(key, "spam_smtp_port") == 0)
-                     cfg.spam_smtp_port = atoi(val);
-
-
-                  if(strcmp(key, "ldap_host") == 0)
-                     memcpy(cfg.ldap_host, val, MAXVAL-1);
-
-                  if(strcmp(key, "ldap_base") == 0)
-                     memcpy(cfg.ldap_base, val, MAXVAL-1);
-
-                  if(strcmp(key, "ldap_user") == 0)
-                     memcpy(cfg.ldap_user, val, MAXVAL-1);
-
-                  if(strcmp(key, "ldap_pwd") == 0)
-                     memcpy(cfg.ldap_pwd, val, MAXVAL-1);
-
-                  if(strcmp(key, "ldap_use_tls") == 0)
-                     cfg.ldap_use_tls = atoi(val);
-
-                  if(strcmp(key, "email_address_attribute_name") == 0)
-                     memcpy(cfg.email_address_attribute_name, val, MAXVAL-1);
-
-                  if(strcmp(key, "email_alias_attribute_name") == 0)
-                     memcpy(cfg.email_alias_attribute_name, val, MAXVAL-1);
-
-                  if(strcmp(key, "ssl_cert_file") == 0)
-                     memcpy(cfg.ssl_cert_file, val, MAXVAL-1);
-
-                  if(strcmp(key, "ssl_key_file") == 0)
-                     memcpy(cfg.ssl_key_file, val, MAXVAL-1);
-
-
-
-                  if(strcmp(key, "sig_db") == 0)
-                     memcpy(cfg.sig_db, val, MAXVAL-1);
-
-                  if(strcmp(key, "pidfile") == 0)
-                     memcpy(cfg.pidfile, val, MAXVAL-1);
-
-                  if(strcmp(key, "spamd_addr") == 0)
-                     memcpy(cfg.spamd_addr, val, MAXVAL-1);
-
-                  if(strcmp(key, "spamd_port") == 0)
-                     cfg.spamd_port = atoi(val);
-
-                  if(strcmp(key, "spamc_user") == 0)
-                     memcpy(cfg.spamc_user, val, MAXVAL-1);
-
-               }
-
-            }
-         }
-         fclose(F);
-      }
-   }
+   if(parse_config_file(configfile, &cfg, config_parse_rules) == -1) printf("error parsing the configfile: %s\n", configfile);
 
    return cfg;
 }
+
+
+/*
+ * print a single configuration item as key=value
+ */
+
+void print_config_item(struct __config *cfg, struct _parse_rule *rules, int i){
+   int j;
+   float f;
+   char *p, buf[MAXVAL];
+
+   p = (char*)cfg + rules[i].offset;
+
+   if(strcmp(rules[i].type, "integer") == 0){
+      memcpy((char*)&j, p, sizeof(int));
+      printf("%s=%d\n", rules[i].name, j);
+   }
+   else if(strcmp(rules[i].type, "float") == 0){
+      memcpy((char*)&f, p, sizeof(float));
+      printf("%s=%.4f\n", rules[i].name, f);
+   }
+   else if(strcmp(rules[i].type, "multi_line_string") == 0){
+      j = 0;
+      do {
+         p = split_str(p, "\r\n", buf, MAXVAL-1);
+         if(p || !j) printf("%s=%s\n", rules[i].name, buf);
+         j++;
+      } while(p);
+   }
+   else {
+      trim(p);
+      printf("%s=%s\n", rules[i].name, p);
+   }
+ 
+}
+
+
+/*
+ * print all known configuration items
+ */
+
+void print_config_all(struct __config *cfg){
+   int i=0;
+   struct _parse_rule *rules;
+
+   rules = &config_parse_rules[0];
+
+   while(rules[i].name){
+      print_config_item(cfg, rules, i);
+
+      i++;
+   }
+}
+
+
+/*
+ * print all configuration items found in configfile
+ */
+
+void print_config(char *configfile, struct __config *cfg){
+   FILE *f;
+   char *line = NULL, *chpos, previtem[MAXVAL];
+   size_t size=0;
+   struct _parse_rule *rules;
+
+
+   if(!configfile) return;
+
+   f = fopen(configfile, "r");
+   if(!f) return;
+
+   rules = &config_parse_rules[0];
+
+   memset(previtem, 0, MAXVAL);
+
+   while(0 < getline(&line, &size, f)){
+      if(*line == ';' || *line == '#') continue;
+
+      chpos = strchr(line, '=');
+
+      if(chpos){
+         trim(chpos+1);
+         *chpos = '\0';
+         int i = 0;
+
+         while(rules[i].name){
+            if(strcmp(line, rules[i].name) == 0) {
+               if(strcmp(line, previtem)) print_config_item(cfg, rules, i);
+
+               snprintf(previtem, MAXVAL-1, "%s", line);
+               break;
+            }
+
+            i++;
+         }
+ 
+         if(!rules[i].name) printf("unknown key: \"%s\" \n", line);
+      }
+   }
+
+   if(line) free(line);
+
+   fclose(f);
+}
+
+

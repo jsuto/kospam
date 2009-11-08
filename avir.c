@@ -1,5 +1,5 @@
 /*
- * avir.c, 2009.09.02, SJ
+ * avir.c, 2009.11.08, SJ
  */
 
 #include <stdio.h>
@@ -63,7 +63,7 @@ int do_av_check(struct session_data *sdata, char *email, char *email2, char *vir
 #endif
 
 #ifdef HAVE_CLAMD
-   if(strlen(cfg->clamd_addr) > 3){
+   if(strlen(cfg->clamd_addr) > 3 && cfg->clamd_port > 0){
       if(clamd_net_scan(sdata->ttmpfile, avengine, virusinfo, cfg) == AV_VIRUS) rav = AVIR_VIRUS;
    } else {
       if(clamd_scan(sdata->ttmpfile, avengine, virusinfo, cfg) == AV_VIRUS) rav = AVIR_VIRUS;

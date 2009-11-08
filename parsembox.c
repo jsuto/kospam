@@ -1,5 +1,5 @@
 /*
- * parsembox.c, 2009.01.09, SJ
+ * parsembox.c, 2009.11.07, SJ
  */
 
 #include <stdio.h>
@@ -14,6 +14,7 @@
 #include "cfg.h"
 #include "hash.h"
 #include "config.h"
+#include "clapf.h"
 
 int main(int argc, char **argv){
    struct _state state;

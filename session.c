@@ -1,5 +1,5 @@
 /*
- * session.c, 2009.10.29, SJ
+ * session.c, 2009.11.11, SJ
  */
 
 #include <stdio.h>
@@ -367,7 +367,7 @@ void postfix_to_clapf(int new_sd, struct __data *data, struct __config *cfg){
                                    sdata.__acquire/1000000.0, sdata.__parsed/1000000.0, sdata.__av/1000000.0, sdata.__user/1000000.0, sdata.__policy/1000000.0, sdata.__minefield/1000000.0,
                                        sdata.__as/1000000.0, sdata.__training/1000000.0, sdata.__update/1000000.0, sdata.__store/1000000.0, sdata.__inject/1000000.0);
 
-                  if(sdata.spaminess >= cfg->spam_overall_limit){
+                  if(sdata.spaminess >= my_cfg.spam_overall_limit){
                      syslog(LOG_PRIORITY, "%s: %s got SPAM, %.4f, %d, relay=%s:%d, %s, status=%s", sdata.ttmpfile, email, sdata.spaminess, sdata.tot_len, my_cfg.spam_smtp_addr, my_cfg.spam_smtp_port, reason, resp);
                   } else if(sdata.rav == AVIR_VIRUS) {
                      syslog(LOG_PRIORITY, "%s: %s got VIRUS (%s), %.4f, %d, relay=%s:%d, %s, status=%s", sdata.ttmpfile, email, virusinfo, sdata.spaminess, sdata.tot_len, my_cfg.postfix_addr, my_cfg.postfix_port, reason, resp);

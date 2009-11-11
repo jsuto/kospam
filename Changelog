@@ -1,10 +1,18 @@
-0.4.3-rc1:
+0.4.3-rc2:
+
+2009.11.11, SJ
+
+Fixed a nasty bug in smtp.c. If clapf gets an email from another
+clapf, then it fails to remove the last line of the foreign clapf
+instance causing evaluation problems. The bug was introduced with
+0.4.3-rc1, so previous versions are believed not affected.
+(smtp.c)
 
 2009.11.08, SJ
 
 Code cleanup. Created a brand new config file parsing utility.
 (cfg.c, cfg.h, clapf.h, clapf.c, parsembox.c, misc.c, misc.h, hash2.c,
-config.h, avir.c, example.conf, spamstat.c, Makefile.in)
+config.h, avir.c, example.conf, spamstat.c, Makefile.in, clapfconf.c)
 (credits: turul16)
 
 2009.11.06, SJ
@@ -22,6 +30,10 @@ clapf_possible_spam_header_field=X-Clapf-spamicity: maybe
 
 Removed the unnecessary t_queue table reference from the purge scripts.
 (util/purge*)
+
+
+0.4.3-rc1:
+
 
 2009.11.03, SJ
 

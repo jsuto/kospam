@@ -1,5 +1,5 @@
 /*
- * parsembox.c, 2009.11.07, SJ
+ * parsembox.c, 2009.11.11, SJ
  */
 
 #include <stdio.h>
@@ -21,10 +21,10 @@ int main(int argc, char **argv){
    struct session_data sdata;
    struct __config cfg;
    int is_match, tot_msgs = 0;
-   char buf[MAXBUFSIZE], ifile[SMALLBUFSIZE];
+   char *configfile=CONFIG_FILE, buf[MAXBUFSIZE], ifile[SMALLBUFSIZE];
    FILE *F;
 
-   cfg = read_config(NULL);
+   cfg = read_config(configfile);
 
    if(argc < 2)
       __fatal("usage: <mbox file>");

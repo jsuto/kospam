@@ -1,5 +1,5 @@
 /*
- * smtp.c, 2009.11.03, SJ
+ * smtp.c, 2009.11.11, SJ
  */
 
 #include <stdio.h>
@@ -69,7 +69,7 @@ int send_headers(int sd, char *bigbuf, int n, char *spaminessbuf, int put_subjec
       }
       else {
          remove_folded_hdr = 0;
-         hdr_field_name_len = strcspn(p, ": \t\n\r");
+         hdr_field_name_len = strcspn(buf, ": \t\n\r");
          if(hdr_field_name_len){ /* got a valid header */
             hdr_ptr = spaminessbuf;
             while(hdr_ptr){

@@ -8,6 +8,12 @@ instance causing evaluation problems. The bug was introduced with
 0.4.3-rc1, so previous versions are believed not affected.
 (smtp.c)
 
+2009.11.09, SJ
+
+Added a new utility (clapfconf) to show configuration variables, just
+as the postconf utility does.
+(clapfconf.c)
+
 2009.11.08, SJ
 
 Code cleanup. Created a brand new config file parsing utility.

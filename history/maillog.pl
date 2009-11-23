@@ -34,7 +34,7 @@ $sth_clapf = $dbh->prepare($stmt);
 
 while (defined($line = $file->read)) {
 
-   if($line =~ /\ postfix\/smtpd\[/ || $line =~ /\ postfix\/cleanup\[/ || $line =~ /\ postfix\/qmgr\[/ || $line =~ /\ postfix\/(l|s)mtp\[/ || $line =~ /\ postfix\/local\[/ || $line =~ /\ clapf\[/ || $line =~ /\ postfix\/virtual\[/ ) {
+   if($line =~ /\ postfix\/smtpd\[/ || $line =~ /\ postfix\/cleanup\[/ || $line =~ /\ postfix\/qmgr\[/ || $line =~ /\ postfix\/(l|s)mtp\[/ || $line =~ /\ postfix\/local\[/ || $line =~ /\ clapf\[/ || $line =~ /\ postfix\/virtual\[/ || $line =~ /\ postfix\/pipe\[/) {
       chomp($line);
 
       $queue_id = $to = $orig_to = $relay = $status = $result = $queue_id2 = "";
@@ -66,7 +66,7 @@ while (defined($line = $file->read)) {
 
       #Sep  3 09:30:22 thorium postfix/cleanup[2311]: D20E617022: message-id=<f14f01c89af3$8a784f50$3bc40658@acts.hu>
 
-      if($line =~ /\ postfix\/cleanup\[/) {
+      if($line =~ /\ postfix\/cleanup\[/ && $line =~ /message\-id=/) {
          $message_id = "";
 
          ($queue_id, undef) = split(/\:/, $l[5]);
@@ -125,7 +125,7 @@ while (defined($line = $file->read)) {
       # Sep  3 10:06:46 thorium postfix/local[2664]: 0536C6450: to=<sj@thorium.datanet.hu>, orig_to=<sj@acts.hu>, relay=local, delay=0.08, delays=0.04/0.01/0/0.03, dsn=2.0.0, status=sent (delivered to command: /usr/local/bin/maildrop)
       # Sep  3 11:17:35 cesium postfix/virtual[4276]: 2A96F14C6EE: to=<sj@acts.hu>, relay=virtual, delay=0.08, delays=0.06/0.02/0/0.01, dsn=2.0.0, status=sent (delivered to maildir)
 
-      if($line =~ /\ postfix\/local\[/ || $line =~ /\ postfix\/virtual\[/) {
+      if($line =~ /\ postfix\/local\[/ || $line =~ /\ postfix\/virtual\[/ || $line =~ /\ postfix\/pipe\[/) {
          ($queue_id, undef) = split(/\:/, $l[5]);
          (undef, $to) = split(/=/, $l[6]);
 

@@ -1,6 +1,9 @@
 AC_INIT(clapf.c)
 AM_CONFIG_HEADER(clapf-config.h)
 
+CONFIGURE_PARAMS_FILE=params.h
+rm -f $CONFIGURE_PARAMS_FILE; echo "#define CONFIGURE_PARAMS \"Build Date: "`date`"\nConfigure command: $@\"" > $CONFIGURE_PARAMS_FILE
+
 dnl Checks for programs.
 AC_PROG_CC
 AM_PROG_CC_STDC

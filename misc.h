@@ -1,5 +1,5 @@
 /*
- * misc.h, 2009.11.08, SJ
+ * misc.h, 2009.11.25, SJ
  */
 
 #ifndef _MISC_H
@@ -13,7 +13,6 @@
 #include "defs.h"
 #include <config.h>
 
-void _fatal(char *s);
 void __fatal(char *s);
 long tvdiff(struct timeval a, struct timeval b);
 void pre_translate(char *p);

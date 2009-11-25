@@ -1,5 +1,5 @@
 /*
- * misc.c, 2009.10.26, SJ
+ * misc.c, 2009.11.25, SJ
  */
 
 #include <stdio.h>
@@ -27,13 +27,8 @@
 
 
 /*
- * fatal functions for quitting
+ * fatal function for quitting
  */
-
-void _fatal(char *s){
-   syslog(LOG_PRIORITY, "%s\n", s);
-   exit(1);
-}
 
 void __fatal(char *s){
    fprintf(stderr, "%s\n", s);

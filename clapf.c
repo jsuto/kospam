@@ -1,5 +1,5 @@
 /*
- * clapf.c, 2009.11.07, SJ
+ * clapf.c, 2009.11.25, SJ
  */
 
 #include <stdio.h>
@@ -265,7 +265,7 @@ int main(int argc, char **argv){
                     break;
 
          case 'V' :
-                    __fatal(PROGNAME " " VERSION);
+                    __fatal(PROGNAME " " PROGINFO);
                     break;
 
          case 'h' :

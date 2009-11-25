@@ -1859,6 +1859,9 @@ ac_config_headers="$ac_config_headers clapf-config.h"
 ac_config_commands="$ac_config_commands default-1"
 
 
+CONFIGURE_PARAMS_FILE=params.h
+rm -f $CONFIGURE_PARAMS_FILE; echo "#define CONFIGURE_PARAMS \"Build Date: "`date`"\nConfigure command: $@\"" > $CONFIGURE_PARAMS_FILE
+
 ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
 ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'

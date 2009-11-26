@@ -1,5 +1,5 @@
 /*
- * clapf.c, 2009.11.25, SJ
+ * clapf.c, 2009.11.26, SJ
  */
 
 #include <stdio.h>
@@ -245,7 +245,7 @@ int main(int argc, char **argv){
     struct in_addr addr;
     FILE *f;
 
-    while((i = getopt(argc, argv, "c:u:g:dVhQ")) > 0){
+    while((i = getopt(argc, argv, "c:u:g:dvVhQ")) > 0){
        switch(i){
 
          case 'c' :
@@ -264,6 +264,7 @@ int main(int argc, char **argv){
                     gid = atoi(optarg);
                     break;
 
+         case 'v' :
          case 'V' :
                     __fatal(PROGNAME " " PROGINFO);
                     break;

@@ -1,5 +1,5 @@
 /*
- * config.h, 2009.11.25, SJ
+ * config.h, 2009.11.26, SJ
  */
 
 #ifndef _CONFIG_H
@@ -13,7 +13,7 @@
 
 #define VERSION "0.4.3-rc2"
 
-#define PROGINFO "version " VERSION ", (C) Janos SUTO <sj@acts.hu>\n\n" CONFIGURE_PARAMS "\n\nSend bugs/issues to https://jira.acts.hu:8443/\n"
+#define PROGINFO VERSION ", Janos SUTO <sj@acts.hu>\n\n" CONFIGURE_PARAMS "\n\nSend bugs/issues to https://jira.acts.hu:8443/\n"
 
 #define HOSTID "av-engine.localhost"
 

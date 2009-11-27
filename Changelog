@@ -1,5 +1,15 @@
 0.4.3-rc2:
 
+2009.11.27, SJ
+
+Added a utility called zombitest. It's purpose is to test whether
+a given host matches the zombienet.regex file. Usage: eg.
+
+zombietest mail-gx0-f212.google.com triband-mum-59.184.161.130.mtnl.net.in
+
+If you need this utility then issue a "make zombitest"
+(zombietest.c)
+
 2009.11.11, SJ
 
 Fixed a nasty bug in smtp.c. If clapf gets an email from another

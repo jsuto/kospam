@@ -82,6 +82,9 @@ prepare-sql : % : %.o misc.o
 mydb_stat mydb_compress mydb_export:	%: %.o mydb.o misc.o hash.o chi.o score.o cfg.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
 
+zombietest: % :	%.o misc.o
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ -ltre
+
 spamsum:
 	(cd $(srcdir)/contrib/spamsum; make all)
 
@@ -220,7 +223,10 @@ clean_db:
 	rm -f ham.tmp spam.tmp num_of_spam.tmp num_of_ham.tmp tokens.mydb temp.*
 
 clean:
-	rm -f *.o *.a libclapf.so* qcache db.sql clapf clapf.conf parsembox splitmbox spamtest spamdrop spamstat aphash prepare-sql mydb_stat mydb_compress mydb_export clapfconf
+	rm -f *.o *.a libclapf.so* qcache db.sql clapf clapf.conf parsembox splitmbox \
+		spamtest spamdrop spamstat aphash prepare-sql mydb_stat mydb_compress mydb_export clapfconf \
+		zombietest
+
 	(cd $(srcdir)/contrib/spamsum; make clean)
 
 dist_clean distclean: clean

@@ -4,16 +4,29 @@ use File::Tail;
 use Date::Parse;
 
 use DBI;
+use Getopt::Long;
 
-die "usage: $0 <logfile> <sqlite3 db file>\n" unless ( ($maillog = $ARGV[0]) && ($dbfile = $ARGV[1]) );
+$maillog = "";
+$database = "";
+$db = "";
+$user = "";
+$password = "";
+$host = "localhost";
+$port = "";
+
+GetOptions('l|logfile=s' => \$maillog, 'db=s' => \$db, 'database=s' => \$database, 'u|user=s' => \$user, 'p|password=s' => \$password);
+
+if($maillog eq "" || $db eq "") { &usage; }
 
 
-$dsn = "dbi:SQLite:dbname=$dbfile";
+
+if($db eq "sqlite3") { $dsn = "dbi:SQLite:dbname=$database"; }
+if($db eq "mysql") { $dsn = "dbi:mysql:database=$database;host=$host;port=$port"; }
 
 $file = File::Tail->new(name => $maillog, maxinterval=> 5) or die "cannot read $maillog";
 
 
-$dbh = DBI->connect($dsn, "", "") or die "cannot open database: $dbfile";
+$dbh = DBI->connect($dsn, $user, $password) or die "cannot open database: $database";
 
 $stmt = "INSERT INTO smtpd (ts, queue_id, client_ip) VALUES(?, ?, ?)";
 $sth_smtpd = $dbh->prepare($stmt);
@@ -194,5 +207,12 @@ while (defined($line = $file->read)) {
       
    }
 
+}
+
+
+sub usage {
+   die "usage: $0 -l|--logfile <maillog> --database <database> --db <sqlite3|mysql>\n\n" .
+   "eg #1. $0 -l /var/log/maillog --db sqlite3 --database /var/lib/clapf/log.sdb\n" .
+   "eg #2. $0 -l /var/log/maillog --db mysql --database history --user history --password veryhardsecret\n";
 }
 

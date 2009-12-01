@@ -1,5 +1,16 @@
 0.4.3-rc2:
 
+2009.12.01, SJ
+
+Enhanced the maillog.pl utility to be able to handle either sqlite3
+or mysql database.
+
+Usage examples: maillog
+maillog.pl -l /var/log/maillog --db sqlite3 --database /var/lib/clapf/log.sdb
+maillog.pl -l /var/log/maillog --db mysql --database history --user history --password veryhardsecret
+
+(history/maillog.pl)
+
 2009.11.27, SJ
 
 Added a utility called zombitest. It's purpose is to test whether

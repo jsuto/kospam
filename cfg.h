@@ -176,6 +176,7 @@ struct __config {
    int spamd_port;
    char spamc_user[MAXVAL];
 
+
 };
 
 

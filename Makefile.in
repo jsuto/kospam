@@ -35,7 +35,7 @@ LIBCLAPF_VERSION=$(CLAPF_VERSION).$(CLAPF_REVISION).$(CLAPF_RELEASE)
 
 INSTALL = @INSTALL@
 
-all: clapf-lib clapf clapfconf @memcached@ @spamsum@ splitmbox @parsembox@ @spamdrop@ @preparesql@
+all: clapf-lib clapf clapfconf rc.clapf @memcached@ @spamsum@ splitmbox @parsembox@ @spamdrop@ @preparesql@
 install: install-clapf install-splitmbox @parsembox_install@ @spamsum_install@ @spamdrop_install@ @db_install@
 
 
@@ -44,6 +44,12 @@ clapf.conf:
 	-e 's%sqlite3=.*%sqlite3=$(localstatedir)/lib/clapf/data/tokens.sdb%' \
 	-e 's%workdir=.*%workdir=$(localstatedir)/lib/clapf/tmp%' \
 	-e 's%mydbfile=.*%mydbfile=$(localstatedir)/lib/clapf/tokens.mydb%' < $(srcdir)/example.conf >$@
+
+rc.clapf: init.d/clapf.in
+	sed -e 's%SBINDIR%$(sbindir)%' \
+	-e 's%PIDFILE%$(localstatedir)/lib/clapf/clapf.pid%' \
+	-e 's%CLAPF_USER%$(CLAPF_USER)%' \
+	-e 's%CLAPF_GROUP%$(CLAPF_GROUP)%' < $(srcdir)/init.d/clapf.in >$(srcdir)/init.d/clapf
 
 clapf: % : %.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ -lclapf $(LIBS) $(LDAP_LIBS) $(LIBDIR) @LDFLAGS@ @libclamav_extra_libs@
@@ -223,7 +229,7 @@ clean_db:
 	rm -f ham.tmp spam.tmp num_of_spam.tmp num_of_ham.tmp tokens.mydb temp.*
 
 clean:
-	rm -f *.o *.a libclapf.so* qcache db.sql clapf clapf.conf parsembox splitmbox \
+	rm -f *.o *.a libclapf.so* qcache db.sql clapf clapf.conf init.d/clapf parsembox splitmbox \
 		spamtest spamdrop spamstat aphash prepare-sql mydb_stat mydb_compress mydb_export clapfconf \
 		zombietest
 

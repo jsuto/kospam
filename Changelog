@@ -1,5 +1,15 @@
 0.4.3-rc2:
 
+2009.12.02, SJ
+
+Added an init script.
+(Makefile.in, init.d/clapf.in)
+
+Splitted the util/db_init_* scripts to util/db_init.sh for the
+creation of the database schema, and util/db_train.sh for training
+from scratch. I have also unified the training scripts, so you have
+to specify the database type as well (ie. either sqlite3 or mysql).
+
 2009.12.01, SJ
 
 Enhanced the maillog.pl utility to be able to handle either sqlite3

@@ -1,0 +1,33 @@
+#!/bin/sh
+##
+##
+##
+
+clapf_start() {
+   SBINDIR/clapf -d -u `id -u CLAPF_USER` -g `id -g CLAPF_GROUP`
+}
+
+clapf_stop() {
+   killall clapf
+}
+
+clapf_restart() {
+   kill `cat PIDFILE`
+   sleep 1
+   clapf_start
+}
+
+case "$1" in
+'start')
+   clapf_start
+   ;;
+'stop')
+   clapf_stop
+   ;;
+'restart')
+   clapf_restart
+   ;;
+*)
+   echo "usage $0 start|stop|restart"
+esac
+

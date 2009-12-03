@@ -199,13 +199,12 @@ install-parsembox:
 	$(INSTALL) -m 0755 $(srcdir)/perl/shrink.pl $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 $(srcdir)/perl/uribl.pl $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 $(srcdir)/stat/process_syslog.pl $(DESTDIR)$(libexecdir)/clapf
-	cat $(srcdir)/util/db_init_mydb.sh.in | sed -e "s%YOUR_LIBEXECDIR%$(libexecdir)/clapf%" -e "s%YOUR_BINDIR%$(bindir)%" -e "s%YOUR_SHAREDIR%$(datarootdir)/clapf%" > $(srcdir)/util/db_init_mydb.sh
-	cat $(srcdir)/util/db_init_mysql.sh.in | sed -e "s%YOUR_LIBEXECDIR%$(libexecdir)/clapf%" -e "s%YOUR_BINDIR%$(bindir)%" -e "s%YOUR_SHAREDIR%$(datarootdir)/clapf%" > $(srcdir)/util/db_init_mysql.sh
-	cat $(srcdir)/util/db_init_sqlite3.sh.in | sed -e "s%YOUR_LIBEXECDIR%$(libexecdir)/clapf%" -e "s%YOUR_BINDIR%$(bindir)%" -e "s%YOUR_SHAREDIR%$(datarootdir)/clapf%" > $(srcdir)/util/db_init_sqlite3.sh
+
+	cat $(srcdir)/util/db_train.sh.in | sed -e "s%YOUR_LIBEXECDIR%$(libexecdir)/clapf%" -e "s%YOUR_BINDIR%$(bindir)%" -e "s%YOUR_SHAREDIR%$(datarootdir)/clapf%" > $(srcdir)/util/db_train.sh
+
 	if test `echo $(DEFS) | grep -c USERS_IN_LDAP ` -eq 1 ; then cat $(srcdir)/util/clapf_admin-ldap.sh.in > $(srcdir)/util/clapf_admin.sh; else cat $(srcdir)/util/clapf_admin-sql.sh.in | sed -e "s%MYSQLBINPROG%`which mysql`%" -e "s%YOUR_DATAROOTDIR%$(datarootdir)/clapf%" > $(srcdir)/util/clapf_admin.sh; fi
-	$(INSTALL) -m 0755 $(srcdir)/util/db_init_mydb.sh $(DESTDIR)$(libexecdir)/clapf
-	$(INSTALL) -m 0755 $(srcdir)/util/db_init_mysql.sh $(DESTDIR)$(libexecdir)/clapf
-	$(INSTALL) -m 0755 $(srcdir)/util/db_init_sqlite3.sh $(DESTDIR)$(libexecdir)/clapf
+	$(INSTALL) -m 0755 $(srcdir)/util/db_init.sh $(DESTDIR)$(libexecdir)/clapf
+	$(INSTALL) -m 0755 $(srcdir)/util/db_train.sh $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 $(srcdir)/util/clapf_admin.sh $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 $(srcdir)/history/maillog.pl $(DESTDIR)$(libexecdir)/clapf
 

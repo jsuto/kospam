@@ -1,5 +1,12 @@
 0.4.3-rc2:
 
+2009.12.10, SJ
+
+Christoph Wilke contributed some fixes related to the spamsum module. Thanks!
+(contrib/spamsum/ssum.c, contrib/spamsum/Makefile.in)
+
+(credits: Christoph Wilke)
+
 2009.12.02, SJ
 
 Added an init script.

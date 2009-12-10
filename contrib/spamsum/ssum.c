@@ -1,5 +1,5 @@
 /*
- * spamsum.c, 2008.04.29, SJ
+ * spamsum.c, 2009.12.10, SJ
  */
 
 #include <stdio.h>
@@ -17,7 +17,7 @@ int main(int argc, char **argv){
 
    for(i=1;i<argc;i++){
       sum = spamsum_file(argv[i], flags, block_size);
-      printf("%s\n", sum);
+      if ( sum != NULL ) printf("%s\n", sum);
       free(sum);
    }
 

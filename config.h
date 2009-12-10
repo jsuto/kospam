@@ -1,5 +1,5 @@
 /*
- * config.h, 2009.11.26, SJ
+ * config.h, 2009.12.10, SJ
  */
 
 #ifndef _CONFIG_H
@@ -55,8 +55,7 @@
 
 #define CLAPFUSAGE "usage: " PROGNAME " -c <config file> -u <uid> -g <gid> -d -V -h"
 
-#define SPAMDROPUSAGE "usage: spamdrop [-c <config file>] [-u <username>] [-s] [-p] [-H | -S] < message"
-
+#define SPAMDROPUSAGE "usage: spamdrop [-c <config file>] [-u <username> | -U uid] [-f from] [-r recipient] [-dsp] [-H | -S | -D] < message"
 
 #define LOG_PRIORITY LOG_INFO
 

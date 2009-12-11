@@ -1,5 +1,11 @@
 0.4.3-rc2:
 
+2009.12.11, SJ
+
+Add an extra '${clapf_header_field} statistically whitelisted' header
+if the message is statistically whitelisted.
+(defs.h, session.c, spamdrop.c, bayes.c, antispam.c)
+
 2009.12.10, SJ
 
 Christoph Wilke contributed some fixes related to the spamsum module. Thanks!

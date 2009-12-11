@@ -1,5 +1,5 @@
 /*
- * bayes.c, 2009.11.06, SJ
+ * bayes.c, 2009.12.11, SJ
  */
 
 #include <stdio.h>
@@ -273,11 +273,13 @@ float bayes_file(struct session_data *sdata, struct _state *state, struct __conf
       if(cfg->debug == 1)
          printf("from: %.0f, %.0f\n", ham_from, spam_from);
 
-      if(ham_from > NUMBER_OF_GOOD_FROM && spam_from == 0){
+      if(ham_from >= NUMBER_OF_GOOD_FROM && spam_from == 0){
          if(cfg->verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: sender is statistically whitelisted", sdata->ttmpfile);
 
          /* we query the spaminess of the token pairs in order to have their timestamp updated */
          qry_spaminess(sdata, state, 1, cfg);
+
+         sdata->statistically_whitelisted = 1;
 
          return REAL_HAM_TOKEN_PROBABILITY;
       }

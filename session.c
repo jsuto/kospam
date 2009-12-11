@@ -1,5 +1,5 @@
 /*
- * session.c, 2009.11.11, SJ
+ * session.c, 2009.12.11, SJ
  */
 
 #include <stdio.h>
@@ -67,6 +67,7 @@ void init_session_data(struct session_data *sdata){
 #endif
 
    sdata->tre = '-';
+   sdata->statistically_whitelisted = 0;
 
    sdata->rav = AVIR_OK;
 

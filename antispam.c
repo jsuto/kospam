@@ -1,5 +1,5 @@
 /*
- * antispam.c, 2009.11.05, SJ
+ * antispam.c, 2009.12.11, SJ
  */
 
 #include <stdio.h>
@@ -357,6 +357,10 @@ int process_message(struct session_data *sdata, struct _state *sstate, struct __
          strncat(sdata->spaminessbuf, cfg->clapf_possible_spam_header_field, MAXBUFSIZE-1);
       }
 
+      if(sdata->statistically_whitelisted == 1){
+         snprintf(tmpbuf, SMALLBUFSIZE-1, "%sstatistically whitelisted\r\n", cfg->clapf_header_field);
+         strncat(sdata->spaminessbuf, tmpbuf, MAXBUFSIZE-1);
+      }
 
    } /* end of running spam check */
 

@@ -1,5 +1,5 @@
 /*
- * defs.h, 2009.10.29, SJ
+ * defs.h, 2009.12.11, SJ
  */
 
 #ifndef _DEFS_H
@@ -141,7 +141,7 @@ struct _state {
 };
 
 struct session_data {
-   char ttmpfile[SMALLBUFSIZE], deliveryinfo[SMALLBUFSIZE], clapf_id[SMALLBUFSIZE], xforward[SMALLBUFSIZE], tre;
+   char ttmpfile[SMALLBUFSIZE], deliveryinfo[SMALLBUFSIZE], clapf_id[SMALLBUFSIZE], xforward[SMALLBUFSIZE], tre, statistically_whitelisted;
    char mailfrom[SMALLBUFSIZE], rcptto[MAX_RCPT_TO][SMALLBUFSIZE], client_addr[IPLEN], name[SMALLBUFSIZE], domain[SMALLBUFSIZE];
    char spaminessbuf[MAXBUFSIZE], acceptbuf[SMALLBUFSIZE];
    unsigned long uid;

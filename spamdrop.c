@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2009.10.12, SJ
+ * spamdrop.c, 2009.12.11, SJ
  */
 
 #include <stdio.h>
@@ -281,6 +281,7 @@ int main(int argc, char **argv, char **envp){
    sdata.unknown_client = sdata.trapped_client = 0;
    sdata.blackhole = 0;
    sdata.need_signo_check = 0;
+   sdata.statistically_whitelisted = 0;
 
    sdata.Nham = sdata.Nspam = 0;
    memset(whitelistbuf, 0, SMALLBUFSIZE);
@@ -751,6 +752,11 @@ ENDE_SPAMDROP:
               cfg.clapf_header_field, sdata.ttmpfile, trainbuf, cfg.clapf_header_field, spaminess, cfg.clapf_header_field, tvdiff(tv_stop, tv_start)/1000);
 
       strncat(clapf_info, buf, MAXBUFSIZE-1);
+
+      if(sdata.statistically_whitelisted == 1){
+         snprintf(buf, MAXBUFSIZE-1, "%sstatistically whitelisted\r\n", cfg.clapf_header_field);
+         strncat(clapf_info, buf, MAXBUFSIZE-1);
+      }
 
       if(spaminess > 0.9999){
          strncat(clapf_info, cfg.clapf_header_field, MAXBUFSIZE-1);

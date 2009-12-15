@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2009.12.11, SJ
+ * spamdrop.c, 2009.12.15, SJ
  */
 
 #include <stdio.h>
@@ -388,18 +388,6 @@ int main(int argc, char **argv, char **envp){
    }
 
 
-   /* open database connection */
-
-   if(open_db(&sdata, &cfg) == 0){
-      rc = print_message_stdout(&sdata, NULL, spaminess, &cfg);
-      unlink(sdata.ttmpfile);
-      if(rc)
-         return EX_TEMPFAIL;
-      else
-         return 0;
-   }
-
-
    /* fix username and uid */
 
 #ifdef HAVE_USERS
@@ -452,6 +440,18 @@ int main(int argc, char **argv, char **envp){
    }
 #endif
 
+
+
+   /* open database connection */
+
+   if(open_db(&sdata, &cfg) == 0){
+      rc = print_message_stdout(&sdata, NULL, spaminess, &cfg);
+      unlink(sdata.ttmpfile);
+      if(rc)
+         return EX_TEMPFAIL;
+      else
+         return 0;
+   }
 
 
 
@@ -748,7 +748,7 @@ ENDE_SPAMDROP:
 
    if(print_message == 1){
 
-      snprintf(buf, MAXBUFSIZE-1, "%s%s\r\n%s%s%.4f\r\n%s%ld ms\r\n",
+      snprintf(buf, MAXBUFSIZE-1, "%s%s%s%s%.4f\r\n%s%ld ms\r\n",
               cfg.clapf_header_field, sdata.ttmpfile, trainbuf, cfg.clapf_header_field, spaminess, cfg.clapf_header_field, tvdiff(tv_stop, tv_start)/1000);
 
       strncat(clapf_info, buf, MAXBUFSIZE-1);

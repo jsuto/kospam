@@ -1,5 +1,12 @@
 0.4.3-rc2:
 
+2009.12.15, SJ
+
+Minor fixes for various parts of clapf.
+(cfg.c, config.h, Makefile.in, spamdrop.c, util/db_init.sh, util/purge-sqlite3.sh, util/spamdrop_helper.in)
+
+(credits: Gabor Varadi and Christoph Wilke)
+
 2009.12.11, SJ
 
 Add an extra '${clapf_header_field} statistically whitelisted' header

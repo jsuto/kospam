@@ -1,6 +1,6 @@
 #!/bin/sh
 ##
-## db_init.sh, 2009.12.02, SJ
+## db_init.sh, 2009.12.15, SJ
 ## create the database tables
 ##
 
@@ -12,7 +12,6 @@ DBTYPE=$1
 CONFIG=$2
 
 SQLSCRIPT=/usr/local/share/clapf/db.sql
-SQLSCRIPT=~/devel/clapf/db-sqlite3.sql
 
 SQLITEDB=`grep ^sqlite3= $CONFIG | cut -f2 -d '='`
 

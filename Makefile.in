@@ -40,10 +40,10 @@ install: install-clapf install-splitmbox @parsembox_install@ @spamsum_install@ @
 
 
 clapf.conf:
-	sed -e 's%pidfile=.*%pidfile=$(localstatedir)/lib/clapf/clapf.pid%' \
-	-e 's%sqlite3=.*%sqlite3=$(localstatedir)/lib/clapf/data/tokens.sdb%' \
-	-e 's%workdir=.*%workdir=$(localstatedir)/lib/clapf/tmp%' \
-	-e 's%mydbfile=.*%mydbfile=$(localstatedir)/lib/clapf/tokens.mydb%' < $(srcdir)/example.conf >$@
+	sed -e 's%pidfile=.*%pidfile=$(localstatedir)/lib/clapf/clapf.pid%g' \
+	-e 's%sqlite3=.*%sqlite3=$(localstatedir)/lib/clapf/data/tokens.sdb%g' \
+	-e 's%workdir=.*%workdir=$(localstatedir)/lib/clapf/tmp%g' \
+	-e 's%mydbfile=.*%mydbfile=$(localstatedir)/lib/clapf/tokens.mydb%g' < $(srcdir)/example.conf >$@
 
 rc.clapf: init.d/clapf.in
 	sed -e 's%SBINDIR%$(sbindir)%' \
@@ -158,8 +158,6 @@ install-clapf: clapf
 	$(INSTALL) -d $(DESTDIR)$(localstatedir)/lib/clapf/data
 	$(INSTALL) -d -m 755 $(DESTDIR)$(localstatedir)/lib/clapf/queue
 	$(INSTALL) -d -m 711 $(DESTDIR)$(localstatedir)/lib/clapf/tmp
-	$(INSTALL) -d $(DESTDIR)$(localstatedir)/lib/clapf/stat
-	$(INSTALL) -d $(DESTDIR)$(localstatedir)/lib/clapf/hold
 
 	$(INSTALL) -d $(DESTDIR)$(datarootdir)/clapf
 	$(INSTALL) -m 0644 $(srcdir)/templates/template.virus $(DESTDIR)$(datarootdir)/clapf
@@ -167,9 +165,9 @@ install-clapf: clapf
 	$(INSTALL) -m 0644 $(srcdir)/history/mail.sql $(DESTDIR)$(datarootdir)/clapf
 
 	chown -R $(CLAPF_USER):$(CLAPF_GROUP) $(DESTDIR)$(localstatedir)/lib/clapf
-	cat $(srcdir)/util/check_clapf.sh.in | sed -e "s%YOUR_PATH%$(sbindir)%" -e "s%YOUR_QUEUE%$(localstatedir)/lib/clapf/queue%" -e "s%USER%$(CLAPF_USER)%g" > $(srcdir)/util/check_clapf.sh
+	cat $(srcdir)/util/check_clapf.sh.in | sed -e "s%YOUR_PATH%$(sbindir)%g" -e "s%YOUR_QUEUE%$(localstatedir)/lib/clapf/queue%g" -e "s%USER%$(CLAPF_USER)%g" > $(srcdir)/util/check_clapf.sh
 	$(INSTALL) -m 0755 util/check_clapf.sh $(DESTDIR)$(libexecdir)/clapf
-	cat $(srcdir)/util/spamdrop_helper.in | sed -e "s%YOUR_STATE_DIR%$(localstatedir)%" > $(srcdir)/util/spamdrop_helper
+	cat $(srcdir)/util/spamdrop_helper.in | sed -e "s%YOUR_STATE_DIR%$(localstatedir)%g" > $(srcdir)/util/spamdrop_helper
 	$(INSTALL) -m 0755 util/spamdrop_helper $(DESTDIR)$(libexecdir)/clapf
 	if [ -f "$(srcdir)/memcached_cleaner" ]; then $(INSTALL) -m 0755 $(srcdir)/memcached_cleaner $(DESTDIR)$(libexecdir)/clapf; fi
 	$(INSTALL) -m 0755 clapf $(DESTDIR)$(sbindir)
@@ -200,9 +198,9 @@ install-parsembox:
 	$(INSTALL) -m 0755 $(srcdir)/perl/uribl.pl $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 $(srcdir)/stat/process_syslog.pl $(DESTDIR)$(libexecdir)/clapf
 
-	cat $(srcdir)/util/db_train.sh.in | sed -e "s%YOUR_LIBEXECDIR%$(libexecdir)/clapf%" -e "s%YOUR_BINDIR%$(bindir)%" -e "s%YOUR_SHAREDIR%$(datarootdir)/clapf%" > $(srcdir)/util/db_train.sh
+	cat $(srcdir)/util/db_train.sh.in | sed -e "s%YOUR_LIBEXECDIR%$(libexecdir)/clapf%g" -e "s%YOUR_BINDIR%$(bindir)%g" -e "s%YOUR_SHAREDIR%$(datarootdir)/clapf%g" > $(srcdir)/util/db_train.sh
 
-	if test `echo $(DEFS) | grep -c USERS_IN_LDAP ` -eq 1 ; then cat $(srcdir)/util/clapf_admin-ldap.sh.in > $(srcdir)/util/clapf_admin.sh; else cat $(srcdir)/util/clapf_admin-sql.sh.in | sed -e "s%MYSQLBINPROG%`which mysql`%" -e "s%YOUR_DATAROOTDIR%$(datarootdir)/clapf%" > $(srcdir)/util/clapf_admin.sh; fi
+	if test `echo $(DEFS) | grep -c USERS_IN_LDAP ` -eq 1 ; then cat $(srcdir)/util/clapf_admin-ldap.sh.in > $(srcdir)/util/clapf_admin.sh; else cat $(srcdir)/util/clapf_admin-sql.sh.in | sed -e "s%MYSQLBINPROG%`which mysql`%g" -e "s%YOUR_DATAROOTDIR%$(datarootdir)/clapf%g" > $(srcdir)/util/clapf_admin.sh; fi
 	$(INSTALL) -m 0755 $(srcdir)/util/db_init.sh $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 $(srcdir)/util/db_train.sh $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 $(srcdir)/util/clapf_admin.sh $(DESTDIR)$(libexecdir)/clapf

@@ -22,6 +22,6 @@ echo "DELETE FROM t_token WHERE (2*nham)+nspam < 5 AND timestamp < $_60_DAYS;" |
 echo "DELETE FROM t_token WHERE timestamp < $_90_DAYS;" | $SQLITE3 $DB
 
 # purge aged entries from the t_minefield table
-echo "DELETE FROM t_minefield WHERE ts < (SELECT strftime('%s','now')-$MINEFIELD_TTL)" | $SQLITE3 $DB
+echo "DELETE FROM t_minefield WHERE ts < (SELECT strftime('%s','now')-$MINEFIELD_TTL);" | $SQLITE3 $DB
 
 echo "VACUUM;" | $SQLITE3 $DB

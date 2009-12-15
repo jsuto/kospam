@@ -1,5 +1,5 @@
 /*
- * config.h, 2009.12.10, SJ
+ * config.h, 2009.12.15, SJ
  */
 
 #ifndef _CONFIG_H
@@ -20,7 +20,7 @@
 #define CONFIG_FILE CONFDIR "/clapf.conf"
 #define USER_DATA_DIR DATADIR "/lib/clapf/data"
 #define USER_QUEUE_DIR DATADIR "/lib/clapf/queue"
-#define PER_USER_SQLITE3_DB_FILE "clapf.sdb"
+#define PER_USER_SQLITE3_DB_FILE "tokens.sdb"
 #define MYDB_FILE "tokens.mydb"
 
 #define CLAMD_SOCKET "/tmp/clamd"

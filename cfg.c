@@ -1,5 +1,5 @@
 /*
- * cfg.c, 2009.11.08, SJ
+ * cfg.c, 2009.12.15, SJ
  */
 
 #include <stdio.h>
@@ -109,7 +109,7 @@ struct _parse_rule config_parse_rules[] =
    { "max_number_of_tokens_to_filter", "integer", (void*) int_parser, offsetof(struct __config, max_number_of_tokens_to_filter), "2000", sizeof(int)},
    { "memcached_servers", "string", (void*) string_parser, offsetof(struct __config, memcached_servers), "127.0.0.1", MAXVAL-1},
    { "message_from_a_zombie", "integer", (void*) int_parser, offsetof(struct __config, message_from_a_zombie), "0", sizeof(int)},
-   { "mydbfile", "string", (void*) string_parser, offsetof(struct __config, mydbfile), "/var/lib/clapf/data/tokens.mydb", MAXVAL-1},
+   { "mydbfile", "string", (void*) string_parser, offsetof(struct __config, mydbfile), USER_DATA_DIR DATADIR "/" MYDB_FILE, MAXVAL-1},
    { "mysqlhost", "string", (void*) string_parser, offsetof(struct __config, mysqlhost), "", MAXVAL-1},
    { "mysqlport", "integer", (void*) int_parser, offsetof(struct __config, mysqlport), "", sizeof(int)},
    { "mysqlsocket", "string", (void*) string_parser, offsetof(struct __config, mysqlsocket), "/tmp/mysql.sock", MAXVAL-1},
@@ -148,7 +148,7 @@ struct _parse_rule config_parse_rules[] =
    { "spaminess_of_strange_language_stuff", "float", (void*) float_parser, offsetof(struct __config, spaminess_of_strange_language_stuff), "0.9876", sizeof(float)},
    { "spaminess_of_text_and_base64", "float", (void*) float_parser, offsetof(struct __config, spaminess_of_text_and_base64), "0", sizeof(float)},
    { "spam_subject_prefix", "string", (void*) string_parser, offsetof(struct __config, spam_subject_prefix), "", MAXVAL-1},
-   { "sqlite3", "string", (void*) string_parser, offsetof(struct __config, sqlite3), "/var/lib/clapf/data/tokens.sdb", MAXVAL-1},
+   { "sqlite3", "string", (void*) string_parser, offsetof(struct __config, sqlite3), USER_DATA_DIR "/" PER_USER_SQLITE3_DB_FILE, MAXVAL-1},
    { "sqlite3_pragma", "string", (void*) string_parser, offsetof(struct __config, sqlite3_pragma), "PRAGMA synchronous = OFF", MAXVAL-1},
    { "store_metadata", "integer", (void*) int_parser, offsetof(struct __config, store_metadata), "1", sizeof(int)},
    { "store_only_spam", "integer", (void*) int_parser, offsetof(struct __config, store_only_spam), "0", sizeof(int)},

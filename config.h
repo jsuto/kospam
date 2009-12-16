@@ -1,5 +1,5 @@
 /*
- * config.h, 2009.12.15, SJ
+ * config.h, 2009.12.16, SJ
  */
 
 #ifndef _CONFIG_H
@@ -41,6 +41,8 @@
 #define MESSAGE_ID_LEN 32
 #define BUFLEN 32
 #define IPLEN 16+1
+
+#define CRLF "\r\n"
 
 #define MYDB_MIN_SIZE 1000000
 

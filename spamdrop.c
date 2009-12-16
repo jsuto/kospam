@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2009.12.15, SJ
+ * spamdrop.c, 2009.12.16, SJ
  */
 
 #include <stdio.h>
@@ -136,11 +136,11 @@ int print_message_stdout(struct session_data *sdata, char *clapf_info, float spa
          /* if we did not find a Subject line, add one - if we have to */
 
          if(sent_subject_spam_prefix == 0 && put_subject_spam_prefix == 1 && spaminess >= cfg->spam_overall_limit && spaminess < 1.01)
-            fprintf(ofile, "Subject: %s\r\n", cfg->spam_subject_prefix);
+            fprintf(ofile, "Subject: %s%s", cfg->spam_subject_prefix, CRLF);
 
       }
 
-      if(strncmp(buf, cfg->clapf_header_field, strlen(cfg->clapf_header_field)))
+      if(is_header == 0 || strncmp(buf, cfg->clapf_header_field, strlen(cfg->clapf_header_field)))
          fprintf(ofile, "%s", buf);
    }
 
@@ -152,7 +152,7 @@ int print_message_stdout(struct session_data *sdata, char *clapf_info, float spa
 
 
 int main(int argc, char **argv, char **envp){
-   int i, n, fd, rc=0, rounds=1, debug=0;
+   int i, n, fd, rc=0, rounds=1, debug=0, quiet=0;
    int print_message=1;
    int is_spam=0, train_as_ham=0, train_as_spam=0, blackhole_request=0, training_request=0;
    int train_mode=T_TOE;
@@ -181,7 +181,7 @@ int main(int argc, char **argv, char **envp){
 #endif
 
 
-   while((i = getopt(argc, argv, "c:u:U:f:r:SHDdh?")) > 0){
+   while((i = getopt(argc, argv, "c:u:U:f:r:SHDdhq?")) > 0){
        switch(i){
 
          case 'c' :
@@ -208,6 +208,10 @@ int main(int argc, char **argv, char **envp){
                     deliver_message = 1;
                     break;
 
+         case 'q' :
+                    quiet = 1;
+                    break;
+
          case 'S' :
                     train_as_spam = 1;
                     print_message = 0;
@@ -224,7 +228,7 @@ int main(int argc, char **argv, char **envp){
 
          case 'h' :
          case '?' :
-                    printf("%s", SPAMDROPUSAGE);
+                    printf("%s\n", SPAMDROPUSAGE);
                     break;
 
 
@@ -252,6 +256,7 @@ int main(int argc, char **argv, char **envp){
       cfg.debug = 1;
    }
 
+   if(quiet == 1) cfg.verbosity = 0;
 
    setlocale(LC_MESSAGES, cfg.locale);
    setlocale(LC_CTYPE, cfg.locale);
@@ -586,7 +591,7 @@ int main(int argc, char **argv, char **envp){
    #ifdef HAVE_WHITELIST
       if(is_sender_on_black_or_white_list(&sdata, from, SQL_WHITE_FIELD_NAME, SQL_WHITE_LIST, &cfg)){
          syslog(LOG_PRIORITY, "%s: sender (%s) found on whitelist", sdata.ttmpfile, from);
-         snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on whitelist\r\n", cfg.clapf_header_field);
+         snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on whitelist%s", cfg.clapf_header_field, CRLF);
          strncat(clapf_info, whitelistbuf, MAXBUFSIZE-1);
          is_spam = 0;
          goto ENDE_SPAMDROP;
@@ -598,7 +603,7 @@ int main(int argc, char **argv, char **envp){
    #ifdef HAVE_BLACKLIST
       if(is_sender_on_black_or_white_list(&sdata, from, SQL_BLACK_FIELD_NAME, SQL_BLACK_LIST, &cfg) == 1){
          syslog(LOG_PRIORITY, "%s: sender (%s) found on blacklist", sdata.ttmpfile, from);
-         snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on blacklist\r\n", cfg.clapf_header_field);
+         snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on blacklist%s", cfg.clapf_header_field, CRLF);
          is_spam = 1;
          unlink(sdata.ttmpfile);
          return 0;
@@ -643,7 +648,7 @@ int main(int argc, char **argv, char **envp){
          if(sum){
             spamsum_score = spamsum_match_db(cfg.sig_db, sum, 55);
             if(spamsum_score >= 50) spaminess = 0.9988;
-            snprintf(spamsum_buf, SMALLBUFSIZE-1, "%sspamsum=%d\r\n", cfg.clapf_header_field, spamsum_score);
+            snprintf(spamsum_buf, SMALLBUFSIZE-1, "%sspamsum=%d%s", cfg.clapf_header_field, spamsum_score, CRLF);
             strncat(clapf_info, spamsum_buf, MAXBUFSIZE-1);
             free(sum);
          }
@@ -681,7 +686,7 @@ int main(int argc, char **argv, char **envp){
          else
             syslog(LOG_PRIORITY, "%s: TUM training a ham", sdata.ttmpfile);
 
-         snprintf(trainbuf, SMALLBUFSIZE-1, "%sTUM\r\n", cfg.clapf_header_field);
+         snprintf(trainbuf, SMALLBUFSIZE-1, "%sTUM%s", cfg.clapf_header_field, CRLF);
 
          train_message(&sdata, &state, 1, is_spam, train_mode, &cfg);
       }
@@ -699,7 +704,7 @@ int main(int argc, char **argv, char **envp){
          rounds = MAX_ITERATIVE_TRAIN_LOOPS;
 
          syslog(LOG_PRIORITY, "%s: training on a blackhole message", sdata.ttmpfile);
-         snprintf(trainbuf, SMALLBUFSIZE-1, "%sTUM on blackhole\r\n", cfg.clapf_header_field);
+         snprintf(trainbuf, SMALLBUFSIZE-1, "%sTUM on blackhole%s", cfg.clapf_header_field, CRLF);
 
          sdata.uid = 0;
          train_message(&sdata, &state, rounds, 1, T_TOE, &cfg);
@@ -739,7 +744,7 @@ int main(int argc, char **argv, char **envp){
 
 ENDE_SPAMDROP:
 
-   if(cfg.debug == 0) syslog(LOG_PRIORITY, "%s: %.4f %d in %ld [ms]", sdata.ttmpfile, spaminess, sdata.tot_len, tvdiff(tv_stop, tv_start)/1000);
+   if(cfg.debug == 0 && cfg.verbosity > 0) syslog(LOG_PRIORITY, "%s: %.4f %d in %ld [ms]", sdata.ttmpfile, spaminess, sdata.tot_len, tvdiff(tv_stop, tv_start)/1000);
 
 
    /********************************/
@@ -748,13 +753,13 @@ ENDE_SPAMDROP:
 
    if(print_message == 1){
 
-      snprintf(buf, MAXBUFSIZE-1, "%s%s%s%s%.4f\r\n%s%ld ms\r\n",
-              cfg.clapf_header_field, sdata.ttmpfile, trainbuf, cfg.clapf_header_field, spaminess, cfg.clapf_header_field, tvdiff(tv_stop, tv_start)/1000);
+      snprintf(buf, MAXBUFSIZE-1, "%s%s%s%s%s%ld ms%s",
+              cfg.clapf_header_field, sdata.ttmpfile, CRLF, trainbuf, cfg.clapf_header_field, tvdiff(tv_stop, tv_start)/1000, CRLF);
 
       strncat(clapf_info, buf, MAXBUFSIZE-1);
 
       if(sdata.statistically_whitelisted == 1){
-         snprintf(buf, MAXBUFSIZE-1, "%sstatistically whitelisted\r\n", cfg.clapf_header_field);
+         snprintf(buf, MAXBUFSIZE-1, "%sstatistically whitelisted%s", cfg.clapf_header_field, CRLF);
          strncat(clapf_info, buf, MAXBUFSIZE-1);
       }
 
@@ -764,10 +769,12 @@ ENDE_SPAMDROP:
          strncat(clapf_info, "\r\n", MAXBUFSIZE-1);
       }
 
-      if(spaminess >= cfg.spam_overall_limit && spaminess < 1.01){
-         strncat(clapf_info, cfg.clapf_header_field, MAXBUFSIZE-1);
-         strncat(clapf_info, "Yes\r\n", MAXBUFSIZE-1);
-      }
+      if(spaminess >= cfg.spam_overall_limit && spaminess < 1.01)
+         snprintf(buf, MAXBUFSIZE-1, "%sYes, %.4f%s", cfg.clapf_header_field, spaminess, CRLF);
+      else
+         snprintf(buf, MAXBUFSIZE-1, "%sNo, %.4f%s", cfg.clapf_header_field, spaminess, CRLF);
+
+      strncat(clapf_info, buf, MAXBUFSIZE-1);
 
    #ifdef MY_TEST
       char rblbuf[SMALLBUFSIZE];
@@ -775,9 +782,9 @@ ENDE_SPAMDROP:
       memset(rblbuf, 0, SMALLBUFSIZE);
       reverse_ipv4_addr(state.ip);
       if(rbl_list_check("zen.spamhaus.org", state.ip, cfg.verbosity) == 1)
-         snprintf(rblbuf, SMALLBUFSIZE-1, "%sZEN=1\r\n", cfg.clapf_header_field);
+         snprintf(rblbuf, SMALLBUFSIZE-1, "%sZEN=1%s", cfg.clapf_header_field, CRLF);
       else
-         snprintf(rblbuf, SMALLBUFSIZE-1, "%sZEN=0\r\n", cfg.clapf_header_field);
+         snprintf(rblbuf, SMALLBUFSIZE-1, "%sZEN=0%s", cfg.clapf_header_field, CRLF);
 
       strncat(clapf_info, rblbuf, MAXBUFSIZE-1);
    #endif
@@ -789,7 +796,7 @@ ENDE_SPAMDROP:
 
 
 
-   if(cfg.debug == 0){
+   if(cfg.debug == 0 && cfg.verbosity > 0){
       snprintf(buf, MAXBUFSIZE-1, "%ld", sdata.uid);
 
       if(is_spam == 1)

@@ -1,5 +1,16 @@
 0.4.3-rc2:
 
+2009.12.16, SJ
+
+The spamdrop utility removes the clapf related header lines from the header only.
+
+It's also possible to suppress all normal syslog activity (except for errors)
+if using the '-q' command line switch or specifying verbose=0 in the config file.
+
+Changed spamdrop to print the spam status and the spaminess probability in a single
+row, eg. 'X-Clapf-spamicity: Yes, 1.000' or 'X-Clapf-spamicity: No, 0.0001'.
+(spamdrop.c)
+
 2009.12.15, SJ
 
 Minor fixes for various parts of clapf.

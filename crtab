@@ -1,8 +1,0 @@
-unprivileged user:
-
-# remove aged entries from the queue directory
-# may decrease the TTL (3 in this example) by
-# lowering the value of 'atime'
-1 * * * * find /var/lib/clapf/queue -type f -atime +7 -exec rm -f '{}' \;
-
-echo "delete t_queue where UNIX_TIMESTAMP() - ts > 604800" | mysql

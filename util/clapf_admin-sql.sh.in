@@ -3,8 +3,7 @@
 ### clapf_admin.sh
 ###
 
-MYSQL='MYSQLBINPROG --defaults-file=YOUR_DATAROOTDIR/clapf/.my.cnf'
-
+SQLPROG='SQLBINPROG'
 
 if [ $# -lt 2 ]; then
 	echo; echo "usage: $0 <action> <uid> <username> <encrypted password> <email address> <domain> <policy group id>"; echo
@@ -77,6 +76,6 @@ fi
 
 
 if test "x" != "x$CMD"; then
-	echo $CMD | $MYSQL
+	echo $CMD | $SQLPROG
 fi
 

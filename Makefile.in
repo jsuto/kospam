@@ -200,7 +200,7 @@ install-parsembox:
 
 	cat $(srcdir)/util/db_train.sh.in | sed -e "s%YOUR_LIBEXECDIR%$(libexecdir)/clapf%g" -e "s%YOUR_BINDIR%$(bindir)%g" -e "s%YOUR_SHAREDIR%$(datarootdir)/clapf%g" > $(srcdir)/util/db_train.sh
 
-	if test `echo $(DEFS) | grep -c USERS_IN_LDAP ` -eq 1 ; then cat $(srcdir)/util/clapf_admin-ldap.sh.in > $(srcdir)/util/clapf_admin.sh; else cat $(srcdir)/util/clapf_admin-sql.sh.in | sed -e "s%MYSQLBINPROG%`which mysql`%g" -e "s%YOUR_DATAROOTDIR%$(datarootdir)/clapf%g" > $(srcdir)/util/clapf_admin.sh; fi
+	if test `echo $(DEFS) | grep -c USERS_IN_LDAP ` -eq 1 ; then cat $(srcdir)/util/clapf_admin-ldap.sh.in > $(srcdir)/util/clapf_admin.sh; else if test `echo $(DEFS) | grep -c USERS_IN_MYSQL ` -eq 1 ; then cat $(srcdir)/util/clapf_admin-sql.sh.in | sed -e "s%SQLBINPROG%`which mysql` --defaults-file=$(datarootdir)/clapf/.my.cnf%g" > $(srcdir)/util/clapf_admin.sh; else cat $(srcdir)/util/clapf_admin-sql.sh.in | sed -e "s%SQLBINPROG%`which sqlite3` $(localstatedir)/lib/clapf/data/tokens.sdb%g" > $(srcdir)/util/clapf_admin.sh; fi; fi
 	$(INSTALL) -m 0755 $(srcdir)/util/db_init.sh $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 $(srcdir)/util/db_train.sh $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 $(srcdir)/util/clapf_admin.sh $(DESTDIR)$(libexecdir)/clapf

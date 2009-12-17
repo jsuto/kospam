@@ -1,5 +1,10 @@
 0.4.3-rc2:
 
+2009.12.17, SJ
+
+Modified the clapf_admin.sh script to handle sqlite3 databases, too.
+(Makefile.in, util/clapf_admin-sql.sh.in)
+
 2009.12.16, SJ
 
 The spamdrop utility removes the clapf related header lines from the header only.

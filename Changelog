@@ -1,5 +1,12 @@
 0.4.3-rc2:
 
+2009.12.18, SJ
+
+A few users complained about the merge of the spam status and the
+probability value. So reverted the change, but you can use the '-o'
+command line switch for this compact behaviour.
+(spamdrop.c)
+
 2009.12.17, SJ
 
 Modified the clapf_admin.sh script to handle sqlite3 databases, too.

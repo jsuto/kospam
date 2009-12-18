@@ -152,7 +152,7 @@ int print_message_stdout(struct session_data *sdata, char *clapf_info, float spa
 
 
 int main(int argc, char **argv, char **envp){
-   int i, n, fd, rc=0, rounds=1, debug=0, quiet=0;
+   int i, n, fd, rc=0, rounds=1, debug=0, quiet=0, compact=0;
    int print_message=1;
    int is_spam=0, train_as_ham=0, train_as_spam=0, blackhole_request=0, training_request=0;
    int train_mode=T_TOE;
@@ -181,7 +181,7 @@ int main(int argc, char **argv, char **envp){
 #endif
 
 
-   while((i = getopt(argc, argv, "c:u:U:f:r:SHDdhq?")) > 0){
+   while((i = getopt(argc, argv, "c:u:U:f:r:SHDdhqo?")) > 0){
        switch(i){
 
          case 'c' :
@@ -224,6 +224,10 @@ int main(int argc, char **argv, char **envp){
 
          case 'D' :
                     debug = 1;
+                    break;
+
+         case 'o' :
+                    compact = 1;
                     break;
 
          case 'h' :
@@ -753,8 +757,13 @@ ENDE_SPAMDROP:
 
    if(print_message == 1){
 
-      snprintf(buf, MAXBUFSIZE-1, "%s%s%s%s%s%ld ms%s",
+      if(compact == 1)
+         snprintf(buf, MAXBUFSIZE-1, "%s%s%s%s%s%ld ms%s",
               cfg.clapf_header_field, sdata.ttmpfile, CRLF, trainbuf, cfg.clapf_header_field, tvdiff(tv_stop, tv_start)/1000, CRLF);
+      else
+         snprintf(buf, MAXBUFSIZE-1, "%s%s%s%s%.4f%s%s%s%ld ms%s",
+              cfg.clapf_header_field, sdata.ttmpfile, CRLF, cfg.clapf_header_field, spaminess, CRLF, trainbuf, cfg.clapf_header_field, tvdiff(tv_stop, tv_start)/1000, CRLF);
+
 
       strncat(clapf_info, buf, MAXBUFSIZE-1);
 
@@ -769,10 +778,15 @@ ENDE_SPAMDROP:
          strncat(clapf_info, "\r\n", MAXBUFSIZE-1);
       }
 
-      if(spaminess >= cfg.spam_overall_limit && spaminess < 1.01)
-         snprintf(buf, MAXBUFSIZE-1, "%sYes, %.4f%s", cfg.clapf_header_field, spaminess, CRLF);
-      else
-         snprintf(buf, MAXBUFSIZE-1, "%sNo, %.4f%s", cfg.clapf_header_field, spaminess, CRLF);
+      if(compact == 1){
+         if(spaminess >= cfg.spam_overall_limit && spaminess < 1.01)
+            snprintf(buf, MAXBUFSIZE-1, "%sYes, %.4f%s", cfg.clapf_header_field, spaminess, CRLF);
+         else
+            snprintf(buf, MAXBUFSIZE-1, "%sNo, %.4f%s", cfg.clapf_header_field, spaminess, CRLF);
+      }
+      else {
+         snprintf(buf, MAXBUFSIZE-1, "%sYes%s", cfg.clapf_header_field, CRLF);
+      }
 
       strncat(clapf_info, buf, MAXBUFSIZE-1);
 

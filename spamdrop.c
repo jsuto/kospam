@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2009.12.16, SJ
+ * spamdrop.c, 2009.12.18, SJ
  */
 
 #include <stdio.h>
@@ -638,7 +638,7 @@ int main(int argc, char **argv, char **envp){
 
       strncat(clapf_info, cfg.clapf_header_field, MAXBUFSIZE-1);
       strncat(clapf_info, lang, MAXBUFSIZE-1);
-      strncat(clapf_info, "\r\n", MAXBUFSIZE-1);
+      strncat(clapf_info, CRLF, MAXBUFSIZE-1);
 
       if(cfg.debug == 1) printf("lang detected: %s\n", lang);
    #endif
@@ -775,7 +775,7 @@ ENDE_SPAMDROP:
       if(spaminess > 0.9999){
          strncat(clapf_info, cfg.clapf_header_field, MAXBUFSIZE-1);
          strncat(clapf_info, MSG_ABSOLUTELY_SPAM, MAXBUFSIZE-1);
-         strncat(clapf_info, "\r\n", MAXBUFSIZE-1);
+         strncat(clapf_info, CRLF, MAXBUFSIZE-1);
       }
 
       if(compact == 1){

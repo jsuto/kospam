@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2009.12.18, SJ
+ * spamdrop.c, 2009.12.19, SJ
  */
 
 #include <stdio.h>
@@ -607,8 +607,7 @@ int main(int argc, char **argv, char **envp){
    #ifdef HAVE_BLACKLIST
       if(is_sender_on_black_or_white_list(&sdata, from, SQL_BLACK_FIELD_NAME, SQL_BLACK_LIST, &cfg) == 1){
          syslog(LOG_PRIORITY, "%s: sender (%s) found on blacklist", sdata.ttmpfile, from);
-         snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on blacklist%s", cfg.clapf_header_field, CRLF);
-         is_spam = 1;
+         close_db(&sdata, &state);
          unlink(sdata.ttmpfile);
          return 0;
       }
@@ -783,12 +782,13 @@ ENDE_SPAMDROP:
             snprintf(buf, MAXBUFSIZE-1, "%sYes, %.4f%s", cfg.clapf_header_field, spaminess, CRLF);
          else
             snprintf(buf, MAXBUFSIZE-1, "%sNo, %.4f%s", cfg.clapf_header_field, spaminess, CRLF);
-      }
-      else {
-         snprintf(buf, MAXBUFSIZE-1, "%sYes%s", cfg.clapf_header_field, CRLF);
-      }
 
-      strncat(clapf_info, buf, MAXBUFSIZE-1);
+         strncat(clapf_info, buf, MAXBUFSIZE-1);
+      }
+      else if(spaminess >= cfg.spam_overall_limit && spaminess < 1.01){
+         snprintf(buf, MAXBUFSIZE-1, "%sYes%s", cfg.clapf_header_field, CRLF);
+         strncat(clapf_info, buf, MAXBUFSIZE-1);
+      }
 
    #ifdef MY_TEST
       char rblbuf[SMALLBUFSIZE];

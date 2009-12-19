@@ -1,5 +1,12 @@
 0.4.3-rc2:
 
+2009.12.19, SJ
+
+Spamdrop fix.
+(spamdrop.c)
+
+(credits: Gabor Varadi)
+
 2009.12.18, SJ
 
 A few users complained about the merge of the spam status and the

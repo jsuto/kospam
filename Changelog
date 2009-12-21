@@ -1,4 +1,9 @@
-0.4.3-rc2:
+0.4.3:
+
+2009.12.21, SJ
+
+Parser fix.
+(misc.c)
 
 2009.12.19, SJ
 
@@ -13,6 +18,10 @@ A few users complained about the merge of the spam status and the
 probability value. So reverted the change, but you can use the '-o'
 command line switch for this compact behaviour.
 (spamdrop.c)
+
+
+0.4.3-rc2:
+
 
 2009.12.17, SJ
 

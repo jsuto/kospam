@@ -1,5 +1,5 @@
 /*
- * misc.c, 2009.11.25, SJ
+ * misc.c, 2009.12.21, SJ
  */
 
 #include <stdio.h>
@@ -135,7 +135,7 @@ int translate2(unsigned char *p, int qp){
          continue;
       }
 
-      if(delimiter_characters[(unsigned int)*p] != ' ')
+      if(delimiter_characters[(unsigned int)*p] != ' ' || isalnum(*p) == 0)
          *p = ' ';
       else {
       #ifndef HAVE_CASE

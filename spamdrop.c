@@ -381,8 +381,11 @@ int main(int argc, char **argv, char **envp){
 
    /* skip spamicity check if message is too long, and we are not debugging nor training */
 
-   if(print_message == 1 && sdata.tot_len > cfg.max_message_size_to_filter && cfg.debug == 0 && training_request == 0 && train_as_ham == 0 && train_as_spam == 0){
+   //if(print_message == 1 && sdata.tot_len > cfg.max_message_size_to_filter && cfg.debug == 0 && training_request == 0 && train_as_ham == 0 && train_as_spam == 0){
+   if(print_message == 1 && cfg.max_message_size_to_filter > 0 && sdata.tot_len > cfg.max_message_size_to_filter && cfg.debug == 0 && training_request == 0 && train_as_ham == 0 && train_as_spam == 0){
+
       gettimeofday(&tv_stop, &tz);
+      memset(trainbuf, 0, SMALLBUFSIZE);
       goto ENDE_SPAMDROP;
    }
 
@@ -684,11 +687,12 @@ int main(int argc, char **argv, char **envp){
         )
       {
 
-         if(is_spam == 1)
-            syslog(LOG_PRIORITY, "%s: TUM training a spam", sdata.ttmpfile);
-         else
-            syslog(LOG_PRIORITY, "%s: TUM training a ham", sdata.ttmpfile);
-
+         if(cfg.verbosity > 0){
+            if(is_spam == 1)
+               syslog(LOG_PRIORITY, "%s: TUM training a spam", sdata.ttmpfile);
+            else
+               syslog(LOG_PRIORITY, "%s: TUM training a ham", sdata.ttmpfile);
+         }
          snprintf(trainbuf, SMALLBUFSIZE-1, "%sTUM%s", cfg.clapf_header_field, CRLF);
 
          train_message(&sdata, &state, 1, is_spam, train_mode, &cfg);
@@ -706,7 +710,7 @@ int main(int argc, char **argv, char **envp){
       if(spaminess < 0.99){
          rounds = MAX_ITERATIVE_TRAIN_LOOPS;
 
-         syslog(LOG_PRIORITY, "%s: training on a blackhole message", sdata.ttmpfile);
+         if(cfg.verbosity > 0) syslog(LOG_PRIORITY, "%s: training on a blackhole message", sdata.ttmpfile);
          snprintf(trainbuf, SMALLBUFSIZE-1, "%sTUM on blackhole%s", cfg.clapf_header_field, CRLF);
 
          sdata.uid = 0;
@@ -727,7 +731,8 @@ int main(int argc, char **argv, char **envp){
    /* save email for later retraining and/or spam quarantine */
 
 #ifdef HAVE_STORE
-   if(sdata.tot_len <= cfg.max_message_size_to_filter && blackhole_request == 0 && debug == 0){
+   if( (sdata.tot_len <= cfg.max_message_size_to_filter || cfg.max_message_size_to_filter == 0) && blackhole_request == 0 && debug == 0){
+   //if(sdata.tot_len <= cfg.max_message_size_to_filter && blackhole_request == 0 && debug == 0){
 
       /* add trailing dot to the file, 2008.09.08, SJ */
 

@@ -5,6 +5,11 @@
 Parser fix.
 (misc.c)
 
+Various spamdrop fixes.
+(spamdrop.c)
+
+(credits: Gabor Varadi)
+
 2009.12.19, SJ
 
 Spamdrop fix.

@@ -1,3 +1,26 @@
+0.4.3:
+------
+
+MySQL schema optimisations
+
+Zombie handling via the XFORWARD feature and the TRE library
+
+Locale fixes
+
+Added a postconf-like utility, clapfconf
+
+New counter to the 'delays=' to show how much time clapf
+needs to acquire a message from postfix.
+
+Training is possible without actually storing the original email.
+
+Enhanced the maillog.pl utility to be able to handle mysql databases as well.
+
+Possible spam can be identified with both a '[spam???]' prefix in the
+Subject: line, and with an extra header line.
+
+
+
 0.4.2:
 ------
 

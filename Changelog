@@ -1,5 +1,7 @@
 0.4.4-rc1:
 
+2009.12.28, SJ
+
 Created the contrib/spamdrop_helper directory with
 Varadi Gabor's spamdrop_helper.c
 (contrib/spamdrop_helper)
@@ -12,6 +14,10 @@ Added a mysql version of history.
 
 Simplified the statistics.
 (stat/clapf-stat.run.sh)
+
+Added a fix to the configure script to include the spam.o and antispam.o
+object files if using --enable-spamc-emul
+(configure*)
 
 
 0.4.3:

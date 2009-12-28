@@ -1,5 +1,5 @@
 /*
- * antispam.c, 2009.12.11, SJ
+ * antispam.c, 2009.12.28, SJ
  */
 
 #include <stdio.h>
@@ -189,7 +189,7 @@ int process_message(struct session_data *sdata, struct _state *sstate, struct __
 
    #ifdef SPAMC_EMUL
       gettimeofday(&tv1, &tz);
-      rc = spamc_emul(sdata->ttmpfile, sdata->tot_len, cfg);
+      int rc = spamc_emul(sdata->ttmpfile, sdata->tot_len, cfg);
       gettimeofday(&tv2, &tz);
       sdata->__as = tvdiff(tv2, tv1);
 

@@ -473,7 +473,7 @@ dnl SpamAssassin's spamd support
 
     if test "$want_spamc_emul" = "yes"; then
        defs="$defs -DSPAMC_EMUL -DHAVE_ANTISPAM"
-       objs="$objs spamc.o hash2.o bayes.o buffer.o"
+       objs="$objs spamc.o hash2.o bayes.o buffer.o antispam.o spam.o"
     fi
 
 

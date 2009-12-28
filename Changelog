@@ -1,3 +1,19 @@
+0.4.4-rc1:
+
+Created the contrib/spamdrop_helper directory with
+Varadi Gabor's spamdrop_helper.c
+(contrib/spamdrop_helper)
+
+Fixed the blackhole routine.
+(black.c)
+
+Added a mysql version of history.
+(webui/setup/*, webui/controller/history/worker.php)
+
+Simplified the statistics.
+(stat/clapf-stat.run.sh)
+
+
 0.4.3:
 
 2009.12.21, SJ

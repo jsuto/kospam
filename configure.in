@@ -846,3 +846,5 @@ OBJS="misc.o cfg.o smtp.o sig.o decoder.o list.o boundary.o parser.o session.o t
 
 AC_OUTPUT(Makefile)
 AC_OUTPUT(contrib/spamsum/Makefile)
+AC_OUTPUT(contrib/spamdrop_helper/Makefile)
+

@@ -92,9 +92,15 @@ void is_sender_on_minefield(struct session_data *sdata, char *ip, struct __confi
 
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: minefield query: %s", sdata->ttmpfile, stmt);
 
-   if(sqlite3_prepare_v2(sdata->db, stmt, -1, &pStmt, pzTail) != SQLITE_OK) return ts;
-
-   if(sqlite3_step(pStmt) == SQLITE_ROW) sdata->trapped_client = 1;
+   if(sqlite3_prepare_v2(sdata->db, stmt, -1, &pStmt, pzTail) != SQLITE_OK){
+      syslog(LOG_PRIORITY, "%s: error compiling query: %s", sdata->ttmpfile, stmt);
+      return;
+   }
+ 
+   if(sqlite3_step(pStmt) == SQLITE_ROW){
+      sdata->trapped_client = 1;
+      syslog(LOG_PRIORITY, "%s: %s is trapped on minefield", sdata->ttmpfile, ip);
+   }
 
    sqlite3_finalize(pStmt);
 }

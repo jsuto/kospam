@@ -1,6 +1,8 @@
 #!/bin/sh
 
-RRDTOOL=/usr/local/bin/rrdtool
+export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:/usr/local/rrdtool/bin
+
+RRDTOOL=rrdtool
 ONEMONTH=2678400
 ONEWEEK=604800
 ONEDAY=86400
@@ -34,5 +36,6 @@ $RRDTOOL graph $2 \
 	"CDEF:reqs=dds0,1,*" \
 	"CDEF:traff=dds1,1,*" \
 	"AREA:reqs#1ac090" \
-        "LINE1:reqs#1ac090:$TITLE" 
+        "LINE1:reqs#1ac090:$TITLE" \
+	> /dev/null
 

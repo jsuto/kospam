@@ -1,6 +1,8 @@
 #!/bin/sh
 
-RRDTOOL=/usr/local/bin/rrdtool
+export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:/usr/local/rrdtool/bin
+
+RRDTOOL=rrdtool
 
 if [ $# -ne 2 ]; then echo "usage: $0 <rrd file> <timestamp>:<ham>:<spam>"; exit; fi
 

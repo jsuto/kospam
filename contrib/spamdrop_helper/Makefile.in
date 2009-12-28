@@ -1,0 +1,44 @@
+SHELL = @SHELL@
+
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+bindir = @bindir@
+sbindir = @sbindir@
+includedir = @includedir@
+libdir = @libdir@
+libexecdir = @libexecdir@
+srcdir = @srcdir@
+sysconfdir = @sysconfdir@
+mandir = @mandir@
+datarootdir = @datarootdir@
+localstatedir = @localstatedir@
+
+CC = @CC@
+CFLAGS = @CFLAGS@ @CPPFLAGS@
+DEFS = @defs@
+INCDIR = -I. -I../.. @INCDIR@ @mysql_includes@
+LIBDIR = -L. @LIBDIR@ @LDFLAGS@ -L../..
+LIBS = @LIBS@ @mysql_libs@
+LDAP_LIBS = @ldap_libs@
+OBJS = edit_dist.o spamsum.o
+
+INSTALL = @INSTALL@
+
+all: spamdrop_helper
+
+spamdrop_helper: % : %.o
+	cat $(srcdir)/spamdrop_helper.sh.in | sed -e "s%YOUR_STATE_DIR%$(localstatedir)%g" > $(srcdir)/spamdrop_helper.sh
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ -lclapf  $(LIBS) $(LDAP_LIBS) $(LIBDIR)
+
+
+%.o: $(srcdir)/%.c
+	$(CC) $(CFLAGS) -fPIC $(INCDIR) $(DEFS) -c $< -o $@
+
+install:
+	@echo "Please install manually what you need"
+
+clean:
+	rm -f *.o spamdrop_helper spamdrop_helper.sh
+
+dist_clean distclean: clean
+	rm -f Makefile

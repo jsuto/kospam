@@ -43,8 +43,13 @@ class ControllerHistoryWorker extends Controller {
 
       if(Registry::get('admin_user') == 1) {
 
-         require_once(DIR_DATABASE . "/sqlite3.php");
-         $db = new DB("sqlite3", DB_HOSTNAME, DB_USERNAME, DB_PASSWORD, HISTORY_DATA, DB_PREFIX);
+         if(HISTORY_DRIVER == "sqlite3") {
+            require_once(DIR_DATABASE . "/sqlite3.php");
+            $db = new DB("sqlite3", DB_HOSTNAME, DB_USERNAME, DB_PASSWORD, HISTORY_DATABASE, DB_PREFIX);
+         }
+         else {
+            $db = Registry::get('db');
+         }
 
          $last_update = 0;
 

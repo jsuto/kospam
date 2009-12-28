@@ -50,6 +50,15 @@ function fix1() {
       ShowOption('LDAP_DOMAIN_BASEDN', 0);
    }
 
+
+   if(document.forms.setup.HISTORY_DRIVER.value == "sqlite3") {
+      ShowOption('HISTORY_DATABASE', 1);
+      document.forms.setup.HISTORY_DATABASE.value = "/var/lib/clapf/data/log.sdb";
+   }
+   else {
+      ShowOption('HISTORY_DATABASE', 0);
+   }
+
 }
 
 
@@ -184,6 +193,24 @@ function ShowOption(what, value) {
    <tr id="DIV_LDAP_DOMAIN_BASEDN" style="display:none">
       <td>Base DN of the domains: </td>
       <td><input type="text" name="LDAP_DOMAIN_BASEDN" id="LDAP_DOMAIN_BASEDN" value="ou=clapfdomains,dc=yourdomain.dc=com" size="30" /></td>
+   </tr>
+
+
+   <!-- history stuff -->
+
+   <tr>
+      <td>History driver: </td>
+      <td>
+         <select name="HISTORY_DRIVER" id="HISTORY_DRIVER" onchange="fix1(); return false;">
+            <option value="mysql">MySQL</option>
+            <option value="sqlite3">SQLite3</option>
+         </select>
+      </td>
+   </tr>
+
+   <tr id="DIV_HISTORY_DATABASE" style="display:show">
+      <td>History database name: </td>
+      <td><input type="text" name="HISTORY_DATABASE" id="HISTORY_DATABASE" value="/var/lib/clapf/data/log.sdb" size="30" /></td>
    </tr>
 
    <tr>

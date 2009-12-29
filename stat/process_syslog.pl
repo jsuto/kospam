@@ -1,9 +1,8 @@
 #!/usr/bin/perl
 ##
-## process_syslog.pl, 2009.09.02, SJ
+## process_syslog.pl, 2009.12.29, SJ
 ##
 
-$spam_limit = 0.92;
 $n = 0;
 $n_ham = 0;
 $n_spam = 0;
@@ -27,20 +26,23 @@ while(<STDIN>){
    #if(/^$MON\ / && /$DAY\ $HOUR\:/ && (/clapf/ || /spamdrop/) && /\:\ 0\./){
    if(/^$MON\ / && /$DAY\ $HOUR\:/ && (/clapf/ || /spamdrop/) && /\ delay\=/){
       $_ =~ s/\s{1,}/ /g;
+      $_ =~ s/\,//g;
 
       @x = split(/ /, $_);
-      #Mar  7 11:32:06 thorium clapf[3987]: 8f7d96b0517f1e47db1e40851a86ac: 1.0000 3226 in 12 [ms]
-      #Sep  2 16:07:52 thorium clapf[27064]: 4a9e7c37498924467325498cbc8c3e: sj@acts.hu got HAM, 0.0001, 86612, delay=0.49, delays=0.08/0.06/0.00/0.00/0.00/0.00/0.33/0.00/0.02, relay said: 250 2.0.0 Ok: queued as AB1541F23D
 
-      $spamicity = $x[6];
-      $size = $x[7];
-      $time = $x[9];
+      #Sep 11 16:16:35 thorium clapf[28688]: 4aaa5bc2e143b68ed701d8833be296: sj@acts.hu got SPAM, 1.000, 2378, relay=127.0.0.1:10026, delay=0.12, delays=0.01/0.01/0.00/0.00/0.00/0.02/0.00/0.04/0.00/0.05, status=250 2.0.0 Ok: queued as 5597A17021
+
+      $is_spam = $x[8];
+      $size = $x[10];
+      (undef, $time) = split(/=/, $x[12]);
+
+      $time *= 1000;
 
       $n++;
       $tot_size += $size;
       $tot_time += $time;
 
-      if($spamicity < $spam_limit){
+      if($is_spam eq "HAM"){
          $n_ham++;
          $tot_spam_size += $size;
          $tot_spam_time += $time;
@@ -51,7 +53,7 @@ while(<STDIN>){
          $tot_ham_time += $time;
       }
 
-      #print "$spamicity $size $time\n";
+      #print "$is_spam $size $time\n";
    }
 }
 

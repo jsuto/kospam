@@ -1,5 +1,10 @@
 0.4.4-rc1:
 
+2009.12.29, SJ
+
+Updated the stat/process_syslog.pl script to match the current logging style.
+(stat/process_syslog.pl)
+
 2009.12.28, SJ
 
 Created the contrib/spamdrop_helper directory with

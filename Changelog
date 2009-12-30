@@ -1,5 +1,11 @@
 0.4.4-rc1:
 
+2009.12.30, SJ
+
+spamdrop is now setuid, so we can always enter the workdir, even if we
+just test a single message with spamdrop -D
+(spamdrop.c, Makefile.in)
+
 2009.12.29, SJ
 
 Updated the stat/process_syslog.pl script to match the current logging style.

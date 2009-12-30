@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2009.12.19, SJ
+ * spamdrop.c, 2009.12.30, SJ
  */
 
 #include <stdio.h>
@@ -304,11 +304,11 @@ int main(int argc, char **argv, char **envp){
    memset(clapf_info, 0, MAXBUFSIZE);
 
 
-   /* do not go to the workdir if this is a cmdline training request
-      or a debug run */
+   /* do not go to the workdir if this is a cmdline training request or a debug run */
+   //if(train_as_ham == 0 && train_as_spam == 0 && debug == 0) i = chdir(cfg.workdir);
 
-   if(train_as_ham == 0 && train_as_spam == 0 && debug == 0) i = chdir(cfg.workdir);
-
+   /* spamdrop is now setuid to clapf:clapf, so we can always get to the workdir */
+   i = chdir(cfg.workdir);
 
    /* read message from standard input */
 

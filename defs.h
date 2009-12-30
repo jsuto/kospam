@@ -1,5 +1,5 @@
 /*
- * defs.h, 2009.12.11, SJ
+ * defs.h, 2009.12.30, SJ
  */
 
 #ifndef _DEFS_H
@@ -10,6 +10,13 @@
 #endif
 #ifdef NEED_SQLITE3
   #include <sqlite3.h>
+
+   /* for older versions of sqlite3 do not have the sqlite3_prepare_v2() function, 2009.12.30, SJ */
+
+  #if SQLITE_VERSION_NUMBER < 3006000
+    #define sqlite3_prepare_v2 sqlite3_prepare
+  #endif
+
 #endif
 #ifdef NEED_LDAP
   #include <ldap.h>

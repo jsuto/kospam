@@ -41,6 +41,7 @@ AC_SUBST(spamsum_install)
 AC_SUBST(qcache)
 AC_SUBST(libclamav_extra_libs)
 AC_SUBST(memcached)
+AC_SUBST(sqlite3_batch)
 
 have_libclamav="no"
 have_clamd="no"
@@ -77,6 +78,7 @@ mysql_obj=""
 ldap_libs=""
 sqlite3_libs=""
 spamsum_libs=""
+sqlite3_batch=""
 os=`uname -s`
 
 want_language_detection="no"
@@ -395,6 +397,9 @@ AC_ARG_WITH(tokendb,
     preparesql="prepare-sql aphash "
     spamdrop="spamdrop"
     spamdrop_install="install-spamdrop"
+
+    if test `sqlite3 -help 2>&1| grep -c -- -batch` -gt 0; then sqlite3_batch="-batch"; fi
+
 
     test="test"
   fi

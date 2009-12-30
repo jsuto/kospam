@@ -640,6 +640,7 @@ LIBOBJS
 DATADIR
 CFGDIR
 MYSQL_CONFIG
+sqlite3_batch
 memcached
 libclamav_extra_libs
 qcache
@@ -3862,6 +3863,7 @@ done
 
 
 
+
 have_libclamav="no"
 have_clamd="no"
 have_avast="no"
@@ -3897,6 +3899,7 @@ mysql_obj=""
 ldap_libs=""
 sqlite3_libs=""
 spamsum_libs=""
+sqlite3_batch=""
 os=`uname -s`
 
 want_language_detection="no"
@@ -6320,6 +6323,9 @@ ac_cv_lib_sqlite3=ac_cv_lib_sqlite3_main
     preparesql="prepare-sql aphash "
     spamdrop="spamdrop"
     spamdrop_install="install-spamdrop"
+
+    if test `sqlite3 -help 2>&1| grep -c -- -batch` -gt 0; then sqlite3_batch="-batch"; fi
+
 
     test="test"
   fi

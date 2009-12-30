@@ -65,7 +65,8 @@ clapf-lib:	$(OBJS) $(STORE_OBJ) $(MYSQL_OBJS)
 	ar cr libclapf.a $(OBJS) $(MYSQL_OBJS)
 	ranlib libclapf.a
 	$(CC) -shared -Wl,-soname,libclapf.so.$(CLAPF_VERSION) -o libclapf.so.$(LIBCLAPF_VERSION) $(OBJS) $(MYSQL_OBJS) $(LIBS) $(LDAP_LIBS) @LDFLAGS@
-	ln -sf libclapf.so.$(CLAPF_VERSION) libclapf.so
+	ln -sf libclapf.so.$(LIBCLAPF_VERSION) libclapf.so
+	ln -sf libclapf.so.$(LIBCLAPF_VERSION) libclapf.so.$(CLAPF_VERSION)
 
 
 memcached_cleaner:	%	: %.o libclapf.a

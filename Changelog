@@ -5,6 +5,9 @@
 Now the webui handles different history databases.
 (webui/index.php, webui/controller/history/worker.php)
 
+Fixed an URL related parser bug introduced in translate2().
+(misc.c)
+
 2009.12.30, SJ
 
 spamdrop is now setuid, so we can always enter the workdir, even if we

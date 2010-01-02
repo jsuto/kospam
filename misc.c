@@ -110,7 +110,7 @@ int translate(unsigned char *p, int qp){
 }
 
 int translate2(unsigned char *p, int qp){
-   int url=0, clear=0;
+   int url=0;
    unsigned char *q=NULL, *P=p;
 
    for(; *p; p++){
@@ -125,15 +125,9 @@ int translate2(unsigned char *p, int qp){
       if(strncasecmp((char *)p, "http://", 7) == 0){ p += 7; url = 1; continue; }
       if(strncasecmp((char *)p, "https://", 8) == 0){ p += 8; url = 1; continue; }
 
-      if(url == 1 && (*p == '?' || *p == '/')) clear = 1;
+      if(url == 1 && *p != ' ' && *p != '\r' && *p != '\n') continue;
 
-      /* clear the rest of the url, eg. http://aaa.fu/ahah.cgi?aa=bb => http://aaa.fu */
-
-      if(isspace(*p)) clear = 0;
-      if(clear == 1){
-         *p = ' ';
-         continue;
-      }
+      if(url == 1) url = 0;
 
       if(delimiter_characters[(unsigned int)*p] != ' ' || isalnum(*p) == 0)
          *p = ' ';

@@ -43,6 +43,12 @@ Registry::set('domain_admin', isDomainAdmin());
 if(Registry::get('username')) {
 
    if(isset($request->get['route'])){
+
+      if($request->get['route'] == "history/worker") {
+         $db_history = new DB(HISTORY_DRIVER, DB_HOSTNAME, DB_USERNAME, DB_PASSWORD, HISTORY_DATABASE, DB_PREFIX);
+         Registry::set('db_history', $db_history);
+      }
+
       $action = new Router($request->get['route']);
    }
    else {

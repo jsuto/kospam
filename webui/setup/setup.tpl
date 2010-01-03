@@ -52,11 +52,10 @@ function fix1() {
 
 
    if(document.forms.setup.HISTORY_DRIVER.value == "sqlite3") {
-      ShowOption('HISTORY_DATABASE', 1);
       document.forms.setup.HISTORY_DATABASE.value = "/var/lib/clapf/data/log.sdb";
    }
    else {
-      ShowOption('HISTORY_DATABASE', 0);
+      document.forms.setup.HISTORY_DATABASE.value = "clapf";
    }
 
 }
@@ -210,7 +209,7 @@ function ShowOption(what, value) {
 
    <tr id="DIV_HISTORY_DATABASE" style="display:show">
       <td>History database name: </td>
-      <td><input type="text" name="HISTORY_DATABASE" id="HISTORY_DATABASE" value="/var/lib/clapf/data/log.sdb" size="30" /></td>
+      <td><input type="text" name="HISTORY_DATABASE" id="HISTORY_DATABASE" value="clapf" size="30" /></td>
    </tr>
 
    <tr>

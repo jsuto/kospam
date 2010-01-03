@@ -1,5 +1,13 @@
 0.4.4-rc1:
 
+2010.01.03, SJ
+
+Fixed the maillog.pl script to skip lines if they do not have a valid to field.
+(history/maillog.pl)
+
+Webui setup fixes.
+(webui/setup/setup.tpl)
+
 2010.01.02, SJ
 
 Now the webui handles different history databases.

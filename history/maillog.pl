@@ -73,7 +73,7 @@ while (defined($line = $file->read)) {
          (undef, $client_ip) = split(/client=/, $line);
          ($client_ip, undef) = split(/,/, $client_ip);
 
-         $sth_smtpd->execute($ts, $queue_id, $client_ip);
+         $sth_smtpd->execute($ts, $queue_id, $client_ip) || print $line . "\n";
       }
 
 
@@ -87,8 +87,7 @@ while (defined($line = $file->read)) {
 
          $message_id =~ s/\<|\>|\,//g;
 
-         $sth_cleanup->execute($ts, $queue_id, $message_id);
-         ##print "cleanup: $ts $hostname $queue_id $message_id\n";
+         $sth_cleanup->execute($ts, $queue_id, $message_id) || print $line . "\n";
       }
 
 
@@ -107,8 +106,7 @@ while (defined($line = $file->read)) {
 
          $size =~ s/\,//;
 
-         ##print "qmgr: $ts $hostname $queue_id from: $from ** size: $size\n";
-         $sth_qmgr->execute($ts, $queue_id, $from, $size);
+         $sth_qmgr->execute($ts, $queue_id, $from, $size) || print $line . "\n";
       }
 
       # Sep 3 09:30:23 thorium postfix/smtp[2312]: D20E617022: to=<sj@acts.hu>, relay=127.0.0.1[127.0.0.1]:10025, delay=0.16, delays=0.01/0/0/0.14, dsn=2.0.0, status=sent (250 Ok 4a9f708ea516d9a0814a203f2e1662 <sj@acts.hu>)
@@ -131,7 +129,7 @@ while (defined($line = $file->read)) {
             $status = "$1 $2";
          }
 
-         $sth_smtp->execute($ts, $queue_id, $to, $orig_to, $relay, $delay, $status);
+         $sth_smtp->execute($ts, $queue_id, $to, $orig_to, $relay, $delay, $status) || print $line . "\n";
       }
 
 
@@ -143,6 +141,8 @@ while (defined($line = $file->read)) {
          (undef, $to) = split(/=/, $l[6]);
 
          $to =~ s/\<|\>|\,//g;
+
+         next if $to eq "";
 
          (undef, $x) = split(/orig_to=/, $line);
          ($orig_to, undef) = split(/ /, $x);
@@ -163,7 +163,7 @@ while (defined($line = $file->read)) {
             $status = "$1 $2";
          }
 
-         $sth_smtp->execute($ts, $queue_id, $to, $orig_to, $relay, $delay, $status);
+         $sth_smtp->execute($ts, $queue_id, $to, $orig_to, $relay, $delay, $status) || print $line . "\n";
       }
 
 
@@ -198,8 +198,7 @@ while (defined($line = $file->read)) {
             (undef, $queue_id2) = split(/queued\ as\ /, $x);
          }
 
-         ##print "clapf: $ts $hostname $queue_id delay: $delay, result: $result, q2: $queue_id2\n";
-         $sth_clapf->execute($ts, $queue_id, $result, $spaminess, $relay, $delay, $queue_id2, $virus);
+         $sth_clapf->execute($ts, $queue_id, $result, $spaminess, $relay, $delay, $queue_id2, $virus) || print $line . "\n";
 
       }
 

@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2009.12.30, SJ
+ * spamdrop.c, 2010.01.06, SJ
  */
 
 #include <stdio.h>
@@ -33,6 +33,28 @@ int deliver_message=0;
 #ifdef HAVE_MYDB
    #include "mydb.h"
 #endif
+
+
+/* query unix account info */
+
+void query_unix_account(struct session_data *sdata){
+   char *username;
+   struct passwd *pwd;
+
+   username = getenv("LOGNAME");
+
+   if(username){
+      snprintf(sdata->name, SMALLBUFSIZE-1, "%s", username);
+      pwd = getpwnam(username);
+      sdata->uid = pwd->pw_uid;
+   }
+   else {
+      sdata->uid = getuid();
+      pwd = getpwuid(sdata->uid);
+      snprintf(sdata->name, SMALLBUFSIZE-1, "%s", pwd->pw_name);
+   }
+
+}
 
 
 /* open database connection */
@@ -158,9 +180,8 @@ int main(int argc, char **argv, char **envp){
    int train_mode=T_TOE;
    int u=-1;
    char buf[MAXBUFSIZE], trainbuf[SMALLBUFSIZE], ID[RND_STR_LEN+1], whitelistbuf[SMALLBUFSIZE], clapf_info[MAXBUFSIZE];
-   char *configfile=CONFIG_FILE, *username=NULL, *from=NULL, *recipient=NULL;
+   char *configfile=CONFIG_FILE, *from=NULL, *recipient=NULL;
    char *p, path[SMALLBUFSIZE];
-   struct passwd *pwd;
    struct session_data sdata;
    struct timezone tz;
    struct timeval tv_start, tv_stop;
@@ -181,15 +202,11 @@ int main(int argc, char **argv, char **envp){
 #endif
 
 
-   while((i = getopt(argc, argv, "c:u:U:f:r:SHDdhqo?")) > 0){
+   while((i = getopt(argc, argv, "c:U:f:r:SHDdhqo?")) > 0){
        switch(i){
 
          case 'c' :
                     configfile = optarg;
-                    break;
-
-         case 'u' :
-                    username = optarg;
                     break;
 
          case 'U' :
@@ -378,7 +395,6 @@ int main(int argc, char **argv, char **envp){
 
    }
 
-
    /* skip spamicity check if message is too long, and we are not debugging nor training */
 
    //if(print_message == 1 && sdata.tot_len > cfg.max_message_size_to_filter && cfg.debug == 0 && training_request == 0 && train_as_ham == 0 && train_as_spam == 0){
@@ -402,24 +418,7 @@ int main(int argc, char **argv, char **envp){
 
    /* fix username and uid */
 
-#ifdef HAVE_USERS
-   if(recipient) get_user_from_email(&sdata, recipient, &cfg);
-   else {
-#endif
-      username = getenv("LOGNAME");
-      if(username){
-         snprintf(sdata.name, SMALLBUFSIZE-1, "%s", username);
-         pwd = getpwnam(username);
-         sdata.uid = pwd->pw_uid;
-      }
-      else {
-         sdata.uid = getuid();
-         pwd = getpwuid(sdata.uid);
-         snprintf(sdata.name, SMALLBUFSIZE-1, "%s", pwd->pw_name);
-      }
-#ifdef HAVE_USERS
-   }
-#endif
+   if(recipient == NULL && from == NULL) query_unix_account(&sdata);
 
 
    /* fix database path if we need it */
@@ -466,6 +465,9 @@ int main(int argc, char **argv, char **envp){
    }
 
 
+#ifdef HAVE_USERS
+   if(recipient) get_user_from_email(&sdata, recipient, &cfg);
+#endif
 
    /****************************/
    /* handle training requests */
@@ -561,7 +563,6 @@ int main(int argc, char **argv, char **envp){
        spamdrop -S -f email@address < message
        FROM=email@address spamdrop -S < message
        spamdrop -S -U uid < message
-       TODO: spamdrop -S -u username < message (????)
 
     */
 

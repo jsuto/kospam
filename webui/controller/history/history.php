@@ -20,7 +20,16 @@ class ControllerHistoryHistory extends Controller {
       /* check if we are admin */
 
       if(Registry::get('admin_user') == 1) {
+         $this->data['hamspam'] = @$this->request->cookie['hamspam'];
+         $this->data['sender_domain'] = @$this->request->cookie['sender_domain'];
+         $this->data['rcpt_domain'] = @$this->request->cookie['rcpt_domain'];
 
+         if(isset($this->request->get['page']) && is_numeric($this->request->get['page']) && $this->request->get['page'] > 0) {
+            $this->data['page'] = $this->request->get['page'];
+         }
+         else {
+            $this->data['page'] = 0;
+         }
 
       }
       else {

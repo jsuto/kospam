@@ -1,4 +1,17 @@
+0.4.4-rc1:
+
+2010.01.10, SJ
+
+Added a search/filter feature to the webui history. It requires to
+accept cookies. You are allowed to set filter criteria at the 0th page,
+ie. page=0.
+Whenever you set a filter term it will be used at the next AJAX request,
+ie. expect a ~5 sec delay.
+(webui/*)
+
+
 0.4.3.1:
+
 
 2010.01.06, SJ
 

@@ -30,6 +30,57 @@ class ControllerHistoryWorker extends Controller {
       }
 
 
+      /* assemble filter restrictions */
+
+      $CLAPF_FILTER = "";
+      $QMGR_TABLE = "";
+      $SMTP_TABLE = "";
+
+      $this->data['hamspam'] = "";
+      $this->data['sender_domain'] = "";
+      $this->data['rcpt_domain'] = "";
+
+
+      /* ham or spam */
+
+      $cookie = @$this->request->cookie['hamspam'];
+
+      if($cookie == "HAM" || $cookie == "SPAM"){
+         $this->data['hamspam'] = $cookie;
+         $CLAPF_FILTER = "clapf.result='$cookie'";
+      }
+
+
+      /* rcpt domain */
+
+      $cookie = @$this->request->cookie['rcpt_domain'];
+
+      if($cookie && eregi('^[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,5})$', $cookie)) {
+         $this->data['rcpt_domain'] = $cookie;
+         $CLAPF_FILTER ? $CLAPF_FILTER .= " and clapf.queue_id2=smtp.queue_id and (smtp.`to` like '%@$cookie' or smtp.orig_to like '%@$cookie')" : $CLAPF_FILTER .= " clapf.queue_id2=smtp.queue_id and (smtp.`to` like '%@$cookie' or smtp.orig_to like '%@$cookie')";
+
+         $SMTP_TABLE = ", smtp";
+      }
+
+
+      /* sender domain */
+
+      $cookie = @$this->request->cookie['sender_domain'];
+
+      if($cookie && eregi('^[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,5})$', $cookie)) {
+         $this->data['sender_domain'] = $cookie;
+         $CLAPF_FILTER ? $CLAPF_FILTER .= " and clapf.queue_id2=qmgr.queue_id and qmgr.`from` like '%@$cookie'" : $CLAPF_FILTER .= "clapf.queue_id2=qmgr.queue_id and qmgr.`from` like '%@$cookie'";
+
+         $QMGR_TABLE = ", qmgr ";
+      }
+
+
+      /* assemble clapf filter */
+
+      if($CLAPF_FILTER) { $CLAPF_FILTER = "where " . $CLAPF_FILTER; }
+
+
+
       /* get page */
 
       if(isset($this->request->get['page']) && is_numeric($this->request->get['page']) && $this->request->get['page'] > 0) {
@@ -49,11 +100,10 @@ class ControllerHistoryWorker extends Controller {
 
          $i = 0;
 
-         $query = $db->query("select count(*) as total from clapf");
+         $query = $db->query("select count(*) as total from clapf $QMGR_TABLE $SMTP_TABLE $CLAPF_FILTER");
          $this->data['total'] = $query->row['total'];
 
-         $query = $db->query("select queue_id, result, spaminess, relay, delay, queue_id2, virus from clapf order by ts desc limit " . (int)$this->data['page'] * (int)$this->data['page_len'] . ", " . $this->data['page_len']);
-
+         $query = $db->query("select clapf.queue_id, clapf.result, clapf.spaminess, clapf.relay, clapf.delay, clapf.queue_id2, clapf.virus from clapf $QMGR_TABLE $SMTP_TABLE $CLAPF_FILTER order by clapf.ts desc limit " . (int)$this->data['page'] * (int)$this->data['page_len'] . ", " . $this->data['page_len']);
 
          foreach ($query->rows as $__clapf) {
 
@@ -97,6 +147,8 @@ class ControllerHistoryWorker extends Controller {
                }
 
                if(isset($smtp['orig_to']) && strlen($smtp['orig_to']) > 3) { $smtp['to'] = $smtp['orig_to']; }
+
+               if($this->data['rcpt_domain'] && !preg_match("/@" . $this->data['rcpt_domain'] . "$/", $smtp['to']) ) { continue; }
 
                $this->data['entries'][] = array(
                                                'timedate'       => date("Y.m.d. H:i:s", $__smtp2->row['ts']),

@@ -1,5 +1,9 @@
 0.4.4-rc1:
 
+2010.01.11, SJ
+
+Added a new variable 'queuedir' to let you define its path to your will.
+(cfg.h, cfg.c, config.h, Makefile.in, example.conf)
 
 2010.01.10, SJ
 

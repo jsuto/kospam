@@ -35,8 +35,8 @@ LIBCLAPF_VERSION=$(CLAPF_VERSION).$(CLAPF_REVISION).$(CLAPF_RELEASE)
 
 INSTALL = @INSTALL@
 
-all: clapf-lib clapf clapfconf rc.clapf @memcached@ @spamsum@ splitmbox @parsembox@ @spamdrop@ @preparesql@
-install: install-clapf install-splitmbox @parsembox_install@ @spamsum_install@ @spamdrop_install@ @db_install@ install-end
+all: clapf-lib clapf clapfconf clapf.conf rc.clapf @memcached@ @spamsum@ splitmbox @parsembox@ @spamdrop@ @preparesql@
+install: install-clapf install-splitmbox @parsembox_install@ @spamsum_install@ @spamdrop_install@ @db_install@ localedirs install-end
 
 
 clapf.conf:
@@ -53,7 +53,7 @@ rc.clapf: init.d/clapf.in
 	-e 's%CLAPF_GROUP%$(CLAPF_GROUP)%' < $(srcdir)/init.d/clapf.in >$(srcdir)/init.d/clapf
 
 	cat $(srcdir)/util/db_train.sh.in | sed -e "s%YOUR_LIBEXECDIR%$(libexecdir)/clapf%g" -e "s%YOUR_BINDIR%$(bindir)%g" -e "s%YOUR_SHAREDIR%$(datarootdir)/clapf%g" > $(srcdir)/util/db_train.sh
-	cat $(srcdir)/util/check_clapf.sh.in | sed -e "s%YOUR_PATH%$(sbindir)%g" -e "s%YOUR_QUEUE%$(localstatedir)/lib/clapf/queue%g" -e "s%USER%$(CLAPF_USER)%g" > $(srcdir)/util/check_clapf.sh
+	cat $(srcdir)/util/check_clapf.sh.in | sed -e "s%YOUR_PATH%$(sbindir)%g" -e "s%YOUR_QUEUE%`grep '^queuedir=' clapf.conf | cut -f2 -d '='`%g" -e "s%USER%$(CLAPF_USER)%g" > $(srcdir)/util/check_clapf.sh
 	cat $(srcdir)/stat/clapf-stat.run.sh.in | sed -e "s%YOUR_LIBEXECDIR%$(libexecdir)%g" -e "s%YOUR_LOCALSTATEDIR%$(localstatedir)%g" > $(srcdir)/stat/clapf-stat.run.sh
 
 	if test `echo $(DEFS) | grep -c USERS_IN_LDAP ` -eq 1 ; then cat $(srcdir)/util/clapf_admin-ldap.sh.in > $(srcdir)/util/clapf_admin.sh; else if test `echo $(DEFS) | grep -c USERS_IN_MYSQL ` -eq 1 ; then cat $(srcdir)/util/clapf_admin-sql.sh.in | sed -e "s%SQLBINPROG%`which mysql` --defaults-file=$(datarootdir)/clapf/.my.cnf%g" > $(srcdir)/util/clapf_admin.sh; else cat $(srcdir)/util/clapf_admin-sql.sh.in | sed -e "s%SQLBINPROG%`which sqlite3` $(localstatedir)/lib/clapf/data/tokens.sdb%g" > $(srcdir)/util/clapf_admin.sh; fi; fi
@@ -179,7 +179,6 @@ install-clapf: clapf
 	$(INSTALL) -m 0755 clapf $(DESTDIR)$(sbindir)
 	$(INSTALL) -m 0755 clapfconf $(DESTDIR)$(sbindir)
 	$(INSTALL) -d $(DESTDIR)$(sysconfdir)
-	rm -f clapf.conf; make clapf.conf
 	if [ ! -f "$(DESTDIR)$(sysconfdir)/clapf.conf" ]; then $(INSTALL) -m 0640 $(srcdir)/clapf.conf $(DESTDIR)$(sysconfdir)/clapf.conf; chgrp $(CLAPF_GROUP) $(DESTDIR)$(sysconfdir)/clapf.conf; fi
 
 install-spamsum:
@@ -210,7 +209,7 @@ install-parsembox:
 
 install-end:
 	@echo "***************************"
-	@echo "run make localedirs after editing $(DESTDIR)$(sysconfdir)/clapf.conf to create the clapf directories"
+	@echo "if you ever change queuedir or workdir in clapf.conf, then run 'make localedirs' to recreate the new paths"
 	@echo "***************************"
 
 localedirs:
@@ -218,11 +217,11 @@ localedirs:
 	$(INSTALL) -d -m 755 $(DESTDIR)$(localstatedir)/lib/clapf/stat
 	chown -R $(CLAPF_USER):$(CLAPF_GROUP) $(DESTDIR)$(localstatedir)/lib/clapf
 
-	$(INSTALL) -d -m 711 $(DESTDIR)/`$(DESTDIR)$(sbindir)/clapfconf | grep workdir|cut -f2 -d '='`
-	$(INSTALL) -d -m 755 $(DESTDIR)/`$(DESTDIR)$(sbindir)/clapfconf | grep queuedir|cut -f2 -d '='`
+	$(INSTALL) -d -m 711 $(DESTDIR)/`$(DESTDIR)$(sbindir)/clapfconf -c $(DESTDIR)$(sysconfdir)/clapf.conf | grep workdir|cut -f2 -d '='`
+	$(INSTALL) -d -m 755 $(DESTDIR)/`$(DESTDIR)$(sbindir)/clapfconf -c $(DESTDIR)$(sysconfdir)/clapf.conf | grep queuedir|cut -f2 -d '='`
 
-	chown $(CLAPF_USER):$(CLAPF_GROUP) $(DESTDIR)/`$(DESTDIR)$(sbindir)/clapfconf | grep workdir|cut -f2 -d '='`
-	chown $(CLAPF_USER):$(CLAPF_GROUP) $(DESTDIR)/`$(DESTDIR)$(sbindir)/clapfconf | grep queuedir|cut -f2 -d '='`
+	chown $(CLAPF_USER):$(CLAPF_GROUP) $(DESTDIR)/`$(DESTDIR)$(sbindir)/clapfconf -c $(DESTDIR)$(sysconfdir)/clapf.conf | grep workdir|cut -f2 -d '='`
+	chown $(CLAPF_USER):$(CLAPF_GROUP) $(DESTDIR)/`$(DESTDIR)$(sbindir)/clapfconf -c $(DESTDIR)$(sysconfdir)/clapf.conf | grep queuedir|cut -f2 -d '='`
 
 uninstall:
 	rm -f $(DESTDIR)$(bindir)/parsembox

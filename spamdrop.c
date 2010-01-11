@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2010.01.06, SJ
+ * spamdrop.c, 2010.01.11, SJ
  */
 
 #include <stdio.h>
@@ -433,7 +433,7 @@ int main(int argc, char **argv, char **envp){
 #endif
 
 #ifdef HAVE_SPAMDROP_HELPER
-   snprintf(buf, MAXBUFSIZE-1, "%s/%s/%c/%s", cfg.chrootdir, USER_QUEUE_DIR, sdata.name[0], sdata.name);
+   snprintf(buf, MAXBUFSIZE-1, "%s/%s/%c/%s", cfg.chrootdir, cfg.queuedir, sdata.name[0], sdata.name);
 
    if(stat(buf, &st) != 0){
       syslog(LOG_PRIORITY, "%s: running spamdrop helper script: %s, for user: %s", sdata.ttmpfile, SPAMDROP_HELPER_PROGRAM, sdata.name);

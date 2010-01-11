@@ -36,7 +36,7 @@ LIBCLAPF_VERSION=$(CLAPF_VERSION).$(CLAPF_REVISION).$(CLAPF_RELEASE)
 INSTALL = @INSTALL@
 
 all: clapf-lib clapf clapfconf rc.clapf @memcached@ @spamsum@ splitmbox @parsembox@ @spamdrop@ @preparesql@
-install: install-clapf install-splitmbox @parsembox_install@ @spamsum_install@ @spamdrop_install@ @db_install@
+install: install-clapf install-splitmbox @parsembox_install@ @spamsum_install@ @spamdrop_install@ @db_install@ install-end
 
 
 clapf.conf:
@@ -182,9 +182,6 @@ install-clapf: clapf
 	rm -f clapf.conf; make clapf.conf
 	if [ ! -f "$(DESTDIR)$(sysconfdir)/clapf.conf" ]; then $(INSTALL) -m 0640 $(srcdir)/clapf.conf $(DESTDIR)$(sysconfdir)/clapf.conf; chgrp $(CLAPF_GROUP) $(DESTDIR)$(sysconfdir)/clapf.conf; fi
 
-	@echo "run make localedirs after editing $(DESTDIR)$(sysconfdir)/clapf.conf to create the clapf directories"
-
-
 install-spamsum:
 	(cd contrib/spamsum; make install)
 
@@ -210,6 +207,11 @@ install-parsembox:
 	$(INSTALL) -m 0755 $(srcdir)/util/db_train.sh $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 $(srcdir)/util/clapf_admin.sh $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 $(srcdir)/history/maillog.pl $(DESTDIR)$(libexecdir)/clapf
+
+install-end:
+	@echo "***************************"
+	@echo "run make localedirs after editing $(DESTDIR)$(sysconfdir)/clapf.conf to create the clapf directories"
+	@echo "***************************"
 
 localedirs:
 	$(INSTALL) -d $(DESTDIR)$(localstatedir)/lib/clapf/data

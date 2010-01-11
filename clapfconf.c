@@ -1,5 +1,5 @@
 /*
- * clapfconf.c, 2009.11.09, SJ
+ * clapfconf.c, 2010.01.11, SJ
  */
 
 #include <stdio.h>
@@ -17,7 +17,7 @@ int main(int argc, char **argv){
    char *configfile=CONFIG_FILE;
    struct __config cfg;
 
-   while((i = getopt(argc, argv, "nh?")) > 0){
+   while((i = getopt(argc, argv, "c:nh?")) > 0){
        switch(i){
 
          case 'c' :
@@ -30,7 +30,7 @@ int main(int argc, char **argv){
 
          case 'h' :
          case '?' :
-                    printf("clapfconf [-n]\n");
+                    printf("clapfconf [-n -c <configfile>]\n");
                     break;
 
 
@@ -42,7 +42,7 @@ int main(int argc, char **argv){
 
    cfg = read_config(configfile);
 
-   if(print_from_file ==1){
+   if(print_from_file == 1){
       print_config(configfile, &cfg);
    }
    else {

@@ -1,5 +1,5 @@
 /*
- * spam.c, 2009.10.15, SJ
+ * spam.c, 2010.01.11, SJ
  */
 
 #include <stdio.h>
@@ -24,7 +24,7 @@
  * create path from numeric uid or username
  */
 
-void get_queue_path(struct session_data *sdata, char **path){
+void get_queue_path(struct session_data *sdata, char **path, struct __config *cfg){
    struct stat st;
 
    memset(*path, 0, SMALLBUFSIZE);
@@ -44,35 +44,35 @@ void get_queue_path(struct session_data *sdata, char **path){
    if(i > 0) plus1b = 1;
    else plus1b = 0;
 
-   snprintf(*path, SMALLBUFSIZE-1, "%s/%d/%d/%ld", USER_QUEUE_DIR, 10000 * ((h / 10000) + plus1), 100 * ((h / 100) + plus1b), sdata->uid);
+   snprintf(*path, SMALLBUFSIZE-1, "%s/%d/%d/%ld", cfg->queuedir, 10000 * ((h / 10000) + plus1), 100 * ((h / 100) + plus1b), sdata->uid);
 
    /* create target directory if it doesn't exist */
 
    if(stat(*path, &st) != 0){
-      snprintf(*path, SMALLBUFSIZE-1, "%s/%d", USER_QUEUE_DIR, 10000 * ((h / 10000) + plus1));
+      snprintf(*path, SMALLBUFSIZE-1, "%s/%d", cfg->queuedir, 10000 * ((h / 10000) + plus1));
       mkdir(*path, 0755);
 
-      snprintf(*path, SMALLBUFSIZE-1, "%s/%d/%d", USER_QUEUE_DIR, 10000 * ((h / 10000) + plus1), 100 * ((h / 100) + plus1b));
+      snprintf(*path, SMALLBUFSIZE-1, "%s/%d/%d", cfg->queuedir, 10000 * ((h / 10000) + plus1), 100 * ((h / 100) + plus1b));
       mkdir(*path, 0755);
 
-      snprintf(*path, SMALLBUFSIZE-1, "%s/%d/%d/%ld", USER_QUEUE_DIR, 10000 * ((h / 10000) + plus1), 100 * ((h / 100) + plus1b), sdata->uid);
+      snprintf(*path, SMALLBUFSIZE-1, "%s/%d/%d/%ld", cfg->queuedir, 10000 * ((h / 10000) + plus1), 100 * ((h / 100) + plus1b), sdata->uid);
       mkdir(*path, 0755);
 
       chmod(*path, S_IRUSR|S_IWUSR|S_IXUSR|S_IRGRP|S_IWGRP|S_IXGRP);
    }
 #else
-   snprintf(*path, SMALLBUFSIZE-1, "%s/%s/%c/%s", USER_QUEUE_DIR, sdata->domain, sdata->name[0], sdata->name);
+   snprintf(*path, SMALLBUFSIZE-1, "%s/%s/%c/%s", cfg->queuedir, sdata->domain, sdata->name[0], sdata->name);
 
    /* create target directory if it doesn't exist */
 
    if(stat(*path, &st) != 0){
-      snprintf(*path, SMALLBUFSIZE-1, "%s/%s", USER_QUEUE_DIR, sdata->domain);
+      snprintf(*path, SMALLBUFSIZE-1, "%s/%s", cfg->queuedir, sdata->domain);
       mkdir(*path, 0755);
 
-      snprintf(*path, SMALLBUFSIZE-1, "%s/%s/%c", USER_QUEUE_DIR, sdata->domain, sdata->name[0]);
+      snprintf(*path, SMALLBUFSIZE-1, "%s/%s/%c", cfg->queuedir, sdata->domain, sdata->name[0]);
       mkdir(*path, 0755);
 
-      snprintf(*path, SMALLBUFSIZE-1, "%s/%s/%c/%s", USER_QUEUE_DIR, sdata->domain, sdata->name[0], sdata->name);
+      snprintf(*path, SMALLBUFSIZE-1, "%s/%s/%c/%s", cfg->queuedir, sdata->domain, sdata->name[0], sdata->name);
       mkdir(*path, 0755);
 
       chmod(*path, S_IRUSR|S_IWUSR|S_IXUSR|S_IRGRP|S_IWGRP|S_IXGRP);
@@ -97,7 +97,7 @@ void do_training(struct session_data *sdata, struct _state *state, char *email, 
    if(strcasestr(sdata->rcptto[0], "+spam@") || strncmp(email, "spam@", 5) == 0) is_spam = 1;
 
    p = &path[0];
-   get_queue_path(sdata, &p);
+   get_queue_path(sdata, &p, cfg);
 
 
    if(is_spam == 1){
@@ -136,7 +136,7 @@ void save_email_to_queue(struct session_data *sdata, float spaminess, struct __c
 #endif
 
    p = &path[0];
-   get_queue_path(sdata, &p);
+   get_queue_path(sdata, &p, cfg);
 
    if(spaminess >= cfg->spam_overall_limit)
       snprintf(qpath, SMALLBUFSIZE-1, "%s/s.%s", path, sdata->ttmpfile);

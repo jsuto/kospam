@@ -1,5 +1,5 @@
 /*
- * cfg.h, 2009.11.08, SJ
+ * cfg.h, 2009.11.11, SJ
  */
 
 #ifndef _CFG_H
@@ -43,6 +43,7 @@ struct __config {
 
    char chrootdir[MAXVAL];
    char workdir[MAXVAL];
+   char queuedir[MAXVAL];
    char quarantine_dir[MAXVAL];
 
    char our_signo[MAXVAL];

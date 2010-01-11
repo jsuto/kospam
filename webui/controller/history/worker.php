@@ -30,6 +30,9 @@ class ControllerHistoryWorker extends Controller {
       }
 
 
+      $db = Registry::get('db_history');
+
+
       /* assemble filter restrictions */
 
       $CLAPF_FILTER = "";
@@ -57,7 +60,7 @@ class ControllerHistoryWorker extends Controller {
 
       if($cookie && eregi('^[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,5})$', $cookie)) {
          $this->data['rcpt_domain'] = $cookie;
-         $CLAPF_FILTER ? $CLAPF_FILTER .= " and clapf.queue_id2=smtp.queue_id and (smtp.`to` like '%@$cookie' or smtp.orig_to like '%@$cookie')" : $CLAPF_FILTER .= " clapf.queue_id2=smtp.queue_id and (smtp.`to` like '%@$cookie' or smtp.orig_to like '%@$cookie')";
+         $CLAPF_FILTER ? $CLAPF_FILTER .= " and clapf.queue_id2=smtp.queue_id and (smtp.`to` like '%@" . $db->escape($cookie) . "' or smtp.orig_to like '%@" . $db->escape($cookie) . "')" : $CLAPF_FILTER .= " clapf.queue_id2=smtp.queue_id and (smtp.`to` like '%@" . $db->escape($cookie) . "' or smtp.orig_to like '%@" . $db->escape($cookie) . "')";
 
          $SMTP_TABLE = ", smtp";
       }
@@ -69,7 +72,7 @@ class ControllerHistoryWorker extends Controller {
 
       if($cookie && eregi('^[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,5})$', $cookie)) {
          $this->data['sender_domain'] = $cookie;
-         $CLAPF_FILTER ? $CLAPF_FILTER .= " and clapf.queue_id2=qmgr.queue_id and qmgr.`from` like '%@$cookie'" : $CLAPF_FILTER .= "clapf.queue_id2=qmgr.queue_id and qmgr.`from` like '%@$cookie'";
+         $CLAPF_FILTER ? $CLAPF_FILTER .= " and clapf.queue_id2=qmgr.queue_id and qmgr.`from` like '%@" . $db->escape($cookie) . "'" : $CLAPF_FILTER .= "clapf.queue_id2=qmgr.queue_id and qmgr.`from` like '%@" . $db->escape($cookie) . "'";
 
          $QMGR_TABLE = ", qmgr ";
       }
@@ -93,8 +96,6 @@ class ControllerHistoryWorker extends Controller {
       /* check if we are admin */
 
       if(Registry::get('admin_user') == 1) {
-
-         $db = Registry::get('db_history');
 
          $last_update = 0;
 

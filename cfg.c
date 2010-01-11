@@ -126,6 +126,7 @@ struct _parse_rule config_parse_rules[] =
    { "possible_spam_subject_prefix", "string", (void*) string_parser, offsetof(struct __config, possible_spam_subject_prefix), "", MAXVAL-1},
    { "postfix_addr", "string", (void*) string_parser, offsetof(struct __config, postfix_addr), "127.0.0.1", MAXVAL-1},
    { "postfix_port", "integer", (void*) int_parser, offsetof(struct __config, postfix_port), "10026", sizeof(int)},
+   { "queuedir", "string", (void*) string_parser, offsetof(struct __config, queuedir), USER_QUEUE_DIR, MAXVAL-1},
    { "rbl_condemns_the_message", "integer", (void*) int_parser, offsetof(struct __config, rbl_condemns_the_message), "0", sizeof(int)},
    { "rbl_domain", "string", (void*) string_parser, offsetof(struct __config, rbl_domain), "", MAXVAL-1},
    { "replace_junk_characters", "integer", (void*) int_parser, offsetof(struct __config, replace_junk_characters), "1", sizeof(int)},

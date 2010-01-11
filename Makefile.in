@@ -42,7 +42,8 @@ install: install-clapf install-splitmbox @parsembox_install@ @spamsum_install@ @
 clapf.conf:
 	sed -e 's%pidfile=.*%pidfile=$(localstatedir)/lib/clapf/clapf.pid%g' \
 	-e 's%sqlite3=.*%sqlite3=$(localstatedir)/lib/clapf/data/tokens.sdb%g' \
-	-e 's%workdir=.*%workdir=$(localstatedir)/lib/clapf/tmp%g' \
+	-e 's%workdir=.*%workdir=$(localstatedir)/spool/clapf/tmp%g' \
+	-e 's%queuedir=.*%queuedir=$(localstatedir)/lib/clapf/queue%g' \
 	-e 's%mydbfile=.*%mydbfile=$(localstatedir)/lib/clapf/tokens.mydb%g' < $(srcdir)/example.conf >$@
 
 rc.clapf: init.d/clapf.in
@@ -168,17 +169,11 @@ install-clapf: clapf
 
 	if [ -f "$(srcdir)/spamstat" ]; then $(INSTALL) -m 0755 $(srcdir)/spamstat $(DESTDIR)$(libexecdir)/clapf; fi
 
-	$(INSTALL) -d $(DESTDIR)$(localstatedir)/lib/clapf/data
-	$(INSTALL) -d -m 755 $(DESTDIR)$(localstatedir)/lib/clapf/queue
-	$(INSTALL) -d -m 711 $(DESTDIR)$(localstatedir)/lib/clapf/tmp
-	$(INSTALL) -d -m 755 $(DESTDIR)$(localstatedir)/lib/clapf/stat
-
 	$(INSTALL) -d $(DESTDIR)$(datarootdir)/clapf
 	$(INSTALL) -m 0644 $(srcdir)/templates/template.virus $(DESTDIR)$(datarootdir)/clapf
 	$(INSTALL) -m 0644 $(srcdir)/zombienets.regex $(DESTDIR)$(datarootdir)/clapf
 	$(INSTALL) -m 0644 $(srcdir)/history/mail.sql $(DESTDIR)$(datarootdir)/clapf
 
-	chown -R $(CLAPF_USER):$(CLAPF_GROUP) $(DESTDIR)$(localstatedir)/lib/clapf
 	$(INSTALL) -m 0755 util/check_clapf.sh $(DESTDIR)$(libexecdir)/clapf
 	if [ -f "$(srcdir)/memcached_cleaner" ]; then $(INSTALL) -m 0755 $(srcdir)/memcached_cleaner $(DESTDIR)$(libexecdir)/clapf; fi
 	$(INSTALL) -m 0755 clapf $(DESTDIR)$(sbindir)
@@ -186,6 +181,9 @@ install-clapf: clapf
 	$(INSTALL) -d $(DESTDIR)$(sysconfdir)
 	rm -f clapf.conf; make clapf.conf
 	if [ ! -f "$(DESTDIR)$(sysconfdir)/clapf.conf" ]; then $(INSTALL) -m 0640 $(srcdir)/clapf.conf $(DESTDIR)$(sysconfdir)/clapf.conf; chgrp $(CLAPF_GROUP) $(DESTDIR)$(sysconfdir)/clapf.conf; fi
+
+	@echo "run make localedirs after editing $(DESTDIR)$(sysconfdir)/clapf.conf to create the clapf directories"
+
 
 install-spamsum:
 	(cd contrib/spamsum; make install)
@@ -213,6 +211,17 @@ install-parsembox:
 	$(INSTALL) -m 0755 $(srcdir)/util/clapf_admin.sh $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 $(srcdir)/history/maillog.pl $(DESTDIR)$(libexecdir)/clapf
 
+localedirs:
+	$(INSTALL) -d $(DESTDIR)$(localstatedir)/lib/clapf/data
+	$(INSTALL) -d -m 755 $(DESTDIR)$(localstatedir)/lib/clapf/stat
+	chown -R $(CLAPF_USER):$(CLAPF_GROUP) $(DESTDIR)$(localstatedir)/lib/clapf
+
+	$(INSTALL) -d -m 711 $(DESTDIR)/`$(DESTDIR)$(sbindir)/clapfconf | grep workdir|cut -f2 -d '='`
+	$(INSTALL) -d -m 755 $(DESTDIR)/`$(DESTDIR)$(sbindir)/clapfconf | grep queuedir|cut -f2 -d '='`
+
+	chown $(CLAPF_USER):$(CLAPF_GROUP) $(DESTDIR)/`$(DESTDIR)$(sbindir)/clapfconf | grep workdir|cut -f2 -d '='`
+	chown $(CLAPF_USER):$(CLAPF_GROUP) $(DESTDIR)/`$(DESTDIR)$(sbindir)/clapfconf | grep queuedir|cut -f2 -d '='`
+
 uninstall:
 	rm -f $(DESTDIR)$(bindir)/parsembox
 	rm -f $(DESTDIR)$(bindir)/splitmbox
@@ -224,7 +233,6 @@ uninstall:
 	rm -f $(DESTDIR)$(libdir)/libclapf.*
 	rm -f $(DESTDIR)$(sysconfdir)/clapf.conf
 	rm -rf $(DESTDIR)$(libexecdir)/clapf
-	#rm -rf $(DESTDIR)$(localstatedir)/lib/clapf
 	rm -rf $(DESTDIR)$(includedir)/clapf
 	rm -rf $(DESTDIR)$(datarootdir)/clapf
 	@echo "I left the $(DESTDIR)$(localstatedir)/lib/clapf directory, remove it for yourself"

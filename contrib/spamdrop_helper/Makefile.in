@@ -27,8 +27,8 @@ INSTALL = @INSTALL@
 all: spamdrop_helper
 
 spamdrop_helper: % : %.o
-	cat $(srcdir)/spamdrop_helper.sh.in | sed -e "s%YOUR_STATE_DIR%$(localstatedir)%g" > $(srcdir)/spamdrop_helper.sh
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ -lclapf  $(LIBS) $(LDAP_LIBS) $(LIBDIR)
+	cat $(srcdir)/spamdrop_helper.sh.in | sed -e "s%YOUR_STATE_DIR%$(localstatedir)%g" > $(srcdir)/spamdrop_helper
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o spamdrop_helper.bin $^ -lclapf  $(LIBS) $(LDAP_LIBS) $(LIBDIR)
 
 
 %.o: $(srcdir)/%.c
@@ -38,7 +38,7 @@ install:
 	@echo "Please install manually what you need"
 
 clean:
-	rm -f *.o spamdrop_helper spamdrop_helper.sh
+	rm -f *.o spamdrop_helper spamdrop_helper.bin
 
 dist_clean distclean: clean
 	rm -f Makefile

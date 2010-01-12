@@ -34,10 +34,10 @@ $sth_smtpd = $dbh->prepare($stmt);
 $stmt = "INSERT INTO cleanup (ts, queue_id, message_id) VALUES(?, ?, ?)";
 $sth_cleanup = $dbh->prepare($stmt);
 
-$stmt = "INSERT INTO qmgr (ts, queue_id, `from`, size) VALUES(?, ?, ?, ?)";
+$stmt = "INSERT INTO qmgr (ts, queue_id, `from`, `from_domain`, size) VALUES(?, ?, ?, ?, ?)";
 $sth_qmgr = $dbh->prepare($stmt);
 
-$stmt = "INSERT INTO smtp (ts, queue_id, `to`, orig_to, relay, delay, result) VALUES(?, ?, ?, ?, ?, ?, ?)";
+$stmt = "INSERT INTO smtp (ts, queue_id, `to`, to_domain, orig_to, orig_to_domain, relay, delay, result, clapf_id) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 $sth_smtp = $dbh->prepare($stmt);
 
 $stmt = "INSERT INTO clapf (ts, queue_id, result, spaminess, relay, delay, queue_id2, virus) VALUES(?, ?, ?, ?, ?, ?, ?, ?)";
@@ -50,7 +50,7 @@ while (defined($line = $file->read)) {
    if($line =~ /\ postfix\/smtpd\[/ || $line =~ /\ postfix\/cleanup\[/ || $line =~ /\ postfix\/qmgr\[/ || $line =~ /\ postfix\/(l|s)mtp\[/ || $line =~ /\ postfix\/local\[/ || $line =~ /\ clapf\[/ || $line =~ /\ postfix\/virtual\[/ || $line =~ /\ postfix\/pipe\[/) {
       chomp($line);
 
-      $queue_id = $to = $orig_to = $relay = $status = $result = $queue_id2 = "";
+      $queue_id = $to = $orig_to = $to_domain = $orig_to_domain = $clapf_id = $relay = $status = $result = $queue_id2 = "";
       $delay = 0;
 
       ##print "xx: " . $line;
@@ -94,28 +94,29 @@ while (defined($line = $file->read)) {
       # Sep 3 09:30:22 thorium postfix/qmgr[3010]: D20E617022: from=<aaa@freemail.hu>, size=2731, nrcpt=1 (queue active)
 
       if($line =~ /\ postfix\/qmgr\[/ && $line =~ /from=/) {
-         $from = ""; $size = 0;
+         $from = ""; $from_domain = ""; $size = 0;
 
          ($queue_id, undef) = split(/\:/, $l[5]);
 
          if($line =~ /from=\<([\w\W]+)\>/){
             $from = $1;
+            (undef, $from_domain) = split(/\@/, $from);
          }
 
          (undef, $size) = split(/=/, $l[7]);
 
          $size =~ s/\,//;
 
-         $sth_qmgr->execute($ts, $queue_id, $from, $size) || print $line . "\n";
+         $sth_qmgr->execute($ts, $queue_id, $from, $from_domain, $size) || print $line . "\n";
       }
 
-      # Sep 3 09:30:23 thorium postfix/smtp[2312]: D20E617022: to=<sj@acts.hu>, relay=127.0.0.1[127.0.0.1]:10025, delay=0.16, delays=0.01/0/0/0.14, dsn=2.0.0, status=sent (250 Ok 4a9f708ea516d9a0814a203f2e1662 <sj@acts.hu>)
-      # Sep 3 10:19:34 thorium postfix/smtp[2119]: 55DDB14C32E: to=<sj@acts.hu>, relay=thorium.datanet.hu[194.149.0.116]:25, delay=0.1, delays=0.05/0.01/0.04/0.02, dsn=2.0.0, status=sent (250 2.0.0 Ok: queued as 6AE4517022)
 
       if($line =~ /\ postfix\/(l|s)mtp\[/ && $line =~ /to=/) {
          ($queue_id, undef) = split(/\:/, $l[5]);
          (undef, $to) = split(/=/, $l[6]);
          $to =~ s/\<|\>|\,//g;
+
+         (undef, $to_domain) = split(/\@/, $to);
 
          (undef, $relay) = split(/relay=/, $line);
          ($relay, undef) = split(/,/, $relay);
@@ -129,12 +130,13 @@ while (defined($line = $file->read)) {
             $status = "$1 $2";
          }
 
-         $sth_smtp->execute($ts, $queue_id, $to, $orig_to, $relay, $delay, $status) || print $line . "\n";
+         if($line =~ / ([a-f0-9]{30,32}) /){
+            $clapf_id = $1;
+         }
+
+         $sth_smtp->execute($ts, $queue_id, $to, $to_domain, $orig_to, $orig_to_domain, $relay, $delay, $status, $clapf_id) || print $line . "\n";
       }
 
-
-      # Sep  3 10:06:46 thorium postfix/local[2664]: 0536C6450: to=<sj@thorium.datanet.hu>, orig_to=<sj@acts.hu>, relay=local, delay=0.08, delays=0.04/0.01/0/0.03, dsn=2.0.0, status=sent (delivered to command: /usr/local/bin/maildrop)
-      # Sep  3 11:17:35 cesium postfix/virtual[4276]: 2A96F14C6EE: to=<sj@acts.hu>, relay=virtual, delay=0.08, delays=0.06/0.02/0/0.01, dsn=2.0.0, status=sent (delivered to maildir)
 
       if($line =~ /\ postfix\/local\[/ || $line =~ /\ postfix\/virtual\[/ || $line =~ /\ postfix\/pipe\[/) {
          ($queue_id, undef) = split(/\:/, $l[5]);
@@ -144,10 +146,14 @@ while (defined($line = $file->read)) {
 
          next if $to eq "";
 
+         (undef, $to_domain) = split(/\@/, $to);
+
+
          (undef, $x) = split(/orig_to=/, $line);
          ($orig_to, undef) = split(/ /, $x);
 
          $orig_to =~ s/\<|\>|\,//g;
+         (undef, $orig_to_domain) = split(/\@/, $orig_to);
 
          (undef, $relay) = split(/relay=/, $line);
          ($relay, undef) = split(/,/, $relay);
@@ -163,7 +169,11 @@ while (defined($line = $file->read)) {
             $status = "$1 $2";
          }
 
-         $sth_smtp->execute($ts, $queue_id, $to, $orig_to, $relay, $delay, $status) || print $line . "\n";
+         if($line =~ / ([a-f0-9]{30,32}) /){
+            $clapf_id = $1;
+         }
+
+         $sth_smtp->execute($ts, $queue_id, $to, $to_domain, $orig_to, $orig_to_domain, $relay, $delay, $status, $clapf_id) || print $line . "\n";
       }
 
 

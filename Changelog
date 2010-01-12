@@ -1,5 +1,11 @@
 0.4.4-rc1:
 
+2010.01.12, SJ
+
+Modified the history schema and the collecting perl script to gain a
+performance boost.
+(history/*, webui/controller/history/worker.php)
+
 2010.01.11, SJ
 
 Added a new variable 'queuedir' to let you define its path to your will.

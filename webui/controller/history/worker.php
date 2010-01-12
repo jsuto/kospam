@@ -60,7 +60,7 @@ class ControllerHistoryWorker extends Controller {
 
       if($cookie && eregi('^[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,5})$', $cookie)) {
          $this->data['rcpt_domain'] = $cookie;
-         $CLAPF_FILTER ? $CLAPF_FILTER .= " and clapf.queue_id2=smtp.queue_id and (smtp.`to` like '%@" . $db->escape($cookie) . "' or smtp.orig_to like '%@" . $db->escape($cookie) . "')" : $CLAPF_FILTER .= " clapf.queue_id2=smtp.queue_id and (smtp.`to` like '%@" . $db->escape($cookie) . "' or smtp.orig_to like '%@" . $db->escape($cookie) . "')";
+         $CLAPF_FILTER ? $CLAPF_FILTER .= " and clapf.queue_id2=smtp.queue_id and (smtp.to_domain='" . $db->escape($cookie) . "' or smtp.orig_to_domain='" . $db->escape($cookie) . "')" : $CLAPF_FILTER .= " clapf.queue_id2=smtp.queue_id and (smtp.to_domain='" . $db->escape($cookie) . "' or smtp.orig_to_domain='" . $db->escape($cookie) . "')";
 
          $SMTP_TABLE = ", smtp";
       }
@@ -72,7 +72,7 @@ class ControllerHistoryWorker extends Controller {
 
       if($cookie && eregi('^[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,5})$', $cookie)) {
          $this->data['sender_domain'] = $cookie;
-         $CLAPF_FILTER ? $CLAPF_FILTER .= " and clapf.queue_id2=qmgr.queue_id and qmgr.`from` like '%@" . $db->escape($cookie) . "'" : $CLAPF_FILTER .= "clapf.queue_id2=qmgr.queue_id and qmgr.`from` like '%@" . $db->escape($cookie) . "'";
+         $CLAPF_FILTER ? $CLAPF_FILTER .= " and clapf.queue_id2=qmgr.queue_id and qmgr.from_domain='" . $db->escape($cookie) . "'" : $CLAPF_FILTER .= "clapf.queue_id2=qmgr.queue_id and qmgr.from_domain='" . $db->escape($cookie) . "'";
 
          $QMGR_TABLE = ", qmgr ";
       }
@@ -114,7 +114,7 @@ class ControllerHistoryWorker extends Controller {
             if($i == 0) { $last_update = $__smtp->row['ts']; }
 
             // what we had before the content filter
-            $__smtp2 = $db->query("select * from smtp where result like '%" . $db->escape($__clapf['queue_id']) . "%'");
+            $__smtp2 = $db->query("select * from smtp where clapf_id='" . $db->escape($__clapf['queue_id']) . "'");
             $__qmgr = $db->query("select * from qmgr where queue_id='" . $db->escape($__smtp2->row['queue_id']) . "'");
             $__cleanup = $db->query("select message_id from cleanup where queue_id='" . $db->escape($__smtp2->row['queue_id']) . "'");
             $__smtpd = $db->query("select client_ip from smtpd where queue_id='" . $db->escape($__smtp2->row['queue_id']) . "'");

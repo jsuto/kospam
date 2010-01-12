@@ -21,10 +21,11 @@ create table if not exists qmgr (
 	ts int default 0,
 	queue_id char(16) not null,
 	`from` char(64) not null,
+	from_domain char(48) not null,
 	size int default 0
 );
 
-create index qmgr_idx on qmgr(queue_id);
+create index qmgr_idx on qmgr(queue_id, from_domain);
 
 
 drop table if exists smtp;
@@ -32,13 +33,16 @@ create table if not exists smtp (
 	ts int default 0,
 	queue_id char(16) not null,
 	`to` char(64) not null,
+	to_domain char(48) not null,
 	orig_to char(64) default null,
+	orig_to_domain char(48) default null,
 	relay char(64) default null,
 	delay float default 0.0,
-	result char(64) default null
+	result char(64) default null,
+	clapf_id char(32) default null
 );
 
-create index smtp_idx on smtp(queue_id);
+create index smtp_idx on smtp(queue_id, to_domain, orig_to_domain, clapf_id);
 
 
 drop table if exists clapf;
@@ -53,5 +57,5 @@ create table if not exists clapf (
 	virus char(32) default null
 );
 
-create index clapf_idx on clapf(queue_id);
+create index clapf_idx on clapf(queue_id, result);
 

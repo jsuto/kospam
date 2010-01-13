@@ -26,7 +26,7 @@ STORE_OBJ = @store_obj@
 USER_OBJ = @user_obj@
 MYSQL_OBJS = @mysql_obj@
 CLAPF_USER = @CLAPF_USER@
-CLAPF_GROUP = `id -gn $(CLAPF_USER)`
+CLAPF_GROUP = `/usr/xpg4/bin/id -gn $(CLAPF_USER)`
 
 CLAPF_VERSION=0
 CLAPF_REVISION=1

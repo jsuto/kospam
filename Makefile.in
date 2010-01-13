@@ -77,7 +77,7 @@ parsembox: % : %.o misc.o decoder.o list.o boundary.o parser.o cfg.o hash.o scor
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
 
 clapfconf: % : %.o
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ cfg.o misc.o
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ cfg.o misc.o $(LIBS)
 
 spamdrop: % : %.o libclapf.a
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ -lclapf @spamsum_libs@ $(LIBS) $(LDAP_LIBS) $(LIBDIR)

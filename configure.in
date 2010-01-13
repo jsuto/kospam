@@ -622,6 +622,7 @@ fi
 
 if test "$os" = "SunOS"; then
    AC_DEFINE(HAVE_DAEMON, 0, [daemon() support])
+   sunos_libs="-lnsl -lsocket"
 fi
 
 if test `echo $os | grep -c CYGWIN` -eq 1; then
@@ -850,7 +851,7 @@ echo; echo
 
 
 CFLAGS="$static -O2 -Wall -g"
-LIBS="$libclamav $antispam_libs $gsl_libs $sqlite3_libs"
+LIBS="$libclamav $antispam_libs $gsl_libs $sqlite3_libs $sunos_libs"
 OBJS="misc.o cfg.o smtp.o sig.o decoder.o list.o boundary.o parser.o session.o templates.o hash.o score.o chi.o $objs"
 
 AC_OUTPUT(Makefile)

@@ -1,5 +1,5 @@
 /*
- * clapf.c, 2009.11.26, SJ
+ * clapf.c, 2010.01.13, SJ
  */
 
 #include <stdio.h>
@@ -331,7 +331,9 @@ int main(int argc, char **argv){
 
 
     /* go to the background */
+#if HAVE_DAEMON == 1
     if(daemonise == 1) i = daemon(1, 0);
+#endif
 
     /* write pid file */
 

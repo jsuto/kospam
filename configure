@@ -6904,6 +6904,14 @@ if test "$os" = "Linux"; then
    defs="$defs -D_GNU_SOURCE"
 fi
 
+if test "$os" = "SunOS"; then
+
+cat >>confdefs.h <<\_ACEOF
+#define HAVE_DAEMON 0
+_ACEOF
+
+fi
+
 if test `echo $os | grep -c CYGWIN` -eq 1; then
    defs="$defs -DCYGWIN"
 

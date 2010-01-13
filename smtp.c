@@ -1,10 +1,11 @@
 /*
- * smtp.c, 2009.11.11, SJ
+ * smtp.c, 2010.01.13, SJ
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/socket.h>

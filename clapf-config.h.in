@@ -1,5 +1,5 @@
 /*
- * clapf-config.h.in, 2009.10.28, SJ
+ * clapf-config.h.in, 2010.01.13, SJ
  */
 
 #define CONFDIR "/usr/local/etc"
@@ -10,4 +10,6 @@
 #define VIRUS_TEMPLATE "/usr/local/share/clapf/template.virus"
 
 #define ZOMBIE_NET_REGEX "/usr/local/share/clapf/zombienets.regex"
+
+#define HAVE_DAEMON 1
 

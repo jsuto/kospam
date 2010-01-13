@@ -1,5 +1,5 @@
 /*
- * cfg.c, 2009.12.15, SJ
+ * cfg.c, 2010.01.13, SJ
  */
 
 #include <stdio.h>
@@ -171,8 +171,7 @@ struct _parse_rule config_parse_rules[] =
  */
 
 int parse_config_file(char *configfile, struct __config *target_cfg, struct _parse_rule *rules){
-   char *line = NULL, *chpos;
-   size_t size=0;
+   char line[MAXVAL], *chpos;
    FILE *f;
 
    if(!configfile) return -1;
@@ -180,8 +179,8 @@ int parse_config_file(char *configfile, struct __config *target_cfg, struct _par
    f = fopen(configfile, "r");
    if(!f) return -1;
 
-   while(0 < getline(&line, &size, f)){
-      if(*line == ';' || *line == '#') continue;
+   while(fgets(&line[0], MAXVAL-1, f)){
+      if(line[0] == ';' || line[0] == '#') continue;
 
       chpos = strchr(line, '=');
 
@@ -204,8 +203,6 @@ int parse_config_file(char *configfile, struct __config *target_cfg, struct _par
          if(!rules[i].name) printf("unknown key: \"%s\" \n", line);
       }
    }
-
-   if(line) free(line);
 
    fclose(f);
 
@@ -306,8 +303,7 @@ void print_config_all(struct __config *cfg){
 
 void print_config(char *configfile, struct __config *cfg){
    FILE *f;
-   char *line = NULL, *chpos, previtem[MAXVAL];
-   size_t size=0;
+   char line[MAXVAL], *chpos, previtem[MAXVAL];
    struct _parse_rule *rules;
 
 
@@ -320,8 +316,8 @@ void print_config(char *configfile, struct __config *cfg){
 
    memset(previtem, 0, MAXVAL);
 
-   while(0 < getline(&line, &size, f)){
-      if(*line == ';' || *line == '#') continue;
+   while(fgets(&line[0], MAXVAL-1, f)){
+      if(line[0] == ';' || line[0] == '#') continue;
 
       chpos = strchr(line, '=');
 
@@ -344,8 +340,6 @@ void print_config(char *configfile, struct __config *cfg){
          if(!rules[i].name) printf("unknown key: \"%s\" \n", line);
       }
    }
-
-   if(line) free(line);
 
    fclose(f);
 }

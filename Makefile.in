@@ -65,7 +65,8 @@ clapf: % : %.o libclapf.a
 clapf-lib:	$(OBJS) $(STORE_OBJ) $(MYSQL_OBJS)
 	ar cr libclapf.a $(OBJS) $(MYSQL_OBJS)
 	ranlib libclapf.a
-	$(CC) -shared -Wl,-soname,libclapf.so.$(CLAPF_VERSION) -o libclapf.so.$(LIBCLAPF_VERSION) $(OBJS) $(MYSQL_OBJS) $(LIBS) $(LDAP_LIBS) @LDFLAGS@
+	#$(CC) -shared -Wl,-soname,libclapf.so.$(CLAPF_VERSION) -o libclapf.so.$(LIBCLAPF_VERSION) $(OBJS) $(MYSQL_OBJS) $(LIBS) $(LDAP_LIBS) @LDFLAGS@
+	$(CC) -shared -Wl -o libclapf.so.$(LIBCLAPF_VERSION) $(OBJS) $(MYSQL_OBJS) $(LIBS) $(LDAP_LIBS) @LDFLAGS@
 	ln -sf libclapf.so.$(LIBCLAPF_VERSION) libclapf.so
 	ln -sf libclapf.so.$(LIBCLAPF_VERSION) libclapf.so.$(CLAPF_VERSION)
 
@@ -89,10 +90,10 @@ splitmbox: % : %.o misc.o decoder.o list.o boundary.o parser.o hash.o score.o ch
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
 
 aphash: % : %.o misc.o
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS)
 
 prepare-sql : % : %.o misc.o
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS)
 
 mydb_stat mydb_compress mydb_export:	%: %.o mydb.o misc.o hash.o chi.o score.o cfg.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)

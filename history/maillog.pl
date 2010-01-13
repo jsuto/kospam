@@ -113,8 +113,12 @@ while (defined($line = $file->read)) {
 
       if($line =~ /\ postfix\/(l|s)mtp\[/ && $line =~ /to=/) {
          ($queue_id, undef) = split(/\:/, $l[5]);
-         (undef, $to) = split(/=/, $l[6]);
-         $to =~ s/\<|\>|\,//g;
+
+         if($line =~ /to=\<([\w\W]+)\>,/){
+            $to = $1;
+         }
+
+         next if $to eq "";
 
          (undef, $to_domain) = split(/\@/, $to);
 
@@ -140,9 +144,10 @@ while (defined($line = $file->read)) {
 
       if($line =~ /\ postfix\/local\[/ || $line =~ /\ postfix\/virtual\[/ || $line =~ /\ postfix\/pipe\[/) {
          ($queue_id, undef) = split(/\:/, $l[5]);
-         (undef, $to) = split(/=/, $l[6]);
 
-         $to =~ s/\<|\>|\,//g;
+         if($line =~ /to=\<([\w\W]+)\>,/){
+            $to = $1;
+         }
 
          next if $to eq "";
 

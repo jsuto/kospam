@@ -1,5 +1,16 @@
 0.4.4-rc1:
 
+2010.01.13, SJ
+
+Fixed a bug in the webui prevented the admin users to remove a spam from
+a user's quarantine, and forced admin user to leave the user's quarantine
+after the unsuccesful removal.
+(webui/controller/quarantine/remove.php)
+
+Fixed a bug in the maillog.pl script missing the domain part of the 'to='
+addresses having '=' sign (usually list addresses).
+(history/maillog.pl)
+
 2010.01.12, SJ
 
 Modified the history schema and the collecting perl script to gain a

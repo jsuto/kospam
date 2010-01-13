@@ -33,7 +33,7 @@ class ControllerQuarantineRemove extends Controller {
 
       /* the same fix with POST requests */
 
-      if(isset($this->request->get['user']) && strlen($this->request->get['user']) > 1 && (Registry::get('admin_user') == 1 || $this->model_user_user->isUserInMyDomain($this->request->get['user']) == 1) ) {
+      if(isset($this->request->post['user']) && strlen($this->request->post['user']) > 1 && (Registry::get('admin_user') == 1 || $this->model_user_user->isUserInMyDomain($this->request->post['user']) == 1) ) {
          $this->data['username'] = $this->request->post['user'];
       }
 

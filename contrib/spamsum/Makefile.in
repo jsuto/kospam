@@ -29,9 +29,9 @@ LIBSPAMSUM_VERSION=$(SPAMSUM_VERSION).$(SPAMSUM_REVISION).$(SPAMSUM_RELEASE)
 
 INSTALL = @INSTALL@
 
-all: spamsum ssum
+all: libspamsum.a ssum
 
-spamsum:	% : %.o $(OBJS)
+libspamsum.a: $(OBJS)
 	ar cr libspamsum.a $(OBJS)
 	ranlib libspamsum.a
 	$(CC) -shared -Wl,-soname,libspamsum.so.$(SPAMSUM_VERSION) -o libspamsum.so.$(LIBSPAMSUM_VERSION) $(OBJS) $(MYSQL_OBJS) $(LIBS) $(LDAP_LIBS) @LDFLAGS@
@@ -41,7 +41,7 @@ spamsum:	% : %.o $(OBJS)
 %.o: $(srcdir)/%.c
 	$(CC) $(CFLAGS) -fPIC $(INCDIR) $(DEFS) -c $< -o $@
 
-ssum:	% : %.o
+ssum: ssum.c libspamsum.a
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ -lspamsum $(LIBDIR) @LDFLAGS@
 
 install:

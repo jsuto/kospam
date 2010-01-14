@@ -640,6 +640,7 @@ LIBOBJS
 DATADIR
 CFGDIR
 MYSQL_CONFIG
+id_bin
 sqlite3_batch
 memcached
 libclamav_extra_libs
@@ -3864,6 +3865,7 @@ done
 
 
 
+
 have_libclamav="no"
 have_clamd="no"
 have_avast="no"
@@ -3901,6 +3903,8 @@ sqlite3_libs=""
 spamsum_libs=""
 sqlite3_batch=""
 os=`uname -s`
+
+id_bin="id"
 
 want_language_detection="no"
 
@@ -6911,6 +6915,8 @@ cat >>confdefs.h <<\_ACEOF
 _ACEOF
 
    sunos_libs="-lnsl -lsocket"
+
+   if test -x /usr/xpg4/bin/id; then id_bin="/usr/xpg4/bin/id"; fi
 fi
 
 if test `echo $os | grep -c CYGWIN` -eq 1; then

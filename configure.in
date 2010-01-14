@@ -33,7 +33,6 @@ AC_SUBST(mysql_libs)
 AC_SUBST(user_obj)
 AC_SUBST(ldap_libs)
 AC_SUBST(mysql_obj)
-AC_SUBST(store_obj)
 AC_SUBST(db_install)
 AC_SUBST(spamsum_libs)
 AC_SUBST(spamsum)
@@ -42,6 +41,7 @@ AC_SUBST(qcache)
 AC_SUBST(libclamav_extra_libs)
 AC_SUBST(memcached)
 AC_SUBST(sqlite3_batch)
+AC_SUBST(id_bin)
 
 have_libclamav="no"
 have_clamd="no"
@@ -80,6 +80,8 @@ sqlite3_libs=""
 spamsum_libs=""
 sqlite3_batch=""
 os=`uname -s`
+
+id_bin="id"
 
 want_language_detection="no"
 
@@ -623,6 +625,8 @@ fi
 if test "$os" = "SunOS"; then
    AC_DEFINE(HAVE_DAEMON, 0, [daemon() support])
    sunos_libs="-lnsl -lsocket"
+
+   if test -x /usr/xpg4/bin/id; then id_bin="/usr/xpg4/bin/id"; fi
 fi
 
 if test `echo $os | grep -c CYGWIN` -eq 1; then

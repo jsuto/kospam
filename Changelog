@@ -1,5 +1,11 @@
 0.4.4-rc1:
 
+2010.01.14, SJ
+
+Modified the Makefile to let other than gnu make be able to compile clapf.
+(Notably on Solaris and FreeBSD)
+(Makefile.in, contrib/spamsum/Makefile.in, contrib/spamdrop_helper/Makefile.in, configure*)
+
 2010.01.13, SJ
 
 Fixed a bug in the webui prevented the admin users to remove a spam from

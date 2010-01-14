@@ -22,11 +22,10 @@ LIBS = @LIBS@ @mysql_libs@
 LDAP_LIBS = @ldap_libs@
 ##CLAMAV_EXTRA_LIBS = -lclamunrar_iface -lclamunrar
 OBJS = @OBJS@
-STORE_OBJ = @store_obj@
 USER_OBJ = @user_obj@
 MYSQL_OBJS = @mysql_obj@
 CLAPF_USER = @CLAPF_USER@
-CLAPF_GROUP = `/usr/xpg4/bin/id -gn $(CLAPF_USER)`
+CLAPF_GROUP = `@id_bin@ -gn $(CLAPF_USER)`
 
 CLAPF_VERSION=0
 CLAPF_REVISION=1
@@ -35,7 +34,7 @@ LIBCLAPF_VERSION=$(CLAPF_VERSION).$(CLAPF_REVISION).$(CLAPF_RELEASE)
 
 INSTALL = @INSTALL@
 
-all: clapf-lib clapf clapfconf clapf.conf rc.clapf @memcached@ @spamsum@ splitmbox @parsembox@ @spamdrop@ @preparesql@
+all: libclapf.a clapf clapfconf clapf.conf init.d/clapf @memcached@ @spamsum@ splitmbox @parsembox@ @spamdrop@ @preparesql@
 install: install-clapf install-splitmbox @parsembox_install@ @spamsum_install@ @spamdrop_install@ @db_install@ localedirs install-end
 
 
@@ -46,7 +45,7 @@ clapf.conf:
 	-e 's%queuedir=.*%queuedir=$(localstatedir)/lib/clapf/queue%g' \
 	-e 's%mydbfile=.*%mydbfile=$(localstatedir)/lib/clapf/tokens.mydb%g' < $(srcdir)/example.conf >$@
 
-rc.clapf: init.d/clapf.in
+init.d/clapf: init.d/clapf.in
 	sed -e 's%SBINDIR%$(sbindir)%' \
 	-e 's%PIDFILE%$(localstatedir)/lib/clapf/clapf.pid%' \
 	-e 's%CLAPF_USER%$(CLAPF_USER)%' \
@@ -59,10 +58,10 @@ rc.clapf: init.d/clapf.in
 	if test `echo $(DEFS) | grep -c USERS_IN_LDAP ` -eq 1 ; then cat $(srcdir)/util/clapf_admin-ldap.sh.in > $(srcdir)/util/clapf_admin.sh; else if test `echo $(DEFS) | grep -c USERS_IN_MYSQL ` -eq 1 ; then cat $(srcdir)/util/clapf_admin-sql.sh.in | sed -e "s%SQLBINPROG%`which mysql` --defaults-file=$(datarootdir)/clapf/.my.cnf%g" > $(srcdir)/util/clapf_admin.sh; else cat $(srcdir)/util/clapf_admin-sql.sh.in | sed -e "s%SQLBINPROG%`which sqlite3` $(localstatedir)/lib/clapf/data/tokens.sdb%g" > $(srcdir)/util/clapf_admin.sh; fi; fi
 
 
-clapf: % : %.o libclapf.a
+clapf: clapf.c libclapf.a
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ -lclapf $(LIBS) $(LDAP_LIBS) $(LIBDIR) @LDFLAGS@ @libclamav_extra_libs@
 
-clapf-lib:	$(OBJS) $(STORE_OBJ) $(MYSQL_OBJS)
+libclapf.a: $(OBJS) $(MYSQL_OBJS)
 	ar cr libclapf.a $(OBJS) $(MYSQL_OBJS)
 	ranlib libclapf.a
 	#$(CC) -shared -Wl,-soname,libclapf.so.$(CLAPF_VERSION) -o libclapf.so.$(LIBCLAPF_VERSION) $(OBJS) $(MYSQL_OBJS) $(LIBS) $(LDAP_LIBS) @LDFLAGS@
@@ -71,35 +70,35 @@ clapf-lib:	$(OBJS) $(STORE_OBJ) $(MYSQL_OBJS)
 	ln -sf libclapf.so.$(LIBCLAPF_VERSION) libclapf.so.$(CLAPF_VERSION)
 
 
-memcached_cleaner:	%	: %.o libclapf.a
+memcached_cleaner: memcached_cleaner.c libclapf.a
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ -lclapf $(LIBS) $(LDAP_LIBS) $(LIBDIR)
 
-parsembox: % : %.o misc.o decoder.o list.o boundary.o parser.o cfg.o hash.o score.o chi.o
+parsembox: parsembox.c cfg.o misc.o list.o hash.o parser.o decoder.o boundary.o score.o chi.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
 
-clapfconf: % : %.o
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ cfg.o misc.o $(LIBS)
-
-spamdrop: % : %.o libclapf.a
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ -lclapf @spamsum_libs@ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
-
-spamstat: % : %.o libclapf.a
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ -lclapf @spamsum_libs@ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
-
-splitmbox: % : %.o misc.o decoder.o list.o boundary.o parser.o hash.o score.o chi.o
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
-
-aphash: % : %.o misc.o
+clapfconf: clapfconf.c cfg.o misc.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS)
 
-prepare-sql : % : %.o misc.o
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS)
+spamdrop: spamdrop.c libclapf.a
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ -lclapf @spamsum_libs@ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
 
-mydb_stat mydb_compress mydb_export:	%: %.o mydb.o misc.o hash.o chi.o score.o cfg.o
+spamstat: spamstat.c libclapf.a
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ -lclapf @spamsum_libs@ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
+
+splitmbox: splitmbox.c misc.o decoder.o list.o boundary.o parser.o hash.o score.o chi.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
 
-zombietest: % :	%.o misc.o
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ -ltre
+aphash: aphash.c misc.o
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS)
+
+prepare-sql: prepare-sql.c misc.o decoder.o list.o boundary.o parser.o score.o chi.o
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS)
+
+mydb_stat mydb_compress mydb_export: %.o mydb.o misc.o hash.o chi.o score.o cfg.o
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
+
+zombietest: zombietest.c misc.o
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR) -ltre
 
 spamsum:
 	(cd $(srcdir)/contrib/spamsum; make all)

@@ -1,5 +1,5 @@
 /*
- * clapf.c, 2010.01.13, SJ
+ * clapf.c, 2010.01.14, SJ
  */
 
 #include <stdio.h>
@@ -340,7 +340,7 @@ int main(int argc, char **argv){
 
     f = fopen(cfg.pidfile, "w");
     if(f){
-       fprintf(f, "%d", getpid());
+       fprintf(f, "%d", (int)getpid());
        fclose(f);
     }
     else syslog(LOG_PRIORITY, "cannot write pidfile: %s", cfg.pidfile);

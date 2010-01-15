@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2010.01.11, SJ
+ * spamdrop.c, 2010.01.15, SJ
  */
 
 #include <stdio.h>
@@ -175,7 +175,7 @@ int print_message_stdout(struct session_data *sdata, char *clapf_info, float spa
 
 int main(int argc, char **argv, char **envp){
    int i, n, fd, rc=0, rounds=1, debug=0, quiet=0, compact=0;
-   int print_message=1;
+   int print_message=1, no_chdir=0;
    int is_spam=0, train_as_ham=0, train_as_spam=0, blackhole_request=0, training_request=0;
    int train_mode=T_TOE;
    int u=-1;
@@ -202,7 +202,7 @@ int main(int argc, char **argv, char **envp){
 #endif
 
 
-   while((i = getopt(argc, argv, "c:U:f:r:SHDdhqo?")) > 0){
+   while((i = getopt(argc, argv, "c:U:f:r:SHDCdhqo?")) > 0){
        switch(i){
 
          case 'c' :
@@ -241,6 +241,10 @@ int main(int argc, char **argv, char **envp){
 
          case 'D' :
                     debug = 1;
+                    break;
+
+         case 'C' :
+                    no_chdir = 1;
                     break;
 
          case 'o' :
@@ -325,7 +329,7 @@ int main(int argc, char **argv, char **envp){
    //if(train_as_ham == 0 && train_as_spam == 0 && debug == 0) i = chdir(cfg.workdir);
 
    /* spamdrop is now setuid to clapf:clapf, so we can always get to the workdir */
-   i = chdir(cfg.workdir);
+   if(no_chdir == 0) i = chdir(cfg.workdir);
 
    /* read message from standard input */
 

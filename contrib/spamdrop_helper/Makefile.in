@@ -28,7 +28,7 @@ all: spamdrop_helper
 
 spamdrop_helper: spamdrop_helper.c
 	cat $(srcdir)/spamdrop_helper.sh.in | sed -e "s%YOUR_STATE_DIR%$(localstatedir)%g" > $(srcdir)/spamdrop_helper
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o spamdrop_helper.bin $^ -lclapf  $(LIBS) $(LDAP_LIBS) $(LIBDIR)
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o spamdrop_helper.bin $< -lclapf  $(LIBS) $(LDAP_LIBS) $(LIBDIR)
 
 
 %.o: $(srcdir)/%.c

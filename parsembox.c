@@ -1,20 +1,20 @@
 /*
- * parsembox.c, 2009.11.11, SJ
+ * parsembox.c, 2010.01.15, SJ
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/file.h>
+#include <fcntl.h>
+#include <sys/time.h>
+#include <pwd.h>
 #include <unistd.h>
-#include "misc.h"
-#include "decoder.h"
-#include "list.h"
-#include "parser.h"
-#include "cfg.h"
-#include "hash.h"
-#include "config.h"
-#include "clapf.h"
+#include <sysexits.h>
+#include <clapf.h>
+#include <locale.h>
 
 int main(int argc, char **argv){
    struct _state state;
@@ -25,6 +25,9 @@ int main(int argc, char **argv){
    FILE *F;
 
    cfg = read_config(configfile);
+
+   setlocale(LC_MESSAGES, cfg.locale);
+   setlocale(LC_CTYPE, cfg.locale);
 
    if(argc < 2)
       __fatal("usage: <mbox file>");
@@ -59,6 +62,7 @@ int main(int argc, char **argv){
 
             free_list(state.urls);
             clearhash(state.token_hash, 2);
+            free_boundary(state.boundaries);
          }
 
          init_state(&state);
@@ -81,6 +85,7 @@ int main(int argc, char **argv){
 
       free_list(state.urls);
       clearhash(state.token_hash, 2);
+      free_boundary(state.boundaries);
    }
 
    fclose(F);

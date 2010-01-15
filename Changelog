@@ -1,5 +1,10 @@
 0.4.4-rc1:
 
+2010.01.15, SJ
+
+Fixed a locale bug in parsembox.c causing to miss accented characters.
+(parsembox.c)
+
 2010.01.14, SJ
 
 Modified the Makefile to let other than gnu make be able to compile clapf.

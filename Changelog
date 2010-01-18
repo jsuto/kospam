@@ -1,5 +1,13 @@
 0.4.4-rc1:
 
+2010.01.18, SJ
+
+Webui enhancements.
+(webui/*)
+
+Fixed a to= and orig_to= parsing issue.
+(history/maillog.pl)
+
 2010.01.15, SJ
 
 Fixed a locale bug in parsembox.c causing to miss accented characters.

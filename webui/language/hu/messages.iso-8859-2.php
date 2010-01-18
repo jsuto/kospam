@@ -14,9 +14,12 @@ $_['text_bulk_edit_selected_uids'] = "Kiválasztott azonosítók szerkesztése";
 $_['text_bulk_update_selected_uids'] = "Kiválasztott azonosítók szerkesztése";
 
 $_['text_cancel'] = "Mégse";
+$_['text_clienthost'] = "Kliens gép";
+$_['text_content_filter'] = "Tartalomszûrõ";
 
 $_['text_daily_report'] = "Napi jelentés";
 $_['text_date'] = "Dátum";
+$_['text_delay'] = "Késleltetés";
 $_['text_deliver'] = "Kézbesítés";
 $_['text_delivered'] = "Kézbesített";
 $_['text_deliver_and_train_selected_messages'] = "Kiválasztott üzenetek tanítása és kézbesítése";
@@ -111,6 +114,8 @@ $_['text_purged'] = "Eltávolítva";
 
 $_['text_quarantine'] = "Karantén";
 
+$_['text_relay_details'] = "Relay részletek";
+$_['text_relay_status'] = "Relay státusz";
 $_['text_remove'] = "Törlés";
 $_['text_remove_domain'] = "Domain törlése";
 $_['text_remove_selected_uids'] = "Kijelölt azonosítók törlése";

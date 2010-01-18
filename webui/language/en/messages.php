@@ -14,9 +14,12 @@ $_['text_bulk_edit_selected_uids'] = "Bulk edit selected uids";
 $_['text_bulk_update_selected_uids'] = "Bulk update selected uids";
 
 $_['text_cancel'] = "Cancel";
+$_['text_clienthost'] = "Client host";
+$_['text_content_filter'] = "Content filter";
 
 $_['text_daily_report'] = "Daily report";
 $_['text_date'] = "Date";
+$_['text_delay'] = "Delay";
 $_['text_deliver'] = "Deliver";
 $_['text_delivered'] = "Delivered";
 $_['text_deliver_and_train_selected_messages'] = "Deliver and train selected messages";
@@ -111,6 +114,8 @@ $_['text_purged'] = "Purged";
 
 $_['text_quarantine'] = "Quarantine";
 
+$_['text_relay_details'] = "Relay details";
+$_['text_relay_status'] = "Relay status";
 $_['text_remove'] = "Remove";
 $_['text_remove_domain'] = "Remove domain";
 $_['text_remove_selected_uids'] = "Remove selected uids";

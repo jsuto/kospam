@@ -1,8 +1,3 @@
-<p>
-<?php if(isset($_SESSION['username'])){
-   print $text_you_are; ?>: <?php print $_SESSION['username'];
-} ?>
-</p>
 
 <?php if(!isset($x)){ ?>
 

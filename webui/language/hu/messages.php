@@ -54,6 +54,7 @@ $_['text_first'] = "Első";
 $_['text_from'] = "Feladó";
 
 $_['text_ham_and_spam_messages'] = "Ham & spam üzenetek";
+$_['text_help'] = "Segítség";
 $_['text_history'] = "Történet";
 $_['text_home'] = "Kezdőlap";
 

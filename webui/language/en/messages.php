@@ -54,6 +54,7 @@ $_['text_first'] = "First";
 $_['text_from'] = "From";
 
 $_['text_ham_and_spam_messages'] = "Ham & spam messages";
+$_['text_help'] = "Help";
 $_['text_history'] = "History";
 $_['text_home'] = "Home";
 

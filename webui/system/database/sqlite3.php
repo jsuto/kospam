@@ -18,6 +18,9 @@ class SQLite3 {
    }
 
 
+   public function select_db($database) { }
+
+
    public function query($sql) {
       //print "sql: $sql<p>\n";
 

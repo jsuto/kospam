@@ -30,8 +30,8 @@ class ControllerHistoryView extends Controller {
       }
 
 
-      $db_history = Registry::get('db_history');
       $db = Registry::get('db');
+      $db_history = Registry::get('db_history');
 
 
       $this->data['entries'] = array();
@@ -40,8 +40,15 @@ class ControllerHistoryView extends Controller {
 
       if(Registry::get('admin_user') == 1) {
 
-         //$query = $db->query("select count(*) as total from clapf $QMGR_TABLE $SMTP_TABLE $CLAPF_FILTER");
-         //$this->data['total'] = $query->row['total'];
+         $username = "";
+
+         if(Registry::get('DB_DRIVER') == 'mysql'){ $db->select_db(Registry::get('DB_DATABASE')); }
+
+         $user = $db->query("select user.username from user, t_email where user.uid=t_email.uid and t_email.email='" . $db->escape(@$this->request->get['to']) . "'");
+         if($user->num_rows == 1) { $username = $user->row['username']; }
+
+         if(Registry::get('HISTORY_DRIVER') == 'mysql'){ $db_history->select_db(Registry::get('HISTORY_DATABASE')); }
+
 
          $query = $db_history->query("select queue_id, result, spaminess, relay, delay, queue_id2, virus from clapf where queue_id='" . $db_history->escape(@$this->request->get['id']) . "'");
 
@@ -87,15 +94,6 @@ class ControllerHistoryView extends Controller {
                }
 
                if(isset($smtp['orig_to']) && strlen($smtp['orig_to']) > 3) { $smtp['to'] = $smtp['orig_to']; }
-
-               /* query the username */
-
-               $username = "";
-
-               if(isset($__smtp->row['to'])) {
-                  $user = $db->query("select user.username from user, t_email where user.uid=t_email.uid and t_email.email='" . $db->escape($__smtp->row['to']) . "'");
-                  if($user->num_rows == 1) { $username = $user->row['username']; }
-               }
 
 
                $this->data['entry'] = array(

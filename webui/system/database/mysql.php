@@ -11,7 +11,7 @@ class MySQL {
       }
 
 
-      if(!mysql_select_db($database, $this->link)){
+      if(!$this->select_db($database)) {
          exit('Error: Could not connect to database ' . $database);
       }
 
@@ -20,6 +20,11 @@ class MySQL {
 
       /*mysql_query("SET NAMES 'utf8'", $this->link);
       mysql_query("SET CHARACTER SET utf8", $this->link);*/
+   }
+
+
+   public function select_db($database) {
+      return mysql_select_db($database, $this->link);
    }
 
 

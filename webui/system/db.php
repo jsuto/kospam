@@ -13,6 +13,11 @@ class DB {
    }
 
 
+   public function select_db($db) {
+      $this->driver->select_db($db);
+   }
+
+
    public function query($sql) {
       return $this->driver->query($sql);
    }
@@ -33,11 +38,5 @@ class DB {
    }
 
 }
-
-
-
-$db = new DB(DB_DRIVER, DB_HOSTNAME, DB_USERNAME, DB_PASSWORD, DB_DATABASE, DB_PREFIX);
-Registry::set('db', $db);
-
 
 ?>

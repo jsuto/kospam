@@ -649,7 +649,6 @@ spamsum_install
 spamsum
 spamsum_libs
 db_install
-store_obj
 mysql_obj
 ldap_libs
 user_obj
@@ -3834,7 +3833,6 @@ _ACEOF
 fi
 
 done
-
 
 
 

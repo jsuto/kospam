@@ -1,5 +1,5 @@
 /*
- * cfg.c, 2010.01.13, SJ
+ * cfg.c, 2010.01.20, SJ
  */
 
 #include <stdio.h>
@@ -89,6 +89,8 @@ struct _parse_rule config_parse_rules[] =
    { "esf_s", "float", (void*) float_parser, offsetof(struct __config, esf_s), "1.0", sizeof(float)},
    { "exclusion_radius", "float", (void*) float_parser, offsetof(struct __config, exclusion_radius), "0.375", sizeof(float)},
    { "group_type", "integer", (void*) int_parser, offsetof(struct __config, group_type), "1", sizeof(int)},
+   { "historydb", "string", (void*) string_parser, offsetof(struct __config, historydb), "", MAXVAL-1},
+   { "historypid", "string", (void*) string_parser, offsetof(struct __config, historypid), "", MAXVAL-1},
    { "hostid", "string", (void*) string_parser, offsetof(struct __config, hostid), HOSTID, MAXVAL-1},
    { "initial_1000_learning", "integer", (void*) int_parser, offsetof(struct __config, initial_1000_learning), "0", sizeof(int)},
    { "invalid_junk_limit", "integer", (void*) int_parser, offsetof(struct __config, invalid_junk_limit), "5", sizeof(int)},
@@ -103,6 +105,7 @@ struct _parse_rule config_parse_rules[] =
    { "listen_port", "integer", (void*) int_parser, offsetof(struct __config, listen_port), "10025", sizeof(int)},
    { "locale", "string", (void*) string_parser, offsetof(struct __config, locale), "", MAXVAL-1},
    { "localpostmaster", "string", (void*) string_parser, offsetof(struct __config, localpostmaster), "", MAXVAL-1},
+   { "maillog", "string", (void*) string_parser, offsetof(struct __config, maillog), "", MAXVAL-1},
    { "max_connections", "integer", (void*) int_parser, offsetof(struct __config, max_connections), "30", sizeof(int)},
    { "max_ham_spamicity", "float", (void*) float_parser, offsetof(struct __config, max_ham_spamicity), "0.45", sizeof(float)},
    { "max_message_size_to_filter", "integer", (void*) int_parser, offsetof(struct __config, max_message_size_to_filter), "65535", sizeof(int)},

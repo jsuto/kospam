@@ -1,7 +1,18 @@
 #!/bin/sh
 ##
 ##
-##
+### BEGIN INIT INFO
+# Provides:          clapf
+# Required-Start:    $syslog
+# Should-Start:      mysql clamav-daemon
+# Required-Stop:
+# Should-Stop:
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 6
+# Short-Description: Clapf daemon
+# Description:       Clapf email filter daemon
+### END INIT INFO
+
 
 clapf_start() {
    SBINDIR/clapf -d -u `id -u CLAPF_USER` -g `id -g CLAPF_GROUP`
@@ -12,7 +23,7 @@ clapf_stop() {
 }
 
 clapf_restart() {
-   kill `cat PIDFILE`
+   clapf_stop
    sleep 1
    clapf_start
 }

@@ -1,0 +1,48 @@
+#!/bin/sh
+##
+##
+#
+# clapf      Clapf mail filter daemon
+#
+# chkconfig: 2345 80 30
+# description: Clapf is a mail filter deamon, which can detect spam and virus \
+#              infected emails as a frontend.
+# processname: clapf
+# pidfile: /data/apps/clapf/current/var/lib/clapf/clapf.pid
+# config: /data/apps/clapf/current/etc/clapf.conf
+
+# Source function library.
+. /etc/rc.d/init.d/functions
+
+# Source networking configuration.
+. /etc/sysconfig/network
+
+
+clapf_start() {
+   SBINDIR/clapf -d -u `id -u CLAPF_USER` -g `id -g CLAPF_GROUP`
+}
+
+clapf_stop() {
+   killall clapf
+}
+
+clapf_restart() {
+   clapf_stop
+   sleep 1
+   clapf_start
+}
+
+case "$1" in
+'start')
+   clapf_start
+   ;;
+'stop')
+   clapf_stop
+   ;;
+'restart')
+   clapf_restart
+   ;;
+*)
+   echo "usage $0 start|stop|restart"
+esac
+

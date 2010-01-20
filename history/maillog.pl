@@ -4,24 +4,40 @@ use File::Tail;
 use Date::Parse;
 
 use DBI;
-use Getopt::Long;
+use POSIX qw(setsid);
 
-$maillog = "";
-$database = "";
+
 $db = "";
-$user = "";
-$password = "";
-$host = "localhost";
-$port = "";
 
-GetOptions('l|logfile=s' => \$maillog, 'db=s' => \$db, 'database=s' => \$database, 'u|user=s' => \$user, 'p|password=s' => \$password);
+&usage unless $config_file = $ARGV[0];
+
+%cfg = &read_config($config_file);
+
+$maillog = $cfg{'maillog'};
+$database = $cfg{'historydb'};
+$user = $cfg{'mysqluser'};
+$password = $cfg{'mysqlpwd'};
+$host = $cfg{'mysqlhost'};
+$port = $cfg{'mysqlport'};
+$pidfile = $cfg{'historypid'};
+
+if($database =~ /\//){ $db = "sqlite3"; }
+else { $db = "mysql"; }
 
 if($maillog eq "" || $db eq "") { &usage; }
 
 
-
 if($db eq "sqlite3") { $dsn = "dbi:SQLite:dbname=$database"; }
 if($db eq "mysql") { $dsn = "dbi:mysql:database=$database;host=$host;port=$port"; }
+
+&daemonize;
+
+if($pidfile) { &writepid($pidfile); }
+
+
+$SIG{'INT'} = 'nice_exit';
+$SIG{'TERM'} = 'nice_exit';
+
 
 $file = File::Tail->new(name => $maillog, maxinterval=> 5) or die "cannot read $maillog";
 
@@ -227,8 +243,59 @@ while (defined($line = $file->read)) {
 
 
 sub usage {
-   die "usage: $0 -l|--logfile <maillog> --database <database> --db <sqlite3|mysql>\n\n" .
-   "eg #1. $0 -l /var/log/maillog --db sqlite3 --database /var/lib/clapf/log.sdb\n" .
-   "eg #2. $0 -l /var/log/maillog --db mysql --database history --user history --password veryhardsecret\n";
+   die "usage: $0 <config file>\n";
 }
+
+
+sub read_config {
+   my ($cfg) = @_;
+
+   %CFG = ();
+
+   open(F, "<$cfg") || die "cannot open: $cfg\n";
+
+   while(<F>){
+      if($_ !~ /^\#/ && $_ !~ /^\;/) {
+         chomp;
+         @l = split("=", $_);
+
+         $CFG{$l[0]} = $l[1];
+      }
+   }
+
+   close F;
+
+   return %CFG;
+}
+
+
+sub daemonize {
+   chdir '/'                 or die "Can't chdir to /: $!";
+   open STDIN, '/dev/null'   or die "Can't read /dev/null: $!";
+   open STDOUT, '>>/dev/null' or die "Can't write to /dev/null: $!";
+   open STDERR, '>>/dev/null' or die "Can't write to /dev/null: $!";
+   defined(my $pid = fork)   or die "Can't fork: $!";
+   exit if $pid;
+   setsid                    or die "Can't start a new session: $!";
+   umask 022;
+}
+
+
+sub writepid {
+   my ($pidfile) = @_;
+
+   open(PID, ">$pidfile") || warn "cannot write pidfile: $pidfile\n";
+
+   print PID $$;
+
+   close PID;
+}
+
+
+sub nice_exit {
+   if($pidfile) { unlink $pidfile; }
+
+   exit;
+}
+
 

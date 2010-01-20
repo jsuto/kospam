@@ -32,6 +32,8 @@ CLAPF_REVISION=1
 CLAPF_RELEASE=1
 LIBCLAPF_VERSION=$(CLAPF_VERSION).$(CLAPF_REVISION).$(CLAPF_RELEASE)
 
+MAKE = `which make`
+
 INSTALL = @INSTALL@
 
 all: libclapf.a clapf clapfconf clapf.conf init.d/clapf @memcached@ @spamsum@ splitmbox @parsembox@ @spamdrop@ @preparesql@
@@ -45,11 +47,21 @@ clapf.conf:
 	-e 's%queuedir=.*%queuedir=$(localstatedir)/lib/clapf/queue%g' \
 	-e 's%mydbfile=.*%mydbfile=$(localstatedir)/lib/clapf/tokens.mydb%g' < $(srcdir)/example.conf >$@
 
-init.d/clapf: init.d/clapf.in
+init.d/clapf:
+	$(MAKE) init.d/clapf.ubuntu init.d/clapf.redhat
+
+init.d/clapf.ubuntu:
 	sed -e 's%SBINDIR%$(sbindir)%' \
 	-e 's%PIDFILE%$(localstatedir)/lib/clapf/clapf.pid%' \
 	-e 's%CLAPF_USER%$(CLAPF_USER)%' \
-	-e 's%CLAPF_GROUP%$(CLAPF_GROUP)%' < $(srcdir)/init.d/clapf.in >$(srcdir)/init.d/clapf
+	-e 's%CLAPF_GROUP%$(CLAPF_GROUP)%' < $(srcdir)/init.d/clapf.in.ubuntu >$(srcdir)/init.d/clapf.ubuntu
+
+init.d/clapf.redhat:
+	sed -e 's%SBINDIR%$(sbindir)%' \
+	-e 's%PIDFILE%$(localstatedir)/lib/clapf/clapf.pid%' \
+	-e 's%CLAPF_USER%$(CLAPF_USER)%' \
+	-e 's%CLAPF_GROUP%$(CLAPF_GROUP)%' < $(srcdir)/init.d/clapf.in.redhat >$(srcdir)/init.d/clapf.redhat
+
 
 	cat $(srcdir)/util/db_train.sh.in | sed -e "s%YOUR_LIBEXECDIR%$(libexecdir)/clapf%g" -e "s%YOUR_BINDIR%$(bindir)%g" -e "s%YOUR_SHAREDIR%$(datarootdir)/clapf%g" > $(srcdir)/util/db_train.sh
 	cat $(srcdir)/util/check_clapf.sh.in | sed -e "s%YOUR_PATH%$(sbindir)%g" -e "s%YOUR_QUEUE%`grep '^queuedir=' clapf.conf | cut -f2 -d '='`%g" -e "s%USER%$(CLAPF_USER)%g" > $(srcdir)/util/check_clapf.sh
@@ -101,7 +113,7 @@ zombietest: zombietest.c misc.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR) -ltre
 
 spamsum:
-	(cd $(srcdir)/contrib/spamsum; make all)
+	(cd $(srcdir)/contrib/spamsum; $(MAKE) all)
 
 test:
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o spamtest $(srcdir)/test.c -lclapf $(LIBS) $(LDAP_LIBS) @spamsum_libs@ $(LIBDIR) @LDFLAGS@
@@ -182,7 +194,7 @@ install-clapf: clapf
 	if [ ! -f "$(DESTDIR)$(sysconfdir)/clapf.conf" ]; then $(INSTALL) -m 0640 $(srcdir)/clapf.conf $(DESTDIR)$(sysconfdir)/clapf.conf; chgrp $(CLAPF_GROUP) $(DESTDIR)$(sysconfdir)/clapf.conf; fi
 
 install-spamsum:
-	(cd contrib/spamsum; make install)
+	(cd contrib/spamsum; $(MAKE) install)
 
 install-spamdrop: spamdrop
 	$(INSTALL) -m 0755 spamdrop $(DESTDIR)$(bindir)
@@ -209,7 +221,7 @@ install-parsembox:
 
 install-end:
 	@echo "***************************"
-	@echo "if you ever change queuedir or workdir in clapf.conf, then run 'make localedirs' to recreate the new paths"
+	@echo "if you ever change queuedir or workdir in clapf.conf, then run '$(MAKE) localedirs' to recreate the new paths"
 	@echo "***************************"
 
 localedirs:
@@ -242,12 +254,12 @@ clean_db:
 	rm -f ham.tmp spam.tmp num_of_spam.tmp num_of_ham.tmp tokens.mydb temp.*
 
 clean:
-	rm -f *.o *.a libclapf.so* qcache db.sql clapf clapf.conf init.d/clapf parsembox splitmbox \
+	rm -f *.o *.a libclapf.so* qcache db.sql clapf clapf.conf init.d/clapf.redhat init.d/clapf.ubuntu parsembox splitmbox \
 		spamtest spamdrop spamstat aphash prepare-sql mydb_stat mydb_compress mydb_export clapfconf \
 		zombietest
 
-	(cd $(srcdir)/contrib/spamsum; make clean)
-	(cd $(srcdir)/contrib/spamdrop_helper; make clean)
+	(cd $(srcdir)/contrib/spamsum; $(MAKE) clean)
+	(cd $(srcdir)/contrib/spamdrop_helper; $(MAKE) clean)
 
 dist_clean distclean: clean
 	rm -f Makefile config.log config.status clapf-config.h stamp.h clapf.conf

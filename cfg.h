@@ -1,5 +1,5 @@
 /*
- * cfg.h, 2009.11.11, SJ
+ * cfg.h, 2010.01.20, SJ
  */
 
 #ifndef _CFG_H
@@ -178,6 +178,10 @@ struct __config {
    char spamc_user[MAXVAL];
 
 
+   // history
+   char maillog[MAXVAL];
+   char historydb[MAXVAL];
+   char historypid[MAXVAL];
 };
 
 

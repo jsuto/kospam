@@ -1,5 +1,5 @@
 /*
- * clapf.h, 2010.01.15, SJ
+ * clapf.h, 2010.01.21, SJ
  */
 
 #include <misc.h>
@@ -51,7 +51,7 @@ void is_sender_on_minefield(struct session_data *sdata, char *ip, struct __confi
 int process_message(struct session_data *sdata, struct _state *sstate, struct __data *data, char *email, char *email2, struct __config *cfg, struct __config *my_cfg);
 
 struct __config read_config(char *configfile);
-void print_config_all(struct __config *cfg);
+void print_config_all(struct __config *cfg, char *key);
 void print_config(char *configfile, struct __config *cfg);
 
 

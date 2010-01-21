@@ -1,5 +1,5 @@
 /*
- * config.h, 2010.01.11, SJ
+ * config.h, 2010.01.21, SJ
  */
 
 #ifndef _CONFIG_H
@@ -55,7 +55,7 @@
 
 #define MAILBUFSIZE 32000
 
-#define CLAPFUSAGE "usage: " PROGNAME " -c <config file> -u <uid> -g <gid> -d -V -h"
+#define CLAPFUSAGE "usage: " PROGNAME " -c <config file> -d -V -h"
 
 #define SPAMDROPUSAGE "usage: spamdrop [-c <config file>] [-u <username> | -U uid] [-f from] [-r recipient] [-dsp] [-H | -S | -D] < message"
 

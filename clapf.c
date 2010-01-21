@@ -1,5 +1,5 @@
 /*
- * clapf.c, 2010.01.14, SJ
+ * clapf.c, 2010.01.21, SJ
  */
 
 #include <stdio.h>
@@ -14,6 +14,7 @@
 #include <sys/wait.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <pwd.h>
 #include <signal.h>
 #include <syslog.h>
 #include <time.h>
@@ -142,6 +143,28 @@ void fatal(char *s){
 
 
 /*
+ * drop privileges
+ */
+
+void drop_privileges(struct __config *cfg){
+   struct passwd *pwd;
+
+   if(strlen(cfg->username) > 1){
+      pwd = getpwnam(cfg->username);
+
+      if(getgid() != pwd->pw_gid){
+         if(setgid(pwd->pw_gid)) fatal(ERR_SETGID);
+      }
+
+      if(getuid() != pwd->pw_uid){
+         if(setuid(pwd->pw_uid)) fatal(ERR_SETUID);
+      }
+
+   }
+}
+
+
+/*
  * reload configuration
  */
 
@@ -240,13 +263,13 @@ void sigchld(){
 }
 
 int main(int argc, char **argv){
-    int i, new_sd, yes=1, pid, daemonise=0, uid=0, gid=0;
+    int i, new_sd, yes=1, pid, daemonise=0;
     unsigned int clen;
     struct sockaddr_in client_addr, serv_addr;
     struct in_addr addr;
     FILE *f;
 
-    while((i = getopt(argc, argv, "c:u:g:dvVhQ")) > 0){
+    while((i = getopt(argc, argv, "c:dvVh")) > 0){
        switch(i){
 
          case 'c' :
@@ -255,14 +278,6 @@ int main(int argc, char **argv){
 
          case 'd' :
                     daemonise = 1;
-                    break;
-
-         case 'u' :
-                    uid = atoi(optarg);
-                    break;
-
-         case 'g' :
-                    gid = atoi(optarg);
                     break;
 
          case 'v' :
@@ -319,8 +334,11 @@ int main(int argc, char **argv){
     if(listen(sd, cfg.backlog) == -1)
         fatal(ERR_LISTEN);
 
-    if(gid > 0) setgid(gid);
-    if(uid > 0) setuid(uid);
+
+    /* drop privileges */
+
+    drop_privileges(&cfg);
+
 
     syslog(LOG_PRIORITY, "%s %s starting", PROGNAME, VERSION);
 

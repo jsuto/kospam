@@ -1,5 +1,5 @@
 /*
- * cfg.h, 2010.01.20, SJ
+ * cfg.h, 2010.01.21, SJ
  */
 
 #ifndef _CFG_H
@@ -8,6 +8,8 @@
 #include "config.h"
 
 struct __config {
+   char username[MAXVAL];
+
    char hostid[MAXVAL];
    char pidfile[MAXVAL];
 

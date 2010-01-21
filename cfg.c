@@ -162,6 +162,7 @@ struct _parse_rule config_parse_rules[] =
    { "update_tokens", "integer", (void*) int_parser, offsetof(struct __config, update_tokens), "1", sizeof(int)},
    { "use_antispam", "integer", (void*) int_parser, offsetof(struct __config, use_antispam), "1", sizeof(int)},
    { "use_libclamav_block_max_feature", "integer", (void*) int_parser, offsetof(struct __config, use_libclamav_block_max_feature), "1", sizeof(int)},
+   { "username", "string", (void*) string_parser, offsetof(struct __config, username), "clapf", MAXVAL-1},
    { "verbosity", "integer", (void*) int_parser, offsetof(struct __config, verbosity), "1", sizeof(int)},
    { "workdir", "string", (void*) string_parser, offsetof(struct __config, workdir), WORK_DIR, MAXVAL-1},
 
@@ -286,14 +287,20 @@ void print_config_item(struct __config *cfg, struct _parse_rule *rules, int i){
  * print all known configuration items
  */
 
-void print_config_all(struct __config *cfg){
+void print_config_all(struct __config *cfg, char *key){
    int i=0;
    struct _parse_rule *rules;
 
    rules = &config_parse_rules[0];
 
    while(rules[i].name){
-      print_config_item(cfg, rules, i);
+      if(key == NULL){
+         print_config_item(cfg, rules, i);
+      }
+      else {
+         if(strcmp(key, rules[i].name) == 0)
+            print_config_item(cfg, rules, i);
+      }
 
       i++;
    }

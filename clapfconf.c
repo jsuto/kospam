@@ -1,5 +1,5 @@
 /*
- * clapfconf.c, 2010.01.11, SJ
+ * clapfconf.c, 2010.01.21, SJ
  */
 
 #include <stdio.h>
@@ -14,10 +14,10 @@ extern int optind;
 
 int main(int argc, char **argv){
    int i, print_from_file=0;
-   char *configfile=CONFIG_FILE;
+   char *configfile=CONFIG_FILE, *query=NULL;
    struct __config cfg;
 
-   while((i = getopt(argc, argv, "c:nh?")) > 0){
+   while((i = getopt(argc, argv, "c:q:nh?")) > 0){
        switch(i){
 
          case 'c' :
@@ -28,9 +28,13 @@ int main(int argc, char **argv){
                     print_from_file = 1;
                     break;
 
+         case 'q' :
+                    query = optarg;
+                    break;
+
          case 'h' :
          case '?' :
-                    printf("clapfconf [-n -c <configfile>]\n");
+                    printf("clapfconf [-n -c <configfile>] [-q <key>]\n");
                     break;
 
 
@@ -46,7 +50,7 @@ int main(int argc, char **argv){
       print_config(configfile, &cfg);
    }
    else {
-      print_config_all(&cfg);
+      print_config_all(&cfg, query);
    }
 
    return 0;

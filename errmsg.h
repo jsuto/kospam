@@ -1,5 +1,5 @@
 /*
- * errmsg.h, 2009.05.27, SJ
+ * errmsg.h, 2010.01.21, SJ
  */
 
 #ifndef _ERRMSG_H
@@ -13,6 +13,8 @@
 #define ERR_SET_SOCK_OPT "ERR: cannot set socket option"
 #define ERR_BIND_TO_PORT "ERR: cannot bind to port"
 #define ERR_LISTEN "ERR: cannot listen"
+#define ERR_SETUID "ERR: setuid()"
+#define ERR_SETGID "ERR: setgid()"
 #define ERR_SELECT "ERR: select()"
 #define ERR_CHDIR "ERR: chdir() to working directory failed"
 #define ERR_LOAD_DB "ERR: loading database"

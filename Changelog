@@ -1,5 +1,11 @@
 0.4.4-rc1:
 
+2010.01.21, SJ
+
+Modified the clapf daemon to user the 'username' config file
+variable instead specifying -u and -g to set the uid and gid.
+(cfg.c, cfg.h, clapf.c, errmsg.h, config.h)
+
 2010.01.20, SJ
 
 maillog.pl enhancements.

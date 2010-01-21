@@ -44,6 +44,7 @@ AC_SUBST(sqlite3_batch)
 AC_SUBST(id_bin)
 
 have_libclamav="no"
+have_libtool="no"
 have_clamd="no"
 have_avast="no"
 have_avast_home="no"
@@ -106,6 +107,8 @@ AC_ARG_ENABLE(libclamav,
    	   echo "clamav not found";
    	   exit 1;
 	fi
+
+        AC_HAVE_LIBRARY(ltdl, AC_CHECK_LIB(ltdl, lt_dlopen, have_libtool=yes, have_libtool=no))
 
         have_antivirus="yes"
    fi
@@ -651,7 +654,11 @@ echo; echo
 
 if test "$have_libclamav" = "yes"; then
    echo "libclamav support: yes"
-   libclamav="-lclamav `clamav-config --libs` "
+
+   libtool=""
+   if test "$have_libtool" = "yes"; then libtool="-lltdl" ;fi
+
+   libclamav="-lclamav $libtool `clamav-config --libs` "
    defs="$defs -DHAVE_LIBCLAMAV"
    libclamav_extra_libs='$(CLAMAV_EXTRA_LIBS)'
 fi

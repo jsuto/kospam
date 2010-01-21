@@ -173,8 +173,10 @@ void reload_config(){
 
    cfg = read_config(configfile);
 
-   if(chdir(cfg.workdir))
+   if(chdir(cfg.workdir)){
+      syslog(LOG_PRIORITY, workdir: *%s*", cfg.workdir);
       fatal(ERR_CHDIR);
+   }
 
 #ifdef HAVE_LIBCLAMAV
 

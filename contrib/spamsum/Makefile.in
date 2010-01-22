@@ -42,7 +42,7 @@ libspamsum.a: $(OBJS)
 	$(CC) $(CFLAGS) -fPIC $(INCDIR) $(DEFS) -c $< -o $@
 
 ssum: ssum.c libspamsum.a
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ -lspamsum $(LIBDIR) @LDFLAGS@
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ ssum.c -lspamsum $(LIBDIR) @LDFLAGS@
 
 install:
 	$(INSTALL) -d $(DESTDIR)$(libdir)

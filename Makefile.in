@@ -36,7 +36,7 @@ MAKE = `which make`
 
 INSTALL = @INSTALL@
 
-all: libclapf.a clapf clapfconf clapf.conf init.d/clapf @memcached@ @spamsum@ splitmbox @parsembox@ @spamdrop@ @preparesql@
+all: libclapf.a clapf clapfconf clapf.conf @memcached@ @spamsum@ splitmbox @parsembox@ @spamdrop@ @preparesql@
 install: install-clapf install-splitmbox @parsembox_install@ @spamsum_install@ @spamdrop_install@ @db_install@ localedirs install-end
 
 
@@ -47,22 +47,6 @@ clapf.conf:
 	-e 's%queuedir=.*%queuedir=$(localstatedir)/lib/clapf/queue%g' \
 	-e 's%mydbfile=.*%mydbfile=$(localstatedir)/lib/clapf/tokens.mydb%g' < $(srcdir)/example.conf >$@
 
-init.d/clapf:
-	$(MAKE) init.d/clapf.ubuntu init.d/clapf.redhat
-
-init.d/clapf.ubuntu:
-	sed -e 's%SBINDIR%$(sbindir)%' \
-	-e 's%PIDFILE%$(localstatedir)/lib/clapf/clapf.pid%' \
-	-e 's%CLAPF_USER%$(CLAPF_USER)%' \
-	-e 's%CLAPF_GROUP%$(CLAPF_GROUP)%' < $(srcdir)/init.d/clapf.in.ubuntu >$(srcdir)/init.d/clapf.ubuntu
-
-init.d/clapf.redhat:
-	sed -e 's%SBINDIR%$(sbindir)%' \
-	-e 's%PIDFILE%$(localstatedir)/lib/clapf/clapf.pid%' \
-	-e 's%CLAPF_USER%$(CLAPF_USER)%' \
-	-e 's%CLAPF_GROUP%$(CLAPF_GROUP)%' < $(srcdir)/init.d/clapf.in.redhat >$(srcdir)/init.d/clapf.redhat
-
-
 	cat $(srcdir)/util/db_train.sh.in | sed -e "s%YOUR_LIBEXECDIR%$(libexecdir)/clapf%g" -e "s%YOUR_BINDIR%$(bindir)%g" -e "s%YOUR_SHAREDIR%$(datarootdir)/clapf%g" > $(srcdir)/util/db_train.sh
 	cat $(srcdir)/util/check_clapf.sh.in | sed -e "s%YOUR_PATH%$(sbindir)%g" -e "s%YOUR_QUEUE%`grep '^queuedir=' clapf.conf | cut -f2 -d '='`%g" -e "s%USER%$(CLAPF_USER)%g" > $(srcdir)/util/check_clapf.sh
 	cat $(srcdir)/stat/clapf-stat.run.sh.in | sed -e "s%YOUR_LIBEXECDIR%$(libexecdir)%g" -e "s%YOUR_LOCALSTATEDIR%$(localstatedir)%g" > $(srcdir)/stat/clapf-stat.run.sh
@@ -71,7 +55,7 @@ init.d/clapf.redhat:
 
 
 clapf: clapf.c libclapf.a
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $< -lclapf $(LIBS) $(LDAP_LIBS) $(LIBDIR) @LDFLAGS@ @libclamav_extra_libs@
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ clapf.c -lclapf $(LIBS) $(LDAP_LIBS) $(LIBDIR) @LDFLAGS@ @libclamav_extra_libs@
 
 libclapf.a: $(OBJS) $(MYSQL_OBJS)
 	ar cr libclapf.a $(OBJS) $(MYSQL_OBJS)
@@ -83,7 +67,7 @@ libclapf.a: $(OBJS) $(MYSQL_OBJS)
 
 
 memcached_cleaner: memcached_cleaner.c libclapf.a
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $< -lclapf $(LIBS) $(LDAP_LIBS) $(LIBDIR)
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ memcached_cleaner.c -lclapf $(LIBS) $(LDAP_LIBS) $(LIBDIR)
 
 parsembox: parsembox.c cfg.o misc.o list.o hash.o parser.o decoder.o boundary.o score.o chi.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
@@ -92,10 +76,10 @@ clapfconf: clapfconf.c cfg.o misc.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS)
 
 spamdrop: spamdrop.c libclapf.a
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $< -lclapf @spamsum_libs@ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ spamdrop.c -lclapf @spamsum_libs@ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
 
 spamstat: spamstat.c libclapf.a
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $< -lclapf @spamsum_libs@ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ spamstat.c -lclapf @spamsum_libs@ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
 
 splitmbox: splitmbox.c misc.o decoder.o list.o boundary.o parser.o hash.o score.o chi.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)

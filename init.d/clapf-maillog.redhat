@@ -1,0 +1,65 @@
+#!/bin/sh
+##
+##
+#
+# maillog.pl      maillog.pl is a mail.log data collector daemon
+#
+# chkconfig: 2345 80 30
+# description: maillog.pl is a mail.log data collector for clapf
+# processname: maillog.pl
+# pidfile: /var/run/clapf/history.pid
+# config: /data/apps/clapf/current/etc/clapf.conf
+
+# Source function library.
+. /etc/rc.d/init.d/functions
+
+# Source networking configuration.
+. /etc/sysconfig/network
+
+NAME="maillog.pl"
+PREFIX="/data/apps/clapf/current"
+PARAMS="${PREFIX}/etc/clapf.conf"
+RETVAL=0
+PID_FILE=`${PREFIX}/sbin/clapfconf |grep ^historypid |cut -f2 -d=`
+PID_NUMBER=`test -f ${PID_FILE} && cat ${PID_FILE}`
+PID_DIR=`dirname ${PID_FILE}`
+UID=`${PREFIX}/sbin/clapfconf |grep ^username |cut -f2 -d=`
+GID=`id -gn ${UID}`
+
+test -d ${PID_DIR} || install -m 755 -o ${UID} -g ${GID} -d ${PID_DIR}
+
+start() {
+	echo -n $"Starting $NAME: "
+	${PREFIX}/libexec/clapf/maillog.pl ${PARAMS} 2>/dev/null 1>&2 && success || failure $"${NAME} start"
+	RETVAL=$?
+	[ $RETVAL -eq 0 ] && touch /var/lock/subsys/${NAME}
+	return $RETVAL
+}
+
+stop() {
+	echo -n $"Shutting down ${NAME}: "
+	kill ${PID_NUMBER}
+	RETVAL=$?
+	echo
+	return $RETVAL
+}
+
+case "$1" in
+	start)
+		start;
+   	;;
+
+	stop)
+		stop;
+   	;;
+
+	restart)
+		stop;
+		sleep 1;
+		start;
+   	;;
+
+	*)
+		echo "Usage: $0 start|stop|restart"
+esac
+

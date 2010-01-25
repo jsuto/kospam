@@ -23,7 +23,7 @@ function fix1() {
       ShowOption('DB_PASSWORD', 0);
    }
 
-   if(document.forms.setup.DB_DRIVER.value == "sqlite3") {
+   if(document.forms.setup.DB_DRIVER.value == "sqlite") {
 
       ShowOption('DB_HOSTNAME', 0);
       ShowOption('DB_DATABASE', 1);
@@ -51,7 +51,7 @@ function fix1() {
    }
 
 
-   if(document.forms.setup.HISTORY_DRIVER.value == "sqlite3") {
+   if(document.forms.setup.HISTORY_DRIVER.value == "sqlite") {
       document.forms.setup.HISTORY_DATABASE.value = "/var/lib/clapf/data/log.sdb";
    }
    else {
@@ -136,7 +136,7 @@ function ShowOption(what, value) {
       <td>
          <select name="DB_DRIVER" id="DB_DRIVER" onchange="fix1(); return false;">
             <option value="mysql">MySQL</option>
-            <option value="sqlite3">SQLite3</option>
+            <option value="sqlite">SQLite3</option>
             <option value="ldap">LDAP</option>
          </select>
       </td>
@@ -202,7 +202,7 @@ function ShowOption(what, value) {
       <td>
          <select name="HISTORY_DRIVER" id="HISTORY_DRIVER" onchange="fix1(); return false;">
             <option value="mysql">MySQL</option>
-            <option value="sqlite3">SQLite3</option>
+            <option value="sqlite">SQLite3</option>
          </select>
       </td>
    </tr>

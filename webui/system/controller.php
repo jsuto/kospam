@@ -16,12 +16,12 @@ class Controller {
    }
 
 
-   protected function __get($key) {
+   public function __get($key) {
       return Registry::get($key);
    }
 
 
-   protected function __set($key, $value) {
+   public function __set($key, $value) {
       Registry::set($key, $value);
    }
 

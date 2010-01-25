@@ -1,7 +1,7 @@
 <?php
 
 
-class SQLite3 {
+class SQLite {
    private $link;
    private $affected;
 

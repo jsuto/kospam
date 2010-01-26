@@ -1,5 +1,11 @@
 0.4.4-rc1:
 
+2010.01.26, SJ
+
+Added the Ubuntu and Redhat specific clapf init scripts, and
+let the make process set the PREFIX in them.
+(init.d/*)
+
 2010.01.25, SJ
 
 Modified the webui to be compatible with PHP 5.3.1. You have to either run the

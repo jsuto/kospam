@@ -17,7 +17,7 @@
 . /etc/sysconfig/network
 
 NAME="maillog.pl"
-PREFIX="/data/apps/clapf/current"
+PREFIX="_PREFIX_"
 PARAMS="${PREFIX}/etc/clapf.conf"
 RETVAL=0
 PID_FILE=`${PREFIX}/sbin/clapfconf |grep ^historypid |cut -f2 -d=`

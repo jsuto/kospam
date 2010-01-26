@@ -1,5 +1,5 @@
 /*
- * config.h, 2010.01.21, SJ
+ * config.h, 2010.01.26, SJ
  */
 
 #ifndef _CONFIG_H
@@ -11,7 +11,7 @@
 
 #define PROGNAME "clapf"
 
-#define VERSION "0.4.4-rc1"
+#define VERSION "0.4.4-rc2"
 
 #define PROGINFO VERSION ", Janos SUTO <sj@acts.hu>\n\n" CONFIGURE_PARAMS "\n\nSend bugs/issues to https://jira.acts.hu:8443/\n"
 

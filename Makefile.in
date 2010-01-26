@@ -47,6 +47,12 @@ clapf.conf:
 	-e 's%queuedir=.*%queuedir=$(localstatedir)/lib/clapf/queue%g' \
 	-e 's%mydbfile=.*%mydbfile=$(localstatedir)/lib/clapf/tokens.mydb%g' < $(srcdir)/example.conf >$@
 
+
+	sed -e "s%_PREFIX_%$(prefix)%" init.d/clapf.ubuntu.in > init.d/clapf.ubuntu
+	sed -e "s%_PREFIX_%$(prefix)%" init.d/clapf.redhat.in > init.d/clapf.redhat
+	sed -e "s%_PREFIX_%$(prefix)%" init.d/clapf-maillog.ubuntu.in > init.d/clapf-maillog.ubuntu
+	sed -e "s%_PREFIX_%$(prefix)%" init.d/clapf-maillog.redhat.in > init.d/clapf-maillog.redhat
+
 	cat $(srcdir)/util/db_train.sh.in | sed -e "s%YOUR_LIBEXECDIR%$(libexecdir)/clapf%g" -e "s%YOUR_BINDIR%$(bindir)%g" -e "s%YOUR_SHAREDIR%$(datarootdir)/clapf%g" > $(srcdir)/util/db_train.sh
 	cat $(srcdir)/util/check_clapf.sh.in | sed -e "s%YOUR_PATH%$(sbindir)%g" -e "s%YOUR_QUEUE%`grep '^queuedir=' clapf.conf | cut -f2 -d '='`%g" -e "s%USER%$(CLAPF_USER)%g" > $(srcdir)/util/check_clapf.sh
 	cat $(srcdir)/stat/clapf-stat.run.sh.in | sed -e "s%YOUR_LIBEXECDIR%$(libexecdir)%g" -e "s%YOUR_LOCALSTATEDIR%$(localstatedir)%g" > $(srcdir)/stat/clapf-stat.run.sh
@@ -238,9 +244,10 @@ clean_db:
 	rm -f ham.tmp spam.tmp num_of_spam.tmp num_of_ham.tmp tokens.mydb temp.*
 
 clean:
-	rm -f *.o *.a libclapf.so* qcache db.sql clapf clapf.conf init.d/clapf.redhat init.d/clapf.ubuntu parsembox splitmbox \
-		spamtest spamdrop spamstat aphash prepare-sql mydb_stat mydb_compress mydb_export clapfconf \
-		zombietest
+	rm -f *.o *.a libclapf.so* qcache db.sql clapf clapfconf clapf.conf parsembox splitmbox \
+		spamtest spamdrop spamstat aphash prepare-sql mydb_stat mydb_compress mydb_export \
+		zombietest \
+		init.d/*ubuntu init.d/*redhat
 
 	(cd $(srcdir)/contrib/spamsum; $(MAKE) clean)
 	(cd $(srcdir)/contrib/spamdrop_helper; $(MAKE) clean)

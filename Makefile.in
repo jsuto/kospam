@@ -209,8 +209,8 @@ install-parsembox:
 	$(INSTALL) -m 0755 $(srcdir)/util/clapf_admin.sh $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 $(srcdir)/history/maillog.pl $(DESTDIR)$(libexecdir)/clapf
 
-	$(INSTALL) -m 0644 $(srcdir)/history/history/history-purge-mysql.sql $(DESTDIR)$(datarootdir)/clapf
-	$(INSTALL) -m 0644 $(srcdir)/history/history/history-purge-sqlite3.sql $(DESTDIR)$(datarootdir)/clapf
+	$(INSTALL) -m 0644 $(srcdir)/history/history-purge-mysql.sql $(DESTDIR)$(datarootdir)/clapf
+	$(INSTALL) -m 0644 $(srcdir)/history/history-purge-sqlite3.sql $(DESTDIR)$(datarootdir)/clapf
 
 install-end:
 	@echo "***************************"

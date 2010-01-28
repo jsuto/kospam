@@ -25,6 +25,14 @@ class ControllerCommonHome extends Controller {
       }
 
 
+      if(isset($this->request->get['lang']) && strlen($this->request->get['lang']) == 2 && file_exists(DIR_LANGUAGE . $this->request->get['lang']) ) {
+         $_SESSION['lang'] = $this->request->get['lang'];
+
+         Header("Location: index.php?route=common/home");
+         return;
+      }
+
+
       if($this->request->server['REQUEST_METHOD'] == 'POST' && $this->validate() == true) {
 
          if($this->model_user_auth->changePassword(Registry::get('username'), $this->request->post['password']) == 1) {

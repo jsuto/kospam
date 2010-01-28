@@ -5,7 +5,11 @@ class Language {
 
 
    public function __construct () {
-      $file = DIR_LANGUAGE . LANG . '/messages.php';
+      if(isset($_SESSION['lang'])) {
+         $file = DIR_LANGUAGE . $_SESSION['lang'] . '/messages.php';
+      } else {
+         $file = DIR_LANGUAGE . LANG . '/messages.php';
+      }
 
       if (file_exists($file)) {
          $_ = array();

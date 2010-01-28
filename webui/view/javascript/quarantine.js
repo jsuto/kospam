@@ -11,12 +11,20 @@ function mark_all(x){
 
 
 function fix_search(){
-   location = "index.php?route=quarantine/quarantine&subj=" + document.forms.aaa0.subj.value + "&from=" + document.forms.aaa0.from.value + "&user=" + document.forms.aaa0.user.value;
+   location = "index.php?route=quarantine/quarantine&subj=" + document.forms.aaa0.subj.value + 
+         "&from=" + document.forms.aaa0.from.value + "&user=" + document.forms.aaa0.user.value +
+           "&hamspam=" + document.forms.aaa0.hamspam.value;
 }
 
 
 function fix_form(){
-   location = document.forms[0].action + "&" + document.forms[0].elements[0].name + "=" + document.forms[0].elements[0].value;
+   var a = "";
+
+   for(i=0; i<document.forms[0].elements.length; i+=2){
+      a = a + "&" + document.forms[0].elements[i].name + "=" + document.forms[0].elements[i].value;
+   }
+
+   location = document.forms[0].action + a;
 }
 
 

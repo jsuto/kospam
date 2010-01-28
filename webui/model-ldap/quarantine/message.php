@@ -2,8 +2,53 @@
 
 class ModelQuarantineMessage extends Model {
 
+
+/*
+ * files can be sorted on name and stat() attributes, ascending and descending:
+ *
+ * name    file name
+ * dev     device number
+ * ino     inode number
+ * mode    inode protection mode
+ * nlink   number of links
+ * uid     userid of owner
+ * gid     groupid of owner
+ * rdev    device type, if inode device
+ * size    size in bytes
+ * atime   time of last access (Unix timestamp)
+ * mtime   time of last modification (Unix timestamp)
+ * ctime   time of last inode change (Unix timestamp)
+ * blksize blocksize of filesystem IO *
+ * blocks  number of blocks allocated
+ */
+
+   public function myscandir($dir, $exp = '', $how='name', $desc=0) {
+      $r = array();
+
+      $dh = @opendir($dir);
+      if($dh) {
+         while(($fname = readdir($dh)) !== false) {
+            if($exp == "" || preg_match($exp, $fname)) {
+               $stat = stat("$dir/$fname");
+               $r[$fname] = ($how == 'name')? $fname: $stat[$how];
+            }
+         }
+         closedir($dh);
+
+         if($desc) {
+            arsort($r);
+         }
+         else {
+            asort($r);
+         }
+      }
+
+      return(array_keys($r));
+   }
+
+
    public function checkId($id = '') {
-      if(strlen($id) > 10 && preg_match('/^(s\.[0-9a-f]+)$/', $id)){
+      if(strlen($id) > 10 && preg_match('/^([sh]\.[0-9a-f]+)$/', $id)){
          return 1;
       }
 
@@ -11,47 +56,50 @@ class ModelQuarantineMessage extends Model {
    }
 
 
-   public function getMessages($dir = '', $username = '', $page = 0, $page_len = PAGE_LEN, $from = '', $subj = '') {
-      $n_spam = $n_msgs = $spam_total_size = 0;
+   public function getMessages($dir = '', $username = '', $page = 0, $page_len = PAGE_LEN, $from = '', $subj = '', $hamspam = '') {
+      $n = $n_msgs = $total_size = 0;
       $messages = array();
+      $expr = '/^([sh]\.[0-9a-f]+)$/';
 
-      if($dir == "" || !file_exists($dir)) { return array($n_msgs, $spam_total_size, $messages); }
+
+      if($dir == "" || !file_exists($dir)) { return array($n_msgs, $total_size, $messages); }
+
+      if($hamspam == "SPAM") { $expr = '/^([s]\.[0-9a-f]+)$/'; }
+      if($hamspam == "HAM") { $expr = '/^([h]\.[0-9a-f]+)$/'; }
 
 
-      $files = scandir($dir, 1);
+      $files = $this->myscandir($dir, $expr, 'ctime', 1);
 
       while(list($k, $v) = each($files)){
-         if(strncmp($v, "s.", 2) == 0 && $this->checkId($v)){
 
-            $f = $dir . "/" . $v;
+         $f = $dir . "/" . $v;
 
-            list ($mailfrom, $subject) = $this->scan_message($dir, $v);
+         list ($mailfrom, $subject) = $this->scan_message($dir, $v);
 
-            $st = stat($f);
+         $st = stat($f);
 
-            if($this->is_it_in($subject, $subj) && $this->is_it_in($mailfrom, $from) && $st['size'] > 5){
+         if($this->is_it_in($subject, $subj) && $this->is_it_in($mailfrom, $from) && $st['size'] > 5){
 
-               $n_spam++;
+            $n++;
 
-               $spam_total_size += $st['size'];
+            $total_size += $st['size'];
 
-               if($n_spam > $page_len*$page && $n_spam <= $page_len*($page+1)){
+            if($n > $page_len*$page && $n <= $page_len*($page+1)){
 
-                  $messages[] = array(
-                                       'i' => $n_spam,
-                                       'id' => $v,
-                                       'from' => $mailfrom,
-                                       'subject' => $subject,
-                                       'date' => date("Y.m.d.", $st['mtime'])
-                                     );
+               $messages[] = array(
+                                    'i' => $n,
+                                    'id' => $v,
+                                    'from' => $mailfrom,
+                                    'subject' => $subject,
+                                    'date' => date("Y.m.d.", $st['mtime'])
+                                  );
 
-               }
             }
          }
       }
 
 
-      return array($n_spam, $spam_total_size, $messages);
+      return array($n, $total_size, $messages);
    }
 
 
@@ -180,7 +228,7 @@ class ModelQuarantineMessage extends Model {
             else {
 
                if($this->check_boundary($boundary, $l) == 1){
-                  $message .= $this->flush_body_chunk($body_chunk, $charset, $qp, $text_plain, $text_html);
+                  $message .= $this->flush_body_chunk($body_chunk, $charset, $qp, $base64, $text_plain, $text_html);
 
                   $text_plain = $text_html = $qp = $base64 = 0;
 
@@ -200,7 +248,7 @@ class ModelQuarantineMessage extends Model {
                }
 
                if($state == "BODY" && $base64 == 1 && !preg_match("/^[\r\n]/", $l) ) {
-                  $images[$n_image] .= rtrim($l);
+                  if($n_image >= 0){ $images[$n_image] .= rtrim($l); }
                }
 
             }
@@ -211,7 +259,7 @@ class ModelQuarantineMessage extends Model {
       }
 
       if($body_chunk){
-         $message .= $this->flush_body_chunk($body_chunk, $charset, $qp, $text_plain, $text_html);
+         $message .= $this->flush_body_chunk($body_chunk, $charset, $qp, $base64, $text_plain, $text_html);
       }
 
       /* write images to the cache dir, if possible */
@@ -253,9 +301,14 @@ class ModelQuarantineMessage extends Model {
 }
 
 
-   private function flush_body_chunk($chunk, $charset, $qp, $text_plain, $text_html) {
+   private function flush_body_chunk($chunk, $charset, $qp, $base64, $text_plain, $text_html) {
+
       if($qp == 1){
          $chunk = $this->qp_decode($chunk);
+      }
+
+      if($base64 == 1){
+         $chunk = base64_decode($chunk);
       }
 
       if(!preg_match("/utf-8/i", $charset)){

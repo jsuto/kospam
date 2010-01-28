@@ -70,6 +70,7 @@ $_['text_invalid_policy_setting'] = "Érvénytelen beállítás(ok)";
 $_['text_invalid_uid'] = "Érvénytelen felhasználóazonosító";
 $_['text_invalid_username'] = "Érvénytelen felhasználónév";
 
+$_['text_language'] = "Nyelv";
 $_['text_last'] = "Utolsó";
 $_['text_ldap_basedn'] = "LDAP alapértelmezett DN";
 $_['text_ldap_binddn'] = "LDAP csatlakozási DN";
@@ -98,6 +99,7 @@ $_['text_non_existent_queue_directory'] = "A megadott queue könyvtár nem léte
 $_['text_non_existing_user'] = "Nem létező felhasználó";
 $_['text_not_found'] = "Nincs találat";
 $_['title_not_found'] = "Az oldal nem található";
+$_['text_number_of_messages_in_quarantine'] = "A keresési feltételnek megfelelő üzenetek száma a karanténban";
 $_['text_number_of_spam_messages_in_quarantine'] = "A keresési feltételnek megfelelő spam üzenetek száma a karanténban";
 
 $_['text_password'] = "Jelszó";
@@ -137,6 +139,7 @@ $_['text_successfully_added'] = "Sikeresen felvéve";
 $_['text_successfully_delivered'] = "Sikeresen kézbesítve";
 $_['text_successfully_modified'] = "Sikeresen módosítva";
 $_['text_successfully_removed'] = "Sikeresen eltávolítva";
+$_['text_successfully_trained'] = "Sikeresen tanítva";
 $_['text_successfully_updated'] = "Sikeresen módosítva";
 
 $_['text_time'] = "Időpont";

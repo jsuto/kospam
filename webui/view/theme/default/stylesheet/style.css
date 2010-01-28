@@ -114,6 +114,7 @@
 		text-decoration: none;
 		border-bottom: 1px solid #C1C0C0;
 	}
+
 	a:hover {
 		text-decoration: none;
 		border-bottom: 1px solid #9D9D9D;
@@ -170,7 +171,7 @@
 		margin-bottom: 1em;
 		overflow: hidden;
 		/* width: 740px; */
-		width: 800px;
+		width: 860px;
 	}
 
 	#intro {
@@ -279,6 +280,15 @@
 	td.VIRUS {
 		color: black;
 	}
+
+	td.spam {
+		background: red;
+	}
+
+	td.ham {
+		background: green;
+	}
+
 
 /* Quote */
 

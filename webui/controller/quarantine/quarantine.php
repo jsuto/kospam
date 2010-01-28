@@ -26,7 +26,7 @@ class ControllerQuarantineQuarantine extends Controller {
       $this->data['page_len'] = getPageLength();
       $this->data['from'] = @$this->request->get['from'];
       $this->data['subj'] = @$this->request->get['subj'];
-
+      $this->data['hamspam'] = @$this->request->get['hamspam'];
 
 
       if(isset($this->request->get['page']) && is_numeric($this->request->get['page']) && $this->request->get['page'] > 0) {
@@ -82,15 +82,15 @@ class ControllerQuarantineQuarantine extends Controller {
 
       /* get messages from qurantine */
 
-      list ($this->data['n_spam'], $this->data['spam_total_size'], $this->data['messages']) =
-              $this->model_quarantine_message->getMessages($my_q_dir, $this->data['username'], $this->data['page'], $this->data['page_len'], $this->data['from'], $this->data['subj']);
+      list ($this->data['n'], $this->data['total_size'], $this->data['messages']) =
+              $this->model_quarantine_message->getMessages($my_q_dir, $this->data['username'], $this->data['page'], $this->data['page_len'], $this->data['from'], $this->data['subj'], $this->data['hamspam']);
 
       /* print paging info */
 
       $this->data['prev_page'] = $this->data['page'] - 1;
       $this->data['next_page'] = $this->data['page'] + 1;
 
-      $this->data['total_pages'] = floor($this->data['n_spam'] / $this->data['page_len']);
+      $this->data['total_pages'] = floor($this->data['n'] / $this->data['page_len']);
 
 
       $this->render();

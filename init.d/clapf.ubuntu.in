@@ -32,7 +32,7 @@ test -d ${PID_DIR} || install -m 755 -o ${UID} -g ${GID} -d ${PID_DIR}
 
 case "$1" in
 	start)
-		log_daemon_msg "Starting ${DESC}" ${NAME}:
+		log_daemon_msg "Starting ${DESC}:" ${NAME}
 		if check_status;
 		 then
 			log_failure_msg "${NAME} is already running."
@@ -50,7 +50,7 @@ case "$1" in
 	stop)
         if check_status;
          then
-			log_daemon_msg "Stopping ${DESC}" ${NAME}
+			log_daemon_msg "Stopping ${DESC}:" ${NAME}
 	        if start-stop-daemon --stop --quiet --signal TERM --pidfile ${PID_FILE};
 			 then
     	        log_end_msg 0

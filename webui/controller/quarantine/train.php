@@ -44,16 +44,29 @@ class ControllerQuarantineTrain extends Controller {
 
          /* assemble training message */
 
-         $training_message  = "From: " . $fromaddr . "\r\nTo: " . HAM_TRAIN_ADDRESS . "\r\nSubject: training a spam as ham\r\n\r\n\r\n";
-         $training_message .= "Received: " . preg_replace("/^s\./", "", $this->data['id']) . "\r\n" . $message;
+         if($this->data['id'][0] == 's') {
+            $training_address = HAM_TRAIN_ADDRESS;
+         }
+         else {
+            $training_address = SPAM_TRAIN_ADDRESS;
+         }
 
-         $x = $this->model_mail_mail->SendSmtpEmail(SMTP_HOST, CLAPF_PORT, SMTP_DOMAIN, $fromaddr, HAM_TRAIN_ADDRESS, $training_message);
+         $training_message  = "From: " . $fromaddr . "\r\nTo: " . $training_address . "\r\nSubject: training message\r\n\r\n\r\n";
+         $training_message .= "Received: " . preg_replace("/^[sh]\./", "", $this->data['id']) . "\r\n" . $message;
+
+         $x = $this->model_mail_mail->SendSmtpEmail(SMTP_HOST, CLAPF_PORT, SMTP_DOMAIN, $fromaddr, $training_address, $training_message);
 
          if($x == 1){
 
-            /* now deliver it by calling the delivery url */
+            /* deliver only the the false positives */
 
-            header("Location: " . SITE_URL . "/index.php?route=quarantine/deliver&id=" . $this->data['id'] . "&user=" . $this->data['username']);
+            if($this->data['id'][0] == 's') {
+               header("Location: " . SITE_URL . "/index.php?route=quarantine/deliver&id=" . $this->data['id'] . "&user=" . $this->data['username']);
+            }
+            else {
+               $this->data['x'] = $this->data['text_successfully_trained'];
+            }
+
          }
          else {
             $this->data['x'] = $this->data['text_message_failed_to_train'];

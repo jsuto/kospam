@@ -70,6 +70,7 @@ $_['text_invalid_policy_setting'] = "Invalid policy setting";
 $_['text_invalid_uid'] = "Invalid uid";
 $_['text_invalid_username'] = "Invalid username";
 
+$_['text_language'] = "Language";
 $_['text_last'] = "Last";
 $_['text_ldap_basedn'] = "LDAP base DN";
 $_['text_ldap_binddn'] = "LDAP bind DN";
@@ -98,6 +99,7 @@ $_['text_non_existent_queue_directory'] = "The queue directory you have specifie
 $_['text_non_existing_user'] = "Non existing user";
 $_['text_not_found'] = "Not found";
 $_['title_not_found'] = "Page not found";
+$_['text_number_of_messages_in_quarantine'] = "Number of messages in the quarantine matching your search criteria";
 $_['text_number_of_spam_messages_in_quarantine'] = "Number of spam messages in the quarantine matching your search criteria";
 
 $_['text_password'] = "Password";
@@ -137,6 +139,7 @@ $_['text_successfully_added'] = "Successfully added";
 $_['text_successfully_delivered'] = "Successfully delivered";
 $_['text_successfully_modified'] = "Successfully modified";
 $_['text_successfully_removed'] = "Successfully removed";
+$_['text_successfully_trained'] = "Successfully trained";
 $_['text_successfully_updated'] = "Successfully modified";
 
 $_['text_time'] = "Time";

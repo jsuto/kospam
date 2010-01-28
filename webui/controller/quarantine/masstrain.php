@@ -38,26 +38,42 @@ class ControllerQuarantineMasstrain extends Controller {
 
       $fromaddr = $this->data['to'] = $this->model_user_user->getEmailAddress($this->data['username']);
 
-      while(list($k, $v) = each($_POST)){
-         if(preg_match("/^[a-f0-9]{28,36}$/", $k)){
 
-            $message = $this->model_quarantine_message->getMessageForDelivery($my_q_dir . "/" . "s." . $k);
+      while(list($k, $v) = each($_POST)){
+         if(preg_match("/^[sh][\._][a-f0-9]{28,36}$/", $k) && $v == "on"){
+
+            $k = preg_replace("/_/", ".", $k);
+
+            $message = $this->model_quarantine_message->getMessageForDelivery($my_q_dir . "/" . $k);
 
             /* assemble training message */
 
-            $training_message  = "From: " . $fromaddr . "\r\nTo: " . HAM_TRAIN_ADDRESS . "\r\nSubject: training a spam as ham\r\n\r\n\r\n";
-            $training_message .= "Received: " . $k . "\r\n" . $message;
+            if($k[0] == 's') {
+               $training_address = HAM_TRAIN_ADDRESS;
+            }
+            else {
+               $training_address = SPAM_TRAIN_ADDRESS;
+            }
 
-            $x = $this->model_mail_mail->SendSmtpEmail(SMTP_HOST, CLAPF_PORT, SMTP_DOMAIN, $fromaddr, HAM_TRAIN_ADDRESS, $training_message);
+            $training_message  = "From: " . $fromaddr . "\r\nTo: " . $training_address . "\r\nSubject: training a message\r\n\r\n\r\n";
+            $training_message .= "Received: " . substr($k, 2, strlen($k)) . "\r\n" . $message;
 
-            if($x == 1 && $this->model_mail_mail->SendSmtpEmail(SMTP_HOST, SMTP_PORT, SMTP_DOMAIN, SMTP_FROMADDR, $this->data['to'], $message) == 1) {
 
-               if(file_exists($my_q_dir . "/" . "s." . $k)){
-                  unlink($my_q_dir . "/" . "s." . $k);
+            $x = $this->model_mail_mail->SendSmtpEmail(SMTP_HOST, CLAPF_PORT, SMTP_DOMAIN, $fromaddr, $training_address, $training_message);
+
+            if($x == 1) {
+
+               if($k[0] == 's') {
+                  $x = $this->model_mail_mail->SendSmtpEmail(SMTP_HOST, SMTP_PORT, SMTP_DOMAIN, SMTP_FROMADDR, $this->data['to'], $message);
+               }
+
+               if($x == 1 && file_exists($my_q_dir . "/" . $k)){
+                  unlink($my_q_dir . "/" . $k);
                }
 
                $this->data['n']++;
             }
+
          }
       }
 

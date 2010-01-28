@@ -2,16 +2,22 @@
 <?php if(!isset($x)){ ?>
 
 <form action="index.php?route=common/home" method="get" name="setpagelen" onSubmit="fix_form(); return false; ">
-<?php print $text_page_length; ?>:
-   <select name="pagelen">
+<?php print $text_page_length; ?>: <select name="pagelen">
       <option value="10">10
       <option value="20">20
       <option value="30">30
       <option value="50">50
    </select>
    <input type="submit" value="<?php print $text_set; ?>" />
-</form>
 
+<p></p>
+
+<?php print $text_language; ?>: <select name="lang">
+      <option value="en"<?php if(isset($_SESSION['lang']) && $_SESSION['lang'] == "en") { ?> selected="selected"<?php } ?>>en</option>
+      <option value="hu"<?php if(isset($_SESSION['lang']) && $_SESSION['lang'] == "hu") { ?> selected="selected"<?php } ?>>hu</option>
+   </select>
+   <input type="submit" value="<?php print $text_set; ?>" />
+</form>
 
 <p>&nbsp;</p>
 

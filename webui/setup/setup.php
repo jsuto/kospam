@@ -79,6 +79,7 @@ function write_stuff() {
    write_line($fp, "SMTP_DOMAIN", $_POST['SMTP_DOMAIN']);
    write_line($fp, "SMTP_FROMADDR", "no-reply@" . $_POST['SMTP_DOMAIN']);
    write_line($fp, "HAM_TRAIN_ADDRESS", "ham@" . $_POST['SMTP_DOMAIN']);
+   write_line($fp, "SPAM_TRAIN_ADDRESS", "spam@" . $_POST['SMTP_DOMAIN']);
    write_line($fp);
     
    write_line($fp, "CLAPF_HEADER_FIELD", "X-Clapf-spamicity: ");

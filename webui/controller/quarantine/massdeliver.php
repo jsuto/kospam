@@ -39,14 +39,16 @@ class ControllerQuarantineMassdeliver extends Controller {
       $this->data['to'] = $this->model_user_user->getEmailAddress($this->data['username']);
 
       while(list($k, $v) = each($_POST)){
-         if(preg_match("/^[a-f0-9]{28,36}$/", $k)){
+         if(preg_match("/^[sh][\._][a-f0-9]{28,36}$/", $k) && $v == "on"){
 
-            $message = $this->model_quarantine_message->getMessageForDelivery($my_q_dir . "/" . "s." . $k);
+            $k = preg_replace("/_/", ".", $k);
+
+            $message = $this->model_quarantine_message->getMessageForDelivery($my_q_dir . "/" . $k);
 
             if($this->model_mail_mail->SendSmtpEmail(SMTP_HOST, SMTP_PORT, SMTP_DOMAIN, SMTP_FROMADDR, $this->data['to'], $message) == 1) {
 
-               if(file_exists($my_q_dir . "/" . "s." . $k)){
-                  unlink($my_q_dir . "/" . "s." . $k);
+               if(file_exists($my_q_dir . "/" . $k)){
+                  unlink($my_q_dir . "/" . $k);
                }
 
                $this->data['n']++;

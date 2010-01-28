@@ -2,15 +2,21 @@
 <form action="index.php?route=quarantine/quarantine" name="aaa0" method="get" onsubmit="fix_search(); return false;">
    <input type="hidden" name="user" value="<?php print $username; ?>" />
    <table border="0">
-      <tr><td><?php print $text_from; ?>:</td><td><input type="text" name="from" value="<?php print $from; ?>" /></td></tr>
-      <tr><td><?php print $text_subject; ?>:</td><td><input type="text" name="subj" value="<?php print $subj; ?>" /></td></tr>
-      <tr><td colspan="2"><input type="submit" value="<?php print $text_submit; ?>" /></td></tr>
+      <tr><td><?php print $text_from; ?>:</td><td><input type="text" name="from" value="<?php print $from; ?>" /></td>
+      <td><?php print $text_subject; ?>:</td><td><input type="text" name="subj" value="<?php print $subj; ?>" /></td>
+      <td>Ham/spam: <select name="hamspam" onChange="javascript:ham_or_spam();">
+   <option value="" <?php if($hamspam == ""){ ?>"selected" <?php } ?>/>All
+   <option value="HAM" <?php if($hamspam == "HAM"){ ?>"selected" <?php } ?>/>HAM
+   <option value="SPAM" <?php if($hamspam == "SPAM"){ ?>"selected" <?php } ?>/>SPAM
+</select>
+      </td>
+      <td colspan="2"><input type="submit" value="<?php print $text_submit; ?>" /></td></tr>
    </table>
 </form>
 
-<?php if($n_spam > 0){ ?>
+<?php if($n > 0){ ?>
 
-<p><?php print $text_number_of_spam_messages_in_quarantine; ?>: <?php print $n_spam; ?> (<?php print $spam_total_size; ?> bytes)</p>
+<p><?php print $text_number_of_messages_in_quarantine; ?>: <?php print $n; ?> (<?php print $total_size; ?> bytes)</p>
 
 <form action="index.php?route=quarantine/remove" name="aaa1" method="post">
    <input type="hidden" name="topurge" value="1" />
@@ -24,12 +30,14 @@
       <th><?php print $text_from; ?></th>
       <th><?php print $text_subject; ?></th>
       <th>&nbsp;</th>
+      <th>&nbsp;</th>
    </tr>
    <tr>
       <td>&nbsp;</td>
       <td>&nbsp;</td>
       <td><img src="<?php print WEBUI_DIRECTORY; ?>/view/theme/<?php print THEME; ?>/images/line.png" alt="xxx" /></td>
       <td><img src="<?php print WEBUI_DIRECTORY; ?>/view/theme/<?php print THEME; ?>/images/line.png" alt="xxx" /></td> 
+      <td>&nbsp;</td>
       <td>&nbsp;</td>
    </tr>
 
@@ -38,7 +46,8 @@
    <tr valign="top">
       <td<?php if(($message['i'] % 2) == 0){ ?> class="odd"<?php } ?>><a href="index.php?route=quarantine/message&amp;id=<?php print $message['id']; ?>&amp;user=<?php print $username; ?>"><?php print $message['i']; ?>.</a></td><td><?php print $message['date']; ?></td><td><?php print $message['from']; ?></td>
       <td<?php if(($message['i'] % 2) == 0){ ?> class="odd"<?php } ?>><a href="index.php?route=quarantine/message&amp;id=<?php print $message['id']; ?>&amp;user=<?php print $username; ?>"><?php print $message['subject']; ?></a></td>
-      <td<?php if(($message['i'] % 2) == 0){ ?> class="odd"<?php } ?>><input type="checkbox" name="<?php print substr($message['id'], 2, strlen($message['id'])); ?>" /></td>
+      <td class="<?php if($message['id'][0] == 's'){ ?>spam<?php } else { ?>ham<?php } ?>">&nbsp;</td>
+      <td<?php if(($message['i'] % 2) == 0){ ?> class="odd"<?php } ?>><input type="checkbox" name="<?php print $message['id']; ?>" /></td>
    </tr>
 
 <?php } ?>
@@ -68,19 +77,19 @@
    <input type="submit" value="<?php print $text_purge_all_messages_from_quarantine; ?>" />
 </form>
 
-<?php if($n_spam > $page_len){ ?>
+<?php if($n > $page_len){ ?>
 <p>
 <?php if($page > 0){ ?>
-   <a href="index.php?route=quarantine/quarantine&amp;page=0&amp;user=<?php print $username; ?>&amp;from=<?php print $from; ?>&amp;subj=<?php print $subj; ?>"><?php print $text_first; ?></a>
-   <a href="index.php?route=quarantine/quarantine&amp;page=<?php print $prev_page; ?>&amp;user=<?php print $username; ?>&amp;from=<?php print $from; ?>&amp;subj=<?php print $subj; ?>"><?php print $text_previous; ?></a>
+   <a href="index.php?route=quarantine/quarantine&amp;page=0&amp;user=<?php print $username; ?>&amp;from=<?php print $from; ?>&amp;subj=<?php print $subj; ?>&hamspam=<?php print $hamspam; ?>"><?php print $text_first; ?></a>
+   <a href="index.php?route=quarantine/quarantine&amp;page=<?php print $prev_page; ?>&amp;user=<?php print $username; ?>&amp;from=<?php print $from; ?>&amp;subj=<?php print $subj; ?>&hamspam=<?php print $hamspam; ?>"><?php print $text_previous; ?></a>
 <?php } ?>
 
-<?php if($n_spam >= $page_len*($page+1) && $n_spam > $page_len){ ?>
-   <a href="index.php?route=quarantine/quarantine&amp;page=<?php print $next_page; ?>&amp;user=<?php print $username; ?>&amp;from=<?php print $from; ?>&amp;subj=<?php print $subj; ?>"><?php print $text_next; ?></a>
+<?php if($n >= $page_len*($page+1) && $n > $page_len){ ?>
+   <a href="index.php?route=quarantine/quarantine&amp;page=<?php print $next_page; ?>&amp;user=<?php print $username; ?>&amp;from=<?php print $from; ?>&amp;subj=<?php print $subj; ?>&hamspam=<?php print $hamspam; ?>"><?php print $text_next; ?></a>
 <?php } ?>
 
 <?php if($page < $total_pages){ ?>
-   <a href="index.php?route=quarantine/quarantine&amp;page=<?php print $total_pages; ?>&amp;user=<?php print $username; ?>&amp;from=<?php print $from; ?>&amp;subj=<?php print $subj; ?>"><?php print $text_last; ?></a>
+   <a href="index.php?route=quarantine/quarantine&amp;page=<?php print $total_pages; ?>&amp;user=<?php print $username; ?>&amp;from=<?php print $from; ?>&amp;subj=<?php print $subj; ?>&hamspam=<?php print $hamspam; ?>"><?php print $text_last; ?></a>
 <?php } ?>
 </p>
 <?php } ?>

@@ -49,8 +49,9 @@ class ControllerQuarantineRemove extends Controller {
          $n = 0;
 
          while(list($k, $v) = each($_POST)){
-            $f = "s.$k";
-            if($this->model_quarantine_message->checkId($f) && file_exists($my_q_dir . "/$f") && unlink($my_q_dir . "/$f") ){
+            $k = preg_replace("/_/", ".", $k);
+
+            if($this->model_quarantine_message->checkId($k) && file_exists($my_q_dir . "/$k") && unlink($my_q_dir . "/$k") ){
                $n++;
             }
          }

@@ -11,6 +11,12 @@ and allows you to train the false negatives (ie. missed spam
 emails).
 (webui/*)
 
+Changed the default path of the pidfile to /var/run/clapf.
+(config.h, Makefile.in)
+
+Added the history specific config variables to example.conf
+(example.conf)
+
 2010.01.26, SJ
 
 Added the Ubuntu and Redhat specific clapf init scripts, and

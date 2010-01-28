@@ -1,7 +1,7 @@
 <?php if($entry){ ?>
 
 <table border="1">
-   <tr><td>clapf id: </td><td><?php if($entry['username'] && $entry['result'] == "SPAM") { ?><a href="index.php?route=quarantine/message&id=s.<?php print $entry['clapf_id']; ?>&user=<?php print $entry['username']; ?>"><?php } ?><?php print $entry['clapf_id']; ?><?php if($entry['username'] && $entry['result'] == "SPAM") { ?></a><?php } ?></td></tr>
+   <tr><td>clapf id: </td><td><?php if($entry['username']) { ?><a href="index.php?route=quarantine/message&id=<?php if($entry['result'] == "SPAM") { ?>s.<?php } else { ?>h.<?php } ?><?php print $entry['clapf_id']; ?>&user=<?php print $entry['username']; ?>"><?php } ?><?php print $entry['clapf_id']; ?><?php if($entry['username']) { ?></a><?php } ?></td></tr>
    <tr><td><?php print $text_date; ?>: </td><td><?php print $entry['timedate']; ?></td></tr>
    <tr><td><?php print $text_clienthost; ?>: </td><td><?php print $entry['client']; ?></td></tr>
    <tr><td><?php print $text_from; ?>: </td><td><?php print $entry['from']; ?></td></tr>

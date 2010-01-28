@@ -145,6 +145,7 @@ $_['text_successfully_updated'] = "Successfully modified";
 $_['text_time'] = "Time";
 $_['text_to'] = "To";
 $_['text_too_short_password'] = "Too short password";
+$_['text_train'] = "Train";
 $_['text_train_and_deliver'] = "Train and deliver";
 $_['text_trained'] = "Trained";
 

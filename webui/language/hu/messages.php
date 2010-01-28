@@ -146,6 +146,7 @@ $_['text_time'] = "Időpont";
 $_['text_to'] = "Címzett";
 $_['text_too_short_password'] = "Túl rövid jelszó";
 $_['text_train_and_deliver'] = "Tanítás és kézbesítés";
+$_['text_train'] = "Tanít";
 $_['text_trained'] = "Tanítva";
 
 $_['text_uids'] = "Felhasználó azonosítók";

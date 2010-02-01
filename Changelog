@@ -18,6 +18,9 @@ Fixed a webui bug preventing the administrators to set a password
 shorter than 8 characters.
 (webui/controller/user/edit.php)
 
+Fixed another webui bug, and let the values of a new policy be the
+same as the clapf.conf defaults.
+(webui/controller/policy/add.php)
 
 2010.01.28, SJ
 

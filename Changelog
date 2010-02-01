@@ -22,6 +22,12 @@ Fixed another webui bug, and let the values of a new policy be the
 same as the clapf.conf defaults.
 (webui/controller/policy/add.php)
 
+Modified the logout() function, and it won't destroy all the sessions,
+only unsets the username and admin_user variables. Thus the other session
+related settings (language and pagelen) may survive the logout as
+long as the session is alive.
+(webui/system/misc.php)
+
 2010.01.28, SJ
 
 Added a history purge script, and fixed the ubuntu init script.

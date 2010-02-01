@@ -27,7 +27,8 @@ function logout() {
    $_SESSION['username'] = "";
    $_SESSION['admin_user'] = 0;
 
-   session_destroy();
+   unset($_SESSION['username']);
+   unset($_SESSION['admin_user']);
 }
 
 

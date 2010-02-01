@@ -1,5 +1,5 @@
 /*
- * cfg.c, 2010.01.20, SJ
+ * cfg.c, 2010.02.01, SJ
  */
 
 #include <stdio.h>
@@ -204,7 +204,7 @@ int parse_config_file(char *configfile, struct __config *target_cfg, struct _par
             i++;
          }
 
-         if(!rules[i].name) printf("unknown key: \"%s\" \n", line);
+         if(!rules[i].name) syslog(LOG_PRIORITY, "unknown key: \"%s\"", line);
       }
    }
 

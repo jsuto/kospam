@@ -3,10 +3,10 @@
 
 <form action="index.php?route=common/home" method="get" name="setpagelen" onSubmit="fix_form(); return false; ">
 <?php print $text_page_length; ?>: <select name="pagelen">
-      <option value="10">10
-      <option value="20">20
-      <option value="30">30
-      <option value="50">50
+      <option value="10"<?php if($page_len == 10) { ?> selected="selected"<?php } ?>>10
+      <option value="20"<?php if($page_len == 20) { ?> selected="selected"<?php } ?>>20
+      <option value="30"<?php if($page_len == 30) { ?> selected="selected"<?php } ?>>30
+      <option value="50"<?php if($page_len == 50) { ?> selected="selected"<?php } ?>>50
    </select>
    <input type="submit" value="<?php print $text_set; ?>" />
 

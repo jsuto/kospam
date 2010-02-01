@@ -20,8 +20,8 @@ class ControllerCommonHome extends Controller {
 
       $this->document->title = $this->data['text_home'];
 
-      if(isset($this->request->get['pagelen']) && is_numeric($this->request->get['pagelen']) && $this->request->get['pagelen'] > 5) {
-          Header("Set-Cookie: pagelen=" . $this->request->get['pagelen'] . "; path=/");
+      if(isset($this->request->get['pagelen']) && is_numeric($this->request->get['pagelen']) && $this->request->get['pagelen'] >= 10 && $this->request->get['pagelen'] <= 50) {
+         $_SESSION['pagelen'] = $this->request->get['pagelen'];
       }
 
 
@@ -43,6 +43,8 @@ class ControllerCommonHome extends Controller {
          }
       }
 
+
+      $this->data['page_len'] = getPageLength();
 
       $this->render();
    }

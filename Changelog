@@ -1,5 +1,19 @@
 0.4.4-rc2:
 
+2010.02.01, SJ
+
+Fixed the display of the page length at route=common/home. It
+also uses sessions instead of cookies.
+(webui/*)
+
+Let the config parser syslog if an unknown key was found, otherwise
+it will interfere with the output of spamdrop.
+(cfg.c)
+
+Added a procmailrc script, you may try it if you don't like maildrop.
+(credits: Tamas Papp)
+(procmailrc)
+
 2010.01.28, SJ
 
 Added a history purge script, and fixed the ubuntu init script.

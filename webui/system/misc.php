@@ -41,8 +41,8 @@ function isBinary($num = '') {
 function getPageLength() {
    $page_len = PAGE_LEN;
    
-   if(isset($_COOKIE['pagelen']) && is_numeric($_COOKIE['pagelen']) && $_COOKIE['pagelen'] >= 10 && $_COOKIE['pagelen'] <= 50) {
-      $page_len = $_COOKIE['pagelen'];
+   if(isset($_SESSION['pagelen']) && is_numeric($_SESSION['pagelen']) && $_SESSION['pagelen'] >= 10 && $_SESSION['pagelen'] <= 50) {
+      $page_len = $_SESSION['pagelen'];
    }
 
    return $page_len;

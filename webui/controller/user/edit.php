@@ -104,7 +104,7 @@ class ControllerUserEdit extends Controller {
 
       if(isset($this->request->post['password']) && strlen(@$this->request->post['password']) > 1) {
 
-         if(strlen(@$this->request->post['password']) < 8 || strlen(@$this->request->post['password2']) < 8) {
+         if(strlen(@$this->request->post['password']) < MIN_PASSWORD_LENGTH || strlen(@$this->request->post['password2']) < MIN_PASSWORD_LENGTH) {
             $this->error['password'] = $this->data['text_invalid_password'];
          }
 

@@ -14,6 +14,11 @@ Added a procmailrc script, you may try it if you don't like maildrop.
 (credits: Tamas Papp)
 (procmailrc)
 
+Fixed a webui bug preventing the administrators to set a password
+shorter than 8 characters.
+(webui/controller/user/edit.php)
+
+
 2010.01.28, SJ
 
 Added a history purge script, and fixed the ubuntu init script.

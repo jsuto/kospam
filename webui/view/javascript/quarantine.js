@@ -28,6 +28,18 @@ function fix_form(){
 }
 
 
+function fix_mass_action(username) {
+
+   if(document.forms.aaa1.massaction.value == "purge") document.forms.aaa1.action="index.php?route=quarantine/remove&topurge=1&user=" + username;
+   if(document.forms.aaa1.massaction.value == "purgeeverything") document.forms.aaa1.action="index.php?route=quarantine/remove&purgeallfromqueue=1&user=" + username;
+   if(document.forms.aaa1.massaction.value == "deliver") document.forms.aaa1.action="index.php?route=quarantine/massdeliver&user=" + username;
+   if(document.forms.aaa1.massaction.value == "train") document.forms.aaa1.action="index.php?route=quarantine/masstrain&nodeliver=1&user=" + username;
+   if(document.forms.aaa1.massaction.value == "train+deliver") document.forms.aaa1.action="index.php?route=quarantine/masstrain&user=" + username;
+
+   if(document.forms.aaa1.massaction.value != "-") document.forms.aaa1.submit();
+}
+
+
 function setCookie(c_name, value, expiredays){
    var exdate = new Date();
 

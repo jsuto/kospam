@@ -62,20 +62,19 @@
 </p>
 
 <p>
-   <input type="submit" value="<?php print $text_purge_selected_messages; ?>" />
-   <input type="button" value="<?php print $text_deliver_selected_messages; ?>" onClick='document.forms.aaa1.action="index.php?route=quarantine/massdeliver&amp;user=<?php print $username; ?>"; document.forms.aaa1.submit();' />
-   <input type="button" value="<?php print $text_deliver_and_train_selected_messages; ?>" onClick='document.forms.aaa1.action="index.php?route=quarantine/masstrain&amp;user=<?php print $username; ?>"; document.forms.aaa1.submit();' />
+   <select name="massaction" onChange="fix_mass_action('<?php print $username; ?>');">
+      <option value="-"><?php print $text_select_action; ?></option>
+      <option value="purge"><?php print $text_purge_selected_messages; ?></option>
+      <option value="deliver"><?php print $text_deliver_selected_messages; ?></option>
+      <option value="train"><?php print $text_train_selected_messages; ?></option>
+      <option value="train+deliver"><?php print $text_deliver_and_train_selected_messages; ?></option>
+      <option value="purgeeverything"><?php print $text_purge_all_messages_from_quarantine; ?></option>
+   </select>
 </p>
 
 </form>
 
 <p>&nbsp;</p>
-
-<form action="index.php?route=quarantine/remove" name="purgeallfromqueue" method="post">
-   <input type="hidden" name="purgeallfromqueue" value="1" />
-   <input type="hidden" name="user" value="<?php print $username; ?>" />
-   <input type="submit" value="<?php print $text_purge_all_messages_from_quarantine; ?>" />
-</form>
 
 <?php if($n > $page_len){ ?>
 <p>

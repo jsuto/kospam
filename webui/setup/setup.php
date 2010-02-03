@@ -75,6 +75,7 @@ function write_stuff() {
 
    write_line($fp, "SMTP_HOST", $_POST['SMTP_HOST']);
    write_line($fp, "SMTP_PORT", $_POST['SMTP_PORT']);
+   write_line($fp, "POSTFIX_PORT", 25);
    write_line($fp, "CLAPF_PORT", $_POST['CLAPF_PORT']);
    write_line($fp, "SMTP_DOMAIN", $_POST['SMTP_DOMAIN']);
    write_line($fp, "SMTP_FROMADDR", "no-reply@" . $_POST['SMTP_DOMAIN']);

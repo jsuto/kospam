@@ -1,5 +1,13 @@
 0.4.4-rc2:
 
+2010.02.03, SJ
+
+Let the webui forward training requests to postfix instead of clapf.
+(webui/controller/quarantine/*train.php, webui/setup/setup.php)
+
+Simplified quarantine list page.
+(webui/*)
+
 2010.02.01, SJ
 
 Fixed the display of the page length at route=common/home. It

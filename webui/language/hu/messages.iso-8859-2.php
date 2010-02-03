@@ -128,6 +128,7 @@ $_['text_remove_this_user'] = "Felhasználó törlése";
 $_['text_result'] = "Eredmény";
 
 $_['text_search'] = "Keresés";
+$_['text_select_action'] = "Mûvelet választás";
 $_['text_select_all'] = "Mindegyik kijelölése";
 $_['text_set'] = "Beállít";
 $_['text_size'] = "Méret";
@@ -148,6 +149,7 @@ $_['text_too_short_password'] = "Túl rövid jelszó";
 $_['text_train_and_deliver'] = "Tanítás és kézbesítés";
 $_['text_train'] = "Tanít";
 $_['text_trained'] = "Tanítva";
+$_['text_train_selected_messages'] = "Kijelölt üzenetek tanítása";
 
 $_['text_uids'] = "Felhasználó azonosítók";
 $_['text_unauthorized_domain'] = "Nem megengedett domain";

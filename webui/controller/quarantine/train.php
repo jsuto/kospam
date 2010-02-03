@@ -54,13 +54,13 @@ class ControllerQuarantineTrain extends Controller {
          $training_message  = "From: " . $fromaddr . "\r\nTo: " . $training_address . "\r\nSubject: training message\r\n\r\n\r\n";
          $training_message .= "Received: " . preg_replace("/^[sh]\./", "", $this->data['id']) . "\r\n" . $message;
 
-         $x = $this->model_mail_mail->SendSmtpEmail(SMTP_HOST, CLAPF_PORT, SMTP_DOMAIN, $fromaddr, $training_address, $training_message);
+         $x = $this->model_mail_mail->SendSmtpEmail(SMTP_HOST, POSTFIX_PORT, SMTP_DOMAIN, $fromaddr, $training_address, $training_message);
 
          if($x == 1){
 
             /* deliver only the the false positives */
 
-            if($this->data['id'][0] == 's') {
+            if($this->data['id'][0] == 's' || (int)@$this->request->get['nodeliver'] == 0) {
                header("Location: " . SITE_URL . "/index.php?route=quarantine/deliver&id=" . $this->data['id'] . "&user=" . $this->data['username']);
             }
             else {

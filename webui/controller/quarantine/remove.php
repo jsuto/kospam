@@ -63,7 +63,7 @@ class ControllerQuarantineRemove extends Controller {
 
       /* purge all messages */
 
-      if($this->request->server['REQUEST_METHOD'] == 'POST' && isset($this->request->post['purgeallfromqueue'])){
+      if($this->request->server['REQUEST_METHOD'] == 'GET' && isset($this->request->get['purgeallfromqueue'])){
          $n = 0;
 
          $files = scandir($my_q_dir, 1);

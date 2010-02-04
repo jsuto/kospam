@@ -59,7 +59,7 @@ class ControllerQuarantineMasstrain extends Controller {
             $training_message .= "Received: " . substr($k, 2, strlen($k)) . "\r\n" . $message;
 
 
-            $x = $this->model_mail_mail->SendSmtpEmail(SMTP_HOST, POSTFIX_PORT, SMTP_DOMAIN, $fromaddr, $training_address, $training_message);
+            $x = $this->model_mail_mail->SendSmtpEmail(SMTP_HOST, CLAPF_PORT, SMTP_DOMAIN, $fromaddr, $training_address, $training_message);
 
             if($x == 1) {
 

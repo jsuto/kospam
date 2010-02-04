@@ -10,6 +10,10 @@ spamdrop enhancements.
 (credits: Gabor Varadi)
 (spamdrop.c)
 
+Reverted the webui training changes, because the webui removed
+the message before postfix handed it to clapf to learn, so clapf
+produced an "invalid signature" (or similar) error message.
+(webui/controller/quarantine/*train.php)
 
 2010.02.03, SJ
 

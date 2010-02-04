@@ -1,6 +1,18 @@
-/*
-** spamdrop_helper.c, 2009.12.22, VG
+/** spamdrop_helper.c, 2009.12.22, VG
 ** Based on spamdrop.c :)
+**
+*******
+**
+** 2010.02.01, VG
+**   new option -U username
+**              -u uid
+**   modify usage ;-) see -h or -?
+**   syslog prefix in program name.
+**   no contans (USER_QUEUE_DIR) in path, use config variable (cfg.queuedir)
+**   In this the source in a file translating the comments from Hungarian onto English.
+**
+********
+**
 */
 
 #include <stdio.h>
@@ -138,18 +150,18 @@ void open_db2( struct __config *cfg, char *in_file, int mode )
     return;
   }
 /*
-** Megnyitottuk es be is csuktuk, a nyitasnal nem volt hiba.
-** Becsukas utan mekkora a merete a fajlnak?
+** Open database and close database. if open error -> exit.
+** After close, size of database file?
 */
   if( stat( cfg->sqlite3, &st ) == 0 ) {
     if( ( !st.st_size && !mode ) || ( st.st_size && mode ) ) {
 /*
-** 0 meretu a fajl, nincs adatbazis.
+** size == 0 -> no database.
 ** ----
-** meret = 0 es mode = 0 -> create
-** meret <> 0 es mode = 1 -> purge
+** size == 0 and mode = 0 -> create database (determinated in_file)
+** size != 0 and mode = 1 -> purge database (determinated in_file)
 ** ----
-** Ujra megnyitjuk.
+** Open database.
 */
       rc = sqlite3_open( cfg->sqlite3, &db );
       if( rc ) {
@@ -168,19 +180,33 @@ int main( int argc, char **argv )
 {
   int i, nocopy = 0;
   time_t sec = 86400;           /* 1 day */
+  uid_t uid = (uid_t) -1;
   char *configfile = CONFIG_FILE;
   char *create_sqlfile = ( char * ) NULL;
   char *purge_sqlfile = ( char * ) NULL;
   char name[SMALLBUFSIZE];
   char path[MAXBUFSIZE];
+  char *prg, *p;
   struct passwd *pwd;
   struct __config cfg;
 
-  while( ( i = getopt( argc, argv, "c:p:s:t:xh?" ) ) > 0 ) {
+  while( ( i = getopt( argc, argv, "c:u:U:p:s:t:xh?" ) ) > 0 ) {
     switch ( i ) {
 
       case 'c':
         configfile = optarg;
+        break;
+
+      case 'U' :
+        if( ( pwd = getpwuid( atoi( optarg ) ) ) != ( struct passwd * ) NULL ) {
+          uid = pwd->pw_uid;
+        }
+        break;
+
+      case 'u' :
+        if( ( pwd = getpwnam( optarg ) ) != ( struct passwd * ) NULL ) {
+          uid = pwd->pw_uid;
+        }
         break;
 
       case 'p':
@@ -201,7 +227,7 @@ int main( int argc, char **argv )
 
       case 'h':
       case '?':
-        fprintf( stderr, "%s\n", "spamdrop_helper [-c config] [-p sql_table_purge_file] [-s sql_table_create_file] [-t sec] -x" );
+        fprintf( stderr, "%s %s\n", argv[0], "[-c config] [-u username | -U uid] [-p sql_table_purge_file] [-s sql_table_create_file] [-t sec] [-x]" );
         return 1;
         break;
 
@@ -210,7 +236,11 @@ int main( int argc, char **argv )
     }
   }
 
-  ( void ) openlog( "spamdrop_helper", LOG_PID, LOG_MAIL );
+  prg = basename( argv[0] );
+  if( ( p = strstr( prg, ".bin" ) ) != ( char * ) NULL ) {
+    *p = '\0';
+  }
+  ( void ) openlog( prg, LOG_PID, LOG_MAIL );
   /* read config file */
   cfg = read_config( configfile );
 
@@ -219,7 +249,9 @@ int main( int argc, char **argv )
 
   memset( name, 0, sizeof( name ) );
   memset( path, 0, sizeof( path ) );
-  pwd = getpwuid( getuid(  ) );
+  if( uid == (uid_t) -1 )
+    uid = getuid( );
+  pwd = getpwuid( uid );
   snprintf( name, sizeof( name ) - 1, "%s", pwd->pw_name );
 
   if( cfg.verbosity >= _LOG_INFO )
@@ -229,11 +261,11 @@ int main( int argc, char **argv )
     snprintf( cfg.sqlite3, sizeof( cfg.sqlite3 ) - 1, PA3, cfg.chrootdir, USER_DATA_DIR, name[0], name, PER_USER_SQLITE3_DB_FILE );
 
   old_umask = umask( 0 );
-  snprintf( path, sizeof( path ) - 1, PA2, cfg.chrootdir, USER_QUEUE_DIR, name[0], name );
+  snprintf( path, sizeof( path ) - 1, PA2, cfg.chrootdir, cfg.queuedir, name[0], name );
   if( stat( path, &st ) != 0 ) {
-    snprintf( path, sizeof( path ) - 1, PA1, cfg.chrootdir, USER_QUEUE_DIR, name[0] );
+    snprintf( path, sizeof( path ) - 1, PA1, cfg.chrootdir, cfg.queuedir, name[0] );
     mkdir( path, 0750 );
-    snprintf( path, sizeof( path ) - 1, PA2, cfg.chrootdir, USER_QUEUE_DIR, name[0], name );
+    snprintf( path, sizeof( path ) - 1, PA2, cfg.chrootdir, cfg.queuedir, name[0], name );
     mkdir( path, 0750 );
   }
   snprintf( path, sizeof( path ) - 1, PA2, cfg.chrootdir, USER_DATA_DIR, name[0], name );

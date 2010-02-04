@@ -1,5 +1,16 @@
 0.4.4-rc2:
 
+2010.02.04, SJ
+
+spamdrop_helper.c changes.
+(credits: Gabor Varadi)
+(contrib/spamdrop_helper/spamdrop_helper.c)
+
+spamdrop enhancements.
+(credits: Gabor Varadi)
+(spamdrop.c)
+
+
 2010.02.03, SJ
 
 Let the webui forward training requests to postfix instead of clapf.

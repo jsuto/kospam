@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2010.01.15, SJ
+ * spamdrop.c, 2010.02.04, SJ
  */
 
 #include <stdio.h>
@@ -37,21 +37,29 @@ int deliver_message=0;
 
 /* query unix account info */
 
-void query_unix_account(struct session_data *sdata){
-   char *username;
+void query_unix_account(struct session_data *sdata, char *username){
    struct passwd *pwd;
 
-   username = getenv("LOGNAME");
-
    if(username){
-      snprintf(sdata->name, SMALLBUFSIZE-1, "%s", username);
+      /*snprintf(sdata->name, SMALLBUFSIZE-1, "%s", username);
       pwd = getpwnam(username);
-      sdata->uid = pwd->pw_uid;
+      sdata->uid = pwd->pw_uid;*/
+
+      if((pwd = getpwnam(username)) != (struct passwd *)NULL) {
+         sdata->uid = pwd->pw_uid;
+         snprintf(sdata->name, SMALLBUFSIZE-1, "%s", username);
+      }
+
    }
    else {
-      sdata->uid = getuid();
+      /*sdata->uid = getuid();
       pwd = getpwuid(sdata->uid);
-      snprintf(sdata->name, SMALLBUFSIZE-1, "%s", pwd->pw_name);
+      snprintf(sdata->name, SMALLBUFSIZE-1, "%s", pwd->pw_name);*/
+
+      if(sdata->uid == -1) sdata->uid = getuid();
+      if((pwd = getpwuid(sdata->uid)) != (struct passwd *)NULL) {
+         snprintf(sdata->name, SMALLBUFSIZE-1, "%s", pwd->pw_name);
+      }
    }
 
 }
@@ -182,6 +190,7 @@ int main(int argc, char **argv, char **envp){
    char buf[MAXBUFSIZE], trainbuf[SMALLBUFSIZE], ID[RND_STR_LEN+1], whitelistbuf[SMALLBUFSIZE], clapf_info[MAXBUFSIZE];
    char *configfile=CONFIG_FILE, *from=NULL, *recipient=NULL;
    char *p, path[SMALLBUFSIZE];
+   char *username=NULL;
    struct session_data sdata;
    struct timezone tz;
    struct timeval tv_start, tv_stop;
@@ -202,7 +211,7 @@ int main(int argc, char **argv, char **envp){
 #endif
 
 
-   while((i = getopt(argc, argv, "c:U:f:r:SHDCdhqo?")) > 0){
+   while((i = getopt(argc, argv, "c:U:f:r:u:SHDCdhqo?")) > 0){
        switch(i){
 
          case 'c' :
@@ -211,6 +220,10 @@ int main(int argc, char **argv, char **envp){
 
          case 'U' :
                     u = atoi(optarg);
+                    break;
+
+         case 'u' :
+                    username = optarg;
                     break;
 
          case 'f' :
@@ -226,7 +239,8 @@ int main(int argc, char **argv, char **envp){
                     break;
 
          case 'q' :
-                    quiet = 1;
+                    quiet++;
+                    if(quiet > 2) quiet = 2;
                     break;
 
          case 'S' :
@@ -281,7 +295,7 @@ int main(int argc, char **argv, char **envp){
       cfg.debug = 1;
    }
 
-   if(quiet == 1) cfg.verbosity = 0;
+   if(quiet > 0) cfg.verbosity = 0;
 
    setlocale(LC_MESSAGES, cfg.locale);
    setlocale(LC_CTYPE, cfg.locale);
@@ -304,7 +318,7 @@ int main(int argc, char **argv, char **envp){
    memset(sdata.mailfrom, 0, SMALLBUFSIZE);
    memset(sdata.client_addr, 0, IPLEN);
 
-   sdata.uid = 0;
+   sdata.uid = -1;
    sdata.tot_len = 0;
    sdata.num_of_rcpt_to = 1;
    sdata.skip_id_check = 0;
@@ -422,8 +436,13 @@ int main(int argc, char **argv, char **envp){
 
    /* fix username and uid */
 
-   if(recipient == NULL && from == NULL) query_unix_account(&sdata);
+   if(recipient == NULL && from == NULL) query_unix_account(&sdata, username != (char *)NULL ? username : getenv("LOGNAME"));
 
+   if(sdata.uid == -1){
+      sdata.uid = 0;
+      if(u > 0) sdata.uid = u;
+      query_unix_account(&sdata, (char *)NULL);
+   }
 
    /* fix database path if we need it */
 
@@ -643,9 +662,11 @@ int main(int argc, char **argv, char **envp){
    #ifdef HAVE_LANG_DETECT
       lang = check_lang(state.token_hash);
 
-      strncat(clapf_info, cfg.clapf_header_field, MAXBUFSIZE-1);
-      strncat(clapf_info, lang, MAXBUFSIZE-1);
-      strncat(clapf_info, CRLF, MAXBUFSIZE-1);
+      if(quiet < 2){
+         strncat(clapf_info, cfg.clapf_header_field, MAXBUFSIZE-1);
+         strncat(clapf_info, lang, MAXBUFSIZE-1);
+         strncat(clapf_info, CRLF, MAXBUFSIZE-1);
+      }
 
       if(cfg.debug == 1) printf("lang detected: %s\n", lang);
    #endif
@@ -659,8 +680,12 @@ int main(int argc, char **argv, char **envp){
          if(sum){
             spamsum_score = spamsum_match_db(cfg.sig_db, sum, 55);
             if(spamsum_score >= 50) spaminess = 0.9988;
-            snprintf(spamsum_buf, SMALLBUFSIZE-1, "%sspamsum=%d%s", cfg.clapf_header_field, spamsum_score, CRLF);
-            strncat(clapf_info, spamsum_buf, MAXBUFSIZE-1);
+
+            if(quiet < 2){
+               snprintf(spamsum_buf, SMALLBUFSIZE-1, "%sspamsum=%d%s", cfg.clapf_header_field, spamsum_score, CRLF);
+               strncat(clapf_info, spamsum_buf, MAXBUFSIZE-1);
+            }
+
             free(sum);
          }
       }
@@ -766,15 +791,17 @@ ENDE_SPAMDROP:
 
    if(print_message == 1){
 
-      if(compact == 1)
-         snprintf(buf, MAXBUFSIZE-1, "%s%s%s%s%s%ld ms%s",
-              cfg.clapf_header_field, sdata.ttmpfile, CRLF, trainbuf, cfg.clapf_header_field, tvdiff(tv_stop, tv_start)/1000, CRLF);
-      else
-         snprintf(buf, MAXBUFSIZE-1, "%s%s%s%s%.4f%s%s%s%ld ms%s",
-              cfg.clapf_header_field, sdata.ttmpfile, CRLF, cfg.clapf_header_field, spaminess, CRLF, trainbuf, cfg.clapf_header_field, tvdiff(tv_stop, tv_start)/1000, CRLF);
+      if(quiet < 2){
+         if(compact == 1)
+            snprintf(buf, MAXBUFSIZE-1, "%s%s%s%s%s%ld ms%s",
+                 cfg.clapf_header_field, sdata.ttmpfile, CRLF, trainbuf, cfg.clapf_header_field, tvdiff(tv_stop, tv_start)/1000, CRLF);
+         else
+            snprintf(buf, MAXBUFSIZE-1, "%s%s%s%s%.4f%s%s%s%ld ms%s",
+                 cfg.clapf_header_field, sdata.ttmpfile, CRLF, cfg.clapf_header_field, spaminess, CRLF, trainbuf, cfg.clapf_header_field, tvdiff(tv_stop, tv_start)/1000, CRLF);
 
 
-      strncat(clapf_info, buf, MAXBUFSIZE-1);
+         strncat(clapf_info, buf, MAXBUFSIZE-1);
+      }
 
       if(sdata.statistically_whitelisted == 1){
          snprintf(buf, MAXBUFSIZE-1, "%sstatistically whitelisted%s", cfg.clapf_header_field, CRLF);

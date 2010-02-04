@@ -15,6 +15,7 @@
 #include <sysexits.h>
 #include <clapf.h>
 #include <locale.h>
+#include <libgen.h>
 
 extern char *optarg;
 extern int optind;
@@ -277,7 +278,7 @@ int main(int argc, char **argv, char **envp){
    }
 
 
-   (void) openlog("spamdrop", LOG_PID, LOG_MAIL);
+   (void) openlog(basename(argv[0]), LOG_PID, LOG_MAIL);
 
    if(strstr(argv[0], "blackhole")) blackhole_request = 1;
 

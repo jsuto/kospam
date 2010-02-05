@@ -64,6 +64,10 @@ class ControllerHistoryView extends Controller {
             $__smtpd = $db_history->query("select client_ip from smtpd where queue_id='" . $db_history->escape($__smtp2->row['queue_id']) . "'");
 
 
+            /* fix null sender (<>) */
+            if(strlen($__qmgr->row['from']) == 0) { $__qmgr->row['from'] = "&lt;&gt;"; }
+
+
             /* if there's no smtp record after clapf (ie. a dropped VIRUS), then fake an smtp entry */
 
             if(!isset($__smtp->row['to'])) {

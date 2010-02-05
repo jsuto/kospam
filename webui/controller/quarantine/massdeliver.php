@@ -24,6 +24,12 @@ class ControllerQuarantineMassdeliver extends Controller {
 
       $this->data['n'] = 0;
 
+      $this->data['from'] = @$this->request->get['from'];
+      $this->data['subj'] = @$this->request->get['subj'];
+      $this->data['hamspam'] = @$this->request->get['hamspam'];
+      $this->data['page'] = @$this->request->get['page'];
+
+
       /* fix username if we are admin */
 
       if(isset($this->request->get['user']) && strlen($this->request->get['user']) > 1 && (Registry::get('admin_user') == 1 || $this->model_user_user->isUserInMyDomain($this->request->get['user']) == 1) ) {

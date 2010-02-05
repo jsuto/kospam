@@ -12,6 +12,11 @@ sure to give write access to both the sessions directory
 and the sessions.sdb file.
 (webui/*)
 
+Let the quarantine remember what search terms you have set
+while delivering, removing, training, etc. messages.
+(webui/*)
+
+
 2010.02.04, SJ
 
 spamdrop_helper.c changes.

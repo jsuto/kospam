@@ -1,5 +1,11 @@
 0.4.4-rc2:
 
+2010.02.05, SJ
+
+spamdrop.c fixes.
+(credits: Gabor Varadi)
+(spamdrop.c)
+
 2010.02.04, SJ
 
 spamdrop_helper.c changes.

@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2010.02.04, SJ
+ * spamdrop.c, 2010.02.05, SJ
  */
 
 #include <stdio.h>
@@ -340,9 +340,6 @@ int main(int argc, char **argv, char **envp){
    memset(clapf_info, 0, MAXBUFSIZE);
 
 
-   /* do not go to the workdir if this is a cmdline training request or a debug run */
-   //if(train_as_ham == 0 && train_as_spam == 0 && debug == 0) i = chdir(cfg.workdir);
-
    /* spamdrop is now setuid to clapf:clapf, so we can always get to the workdir */
    if(no_chdir == 0) i = chdir(cfg.workdir);
 
@@ -440,7 +437,6 @@ int main(int argc, char **argv, char **envp){
    if(recipient == NULL && from == NULL) query_unix_account(&sdata, username != (char *)NULL ? username : getenv("LOGNAME"));
 
    if(sdata.uid == -1){
-      sdata.uid = 0;
       if(u > 0) sdata.uid = u;
       query_unix_account(&sdata, (char *)NULL);
    }
@@ -460,6 +456,11 @@ int main(int argc, char **argv, char **envp){
    snprintf(buf, MAXBUFSIZE-1, "%s/%s/%c/%s", cfg.chrootdir, cfg.queuedir, sdata.name[0], sdata.name);
 
    if(stat(buf, &st) != 0){
+      if(stat(SPAMDROP_HELPER_PROGRAM, &st) != 0){
+         syslog(LOG_PRIORITY, "%s: missing spamdrop helper script: %s, for user: %s", sdata.ttmpfile, SPAMDROP_HELPER_PROGRAM, sdata.name);
+         return EX_TEMPFAIL;
+      }
+
       syslog(LOG_PRIORITY, "%s: running spamdrop helper script: %s, for user: %s", sdata.ttmpfile, SPAMDROP_HELPER_PROGRAM, sdata.name);
 
       snprintf(envvar, SMALLBUFSIZE-1, "YOURUSERNAME=%s", sdata.name);
@@ -469,7 +470,7 @@ int main(int argc, char **argv, char **envp){
       execl(SPAMDROP_HELPER_PROGRAM, envvar, (char*)0);
 
       if(stat(buf, &st) != 0){
-         syslog(LOG_PRIORITY, "%s: missing user directory: %s", buf, sdata.ttmpfile);
+         syslog(LOG_PRIORITY, "%s: missing user directory: %s", sdata.ttmpfile, buf);
          return EX_TEMPFAIL;
       }
    }

@@ -12,14 +12,21 @@ class ControllerLoginLogin extends Controller {
 
 
       $request = Registry::get('request');
+
       $db = Registry::get('db');
 
       $this->load->model('user/auth');
+      $this->load->model('user/prefs');
 
       $this->document->title = $this->data['text_login'];
 
       if($this->request->server['REQUEST_METHOD'] == 'POST' && $this->validate() == true) {
          if($this->model_user_auth->checkLogin($this->request->post['username'], $this->request->post['password']) == 1) {
+
+            $db_session = new DB("sqlite", "", "", "", SESSION_DATABASE, "");
+
+            $this->model_user_prefs->getUserPrefs($db_session, $_SESSION['username']);
+
             header("Location: " . SITE_URL . "index.php?route=quarantine/quarantine");
             exit;
          }

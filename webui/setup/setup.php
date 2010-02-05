@@ -165,9 +165,13 @@ function write_stuff() {
 
    write_line($fp, "HISTORY_DRIVER", $_POST['HISTORY_DRIVER']);
    write_line($fp, "HISTORY_DATABASE", $_POST['HISTORY_DATABASE']);
-
    write_line($fp, "HISTORY_REFRESH", 5);
+   write_line($fp);
+
    write_line($fp, "FROM_LENGTH_TO_SHOW", 28);
+   write_line($fp);
+
+   write_line($fp, "SESSION_DATABASE", $_POST['SESSION_DATABASE']);
    write_line($fp);
 
    write_line($fp, "MIN_PASSWORD_LENGTH", 6);

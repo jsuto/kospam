@@ -20,8 +20,10 @@ function fix_search(){
 function fix_form(){
    var a = "";
 
-   for(i=0; i<document.forms[0].elements.length; i+=2){
-      a = a + "&" + document.forms[0].elements[i].name + "=" + document.forms[0].elements[i].value;
+   for(i=0; i<document.forms[0].elements.length; i++){
+      if(document.forms[0].elements[i].name) {
+         a = a + "&" + document.forms[0].elements[i].name + "=" + document.forms[0].elements[i].value;
+      }
    }
 
    location = document.forms[0].action + a;

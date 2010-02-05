@@ -212,6 +212,11 @@ function ShowOption(what, value) {
       <td><input type="text" name="HISTORY_DATABASE" id="HISTORY_DATABASE" value="clapf" size="30" /></td>
    </tr>
 
+   <tr id="DIV_SESSION_DATABASE" style="display:show">
+      <td>Session database name: </td>
+      <td><input type="text" name="SESSION_DATABASE" id="SESSION_DATABASE" value="sessions/sessions.sdb" size="30" /></td>
+   </tr>
+
    <tr>
       <td colspan="2"><input type="submit" value="Submit"> <input type="reset" value="Cancel"> </td>
    </tr>

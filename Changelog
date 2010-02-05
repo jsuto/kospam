@@ -6,6 +6,12 @@ spamdrop.c fixes.
 (credits: Gabor Varadi)
 (spamdrop.c)
 
+Fixed the user preferences issue. Now the webui stores the
+user preferences in a SQLite3 based session database. Make
+sure to give write access to both the sessions directory
+and the sessions.sdb file.
+(webui/*)
+
 2010.02.04, SJ
 
 spamdrop_helper.c changes.

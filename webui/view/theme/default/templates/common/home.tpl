@@ -2,21 +2,34 @@
 <?php if(!isset($x)){ ?>
 
 <form action="index.php?route=common/home" method="get" name="setpagelen" onSubmit="fix_form(); return false; ">
-<?php print $text_page_length; ?>: <select name="pagelen">
-      <option value="10"<?php if($page_len == 10) { ?> selected="selected"<?php } ?>>10
-      <option value="20"<?php if($page_len == 20) { ?> selected="selected"<?php } ?>>20
-      <option value="30"<?php if($page_len == 30) { ?> selected="selected"<?php } ?>>30
-      <option value="50"<?php if($page_len == 50) { ?> selected="selected"<?php } ?>>50
-   </select>
-   <input type="submit" value="<?php print $text_set; ?>" />
 
-<p></p>
+<table>
+   <tr>
+      <td><?php print $text_page_length; ?>:</td>
+      <td>
+         <select name="pagelen">
+            <option value="10"<?php if($page_len == 10) { ?> selected="selected"<?php } ?>>10
+            <option value="20"<?php if($page_len == 20) { ?> selected="selected"<?php } ?>>20
+            <option value="30"<?php if($page_len == 30) { ?> selected="selected"<?php } ?>>30
+            <option value="50"<?php if($page_len == 50) { ?> selected="selected"<?php } ?>>50
+         </select>
+      </td>
+   </tr>
+   <tr>
+      <td><?php print $text_language; ?>:</td>
+      <td>
+         <select name="lang">
+            <option value="en"<?php if(isset($_SESSION['lang']) && $_SESSION['lang'] == "en") { ?> selected="selected"<?php } ?>>en</option>
+            <option value="hu"<?php if(isset($_SESSION['lang']) && $_SESSION['lang'] == "hu") { ?> selected="selected"<?php } ?>>hu</option>
+         </select>
+      </td>
+   </tr>
+   <tr>
+      <td>&nbsp;</td>
+      <td><input type="submit" value="<?php print $text_set; ?>" /></td>
+   </tr>
+</table>
 
-<?php print $text_language; ?>: <select name="lang">
-      <option value="en"<?php if(isset($_SESSION['lang']) && $_SESSION['lang'] == "en") { ?> selected="selected"<?php } ?>>en</option>
-      <option value="hu"<?php if(isset($_SESSION['lang']) && $_SESSION['lang'] == "hu") { ?> selected="selected"<?php } ?>>hu</option>
-   </select>
-   <input type="submit" value="<?php print $text_set; ?>" />
 </form>
 
 <p>&nbsp;</p>

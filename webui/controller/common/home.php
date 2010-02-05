@@ -15,18 +15,16 @@ class ControllerCommonHome extends Controller {
       $db = Registry::get('db');
 
       $this->load->model('user/auth');
-
+      $this->load->model('user/prefs');
 
 
       $this->document->title = $this->data['text_home'];
 
-      if(isset($this->request->get['pagelen']) && is_numeric($this->request->get['pagelen']) && $this->request->get['pagelen'] >= 10 && $this->request->get['pagelen'] <= 50) {
-         $_SESSION['pagelen'] = $this->request->get['pagelen'];
-      }
 
+      if(isset($this->request->get['pagelen']) && isset($this->request->get['lang']) ) {
+         $db_session = new DB("sqlite", "", "", "", SESSION_DATABASE, "");
 
-      if(isset($this->request->get['lang']) && strlen($this->request->get['lang']) == 2 && file_exists(DIR_LANGUAGE . $this->request->get['lang']) ) {
-         $_SESSION['lang'] = $this->request->get['lang'];
+         $this->model_user_prefs->setUserPrefs($db_session, Registry::get('username'), $this->request->get);
 
          Header("Location: index.php?route=common/home");
          return;

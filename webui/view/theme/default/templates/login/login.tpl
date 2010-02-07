@@ -1,7 +1,5 @@
 
-<?php if(isset($_SESSION['username'])){
-   print $text_you_are; ?>: <?php print $_SESSION['username'];
-} else { ?>
+<?php if(!isset($_SESSION['username'])){ ?>
 <form name="login" action="index.php?route=login/login" method="post">
    <table border="0">
       <tr><td><?php print $text_email; ?>:</td><td><input type="text" name="username" /></td></tr>

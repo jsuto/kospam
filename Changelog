@@ -1,5 +1,14 @@
 0.4.4-rc2:
 
+2010.02.07, SJ
+
+Fixed a webui bug in login/login showing you the 'You are'
+message as twice if you are actually logged in.
+(webui/view/theme/default/templates/login/login.tpl)
+
+Let the MIN_PASSWORD_LENGTH variable be honored by common/home.php.
+(webui/controller/common/home.php)
+
 2010.02.05, SJ
 
 spamdrop.c fixes.

@@ -9,6 +9,10 @@ message as twice if you are actually logged in.
 Let the MIN_PASSWORD_LENGTH variable be honored by common/home.php.
 (webui/controller/common/home.php)
 
+Users' quarantine defaults to show the spam emails. Of course
+they can set to see all messages, or only the hams.
+(webui/controller/login/login.php)
+
 2010.02.05, SJ
 
 spamdrop.c fixes.

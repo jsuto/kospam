@@ -13,6 +13,13 @@ Users' quarantine defaults to show the spam emails. Of course
 they can set to see all messages, or only the hams.
 (webui/controller/login/login.php)
 
+Let a wait cursor be displayed while the history is loading.
+(webui/view/theme/default/templates/common/layout-history.tpl)
+
+If the message to be trained is not in the per user quarantine
+directory, then it tries the "archived" directory in his quarantine.
+(spam.c)
+
 2010.02.05, SJ
 
 spamdrop.c fixes.

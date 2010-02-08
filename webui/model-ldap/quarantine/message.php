@@ -475,6 +475,10 @@ class ModelQuarantineMessage extends Model {
             $s = base64_decode($x);
          }
 
+         if(!preg_match("/utf-8/i", $what)){
+            $s = utf8_encode($s);
+         }
+
       }
       else {
          $s = utf8_encode($what);

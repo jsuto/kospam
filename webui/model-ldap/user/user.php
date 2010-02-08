@@ -3,7 +3,7 @@
 
 class ModelUserUser extends Model {
 
-   public function getUsers($search = '', $page = 0, $page_len = 0) {
+   public function getUsers($search = '', $page = 0, $page_len = 0, $uid = 0, $user = 0, $email = 0, $domain = 0) {
       $data = $emails = array();
       $n_users = 0;
       $from = $page * $page_len;

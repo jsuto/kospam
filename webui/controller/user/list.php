@@ -38,7 +38,6 @@ class ControllerUserList extends Controller {
          $this->data['search'] = @$this->request->get['search'];
       }
 
-
       /* get page */
 
       if(isset($this->request->get['page']) && is_numeric($this->request->get['page']) && $this->request->get['page'] > 0) {
@@ -46,12 +45,21 @@ class ControllerUserList extends Controller {
       }
 
 
+      /* get list order */
+      $this->data['order'] = "";
+
+      if((int)@$this->request->get['uid'] == 1) { $this->data['order'] = "&amp;uid=1"; }
+      if((int)@$this->request->get['user'] == 1) { $this->data['order'] = "&amp;user=1"; }
+      if((int)@$this->request->get['email'] == 1) { $this->data['order'] = "&amp;email=1"; }
+      if((int)@$this->request->get['domain'] == 1) { $this->data['order'] = "&amp;domain=1"; }
+
 
       /* check if we are admin */
 
       if(Registry::get('admin_user') == 1 || Registry::get('domain_admin') == 1) {
 
-         $users = $this->model_user_user->getUsers($this->data['search'], $this->data['page'], $this->data['page_len']);
+         $users = $this->model_user_user->getUsers($this->data['search'], $this->data['page'], $this->data['page_len'], 
+                    (int)@$this->request->get['uid'], (int)@$this->request->get['user'], (int)@$this->request->get['email'], (int)@$this->request->get['domain']);
 
          $this->data['total_users'] = $this->model_user_user->howManyUsers($this->data['search']);
 

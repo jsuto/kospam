@@ -150,6 +150,9 @@ class ControllerHistoryWorker extends Controller {
                   $status_the_rest = $smtp['relay'] . ", " . $status_the_rest . "<br/>" . date("Y.m.d. H:i:s", $smtp['ts']);
                }
 
+               $status_the_rest = preg_replace('/"/', '&#96;', $status_the_rest);
+               $status_the_rest = preg_replace("/'/", '&#101;', $status_the_rest);
+
                if(isset($smtp['orig_to']) && strlen($smtp['orig_to']) > 3) { $smtp['to'] = $smtp['orig_to']; }
 
                if($this->data['rcpt_domain'] && !preg_match("/@" . $this->data['rcpt_domain'] . "$/", $smtp['to']) ) { continue; }

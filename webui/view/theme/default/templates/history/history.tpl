@@ -4,9 +4,9 @@
 
 <p>
 Ham/spam: <select name="hamspam" onChange="javascript:ham_or_spam();">
-   <option value="" <?php if($hamspam == ""){ ?>"selected" <?php } ?>/>All
-   <option value="HAM" <?php if($hamspam == "HAM"){ ?>"selected" <?php } ?>/>HAM
-   <option value="SPAM" <?php if($hamspam == "SPAM"){ ?>"selected" <?php } ?>/>SPAM
+   <option value="" <?php if($hamspam == ""){ ?>selected="selected" <?php } ?>/>All
+   <option value="HAM" <?php if($hamspam == "HAM"){ ?>selected="selected" <?php } ?>/>HAM
+   <option value="SPAM" <?php if($hamspam == "SPAM"){ ?>selected="selected" <?php } ?>/>SPAM
 </select>
 
 Sender domain: <input type="text" name="sender_domain" value="<?php print $sender_domain; ?>" />, Recipient domain: <input type="text" name="rcpt_domain" value="<?php print $rcpt_domain; ?>" />

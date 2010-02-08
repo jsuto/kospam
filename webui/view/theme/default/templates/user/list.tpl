@@ -20,10 +20,10 @@
 <table border="1">
    <tr align="center">
       <th>&nbsp;</th>
-      <th><?php print $text_user_id; ?></th>
-      <th><?php print $text_username; ?></th>
+      <th><?php print $text_user_id; ?> <a href="index.php?route=user/list&amp;uid=0"><img src="/view/theme/<?php print THEME; ?>/images/arrowup.gif" border="0"></a> <a href="index.php?route=user/list&amp;uid=1"><img src="/view/theme/<?php print THEME; ?>/images/arrowdown.gif" border="0"></a></th>
+      <th><?php print $text_username; ?> <a href="index.php?route=user/list&amp;user=0"><img src="/view/theme/<?php print THEME; ?>/images/arrowup.gif" border="0"></a> <a href="index.php?route=user/list&amp;user=1"><img src="/view/theme/<?php print THEME; ?>/images/arrowdown.gif" border="0"></a></th>
       <th><?php print $text_email; ?></th>
-      <th><?php print $text_domain; ?></th>
+      <th><?php print $text_domain; ?> <a href="index.php?route=user/list&amp;domain=0"><img src="/view/theme/<?php print THEME; ?>/images/arrowup.gif" border="0"></a> <a href="index.php?route=user/list&amp;domain=1"><img src="/view/theme/<?php print THEME; ?>/images/arrowdown.gif" border="0"></a></th>
       <th><?php print $text_policy_group; ?></th>
       <th>&nbsp;</th>
       <th>&nbsp;</th>
@@ -49,16 +49,16 @@
 <?php if($total_users > $page_len){ ?>
 <p>
 <?php if($page > 0){ ?>
-   <a href="index.php?route=user/list&amp;page=0&amp;search=<?php print $search; ?>"><?php print $text_first; ?></a>
-   <a href="index.php?route=user/list&amp;page=<?php print $prev_page; ?>&amp;search=<?php print $search; ?>"><?php print $text_previous; ?></a>
+   <a href="index.php?route=user/list&amp;page=0&amp;search=<?php print $search; ?><?php print $order; ?>"><?php print $text_first; ?></a>
+   <a href="index.php?route=user/list&amp;page=<?php print $prev_page; ?>&amp;search=<?php print $search; ?><?php print $order; ?>"><?php print $text_previous; ?></a>
 <?php } ?>
 
 <?php if($total_users >= $page_len*($page+1) && $total_users > $page_len){ ?>
-   <a href="index.php?route=user/list&amp;page=<?php print $next_page; ?>&amp;search=<?php print $search; ?>"><?php print $text_next; ?></a>
+   <a href="index.php?route=user/list&amp;page=<?php print $next_page; ?>&amp;search=<?php print $search; ?><?php print $order; ?>"><?php print $text_next; ?></a>
 <?php } ?>
 
 <?php if($page < $total_pages){ ?>
-   <a href="index.php?route=user/list&amp;page=<?php print $total_pages; ?>&amp;search=<?php print $search; ?>"><?php print $text_last; ?></a>
+   <a href="index.php?route=user/list&amp;page=<?php print $total_pages; ?>&amp;search=<?php print $search; ?><?php print $order; ?>"><?php print $text_last; ?></a>
 <?php } ?>
 </p>
 <?php } ?>

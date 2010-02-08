@@ -1,5 +1,11 @@
 0.4.4-rc2:
 
+2010.02.08, SJ
+
+Added an order feature to the user list (uid, username, domain).
+It works for an SQL backend at the moment.
+(webui/*)
+
 2010.02.07, SJ
 
 Fixed a webui bug in login/login showing you the 'You are'
@@ -19,6 +25,9 @@ Let a wait cursor be displayed while the history is loading.
 If the message to be trained is not in the per user quarantine
 directory, then it tries the "archived" directory in his quarantine.
 (spam.c)
+
+Webui encoding fixes.
+(webui/model*/quarantine/message.php)
 
 2010.02.05, SJ
 

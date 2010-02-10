@@ -1,4 +1,7 @@
-/** spamdrop_helper.c, 2009.12.22, VG
+/*
+*******
+**
+** spamdrop_helper.c, 2009.12.22, VG
 ** Based on spamdrop.c :)
 **
 *******
@@ -10,6 +13,11 @@
 **   syslog prefix in program name.
 **   no contans (USER_QUEUE_DIR) in path, use config variable (cfg.queuedir)
 **   In this the source in a file translating the comments from Hungarian onto English.
+**
+********
+**
+** 2010.02.10, VG
+**   no -p option -> no touch flag-file ( last-purge )
 **
 ********
 **
@@ -39,7 +47,7 @@ int rc = 0, old_umask ;
 #define PA2 PA1"/%s"
 #define PA3 PA2"/%s"
 
-static int go_purge( char *dir, time_t sec, int verbose )
+static int go_purge( char *dir, time_t sec, int verbose, char *sfn )
 {
   char *name = ( char * ) NULL;
   char buf[1] = { '!' };
@@ -48,10 +56,13 @@ static int go_purge( char *dir, time_t sec, int verbose )
   char *fn = "/last-purge";
   int l = strlen( dir ) + strlen( fn ) + 1;
 
+  if( sfn == ( char * ) NULL ) {
+    return 0;
+  }
+  st.st_mtime = 0;
   if( ( name = malloc( l ) ) != ( char * ) NULL ) {
     strcat( strcpy( name, dir ), fn );
     time( &t );
-    st.st_mtime = 0;
     ret = stat( name, &st );
     if( ( ret == 0 ) && ( ( time_t ) ( st.st_mtime + sec ) > t ) ) {
       go = 0;
@@ -281,7 +292,7 @@ int main( int argc, char **argv )
     syslog( LOG_PRIORITY, "DataBaseFile is '%s'", cfg.sqlite3 );
 
   open_db2( &cfg, create_sqlfile, 0 );
-  if( go_purge( path, sec, cfg.verbosity ) ) {
+  if( go_purge( path, sec, cfg.verbosity, purge_sqlfile ) ) {
     open_db2( &cfg, purge_sqlfile, 1 );
   }
 

@@ -378,6 +378,9 @@ class ModelQuarantineMessage extends Model {
       $from = preg_replace("/</", "&lt;", $from);
       $from = preg_replace("/>/", "&gt;", $from);
 
+      $subj = preg_replace("/</", "&lt;", $subj);
+      $subj = preg_replace("/>/", "&gt;", $subj);
+
       $from = preg_replace("/'/", '"', $from);
       $subj = preg_replace("/'/", '"', $subj);
 

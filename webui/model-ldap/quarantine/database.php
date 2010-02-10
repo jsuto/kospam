@@ -98,21 +98,22 @@ class ModelQuarantineDatabase extends Model {
       if(isset($query->row['total_size'])) { $total_size = $query->row['total_size']; }
       if(isset($query->row['total_num'])) { $n = $query->row['total_num']; }
 
-      $query = $Q->query("select * from quarantine $where_cond ORDER BY ts DESC LIMIT " . $page_len*$page . "," . $page_len*($page+1));
+      $query = $Q->query("select * from quarantine $where_cond ORDER BY ts DESC LIMIT " . $page_len*$page . "," . $page_len);
 
       $i = $page_len*$page;
 
       foreach ($query->rows as $message){
          $i++;
 
-         if(strlen($message['from']) > 6+MAX_CGI_FROM_SUBJ_LEN){ $message['from'] = substr($message['from'], 0, MAX_CGI_FROM_SUBJ_LEN) . "..."; }
-         if(strlen($message['subj']) > 6+MAX_CGI_FROM_SUBJ_LEN){ $message['subj'] = substr($message['subj'], 0, MAX_CGI_FROM_SUBJ_LEN) . "..."; }
+         $message['subj'] = preg_replace('/"/', "&quot;", $message['subj']);
 
          $messages[] = array(
                              'i' => $i,
                              'id' => $message['is_spam'] . '.' . $message['id'],
                              'from' => $message['from'],
+                             'shortfrom' => strlen($message['from']) > 6+MAX_CGI_FROM_SUBJ_LEN ? substr($message['from'], 0, MAX_CGI_FROM_SUBJ_LEN) . "..." : $message['from'],
                              'subject' => $message['subj'],
+                             'shortsubject' => strlen($message['subj']) > 6+MAX_CGI_FROM_SUBJ_LEN ? substr($message['subj'], 0, MAX_CGI_FROM_SUBJ_LEN) . "..." : $message['subj'],
                              'size' => $this->model_quarantine_message->NiceSize($message['size']),
                              'date' => date("Y.m.d.", $message['ts']),
                             );

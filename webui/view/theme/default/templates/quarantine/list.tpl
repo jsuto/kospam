@@ -6,11 +6,12 @@
      <tr>
       <td><?php print $text_from; ?>:</td><td><input type="text" name="from" value="<?php print $from; ?>" /></td>
       <td><?php print $text_subject; ?>:</td><td><input type="text" name="subj" value="<?php print $subj; ?>" /></td>
-      <td>Ham/spam: <select name="hamspam" onChange="javascript:ham_or_spam();">
-   <option value="" <?php if($hamspam == ""){ ?>"selected" <?php } ?>/>All
-   <option value="HAM" <?php if($hamspam == "HAM"){ ?>"selected" <?php } ?>/>HAM
-   <option value="SPAM" <?php if($hamspam == "SPAM"){ ?>"selected" <?php } ?>/>SPAM
-</select>
+      <td>Ham/spam:
+         <select name="hamspam" onChange="javascript:ham_or_spam();">
+            <option value=""<?php if($hamspam == ""){ ?> selected="selected"<?php } ?>>All</option>
+            <option value="HAM"<?php if($hamspam == "HAM"){ ?> selected="selected"<?php } ?>>HAM</option>
+            <option value="SPAM"<?php if($hamspam == "SPAM"){ ?> selected="selected"<?php } ?>>SPAM</option>
+         </select>
       </td>
       <td colspan="2"><input type="submit" value="<?php print $text_submit; ?>" /></td>
      </tr>
@@ -65,8 +66,10 @@
 <?php foreach ($messages as $message) { ?>
 
    <tr valign="top">
-      <td<?php if(($message['i'] % 2) == 0){ ?> class="odd"<?php } ?>><a href="index.php?route=quarantine/message&amp;id=<?php print $message['id']; ?>&amp;user=<?php print $username; ?>&amp;page=<?php print $page; ?>&amp;from=<?php print $from; ?>&amp;subj=<?php print $subj; ?>&hamspam=<?php print $hamspam; ?>"><?php print $message['i']; ?>.</a></td><td><?php print $message['date']; ?></td><td><?php print $message['from']; ?></td>
-      <td<?php if(($message['i'] % 2) == 0){ ?> class="odd"<?php } ?>><a href="index.php?route=quarantine/message&amp;id=<?php print $message['id']; ?>&amp;user=<?php print $username; ?>&amp;page=<?php print $page; ?>&amp;from=<?php print $from; ?>&amp;subj=<?php print $subj; ?>&hamspam=<?php print $hamspam; ?>"><?php print $message['subject']; ?></a></td>
+      <td<?php if(($message['i'] % 2) == 0){ ?> class="odd"<?php } ?>><a href="index.php?route=quarantine/message&amp;id=<?php print $message['id']; ?>&amp;user=<?php print $username; ?>&amp;page=<?php print $page; ?>&amp;from=<?php print $from; ?>&amp;subj=<?php print $subj; ?>&hamspam=<?php print $hamspam; ?>"><?php print $message['i']; ?>.</a></td>
+      <td<?php if(($message['i'] % 2) == 0){ ?> class="odd"<?php } ?>><?php print $message['date']; ?></td>
+      <td<?php if(($message['i'] % 2) == 0){ ?> class="odd"<?php } ?>><?php if($message['from'] != $message['shortfrom']) { ?><span onmouseover="Tip('<?php print preg_replace("/&/", "&amp;", $message['from']); ?>', BALLOON, true, ABOVE, true)" onmouseout="UnTip()"><?php print $message['shortfrom']; ?></span><?php } else { print $message['from']; } ?></td>
+      <td<?php if(($message['i'] % 2) == 0){ ?> class="odd"<?php } ?>><a href="index.php?route=quarantine/message&amp;id=<?php print $message['id']; ?>&amp;user=<?php print $username; ?>&amp;page=<?php print $page; ?>&amp;from=<?php print $from; ?>&amp;subj=<?php print $subj; ?>&hamspam=<?php print $hamspam; ?>"><?php if($message['subject'] != $message['shortsubject']) { ?><span onmouseover="Tip('<?php print preg_replace("/&/", "&amp;", $message['subject']); ?>', BALLOON, true, ABOVE, true)" onmouseout="UnTip()"><?php print $message['shortsubject']; ?></span><?php } else { print $message['subject']; } ?></a></td>
       <td align="right"><?php print $message['size']; ?></td>
       <td>&nbsp;</td>
       <td class="<?php if($message['id'][0] == 's'){ ?>spam<?php } else { ?>ham<?php } ?>">&nbsp;</td>

@@ -46,6 +46,8 @@
       <th><?php print $text_date; ?></th>
       <th><?php print $text_from; ?></th>
       <th><?php print $text_subject; ?></th>
+      <th><?php print $text_size; ?></th>
+      <th>&nbsp;</th>
       <th>&nbsp;</th>
       <th>&nbsp;</th>
    </tr>
@@ -53,7 +55,9 @@
       <td>&nbsp;</td>
       <td>&nbsp;</td>
       <td><img src="<?php print WEBUI_DIRECTORY; ?>/view/theme/<?php print THEME; ?>/images/line.png" alt="xxx" /></td>
-      <td><img src="<?php print WEBUI_DIRECTORY; ?>/view/theme/<?php print THEME; ?>/images/line.png" alt="xxx" /></td> 
+      <td><img src="<?php print WEBUI_DIRECTORY; ?>/view/theme/<?php print THEME; ?>/images/line.png" alt="xxx" /></td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
       <td>&nbsp;</td>
       <td>&nbsp;</td>
    </tr>
@@ -63,6 +67,8 @@
    <tr valign="top">
       <td<?php if(($message['i'] % 2) == 0){ ?> class="odd"<?php } ?>><a href="index.php?route=quarantine/message&amp;id=<?php print $message['id']; ?>&amp;user=<?php print $username; ?>&amp;page=<?php print $page; ?>&amp;from=<?php print $from; ?>&amp;subj=<?php print $subj; ?>&hamspam=<?php print $hamspam; ?>"><?php print $message['i']; ?>.</a></td><td><?php print $message['date']; ?></td><td><?php print $message['from']; ?></td>
       <td<?php if(($message['i'] % 2) == 0){ ?> class="odd"<?php } ?>><a href="index.php?route=quarantine/message&amp;id=<?php print $message['id']; ?>&amp;user=<?php print $username; ?>&amp;page=<?php print $page; ?>&amp;from=<?php print $from; ?>&amp;subj=<?php print $subj; ?>&hamspam=<?php print $hamspam; ?>"><?php print $message['subject']; ?></a></td>
+      <td align="right"><?php print $message['size']; ?></td>
+      <td>&nbsp;</td>
       <td class="<?php if($message['id'][0] == 's'){ ?>spam<?php } else { ?>ham<?php } ?>">&nbsp;</td>
       <td<?php if(($message['i'] % 2) == 0){ ?> class="odd"<?php } ?>><input type="checkbox" name="<?php print $message['id']; ?>" /></td>
    </tr>
@@ -79,7 +85,7 @@
 </p>
 
 <p>
-   <select name="massaction" onChange="fix_mass_action('<?php print $username; ?>');">
+   <select name="massaction">
       <option value="-"><?php print $text_select_action; ?></option>
       <option value="purge"><?php print $text_purge_selected_messages; ?></option>
       <option value="deliver"><?php print $text_deliver_selected_messages; ?></option>
@@ -87,6 +93,8 @@
       <option value="train+deliver"><?php print $text_deliver_and_train_selected_messages; ?></option>
       <option value="purgeeverything"><?php print $text_purge_all_messages_from_quarantine; ?></option>
    </select>
+
+   <input type="button" name="MassAction" value="Ok" onClick="fix_mass_action('<?php print $username; ?>');" />
 </p>
 
 </form>

@@ -187,7 +187,7 @@ class ModelUserUser extends Model {
    }
 
 
-   public function getUsers($search = '', $page = 0, $page_len = 0, $uid = 0, $user = 0, $email = 0, $domain = 0) {
+   public function getUsers($search = '', $page = 0, $page_len = 0, $uid = '', $user = '', $email = '', $domain = '') {
       $where_cond = "";
       $order = "";
       $users = array();
@@ -205,9 +205,21 @@ class ModelUserUser extends Model {
 
       /* sort orders */
 
-      if($uid == 1) { $order = "ORDER BY uid DESC"; }
-      if($user == 1) { $order = "ORDER BY username DESC"; }
-      if($domain == 1) { $order = "ORDER BY domain DESC"; }
+      if($uid != ""){
+         if((int)$uid == 1) { $order = "ORDER BY uid DESC"; }
+         if((int)$uid == 0) { $order = "ORDER BY uid ASC"; }
+      }
+
+      if($user != ""){
+         if((int)$user == 1) { $order = "ORDER BY username DESC"; }
+         if((int)$user == 0) { $order = "ORDER BY username ASC"; }
+      }
+
+      if($domain != ""){
+         if((int)$domain == 1) { $order = "ORDER BY domain DESC"; }
+         if((int)$domain == 0) { $order = "ORDER BY domain ASC"; }
+      }
+
 
       $query = $this->db->query("SELECT uid, username, domain, policy_group FROM " . TABLE_USER . " $where_cond $order LIMIT " . (int)$from . ", " . (int)$page_len);
 

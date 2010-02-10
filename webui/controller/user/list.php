@@ -59,7 +59,7 @@ class ControllerUserList extends Controller {
       if(Registry::get('admin_user') == 1 || Registry::get('domain_admin') == 1) {
 
          $users = $this->model_user_user->getUsers($this->data['search'], $this->data['page'], $this->data['page_len'], 
-                    (int)@$this->request->get['uid'], (int)@$this->request->get['user'], (int)@$this->request->get['email'], (int)@$this->request->get['domain']);
+                    @$this->request->get['uid'], @$this->request->get['user'], @$this->request->get['email'], @$this->request->get['domain']);
 
          $this->data['total_users'] = $this->model_user_user->howManyUsers($this->data['search']);
 

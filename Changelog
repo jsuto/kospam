@@ -3,6 +3,8 @@
 2010.02.10, SJ
 
 Massive webui changes to support 'fast' training, save search history.
+It also puts quarantine data to an sqlite3 database under the users'
+quarantine directory.
 (spam.c, webui/*)
 
 2010.02.08, SJ

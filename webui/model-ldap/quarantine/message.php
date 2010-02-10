@@ -288,6 +288,14 @@ class ModelQuarantineMessage extends Model {
    }
 
 
+   public function NiceSize($size) {
+      if($size < 1000) return "1k";
+      if($size < 100000) return round($size/1000) . "k";
+
+      return sprintf("%.1f", $size/1000000) . "M";
+   }
+
+
    private function qp_decode($l) {
       $res = "";
       $c = "";
@@ -358,7 +366,7 @@ class ModelQuarantineMessage extends Model {
             }
          }
 
-         $from = substr($from, strlen($language->get('text_no_sender'))+6, 4096);
+         $from = substr($from, strlen($language->get('text_no_sender'))+5, 4096);
          $subj = substr($subj, strlen($language->get('text_no_subject'))+8, 4096);
 
          $from = preg_replace("/^\s{1,}/", "", $from);
@@ -431,16 +439,6 @@ class ModelQuarantineMessage extends Model {
       return $s;
    }
 
-
-   private function is_it_in($in, $what) {
-      if($in == ""){ return 0; }
-
-      if($what == ""){ return 1; }
-
-      if(stristr($in, $what)){ return 1; }
-
-      return 0;
-   }
 
 }
 

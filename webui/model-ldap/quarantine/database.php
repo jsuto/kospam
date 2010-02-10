@@ -113,6 +113,7 @@ class ModelQuarantineDatabase extends Model {
                              'id' => $message['is_spam'] . '.' . $message['id'],
                              'from' => $message['from'],
                              'subject' => $message['subj'],
+                             'size' => $this->model_quarantine_message->NiceSize($message['size']),
                              'date' => date("Y.m.d.", $message['ts']),
                             );
 

@@ -12,8 +12,8 @@ function mark_all(x){
 
 function fix_search(){
    location = "index.php?route=quarantine/quarantine&subj=" + document.forms.aaa0.subj.value + 
-         "&from=" + document.forms.aaa0.from.value + "&user=" + document.forms.aaa0.user.value +
-           "&hamspam=" + document.forms.aaa0.hamspam.value;
+         "&from=" + document.forms.aaa0.from.value + "&hamspam=" + document.forms.aaa0.hamspam.value +
+           "&user=" + document.forms.aaa0.user.value;
 }
 
 

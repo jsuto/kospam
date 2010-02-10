@@ -3,26 +3,7 @@
 class ModelQuarantineMessage extends Model {
 
 
-/*
- * files can be sorted on name and stat() attributes, ascending and descending:
- *
- * name    file name
- * dev     device number
- * ino     inode number
- * mode    inode protection mode
- * nlink   number of links
- * uid     userid of owner
- * gid     groupid of owner
- * rdev    device type, if inode device
- * size    size in bytes
- * atime   time of last access (Unix timestamp)
- * mtime   time of last modification (Unix timestamp)
- * ctime   time of last inode change (Unix timestamp)
- * blksize blocksize of filesystem IO *
- * blocks  number of blocks allocated
- */
-
-   public function myscandir($dir, $exp = '', $how='name', $desc=0) {
+   public function myscandir($dir, $exp = '', $desc=0, $ts = 0) {
       $r = array();
 
       $dh = @opendir($dir);
@@ -30,7 +11,9 @@ class ModelQuarantineMessage extends Model {
          while(($fname = readdir($dh)) !== false) {
             if($exp == "" || preg_match($exp, $fname)) {
                $stat = stat("$dir/$fname");
-               $r[$fname] = ($how == 'name')? $fname: $stat[$how];
+               if( ($desc == 1 && $stat['ctime'] > $ts) || $desc == 0) {
+                  $r[$fname] = $stat['ctime'];
+               }
             }
          }
          closedir($dh);
@@ -41,6 +24,7 @@ class ModelQuarantineMessage extends Model {
          else {
             asort($r);
          }
+
       }
 
       return(array_keys($r));
@@ -53,53 +37,6 @@ class ModelQuarantineMessage extends Model {
       }
 
       return 0;
-   }
-
-
-   public function getMessages($dir = '', $username = '', $page = 0, $page_len = PAGE_LEN, $from = '', $subj = '', $hamspam = '') {
-      $n = $n_msgs = $total_size = 0;
-      $messages = array();
-      $expr = '/^([sh]\.[0-9a-f]+)$/';
-
-
-      if($dir == "" || !file_exists($dir)) { return array($n_msgs, $total_size, $messages); }
-
-      if($hamspam == "SPAM") { $expr = '/^([s]\.[0-9a-f]+)$/'; }
-      if($hamspam == "HAM") { $expr = '/^([h]\.[0-9a-f]+)$/'; }
-
-
-      $files = $this->myscandir($dir, $expr, 'ctime', 1);
-
-      while(list($k, $v) = each($files)){
-
-         $f = $dir . "/" . $v;
-
-         list ($mailfrom, $subject) = $this->scan_message($dir, $v);
-
-         $st = stat($f);
-
-         if($this->is_it_in($subject, $subj) && $this->is_it_in($mailfrom, $from) && $st['size'] > 5){
-
-            $n++;
-
-            $total_size += $st['size'];
-
-            if($n > $page_len*$page && $n <= $page_len*($page+1)){
-
-               $messages[] = array(
-                                    'i' => $n,
-                                    'id' => $v,
-                                    'from' => $mailfrom,
-                                    'subject' => $subject,
-                                    'date' => date("Y.m.d.", $st['mtime'])
-                                  );
-
-            }
-         }
-      }
-
-
-      return array($n, $total_size, $messages);
    }
 
 
@@ -382,45 +319,50 @@ class ModelQuarantineMessage extends Model {
    }
 
 
-   private function scan_message($dir, $f) {
+   public function scan_message($dir, $f) {
       $language = Registry::get('language');
 
       $from = $language->get('text_no_sender');
       $subj = $language->get('text_no_subject');
 
-      $i = 0;
+
+      $is_header=1;
+      $state = "UNDEF";
 
       if(!is_readable($dir . "/" . $f)) { return array ($from, $subj); }
 
       $fp = fopen($dir . "/" . $f, "r");
       if($fp){
-         while(($l = fgets($fp, 4096))){
-            if(strncmp($l, "Subject:", 8) == 0 && strlen($l) > 10){
-               $subj = substr($l, 9, 4096);
-               $subj = $this->fix_encoded_string($subj);
 
-               $len = strlen($subj);
-
-               if(strlen($subj) > 9+MAX_CGI_FROM_SUBJ_LEN){
-                  $subj = substr($subj, 0, MAX_CGI_FROM_SUBJ_LEN) . "...";
-               }
-
-               $i++;
-            }
-
-            if(strncmp($l, "From:", 5) == 0 && strlen($l) > 10){
-               $from = substr($l, 6, 4096);
-               $from = $this->decode_my_str($from);
-               if(strlen($from) > 6+MAX_CGI_FROM_SUBJ_LEN){
-                  $from = substr($from, 0, MAX_CGI_FROM_SUBJ_LEN) . "...";
-               }
-               $i++;
-            }
-
-            if($i >= 2){
+          while(($l = fgets($fp, 4096))){
+            if(($l[0] == "\r" && $l[1] == "\n" && $is_header == 1) || ($l[0] == "\n" && $is_header == 1) ){
                break;
             }
+
+            if($is_header == 1){
+               if($l[0] != " " && $l[0] != "\t"){ $state = "UNDEF"; }
+               if(preg_match("/^From:/", $l)){ $state = "FROM"; }
+               if(preg_match("/^To:/", $l)){ $state = "TO"; }
+               if(preg_match("/^Date:/", $l)){ $state = "DATE"; }
+               if(preg_match("/^Subject:/", $l)){ $state = "SUBJECT"; }
+               if(preg_match("/^Content-Type:/", $l)){ $state = "CONTENT_TYPE"; }
+            }
+
+            if($state == "SUBJECT"){
+               $l = preg_replace("/^\s{1,}/", "", $l);
+               $subj .= $this->decode_my_str($l);
+            }
+            if($state == "FROM"){
+               $l = preg_replace("/^\s{1,}/", "", $l);
+               $from .= $this->decode_my_str($l);
+            }
          }
+
+         $from = substr($from, strlen($language->get('text_no_sender'))+6, 4096);
+         $subj = substr($subj, strlen($language->get('text_no_subject'))+8, 4096);
+
+         $from = preg_replace("/^\s{1,}/", "", $from);
+         $subj = preg_replace("/^\s{1,}/", "", $subj);
 
          fclose($fp);
       }
@@ -428,6 +370,8 @@ class ModelQuarantineMessage extends Model {
       $from = preg_replace("/</", "&lt;", $from);
       $from = preg_replace("/>/", "&gt;", $from);
 
+      $from = preg_replace("/'/", '"', $from);
+      $subj = preg_replace("/'/", '"', $subj);
 
       return array ($from, $subj);
    }

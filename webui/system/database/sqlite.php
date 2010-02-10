@@ -8,7 +8,7 @@ class SQLite {
    public function __construct($hostname, $username, $password, $database, $prefix = NULL) {
 
       try {
-         $this->link = new PDO("sqlite:$database");
+         $this->link = new PDO("sqlite:$database", 'OPEN_CREATE');
       }
       catch(PDOException $exception) {
          exit('Error: ' . $exception->getMessage() . '<br />');
@@ -44,6 +44,7 @@ class SQLite {
       $query->row      = isset($data[0]) ? $data[0] : array();
       $query->rows     = $data;
       $query->num_rows = $i;
+      $query->query    = $sql;
 
       unset($data);
 

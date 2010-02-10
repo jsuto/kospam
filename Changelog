@@ -1,5 +1,10 @@
 0.4.4-rc2:
 
+2010.02.10, SJ
+
+Massive webui changes to support 'fast' training, save search history.
+(spam.c, webui/*)
+
 2010.02.08, SJ
 
 Added an order feature to the user list (uid, username, domain).

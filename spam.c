@@ -1,5 +1,5 @@
 /*
- * spam.c, 2010.02.07, SJ
+ * spam.c, 2010.02.10, SJ
  */
 
 #include <stdio.h>
@@ -111,19 +111,7 @@ void do_training(struct session_data *sdata, struct _state *state, char *email, 
       syslog(LOG_PRIORITY, "%s: training %s in %d rounds", sdata->ttmpfile, qpath, i);
    }
    else {
-
-      /* if we cannot find queuedir/[sh].id, then try queuedir/archived/[sh].id, 2010.02.07, SJ */
-
-      if(is_spam == 1) snprintf(qpath, SMALLBUFSIZE-1, "%s/archived/h.%s", path, sdata->clapf_id);
-      snprintf(qpath, SMALLBUFSIZE-1, "%s/archived/s.%s", path, sdata->clapf_id);
-
-      if(stat(qpath, &st) == 0 && S_ISREG(st.st_mode) == 1){
-         i = train_message(sdata, state, MAX_ITERATIVE_TRAIN_LOOPS, is_spam, state->train_mode, cfg);
-         syslog(LOG_PRIORITY, "%s: training %s in %d rounds", sdata->ttmpfile, qpath, i);
-      }
-      else {
-         syslog(LOG_PRIORITY, "%s: invalid signature: %s", sdata->ttmpfile, qpath);
-      }
+      syslog(LOG_PRIORITY, "%s: invalid signature: %s", sdata->ttmpfile, qpath);
    }
 
 #endif

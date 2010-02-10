@@ -14,6 +14,7 @@ class ControllerQuarantineMassdeliver extends Controller {
       $db = Registry::get('db');
 
       $this->load->model('quarantine/message');
+      $this->load->model('quarantine/database');
       $this->load->model('user/user');
       $this->load->model('mail/mail');
 
@@ -41,6 +42,8 @@ class ControllerQuarantineMassdeliver extends Controller {
       $domain = $this->model_user_user->getDomainsByUid($uid);
       $my_q_dir = get_per_user_queue_dir($domain[0], $this->data['username'], $uid);
 
+      $Q = new DB("sqlite", "", "", "", $my_q_dir . "/" . QUARANTINE_DATA, "");
+      Registry::set('Q', $Q);
 
       $this->data['to'] = $this->model_user_user->getEmailAddress($this->data['username']);
 
@@ -53,9 +56,11 @@ class ControllerQuarantineMassdeliver extends Controller {
 
             if($this->model_mail_mail->SendSmtpEmail(SMTP_HOST, SMTP_PORT, SMTP_DOMAIN, SMTP_FROMADDR, $this->data['to'], $message) == 1) {
 
-               if(file_exists($my_q_dir . "/" . $k)){
+               /*if(file_exists($my_q_dir . "/" . $k)){
                   unlink($my_q_dir . "/" . $k);
-               }
+               }*/
+
+               $this->model_quarantine_database->RemoveEntry($k);
 
                $this->data['n']++;
             }

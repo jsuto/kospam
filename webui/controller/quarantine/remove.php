@@ -15,6 +15,7 @@ class ControllerQuarantineRemove extends Controller {
       $db = Registry::get('db');
 
       $this->load->model('quarantine/message');
+      $this->load->model('quarantine/database');
       $this->load->model('user/user');
 
       $this->document->title = $this->data['text_quarantine'];
@@ -46,6 +47,9 @@ class ControllerQuarantineRemove extends Controller {
       $domain = $this->model_user_user->getDomainsByUid($uid);
       $my_q_dir = get_per_user_queue_dir($domain[0], $this->data['username'], $uid);
 
+      $Q = new DB("sqlite", "", "", "", $my_q_dir . "/" . QUARANTINE_DATA, "");
+      Registry::set('Q', $Q);
+
 
       /* purge selected messages */
 
@@ -56,6 +60,7 @@ class ControllerQuarantineRemove extends Controller {
             $k = preg_replace("/_/", ".", $k);
 
             if($this->model_quarantine_message->checkId($k) && file_exists($my_q_dir . "/$k") && unlink($my_q_dir . "/$k") ){
+               $this->model_quarantine_database->RemoveEntry($k);
                $n++;
             }
          }
@@ -67,7 +72,7 @@ class ControllerQuarantineRemove extends Controller {
 
       /* purge all messages */
 
-      if($this->request->server['REQUEST_METHOD'] == 'GET' && isset($this->request->get['purgeallfromqueue'])){
+      if(isset($this->request->get['purgeallfromqueue'])){
          $n = 0;
 
          $files = scandir($my_q_dir, 1);
@@ -78,6 +83,8 @@ class ControllerQuarantineRemove extends Controller {
             }
          }
 
+         $this->model_quarantine_database->RemoveAllEntries();
+
          $this->data['x'] = $this->data['text_purged'] . " " . $n;
  
       }
@@ -85,6 +92,7 @@ class ControllerQuarantineRemove extends Controller {
 
       if($this->request->server['REQUEST_METHOD'] == 'GET') {
          if($this->model_quarantine_message->checkId($this->data['id']) && file_exists($my_q_dir . "/" . $this->data['id']) && unlink($my_q_dir . "/" . $this->data['id'])){
+            $this->model_quarantine_database->RemoveEntry($this->data['id']);
             $this->data['x'] = $this->data['text_successfully_removed'];
          } else {
             $this->data['x'] = $this->data['text_failed_to_remove'];

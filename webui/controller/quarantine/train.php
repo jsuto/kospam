@@ -14,6 +14,7 @@ class ControllerQuarantineTrain extends Controller {
       $db = Registry::get('db');
 
       $this->load->model('quarantine/message');
+      $this->load->model('quarantine/database');
       $this->load->model('user/user');
       $this->load->model('mail/mail');
 
@@ -58,9 +59,12 @@ class ControllerQuarantineTrain extends Controller {
          $training_message  = "From: " . $fromaddr . "\r\nTo: " . $training_address . "\r\nSubject: training message\r\n\r\n\r\n";
          $training_message .= "Received: " . preg_replace("/^[sh]\./", "", $this->data['id']) . "\r\n" . $message;
 
-         $x = $this->model_mail_mail->SendSmtpEmail(SMTP_HOST, CLAPF_PORT, SMTP_DOMAIN, $fromaddr, $training_address, $training_message);
+         $x = $this->model_mail_mail->SendSmtpEmail(SMTP_HOST, POSTFIX_PORT, SMTP_DOMAIN, $fromaddr, $training_address, $training_message);
 
          if($x == 1){
+
+            $Q = new DB("sqlite", "", "", "", $my_q_dir . "/" . QUARANTINE_DATA, "");
+            Registry::set('Q', $Q);
 
             /* deliver only the the false positives */
 
@@ -68,6 +72,7 @@ class ControllerQuarantineTrain extends Controller {
                header("Location: " . SITE_URL . "/index.php?route=quarantine/deliver&id=" . $this->data['id'] . "&user=" . $this->data['username']);
             }
             else {
+               $this->model_quarantine_database->RemoveEntry($this->data['id']);
                $this->data['x'] = $this->data['text_successfully_trained'];
             }
 

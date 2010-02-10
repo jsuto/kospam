@@ -1,8 +1,10 @@
 
 <form action="index.php?route=quarantine/quarantine" name="aaa0" method="get" onsubmit="fix_search(); return false;">
+
    <input type="hidden" name="user" value="<?php print $username; ?>" />
    <table border="0">
-      <tr><td><?php print $text_from; ?>:</td><td><input type="text" name="from" value="<?php print $from; ?>" /></td>
+     <tr>
+      <td><?php print $text_from; ?>:</td><td><input type="text" name="from" value="<?php print $from; ?>" /></td>
       <td><?php print $text_subject; ?>:</td><td><input type="text" name="subj" value="<?php print $subj; ?>" /></td>
       <td>Ham/spam: <select name="hamspam" onChange="javascript:ham_or_spam();">
    <option value="" <?php if($hamspam == ""){ ?>"selected" <?php } ?>/>All
@@ -10,9 +12,24 @@
    <option value="SPAM" <?php if($hamspam == "SPAM"){ ?>"selected" <?php } ?>/>SPAM
 </select>
       </td>
-      <td colspan="2"><input type="submit" value="<?php print $text_submit; ?>" /></td></tr>
+      <td colspan="2"><input type="submit" value="<?php print $text_submit; ?>" /></td>
+     </tr>
+<?php if($searchterms) { ?>
+     <tr>
+      <td colspan="3">
+         <select name="searchterm" onChange="fix_search_terms('<?php print $username; ?>');">
+            <option value=""><?php print $text_search_terms; ?></option>
+<?php foreach($searchterms as $term) { ?>
+            <option value="index.php?route=quarantine/quarantine&<?php print $term['term']; ?>&user=<?php print $username; ?>"<?php if($_SERVER['QUERY_STRING'] == "route=quarantine/quarantine&" . $term['term'] . "&user=" . $username){ ?> selected="selected"<?php } ?>><?php print $term['term']; ?></option>
+<?php } ?>
+         </select>
+      </td>
+     </tr>
+<?php } ?>
+
    </table>
 </form>
+
 
 <?php if($n > 0){ ?>
 

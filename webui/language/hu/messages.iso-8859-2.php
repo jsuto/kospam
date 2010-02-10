@@ -128,6 +128,7 @@ $_['text_remove_this_user'] = "Felhasználó törlése";
 $_['text_result'] = "Eredmény";
 
 $_['text_search'] = "Keresés";
+$_['text_search_terms'] = "Keresési feltételek";
 $_['text_select_action'] = "Mûvelet választás";
 $_['text_select_all'] = "Mindegyik kijelölése";
 $_['text_set'] = "Beállít";

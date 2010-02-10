@@ -128,6 +128,7 @@ $_['text_remove_this_user'] = "Remove this user";
 $_['text_result'] = "Result";
 
 $_['text_search'] = "Search";
+$_['text_search_terms'] = "Search terms";
 $_['text_select_action'] = "Select action";
 $_['text_select_all'] = "Select all";
 $_['text_set'] = "Set";

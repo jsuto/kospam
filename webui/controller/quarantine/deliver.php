@@ -14,6 +14,7 @@ class ControllerQuarantineDeliver extends Controller {
       $db = Registry::get('db');
 
       $this->load->model('quarantine/message');
+      $this->load->model('quarantine/database');
       $this->load->model('user/user');
       $this->load->model('mail/mail');
 
@@ -50,9 +51,15 @@ class ControllerQuarantineDeliver extends Controller {
          $x = $this->model_mail_mail->SendSmtpEmail(SMTP_HOST, SMTP_PORT, SMTP_DOMAIN, SMTP_FROMADDR, $this->data['to'], $message);
 
          if($x == 1){
-            if(file_exists($my_q_dir . "/" . $this->data['id'])){
+
+            $Q = new DB("sqlite", "", "", "", $my_q_dir . "/" . QUARANTINE_DATA, "");
+            Registry::set('Q', $Q);
+
+            $this->model_quarantine_database->RemoveEntry($this->data['id']);
+
+            /*if(file_exists($my_q_dir . "/" . $this->data['id'])){
                unlink($my_q_dir . "/" . $this->data['id']);
-            }
+            }*/
 
             $this->data['x'] = $this->data['text_successfully_delivered'];
          }

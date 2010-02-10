@@ -172,6 +172,7 @@ function write_stuff() {
    write_line($fp);
 
    write_line($fp, "SESSION_DATABASE", $_POST['SESSION_DATABASE']);
+   write_line($fp, "QUARANTINE_DATA", 'quarantine.sdb');
    write_line($fp);
 
    write_line($fp, "MIN_PASSWORD_LENGTH", 6);

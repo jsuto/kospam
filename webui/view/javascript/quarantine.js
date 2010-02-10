@@ -42,6 +42,12 @@ function fix_mass_action(username) {
 }
 
 
+function fix_search_terms(user) {
+   if(document.forms.aaa0.searchterm.value != "") document.location.href = document.forms.aaa0.searchterm.value;
+   else document.location.href = "index.php?route=quarantine/quarantine&user=" + user;
+}
+
+
 function setCookie(c_name, value, expiredays){
    var exdate = new Date();
 
@@ -69,5 +75,4 @@ function ham_or_spam(){
    var x = document.forms[0].hamspam.value;
    setCookie("hamspam", x, 1);
 }
-
 

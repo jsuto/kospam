@@ -14,6 +14,7 @@ class ControllerQuarantineMasstrain extends Controller {
       $db = Registry::get('db');
 
       $this->load->model('quarantine/message');
+      $this->load->model('quarantine/database');
       $this->load->model('user/user');
       $this->load->model('mail/mail');
 
@@ -45,6 +46,10 @@ class ControllerQuarantineMasstrain extends Controller {
       $fromaddr = $this->data['to'] = $this->model_user_user->getEmailAddress($this->data['username']);
 
 
+      $Q = new DB("sqlite", "", "", "", $my_q_dir . "/" . QUARANTINE_DATA, "");
+      Registry::set('Q', $Q);
+
+
       while(list($k, $v) = each($_POST)){
          if(preg_match("/^[sh][\._][a-f0-9]{28,36}$/", $k) && $v == "on"){
 
@@ -65,7 +70,7 @@ class ControllerQuarantineMasstrain extends Controller {
             $training_message .= "Received: " . substr($k, 2, strlen($k)) . "\r\n" . $message;
 
 
-            $x = $this->model_mail_mail->SendSmtpEmail(SMTP_HOST, CLAPF_PORT, SMTP_DOMAIN, $fromaddr, $training_address, $training_message);
+            $x = $this->model_mail_mail->SendSmtpEmail(SMTP_HOST, POSTFIX_PORT, SMTP_DOMAIN, $fromaddr, $training_address, $training_message);
 
             if($x == 1) {
 
@@ -74,7 +79,8 @@ class ControllerQuarantineMasstrain extends Controller {
                }
 
                if($x == 1 && file_exists($my_q_dir . "/" . $k)){
-                  unlink($my_q_dir . "/" . $k);
+                  //unlink($my_q_dir . "/" . $k);
+                  $this->model_quarantine_database->RemoveEntry($k);
                }
 
                $this->data['n']++;

@@ -424,7 +424,9 @@ class ModelQuarantineMessage extends Model {
 
          if(preg_match("/\?B\?/i", $what)){
             $x = preg_replace("/^([\w\-]+)\?B\?/i", "", $what);
+
             $s = base64_decode($x);
+            $s = preg_replace('/\0/', "*", $s);
          }
 
 

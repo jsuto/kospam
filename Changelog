@@ -1,5 +1,12 @@
 0.4.4:
 
+2010.02.11, SJ
+
+Fixing a NUL character problem in the From/Subject lines.
+(webui/*)
+
+2010.02.10, SJ
+
 Spamdrop_helper fixes.
 (credits: Gabor Varadi)
 (spamdrop_helper.c)

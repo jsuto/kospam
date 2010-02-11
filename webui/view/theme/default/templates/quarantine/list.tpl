@@ -21,7 +21,7 @@
          <select name="searchterm" onChange="fix_search_terms('<?php print $username; ?>');">
             <option value=""><?php print $text_search_terms; ?></option>
 <?php foreach($searchterms as $term) { ?>
-            <option value="index.php?route=quarantine/quarantine&<?php print $term['term']; ?>&user=<?php print $username; ?>"<?php if($_SERVER['QUERY_STRING'] == "route=quarantine/quarantine&" . $term['term'] . "&user=" . $username){ ?> selected="selected"<?php } ?>><?php print $term['term']; ?></option>
+            <option value="index.php?route=quarantine/quarantine&<?php print $term['term']; ?>&user=<?php print $username; ?>"<?php if($_SERVER['QUERY_STRING'] == "route=quarantine/quarantine&" . $term['term'] . "&user=" . $username){ ?> selected="selected"<?php } ?>><?php $q1 = 0; parse_str($term['term'], $x1); if($x1['subj']){ print "subj: " . $x1['subj']; $q1++; } if($x1['from']){ if($q1) print ", "; print "from: " . $x1['from']; $q1++; } if($x1['hamspam']){  if($q1) print ", "; print $x1['hamspam']; } ?></option>
 <?php } ?>
          </select>
       </td>

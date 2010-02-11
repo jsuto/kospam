@@ -36,7 +36,10 @@
 
       <h3><?php print $title; ?></h3>
 
-      <?php if(isset($_SESSION['username']) && !strstr($_SERVER['QUERY_STRING'], "login/logout") ){ ?><p><?php print $text_you_are; ?>: <?php print $_SESSION['username']; ?></p><?php } ?>
+      <?php if(isset($_SESSION['username']) && !strstr($_SERVER['QUERY_STRING'], "login/logout") ){ ?>
+<p><?php print $text_you_are; ?>: <?php print $_SESSION['username']; ?>
+<?php if(strstr($_SERVER['QUERY_STRING'], "quarantine/quarantine") && isset($_GET['user']) && $_GET['user'] != $_SESSION['username']) { ?>&nbsp; (<?php print $text_quarantine; ?>: <?php print $_GET['user']; ?>)<?php } ?></p>
+      <?php } ?>
 
       <div id="body">
 

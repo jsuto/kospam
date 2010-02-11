@@ -74,7 +74,7 @@ class ControllerQuarantineMasstrain extends Controller {
 
             if($x == 1) {
 
-               if($k[0] == 's' || (int)@$this->request->get['nodeliver'] == 0) {
+               if($k[0] == 's' && (int)@$this->request->get['nodeliver'] == 0) {
                   $x = $this->model_mail_mail->SendSmtpEmail(SMTP_HOST, SMTP_PORT, SMTP_DOMAIN, SMTP_FROMADDR, $this->data['to'], $message);
                }
 

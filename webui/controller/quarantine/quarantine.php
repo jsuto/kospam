@@ -64,20 +64,21 @@ class ControllerQuarantineQuarantine extends Controller {
           exit;
       }
 
-      $uid = $this->model_user_user->getUidByName($this->data['username']);
-      $domain = $this->model_user_user->getDomainsByUid($uid);
-      $my_q_dir = get_per_user_queue_dir($domain[0], $this->data['username'], $uid);
-
-
       /* check if he's a valid user */
 
-      if($this->model_user_user->getUidByName($this->data['username']) == -1) {
+      $uid = $this->model_user_user->getUidByName($this->data['username']);
+
+      if($uid == -1) {
          $this->template = "common/error.tpl";
          $this->data['errorstring'] = $this->data['text_non_existing_user'] . ": " . $this->data['username'];
 
          $this->render();
          exit;
       }
+
+
+      $domain = $this->model_user_user->getDomainsByUid($uid);
+      $my_q_dir = get_per_user_queue_dir($domain[0], $this->data['username'], $uid);
 
 
       if(file_exists($my_q_dir)) {

@@ -11,7 +11,7 @@ class SQLite {
          $this->link = new PDO("sqlite:$database", 'OPEN_CREATE');
       }
       catch(PDOException $exception) {
-         exit('Error: ' . $exception->getMessage() . '<br />');
+         exit('Error: ' . $exception->getMessage() . " on $database<br />");
       }
 
       $this->affected = 0;

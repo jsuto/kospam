@@ -330,10 +330,7 @@ class ModelQuarantineMessage extends Model {
    public function scan_message($dir, $f) {
       $language = Registry::get('language');
 
-      $from = $language->get('text_no_sender');
-      $subj = $language->get('text_no_subject');
-
-
+      $from = $subj = "";
       $is_header=1;
       $state = "UNDEF";
 
@@ -366,13 +363,13 @@ class ModelQuarantineMessage extends Model {
             }
          }
 
-         $from = substr($from, strlen($language->get('text_no_sender'))+5, 4096);
-         $subj = substr($subj, strlen($language->get('text_no_subject'))+8, 4096);
-
-         $from = preg_replace("/^\s{1,}/", "", $from);
-         $subj = preg_replace("/^\s{1,}/", "", $subj);
-
          fclose($fp);
+
+         $from = preg_replace("/^From\:\s{0,}/", "", $from);
+         if($from == "") { $from = $language->get('text_no_sender'); }
+
+         $subj = preg_replace("/^Subject\:\s{0,}/", "", $subj);
+         if($subj == "") { $subj = $language->get('text_no_subject'); }
       }
 
       $from = preg_replace("/</", "&lt;", $from);
@@ -417,18 +414,19 @@ class ModelQuarantineMessage extends Model {
          $what = preg_replace("/^\=\?/", "", $what);
          $what = preg_replace("/\?\=$/", "", $what);
 
-         if(preg_match("/\?Q\?/", $what)){
-            list($enc, $x) = explode("?Q?", $what);
+         if(preg_match("/\?Q\?/i", $what)){
+            $x = preg_replace("/^([\w\-]+)\?Q\?/i", "", $what);
+            //list($enc, $x) = preg_split("/\?Q\?/i", $what);
 
             $s = quoted_printable_decode($x);
             $s = preg_replace("/_/", " ", $s);
          }
 
-         if(preg_match("/\?B\?/", $what)){
-            list($enc, $x) = explode("?B?", $what);
-
+         if(preg_match("/\?B\?/i", $what)){
+            $x = preg_replace("/^([\w\-]+)\?B\?/i", "", $what);
             $s = base64_decode($x);
          }
+
 
          if(!preg_match("/utf-8/i", $what)){
             $s = utf8_encode($s);

@@ -80,40 +80,47 @@ class ControllerQuarantineQuarantine extends Controller {
       }
 
 
+      if(file_exists($my_q_dir)) {
 
-      $Q = new DB("sqlite", "", "", "", $my_q_dir . "/" . QUARANTINE_DATA, "");
-      Registry::set('Q', $Q);
+         $Q = new DB("sqlite", "", "", "", $my_q_dir . "/" . QUARANTINE_DATA, "");
+         Registry::set('Q', $Q);
 
-      /* create schema if it's a 0 byte length file */
+         /* create schema if it's a 0 byte length file */
 
-      $st = stat($my_q_dir . "/" . QUARANTINE_DATA);
-      if(isset($st['size']) && $st['size'] == 0) {
-         $this->model_quarantine_database->CreateDatabase();
+         $st = stat($my_q_dir . "/" . QUARANTINE_DATA);
+         if(isset($st['size']) && $st['size'] == 0) {
+            $this->model_quarantine_database->CreateDatabase();
+         }
+
+
+         /* populate quarantine files to database if we are on the 1st page */
+
+         if($this->data['page'] == 0) {
+            $this->model_quarantine_database->PopulateDatabase($my_q_dir);
+         }
+
+
+         /* add search term if there's any */
+
+         if($this->data['from'] || $this->data['subj'] || $this->data['hamspam']) {
+            $this->model_quarantine_database->addSearchTerm($this->data['from'], $this->data['subj'], $this->data['hamspam']);
+         }
+
+
+         /* read search terms */
+         $this->data['searchterms'] = $this->model_quarantine_database->getSearchTerms();
+
+
+         /* get messages from quarantine */
+
+         list ($this->data['n'], $this->data['total_size'], $this->data['messages']) =
+                 $this->model_quarantine_database->getMessages($my_q_dir, $this->data['username'], $this->data['page'], $this->data['page_len'], $this->data['from'], $this->data['subj'], $this->data['hamspam']);
+      }
+      else {
+         $this->data['n'] = $this->data['total_size'] = 0;
+         $this->data['messages'] = $this->data['searchterms'] = array();
       }
 
-
-      /* populate quarantine files to database if we are on the 1st page */
-
-      if($this->data['page'] == 0) {
-         $this->model_quarantine_database->PopulateDatabase($my_q_dir);
-      }
-
-
-      /* add search term if there's any */
-
-      if($this->data['from'] || $this->data['subj'] || $this->data['hamspam']) {
-         $this->model_quarantine_database->addSearchTerm($this->data['from'], $this->data['subj'], $this->data['hamspam']);
-      }
-
-
-      /* read search terms */
-      $this->data['searchterms'] = $this->model_quarantine_database->getSearchTerms();
-
-
-      /* get messages from quarantine */
-
-      list ($this->data['n'], $this->data['total_size'], $this->data['messages']) =
-              $this->model_quarantine_database->getMessages($my_q_dir, $this->data['username'], $this->data['page'], $this->data['page_len'], $this->data['from'], $this->data['subj'], $this->data['hamspam']);
 
       /* print paging info */
 

@@ -88,7 +88,7 @@ class ControllerQuarantineQuarantine extends Controller {
          /* create schema if it's a 0 byte length file */
 
          $st = stat($my_q_dir . "/" . QUARANTINE_DATA);
-         if(isset($st['size']) && $st['size'] == 0) {
+         if(isset($st['size']) && $st['size'] < 1024) {
             $this->model_quarantine_database->CreateDatabase();
          }
 

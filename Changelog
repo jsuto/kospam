@@ -1,5 +1,10 @@
 0.4.4:
 
+2010.02.12, SJ
+
+Fixed a webui formatting bug.
+(webui/model/quarantine/database.php)
+
 2010.02.11, SJ
 
 Fixing a NUL character problem in the From/Subject lines.

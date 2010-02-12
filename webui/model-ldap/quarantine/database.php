@@ -111,9 +111,11 @@ class ModelQuarantineDatabase extends Model {
                              'i' => $i,
                              'id' => $message['is_spam'] . '.' . $message['id'],
                              'from' => $message['from'],
-                             'shortfrom' => strlen($message['from']) > 6+MAX_CGI_FROM_SUBJ_LEN ? substr($message['from'], 0, MAX_CGI_FROM_SUBJ_LEN) . "..." : $message['from'],
+                             //'shortfrom' => strlen($message['from']) > 6+MAX_CGI_FROM_SUBJ_LEN ? substr($message['from'], 0, MAX_CGI_FROM_SUBJ_LEN) . "..." : $message['from'],
+                             'shortfrom' => $this->MakeShortString($message['from'], MAX_CGI_FROM_SUBJ_LEN),
                              'subject' => $message['subj'],
-                             'shortsubject' => strlen($message['subj']) > 6+MAX_CGI_FROM_SUBJ_LEN ? substr($message['subj'], 0, MAX_CGI_FROM_SUBJ_LEN) . "..." : $message['subj'],
+                             //'shortsubject' => strlen($message['subj']) > 6+MAX_CGI_FROM_SUBJ_LEN ? substr($message['subj'], 0, MAX_CGI_FROM_SUBJ_LEN) . "..." : $message['subj'],
+                             'shortsubject' => $this->MakeShortString($message['subj'], MAX_CGI_FROM_SUBJ_LEN),
                              'size' => $this->model_quarantine_message->NiceSize($message['size']),
                              'date' => date("Y.m.d.", $message['ts']),
                             );
@@ -165,6 +167,29 @@ class ModelQuarantineDatabase extends Model {
          $query = $Q->query("insert into search (term, ts) values('" . $Q->escape($term) . "', " . time() . ")");
       }
    }
+
+
+   private function MakeShortString($what, $length) {
+      $l = $n = 0;
+      $s = "";
+
+      $x = preg_split("/\s/", $what);
+
+      while(list($k, $v) = each($x)){
+         if($l < $length){
+            if($n > 0) $s .= " $v";
+            else       $s .= $v;
+
+            $l += strlen($v);
+         }
+         else break;
+
+         $n++;
+      }
+
+      return $s;
+   }
+
 
 }
 

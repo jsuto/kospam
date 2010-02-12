@@ -93,6 +93,7 @@ class ModelQuarantineMessage extends Model {
       $n_image = -1;
 
       $message = "";
+      $from = $to = $subject = $date = "";
 
       if($dir == "" || $id == "" || !$this->checkId($id) || !file_exists($dir . "/" . $id) || !is_readable($dir . "/" . $id) ){ return ""; }
 
@@ -100,7 +101,7 @@ class ModelQuarantineMessage extends Model {
       if($fp){
          while(($l = fgets($fp, 4096))){
             if(($l[0] == "\r" && $l[1] == "\n" && $is_header == 1) || ($l[0] == "\n" && $is_header == 1) ){
-               $message .= "<pre>$header</pre>\n\n";
+               $message = "<pre>" . $this->decode_my_str($from) . "\n" . $this->decode_my_str($to) . "\n" . $this->decode_my_str($subject) . "\n" . $this->decode_my_str($date) . "\n</pre>\n\n";
                $is_header = 0;
             }
 
@@ -157,10 +158,10 @@ class ModelQuarantineMessage extends Model {
                $l = preg_replace("/</", "&lt;", $l);
                $l = preg_replace("/>/", "&gt;", $l);
 
-               if($state == "FROM" || $state == "TO" || $state == "SUBJECT" || $state == "DATE") {
-                  $header .= $this->decode_my_str($l) . "\r\n";
-               }
-
+               if($state == "FROM"){ $from .= preg_replace("/\r|\n/", "", $l); }
+               if($state == "TO"){ $to .= preg_replace("/\r|\n/", "", $l); }
+               if($state == "SUBJECT"){ $subject .= preg_replace("/\r|\n/", "", $l); }
+               if($state == "DATE"){ $date .= preg_replace("/\r|\n/", "", $l); }
             }
             else {
 
@@ -390,10 +391,12 @@ class ModelQuarantineMessage extends Model {
 
       $what = rtrim($what);
 
-      $a = explode(" ", $what);
+      $a = preg_split("/\s/", $what);
 
       while(list($k, $v) = each($a)){
-         if($k > 0){
+         $x = preg_match("/\?\=$/", $v);
+
+         if( ($x == 0 && $k > 0) || ($x == 1 && $k == 1) ){
             $result .= " ";
          }
 
@@ -416,7 +419,6 @@ class ModelQuarantineMessage extends Model {
 
          if(preg_match("/\?Q\?/i", $what)){
             $x = preg_replace("/^([\w\-]+)\?Q\?/i", "", $what);
-            //list($enc, $x) = preg_split("/\?Q\?/i", $what);
 
             $s = quoted_printable_decode($x);
             $s = preg_replace("/_/", " ", $s);

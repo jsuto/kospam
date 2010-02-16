@@ -55,6 +55,11 @@ class ControllerQuarantineMasstrain extends Controller {
 
             $k = preg_replace("/_/", ".", $k);
 
+            if(Registry::get('admin_user') == 1 && $_SESSION['train_global']) {
+               touch($my_q_dir . "/" . preg_replace("/^[sh]\./", "g.", $k) );
+            }
+
+
             $message = $this->model_quarantine_message->getMessageForDelivery($my_q_dir . "/" . $k);
 
             /* assemble training message */

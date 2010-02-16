@@ -47,6 +47,10 @@ class ControllerQuarantineTrain extends Controller {
       if($this->model_quarantine_message->checkId($this->data['id']) && strlen($fromaddr) > 3){
          $message = $this->model_quarantine_message->getMessageForDelivery($my_q_dir . "/" . $this->data['id']);
 
+         if(Registry::get('admin_user') == 1 && $_SESSION['train_global']) {
+            touch($my_q_dir . "/" . preg_replace("/^[sh]\./", "g.", $this->data['id']) );
+         }
+
          /* assemble training message */
 
          if($this->data['id'][0] == 's') {

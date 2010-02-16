@@ -113,7 +113,7 @@ void do_training(struct session_data *sdata, struct _state *state, char *email, 
       if(cfg->group_type == 1){
          snprintf(gpath, SMALLBUFSIZE-1, "%s/g.%s", path, sdata->clapf_id);
          if(stat(gpath, &st) == 0){
-            syslog(LOG_PRIORITY, "%s: this is a global training %s", sdata->ttmpfile, gpath);
+            syslog(LOG_PRIORITY, "%s: global training %s", sdata->ttmpfile, gpath);
             sdata->uid = 0;
             unlink(gpath);
          }

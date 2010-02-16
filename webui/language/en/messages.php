@@ -54,6 +54,8 @@ $_['text_failed_to_update'] = "Failed to update";
 $_['text_first'] = "First";
 $_['text_from'] = "From";
 
+$_['text_global_training_happened'] = "Global training.";
+
 $_['text_ham_and_spam_messages'] = "Ham & spam messages";
 $_['text_help'] = "Help";
 $_['text_history'] = "History";

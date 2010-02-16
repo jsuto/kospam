@@ -30,6 +30,7 @@ class ControllerQuarantineMasstrain extends Controller {
       $this->data['hamspam'] = @$this->request->get['hamspam'];
       $this->data['page'] = @$this->request->get['page'];
 
+      $this->data['globaltrain'] = 0;
 
       /* fix username if we are admin */
 
@@ -57,6 +58,7 @@ class ControllerQuarantineMasstrain extends Controller {
 
             if(Registry::get('admin_user') == 1 && $_SESSION['train_global']) {
                touch($my_q_dir . "/" . preg_replace("/^[sh]\./", "g.", $k) );
+               $this->data['globaltrain'] = 1;
             }
 
 

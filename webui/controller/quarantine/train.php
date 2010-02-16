@@ -27,6 +27,7 @@ class ControllerQuarantineTrain extends Controller {
       $this->data['hamspam'] = @$this->request->get['hamspam'];
       $this->data['page'] = @$this->request->get['page'];
 
+      $this->data['globaltrain'] = 0;
 
       $this->data['username'] = Registry::get('username');
 
@@ -49,6 +50,7 @@ class ControllerQuarantineTrain extends Controller {
 
          if(Registry::get('admin_user') == 1 && $_SESSION['train_global']) {
             touch($my_q_dir . "/" . preg_replace("/^[sh]\./", "g.", $this->data['id']) );
+            $this->data['globaltrain'] = 1;
          }
 
          /* assemble training message */
@@ -70,13 +72,14 @@ class ControllerQuarantineTrain extends Controller {
             $Q = new DB("sqlite", "", "", "", $my_q_dir . "/" . QUARANTINE_DATA, "");
             Registry::set('Q', $Q);
 
+            $this->model_quarantine_database->RemoveEntry($this->data['id']);
+
             /* deliver only the the false positives */
 
             if($this->data['id'][0] == 's' && (int)@$this->request->get['nodeliver'] == 0) {
-               header("Location: " . SITE_URL . "/index.php?route=quarantine/deliver&id=" . $this->data['id'] . "&user=" . $this->data['username']);
+               header("Location: " . SITE_URL . "/index.php?route=quarantine/deliver&id=" . $this->data['id'] . "&user=" . $this->data['username'] . "&globaltrain=" . $this->data['globaltrain']);
             }
             else {
-               $this->model_quarantine_database->RemoveEntry($this->data['id']);
                $this->data['x'] = $this->data['text_successfully_trained'];
             }
 

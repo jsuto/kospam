@@ -59,6 +59,8 @@ $_['text_help'] = "Segítség";
 $_['text_history'] = "Történet";
 $_['text_home'] = "Kezdõlap";
 
+$_['text_global_training_happened'] = "Globális tanítás.";
+
 $_['text_import'] = "Import";
 $_['text_import_users'] = "Import users";
 $_['text_invalid_data'] = "Érvénytelen adat(ok)";

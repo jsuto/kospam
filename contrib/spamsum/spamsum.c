@@ -110,7 +110,7 @@ char *spamsum(const uchar *in, size_t length, u32 flags, u32 bsize)
 
 	/* if we are ignoring email headers then skip past them now */
 	if (flags & FLAG_IGNORE_HEADERS) {
-		s = strstr((char*)in, "\n\n");
+		s = (uchar*)strstr((char*)in, "\n\n");
 		if(s){
 			length -= (s+2 - in);
 			in = s+2;
@@ -118,7 +118,7 @@ char *spamsum(const uchar *in, size_t length, u32 flags, u32 bsize)
 
                 /* a few messages have \r\n\r\n at the end of the mail header, SJ */
                 else {
-                   s = strstr((char *)in, "\n\r\n");
+                   s = (uchar*)strstr((char *)in, "\n\r\n");
                    if(s){
                       length -= (s+3 - in);
                       in = s+3;
@@ -218,7 +218,7 @@ again:
 	}
 
 	strcat(p+j, ":");
-	strcat(p+j, ret2);
+	strcat(p+j, (char*)ret2);
 
 	/* our blocksize guess may have been way off - repeat if necessary */
 	if (bsize == 0 && block_size > MIN_BLOCKSIZE && j < SPAMSUM_LENGTH/2) {

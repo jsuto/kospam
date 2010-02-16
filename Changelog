@@ -7,6 +7,9 @@ to the global database or not. It's effective only if you are using
 a merged token group.
 (spam.c, webui/*)
 
+Fixed spamsum compile time warnings.
+(contrib/spamsum/spamsum.c)
+
 2010.02.15, SJ
 
 The webui setup utility honors the protocol (ie. http or https),

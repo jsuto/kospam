@@ -26,7 +26,7 @@ class ControllerQuarantineDeliver extends Controller {
       $this->data['subj'] = @$this->request->get['subj'];
       $this->data['hamspam'] = @$this->request->get['hamspam'];
       $this->data['page'] = @$this->request->get['page'];
-
+      $this->data['globaltrain'] = @$this->request->get['globaltrain'];
 
       $this->data['username'] = Registry::get('username');
 

@@ -1,5 +1,21 @@
 0.4.4:
 
+2010.02.16, SJ
+
+Let the master admins decide if they want to send trainings they do
+to the global database or not. It's effective only if you are using
+a merged token group.
+(spam.c, webui/*)
+
+2010.02.15, SJ
+
+The webui setup utility honors the protocol (ie. http or https),
+and writes it to the config.php.
+(webui/setup.php)
+
+The mysql driver prints its error in a more user friendly way.
+(system/database/mysql.php, controller/common/error.php)
+
 2010.02.12, SJ
 
 Fixed a webui formatting bug.

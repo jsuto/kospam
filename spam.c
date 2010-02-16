@@ -1,5 +1,5 @@
 /*
- * spam.c, 2010.02.10, SJ
+ * spam.c, 2010.02.16, SJ
  */
 
 #include <stdio.h>
@@ -89,7 +89,7 @@ void get_queue_path(struct session_data *sdata, char **path, struct __config *cf
 void do_training(struct session_data *sdata, struct _state *state, char *email, char *acceptbuf, struct __config *cfg){
 #ifndef HAVE_MYDB
    int i, is_spam = 0;
-   char *p, path[SMALLBUFSIZE], qpath[SMALLBUFSIZE];
+   char *p, path[SMALLBUFSIZE], qpath[SMALLBUFSIZE], gpath[SMALLBUFSIZE];
    struct stat st;
 
 
@@ -107,6 +107,18 @@ void do_training(struct session_data *sdata, struct _state *state, char *email, 
    }
 
    if(stat(qpath, &st) == 0 && S_ISREG(st.st_mode) == 1){
+
+      /* check if this is an admin training from the webui to the global database, 2010.02.16, SJ */
+
+      if(cfg->group_type == 1){
+         snprintf(gpath, SMALLBUFSIZE-1, "%s/g.%s", path, sdata->clapf_id);
+         if(stat(gpath, &st) == 0){
+            syslog(LOG_PRIORITY, "%s: this is a global training %s", sdata->ttmpfile, gpath);
+            sdata->uid = 0;
+            unlink(gpath);
+         }
+      }
+
       i = train_message(sdata, state, MAX_ITERATIVE_TRAIN_LOOPS, is_spam, state->train_mode, cfg);
       syslog(LOG_PRIORITY, "%s: training %s in %d rounds", sdata->ttmpfile, qpath, i);
    }

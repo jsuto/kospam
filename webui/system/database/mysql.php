@@ -51,6 +51,7 @@ class MySQL {
             $query->row      = isset($data[0]) ? $data[0] : array();
             $query->rows     = $data;
             $query->num_rows = $i;
+            $query->query    = $sql;
 
             unset($data);
 
@@ -61,7 +62,10 @@ class MySQL {
          }
       }
       else {
-         exit('Error: ' . mysql_error() . '<br />Error No: ' . mysql_errno() . '<br />' . $sql);
+         $_SESSION['error'] = 'Error: ' . mysql_error() . '<br />Error No: ' . mysql_errno() . '<br />' . $sql;
+         header("Location: " . SITE_URL . "/index.php?route=common/error");
+         exit;
+         //exit('Error: ' . mysql_error() . '<br />Error No: ' . mysql_errno() . '<br />' . $sql);
       }
 
    }

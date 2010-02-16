@@ -6,6 +6,7 @@ $_['text_add_new_domain'] = "New domain";
 $_['text_add_new_user_alias'] = "Add new user";
 $_['text_add_policy'] = "Add new policy";
 $_['text_admin_user'] = "Admin user";
+$_['text_admin_user_trains_global_database'] = "Admin user trainings go to the global database";
 
 $_['text_back'] = "Back";
 $_['text_blacklist'] = "Blacklist";

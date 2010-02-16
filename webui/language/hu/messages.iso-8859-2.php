@@ -6,6 +6,7 @@ $_['text_add_new_domain'] = "Új domain";
 $_['text_add_new_user_alias'] = "Új felhasználó";
 $_['text_add_policy'] = "Új házirend";
 $_['text_admin_user'] = "Admin felhasználó";
+$_['text_admin_user_trains_global_database'] = "Admin felhasználó a globális adatbázist tanítja";
 
 $_['text_back'] = "Vissza";
 $_['text_blacklist'] = "Feketelista";

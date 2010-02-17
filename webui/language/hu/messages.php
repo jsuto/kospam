@@ -93,6 +93,7 @@ $_['text_modify'] = "Módosítás";
 $_['text_monthly_report'] = "Havi jelentés";
 
 $_['text_next'] = "Következő";
+$_['text_no_message_in_the_quarantine'] = "Nincs a keresési feltételnek megfelelő üzenet a karanténban";
 $_['text_no_records'] = "nincs találat";
 $_['text_no_sender'] = "nincs feladó";
 $_['text_no_spam_message_in_the_quarantine_yet'] = "Nincs spam a karanténban";

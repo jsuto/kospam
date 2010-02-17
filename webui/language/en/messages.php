@@ -93,6 +93,7 @@ $_['text_modify'] = "Modify";
 $_['text_monthly_report'] = "Monthly report";
 
 $_['text_next'] = "Next";
+$_['text_no_message_in_the_quarantine'] = "No message in the quarantine matching the search criteria";
 $_['text_no_records'] = "No records";
 $_['text_no_sender'] = "no sender";
 $_['text_no_spam_message_in_the_quarantine_yet'] = "No spam message in the quarantine yet";

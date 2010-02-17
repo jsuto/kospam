@@ -1,5 +1,5 @@
 /*
- * cfg.h, 2010.01.21, SJ
+ * cfg.h, 2010.02.16, SJ
  */
 
 #ifndef _CFG_H
@@ -39,6 +39,7 @@ struct __config {
    char clamd_socket[MAXVAL];
 
    char memcached_servers[MAXVAL];
+   int memcached_ttl;
 
    int max_connections;
    int backlog;

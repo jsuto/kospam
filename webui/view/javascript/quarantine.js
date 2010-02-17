@@ -30,13 +30,18 @@ function fix_form(){
 }
 
 
-function fix_mass_action(username) {
+function fix_mass_action(subj, from, hamspam, username) {
 
-   if(document.forms.aaa1.massaction.value == "purge") document.forms.aaa1.action="index.php?route=quarantine/remove&topurge=1&user=" + username;
-   if(document.forms.aaa1.massaction.value == "purgeeverything") document.forms.aaa1.action="index.php?route=quarantine/remove&purgeallfromqueue=1&user=" + username;
-   if(document.forms.aaa1.massaction.value == "deliver") document.forms.aaa1.action="index.php?route=quarantine/massdeliver&user=" + username;
-   if(document.forms.aaa1.massaction.value == "train") document.forms.aaa1.action="index.php?route=quarantine/masstrain&nodeliver=1&user=" + username;
-   if(document.forms.aaa1.massaction.value == "train+deliver") document.forms.aaa1.action="index.php?route=quarantine/masstrain&user=" + username;
+   var query_params = "&subj=" + document.forms.aaa0.subj.value + 
+                      "&from=" + document.forms.aaa0.from.value +
+                      "&hamspam=" + document.forms.aaa0.hamspam.value +
+                      "&user=" + username;
+
+   if(document.forms.aaa1.massaction.value == "purge") document.forms.aaa1.action="index.php?route=quarantine/remove&topurge=1" + query_params;
+   if(document.forms.aaa1.massaction.value == "purgeeverything") document.forms.aaa1.action="index.php?route=quarantine/remove&purgeallfromqueue=1" + query_params;
+   if(document.forms.aaa1.massaction.value == "deliver") document.forms.aaa1.action="index.php?route=quarantine/massdeliver" + query_params;
+   if(document.forms.aaa1.massaction.value == "train") document.forms.aaa1.action="index.php?route=quarantine/masstrain&nodeliver=1" + query_params;
+   if(document.forms.aaa1.massaction.value == "train+deliver") document.forms.aaa1.action="index.php?route=quarantine/masstrain" + query_params;
 
    if(document.forms.aaa1.massaction.value != "-") document.forms.aaa1.submit();
 }

@@ -21,7 +21,7 @@
          <select name="searchterm" onChange="fix_search_terms('<?php print $username; ?>');">
             <option value=""><?php print $text_search_terms; ?></option>
 <?php foreach($searchterms as $term) { ?>
-            <option value="index.php?route=quarantine/quarantine&<?php print $term['term']; ?>&user=<?php print $username; ?>"<?php if($_SERVER['QUERY_STRING'] == "route=quarantine/quarantine&" . $term['term'] . "&user=" . $username){ ?> selected="selected"<?php } ?>><?php $q1 = 0; parse_str($term['term'], $x1); if($x1['subj']){ print "subj: " . $x1['subj']; $q1++; } if($x1['from']){ if($q1) print ", "; print "from: " . $x1['from']; $q1++; } if($x1['hamspam']){  if($q1) print ", "; print $x1['hamspam']; } ?></option>
+            <option value="index.php?route=quarantine/quarantine&<?php print $term['term']; ?>&user=<?php print $username; ?>"<?php if(strncmp($_SERVER['QUERY_STRING'], "route=quarantine/quarantine&" . $term['term'] . "&user=" . $username, strlen("route=quarantine/quarantine&" . $term['term'] . "&user=" . $username)) == 0){ ?> selected="selected"<?php } ?>><?php $q1 = 0; parse_str($term['term'], $x1); if($x1['subj']){ print "subj: " . $x1['subj']; $q1++; } if($x1['from']){ if($q1) print ", "; print "from: " . $x1['from']; $q1++; } if($x1['hamspam']){  if($q1) print ", "; print $x1['hamspam']; } ?></option>
 <?php } ?>
          </select>
       </td>
@@ -97,7 +97,7 @@
       <option value="purgeeverything"><?php print $text_purge_all_messages_from_quarantine; ?></option>
    </select>
 
-   <input type="button" name="MassAction" value="Ok" onClick="fix_mass_action('<?php print $username; ?>');" />
+   <input type="button" name="MassAction" value="Ok" onClick="fix_mass_action('<?php print $subj; ?>', '<?php print $from; ?>', '<?php print $hamspam; ?>', '<?php print $username; ?>');" />
 </p>
 
 </form>
@@ -124,6 +124,6 @@
 
 
 <?php } else { ?>
-<?php print $text_no_spam_message_in_the_quarantine_yet; ?>
+<?php print $text_no_message_in_the_quarantine; ?>
 <?php } ?>
 

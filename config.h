@@ -1,5 +1,5 @@
 /*
- * config.h, 2010.01.28, SJ
+ * config.h, 2010.02.16, SJ
  */
 
 #ifndef _CONFIG_H
@@ -11,7 +11,7 @@
 
 #define PROGNAME "clapf"
 
-#define VERSION "0.4.4-rc2"
+#define VERSION "0.4.4"
 
 #define PROGINFO VERSION ", Janos SUTO <sj@acts.hu>\n\n" CONFIGURE_PARAMS "\n\nSend bugs/issues to https://jira.acts.hu:8443/\n"
 
@@ -49,6 +49,7 @@
 #define MEMCACHED_KEY_NAME "clapf:pos"
 #define MEMCACHED_KEY_LENGTH 9
 #define MEMCACHED_MESSAGE_NAME "clapf_msg:"
+#define MEMCACHED_CLAPF_PREFIX "_c"
 
 /* this should be at least header_size_limit, see the output of postconf, 2006.08.21, SJ */
 #define MAX_MAIL_HEADER_SIZE 128000

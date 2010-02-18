@@ -1,7 +1,7 @@
 <?php
 
 
-class DB {
+class LDAPDB {
    private $driver;
 
 
@@ -45,10 +45,6 @@ class DB {
 
 
 }
-
-
-$db = new DB(DB_DRIVER, LDAP_HOST, LDAP_BINDDN, LDAP_BINDPW);
-Registry::set('db', $db);
 
 
 ?>

@@ -15,6 +15,7 @@ require(DIR_SYSTEM . "/misc.php");
 
 if(DB_DRIVER == "ldap") {
    require(DIR_SYSTEM . "/ldap.php");
+   require(DIR_SYSTEM . "/db.php");
 }
 else {
    require(DIR_SYSTEM . "/db.php");

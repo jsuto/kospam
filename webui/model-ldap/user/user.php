@@ -64,6 +64,9 @@ class ModelUserUser extends Model {
 
          $aliases = rtrim($aliases);
       }
+      else if($result['mailalternateaddress']){
+         $aliases = $result['mailalternateaddress'];
+      }
 
       $data = array(
                     'uid'          => $result['uid'],

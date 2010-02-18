@@ -40,14 +40,21 @@ Registry::set('admin_user', isAdminUser());
 Registry::set('domain_admin', isDomainAdmin());
 
 
-$db = new DB(DB_DRIVER, DB_HOSTNAME, DB_USERNAME, DB_PASSWORD, DB_DATABASE, DB_PREFIX);
+if(DB_DRIVER == "ldap"){
+   $db = new LDAPDB(DB_DRIVER, LDAP_HOST, LDAP_BINDDN, LDAP_BINDPW);
+}
+else {
+   $db = new DB(DB_DRIVER, DB_HOSTNAME, DB_USERNAME, DB_PASSWORD, DB_DATABASE, DB_PREFIX);
+   Registry::set('DB_DATABASE', DB_DATABASE);
+}
+
 Registry::set('db', $db);
 
-Registry::set('DB_DATABASE', DB_DATABASE);
-Registry::set('HISTORY_DATABASE', HISTORY_DATABASE);
-
 Registry::set('DB_DRIVER', DB_DRIVER);
+
+Registry::set('HISTORY_DATABASE', HISTORY_DATABASE);
 Registry::set('HISTORY_DRIVER', HISTORY_DRIVER);
+
 
 
 if(Registry::get('username')) {

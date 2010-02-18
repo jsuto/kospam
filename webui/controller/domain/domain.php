@@ -90,10 +90,6 @@ class ControllerDomainDomain extends Controller {
 
    private function validate() {
 
-      /*if(!isset($this->request->post['domain']) || strlen($this->request->post['domain']) < 3 || !eregi('^[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,5})$', $this->request->post['domain']) ) {
-         $this->error['domain'] = $this->data['text_invalid_data'];
-      }*/
-
       if(!isset($this->request->post['domain']) || strlen($this->request->post['domain']) < 3) {
          $this->error['email'] = $this->data['text_invalid_data'];
       }
@@ -101,13 +97,13 @@ class ControllerDomainDomain extends Controller {
          $domains = explode("\n", $this->request->post['domain']);
          foreach ($domains as $domain) {
             $domain = rtrim($domain);
-            if(!eregi('^[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,5})$', $domain) ) {
+            if(!preg_match('/^[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,5})$/', $domain) ) {
                $this->error['email'] = $this->data['text_invalid_data'] . ": $domain";
             }
          }
       }
 
-      if(!isset($this->request->post['mapped']) || strlen($this->request->post['mapped']) < 3 || !eregi('^[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,5})$', $this->request->post['mapped']) ) {
+      if(!isset($this->request->post['mapped']) || strlen($this->request->post['mapped']) < 3 || !preg_match('/^[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,5})$/', $this->request->post['mapped']) ) {
          $this->error['domain'] = $this->data['text_invalid_data'] . ": " . $this->request->post['mapped'];
       }
 

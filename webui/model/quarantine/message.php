@@ -3,34 +3,6 @@
 class ModelQuarantineMessage extends Model {
 
 
-   public function myscandir($dir, $exp = '', $desc=0, $ts = 0) {
-      $r = array();
-
-      $dh = @opendir($dir);
-      if($dh) {
-         while(($fname = readdir($dh)) !== false) {
-            if($exp == "" || preg_match($exp, $fname)) {
-               $stat = stat("$dir/$fname");
-               if( ($desc == 1 && $stat['ctime'] > $ts) || $desc == 0) {
-                  $r[$fname] = $stat['ctime'];
-               }
-            }
-         }
-         closedir($dh);
-
-         if($desc) {
-            arsort($r);
-         }
-         else {
-            asort($r);
-         }
-
-      }
-
-      return(array_keys($r));
-   }
-
-
    public function checkId($id = '') {
       if(strlen($id) > 10 && preg_match('/^([sh]\.[0-9a-f]+)$/', $id)){
          return 1;

@@ -58,7 +58,7 @@ class ControllerHistoryWorker extends Controller {
 
       $cookie = @$this->request->cookie['rcpt_domain'];
 
-      if($cookie && eregi('^[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,5})$', $cookie)) {
+      if($cookie && preg_match('/^[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,5})$/', $cookie)) {
          $this->data['rcpt_domain'] = $cookie;
          $CLAPF_FILTER ? $CLAPF_FILTER .= " and clapf.queue_id2=smtp.queue_id and (smtp.to_domain='" . $db->escape($cookie) . "' or smtp.orig_to_domain='" . $db->escape($cookie) . "')" : $CLAPF_FILTER .= " clapf.queue_id2=smtp.queue_id and (smtp.to_domain='" . $db->escape($cookie) . "' or smtp.orig_to_domain='" . $db->escape($cookie) . "')";
 
@@ -70,7 +70,7 @@ class ControllerHistoryWorker extends Controller {
 
       $cookie = @$this->request->cookie['sender_domain'];
 
-      if($cookie && eregi('^[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,5})$', $cookie)) {
+      if($cookie && preg_match('/^[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,5})$/', $cookie)) {
          $this->data['sender_domain'] = $cookie;
          $CLAPF_FILTER ? $CLAPF_FILTER .= " and clapf.queue_id2=qmgr.queue_id and qmgr.from_domain='" . $db->escape($cookie) . "'" : $CLAPF_FILTER .= "clapf.queue_id2=qmgr.queue_id and qmgr.from_domain='" . $db->escape($cookie) . "'";
 

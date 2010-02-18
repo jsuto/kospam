@@ -27,6 +27,45 @@ class ModelQuarantineDatabase extends Model {
    }
 
 
+   public function get_new_files($files = array(), $dir, $maxts = 0, $expr = ''){
+      $new_files = array();
+      $Q = Registry::get('Q');
+
+      while(list($k, $v) = each($files)){
+         if(!preg_match($expr, $v)) { continue; }
+
+         $st = stat($dir . "/" . $v);
+
+         if($st['ctime'] >= $maxts){
+
+            $a = explode(".", $v);
+            $ok = 1;
+
+            if($st['ctime'] == $maxts){
+               $query = $Q->query("select count(*) as count from quarantine where id='" . $Q->escape($a[1]) . "'");
+               if(isset($query->row['count']) && $query->row['count'] == 1){ $ok = 0; }
+            }
+
+            if($ok == 1) {
+
+               $new_files[] = array(
+                                    'id'      => $a[1],
+                                    'is_spam' => $a[0],
+                                    'ts'      => $st['ctime'],
+                                    'size'    => $st['size']
+                                   );
+            }
+
+         }
+         else {
+            break;
+         }
+      }
+
+      return $new_files;
+   }
+
+
    public function PopulateDatabase($dir = '') {
       if($dir == "" || !file_exists($dir)) { return 0; }
 
@@ -37,12 +76,19 @@ class ModelQuarantineDatabase extends Model {
 
       /* remove entries not present in the filesystem */
 
-      $files = $this->model_quarantine_message->myscandir($dir, $expr, 0, 0);
-      if(isset($files[0])) {
-         $st = stat($dir . "/" . $files[0]);
-         if(isset($st['ctime'])) {
-            $query = $Q->query("delete from quarantine where ts < " . (int)$st['ctime']);
+      $oldest_ts = 0;
+
+      $files = scandir($dir, 0);
+      while(list($k, $v) = each($files)){
+         if(preg_match($expr, $v)) {
+            $st = stat($dir . "/" . $v);
+            $oldest_ts = $st['ctime'];
+            break;
          }
+      }
+
+      if($oldest_ts > 0) {
+         $query = $Q->query("delete from quarantine where ts < $oldest_ts");
       }
 
 
@@ -51,22 +97,21 @@ class ModelQuarantineDatabase extends Model {
       $query = $Q->query("select max(ts) as maxts from quarantine");
       $maxts = (int)@$query->row['maxts'];
 
-      $files = $this->model_quarantine_message->myscandir($dir, $expr, 1, $maxts);
+
+      $files = scandir($dir, 1);
+
+      $new_hams = $this->get_new_files($files, $dir, $maxts, '/^(h\.[0-9a-f]+)$/');
+      reset($files);
+      $new_spams = $this->get_new_files($files, $dir, $maxts, '/^(s\.[0-9a-f]+)$/');
+
+      $new_files = array_merge($new_hams, $new_spams);
 
       $query = $Q->query("BEGIN");
 
-      while(list($k, $v) = each($files)){
+      foreach ($new_files as $file){
+         list ($mailfrom, $subject) = $this->model_quarantine_message->scan_message($dir, $file['is_spam'] . "." . $file['id']);
 
-         $f = $dir . "/" . $v;
-
-         list ($mailfrom, $subject) = $this->model_quarantine_message->scan_message($dir, $v);
-
-         $st = stat($f);
-
-         $a = explode(".", $v);
-
-         $query = $Q->query("insert into quarantine (id, ts, size, is_spam, hidden, `from`, subj) values('" . $a[1] . "', " . $st['ctime'] . ", " . $st['size'] . ", '" . $a[0] . "', 0, '" . $Q->escape($mailfrom) . "', '" . $Q->escape($subject) . "')");
-
+         $query = $Q->query("insert into quarantine (id, ts, size, is_spam, hidden, `from`, subj) values('" . $file['id'] . "', " . $file['ts'] . ", " . $file['size'] . ", '" . $file['is_spam'] . "', 0, '" . $Q->escape($mailfrom) . "', '" . $Q->escape($subject) . "')");
       }
 
       $query = $Q->query("COMMIT");

@@ -15,7 +15,10 @@ class ControllerPolicyEdit extends Controller {
       $request = Registry::get('request');
       $db = Registry::get('db');
 
-      $this->load->model('policy/policy');
+      if(DB_DRIVER == "ldap")
+         $this->load->model('policy/ldap/policy');
+      else
+         $this->load->model('policy/sql/policy');
 
       $this->document->title = $this->data['text_policy'];
 
@@ -59,7 +62,7 @@ class ControllerPolicyEdit extends Controller {
          $this->error['aaa'] = $this->data['text_invalid_policy_group'];
       }
 
-      if(strlen(@$this->request->post['name']) < 2){
+      if(strlen(@$this->request->post['name']) < 2 || !preg_match("/^([a-zA-Z0-9\-\_\ ]+)$/", $this->request->post['name'])){
          $this->error['aaa'] = $this->data['text_invalid_policy_name'];
       }
 

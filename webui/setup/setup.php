@@ -91,14 +91,7 @@ function write_stuff() {
 
 
    write_line($fp, "DIR_SYSTEM", BASEDIR . WEBUI_DIRECTORY . "/system/");
-
-   if($_POST['DB_DRIVER'] == "ldap") {
-      write_line($fp, "DIR_MODEL", BASEDIR . WEBUI_DIRECTORY . "/model-ldap/");
-   }
-   else {
-      write_line($fp, "DIR_MODEL", BASEDIR . WEBUI_DIRECTORY . "/model/");
-   }
-
+   write_line($fp, "DIR_MODEL", BASEDIR . WEBUI_DIRECTORY . "/model/");
    write_line($fp, "DIR_DATABASE", BASEDIR . WEBUI_DIRECTORY . "/system/database/");
    write_line($fp, "DIR_IMAGE", BASEDIR . WEBUI_DIRECTORY . "/image/");
    write_line($fp, "DIR_LANGUAGE", BASEDIR . WEBUI_DIRECTORY . "/language/");
@@ -180,6 +173,26 @@ function write_stuff() {
    write_line($fp, "CGI_INPUT_FIELD_WIDTH", 50);
    write_line($fp, "CGI_INPUT_FIELD_HEIGHT", 7);
    write_line($fp);
+
+   write_line($fp, "MEMCACHED_ENABLED", 0);
+   write_line($fp);
+
+   fputs($fp, '$memcached_servers = array(' . CRLF);
+
+   $x = explode(",", $_POST['MEMCACHED_SERVERS']);
+   $i = 0; $ii = count($x);
+   foreach ($x as $aaa){
+      $_m = explode(":", $aaa);
+
+      $line1  = "      array('" . $_m[0] . "', ";
+      $line1 .= isset($_m[1]) ? $_m[1] : "0";
+      $line1 .= $i+1 < $ii ? ")," : ")";
+
+      fputs($fp, $line1 . CRLF);
+
+      $i++;
+   }
+   fputs($fp, '                          );' . CRLF);
 
    fputs($fp, "?>\n");
 

@@ -15,7 +15,11 @@ class ControllerLoginLogin extends Controller {
 
       $db = Registry::get('db');
 
-      $this->load->model('user/auth');
+      if(DB_DRIVER == "ldap")
+         $this->load->model('user/ldap/auth');
+      else
+         $this->load->model('user/sql/auth');
+
       $this->load->model('user/prefs');
 
       $this->document->title = $this->data['text_login'];

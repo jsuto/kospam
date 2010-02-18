@@ -15,8 +15,14 @@ class ControllerUserAdd extends Controller {
       $request = Registry::get('request');
       $db = Registry::get('db');
 
-      $this->load->model('user/user');
-      $this->load->model('policy/policy');
+      if(DB_DRIVER == "ldap"){
+         $this->load->model('user/ldap/user');
+         $this->load->model('policy/ldap/policy');
+      } else {
+         $this->load->model('user/sql/user');
+         $this->load->model('policy/sql/policy');
+      }
+
 
       $this->document->title = $this->data['text_user_management'];
 

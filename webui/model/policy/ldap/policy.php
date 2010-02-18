@@ -104,6 +104,14 @@ class ModelPolicyPolicy extends Model {
       $entry["messagefromazombie"] = (int)$policy[' message_from_a_zombie'];
 
       if($this->db->ldap_modify("policyGroup=" . (int)$policy['policy_group'] . "," . LDAP_POLICY_BASEDN, $entry) == TRUE) {
+
+         /* remove from memcached */
+
+         if(MEMCACHED_ENABLED) {
+            $memcache = Registry::get('memcache');
+            $memcache->delete("_c:" . $policy['policy_group']);
+         }
+
          return 1;
       }
 

@@ -53,6 +53,25 @@ class ModelUserBulk extends Model {
 
          if($username) {
             if($this->db->ldap_modify("cn=$username," . LDAP_USER_BASEDN, $entry) == TRUE) {
+
+               $query = $this->model_user_user->getUserByUid((int)$uid);
+
+               /* remove from memcached */
+
+               if(MEMCACHED_ENABLED) {
+                  $memcache = Registry::get('memcache');
+
+                  $memcache->delete("_c:" . $query['email']);
+
+                  $aliases = $this->model_user_user->trim_to_array($query['aliases']);
+
+                  if(is_array($aliases)) {
+                     foreach ($aliases as $email) {
+                        $memcache->delete("_c:" . $email);
+                     }
+                  }
+               }
+
                $n++;
             }
          }

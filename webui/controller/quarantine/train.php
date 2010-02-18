@@ -15,8 +15,12 @@ class ControllerQuarantineTrain extends Controller {
 
       $this->load->model('quarantine/message');
       $this->load->model('quarantine/database');
-      $this->load->model('user/user');
       $this->load->model('mail/mail');
+
+      if(DB_DRIVER == "ldap")
+         $this->load->model('user/ldap/user');
+      else
+         $this->load->model('user/sql/user');
 
       $this->document->title = $this->data['text_quarantine'];
 

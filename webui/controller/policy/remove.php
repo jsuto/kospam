@@ -14,7 +14,10 @@ class ControllerPolicyRemove extends Controller {
       $request = Registry::get('request');
       $db = Registry::get('db');
 
-      $this->load->model('policy/policy');
+      if(DB_DRIVER == "ldap")
+         $this->load->model('policy/ldap/policy');
+      else
+         $this->load->model('policy/sql/policy');
 
       $this->document->title = $this->data['text_policy'];
 

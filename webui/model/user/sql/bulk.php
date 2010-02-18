@@ -31,6 +31,17 @@ class ModelUserBulk extends Model {
       $query = $this->db->query("UPDATE " . TABLE_WHITELIST . " SET whitelist='" . $this->db->escape($whitelist) . "' WHERE uid IN ($uidlist)");
       $query = $this->db->query("UPDATE " . TABLE_BLACKLIST . " SET blacklist='" . $this->db->escape($blacklist) . "' WHERE uid IN ($uidlist)");
 
+         /* remove from memcached */
+
+         if(MEMCACHED_ENABLED) {
+            $memcache = Registry::get('memcache');
+
+            $query = $this->db->query("SELECT email FROM " . TABLE_EMAIL . " WHERE uid IN ($uidlist)");
+            foreach($query->rows as $q) {
+               $memcache->delete("_c:" . $this->db->escape($q['email']));
+            }
+         }
+
       return 1;
    }
 

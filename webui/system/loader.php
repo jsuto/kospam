@@ -26,6 +26,13 @@ class Loader {
 
    public function model($model) {
       $file  = DIR_MODEL . $model . '.php';
+
+      $x = explode("/", $model);
+      if(count($x) > 2){
+         unset($x[1]);
+         $model = join("/", $x);
+      }
+
       $class = 'Model' . preg_replace('/[^a-zA-Z0-9]/', '', $model);
 
       if (file_exists($file)) {

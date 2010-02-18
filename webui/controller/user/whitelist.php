@@ -15,7 +15,10 @@ class ControllerUserWhitelist extends Controller {
       $db = Registry::get('db');
       $language = Registry::get('language');
 
-      $this->load->model('user/user');
+      if(DB_DRIVER == "ldap")
+         $this->load->model('user/ldap/user');
+      else
+         $this->load->model('user/sql/user');
 
       $this->document->title = $language->get('text_whitelist_settings');
 

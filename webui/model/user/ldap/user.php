@@ -273,6 +273,18 @@ class ModelUserUser extends Model {
       $entry["mailMessageStore"] = "";
 
       if($this->db->ldap_add("cn=" . $user['username'] . "," .  LDAP_USER_BASEDN, $entry) == TRUE) {
+         /* remove from memcached */
+
+         if(MEMCACHED_ENABLED) {
+            $memcache = Registry::get('memcache');
+
+            $memcache->delete("_c:" . $user['email']);
+
+            foreach ($entry["mailalternateaddress"] as $email) {
+               $memcache->delete("_c:" . $email);
+            }
+         }
+
          return 1;
       }
 
@@ -307,6 +319,18 @@ class ModelUserUser extends Model {
       }
 
       if($this->db->ldap_modify("cn=" . $user['username'] . "," .  LDAP_USER_BASEDN, $entry) == TRUE) {
+         /* remove from memcached */
+
+         if(MEMCACHED_ENABLED) {
+            $memcache = Registry::get('memcache');
+
+            $memcache->delete("_c:" . $user['email']);
+
+            foreach ($entry["mailalternateaddress"] as $email) {
+               $memcache->delete("_c:" . $email);
+            }
+         }
+
          return 1;
       }
 

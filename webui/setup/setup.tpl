@@ -58,6 +58,13 @@ function fix1() {
       document.forms.setup.HISTORY_DATABASE.value = "clapf";
    }
 
+   if(document.forms.setup.MEMCACHED_ENABLED.value == 1) {
+      ShowOption('MEMCACHED_SERVERS', 1);
+   }
+   else {
+      ShowOption('MEMCACHED_SERVERS', 0);
+   }
+
 }
 
 
@@ -216,6 +223,24 @@ function ShowOption(what, value) {
       <td>Session database name: </td>
       <td><input type="text" name="SESSION_DATABASE" id="SESSION_DATABASE" value="sessions/sessions.sdb" size="30" /></td>
    </tr>
+
+   <!-- memcached stuff -->
+
+   <tr id="DIV_MEMCACHED" style="display:show">
+      <td>Memcached support: </td>
+      <td>
+         <select name="MEMCACHED_ENABLED" id="MEMCACHED_ENABLED" onchange="fix1(); return false;">
+            <option value="0">No</option>
+            <option value="1">Yes</option>
+         </select>
+      </td>
+   </tr>
+
+   <tr id="DIV_MEMCACHED_SERVERS" style="display:none">
+      <td>Comma separated list of memcached servers: </td>
+      <td><input type="text" name="MEMCACHED_SERVERS" id="MEMCACHED_SERVERS" value="127.0.0.1:11211" size="30" /></td>
+   </tr>
+
 
    <tr>
       <td colspan="2"><input type="submit" value="Submit"> <input type="reset" value="Cancel"> </td>

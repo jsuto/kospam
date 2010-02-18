@@ -56,6 +56,15 @@ Registry::set('HISTORY_DATABASE', HISTORY_DATABASE);
 Registry::set('HISTORY_DRIVER', HISTORY_DRIVER);
 
 
+if(MEMCACHED_ENABLED) {
+   $memcache = new Memcache();
+   foreach ($memcached_servers as $m){
+      $memcache->addServer($m[0], $m[1]);
+   }
+
+   Registry::set('memcache', $memcache);
+}
+
 
 if(Registry::get('username')) {
 

@@ -332,6 +332,14 @@ class ModelUserUser extends Model {
       foreach ($emails as $email) {
          $email = rtrim($email);
          $query = $this->db->query("INSERT INTO " . TABLE_EMAIL . " (uid, email) VALUES(" . (int)$user['uid'] . ", '" . $this->db->escape($email) . "')");
+
+         /* remove from memcached */
+
+         if(MEMCACHED_ENABLED) {
+            $memcache = Registry::get('memcache');
+            $memcache->delete("_c:" . $this->db->escape($email));
+         }
+
       }
 
       return 1;

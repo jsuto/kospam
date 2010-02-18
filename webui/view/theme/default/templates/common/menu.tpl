@@ -19,7 +19,7 @@
           <li><a href="index.php?route=policy/policy"<?php if(strstr($_SERVER['QUERY_STRING'], "policy/")){ print ' id="active"'; } ?>><?php print $text_policy; ?></a></li>
           <li><a href="index.php?route=history/history"<?php if(strstr($_SERVER['QUERY_STRING'], "history/")){ print ' id="active"'; } ?>><?php print $text_history; ?></a></li>
    <?php } ?>
-          <li><a href="http://clapf.acts.hu/wiki/doku.php/0.4.4:index"><?php print $text_help; ?></a></li>
+          <li><a href="http://clapf.acts.hu/wiki/doku.php/current:index"><?php print $text_help; ?></a></li>
           <li><a href="index.php?route=login/logout"<?php if(strstr($_SERVER['QUERY_STRING'], "login/logout")){ print ' id="active"'; } ?>><?php print $text_logout; ?></a></li>
 
 

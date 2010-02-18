@@ -14,7 +14,11 @@ class ControllerQuarantineMessage extends Controller {
       $db = Registry::get('db');
 
       $this->load->model('quarantine/message');
-      $this->load->model('user/user');
+
+      if(DB_DRIVER == "ldap")
+         $this->load->model('user/ldap/user');
+      else
+         $this->load->model('user/sql/user');
 
       $this->document->title = $this->data['text_quarantine'];
 

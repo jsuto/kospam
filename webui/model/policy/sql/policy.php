@@ -52,6 +52,13 @@ class ModelPolicyPolicy extends Model {
          " WHERE policy_group=" . (int)$policy['policy_group']
       );
 
+      /* remove from memcached */
+
+      if(MEMCACHED_ENABLED) {
+         $memcache = Registry::get('memcache');
+         $memcache->delete("_c:" . $policy['policy_group']);
+      }
+
       return $this->db->countAffected();
    }
 

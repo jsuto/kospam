@@ -7229,6 +7229,11 @@ else
    echo "local delivery: SMTP"
 fi
 
+if test "$want_memcached" = "yes"; then
+   echo "memcached support: yes"
+   objs="$objs memcached.o"
+fi
+
 if test "$have_policy" = "yes"; then
    defs="$defs -DHAVE_POLICY"
    echo "policy support: yes"

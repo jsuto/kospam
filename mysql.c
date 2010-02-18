@@ -1,5 +1,5 @@
 /*
- * mysql.c, 2009.09.20, SJ
+ * mysql.c, 2010.02.16, SJ
  */
 
 #include <stdio.h>
@@ -190,7 +190,9 @@ int update_mysql_tokens(struct session_data *sdata, struct node *xhash[]){
    }
 
 
-#ifdef HAVE_MEMCACHED
+/* disabled this feature for now, 2010.02.16, SJ */
+
+#ifdef HAVE_MEMCACHED_DISABLED
    int memcached_ok=0;
    char *qry, memcached_queue_id[BUFLEN];
    uint32_t flags = sdata->uid;
@@ -246,7 +248,7 @@ int update_mysql_tokens(struct session_data *sdata, struct node *xhash[]){
       if(mysql_real_query(&(sdata->mysql), query->data, strlen(query->data)) != 0){
          n = -1;
       }
-#ifdef HAVE_MEMCACHED
+#ifdef HAVE_MEMCACHED_DISABLED
    }
 #endif
 

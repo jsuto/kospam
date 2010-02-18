@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2010.02.05, SJ
+ * spamdrop.c, 2010.02.18, SJ
  */
 
 #include <stdio.h>
@@ -760,28 +760,6 @@ int main(int argc, char **argv, char **envp){
    }
 
 
-   /* save email for later retraining and/or spam quarantine */
-
-#ifdef HAVE_STORE
-   if( (sdata.tot_len <= cfg.max_message_size_to_filter || cfg.max_message_size_to_filter == 0) && blackhole_request == 0 && debug == 0){
-   //if(sdata.tot_len <= cfg.max_message_size_to_filter && blackhole_request == 0 && debug == 0){
-
-      /* add trailing dot to the file, 2008.09.08, SJ */
-
-      if(debug == 0){
-         fd = open(sdata.ttmpfile, O_EXCL|O_RDWR, S_IRUSR|S_IWUSR);
-         if(fd != -1){
-            lseek(fd, 0, SEEK_END);
-            i = write(fd, SMTP_CMD_PERIOD, strlen(SMTP_CMD_PERIOD));
-            close(fd);
-         }
-      }
-
-      save_email_to_queue(&sdata, spaminess, &cfg);
-   }
-#endif
-
-
 ENDE_SPAMDROP:
 
    if(cfg.debug == 0 && cfg.verbosity > 0) syslog(LOG_PRIORITY, "%s: %.4f %d in %ld [ms]", sdata.ttmpfile, spaminess, sdata.tot_len, tvdiff(tv_stop, tv_start)/1000);
@@ -860,6 +838,29 @@ ENDE_SPAMDROP:
 
 
    close_db(&sdata, &state);
+
+
+   /* save email for later retraining and/or spam quarantine */
+
+#ifdef HAVE_STORE
+   syslog(LOG_PRIORITY, "storing itt....");
+
+   if( (sdata.tot_len <= cfg.max_message_size_to_filter || cfg.max_message_size_to_filter == 0) && blackhole_request == 0 && debug == 0){
+
+      /* add trailing dot to the file, 2010.02.18, SJ */
+
+      if(debug == 0){
+         fd = open(sdata.ttmpfile, O_EXCL|O_RDWR, S_IRUSR|S_IWUSR);
+         if(fd != -1){
+            lseek(fd, 0, SEEK_END);
+            i = write(fd, SMTP_CMD_PERIOD, strlen(SMTP_CMD_PERIOD));
+            close(fd);
+         }
+      }
+
+      save_email_to_queue(&sdata, spaminess, &cfg);
+   }
+#endif
 
    unlink(sdata.ttmpfile);
 

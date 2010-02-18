@@ -1,5 +1,5 @@
 /*
- * config.h, 2010.02.16, SJ
+ * config.h, 2010.02.18, SJ
  */
 
 #ifndef _CONFIG_H
@@ -42,7 +42,7 @@
 #define BUFLEN 32
 #define IPLEN 16+1
 
-#define CRLF "\r\n"
+#define CRLF "\n"
 
 #define MYDB_MIN_SIZE 1000000
 

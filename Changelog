@@ -1,5 +1,12 @@
 0.4.4:
 
+2010.02.18, SJ
+
+Fixed a spamdrop bug. It appended the CRLF.CRLF sequence at the end of emails,
+and placed a ^M at the end of the clapf related header lines. I changed the
+CRLF definition in config.h as well.
+(spamdrop.c, config.h)
+
 2010.02.17, SJ
 
 Various webui fixes.

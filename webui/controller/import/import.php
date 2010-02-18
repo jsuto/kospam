@@ -15,7 +15,10 @@ class ControllerImportImport extends Controller {
       $db = Registry::get('db');
       $language = Registry::get('language');
 
-      $this->load->model('user/import');
+      if(DB_DRIVER == "ldap")
+         $this->load->model('user/ldap/import');
+      else
+         $this->load->model('user/sql/import');
 
       $this->document->title = $language->get('text_import_users');
 

@@ -103,6 +103,12 @@ function write_stuff() {
 
 
    write_line($fp, "DB_DRIVER", $_POST['DB_DRIVER']);
+   write_line($fp, "DB_HOSTNAME", $_POST['DB_HOSTNAME']);
+   write_line($fp, "DB_USERNAME", $_POST['DB_USERNAME']);
+   write_line($fp, "DB_PASSWORD", $_POST['DB_PASSWORD']);
+   write_line($fp, "DB_DATABASE", $_POST['DB_DATABASE']);
+   write_line($fp, "DB_PREFIX", "");
+   write_line($fp);
 
    if($_POST['DB_DRIVER'] == "ldap") {
       write_line($fp, "LDAP_HOST", $_POST['LDAP_HOST']);
@@ -114,13 +120,6 @@ function write_stuff() {
       write_line($fp);
    }
    else {
-      write_line($fp, "DB_HOSTNAME", $_POST['DB_HOSTNAME']);
-      write_line($fp, "DB_USERNAME", $_POST['DB_USERNAME']);
-      write_line($fp, "DB_PASSWORD", $_POST['DB_PASSWORD']);
-      write_line($fp, "DB_DATABASE", $_POST['DB_DATABASE']);
-      write_line($fp, "DB_PREFIX", "");
-      write_line($fp);
-
       write_line($fp, "TABLE_USER", "user");
       write_line($fp, "TABLE_EMAIL", "t_email");
       write_line($fp, "TABLE_DOMAIN", "t_domain");
@@ -174,7 +173,7 @@ function write_stuff() {
    write_line($fp, "CGI_INPUT_FIELD_HEIGHT", 7);
    write_line($fp);
 
-   write_line($fp, "MEMCACHED_ENABLED", 0);
+   write_line($fp, "MEMCACHED_ENABLED", $_POST['MEMCACHED_ENABLED']);
    write_line($fp);
 
    fputs($fp, '$memcached_servers = array(' . CRLF);

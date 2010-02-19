@@ -1,3 +1,12 @@
+0.4.5-rc1:
+
+2010.02.19, SJ
+
+Fixed a typo in the policy handling.
+(webui/model/policy/ldap/policy.php)
+
+
+
 0.4.4:
 
 2010.02.18, SJ

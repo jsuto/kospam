@@ -101,7 +101,7 @@ class ModelPolicyPolicy extends Model {
       $entry["initial1000learning"] = (int)$policy['initial_1000_learning'];
       $entry["storemetadata"] = (int)$policy['store_metadata'];
       $entry["storeonlyspam"] = (int)$policy['store_only_spam'];
-      $entry["messagefromazombie"] = (int)$policy[' message_from_a_zombie'];
+      $entry["messagefromazombie"] = (int)$policy['message_from_a_zombie'];
 
       if($this->db->ldap_modify("policyGroup=" . (int)$policy['policy_group'] . "," . LDAP_POLICY_BASEDN, $entry) == TRUE) {
 

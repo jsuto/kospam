@@ -195,6 +195,8 @@ class ModelUserUser extends Model {
 
       $from = (int)$page * (int)$page_len;
 
+      $search = preg_replace("/\s{1,}/", "", $search);
+
       if($search){
          $where_cond .= " WHERE uid IN (SELECT DISTINCT uid FROM " . TABLE_USER . " WHERE username LIKE '%" . $this->db->escape($search) . "%') OR uid IN (SELECT DISTINCT uid FROM " . TABLE_EMAIL . " WHERE email LIKE '%" . $this->db->escape($search) . "%')";
       }

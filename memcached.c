@@ -1,5 +1,5 @@
 /*
- * memcached.c, 2010.02.16, SJ
+ * memcached.c, 2010.02.21, SJ
  */
 
 #include <stdio.h>
@@ -31,7 +31,7 @@ int get_user_from_memcached(struct session_data *sdata, char *email, struct __co
       /* 1000:sj:acts.hu:1 */
 
       if(len == 1 && s[0] == 'U'){
-         syslog(LOG_PRIORITY, "%s is unknown", email);
+         if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s is unknown", email);
          return 1;
       }
 

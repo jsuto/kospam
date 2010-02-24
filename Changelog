@@ -1,5 +1,15 @@
 0.4.5-rc1:
 
+2010.02.23, SJ
+
+Strip the trailing whitespace from user management search form. So 'username ' would work too.
+(webui/model/user/*/user.php)
+
+2010.02.21, SJ
+
+Added '-Q' option to spamdrop to return only 0 (=ham) or 1 (=spam).
+(spamdrop.c)
+
 2010.02.19, SJ
 
 Fixed a typo in the policy handling.

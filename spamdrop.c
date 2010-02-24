@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2010.02.18, SJ
+ * spamdrop.c, 2010.02.21, SJ
  */
 
 #include <stdio.h>
@@ -212,7 +212,7 @@ int main(int argc, char **argv, char **envp){
 #endif
 
 
-   while((i = getopt(argc, argv, "c:U:f:r:u:SHDCdhqo?")) > 0){
+   while((i = getopt(argc, argv, "c:U:f:r:u:SHDCQdhqo?")) > 0){
        switch(i){
 
          case 'c' :
@@ -251,6 +251,10 @@ int main(int argc, char **argv, char **envp){
 
          case 'H' :
                     train_as_ham = 1;
+                    print_message = 0;
+                    break;
+
+         case 'Q' :
                     print_message = 0;
                     break;
 
@@ -843,8 +847,6 @@ ENDE_SPAMDROP:
    /* save email for later retraining and/or spam quarantine */
 
 #ifdef HAVE_STORE
-   syslog(LOG_PRIORITY, "storing itt....");
-
    if( (sdata.tot_len <= cfg.max_message_size_to_filter || cfg.max_message_size_to_filter == 0) && blackhole_request == 0 && debug == 0){
 
       /* add trailing dot to the file, 2010.02.18, SJ */

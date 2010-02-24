@@ -9,6 +9,8 @@ class ModelUserUser extends Model {
       $from = $page * $page_len;
       $to = ($page+1) * $page_len;
 
+      $search = preg_replace("/\s{1,}/", "", $search);
+
       if($search) {
          $query = $this->db->ldap_query(LDAP_USER_BASEDN, "(|(cn=*$search*)(mail=*$search*))", array("uid", "mail", "cn", "policygroupid", "domain") );
       }

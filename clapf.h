@@ -1,5 +1,5 @@
 /*
- * clapf.h, 2010.02.16, SJ
+ * clapf.h, 2010.03.19, SJ
  */
 
 #include <misc.h>
@@ -54,6 +54,7 @@ struct __config read_config(char *configfile);
 void print_config_all(struct __config *cfg, char *key);
 void print_config(char *configfile, struct __config *cfg);
 
+void check_dirs(struct __config *cfg, uid_t uid, gid_t gid);
 
 int get_user_from_memcached(struct session_data *sdata, char *email, struct __config *cfg);
 int put_user_to_memcached(struct session_data *sdata, char *email, struct __config *cfg);

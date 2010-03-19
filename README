@@ -1,8 +1,26 @@
+clapf is an open source email content filter application.
+
+Features:
+
+- statistical (inverse chi-square) antispam modul
+- supports several antivirus products, including ClamAV
+- IP-address / URI blacklists
+- email black-, and whitelists
+- zombie detection
+- web user interface (ui) written i PHP for easy administration
+- web based quarantine
+- LDAP support
+- virtual users
+- policies
+- memcached support
+- trap email addresses
+
+clapf can be used as an after queue content filter with Postfix
+(including as an appliance) and Exim or via the maildrop local
+delivery agent (LDA).
+
+Mailing list: clapf-users+subscribe@lists.acts.hu
+Archive: http://www.mail-archive.com/clapf-users@lists.acts.hu/
+
 You may find the installation instructions, usage, manuals, license,
 and many more at http://clapf.acts.hu/
-
-I want clapf to be a complete email security solution and I need
-your opinion. So I would like you to tell me how clapf works for you,
-what features you would like, how accurate it is, etc.
-
-To join the clapf-users mailing list, send an email to clapf-users+subscribe@lists.acts.hu

@@ -37,7 +37,7 @@ MAKE = `which make`
 INSTALL = @INSTALL@
 
 all: libclapf.a clapf clapfconf clapf.conf @memcached@ @spamsum@ splitmbox @parsembox@ @spamdrop@ @preparesql@
-install: install-clapf install-splitmbox @parsembox_install@ @spamsum_install@ @spamdrop_install@ @db_install@ localedirs install-end
+install: install-clapf install-splitmbox @parsembox_install@ @spamsum_install@ @spamdrop_install@ @db_install@
 
 
 clapf.conf:
@@ -214,22 +214,6 @@ install-parsembox:
 
 	$(INSTALL) -m 0644 $(srcdir)/history/history-purge-mysql.sql $(DESTDIR)$(datarootdir)/clapf
 	$(INSTALL) -m 0644 $(srcdir)/history/history-purge-sqlite3.sql $(DESTDIR)$(datarootdir)/clapf
-
-install-end:
-	@echo "***************************"
-	@echo "if you ever change queuedir or workdir in clapf.conf, then run '$(MAKE) localedirs' to recreate the new paths"
-	@echo "***************************"
-
-localedirs:
-	$(INSTALL) -d $(DESTDIR)$(localstatedir)/lib/clapf/data
-	$(INSTALL) -d -m 755 $(DESTDIR)$(localstatedir)/lib/clapf/stat
-	chown -R $(CLAPF_USER):$(CLAPF_GROUP) $(DESTDIR)$(localstatedir)/lib/clapf
-
-	$(INSTALL) -d -m 711 $(DESTDIR)/`$(DESTDIR)$(sbindir)/clapfconf -c $(DESTDIR)$(sysconfdir)/clapf.conf | grep workdir|cut -f2 -d '='`
-	$(INSTALL) -d -m 755 $(DESTDIR)/`$(DESTDIR)$(sbindir)/clapfconf -c $(DESTDIR)$(sysconfdir)/clapf.conf | grep queuedir|cut -f2 -d '='`
-
-	chown $(CLAPF_USER):$(CLAPF_GROUP) $(DESTDIR)/`$(DESTDIR)$(sbindir)/clapfconf -c $(DESTDIR)$(sysconfdir)/clapf.conf | grep workdir|cut -f2 -d '='`
-	chown $(CLAPF_USER):$(CLAPF_GROUP) $(DESTDIR)/`$(DESTDIR)$(sbindir)/clapfconf -c $(DESTDIR)$(sysconfdir)/clapf.conf | grep queuedir|cut -f2 -d '='`
 
 uninstall:
 	rm -f $(DESTDIR)$(bindir)/parsembox

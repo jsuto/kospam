@@ -1,5 +1,5 @@
 /*
- * clapf.c, 2010.01.21, SJ
+ * clapf.c, 2010.03.19, SJ
  */
 
 #include <stdio.h>
@@ -37,6 +37,7 @@ int nconn = 0;
 char *configfile = CONFIG_FILE;
 struct __config cfg;
 struct __data data;
+struct passwd *pwd;
 
 
 void clean_exit();
@@ -147,10 +148,8 @@ void fatal(char *s){
  */
 
 void drop_privileges(struct __config *cfg){
-   struct passwd *pwd;
 
-   if(strlen(cfg->username) > 1){
-      pwd = getpwnam(cfg->username);
+   if(pwd->pw_uid > 0 && pwd->pw_gid > 0){
 
       if(getgid() != pwd->pw_gid){
          if(setgid(pwd->pw_gid)) fatal(ERR_SETGID);
@@ -172,6 +171,18 @@ void reload_config(){
    char *p, puf[SMALLBUFSIZE];
 
    cfg = read_config(configfile);
+
+   if(strlen(cfg.username) > 1){
+      pwd = getpwnam(cfg.username);
+   }
+
+
+   /* check/create clapf directories if we are root */
+
+   if(getuid() == 0 && pwd){
+      check_dirs(&cfg, pwd->pw_uid, pwd->pw_gid);
+   }
+
 
    if(chdir(cfg.workdir)){
       syslog(LOG_PRIORITY, "workdir: *%s*", cfg.workdir);

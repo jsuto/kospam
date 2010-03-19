@@ -1,5 +1,11 @@
 0.4.5-rc1:
 
+2010.03.19, SJ
+
+clapf will try to create its directories if you start it by root.
+The Makefile will not do that for you any longer.
+(clapf.c, dirs.c, Makefile.in)
+
 2010.02.23, SJ
 
 Strip the trailing whitespace from user management search form. So 'username ' would work too.

@@ -1,5 +1,5 @@
 /*
- * cfg.c, 2010.02.16, SJ
+ * cfg.c, 2010.03.19, SJ
  */
 
 #include <stdio.h>
@@ -113,7 +113,7 @@ struct _parse_rule config_parse_rules[] =
    { "memcached_servers", "string", (void*) string_parser, offsetof(struct __config, memcached_servers), "127.0.0.1", MAXVAL-1},
    { "memcached_ttl", "integer", (void*) int_parser, offsetof(struct __config, memcached_ttl), "86400", sizeof(int)},
    { "message_from_a_zombie", "integer", (void*) int_parser, offsetof(struct __config, message_from_a_zombie), "0", sizeof(int)},
-   { "mydbfile", "string", (void*) string_parser, offsetof(struct __config, mydbfile), USER_DATA_DIR DATADIR "/" MYDB_FILE, MAXVAL-1},
+   { "mydbfile", "string", (void*) string_parser, offsetof(struct __config, mydbfile), USER_DATA_DIR "/" MYDB_FILE, MAXVAL-1},
    { "mysqlhost", "string", (void*) string_parser, offsetof(struct __config, mysqlhost), "", MAXVAL-1},
    { "mysqlport", "integer", (void*) int_parser, offsetof(struct __config, mysqlport), "", sizeof(int)},
    { "mysqlsocket", "string", (void*) string_parser, offsetof(struct __config, mysqlsocket), "/tmp/mysql.sock", MAXVAL-1},

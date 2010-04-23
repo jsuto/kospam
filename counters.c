@@ -117,7 +117,7 @@ void update_counters(struct session_data *sdata, struct __data *data, struct __c
             }
 
 
-            if(now - mc > MEMCACHED_TO_DATABASE_DELTA && c.c_rcvd > 0 && c.c_rcvd >= rcvd){
+            if(now - mc > cfg->memcached_to_db_interval && c.c_rcvd > 0 && c.c_rcvd >= rcvd){
                snprintf(buf, SMALLBUFSIZE-1, "%ld", now); memcached_set(&(data->memc), MEMCACHED_COUNTERS_LAST_UPDATE, strlen(MEMCACHED_COUNTERS_LAST_UPDATE), buf, strlen(buf), 0, 0);
 
                snprintf(buf, SMALLBUFSIZE-1, "UPDATE t_counters SET rcvd=%llu, ham=%llu, spam=%llu, possible_spam=%llu, unsure=%llu, minefield=%llu, virus=%llu, fp=%llu, fn=%llu", c.c_rcvd, c.c_ham, c.c_spam, c.c_possible_spam, c.c_unsure, c.c_minefield, c.c_virus, c.c_fp, c.c_fn);

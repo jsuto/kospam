@@ -1,5 +1,5 @@
 /*
- * config.h, 2010.04.22, SJ
+ * config.h, 2010.04.23, SJ
  */
 
 #ifndef _CONFIG_H
@@ -48,7 +48,6 @@
 
 #define MEMCACHED_CLAPF_PREFIX "_c"
 #define MAX_MEMCACHED_KEY_LEN 250
-#define MEMCACHED_TO_DATABASE_DELTA 900
 
 #define MEMCACHED_SUCCESS 0
 #define MEMCACHED_FAILURE 1

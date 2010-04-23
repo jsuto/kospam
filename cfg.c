@@ -1,5 +1,5 @@
 /*
- * cfg.c, 2010.04.19, SJ
+ * cfg.c, 2010.04.23, SJ
  */
 
 #include <stdio.h>
@@ -111,6 +111,7 @@ struct _parse_rule config_parse_rules[] =
    { "max_message_size_to_filter", "integer", (void*) int_parser, offsetof(struct __config, max_message_size_to_filter), "65535", sizeof(int)},
    { "max_number_of_tokens_to_filter", "integer", (void*) int_parser, offsetof(struct __config, max_number_of_tokens_to_filter), "2000", sizeof(int)},
    { "memcached_servers", "string", (void*) string_parser, offsetof(struct __config, memcached_servers), "127.0.0.1", MAXVAL-1},
+   { "memcached_to_db_interval", "integer", (void*) int_parser, offsetof(struct __config, memcached_to_db_interval), "900", sizeof(int)},
    { "memcached_ttl", "integer", (void*) int_parser, offsetof(struct __config, memcached_ttl), "86400", sizeof(int)},
    { "message_from_a_zombie", "integer", (void*) int_parser, offsetof(struct __config, message_from_a_zombie), "0", sizeof(int)},
    { "mydbfile", "string", (void*) string_parser, offsetof(struct __config, mydbfile), USER_DATA_DIR "/" MYDB_FILE, MAXVAL-1},

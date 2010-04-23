@@ -1,5 +1,5 @@
 /*
- * defs.h, 2009.12.30, SJ
+ * defs.h, 2010.04.23, SJ
  */
 
 #ifndef _DEFS_H
@@ -20,9 +20,6 @@
 #endif
 #ifdef NEED_LDAP
   #include <ldap.h>
-#endif
-#ifdef HAVE_MEMCACHED
-  #include <libmemcached/memcached.h>
 #endif
 #ifdef HAVE_LIBCLAMAV
    #include <clamav.h>
@@ -175,9 +172,6 @@ struct session_data {
 #ifdef HAVE_MYDB
    struct mydb_node *mhash[MAX_MYDB_HASH];
 #endif
-#ifdef HAVE_MEMCACHED
-   memcached_st *memc;
-#endif
 };
 
 
@@ -185,6 +179,46 @@ struct te {
    unsigned int nham;
    unsigned int nspam;
 };
+
+
+#ifdef HAVE_MEMCACHED
+
+#include <stdbool.h>
+#include <netinet/in.h>
+
+struct flags {
+   bool no_block:1;
+   bool no_reply:1;
+   bool tcp_nodelay:1;
+   bool tcp_keepalive:1;
+};
+
+
+struct memcached_server {
+
+   struct flags flags;
+
+   int fd;
+   unsigned int snd_timeout;
+   unsigned int rcv_timeout;
+
+   int send_size;
+   int recv_size;
+   unsigned int tcp_keepidle;
+
+   int last_read_bytes;
+
+   char *result;
+   char buf[MAXBUFSIZE];
+
+   struct sockaddr_in addr;
+
+   char server_ip[16];
+   int server_port;
+
+   char initialised;
+};
+#endif
 
 
 struct __data {
@@ -199,8 +233,24 @@ struct __data {
    int n_regex;
 #endif
 
+#ifdef HAVE_MEMCACHED
+   struct memcached_server memc;
+#endif
+
 };
 
+
+struct __counters {
+   unsigned long long c_rcvd;
+   unsigned long long c_ham;
+   unsigned long long c_spam;
+   unsigned long long c_possible_spam;
+   unsigned long long c_unsure;
+   unsigned long long c_minefield;
+   unsigned long long c_virus;
+   unsigned long long c_fp;
+   unsigned long long c_fn;
+};
 
 #endif /* _DEFS_H */
 

@@ -1,5 +1,5 @@
 /*
- * cfg.c, 2010.03.19, SJ
+ * cfg.c, 2010.04.19, SJ
  */
 
 #include <stdio.h>
@@ -160,6 +160,7 @@ struct _parse_rule config_parse_rules[] =
    { "surbl_domain", "string", (void*) string_parser, offsetof(struct __config, surbl_domain), "", MAXVAL-1},
    { "surbl_condemns_the_message", "integer", (void*) int_parser, offsetof(struct __config, surbl_condemns_the_message), "0", sizeof(int)},
    { "training_mode", "integer", (void*) int_parser, offsetof(struct __config, training_mode), "0", sizeof(int)},
+   { "update_counters_to_memcached", "integer", (void*) int_parser, offsetof(struct __config, update_counters_to_memcached), "0", sizeof(int)},
    { "update_tokens", "integer", (void*) int_parser, offsetof(struct __config, update_tokens), "1", sizeof(int)},
    { "use_antispam", "integer", (void*) int_parser, offsetof(struct __config, use_antispam), "1", sizeof(int)},
    { "use_libclamav_block_max_feature", "integer", (void*) int_parser, offsetof(struct __config, use_libclamav_block_max_feature), "1", sizeof(int)},

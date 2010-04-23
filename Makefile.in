@@ -36,7 +36,7 @@ MAKE = `which make`
 
 INSTALL = @INSTALL@
 
-all: libclapf.a clapf clapfconf clapf.conf @memcached@ @spamsum@ splitmbox @parsembox@ @spamdrop@ @preparesql@
+all: libclapf.a clapf clapfconf clapf.conf @spamsum@ splitmbox @parsembox@ @spamdrop@ @preparesql@
 install: install-clapf install-splitmbox @parsembox_install@ @spamsum_install@ @spamdrop_install@ @db_install@
 
 

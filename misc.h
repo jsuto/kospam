@@ -1,5 +1,5 @@
 /*
- * misc.h, 2009.11.25, SJ
+ * misc.h, 2010.04.15, SJ
  */
 
 #ifndef _MISC_H
@@ -45,7 +45,7 @@ int make_rnd_string(char *res);
 int is_valid_id(char *p);
 int extract_id_from_message(char *messagefile, char *clapf_header_field, char *ID);
 void write_delivery_info(struct session_data *sdata, char *dir);
-int move_message_to_quarantine(struct session_data *sdata, char *quarantine_dir);
+int move_message_to_quarantine(struct session_data *sdata, struct __config *cfg);
 
 int rbl_check(char *rbldomain, char *host, int debug);
 int reverse_ipv4_addr(char *ip);

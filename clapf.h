@@ -1,6 +1,9 @@
 /*
- * clapf.h, 2010.03.19, SJ
+ * clapf.h, 2010.04.22, SJ
  */
+
+#ifndef _CLAPF_H
+ #define _CLAPF_H
 
 #include <misc.h>
 #include <list.h>
@@ -17,6 +20,10 @@
 #include <hash.h>
 #include <boundary.h>
 #include <config.h>
+
+#ifdef HAVE_MEMCACHED
+   #include "memc.h"
+#endif
 
 #ifdef HAVE_MYSQL
    #include <mysql.h>
@@ -56,8 +63,13 @@ void print_config(char *configfile, struct __config *cfg);
 
 void check_dirs(struct __config *cfg, uid_t uid, gid_t gid);
 
-int get_user_from_memcached(struct session_data *sdata, char *email, struct __config *cfg);
-int put_user_to_memcached(struct session_data *sdata, char *email, struct __config *cfg);
-int get_policy_from_memcached(struct session_data *sdata, struct __config *cfg, struct __config *my_cfg);
-int put_policy_to_memcached(struct session_data *sdata, struct __config *cfg);
+int get_user_from_memcached(struct session_data *sdata, struct __data *data, char *email, struct __config *cfg);
+int put_user_to_memcached(struct session_data *sdata, struct __data *data, char *email, struct __config *cfg);
+int get_policy_from_memcached(struct session_data *sdata, struct __data *data, struct __config *cfg, struct __config *my_cfg);
+int put_policy_to_memcached(struct session_data *sdata, struct __data *data, struct __config *cfg);
+
+void update_counters(struct session_data *sdata, struct __data *data, struct __counters *counters, struct __config *cfg);
+
+
+#endif /* _CLAPF_H */
 

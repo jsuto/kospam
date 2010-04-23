@@ -1,5 +1,5 @@
 /*
- * misc.c, 2009.12.21, SJ
+ * misc.c, 2010.04.15, SJ
  */
 
 #include <stdio.h>
@@ -809,16 +809,16 @@ void write_delivery_info(struct session_data *sdata, char *dir){
  * move message to quarantine
  */
 
-int move_message_to_quarantine(struct session_data *sdata, char *quarantine_dir){
+int move_message_to_quarantine(struct session_data *sdata, struct __config *cfg){
    char qfile[QUARANTINELEN];
 
-   snprintf(qfile, QUARANTINELEN-1, "%s/%s", quarantine_dir, sdata->ttmpfile);
+   snprintf(qfile, QUARANTINELEN-1, "%s/%s", cfg->quarantine_dir, sdata->ttmpfile);
 
    /* if we would use rename, we cannot unlink this file later, producing an
       error message to syslog */
 
    if(link(sdata->ttmpfile, qfile) == 0){
-      syslog(LOG_PRIORITY, "%s saved as %s", sdata->ttmpfile, qfile);
+      if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s saved as %s", sdata->ttmpfile, qfile);
       chmod(qfile, 0644);
 
       return OK;

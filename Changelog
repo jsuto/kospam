@@ -1,5 +1,30 @@
 0.4.5-rc1:
 
+2010.04.23, SJ
+
+Discovered a weird problem in libmemcached-0.3[89]. If you compile
+clapf statically, though memcached_mget succeeds, however one cannot
+fetch the records from the results. So I have written my own minimalistic
+poor man's memcached client. Note that it supports only a single memcached
+server on the standard tcp port (11211). If you need a more complex
+solution, just let me know.
+(memc.c, memc.h)
+
+2010.04.17, SJ
+
+Finalised counter implementation.
+(counters.c, session.c)
+
+2010.04.16, SJ
+
+Fixed a few memcached related issues.
+(memcached.c, counters.c)
+
+2010.04.13, SJ
+
+Added counters to memcached.
+(defs.h, clapf.h, config.h, memcached.c, clapf.c, antispam.c, session.c)
+
 2010.03.19, SJ
 
 clapf will try to create its directories if you start it by root.

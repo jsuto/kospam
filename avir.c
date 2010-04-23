@@ -1,5 +1,5 @@
 /*
- * avir.c, 2009.11.08, SJ
+ * avir.c, 2010.04.15, SJ
  */
 
 #include <stdio.h>
@@ -77,7 +77,7 @@ int do_av_check(struct session_data *sdata, char *email, char *email2, char *vir
       /* move to quarantine, if we have to */
 
       if(strlen(cfg->quarantine_dir) > 3)
-         move_message_to_quarantine(sdata, cfg->quarantine_dir);
+         move_message_to_quarantine(sdata, cfg);
 
       /* send notification if localpostmaster is set, 2005.10.04, SJ */
 

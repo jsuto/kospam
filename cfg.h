@@ -1,5 +1,5 @@
 /*
- * cfg.h, 2010.02.16, SJ
+ * cfg.h, 2010.04.19, SJ
  */
 
 #ifndef _CFG_H
@@ -40,6 +40,7 @@ struct __config {
 
    char memcached_servers[MAXVAL];
    int memcached_ttl;
+   int update_counters_to_memcached;
 
    int max_connections;
    int backlog;

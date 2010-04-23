@@ -1,5 +1,5 @@
 /*
- * session.c, 2009.12.11, SJ
+ * session.c, 2010.04.22, SJ
  */
 
 #include <stdio.h>
@@ -83,7 +83,6 @@ void init_session_data(struct session_data *sdata){
 
 void postfix_to_clapf(int new_sd, struct __data *data, struct __config *cfg){
    int i, ret, pos, n, inj=ERR_REJECT, state, prevlen=0;
-   int processed_emails = 0;
    char *p, *q, buf[MAXBUFSIZE], puf[MAXBUFSIZE], resp[MAXBUFSIZE], prevbuf[MAXBUFSIZE], last2buf[2*MAXBUFSIZE+1];
    char email[SMALLBUFSIZE], email2[SMALLBUFSIZE], virusinfo[SMALLBUFSIZE], reason[SMALLBUFSIZE];
    struct session_data sdata;
@@ -92,6 +91,7 @@ void postfix_to_clapf(int new_sd, struct __data *data, struct __config *cfg){
    int db_conn=0;
    int rc;
    struct url *a;
+   struct __counters counters;
 
    struct timezone tz;
    struct timeval tv1, tv2;
@@ -120,23 +120,8 @@ void postfix_to_clapf(int new_sd, struct __data *data, struct __config *cfg){
    init_mydb(cfg->mydbfile, &sdata);
 #endif
 
-
-#ifdef HAVE_MEMCACHED
-   memcached_server_st *servers;
-
-   sdata.memc = memcached_create(NULL);
-
-   if(sdata.memc != NULL){
-      servers = memcached_servers_parse(cfg->memcached_servers);
-
-      if(memcached_server_push(sdata.memc, servers) != MEMCACHED_SUCCESS){
-         memcached_free(sdata.memc);
-         sdata.memc = NULL;
-      }
-
-      memcached_server_list_free(servers);
-   }
-#endif
+   /* initialising counters */
+   bzero(&counters, sizeof(counters));
 
 
    /* open database connection */
@@ -354,7 +339,7 @@ void postfix_to_clapf(int new_sd, struct __data *data, struct __config *cfg){
             #endif
                   send(new_sd, sdata.acceptbuf, strlen(sdata.acceptbuf), 0);
 
-                  processed_emails++;
+                  counters.c_rcvd++;
 
                   if(inj == ERR_DROP_SPAM) syslog(LOG_PRIORITY, "%s: dropped spam", sdata.ttmpfile);
                   else if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent: %s", sdata.ttmpfile, sdata.acceptbuf);
@@ -369,10 +354,16 @@ void postfix_to_clapf(int new_sd, struct __data *data, struct __config *cfg){
                                        sdata.__as/1000000.0, sdata.__training/1000000.0, sdata.__update/1000000.0, sdata.__store/1000000.0, sdata.__inject/1000000.0);
 
                   if(sdata.spaminess >= my_cfg.spam_overall_limit){
+                     if(sdata.blackhole == 0) counters.c_spam++;
                      syslog(LOG_PRIORITY, "%s: %s got SPAM, %.4f, %d, relay=%s:%d, %s, status=%s", sdata.ttmpfile, email, sdata.spaminess, sdata.tot_len, my_cfg.spam_smtp_addr, my_cfg.spam_smtp_port, reason, resp);
                   } else if(sdata.rav == AVIR_VIRUS) {
+                     counters.c_virus++;
                      syslog(LOG_PRIORITY, "%s: %s got VIRUS (%s), %.4f, %d, relay=%s:%d, %s, status=%s", sdata.ttmpfile, email, virusinfo, sdata.spaminess, sdata.tot_len, my_cfg.postfix_addr, my_cfg.postfix_port, reason, resp);
                   } else {
+                     counters.c_ham++;
+                     if(sdata.spaminess < my_cfg.spam_overall_limit && sdata.spaminess > my_cfg.possible_spam_limit) counters.c_possible_spam++;
+                     else if(sdata.spaminess < my_cfg.possible_spam_limit && sdata.spaminess > my_cfg.max_ham_spamicity) counters.c_unsure++;
+
                      syslog(LOG_PRIORITY, "%s: %s got HAM, %.4f, %d, relay=%s:%d, %s, status=%s", sdata.ttmpfile, email, sdata.spaminess, sdata.tot_len, my_cfg.postfix_addr, my_cfg.postfix_port, reason, resp);
                   }
 
@@ -390,6 +381,10 @@ void postfix_to_clapf(int new_sd, struct __data *data, struct __config *cfg){
                free_list(sstate.urls);
                clearhash(sstate.token_hash, 0);
 
+
+            #ifdef HAVE_SQLITE3
+               update_counters(&sdata, data, &counters, cfg);
+            #endif
 
                /* close database backend handler */
 
@@ -613,6 +608,7 @@ AFTER_PERIOD:
                      if(strcmp(a->url_str, email) == 0){
                         if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: we have %s on the blacklist", sdata.ttmpfile, email);
                         sdata.blackhole = 1;
+                        counters.c_minefield++;
 
                      #ifdef HAVE_BLACKHOLE
                         gettimeofday(&tv1, &tz);
@@ -631,8 +627,14 @@ AFTER_PERIOD:
 
                /* is it a training request? */
 
-               if(sdata.num_of_rcpt_to == 1 && (strcasestr(sdata.rcptto[0], "+spam@") || strcasestr(sdata.rcptto[0], "+ham@") || strncmp(email, "spam@", 5) == 0 || strncmp(email, "ham@", 4) == 0 ) ){
+               if(sdata.num_of_rcpt_to == 1 && (strcasestr(sdata.rcptto[0], "+ham@") || strncmp(email, "ham@", 4) == 0 ) ){
                   sdata.training_request = 1;
+                  counters.c_fp++;
+               }
+
+               if(sdata.num_of_rcpt_to == 1 && (strcasestr(sdata.rcptto[0], "+spam@") || strncmp(email, "spam@", 5) == 0) ){
+                  sdata.training_request = 1;
+                  counters.c_fn++;
                }
 
 
@@ -748,19 +750,24 @@ AFTER_PERIOD:
 
 QUITTING:
 
+#ifdef HAVE_MYSQL
+   update_counters(&sdata, data, &counters, cfg);
+#endif
+
 #ifdef HAVE_MYDB
    close_mydb(sdata.mhash);
 #endif
 #ifdef NEED_MYSQL
    mysql_close(&(sdata.mysql));
 #endif
+
 #ifdef HAVE_MEMCACHED
-   if(sdata.memc != NULL) memcached_free(sdata.memc);
+   memcached_shutdown(&(data->memc));
 #endif
 
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "child has finished");
 
-   if(cfg->verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "processed %d messages", processed_emails);
+   if(cfg->verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "processed %llu messages", counters.c_rcvd);
 
    _exit(0);
 }

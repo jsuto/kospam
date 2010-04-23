@@ -1,5 +1,5 @@
 /*
- * memcached.c, 2010.02.21, SJ
+ * memcached.c, 2010.04.23, SJ
  */
 
 #include <stdio.h>
@@ -13,17 +13,16 @@
 #include <clapf.h>
 
 
-int get_user_from_memcached(struct session_data *sdata, char *email, struct __config *cfg){
+int get_user_from_memcached(struct session_data *sdata, struct __data *data, char *email, struct __config *cfg){
    size_t len=0;
    uint32_t flags = 0;
    char key[SMALLBUFSIZE], *s=NULL, *p;
-   memcached_return error;
 
-   if(sdata->memc == NULL) return 0;
+   if(data->memc.initialised == 0) return 0;
 
    snprintf(key, SMALLBUFSIZE-1, "%s:%s", MEMCACHED_CLAPF_PREFIX, email);
 
-   s = memcached_get(sdata->memc, key, strlen(key), &len, &flags, &error);
+   s = memcached_get(&(data->memc), key, &len, &flags);
 
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: memcached user query=%s, data=%s (%d)", sdata->ttmpfile, key, s, len);
 
@@ -55,11 +54,11 @@ int get_user_from_memcached(struct session_data *sdata, char *email, struct __co
 }
 
 
-int put_user_to_memcached(struct session_data *sdata, char *email, struct __config *cfg){
+int put_user_to_memcached(struct session_data *sdata, struct __data *data, char *email, struct __config *cfg){
    uint32_t flags = 0;
    char key[SMALLBUFSIZE], value[SMALLBUFSIZE];
 
-   if(sdata->memc == NULL) return 0;
+   if(data->memc.initialised == 0) return 0;
 
    snprintf(key, SMALLBUFSIZE-1, "%s:%s", MEMCACHED_CLAPF_PREFIX, email);
    if(sdata->uid == 0)
@@ -67,23 +66,22 @@ int put_user_to_memcached(struct session_data *sdata, char *email, struct __conf
    else
       snprintf(value, SMALLBUFSIZE-1, "%ld:%s:%s:%d", sdata->uid, sdata->name, sdata->domain, sdata->policy_group);
 
-   if(memcached_add(sdata->memc, key, strlen(key), value, strlen(value), cfg->memcached_ttl, flags) == MEMCACHED_SUCCESS) return 1;
+   if(memcached_add(&(data->memc), key, strlen(key), value, strlen(value), cfg->memcached_ttl, flags) == MEMCACHED_SUCCESS) return 1;
 
    return 0;
 }
 
 
-int get_policy_from_memcached(struct session_data *sdata, struct __config *cfg, struct __config *my_cfg){
+int get_policy_from_memcached(struct session_data *sdata, struct __data *data, struct __config *cfg, struct __config *my_cfg){
    size_t len=0;
    uint32_t flags = 0;
    char key[SMALLBUFSIZE], *s=NULL, *p;
-   memcached_return error;
 
-   if(sdata->memc == NULL || sdata->policy_group <= 0) return 0;
+   if(data->memc.initialised == 0 || sdata->policy_group <= 0) return 0;
 
    snprintf(key, SMALLBUFSIZE-1, "%s:%d", MEMCACHED_CLAPF_PREFIX, sdata->policy_group);
 
-   s = memcached_get(sdata->memc, key, strlen(key), &len, &flags, &error);
+   s = memcached_get(&(data->memc), key, &len, &flags);
 
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: memcached policy query=%s, data=%s (%d)", sdata->ttmpfile, key, s, len);
 
@@ -122,11 +120,11 @@ int get_policy_from_memcached(struct session_data *sdata, struct __config *cfg, 
 }
 
 
-int put_policy_to_memcached(struct session_data *sdata, struct __config *my_cfg){
+int put_policy_to_memcached(struct session_data *sdata, struct __data *data, struct __config *my_cfg){
    uint32_t flags = 0;
    char key[SMALLBUFSIZE], value[SMALLBUFSIZE];
 
-   if(sdata->memc == NULL || sdata->policy_group <= 0) return 0;
+   if(data->memc.initialised == 0 || sdata->policy_group <= 0) return 0;
 
    snprintf(key, SMALLBUFSIZE-1, "%s:%d", MEMCACHED_CLAPF_PREFIX, sdata->policy_group);
 
@@ -155,7 +153,7 @@ int put_policy_to_memcached(struct session_data *sdata, struct __config *my_cfg)
                   );
 
 
-   if(memcached_add(sdata->memc, key, strlen(key), value, strlen(value), my_cfg->memcached_ttl, flags) == MEMCACHED_SUCCESS) return 1;
+   if(memcached_add(&(data->memc), key, strlen(key), value, strlen(value), my_cfg->memcached_ttl, flags) == MEMCACHED_SUCCESS) return 1;
 
    return 0;
 }

@@ -1,5 +1,5 @@
 /*
- * antispam.c, 2010.02.16, SJ
+ * antispam.c, 2010.04.13, SJ
  */
 
 #include <stdio.h>
@@ -48,11 +48,11 @@ int process_message(struct session_data *sdata, struct _state *sstate, struct __
 #ifdef HAVE_USERS
    gettimeofday(&tv1, &tz);
  #ifdef HAVE_MEMCACHED
-   if(get_user_from_memcached(sdata, email, cfg) == 0){
+   if(get_user_from_memcached(sdata, data, email, cfg) == 0){
  #endif
       get_user_from_email(sdata, email, cfg);
  #ifdef HAVE_MEMCACHED
-      put_user_to_memcached(sdata, email, cfg);
+      put_user_to_memcached(sdata, data, email, cfg);
    }
  #endif
    gettimeofday(&tv2, &tz);
@@ -65,11 +65,11 @@ int process_message(struct session_data *sdata, struct _state *sstate, struct __
    if(sdata->policy_group > 0){
       gettimeofday(&tv1, &tz);
    #ifdef HAVE_MEMCACHED
-      if(get_policy_from_memcached(sdata, cfg, my_cfg) == 0){
+      if(get_policy_from_memcached(sdata, data, cfg, my_cfg) == 0){
    #endif
          get_policy(sdata, cfg, my_cfg);
    #ifdef HAVE_MEMCACHED
-         put_policy_to_memcached(sdata, my_cfg);
+         put_policy_to_memcached(sdata, data, my_cfg);
       }
    #endif
       gettimeofday(&tv2, &tz);

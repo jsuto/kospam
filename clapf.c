@@ -1,5 +1,5 @@
 /*
- * clapf.c, 2010.03.19, SJ
+ * clapf.c, 2010.04.15, SJ
  */
 
 #include <stdio.h>
@@ -123,6 +123,10 @@ void clean_exit(){
    for(i=0; i<data.n_regex; i++){
       regfree(&(data.pregs[i]));
    }
+#endif
+
+#ifdef HAVE_MEMCACHED
+   //if(data.memc != NULL) memcached_free(data.memc);
 #endif
 
    syslog(LOG_PRIORITY, "%s has been terminated", PROGNAME);
@@ -259,6 +263,26 @@ void reload_config(){
    else syslog(LOG_PRIORITY, "cannot open: %s", ZOMBIE_NET_REGEX);
 #endif
 
+
+#ifdef HAVE_MEMCACHED
+   /*memcached_server_st *servers;
+
+   data.memc = memcached_create(NULL);
+
+   if(data.memc != NULL){
+      servers = memcached_servers_parse(cfg.memcached_servers);
+
+      if(memcached_server_push(data.memc, servers) != MEMCACHED_SUCCESS){
+         memcached_free(data.memc);
+         data.memc = NULL;
+      }
+
+      memcached_server_list_free(servers);
+   }*/
+
+   memcached_init(&(data.memc), cfg.memcached_servers, 11211);
+#endif
+
 }
 
 
@@ -375,6 +399,7 @@ int main(int argc, char **argv){
        fclose(f);
     }
     else syslog(LOG_PRIORITY, "cannot write pidfile: %s", cfg.pidfile);
+
 
     /* main accept loop */
 

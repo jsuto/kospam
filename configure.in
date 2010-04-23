@@ -37,9 +37,7 @@ AC_SUBST(db_install)
 AC_SUBST(spamsum_libs)
 AC_SUBST(spamsum)
 AC_SUBST(spamsum_install)
-AC_SUBST(qcache)
 AC_SUBST(libclamav_extra_libs)
-AC_SUBST(memcached)
 AC_SUBST(sqlite3_batch)
 AC_SUBST(id_bin)
 
@@ -66,7 +64,6 @@ have_whitelist="no"
 have_blacklist="no"
 have_case="no"
 have_policy="no"
-have_qcache="no"
 
 
 have_static_build="no"
@@ -365,14 +362,12 @@ fi
     AC_ARG_ENABLE(memcached,
           [  --enable-memcached      build memcached support], want_memcached=$enableval, want_memcached="no")
 
-    if test "$want_memcached" = "yes"; then
-       AC_CHECK_HEADERS(libmemcached/memcached.h, have_memcached=yes, echo "libmemcached/memcached.h is not found"; exit 1)
+    dnl if test "$want_memcached" = "yes"; then
+    dnl    AC_CHECK_HEADERS(libmemcached/memcached.h, have_memcached=yes, echo "libmemcached/memcached.h is not found"; exit 1)
 
-       defs="$defs -DHAVE_MEMCACHED"
-       antispam_libs="$antispam_libs -lmemcached"
-
-       memcached="memcached_cleaner"
-    fi
+    dnl   defs="$defs -DHAVE_MEMCACHED"
+    dnl   antispam_libs="$antispam_libs -lmemcached"
+    dnl fi
 
 
 
@@ -808,7 +803,8 @@ fi
 
 if test "$want_memcached" = "yes"; then
    echo "memcached support: yes"
-   objs="$objs memcached.o"
+   objs="$objs memc.o memcached.o"
+   defs="$defs -DHAVE_MEMCACHED"
 fi
 
 if test "$have_policy" = "yes"; then
@@ -868,7 +864,7 @@ echo; echo
 
 CFLAGS="$static -O2 -Wall -g"
 LIBS="$libclamav $antispam_libs $gsl_libs $sqlite3_libs $sunos_libs"
-OBJS="dirs.o misc.o cfg.o smtp.o sig.o decoder.o list.o boundary.o parser.o session.o templates.o hash.o score.o chi.o $objs"
+OBJS="dirs.o misc.o counters.o cfg.o smtp.o sig.o decoder.o list.o boundary.o parser.o session.o templates.o hash.o score.o chi.o $objs"
 
 AC_OUTPUT(Makefile)
 AC_OUTPUT(contrib/spamsum/Makefile)

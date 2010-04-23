@@ -68,6 +68,9 @@ struct __counters load_counters(struct session_data *sdata, struct __config *cfg
 
 void update_counters(struct session_data *sdata, struct __data *data, struct __counters *counters, struct __config *cfg){
    char buf[MAXBUFSIZE];
+#ifdef HAVE_SQLITE3
+   char *err=NULL;
+#endif
 
 #ifdef HAVE_MEMCACHED
    unsigned long long mc, rcvd;
@@ -160,7 +163,6 @@ EXEC_SQL:
       mysql_real_query(&(sdata->mysql), buf, strlen(buf));
    #endif
    #ifdef HAVE_SQLITE3
-      char *err=NULL;
       sqlite3_exec(sdata->db, buf, NULL, NULL, &err);
    #endif
 

@@ -1,5 +1,5 @@
 /*
- * session.c, 2010.04.22, SJ
+ * session.c, 2010.05.13, SJ
  */
 
 #include <stdio.h>
@@ -43,7 +43,7 @@ void init_session_data(struct session_data *sdata){
    sdata->fd = -1;
 
    memset(sdata->ttmpfile, 0, SMALLBUFSIZE);
-   make_rnd_string(&(sdata->ttmpfile[0]));
+   createClapfID(&(sdata->ttmpfile[0]));
    unlink(sdata->ttmpfile);
 
    memset(sdata->mailfrom, 0, SMALLBUFSIZE);
@@ -168,7 +168,7 @@ void postfix_to_clapf(int new_sd, struct __data *data, struct __config *cfg){
             memcpy(last2buf, prevbuf, MAXBUFSIZE);
             memcpy(last2buf+prevlen, puf, MAXBUFSIZE);
 
-            pos = search_in_buf(last2buf, 2*MAXBUFSIZE+1, SMTP_CMD_PERIOD, 5);
+            pos = searchStringInBuffer(last2buf, 2*MAXBUFSIZE+1, SMTP_CMD_PERIOD, 5);
             if(pos > 0){
 
 	       /* fix position */
@@ -221,17 +221,17 @@ void postfix_to_clapf(int new_sd, struct __data *data, struct __config *cfg){
                }
 
 
-               //write_delivery_info(&sdata, cfg->workdir);
+               //writeDeliveryInfo(&sdata, cfg->workdir);
 
                /* parse message */
                gettimeofday(&tv1, &tz);
 
             #ifdef HAVE_MAILBUF
                if(sdata.mailpos > 0 && sdata.discard_mailbuf == 0)
-                  sstate = parse_buffer(&sdata, cfg);
+                  sstate = parseBuffer(&sdata, cfg);
                else
             #endif
-                  sstate = parse_message(sdata.ttmpfile, &sdata, cfg);
+                  sstate = parseMessage(&sdata, cfg);
 
                gettimeofday(&tv2, &tz);
                sdata.__parsed = tvdiff(tv2, tv1);
@@ -280,7 +280,7 @@ void postfix_to_clapf(int new_sd, struct __data *data, struct __config *cfg){
             #endif
                   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: round %d in injection", sdata.ttmpfile, i);
 
-                  extract_email(sdata.rcptto[i], email);
+                  extractEmail(sdata.rcptto[i], email);
 
                   /* copy default config from clapf.conf, to enable policy support */
                   memcpy(&my_cfg, cfg, sizeof(struct __config));
@@ -495,7 +495,7 @@ AFTER_PERIOD:
                strncat(sdata.xforward, "\r\n", SMALLBUFSIZE-1);
             }
 
-            trim(buf);
+            trimBuffer(buf);
 
             /* extract client name */
 
@@ -569,7 +569,7 @@ AFTER_PERIOD:
 
 
                memset(email2, 0, SMALLBUFSIZE);
-               extract_email(sdata.mailfrom, email2);
+               extractEmail(sdata.mailfrom, email2);
 
                //snprintf(buf, MAXBUFSIZE-1, SMTP_RESP_250_210_OK, email2);
                strncat(resp, SMTP_RESP_250_OK, strlen(SMTP_RESP_250_OK));
@@ -599,7 +599,7 @@ AFTER_PERIOD:
 
                /* check against blackhole addresses */
 
-               extract_email(buf, email);
+               extractEmail(buf, email);
 
                if(data->blackhole){
                   a = data->blackhole;

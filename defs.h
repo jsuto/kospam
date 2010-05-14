@@ -1,5 +1,5 @@
 /*
- * defs.h, 2010.04.23, SJ
+ * defs.h, 2010.05.13, SJ
  */
 
 #ifndef _DEFS_H
@@ -124,6 +124,7 @@ struct _state {
    unsigned long line_num;
    char ctype[MAXBUFSIZE];
    char ip[SMALLBUFSIZE];
+   char hostname[SMALLBUFSIZE];
    char miscbuf[MAX_TOKEN_LEN];
    char qpbuf[MAX_TOKEN_LEN];
    char attachedfile[RND_STR_LEN+SMALLBUFSIZE];

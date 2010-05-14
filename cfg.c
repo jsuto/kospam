@@ -1,5 +1,5 @@
 /*
- * cfg.c, 2010.04.23, SJ
+ * cfg.c, 2010.05.14, SJ
  */
 
 #include <stdio.h>
@@ -143,6 +143,8 @@ struct _parse_rule config_parse_rules[] =
    { "spam_smtp_addr", "string", (void*) string_parser, offsetof(struct __config, spam_smtp_addr), "127.0.0.1", MAXVAL-1},
    { "spam_smtp_port", "integer", (void*) int_parser, offsetof(struct __config, spam_smtp_port), "10026", sizeof(int)},
    { "quarantine_dir", "string", (void*) string_parser, offsetof(struct __config, quarantine_dir), "", MAXVAL-1},
+   { "skipped_received_hosts", "string", (void*) string_parser, offsetof(struct __config, skipped_received_hosts), "localhost$", MAXVAL-1},
+   { "skipped_received_ips", "string", (void*) string_parser, offsetof(struct __config, skipped_received_ips), "127.0.0.1$", MAXVAL-1},
    { "spamc_user", "string", (void*) string_parser, offsetof(struct __config, spamc_user), "spamc", MAXVAL-1},
    { "spamd_addr", "string", (void*) string_parser, offsetof(struct __config, spamd_addr), "127.0.0.1", MAXVAL-1},
    { "spamd_port", "integer", (void*) int_parser, offsetof(struct __config, spamd_port), "783", sizeof(int)},
@@ -192,7 +194,7 @@ int parse_config_file(char *configfile, struct __config *target_cfg, struct _par
       chpos = strchr(line, '=');
 
       if(chpos){
-         trim(chpos+1);
+         trimBuffer(chpos+1);
          *chpos = '\0';
          int i = 0;
 
@@ -279,7 +281,7 @@ void print_config_item(struct __config *cfg, struct _parse_rule *rules, int i){
       } while(p);
    }
    else {
-      trim(p);
+      trimBuffer(p);
       printf("%s=%s\n", rules[i].name, p);
    }
  
@@ -335,7 +337,7 @@ void print_config(char *configfile, struct __config *cfg){
       chpos = strchr(line, '=');
 
       if(chpos){
-         trim(chpos+1);
+         trimBuffer(chpos+1);
          *chpos = '\0';
          int i = 0;
 

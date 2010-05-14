@@ -1,5 +1,5 @@
 /*
- * splitmbox.c, 2007.09.25, SJ
+ * splitmbox.c, 2010.05.13, SJ
  */
 
 #include <stdio.h>
@@ -25,7 +25,7 @@ int main(int argc, char **argv){
       __fatal("open");
 
    while(fgets(buf, MAXBUFSIZE-1, F)){
-      trim(buf);
+      trimBuffer(buf);
 
       if(buf[0] == 'F' && buf[1] == 'r' && buf[2] == 'o' && buf[3] == 'm' && buf[4] == ' '){
          tot_msgs++;
@@ -36,7 +36,6 @@ int main(int argc, char **argv){
          continue;
       }
 
-      //trim(buf);
       if(f) fprintf(f, "%s\r\n", buf);
    }
 

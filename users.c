@@ -1,5 +1,5 @@
 /*
- * users.c, 2009.09.20, SJ
+ * users.c, 2010.05.13, SJ
  */
 
 #include <stdio.h>
@@ -28,7 +28,7 @@
  */
 
 #ifdef USERS_IN_MYSQL
-int get_user_from_email(struct session_data *sdata, char *email, struct __config *cfg){
+int getUserdataFromEmail(struct session_data *sdata, char *email, struct __config *cfg){
    MYSQL_RES *res;
    MYSQL_ROW row;
    char *p, *q, buf[MAXBUFSIZE], _email[2*SMALLBUFSIZE+1];
@@ -120,7 +120,7 @@ int get_user_from_email(struct session_data *sdata, char *email, struct __config
  * check whether the email address is on the white list
  */
 
-int is_sender_on_black_or_white_list(struct session_data *sdata, char *email, char *fieldname, char *table, struct __config *cfg){
+int isSenderOnBlackOrWhiteList(struct session_data *sdata, char *email, char *fieldname, char *table, struct __config *cfg){
    MYSQL_RES *res;
    MYSQL_ROW row;
    char buf[SMALLBUFSIZE];
@@ -137,7 +137,7 @@ int is_sender_on_black_or_white_list(struct session_data *sdata, char *email, ch
       if(res != NULL){
          while((row = mysql_fetch_row(res))){
             if(row[0]){
-               if(whitelist_check((char *)row[0], sdata->ttmpfile, email, cfg) == 1){
+               if(isEmailAddressOnList((char *)row[0], sdata->ttmpfile, email, cfg) == 1){
                   r = 1;
                   break;
                }
@@ -155,7 +155,7 @@ int is_sender_on_black_or_white_list(struct session_data *sdata, char *email, ch
  * is it a valid and known email?
  */
 
-int is_valid_email(struct session_data *sdata, char *email, struct __config *cfg){
+int isKnownEmail(struct session_data *sdata, char *email, struct __config *cfg){
    MYSQL_RES *res;
    MYSQL_ROW row;
    char buf[SMALLBUFSIZE], _email[2*SMALLBUFSIZE+1];
@@ -187,7 +187,7 @@ int is_valid_email(struct session_data *sdata, char *email, struct __config *cfg
 
 
 #ifdef USERS_IN_SQLITE3
-int get_user_from_email(struct session_data *sdata, char *email, struct __config *cfg){
+int getUserdataFromEmail(struct session_data *sdata, char *email, struct __config *cfg){
    sqlite3_stmt *pStmt;
    const char **pzTail=NULL;
    char *p, *q, buf[MAXBUFSIZE];
@@ -262,7 +262,7 @@ int get_user_from_email(struct session_data *sdata, char *email, struct __config
 }
 
 
-int is_sender_on_black_or_white_list(struct session_data *sdata, char *email, char *fieldname, char *table, struct __config *cfg){
+int isSenderOnBlackOrWhiteList(struct session_data *sdata, char *email, char *fieldname, char *table, struct __config *cfg){
    sqlite3_stmt *pStmt;
    const char **pzTail=NULL;
    char buf[SMALLBUFSIZE];
@@ -276,7 +276,7 @@ int is_sender_on_black_or_white_list(struct session_data *sdata, char *email, ch
 
    if(sqlite3_prepare_v2(sdata->db, buf, -1, &pStmt, pzTail) == SQLITE_OK){
       while(sqlite3_step(pStmt) == SQLITE_ROW){
-         if(whitelist_check((char *)sqlite3_column_blob(pStmt, 0), sdata->ttmpfile, email, cfg) == 1){
+         if(isEmailAddressOnList((char *)sqlite3_column_blob(pStmt, 0), sdata->ttmpfile, email, cfg) == 1){
             r = 1;
             break;
          }
@@ -332,7 +332,7 @@ LDAP *do_bind_ldap(char *ldap_host, char *binddn, char *bindpw, int usetls){
  * ask a specific entry about the user from LDAP directory
  */
 
-int get_user_from_email(struct session_data *sdata, char *email, struct __config *cfg){
+int getUserdataFromEmail(struct session_data *sdata, char *email, struct __config *cfg){
    int rc=0;
    char filter[SMALLBUFSIZE], *attrs[] = { NULL }, **vals, *p, *q;
    LDAPMessage *res, *e;
@@ -419,7 +419,7 @@ int get_user_from_email(struct session_data *sdata, char *email, struct __config
 }
 
 
-int is_sender_on_black_or_white_list(struct session_data *sdata, char *email, char *fieldname, char *table, struct __config *cfg){
+int isSenderOnBlackOrWhiteList(struct session_data *sdata, char *email, char *fieldname, char *table, struct __config *cfg){
    int i, rc, ret=0;
    char filter[SMALLBUFSIZE], *attrs[] = { NULL }, **vals;
    LDAPMessage *res, *e;
@@ -441,7 +441,7 @@ int is_sender_on_black_or_white_list(struct session_data *sdata, char *email, ch
          vals = ldap_get_values(sdata->ldap, e, "filterMember");
 
       for(i=0; i<ldap_count_values(vals); i++){
-         ret = whitelist_check((char *)vals[i], sdata->ttmpfile, email, cfg);
+         ret = isEmailAddressOnList((char *)vals[i], sdata->ttmpfile, email, cfg);
          if(ret == 1) break;
       }
       ldap_value_free(vals);

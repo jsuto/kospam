@@ -1,5 +1,5 @@
 /*
- * test.c, 2009.10.29, SJ
+ * test.c, 2010.05.13, SJ
  */
 
 #include <stdio.h>
@@ -63,7 +63,7 @@ int main(int argc, char **argv){
    sdata.num_of_rcpt_to = -1;
    memset(sdata.rcptto[0], 0, SMALLBUFSIZE);
    snprintf(sdata.ttmpfile, SMALLBUFSIZE-1, "%s", argv[2]);
-   state = parse_message(argv[2], &sdata, &cfg);
+   state = parseMessage(&sdata, &cfg);
 
    spaminess = DEFAULT_SPAMICITY;
    sdata.Nham = sdata.Nspam = 0;

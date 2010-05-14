@@ -1,10 +1,12 @@
 /*
- * avir.c, 2010.04.15, SJ
+ * avir.c, 2010.05.13, SJ
  */
 
 #include <stdio.h>
 #include <string.h>
 #include <sys/time.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include "defs.h"
 #include "misc.h"
 #include "av.h"
@@ -74,19 +76,16 @@ int do_av_check(struct session_data *sdata, char *email, char *email2, char *vir
 
    if(rav == AVIR_VIRUS){
 
-      /* move to quarantine, if we have to */
-
-      if(strlen(cfg->quarantine_dir) > 3)
-         move_message_to_quarantine(sdata, cfg);
+      if(strlen(cfg->quarantine_dir) > 3) moveMessageToQuarantine(sdata, cfg);
 
       /* send notification if localpostmaster is set, 2005.10.04, SJ */
 
       if(strlen(cfg->localpostmaster) > 3){
 
          memset(email, 0, SMALLBUFSIZE);
-         extract_email(sdata->rcptto[0], email);
+         extractEmail(sdata->rcptto[0], email);
 
-         if(get_template(VIRUS_TEMPLATE, buf, cfg->localpostmaster, email, email2, virusinfo, avengine) == 1){
+         if(createEmailFromTemplate(VIRUS_TEMPLATE, buf, cfg->localpostmaster, email, email2, virusinfo, avengine) == 1){
 
             snprintf(sdata->rcptto[0], SMALLBUFSIZE-1, "RCPT TO: <%s>\r\n", cfg->localpostmaster);
             sdata->num_of_rcpt_to = 1;
@@ -101,3 +100,30 @@ int do_av_check(struct session_data *sdata, char *email, char *email2, char *vir
 
    return rav;
 }
+
+
+/*
+ * move message to quarantine
+ */
+
+int moveMessageToQuarantine(struct session_data *sdata, struct __config *cfg){
+   char qfile[QUARANTINELEN];
+
+   snprintf(qfile, QUARANTINELEN-1, "%s/%s", cfg->quarantine_dir, sdata->ttmpfile);
+
+   /* if we would use rename, we cannot unlink this file later, producing an
+      error message to syslog */
+
+   if(link(sdata->ttmpfile, qfile) == 0){
+      if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s saved as %s", sdata->ttmpfile, qfile);
+      chmod(qfile, 0644);
+
+      return OK;
+   }
+   else {
+      syslog(LOG_PRIORITY, "failed to put %s into quarantine: %s", sdata->ttmpfile, qfile);
+      return ERR;
+   }
+
+}
+

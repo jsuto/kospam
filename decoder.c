@@ -1,5 +1,5 @@
 /*
- * decoder.c, 2008.09.17, SJ
+ * decoder.c, 2010.05.12, SJ
  */
 
 #include <stdio.h>
@@ -7,6 +7,7 @@
 #include <string.h>
 #include <ctype.h>
 #include "decoder.h"
+#include "htmlentities.h"
 #include "config.h"
 
 static int b64[] = {
@@ -56,46 +57,10 @@ static char hex_table[] = {
 };
 
 
-/*
- * url decode buffer
- */
-
-void url_decode(char *p){
-   int i, c, k=0, a, b;
-
-   if(p == NULL) return;
-
-   for(i=0; i<strlen(p); i++){
-      switch(p[i]){
-         case '+':
-            c = ' ';
-            break;
-
-         case '%':
-            if(isxdigit(p[i+1]) && isxdigit(p[i+2])){
-               a = p[i+1];
-               b = p[i+2];
-
-               c = 16 * hex_table[a] + hex_table[b];
-
-               i += 2;
-            }
-            else
-               c = p[i];
-
-            break;
-
-        default:
-            c = p[i];
-            break;
-      }
-
-      p[k] = c;
-      k++;
-
-   }
-
-   p[k] = '\0';
+static int compmi(const void *m1, const void *m2){
+   struct mi *mi1 = (struct mi *) m1;
+   struct mi *mi2 = (struct mi *) m2;
+   return strcmp(mi1->entity, mi2->entity);
 }
 
 
@@ -121,7 +86,7 @@ void sanitiseBase64(char *s){
  * base64 decode buffer
  */
 
-int base64_decode(char *p, char *r){
+int decodeBase64(char *p, char *r){
    int i, j, n[4], k1, k2, len=0;
    char s[5], s2[3];
 
@@ -178,7 +143,7 @@ int base64_decode(char *p, char *r){
  * decode UTF-8 stuff
  */
 
-void utf8_decode(char *p){
+void decodeUTF8(char *p){
    int i, k=0, a, b;
    unsigned char c, c1, c2;
 
@@ -223,7 +188,7 @@ void utf8_decode(char *p){
  * decode Quoted-printable stuff
  */
 
-void qp_decode(char *p){
+void decodeQP(char *p){
    int i, k=0, a, b;
    char c;
 
@@ -253,29 +218,84 @@ void qp_decode(char *p){
  * decode HTML encoded stuff
  */
 
-void html_decode(char *p){
-   char *q;
-   int i, c, k=0;
+void decodeHTML(char *s){
+   char *p;
+   int i, c, k=0, unknown='q';
+   struct mi key, *res;
+
+   if(s == NULL) return;
+
+   for(i=0; i<strlen(s); i++){
+      c = s[i];
+
+      if(*(s+i) == '&'){
+         p = strchr(s+i, ';');
+         if(p){
+            *p = '\0';
+
+            if(*(s+i+1) == '#'){
+               c = atoi(s+i+2);
+               if(c == 0) c = unknown;
+            }
+            else {
+               key.entity = s+i;
+               res = bsearch(&key, htmlentities, NUM_OF_HTML_ENTITIES, sizeof(struct mi), compmi);
+
+               if(res && res->val <= 255) c = res->val;
+               else c = unknown;
+            }
+
+            i += strlen(s+i);
+            *p = ';';
+
+         }
+      }
+
+      s[k] = c;
+      k++;
+   }
+
+   s[k] = '\0';
+}
+
+
+/*
+ * url decode buffer
+ */
+
+void decodeURL(char *p){
+   int i, c, k=0, a, b;
 
    if(p == NULL) return;
 
    for(i=0; i<strlen(p); i++){
-      c = p[i];
+      switch(p[i]){
+         case '+':
+            c = ' ';
+            break;
 
-      if(*(p+i) == '&' && *(p+i+1) == '#'){
-         q = strchr(p+i, ';');
-         if(q){
-            if(q-p-i >= 3 && q-p-i <= 5){
-               *q = '\0';
-               c = atoi(p+i+2);
-               i += q-p-i;
-               *q = ';';
+         case '%':
+            if(isxdigit(p[i+1]) && isxdigit(p[i+2])){
+               a = p[i+1];
+               b = p[i+2];
+
+               c = 16 * hex_table[a] + hex_table[b];
+
+               i += 2;
             }
-         }
+            else
+               c = p[i];
+
+            break;
+
+        default:
+            c = p[i];
+            break;
       }
 
       p[k] = c;
       k++;
+
    }
 
    p[k] = '\0';

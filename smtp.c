@@ -1,5 +1,5 @@
 /*
- * smtp.c, 2010.01.13, SJ
+ * smtp.c, 2010.05.13, SJ
  */
 
 #include <stdio.h>
@@ -41,7 +41,7 @@ int send_headers(int sd, char *bigbuf, int n, char *spaminessbuf, int put_subjec
 
    /* first find the end of the mail header */
 
-   x = search_in_buf(bigbuf, n, "\r\n.\r\n", 5);
+   x = searchStringInBuffer(bigbuf, n, "\r\n.\r\n", 5);
    if(x > 0) N = x;
    else N = n;
 
@@ -98,7 +98,7 @@ int send_headers(int sd, char *bigbuf, int n, char *spaminessbuf, int put_subjec
          hdr_ptr = strstr(buf, "Received: ");
          if(hdr_ptr){
             hdr_ptr += 10;
-            if(is_valid_id(hdr_ptr)){
+            if(isValidClapfID(hdr_ptr)){
                continue;
             }
          }
@@ -265,7 +265,7 @@ int inject_mail(struct session_data *sdata, int msg, char *smtpaddr, int smtppor
 
    /* pass XFORWARD info if we have any */
 
-   int n_xforward = count_char_in_buffer(sdata->xforward, '\n');
+   int n_xforward = countCharacterInBuffer(sdata->xforward, '\n');
 
    if(n_xforward > 0 && has_pipelining == 1){
       snprintf(buf,  MAXBUFSIZE-1, "%s", sdata->xforward);

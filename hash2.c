@@ -1,5 +1,5 @@
 /*
- * hash2.c, 2009.11.08, SJ
+ * hash2.c, 2010.05.13, SJ
  */
 
 
@@ -74,7 +74,7 @@ void check_lists(struct session_data *sdata, struct _state *state, int *found_on
 
    if(strlen(cfg->rbl_domain) > 3){
       gettimeofday(&tv1, &tz);
-      *found_on_rbl = rbl_list_check(cfg->rbl_domain, state->ip, cfg->debug);
+      *found_on_rbl = isIPv4AddressOnRBL(state->ip, cfg->rbl_domain);
       gettimeofday(&tv2, &tz);
 
       if(cfg->debug == 1) printf("rbl check took %ld ms\n", tvdiff(tv2, tv1)/1000);
@@ -94,7 +94,7 @@ void check_lists(struct session_data *sdata, struct _state *state, int *found_on
 
       while(url){
          gettimeofday(&tv1, &tz);
-         i = rbl_list_check(cfg->surbl_domain, url->url_str+4, cfg->debug);
+         i = isURLOnRBL(url->url_str+4, cfg->surbl_domain);
          gettimeofday(&tv2, &tz);
 
          if(cfg->debug == 1) printf("surbl check for %s (%d) took %ld ms\n", url->url_str+4, i, tvdiff(tv2, tv1)/1000);

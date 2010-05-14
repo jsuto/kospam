@@ -1,5 +1,5 @@
 /*
- * av.h, 2009.06.26, SJ
+ * av.h, 2010.05.13, SJ
  */
 
 #ifndef _AV_H
@@ -72,5 +72,7 @@ int kav_scan(char *tmpfile, char *engine, char *avinfo, struct __config *cfg);
 
 int avg_scan(char *tmpdir, char *tmpfile, char *engine, char *avinfo, struct __config *cfg);
 
+
+int moveMessageToQuarantine(struct session_data *sdata, struct __config *cfg);
 
 #endif /* _AV_H */

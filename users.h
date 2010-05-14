@@ -1,5 +1,5 @@
 /*
- * users.h, 2009.09.18, SJ
+ * users.h, 2010.05.10, SJ
  */
 
 #ifndef _USERS_H
@@ -27,8 +27,8 @@
    LDAP *do_bind_ldap(char *ldap_host, char *binddn, char *bindpw, int usetls);
 #endif
 
-int get_user_from_email(struct session_data *sdata, char *email, struct __config *cfg);
-int is_valid_email(struct session_data *sdata, char *email, struct __config *cfg);
+int getUserdataFromEmail(struct session_data *sdata, char *email, struct __config *cfg);
+int isKnownEmail(struct session_data *sdata, char *email, struct __config *cfg);
 
 #endif /* _USERS_H */
 

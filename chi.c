@@ -17,8 +17,6 @@ double gsl_chi2inv(double x, double df){
 
    R = gsl_cdf_chisq_Q(x, df);
 
-   /*printf("x=%f, df=%f, R=%f\n", x, df, R);*/
-
    if(R < DBL_EPSILON)
       return 0.0;
    else
@@ -163,8 +161,6 @@ double chi2inv_old(double x, int df, double esf){
       term *= m/i;
       sum += term;
    }
-
-   /*printf("x=%f, df=%d, R=%f\n", x, v, sum);*/
 
    if(sum < 1)
       return sum;

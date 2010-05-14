@@ -1,5 +1,5 @@
 /*
- * antispam.c, 2010.04.13, SJ
+ * antispam.c, 2010.05.13, SJ
  */
 
 #include <stdio.h>
@@ -33,10 +33,13 @@
 
 
 int process_message(struct session_data *sdata, struct _state *sstate, struct __data *data, char *email, char *email2, struct __config *cfg, struct __config *my_cfg) {
-   int is_spam = 0, utokens;
+   int i, is_spam = 0, utokens;
    char reason[SMALLBUFSIZE], resp[MAXBUFSIZE], tmpbuf[SMALLBUFSIZE], trainbuf[SMALLBUFSIZE], whitelistbuf[SMALLBUFSIZE];
    struct timezone tz;
    struct timeval tv1, tv2;
+#ifdef HAVE_TRE
+   size_t nmatch=0;
+#endif
 
    memset(sdata->acceptbuf, 0, SMALLBUFSIZE);
 
@@ -50,7 +53,7 @@ int process_message(struct session_data *sdata, struct _state *sstate, struct __
  #ifdef HAVE_MEMCACHED
    if(get_user_from_memcached(sdata, data, email, cfg) == 0){
  #endif
-      get_user_from_email(sdata, email, cfg);
+      getUserdataFromEmail(sdata, email, cfg);
  #ifdef HAVE_MEMCACHED
       put_user_to_memcached(sdata, data, email, cfg);
    }
@@ -109,6 +112,18 @@ int process_message(struct session_data *sdata, struct _state *sstate, struct __
     */
 
 #ifdef HAVE_TRE
+   if(sdata->tre != '+'){
+
+      i = 0;
+      while(i < data->n_regex && sdata->tre != '+'){
+         if(regexec(&(data->pregs[i]), sstate->hostname, nmatch, NULL, 0) == 0) sdata->tre = '+';
+         i++;
+      }
+
+      //if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: zombie check: %c [%d] %s", sdata->ttmpfile, sdata->tre, i, sstate->hostname);
+      syslog(LOG_PRIORITY, "%s: zombie check: %c [%d] %s", sdata->ttmpfile, sdata->tre, i, sstate->hostname);
+   }
+
    if(sdata->tre == '+'){
       snprintf(sdata->acceptbuf, SMALLBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata->ttmpfile, email);
 
@@ -137,7 +152,7 @@ int process_message(struct session_data *sdata, struct _state *sstate, struct __
       /* get user from 'MAIL FROM:', 2008.10.25, SJ */
 
       gettimeofday(&tv1, &tz);
-      get_user_from_email(sdata, email2, cfg);
+      getUserdataFromEmail(sdata, email2, cfg);
       gettimeofday(&tv2, &tz);
       sdata->__user += tvdiff(tv2, tv1);
 
@@ -153,7 +168,7 @@ int process_message(struct session_data *sdata, struct _state *sstate, struct __
 
        if(sdata->name[0] == 0){
           gettimeofday(&tv1, &tz);
-          get_user_from_email(sdata, email, cfg);
+          getUserdataFromEmail(sdata, email, cfg);
           gettimeofday(&tv2, &tz);
           sdata->__user += tvdiff(tv2, tv1);
        }
@@ -249,7 +264,7 @@ int process_message(struct session_data *sdata, struct _state *sstate, struct __
       /* check whitelist first */
 
    #ifdef HAVE_WHITELIST
-      if(is_sender_on_black_or_white_list(sdata, email2, SQL_WHITE_FIELD_NAME, SQL_WHITE_LIST, my_cfg) == 1){
+      if(isSenderOnBlackOrWhiteList(sdata, email2, SQL_WHITE_FIELD_NAME, SQL_WHITE_LIST, my_cfg) == 1){
          syslog(LOG_PRIORITY, "%s: sender (%s) found on whitelist", sdata->ttmpfile, email2);
          snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on whitelist\r\n", cfg->clapf_header_field);
          goto END_OF_TRAINING;
@@ -259,7 +274,7 @@ int process_message(struct session_data *sdata, struct _state *sstate, struct __
       /* then give blacklist a try */
 
    #ifdef HAVE_BLACKLIST
-      if(is_sender_on_black_or_white_list(sdata, email2, SQL_BLACK_FIELD_NAME, SQL_BLACK_LIST, my_cfg) == 1){
+      if(isSenderOnBlackOrWhiteList(sdata, email2, SQL_BLACK_FIELD_NAME, SQL_BLACK_LIST, my_cfg) == 1){
          syslog(LOG_PRIORITY, "%s: sender (%s) found on blacklist", sdata->ttmpfile, email2);
          snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on blacklist\r\n", cfg->clapf_header_field);
 

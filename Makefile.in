@@ -72,10 +72,7 @@ libclapf.a: $(OBJS) $(MYSQL_OBJS)
 	ln -sf libclapf.so.$(LIBCLAPF_VERSION) libclapf.so.$(CLAPF_VERSION)
 
 
-memcached_cleaner: memcached_cleaner.c libclapf.a
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ memcached_cleaner.c -lclapf $(LIBS) $(LDAP_LIBS) $(LIBDIR)
-
-parsembox: parsembox.c cfg.o misc.o list.o hash.o parser.o decoder.o boundary.o score.o chi.o
+parsembox: parsembox.c cfg.o misc.o list.o hash.o parser.o parser_utils.o decoder.o boundary.o score.o chi.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
 
 clapfconf: clapfconf.c cfg.o misc.o
@@ -87,13 +84,13 @@ spamdrop: spamdrop.c libclapf.a
 spamstat: spamstat.c libclapf.a
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ spamstat.c -lclapf @spamsum_libs@ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
 
-splitmbox: splitmbox.c misc.o decoder.o list.o boundary.o parser.o hash.o score.o chi.o
+splitmbox: splitmbox.c misc.o decoder.o list.o boundary.o parser.o parser_utils.o hash.o score.o chi.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
 
 aphash: aphash.c misc.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS)
 
-prepare-sql: prepare-sql.c misc.o decoder.o list.o boundary.o parser.o score.o chi.o
+prepare-sql: prepare-sql.c misc.o decoder.o list.o boundary.o parser.o parser_utils.o score.o chi.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS)
 
 mydb_stat mydb_compress mydb_export: %.o mydb.o misc.o hash.o chi.o score.o cfg.o

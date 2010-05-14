@@ -1,13 +1,16 @@
 /*
- * parser.c, 2009.10.29, SJ
+ * parser.c, 2010.05.13, SJ
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include "misc.h"
@@ -19,126 +22,67 @@
 #include "config.h"
 #include "defs.h"
 
+
 /*
- * initialise parser state
+ * parse the message into tokens and return the pointer
  */
 
-void init_state(struct _state *state){
-   int i;
+struct _state parseMessage(struct session_data *sdata, struct __config *cfg){
+   FILE *f;
+   int skipped_header = 0, found_clapf_signature = 0;
+   char *p, *q;
+   char buf[MAXBUFSIZE], tumbuf[SMALLBUFSIZE];
+   struct _state state;
 
-   state->message_state = MSG_UNDEF;
+   init_state(&state);
 
-   state->is_header = 1;
-
-   /* by default we are a text/plain message */
-
-   state->textplain = 1;
-   state->texthtml = 0;
-
-   state->base64 = 0;
-   state->utf8 = 0;
-
-   state->iso_8859_2 = 1;
-   state->qp = 0;
-
-   state->base64_lines = 0;
-   state->html_comment = 0;
-
-   state->base64_text = 0;
-
-   state->n_token = 0;
-   state->n_body_token = 0;
-   state->n_chain_token = 0;
-   state->n_subject_token = 0;
-
-   state->c_shit = 0;
-   state->l_shit = 0;
-
-   state->line_num = 0;
-
-   state->ipcnt = 0;
-
-   state->train_mode = T_TOE;
-
-   memset(state->ctype, 0, MAXBUFSIZE);
-   memset(state->ip, 0, SMALLBUFSIZE);
-   memset(state->miscbuf, 0, MAX_TOKEN_LEN);
-   memset(state->qpbuf, 0, MAX_TOKEN_LEN);
-   memset(state->from, 0, SMALLBUFSIZE);
-
-   state->urls = NULL;
-
-   state->found_our_signo = 0;
-
-   state->has_to_dump = 0;
-   state->fd = 0;
-   state->num_of_images = 0;
-   state->num_of_msword = 0;
-
-   state->boundaries = NULL;
-
-   state->n_attachments = 0;
-   state->has_base64 = 0;
-
-   for(i=0; i<MAX_ATTACHMENTS; i++){
-      state->attachments[i].size = 0;
-      memset(state->attachments[i].type, 0, SMALLBUFSIZE);
+   f = fopen(sdata->ttmpfile, "r");
+   if(!f){
+      syslog(LOG_PRIORITY, "%s: cannot open", sdata->ttmpfile);
+      return state;
    }
 
-   inithash(state->token_hash);
-}
 
+   snprintf(tumbuf, SMALLBUFSIZE-1, "%sTUM", cfg->clapf_header_field);
 
-/*
- *
- */
+   while(fgets(buf, MAXBUFSIZE-1, f)){
 
-int attachment_by_type(struct _state *state, char *type){
-   int i;
-
-   for(i=0; i<MAX_ATTACHMENTS; i++){
-      if(strstr(state->attachments[i].type, type))
-         return 1;
-   }
-
-   return 0;
-}
-
-
-/*
- * extract bondary
- */
-
-int extract_boundary(char *p, struct _state *state){
-   char *q;
-
-   p += strlen("boundary");
-
-   q = strchr(p, '"');
-   if(q) *q = ' ';
-
-   p = strchr(p, '=');
-   if(p){
-      p++;
-      for(; *p; p++){
-         if(isspace(*p) == 0)
-            break;
+      if(sdata->training_request == 0 || found_clapf_signature == 1){
+         parseLine(buf, &state, sdata, cfg);
+         if(strncmp(buf, tumbuf, strlen(tumbuf)) == 0) state.train_mode = T_TUM;
       }
-      q = strrchr(p, '"');
-      if(q) *q = '\0';
 
-      q = strrchr(p, '\r');
-      if(q) *q = '\0';
+      if(found_clapf_signature == 0 && sdata->training_request == 1){
 
-      q = strrchr(p, '\n');
-      if(q) *q = '\0';
+         if(buf[0] == '\n' || (buf[0] == '\r' && buf[1] == '\n') ){
+            skipped_header = 1;
+         }
 
-      append_boundary(&(state->boundaries), p);
+         if(skipped_header == 1){
+            q = strstr(buf, "Received: ");
+            if(q){
+               trimBuffer(buf);
+               p = strchr(buf, ' ');
+               if(p){
+                  p++;
+                  if(isValidClapfID(p)){
+                     snprintf(sdata->clapf_id, SMALLBUFSIZE-1, "%s", p);
+                     if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: found id in training request: *%s*", sdata->ttmpfile, p);
+                     found_clapf_signature = 1;
+                  }
+               }
+            }
+         }
+      }
 
-      return 1;
    }
 
-   return 0;
+
+   fclose(f);
+
+   free_boundary(state.boundaries);
+
+   return state;
 }
 
 
@@ -146,8 +90,8 @@ int extract_boundary(char *p, struct _state *state){
  * parse buffer
  */
 
-int parse(char *buf, struct _state *state, struct session_data *sdata, struct __config *cfg){
-   char *p, *q, *c, huf[MAXBUFSIZE], puf[MAXBUFSIZE], muf[MAXBUFSIZE], tuf[MAXBUFSIZE], u[SMALLBUFSIZE], token[MAX_TOKEN_LEN], phrase[MAX_TOKEN_LEN], ipbuf[IPLEN];
+int parseLine(char *buf, struct _state *state, struct session_data *sdata, struct __config *cfg){
+   char *p, *q, *c, huf[MAXBUFSIZE], puf[MAXBUFSIZE], muf[MAXBUFSIZE], tuf[MAXBUFSIZE], u[SMALLBUFSIZE], token[MAX_TOKEN_LEN], phrase[MAX_TOKEN_LEN];
    int x, b64_len;
 
    memset(token, 0, MAX_TOKEN_LEN);
@@ -160,7 +104,6 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
    /* skip empty lines */
 
    if(buf[0] == '\r' || buf[0] == '\n'){
-      //if(state->base64_lines > 0) state->base64 = 0;
       state->message_state = MSG_BODY;
 
       if(state->is_header == 1) state->is_header = 0;
@@ -200,40 +143,8 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
          else p = buf + 5;
 
          snprintf(state->from, SMALLBUFSIZE-1, "FROM*%s", p);
-         trim(state->from);
+         trimBuffer(state->from);
       }
-
-
-      if(state->message_state == MSG_RECEIVED){
-
-      #ifndef HAVE_PROCESS_ALL_RECEIVED_LINES
-         if(state->ipcnt < 2){
-      #endif
-            p = strchr(buf, '[');
-            if(p){
-               q = strchr(p, ']');
-               if(q){
-
-                  /* we care only IPv4 addresses for now, 2005.12.23, SJ */
-
-                  if(q > p+6 && q-p-1 <= IPLEN-1){
-                     memset(ipbuf, 0, IPLEN);
-                     memcpy(ipbuf, p+1, q-p-1);
-                     strncat(ipbuf, ",", IPLEN-1);
-
-                     if(strncmp(ipbuf, "127.", 4) && !strstr(state->ip, ipbuf) && strlen(state->ip) + strlen(ipbuf) < SMALLBUFSIZE-1)
-                        strncat(state->ip, ipbuf, SMALLBUFSIZE-1);
-
-                     state->ipcnt++;
-                  }
-               }
-            }
-      #ifndef HAVE_PROCESS_ALL_RECEIVED_LINES
-         }
-      #endif
-
-      }
-
 
 
       /* extract prefix type */
@@ -265,9 +176,6 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
 
    if(state->message_state == MSG_CONTENT_TYPE){
 
-      //if(state->n_attachments < MAX_ATTACHMENTS-1 && state->attachments[state->n_attachments].size > 0)
-      //   state->n_attachments++;
-
       /* extract Content type */
 
       p = strchr(buf, ':');
@@ -275,7 +183,7 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
          p++;
          if(*p == ' ' || *p == '\t') p++;
          snprintf(state->attachments[state->n_attachments].type, SMALLBUFSIZE-1, "%s", p);
-         trim(state->attachments[state->n_attachments].type);
+         trimBuffer(state->attachments[state->n_attachments].type);
          p = strchr(state->attachments[state->n_attachments].type, ';');
          if(p) *p = '\0';
 
@@ -311,10 +219,6 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
       if(strcasestr(buf, "base64")){
          state->base64 = 1;
          state->has_base64 = 1;
-
-         /*snprintf(u, SMALLBUFSIZE-1, "%s-%d", sdata->ttmpfile, state->n_attachments);
-         state->has_to_dump = 1;
-         state->fd = open(u, O_CREAT|O_RDWR, 0644);*/
       }
 
       if(strcasestr(buf, "image"))
@@ -389,17 +293,6 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
    /* end of boundary check */
 
 
-   /* dump attachment */
-
-   /*if(state->has_to_dump == 1 && state->message_state == MSG_BODY){
-      if(state->base64 == 1){
-         b64_len = base64_decode(buf, puf);
-         write(state->fd, puf, b64_len);
-      }
-      else write(state->fd, buf, strlen(buf));
-   }*/
-
-
    /* skip non textual stuff */
 
    if(state->is_header == 0 && state->textplain == 0 && state->texthtml == 0)
@@ -409,18 +302,14 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
 
    if(state->base64 == 1 && state->is_header == 0 && strncmp(buf, "Content-", strlen("Content-")) != 0){
       memset(huf, 0, MAXBUFSIZE);
-      b64_len = base64_decode(buf, huf);
+      b64_len = decodeBase64(buf, huf);
       if(b64_len > 0)
          strncpy(buf, huf, MAXBUFSIZE-1);
    }
 
 
-   /* handle qp encoded lines */
 
-   if(state->qp == 1 || ( (state->message_state == MSG_SUBJECT || state->message_state == MSG_FROM) && strcasestr(buf, "?Q?")) )
-      qp_decode(buf);
-
-   /* handle base64 encoded From:, To: and Subject: lines, 2008.11.24, SJ */
+   /* handle encoded From:, To: and Subject: lines, 2008.11.24, SJ */
 
    if(state->message_state == MSG_SUBJECT || state->message_state == MSG_FROM || state->message_state == MSG_TO){
       memset(tuf, 0, MAXBUFSIZE);
@@ -429,29 +318,30 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
 
       do {
          q = split_str(q, " ", u, SMALLBUFSIZE-1);
+         x = 0;
 
          p = strcasestr(u, "?B?");
          if(p){
-            *(p+2) = '\0';
-            strncat(tuf, u, MAXBUFSIZE-1); strncat(tuf, "? ", MAXBUFSIZE-1);
+            decodeBase64(p+3, huf); x = 1;
+         }
+         else if((p = strcasestr(u, "?Q?"))){
+            decodeQP(p+3); x = 1;
+            snprintf(huf, MAXBUFSIZE-1, "%s", p+3);
+         }
 
-            *(p+2) = '?';
-            base64_decode(p+3, huf);
+         if(x == 1){
+            if(strcasestr(u, "=?utf-8?")) decodeUTF8(huf);
             strncat(tuf, huf, MAXBUFSIZE-1); strncat(tuf, " ", MAXBUFSIZE-1);
          }
          else {
-            strncat(tuf, u, MAXBUFSIZE-1);
-            strncat(tuf, " ", MAXBUFSIZE-1);
+            strncat(tuf, u, MAXBUFSIZE-1); strncat(tuf, " ", MAXBUFSIZE-1);
          }
+
       } while(q);
 
       snprintf(buf, MAXBUFSIZE-1, "%s", tuf);
    }
 
-
-   /* html decode stuff, 2007.06.07, SJ */
-
-   html_decode(buf);
 
 
    /* skip the first line too, if it's a "From <email address> date" format */
@@ -506,13 +396,6 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
    }
 
 
-   /*
-    * utf-8 decoding moved after the quoted-printable fixes, together
-    *  with the pre_translate() and url_decode() functions,  2007.05.22, SJ
-    */
-
-   if(state->utf8 == 1) utf8_decode(buf);
-
    /* handle html comments, 2007.06.07, SJ */
 
    if(state->texthtml == 1){
@@ -532,7 +415,14 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
    }
 
 
-   url_decode(buf);
+   if(state->message_state == MSG_BODY){
+      if(state->qp == 1)   decodeQP(buf);
+      if(state->utf8 == 1) decodeUTF8(buf);
+   }
+
+   decodeURL(buf);
+
+   decodeHTML(buf);
 
 
    /* Chinese, Japan, Korean, ... language detection here */
@@ -550,7 +440,7 @@ int parse(char *buf, struct _state *state, struct session_data *sdata, struct __
 
 
    /* count invalid junk characters specified in the ijc.h file, 2008.09.08 */
-   state->c_shit += count_invalid_junk(buf, cfg->replace_junk_characters);
+   state->c_shit += countInvalidJunkCharacters(buf, cfg->replace_junk_characters);
 
    /* skip unless we have an URL, 2006.11.09, SJ */
 
@@ -560,9 +450,9 @@ DECOMPOSE:
    /* skip unnecessary header lines */
    if(state->message_state == MSG_UNDEF && state->is_header == 1) return 0;
 
-   translate2((unsigned char*)buf, state->qp);
+   translateLine((unsigned char*)buf, state);
 
-   reassemble_token(buf);
+   reassembleToken(buf);
 
    if(state->is_header == 1) p = strchr(buf, ' ');
    else p = buf;
@@ -580,7 +470,7 @@ DECOMPOSE:
             if(strlen(u) > 2){
                snprintf(muf, MAXBUFSIZE-1, "http://%s", u);
 
-               fix_url(muf);
+               fixURL(muf);
 
                addnode(state->token_hash, muf, DEFAULT_SPAMICITY, 0);
                append_list(&(state->urls), muf);
@@ -588,7 +478,7 @@ DECOMPOSE:
 
                /* create a .tld token, suitable for http://whatever.cn/ URIs, 2009.08.05, SJ */
 
-               tld_from_url(muf);
+               getTLDFromName(muf);
 
                addnode(state->token_hash, muf, DEFAULT_SPAMICITY, 0);
                append_list(&(state->urls), muf);
@@ -600,21 +490,61 @@ DECOMPOSE:
          continue;
       }
 
-      /* if we have a long string in the Received: lines, let's truncate it, 
-         and it may be a domain name, 2008.07.22 */
 
-      if(state->message_state == MSG_RECEIVED && strlen(puf) > MAX_WORD_LEN){
-         fix_fqdn(puf);
+      /* fixup Received: line tokens, 2010.05.13, SJ */
 
-         snprintf(muf, MAXBUFSIZE-1, "%s", puf);
-         tld_from_fqdn(muf);
-         addnode(state->token_hash, muf, DEFAULT_SPAMICITY, 0);
-         state->n_token++;
+      if(state->message_state == MSG_RECEIVED){
+         x = puf[strlen(puf)-1];
+
+         /* 
+          * skip Received line token, if
+          *    - no punctuation (eg. by, from, esmtp, ...)
+          *    - it's on the skipped_received_hosts or skipped_received_ips list
+          *    - ends with a number and not a valid IP-address (8.14.3, 6.0.3790.211, ...)
+          */
+
+         if(!strchr(puf, '.') || isItemOnList(puf, cfg->skipped_received_hosts) == 1 || isItemOnList(puf, cfg->skipped_received_ips) == 1 || ( (x >= 0x30 && x <= 0x39) && (isDottedIPv4Address(puf) == 0 || countCharacterInBuffer(puf, '.') != 3) ) ){
+            continue;
+         }
+
+
+         /* 
+          * fill state.ip and state.hostname fields _after_
+          * eliminated all entries matched by skipped_received_ips,
+          * and skipped_received_hosts.
+          * These entries hold the name and address of the host
+          * which hands this email to us.
+          */
+
+         if(state->ipcnt == 0){
+
+            if(isDottedIPv4Address(puf) == 1){
+               snprintf(state->ip, SMALLBUFSIZE-1, "%s", puf);
+               state->ipcnt++;
+            }
+            else {
+               snprintf(state->hostname, SMALLBUFSIZE-1, "%s", puf);
+            }
+         }
+
+
+         /* truncate long Received: line tokens */
+
+         if(strlen(puf) > MAX_WORD_LEN){
+            fixFQDN(puf);
+
+            snprintf(muf, MAXBUFSIZE-1, "%s", puf);
+            getTLDFromName(muf);
+            addnode(state->token_hash, muf, DEFAULT_SPAMICITY, 0);
+            state->n_token++;
+         }
+
       }
+
 
       /* skip too short or long or numeric only tokens */
 
-      if(strlen(puf) < MIN_WORD_LEN || strlen(puf) > MAX_WORD_LEN || is_hex_number(puf))
+      if(strlen(puf) < MIN_WORD_LEN || strlen(puf) > MAX_WORD_LEN || isHexNumber(puf))
          continue;
 
       if(state->message_state == MSG_SUBJECT){
@@ -634,9 +564,7 @@ DECOMPOSE:
       state->n_token++;
       if(state->message_state != MSG_RECEIVED && state->message_state != MSG_FROM) state->n_chain_token++;
 
-      /* degenerate token, 2007.05.04, SJ */
-
-      degenerate((unsigned char*)muf);
+      degenerateToken((unsigned char*)muf);
 
 
       /* add single token to list */
@@ -669,72 +597,8 @@ DECOMPOSE:
 }
 
 
-/*
- * parse the message into tokens and return the pointer
- */
-
-struct _state parse_message(char *spamfile, struct session_data *sdata, struct __config *cfg){
-   FILE *f;
-   int skipped_header = 0, found_clapf_signature = 0;
-   char *p, *q;
-   char buf[MAXBUFSIZE], tumbuf[SMALLBUFSIZE];
-   struct _state state;
-
-   init_state(&state);
-
-   f = fopen(spamfile, "r");
-   if(!f){
-      syslog(LOG_PRIORITY, "%s: cannot open", spamfile);
-      return state;
-   }
-
-
-   snprintf(tumbuf, SMALLBUFSIZE-1, "%sTUM", cfg->clapf_header_field);
-
-   while(fgets(buf, MAXBUFSIZE-1, f)){
-
-      if(sdata->training_request == 0 || found_clapf_signature == 1){
-         //syslog(LOG_PRIORITY, "parsing: %s", buf);
-         parse(buf, &state, sdata, cfg);
-         if(strncmp(buf, tumbuf, strlen(tumbuf)) == 0) state.train_mode = T_TUM;
-      }
-
-      if(found_clapf_signature == 0 && sdata->training_request == 1){
-         //syslog(LOG_PRIORITY, "skipping: %s", buf);
-
-         if(buf[0] == '\n' || (buf[0] == '\r' && buf[1] == '\n') ){
-            skipped_header = 1;
-         }
-
-         if(skipped_header == 1){
-            q = strstr(buf, "Received: ");
-            if(q){
-               trim(buf);
-               p = strchr(buf, ' ');
-               if(p){
-                  p++;
-                  if(is_valid_id(p)){
-                     snprintf(sdata->clapf_id, SMALLBUFSIZE-1, "%s", p);
-                     if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: found id in training request: *%s*", sdata->ttmpfile, p);
-                     found_clapf_signature = 1;
-                  }
-               }
-            }
-         }
-      }
-
-   }
- 
-
-   fclose(f);
-
-   free_boundary(state.boundaries);
-
-   return state;
-}
-
 #ifdef HAVE_MAILBUF
-struct _state parse_buffer(struct session_data *sdata, struct __config *cfg){
+struct _state parseBuffer(struct session_data *sdata, struct __config *cfg){
    int skipped_header = 0, found_clapf_signature = 0;
    char *p, *q, *r;
    char buf[MAXBUFSIZE], tumbuf[SMALLBUFSIZE];
@@ -768,11 +632,11 @@ struct _state parse_buffer(struct session_data *sdata, struct __config *cfg){
          if(skipped_header == 1){
             q = strstr(buf, "Received: ");
             if(q){
-               trim(buf);
+               trimBuffer(buf);
                p = strchr(buf, ' ');
                if(p){
                   p++;
-                  if(is_valid_id(p)){
+                  if(isValidClapfID(p)){
                      snprintf(sdata->clapf_id, SMALLBUFSIZE-1, "%s", p);
                      if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: found id in training request: *%s*", sdata->ttmpfile, p);
                      found_clapf_signature = 1;

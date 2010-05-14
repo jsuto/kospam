@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2010.02.21, SJ
+ * spamdrop.c, 2010.05.13, SJ
  */
 
 #include <stdio.h>
@@ -317,7 +317,7 @@ int main(int argc, char **argv, char **envp){
    sdata.fd = -1;
 
    memset(sdata.ttmpfile, 0, SMALLBUFSIZE);
-   make_rnd_string(&(sdata.ttmpfile[0]));
+   createClapfID(&(sdata.ttmpfile[0]));
    unlink(sdata.ttmpfile);
 
    memset(sdata.mailfrom, 0, SMALLBUFSIZE);
@@ -403,7 +403,7 @@ int main(int argc, char **argv, char **envp){
       if(f){
          while(fgets(trainbuf, SMALLBUFSIZE-1, f)){
             if(strncmp(trainbuf, "To:", 3) == 0 && (strcasestr(trainbuf, "+ham@") || strcasestr(trainbuf, "+spam@")) ){
-               trim(trainbuf);
+               trimBuffer(trainbuf);
                training_request = 1;
                break;
             }
@@ -495,7 +495,7 @@ int main(int argc, char **argv, char **envp){
 
 
 #ifdef HAVE_USERS
-   if(recipient) get_user_from_email(&sdata, recipient, &cfg);
+   if(recipient) getUserdataFromEmail(&sdata, recipient, &cfg);
 #endif
 
    /****************************/
@@ -510,7 +510,7 @@ int main(int argc, char **argv, char **envp){
        * the user sends his email to user+spam@domain
        * what postfix will write as user@domain
        */
-      //get_user_from_email(&sdata, from, &cfg);
+      //getUserdataFromEmail(&sdata, from, &cfg);
 
       is_spam = 0;
       if(recipient && strcasestr(recipient, "+spam@")) is_spam = 1;
@@ -543,8 +543,8 @@ int main(int argc, char **argv, char **envp){
       }
 
 
-
-      state = parse_message(buf, &sdata, &cfg);
+      snprintf(sdata.ttmpfile, SMALLBUFSIZE-1, "%s", buf);
+      state = parseMessage(&sdata, &cfg);
 
       /* is it a TUM trained message? */
 
@@ -568,7 +568,7 @@ int main(int argc, char **argv, char **envp){
 
 
    /* parse message */
-   state = parse_message(sdata.ttmpfile, &sdata, &cfg);
+   state = parseMessage(&sdata, &cfg);
 
 
    /*******************************************************/
@@ -595,7 +595,7 @@ int main(int argc, char **argv, char **envp){
 
     */
 
-      if(from) get_user_from_email(&sdata, from, &cfg);
+      if(from) getUserdataFromEmail(&sdata, from, &cfg);
       else if(u >= 0) sdata.uid = u;
 
    #endif
@@ -626,7 +626,7 @@ int main(int argc, char **argv, char **envp){
       /* whitelist check first */
 
    #ifdef HAVE_WHITELIST
-      if(is_sender_on_black_or_white_list(&sdata, from, SQL_WHITE_FIELD_NAME, SQL_WHITE_LIST, &cfg)){
+      if(isSenderOnBlackOrWhiteList(&sdata, from, SQL_WHITE_FIELD_NAME, SQL_WHITE_LIST, &cfg)){
          syslog(LOG_PRIORITY, "%s: sender (%s) found on whitelist", sdata.ttmpfile, from);
          snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on whitelist%s", cfg.clapf_header_field, CRLF);
          strncat(clapf_info, whitelistbuf, MAXBUFSIZE-1);
@@ -638,7 +638,7 @@ int main(int argc, char **argv, char **envp){
       /* then give blacklist a try */
 
    #ifdef HAVE_BLACKLIST
-      if(is_sender_on_black_or_white_list(&sdata, from, SQL_BLACK_FIELD_NAME, SQL_BLACK_LIST, &cfg) == 1){
+      if(isSenderOnBlackOrWhiteList(&sdata, from, SQL_BLACK_FIELD_NAME, SQL_BLACK_LIST, &cfg) == 1){
          syslog(LOG_PRIORITY, "%s: sender (%s) found on blacklist", sdata.ttmpfile, from);
          close_db(&sdata, &state);
          unlink(sdata.ttmpfile);
@@ -760,6 +760,7 @@ int main(int argc, char **argv, char **envp){
    if(cfg.debug == 1){
       printf("spaminess: %.4f in %ld [ms]\n", spaminess, tvdiff(tv_stop, tv_start)/1000);
       printf("%ld %ld\n", state.c_shit, state.l_shit);
+      printf("state.ip/host: %s/%s\n", state.ip, state.hostname);
       printf("number of tokens: %ld/%ld/%ld\n", state.n_token, state.n_chain_token, state.n_body_token);
    }
 
@@ -816,7 +817,7 @@ ENDE_SPAMDROP:
 
       memset(rblbuf, 0, SMALLBUFSIZE);
       reverse_ipv4_addr(state.ip);
-      if(rbl_list_check("zen.spamhaus.org", state.ip, cfg.verbosity) == 1)
+      if(isIPv4AddressOnRBL(state.ip, "zen.spamhaus.org") == 1)
          snprintf(rblbuf, SMALLBUFSIZE-1, "%sZEN=1%s", cfg.clapf_header_field, CRLF);
       else
          snprintf(rblbuf, SMALLBUFSIZE-1, "%sZEN=0%s", cfg.clapf_header_field, CRLF);

@@ -1,5 +1,5 @@
 /*
- * aphash.c, 2007.06.16, SJ
+ * aphash.c, 2010.05.13, SJ
  */
 
 #include <stdio.h>
@@ -32,7 +32,15 @@ int main(int argc, char **argv){
                p = strrchr(puf, ' ');
                if(p){
                   *p = '\0';
-                  len = strlen(puf);
+               #ifdef HAVE_MYSQL
+                  p = strrchr(puf, ' ');
+                  if(p){
+                     *p = '\0';
+               #endif
+                     len = strlen(puf);
+               #ifdef HAVE_MYSQL
+                  }
+               #endif
                }
             }
          }

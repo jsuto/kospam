@@ -1,5 +1,5 @@
 /*
- * zombietest.c, 2009.11.27, SJ
+ * zombietest.c, 2010.05.13, SJ
  */
 
 #include <stdio.h>
@@ -31,7 +31,7 @@ int main(int argc, char **argv){
    if(f){
       while(fgets(buf, SMALLBUFSIZE, f)){
          if(buf[0] != ';' && buf[0] != '#' && buf[0] != '\r' && buf[0] != '\n'){
-            trim(buf);
+            trimBuffer(buf);
             if(regcomp(&(data.pregs[data.n_regex]), buf, REG_ICASE | REG_EXTENDED) == 0){
                printf("compiled (%d): %s\n", i, buf);
                data.n_regex++;

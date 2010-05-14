@@ -1,5 +1,5 @@
 /*
- * prepare-sql.c, 2008.01.23, SJ
+ * prepare-sql.c, 2010.05.13, SJ
  */
 
 #include <stdio.h>
@@ -183,7 +183,7 @@ int main(int argc, char **argv){
    inithash(tokens);
 
    while(fgets(buf, MAXBUFSIZE-1, fham)){
-      trim(buf);
+      trimBuffer(buf);
       if(strlen(buf) > 0){
          key = APHash(buf);
          addnode(tokens, key, 1, 0);
@@ -192,7 +192,7 @@ int main(int argc, char **argv){
    fclose(fham);
 
    while(fgets(buf, MAXBUFSIZE-1, fspam)){
-      trim(buf);
+      trimBuffer(buf);
       if(strlen(buf) > 0){
          key = APHash(buf);
          addnode(tokens, key, 0, 1);

@@ -1,5 +1,5 @@
 /*
- * misc.c, 2010.04.15, SJ
+ * misc.c, 2010.05.10, SJ
  */
 
 #include <stdio.h>
@@ -19,8 +19,6 @@
 #include <unistd.h>
 #include <ctype.h>
 #include "misc.h"
-#include "trans.h"
-#include "ijc.h"
 #include "smtpcodes.h"
 #include "errmsg.h"
 #include "config.h"
@@ -48,199 +46,10 @@ long tvdiff(struct timeval a, struct timeval b){
 
 
 /*
- * translate apostrophes in buffer
- */
-
-void pre_translate(char *p){
-   for(; *p; p++){
-      if(*p == '"' || *p == '\'')
-        *p = ' ';
-   }
-}
-
-/*
- * translate buffer and preserve urls
- */
-
-int translate(unsigned char *p, int qp){
-   int url=0, clear=0;
-   unsigned char *q=NULL, *P=p;
-
-   for(; *p; p++){
-
-   #ifndef HAVE_CASE
-      *p = tolower(*p);
-   #endif
-
-      /* save position of '=', 2006.01.05, SJ */
-
-      if(qp == 1 && *p == '='){
-         q = p;
-      }
-
-
-      if(strncasecmp((char *)p, "http://", 7) == 0){ p += 7; url = 1; continue; }
-      if(strncasecmp((char *)p, "https://", 8) == 0){ p += 8; url = 1; continue; }
-
-      if(url == 1 && (*p == '?' || *p == '/'))
-         clear = 1;
-
-      if(isspace(*p))
-          clear = 0;
-
-      if(clear == 1){
-         /* save the url as it is, 2007.06.21, SJ */
-         *p = ' ';
-      }
-      else {
-         *p = translated_characters[(unsigned int)*p];
-      }
-   }
-
-   /* restore the soft break in quoted-printable parts, 2006.01.05, SJ */
-
-   if(qp == 1 && q && (q > P + strlen((char*)P) - 3))
-     *q = '=';
-
-
-   if(url == 1)
-      return 1;
-   else
-      return 0;
-}
-
-int translate2(unsigned char *p, int qp){
-   int url=0;
-   unsigned char *q=NULL, *P=p;
-
-   for(; *p; p++){
-
-      /* save position of '=', 2006.01.05, SJ */
-
-      if(qp == 1 && *p == '='){
-         q = p;
-      }
-
-
-      if(strncasecmp((char *)p, "http://", 7) == 0){ p += 7; url = 1; continue; }
-      if(strncasecmp((char *)p, "https://", 8) == 0){ p += 8; url = 1; continue; }
-
-      if(url == 1 && *p != ' ' && *p != '\r' && *p != '\n') continue;
-
-      if(url == 1) url = 0;
-
-      if(delimiter_characters[(unsigned int)*p] != ' ' || isalnum(*p) == 0)
-         *p = ' ';
-      else {
-      #ifndef HAVE_CASE
-         *p = tolower(*p);
-      #endif
-      }
-   }
-
-   /* restore the soft break in quoted-printable parts, 2006.01.05, SJ */
-
-   if(qp == 1 && q && (q > P + strlen((char*)P) - 3))
-     *q = '=';
-
-   return 0;
-}
-
-
-/*
- * reassemble 'V i a g r a' to 'Viagra'
- */
-
-void reassemble_token(char *p){
-   int i, k=0;
-
-   for(i=0; i<strlen(p); i++){
-
-      if(isprint(*(p+i)) && *(p+i+1) == ' ' && isprint(*(p+i+2)) && *(p+i+3) == ' ' && isprint(*(p+i+4)) && *(p+i+5) == ' '){
-         p[k] = *(p+i); k++;
-         p[k] = *(p+i+2); k++;
-         p[k] = *(p+i+4); k++;
-
-         //printf("%c*%c*", *(p+i), *(p+i+2));
-         i += 5;
-      }
-      else {
-         p[k] = *(p+i);
-         k++;
-         //printf("%c", *(p+i));
-      }
-   }
-
-   p[k] = '\0';
-
-}
-
-
-/*
- * count the invalid characters (ie. garbage on your display) in the buffer
- */
-
-int count_invalid_junk(char *p, int replace_junk){
-   int i=0;
-
-   for(; *p; p++){
-      if(invalid_junk_characters[(unsigned char)*p] == *p){
-         i++;
-         if(replace_junk == 1) *p = JUNK_REPLACEMENT_CHAR;
-      }
-   }
-
-   return i;
-}
-
-
-/*
- * has the token got strange punctuations?
- */
-
-int is_odd_punctuations(char *p){
-   for(; *p; p++){
-      if(ispunct(*p) && ispunct(*(p+1)) && ispunct(*(p+2)))
-         return 1;
-   }
-
-   return 0;
-}
-
-
-/*
- * is this a numeric string?
- */
-
-int is_number(char *p){
-   for(; *p; p++){
-      if((*p < 0x30 || *p > 0x39) && *p != '-')
-         return 0;
-   }
-
-   return 1;
-}
-
-
-/*
- * is this a hexadecimal numeric string?
- */
-
-int is_hex_number(char *p){
-   for(; *p; p++){
-      if(!(*p == '-' || (*p >= 0x30 && *p <= 0x39) || (*p >= 0x41 && *p <= 0x47) || (*p >= 0x61 && *p <= 0x67)) )
-         return 0;
-   }
-
-   return 1;
-}
-
-
-/*
  * search something in a buffer
  */
 
-int search_in_buf(char *s, int len1, char *what, int len2){
+int searchStringInBuffer(char *s, int len1, char *what, int len2){
    int i, k, r;
 
    for(i=0; i<len1; i++){
@@ -263,7 +72,7 @@ int search_in_buf(char *s, int len1, char *what, int len2){
  * count a character in buffer
  */
 
-int count_char_in_buffer(char *p, char c){
+int countCharacterInBuffer(char *p, char c){
    int i=0;
 
    for(; *p; p++){
@@ -272,183 +81,6 @@ int count_char_in_buffer(char *p, char c){
    }
 
    return i;
-}
-
-
-/*
- * degenerate a token
- */
-
-
-void degenerate(unsigned char *p){
-   int i=1, d=0, dp=0;
-   unsigned char *s;
-
-   /* quit if this the string does not end with a punctuation character */
-
-   if(!ispunct(*(p+strlen((char *)p)-1)))
-      return;
-
-   s = p;
-
-   for(; *p; p++){
-      if(ispunct(*p)){
-         d = i;
-
-         if(!ispunct(*(p-1)))
-            dp = d;
-      }
-      else
-         d = dp = i;
-
-      i++;
-   }
-
-   *(s+dp) = '\0';
-}
-
-
-/*
- * fix a long URL
- */
-
-void fix_url(char *url){
-   char *p, *q, m[MAX_TOKEN_LEN], fixed_url[MAXBUFSIZE];
-   int i, dots=0;
-   struct in_addr addr;
-
-   /* chop trailing dot */
-
-   if(url[strlen(url)-1] == '.')
-      url[strlen(url)-1] = '\0';
-
-   memset(fixed_url, 0, MAXBUFSIZE);
-
-   if((strncasecmp(url, "http://", 7) == 0 || strncasecmp(url, "https://", 8) == 0) ){
-      p = url;
-
-      if(strncasecmp(p, "http://", 7) == 0) p += 7;
-      if(strncasecmp(p, "https://", 8) == 0) p += 8;
-
-      /* skip anything after the host part, 2006.12.11, SJ */
-      q = strchr(p, '/');
-      if(q)
-         *q = '\0';
-
-      /*
-         http://www.ajandekkaracsonyra.hu/email.php?page=email&cmd=unsubscribe&email=yy@xxxx.kom is
-         chopped to www.ajandekkaracsonyra.hu at this point, 2006.12.15, SJ
-       */
-
-      dots = count_char_in_buffer(p, '.');
-      if(dots < 1)
-         return;
-
-      strncpy(fixed_url, "URL*", MAXBUFSIZE-1);
-
-      /* is it a numeric IP-address? */
-
-      if(inet_aton(p, &addr)){
-         addr.s_addr = ntohl(addr.s_addr);
-         strncat(fixed_url, inet_ntoa(addr), MAXBUFSIZE-1);
-         strcpy(url, fixed_url);
-      }
-      else {
-         //dots = count_char_in_buffer(url, '.');
-         for(i=0; i<=dots; i++){
-            q = split(p, '.', m, MAX_TOKEN_LEN-1);
-            if(i>dots-2){
-               strncat(fixed_url, m, MAXBUFSIZE-1);
-               if(i < dots)
-                  strncat(fixed_url, ".", MAXBUFSIZE-1);
-            }
-            p = q;
-         }
-
-         /* if it does not contain a single dot, the rest of the URL may be
-            in the next line or it is a fake one, anyway skip, 2006.04.06, SJ
-          */
-
-         if(count_char_in_buffer(fixed_url, '.') != 1)
-            memset(url, 0, MAXBUFSIZE);
-         else {
-            for(i=4; i<strlen(fixed_url); i++)
-               fixed_url[i] = tolower(fixed_url[i]);
-
-            strcpy(url, fixed_url);
-         }
-      }
-   }
-
-}
-
-
-/*
- *  extract the .tld from the URL
- */
-
-void tld_from_url(char *url){
-   char *p, fixed_url[SMALLBUFSIZE];;
-
-   p = strrchr(url, '.');
-
-   if(p){
-      snprintf(fixed_url, SMALLBUFSIZE-1, "URL*%s", p+1);
-      strcpy(url, fixed_url);
-   }
-
-}
-
-
-/*
- * fix a long FQDN
- */
-
-void fix_fqdn(char *fqdn){
-   char *p, *q, m[MAX_TOKEN_LEN], fixed_fqdn[MAXBUFSIZE];
-   int i, dots=0;
-
-   /* chop trailing dot */
-
-   if(fqdn[strlen(fqdn)-1] == '.')
-      fqdn[strlen(fqdn)-1] = '\0';
-
-   memset(fixed_fqdn, 0, MAXBUFSIZE);
-
-   p = fqdn;
-
-   dots = count_char_in_buffer(p, '.');
-   if(dots < 1)
-      return;
-
-   for(i=0; i<=dots; i++){
-      q = split(p, '.', m, MAX_TOKEN_LEN-1);
-      if(i>dots-2){
-         strncat(fixed_fqdn, m, MAXBUFSIZE-1);
-         if(i < dots)
-             strncat(fixed_fqdn, ".", MAXBUFSIZE-1);
-      }
-      p = q;
-   }
-
-   strcpy(fqdn, fixed_fqdn);
-}
-
-
-/*
- *  extract the .tld from the Received lines
- */
-
-void tld_from_fqdn(char *fqdn){
-   char *p, fixed_fqdn[SMALLBUFSIZE];;
-
-   p = strrchr(fqdn, '.');
-
-   if(p){
-      snprintf(fixed_fqdn, SMALLBUFSIZE-1, "HEADER*%s", p+1);
-      strcpy(fqdn, fixed_fqdn);
-   }
-
 }
 
 
@@ -545,26 +177,15 @@ unsigned long long APHash(char *p){
  * trim trailing CR-LF
  */
 
-void trim(char *what){
+void trimBuffer(char *s){
    char *p;
 
-   p = strrchr(what, '\n');
+   p = strrchr(s, '\n');
    if(p) *p = '\0';
 
-   p = strrchr(what, '\r');
+   p = strrchr(s, '\r');
    if(p) *p = '\0';
 
-}
-
-
-/*
- * replace a character with a different one
- */
-
-void replace(char *p, int what, int with){
-   for(; *p; p++){
-      if(*p == what) *p = with;
-   }
 }
 
 
@@ -572,7 +193,7 @@ void replace(char *p, int what, int with){
  * extract email
  */
 
-int extract_email(char *rawmail, char *email){
+int extractEmail(char *rawmail, char *email){
    char *p;
 
    p = strchr(rawmail, '<');
@@ -590,30 +211,29 @@ int extract_email(char *rawmail, char *email){
 
 
 /*
- * read random data from entropy pool
+ * create a clapf ID
  */
 
-int readfrompool(int fd, void *_s, size_t n){
-   char *s = _s;
-   ssize_t res, pos = 0;
+void createClapfID(char *id){
+   int i;
+   unsigned char buf[RND_STR_LEN/2];
 
-   while(n > pos){
-      res = read(fd, s + pos, n - pos);
-      switch(res){
-         case  -1: continue;
-         case   0: return res;
-         default : pos += res;
-      }
+   getRandomBytes(buf, RND_STR_LEN/2);
+
+   for(i=0; i < (RND_STR_LEN/2)-1; i++){
+      sprintf(id, "%02x", buf[i]);
+      id += 2;
    }
-   return pos;
+
 }
+
 
 /*
  * reading from pool
  */
 
-int get_random_bytes(unsigned char *buf, int len){
-   int random_pool;
+int getRandomBytes(unsigned char *buf, int len){
+   int fd, ret=0;
    unsigned char a, b;
 
    /* the first 4 bytes are the timestamp, 2007.12.13, SJ */
@@ -632,19 +252,37 @@ int get_random_bytes(unsigned char *buf, int len){
    buf[1] = b;
    buf[2] = a;
 
-   random_pool = open(RANDOM_POOL, O_RDONLY);
-   if(random_pool == -1)
-       return 0;
+   fd = open(RANDOM_POOL, O_RDONLY);
+   if(fd == -1) return ret;
 
-   if(readfrompool(random_pool, buf+4, len-4) != len-4){
-       syslog(LOG_PRIORITY, "%s: %s", ERR_CANNOT_READ_FROM_POOL, RANDOM_POOL);
-       close(random_pool);
-       return 0;
+   if(readFromEntropyPool(fd, buf+4, len-4) != len-4){
+      syslog(LOG_PRIORITY, "%s: %s", ERR_CANNOT_READ_FROM_POOL, RANDOM_POOL);
    }
    
-   close(random_pool);
-   return 1;
+   close(fd);
+   return ret;
 }
+
+
+/*
+ * read random data from entropy pool
+ */
+
+int readFromEntropyPool(int fd, void *_s, size_t n){
+   char *s = _s;
+   ssize_t res, pos = 0;
+
+   while(n > pos){
+      res = read(fd, s + pos, n - pos);
+      switch(res){
+         case  -1: continue;
+         case   0: return res;
+         default : pos += res;
+      }
+   }
+   return pos;
+}
+
 
 /*
  * recv() with timeout
@@ -671,34 +309,15 @@ int recvtimeout(int s, char *buf, int len, int timeout){
 }
 
 
-int recvtimeout2(int s, unsigned char *buf, int len, int timeout){
-    fd_set fds;
-    int n;
-    struct timeval tv;
-
-    FD_ZERO(&fds);
-    FD_SET(s, &fds);
-
-    tv.tv_sec = TIMEOUT;
-    tv.tv_usec = TIMEOUT_USEC;
-
-    n = select(s+1, &fds, NULL, NULL, &tv);
-    if (n == 0) return -2; // timeout!
-    if (n == -1) return -1; // error
-
-    return recv(s, buf, len, 0);
-}
-
-
 /*
  * create a random ID
  */
 
-int make_rnd_string(char *res){
+int createRandomString(char *res){
    int i;
    unsigned char buf[RND_STR_LEN/2];
 
-   get_random_bytes(buf, RND_STR_LEN/2);
+   getRandomBytes(buf, RND_STR_LEN/2);
 
    for(i=0; i < (RND_STR_LEN/2)-1; i++){
       sprintf(res, "%02x", buf[i]);
@@ -713,7 +332,7 @@ int make_rnd_string(char *res){
  * check if it's a valid ID
  */
 
-int is_valid_id(char *p){
+int isValidClapfID(char *p){
 
    if(strlen(p) != 30 && strlen(p) != 31)
       return 0;
@@ -755,11 +374,11 @@ int extract_id_from_message(char *messagefile, char *clapf_header_field, char *I
 
          q = strstr(puf, "Received: ");
          if(q){
-            trim(puf);
+            trimBuffer(puf);
             r = strchr(puf, ' ');
             if(r){
                r++;
-               if(is_valid_id(r)){
+               if(isValidClapfID(r)){
                   i++;
                   if(i <= 1){
                      snprintf(ID, RND_STR_LEN, "%s", r);
@@ -786,7 +405,7 @@ int extract_id_from_message(char *messagefile, char *clapf_header_field, char *I
  * write delivery info to file
  */
 
-void write_delivery_info(struct session_data *sdata, char *dir){
+void writeDeliveryInfo(struct session_data *sdata, char *dir){
    int i;
    FILE *f;
 
@@ -832,22 +451,15 @@ int move_message_to_quarantine(struct session_data *sdata, struct __config *cfg)
 
 
 /*
- * resolve a hostname or dotted IPv4 address
+ * is it a valid dotted IPv4 address
  */
 
-unsigned long resolve_host(char *h){
-   struct hostent *host;
+int isDottedIPv4Address(char *s){
    struct in_addr addr;
 
-   if(!h) return 0;
+   if(inet_aton(s, &addr) == 0) return 0;
 
-   if((addr.s_addr = inet_addr(h)) == -1){
-       if((host = gethostbyname(h)) == NULL){
-          return 0;
-       }
-       else return *(unsigned long*)host->h_addr;
-   }
-   else return addr.s_addr;
+   return 1;
 }
 
 
@@ -855,17 +467,17 @@ unsigned long resolve_host(char *h){
  * whitelist check
  */
 
-int whitelist_check(char *whitelist, char *tmpfile, char *email, struct __config *cfg){
+int isEmailAddressOnList(char *list, char *tmpfile, char *email, struct __config *cfg){
    char *p, *q, w[SMALLBUFSIZE];
 
-   p = whitelist;
+   p = list;
 
-   if(cfg->verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: whitelist: %s", tmpfile, whitelist);
+   if(cfg->verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: list: %s", tmpfile, list);
 
    do {
       p = split(p, '\n', w, SMALLBUFSIZE-1);
 
-      trim(w);
+      trimBuffer(w);
 
       if(strlen(w) > 2){
 

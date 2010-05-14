@@ -1,5 +1,5 @@
 /*
- * mysql.c, 2010.02.16, SJ
+ * mysql.c, 2010.05.13, SJ
  */
 
 #include <stdio.h>
@@ -54,7 +54,7 @@ unsigned long get_uid(MYSQL mysql, char *stmt){
  * get the total number of ham and spam
  */
 
-struct te get_ham_spam(MYSQL mysql, char *stmt){
+struct te getNumberOfHamSpamMessages(MYSQL mysql, char *stmt){
    struct te TE;
    MYSQL_RES *res;
    MYSQL_ROW row;
@@ -90,7 +90,7 @@ int do_mysql_qry(MYSQL mysql, int ham_or_spam, char *token, unsigned long uid, i
 
    /* update token entry ... */
 
-   TE = get_ham_spam(mysql, stmt);
+   TE = getNumberOfHamSpamMessages(mysql, stmt);
 
    if(TE.nham > 0 || TE.nspam > 0){
       if(ham_or_spam == 1){

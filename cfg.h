@@ -1,5 +1,5 @@
 /*
- * cfg.h, 2010.04.23, SJ
+ * cfg.h, 2010.05.13, SJ
  */
 
 #ifndef _CFG_H
@@ -187,6 +187,9 @@ struct __config {
    char maillog[MAXVAL];
    char historydb[MAXVAL];
    char historypid[MAXVAL];
+
+   char skipped_received_ips[MAXVAL];
+   char skipped_received_hosts[MAXVAL];
 };
 
 

@@ -1,5 +1,5 @@
 /*
- * bayes.c, 2009.12.11, SJ
+ * bayes.c, 2010.05.13, SJ
  */
 
 #include <stdio.h>
@@ -215,7 +215,7 @@ float bayes_file(struct session_data *sdata, struct _state *state, struct __conf
     */
 
 #ifdef HAVE_MYSQL
-   TE = get_ham_spam(sdata->mysql, buf);
+   TE = getNumberOfHamSpamMessages(sdata->mysql, buf);
    sdata->Nham = TE.nham;
    sdata->Nspam = TE.nspam;
 #endif
@@ -248,7 +248,7 @@ float bayes_file(struct session_data *sdata, struct _state *state, struct __conf
 
    #ifdef HAVE_MYSQL
       snprintf(buf, MAXBUFSIZE-1, "SELECT nham, nspam FROM %s WHERE token=%llu AND (uid=0 OR uid=%ld)", SQL_TOKEN_TABLE, APHash(state->from), sdata->uid);
-      TE = get_ham_spam(sdata->mysql, buf);
+      TE = getNumberOfHamSpamMessages(sdata->mysql, buf);
       ham_from = TE.nham;
       spam_from = TE.nspam;
    #endif

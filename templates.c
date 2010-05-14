@@ -1,5 +1,5 @@
 /*
-   templates.c, 2008.12.10, SJ
+   templates.c, 2010.05.13, SJ
 */
 
 #include <stdio.h>
@@ -12,18 +12,18 @@
 #include <clapf.h>
 
 
-int get_template(char *template, char *msg, char *postmaster, char *recipient, char *sender, char *virus, char *engine){
+int createEmailFromTemplate(char *filename, char *msg, char *postmaster, char *recipient, char *sender, char *virus, char *engine){
    FILE *f;
    char buf[SMALLBUFSIZE], puf[SMALLBUFSIZE], *p;
 
    memset(msg, 0, MAXBUFSIZE);
 
-   f = fopen(template, "r");
+   f = fopen(filename, "r");
    if(!f) return 0;
 
    while((fgets(buf, SMALLBUFSIZE-1, f))){
       p = buf;
-      trim(buf);
+      trimBuffer(buf);
 
       do {
          p = split(p, ' ', puf, MAXBUFSIZE-1);

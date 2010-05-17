@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2010.05.13, SJ
+ * spamdrop.c, 2010.05.17, SJ
  */
 
 #include <stdio.h>
@@ -327,7 +327,7 @@ int main(int argc, char **argv, char **envp){
    sdata.tot_len = 0;
    sdata.num_of_rcpt_to = 1;
    sdata.skip_id_check = 0;
-   sdata.unknown_client = sdata.trapped_client = 0;
+   sdata.trapped_client = 0;
    sdata.blackhole = 0;
    sdata.need_signo_check = 0;
    sdata.statistically_whitelisted = 0;

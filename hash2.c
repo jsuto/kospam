@@ -1,7 +1,6 @@
 /*
- * hash2.c, 2010.05.13, SJ
+ * hash2.c, 2010.05.17, SJ
  */
-
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -46,8 +45,7 @@ void add_penalties(struct session_data *sdata, struct _state *state, struct __co
       addnode(state->token_hash, "NO_SUBJECT*", REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
 
 
-   /* use XFORWARD info */
-   if(sdata->unknown_client == 1 && sdata->Nham > NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED)
+   if(strcmp(state->hostname, "unknown") == 0 && sdata->Nham > NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED)
       addnode(state->token_hash, "UNKNOWN_CLIENT*", REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
 
 

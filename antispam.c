@@ -1,5 +1,5 @@
 /*
- * antispam.c, 2010.05.13, SJ
+ * antispam.c, 2010.05.17, SJ
  */
 
 #include <stdio.h>
@@ -120,8 +120,7 @@ int process_message(struct session_data *sdata, struct _state *sstate, struct __
          i++;
       }
 
-      //if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: zombie check: %c [%d] %s", sdata->ttmpfile, sdata->tre, i, sstate->hostname);
-      syslog(LOG_PRIORITY, "%s: zombie check: %c [%d] %s", sdata->ttmpfile, sdata->tre, i, sstate->hostname);
+      if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: zombie check: %c [%d] %s", sdata->ttmpfile, sdata->tre, i, sstate->hostname);
    }
 
    if(sdata->tre == '+'){

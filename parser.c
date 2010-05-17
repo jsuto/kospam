@@ -365,11 +365,12 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
          /* 
           * skip Received line token, if
           *    - no punctuation (eg. by, from, esmtp, ...)
+          *    - not "unknown"
           *    - it's on the skipped_received_hosts or skipped_received_ips list
           *    - ends with a number and not a valid IP-address (8.14.3, 6.0.3790.211, ...)
           */
 
-         if(!strchr(puf, '.') || isItemOnList(puf, cfg->skipped_received_hosts) == 1 || isItemOnList(puf, cfg->skipped_received_ips) == 1 || ( (x >= 0x30 && x <= 0x39) && (isDottedIPv4Address(puf) == 0 || countCharacterInBuffer(puf, '.') != 3) ) ){
+         if((!strchr(puf, '.') && strcmp(puf, "unknown")) || isItemOnList(puf, cfg->skipped_received_hosts) == 1 || isItemOnList(puf, cfg->skipped_received_ips) == 1 || ( (x >= 0x30 && x <= 0x39) && (isDottedIPv4Address(puf) == 0 ||  countCharacterInBuffer(puf, '.') != 3) ) ){
             continue;
          }
 
@@ -382,15 +383,15 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
           * which hands this email to us.
           */
 
-         if(state->ipcnt == 0){
-
+         if(state->ipcnt <= 1){
             if(isDottedIPv4Address(puf) == 1){
                snprintf(state->ip, SMALLBUFSIZE-1, "%s", puf);
-               state->ipcnt++;
             }
             else {
                snprintf(state->hostname, SMALLBUFSIZE-1, "%s", puf);
             }
+
+            state->ipcnt = 1;
          }
 
 
@@ -451,6 +452,9 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
       memset(muf, 0, MAXBUFSIZE);
 
    } while(p);
+
+   /* prevent the next Received line to overwrite state.ip and state.hostname */
+   if(state->ipcnt == 1) state->ipcnt = 2;
 
 
    /* do not chain between individual headers, 2007.06.09, SJ */

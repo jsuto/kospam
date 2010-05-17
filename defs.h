@@ -146,7 +146,7 @@ struct session_data {
    char mailfrom[SMALLBUFSIZE], rcptto[MAX_RCPT_TO][SMALLBUFSIZE], client_addr[IPLEN], name[SMALLBUFSIZE], domain[SMALLBUFSIZE];
    char spaminessbuf[MAXBUFSIZE], acceptbuf[SMALLBUFSIZE];
    unsigned long uid;
-   int fd, tot_len, num_of_rcpt_to, skip_id_check, need_signo_check, unknown_client, trapped_client, rav;
+   int fd, tot_len, num_of_rcpt_to, skip_id_check, need_signo_check, trapped_client, rav;
    int policy_group, blackhole;
    int need_scan;
    int training_request;

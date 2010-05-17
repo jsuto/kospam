@@ -1,5 +1,5 @@
 /*
- * session.c, 2010.05.13, SJ
+ * session.c, 2010.05.17, SJ
  */
 
 #include <stdio.h>
@@ -56,7 +56,7 @@ void init_session_data(struct session_data *sdata){
    sdata->tot_len = 0;
    sdata->skip_id_check = 0;
    sdata->num_of_rcpt_to = 0;
-   sdata->unknown_client = sdata->trapped_client = 0;
+   sdata->trapped_client = 0;
    sdata->blackhole = 0;
    sdata->need_signo_check = 0;
    sdata->training_request = 0;
@@ -83,7 +83,7 @@ void init_session_data(struct session_data *sdata){
 
 void postfix_to_clapf(int new_sd, struct __data *data, struct __config *cfg){
    int i, ret, pos, n, inj=ERR_REJECT, state, prevlen=0;
-   char *p, *q, buf[MAXBUFSIZE], puf[MAXBUFSIZE], resp[MAXBUFSIZE], prevbuf[MAXBUFSIZE], last2buf[2*MAXBUFSIZE+1];
+   char *p, buf[MAXBUFSIZE], puf[MAXBUFSIZE], resp[MAXBUFSIZE], prevbuf[MAXBUFSIZE], last2buf[2*MAXBUFSIZE+1];
    char email[SMALLBUFSIZE], email2[SMALLBUFSIZE], virusinfo[SMALLBUFSIZE], reason[SMALLBUFSIZE];
    struct session_data sdata;
    struct _state sstate;
@@ -95,11 +95,6 @@ void postfix_to_clapf(int new_sd, struct __data *data, struct __config *cfg){
 
    struct timezone tz;
    struct timeval tv1, tv2;
-
-   #ifdef HAVE_TRE
-      size_t nmatch=0;
-      char *q2;
-   #endif
 
 #ifdef HAVE_LIBCLAMAV
    /* http://www.clamav.net/doc/latest/html/node47.html */
@@ -232,6 +227,8 @@ void postfix_to_clapf(int new_sd, struct __data *data, struct __config *cfg){
                else
             #endif
                   sstate = parseMessage(&sdata, cfg);
+
+               syslog(LOG_PRIORITY, "%s: %s/%s", sdata.ttmpfile, sstate.hostname, sstate.ip);
 
                gettimeofday(&tv2, &tz);
                sdata.__parsed = tvdiff(tv2, tv1);
@@ -496,45 +493,6 @@ AFTER_PERIOD:
             }
 
             trimBuffer(buf);
-
-            /* extract client name */
-
-         #ifdef HAVE_TRE
-            i = 0;
-
-            gettimeofday(&tv1, &tz);
-
-            q = strstr(buf, "NAME=");
-            if(q){
-               q2 = strchr(q+5, ' ');
-               if(q2) *q2 = '\0';
-
-               while(i < data->n_regex && sdata.tre != '+'){
-                  if(regexec(&(data->pregs[i]), q, nmatch, NULL, 0) == 0) sdata.tre = '+';
-
-                  i++;
-               }
-
-               if(q2) *q2 = ' ';
-
-               gettimeofday(&tv2, &tz);
-               if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: zombie check: %c [%d] %s in %ld us", sdata.ttmpfile, sdata.tre, i, q, tvdiff(tv2, tv1));
-            }
-         #endif
-
-            /* extract client address */
-
-            q = strstr(buf, "ADDR=");
-            if(q){
-               snprintf(sdata.client_addr, IPLEN-1, "%s", q+5);
-               if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: client address: %s", sdata.ttmpfile, sdata.client_addr);
-            }
-
-            /* note if the client is unknown, 2007.12.06, SJ */
-
-            if(strstr(buf, " NAME=unknown ")){
-               sdata.unknown_client = 1;
-            }
 
             strncat(resp, SMTP_RESP_250_OK, MAXBUFSIZE-1);
 

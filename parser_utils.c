@@ -64,7 +64,7 @@ void init_state(struct _state *state){
    state->train_mode = T_TOE;
 
    memset(state->ip, 0, SMALLBUFSIZE);
-   snprintf(state->hostname, SMALLBUFSIZE-1, "unknown_or_one_of_my_relay_hosts");
+   snprintf(state->hostname, SMALLBUFSIZE-1, "one_of_my_relay_hosts");
    memset(state->miscbuf, 0, MAX_TOKEN_LEN);
    memset(state->qpbuf, 0, MAX_TOKEN_LEN);
    memset(state->from, 0, SMALLBUFSIZE);

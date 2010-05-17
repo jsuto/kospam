@@ -1,5 +1,5 @@
 /*
- * score.c, 2008.09.17, SJ
+ * score.c, 2010.05.17, SJ
  */
 
 #include <stdio.h>
@@ -92,7 +92,7 @@ double calc_score_chi2(struct node *xhash[], struct __config *cfg){
  * apply some fixes
  */
 
-double apply_fixes(double spaminess, int found_on_rbl, int surbl_match, int has_embed_image, int base64_text, long c_shit, long l_shit, struct __config *cfg){
+double apply_fixes(double spaminess, int found_on_rbl, int surbl_match, int has_embed_image, long c_shit, long l_shit, struct __config *cfg){
 
    /* in case of a surbl or rbl match */
 #ifdef HAVE_RBL
@@ -131,9 +131,6 @@ double apply_fixes(double spaminess, int found_on_rbl, int surbl_match, int has_
       return cfg->spaminess_of_strange_language_stuff;
    }
 
-
-   /* if we are bored with lame base64 encoding */
-   if(base64_text == 1 && cfg->spaminess_of_text_and_base64 > 0) return cfg->spaminess_of_text_and_base64;
 
    return spaminess;
 }

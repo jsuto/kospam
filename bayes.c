@@ -1,5 +1,5 @@
 /*
- * bayes.c, 2010.05.13, SJ
+ * bayes.c, 2010.05.17, SJ
  */
 
 #include <stdio.h>
@@ -156,7 +156,7 @@ END_OF_EVALUATION:
    /* if the message is unsure, try to determine if it's a spam, 2008.01.09, SJ */
 
    if(spaminess > cfg->max_ham_spamicity && spaminess < cfg->spam_overall_limit)
-      spaminess = apply_fixes(spaminess, found_on_rbl, surbl_match, has_embed_image, state->base64_text, state->c_shit, state->l_shit, cfg);
+      spaminess = apply_fixes(spaminess, found_on_rbl, surbl_match, has_embed_image, state->c_shit, state->l_shit, cfg);
 
 
    /* fix spaminess value if we have to */

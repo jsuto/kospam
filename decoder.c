@@ -1,5 +1,5 @@
 /*
- * decoder.c, 2010.05.12, SJ
+ * decoder.c, 2010.05.16, SJ
  */
 
 #include <stdio.h>
@@ -86,9 +86,9 @@ void sanitiseBase64(char *s){
  * base64 decode buffer
  */
 
-int decodeBase64(char *p, char *r){
+int decodeBase64(char *p){
    int i, j, n[4], k1, k2, len=0;
-   char s[5], s2[3];
+   char s[5], s2[3], puf[MAXBUFSIZE];
 
    if(strlen(p) < 4 || strlen(p) > MAXBUFSIZE/2)
       return 0;
@@ -100,7 +100,6 @@ int decodeBase64(char *p, char *r){
       i += 3;
 
       if(strlen(s) == 4){
-         //memset(s2, 0, 4);
          memset(s2, 0, 3);
 
          for(j=0; j<4; j++){
@@ -125,14 +124,16 @@ int decodeBase64(char *p, char *r){
          s2[2] = k1 | k2;
 
          // this is binary safe
-         memcpy(r+len, s2, 3);
+         memcpy(puf+len, s2, 3);
 
          len += 3;
       }
 
    }
 
-   *(r+len) = '\0';
+   *(puf+len) = '\0';
+
+   snprintf(p, MAXBUFSIZE-1, "%s", puf);
 
    return len;
 

@@ -1,5 +1,5 @@
 /*
- * parser.c, 2010.05.13, SJ
+ * parser.c, 2010.05.17, SJ
  */
 
 #include <stdio.h>
@@ -91,7 +91,7 @@ struct _state parseMessage(struct session_data *sdata, struct __config *cfg){
  */
 
 int parseLine(char *buf, struct _state *state, struct session_data *sdata, struct __config *cfg){
-   char *p, *q, *c, huf[MAXBUFSIZE], puf[MAXBUFSIZE], muf[MAXBUFSIZE], tuf[MAXBUFSIZE], u[SMALLBUFSIZE], token[MAX_TOKEN_LEN], phrase[MAX_TOKEN_LEN];
+   char *p, *q, puf[MAXBUFSIZE], muf[MAXBUFSIZE], u[SMALLBUFSIZE], token[MAX_TOKEN_LEN], phrase[MAX_TOKEN_LEN];
    int x, b64_len;
 
    memset(token, 0, MAX_TOKEN_LEN);
@@ -103,7 +103,7 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
 
    /* skip empty lines */
 
-   if(buf[0] == '\r' || buf[0] == '\n'){
+   if(state->message_rfc822 == 0 && (buf[0] == '\r' || buf[0] == '\n') ){
       state->message_state = MSG_BODY;
 
       if(state->is_header == 1) state->is_header = 0;
@@ -112,6 +112,11 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
 
       return 0;
    }
+
+
+   /* skip the first line, if it's a "From <email address> date" format */
+   if(state->line_num == 1 && strncmp(buf, "From ", 5) == 0) return 0;
+
 
    /* check for our anti backscatter signo, SJ */
 
@@ -137,7 +142,6 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
 
 
       if(state->message_state == MSG_FROM){
-
          p = strchr(buf+5, ' ');
          if(p) p = buf + 6;
          else p = buf + 5;
@@ -147,24 +151,11 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
       }
 
 
-      /* extract prefix type */
-
-      memset(puf, 0, MAXBUFSIZE);
-
-      if(!isspace(buf[0])){
-         p = strchr(buf, ':');
-         if(p)
-            memcpy(puf, buf, p-buf);
-      }
-
       /* we are interested in only From:, To:, Subject:, Received:, Content-*: header lines */
       if(state->message_state <= 0) return 0;
    }
-   else
-      state->cnt_type = 0;
 
 
-   /* end of header checks */
 
 
    if((p = strcasestr(buf, "boundary"))){
@@ -175,6 +166,7 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
    /* Content-type: checking */
 
    if(state->message_state == MSG_CONTENT_TYPE){
+      state->message_rfc822 = 0;
 
       /* extract Content type */
 
@@ -189,9 +181,6 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
 
       }
 
-      state->cnt_type = 1;
-
-      /* 2007.04.19, SJ */
 
       if(strcasestr(buf, "text/plain") ||
          strcasestr(buf, "multipart/mixed") ||
@@ -207,8 +196,17 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
       }
       else if(strcasestr(buf, "text/html"))
              state->texthtml = 1;
-      else
-         goto DECOMPOSE;
+
+      /* switch (back) to header mode if we encounterd an attachment with
+         "message/rfc822" content-type, 2010.05.16, SJ */
+
+      if(strcasestr(buf, "message/rfc822")){
+         state->message_rfc822 = 1;
+         state->is_header = 1;
+      }
+
+
+      if(strcasestr(buf, "charset") && strcasestr(buf, "UTF-8")) state->utf8 = 1;
    }
 
 
@@ -221,6 +219,9 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
          state->has_base64 = 1;
       }
 
+      if(strcasestr(buf, "quoted-printable")) state->qp = 1;
+
+
       if(strcasestr(buf, "image"))
          state->num_of_images++;
 
@@ -229,46 +230,8 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
    }
 
 
-   if(state->base64 == 1 && !strchr(buf, ':'))
-      state->base64_lines++;
-
-
-   /* check for UTF-8 encoding */
-
-   if(strcasestr(buf, "charset") && strcasestr(buf, "UTF-8"))
-      state->utf8 = 1;
-
-   if(strcasestr(buf, "charset") && (strcasestr(buf, "ISO-8859-2") || strcasestr(buf, "ISO-8859-1"))  )
-      state->iso_8859_2 = 1;
-
-   /* catch encoded stuff in the Subject|From lines, 2007.09.04, SJ */
-
-   if(state->message_state == MSG_SUBJECT || state->message_state == MSG_FROM){
-      if(strcasestr(buf, "?iso-8859-2?") || strcasestr(buf, "?iso-8859-1?")) state->iso_8859_2 = 1;
-      if(strcasestr(buf, "?utf-8?")) state->utf8 = 1;
-   }
-
-   /* check for quoted-printable encoding */
-
-   if(state->message_state == MSG_CONTENT_TRANSFER_ENCODING && strcasestr(buf, "quoted-printable"))
-      state->qp = 1;
-
-   if(state->message_state == MSG_CONTENT_TRANSFER_ENCODING && state->textplain == 0 && state->texthtml == 0)
-      goto DECOMPOSE;
-
-   if(state->message_state == MSG_CONTENT_DISPOSITION && state->is_header == 1){
-      if(state->textplain == 0 && state->texthtml == 0) goto DECOMPOSE;
-   }
-
-   /* is it a base64 encoded text? 2006.01.02, SJ */
-
-   if(state->base64_text == 0 && (state->textplain == 1 || state->texthtml == 1) && state->base64 == 1)
-      state->base64_text = 1;
-
 
    /* skip the boundary itself */
-
-   /* we had strcasestr here, but I saw the "boundary" string only lowercased, 2009.10.10, SJ */
 
    if(!strstr(buf, "boundary=") && !strstr(buf, "boundary =") && is_boundary(state->boundaries, buf) == 1){
       if(state->has_to_dump == 1){
@@ -280,11 +243,10 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
 
       state->has_to_dump = 0;
 
-      // TODO: do not let the boundary definition reset the Content-* variables if we are in the header
-      state->base64 = 0; state->base64_lines = 0; state->base64_text = 0; state->textplain = 0; state->texthtml = 0;
+      state->base64 = 0; state->textplain = 0; state->texthtml = 0;
       state->html_comment = 0;
-      state->utf8 = 0; state->iso_8859_2 = 1;
-      // state->qp = 0;
+      state->utf8 = 0;
+      state->qp = 0;
 
       //printf("skipping found boundary: %s", buf);
       return 0;      
@@ -295,105 +257,27 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
 
    /* skip non textual stuff */
 
-   if(state->is_header == 0 && state->textplain == 0 && state->texthtml == 0)
-      return 0;
-
-   /* base64 decode buffer, 2005.03.23, SJ */
-
-   if(state->base64 == 1 && state->is_header == 0 && strncmp(buf, "Content-", strlen("Content-")) != 0){
-      memset(huf, 0, MAXBUFSIZE);
-      b64_len = decodeBase64(buf, huf);
-      if(b64_len > 0)
-         strncpy(buf, huf, MAXBUFSIZE-1);
-   }
+   if(state->is_header == 0 && state->textplain == 0 && state->texthtml == 0) return 0;
 
 
+   /* base64 decode buffer */
 
-   /* handle encoded From:, To: and Subject: lines, 2008.11.24, SJ */
-
-   if(state->message_state == MSG_SUBJECT || state->message_state == MSG_FROM || state->message_state == MSG_TO){
-      memset(tuf, 0, MAXBUFSIZE);
-
-      q = buf;
-
-      do {
-         q = split_str(q, " ", u, SMALLBUFSIZE-1);
-         x = 0;
-
-         p = strcasestr(u, "?B?");
-         if(p){
-            decodeBase64(p+3, huf); x = 1;
-         }
-         else if((p = strcasestr(u, "?Q?"))){
-            decodeQP(p+3); x = 1;
-            snprintf(huf, MAXBUFSIZE-1, "%s", p+3);
-         }
-
-         if(x == 1){
-            if(strcasestr(u, "=?utf-8?")) decodeUTF8(huf);
-            strncat(tuf, huf, MAXBUFSIZE-1); strncat(tuf, " ", MAXBUFSIZE-1);
-         }
-         else {
-            strncat(tuf, u, MAXBUFSIZE-1); strncat(tuf, " ", MAXBUFSIZE-1);
-         }
-
-      } while(q);
-
-      snprintf(buf, MAXBUFSIZE-1, "%s", tuf);
-   }
+   if(state->base64 == 1 && state->message_state == MSG_BODY) b64_len = decodeBase64(buf);
 
 
+   /* fix encoded From:, To: and Subject: lines, 2008.11.24, SJ */
 
-   /* skip the first line too, if it's a "From <email address> date" format */
-
-   if(state->line_num == 1 && buf[0] == 'F' && buf[1] == 'r' && buf[2] == 'o' && buf[3] == 'm' && buf[4] == ' ')
-      return 0;
+   if(state->message_state == MSG_FROM || state->message_state == MSG_FROM || state->message_state == MSG_SUBJECT) fixupEncodedHeaderLine(buf);
 
 
    /* fix soft breaks with quoted-printable decoded stuff, 2006.03.01, SJ */
 
-   if(state->qp == 1 && strlen(state->qpbuf) > 0){
-      memset(tuf, 0, MAXBUFSIZE);
-      strncpy(tuf, state->qpbuf, MAXBUFSIZE-1);
-      strncat(tuf, buf, MAXBUFSIZE-1);
+   if(state->qp == 1) fixupSoftBreakInQuotedPritableLine(buf, state);
 
-      memset(buf, 0, MAXBUFSIZE);
-      memcpy(buf, tuf, MAXBUFSIZE);
-
-      memset(state->qpbuf, 0, MAX_TOKEN_LEN);
-   }
-
-   if(state->qp == 1 && buf[strlen(buf)-2] == '='){
-      q = strrchr(buf, ' ');
-      if(q){
-         *q = '\0';
-         q++;
-         memset(state->qpbuf, 0, MAX_TOKEN_LEN);
-         if(strlen(q)-2 < MAX_TOKEN_LEN-1)
-            strncpy(state->qpbuf, q, strlen(q)-2);
-      }
-   }
 
    /* fix base64 stuff if the line does not end with a line break, 2006.03.01, SJ */
 
-   if(state->base64 == 1 && strlen(state->miscbuf) > 0){
-      memset(tuf, 0, MAXBUFSIZE);
-      strncpy(tuf, state->miscbuf, MAXBUFSIZE-1);
-      strncat(tuf, buf, MAXBUFSIZE-1);
-
-      memset(buf, 0, MAXBUFSIZE);
-      memcpy(buf, tuf, MAXBUFSIZE);
-
-      memset(state->miscbuf, 0, MAX_TOKEN_LEN);
-   }
-
-   if(state->base64 == 1 && buf[strlen(buf)-1] != '\n'){
-      q = strrchr(buf, ' ');
-      if(q){
-         strncpy(state->miscbuf, q+1, MAX_TOKEN_LEN-1);
-         *q = '\0';
-      }
-   }
+   if(state->base64 == 1) fixupBase64EncodedLine(buf, state);
 
 
    /* handle html comments, 2007.06.07, SJ */
@@ -422,33 +306,15 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
 
    decodeURL(buf);
 
-   decodeHTML(buf);
-
-
-   /* Chinese, Japan, Korean, ... language detection here */
-
-   x = 0;
-
-   if(buf[0] == '' && buf[1] == '$' && buf[2] == 'B'){
-      c = buf;
-      for(; *c; c++){
-         if(*c == '' && *(c+1) == '(' && *(c+2) == 'B')
-            x++;
-      }
-   }
+   if(state->texthtml == 1) decodeHTML(buf);
 
 
 
-   /* count invalid junk characters specified in the ijc.h file, 2008.09.08 */
+   /* count invalid junk lines and characters */
+
+   state->l_shit += countInvalidJunkLines(buf);
    state->c_shit += countInvalidJunkCharacters(buf, cfg->replace_junk_characters);
 
-   /* skip unless we have an URL, 2006.11.09, SJ */
-
-   if(x > 0) state->l_shit += x;
-
-DECOMPOSE:
-   /* skip unnecessary header lines */
-   if(state->message_state == MSG_UNDEF && state->is_header == 1) return 0;
 
    translateLine((unsigned char*)buf, state);
 
@@ -458,7 +324,7 @@ DECOMPOSE:
    else p = buf;
 
    if(cfg->debug == 1) printf("%s\n", buf);
-   //if(cfg->debug == 1) printf("%d %ld %s\n", state->base64, state->c_shit, buf);
+   //if(cfg->debug == 1) printf("%d %d/%d/%d %s\n", state->is_header, state->message_state, state->utf8, state->qp, buf);
 
    do {
       p = split(p, DELIMITER, puf, MAXBUFSIZE-1);

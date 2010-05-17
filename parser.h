@@ -1,5 +1,5 @@
 /*
- * parser.h, 2010.05.13, SJ
+ * parser.h, 2010.05.16, SJ
  */
 
 #ifndef _PARSER_H
@@ -16,9 +16,13 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
 void init_state(struct _state *state);
 int extract_boundary(char *p, struct _state *state);
 int attachment_by_type(struct _state *state, char *type);
+void fixupEncodedHeaderLine(char *buf);
+void fixupSoftBreakInQuotedPritableLine(char *buf, struct _state *state);
+void fixupBase64EncodedLine(char *buf, struct _state *state);
 void translateLine(unsigned char *p, struct _state *state);
 void reassembleToken(char *p);
 void degenerateToken(unsigned char *p);
+int countInvalidJunkLines(char *p);
 int countInvalidJunkCharacters(char *p, int replace_junk);
 int isHexNumber(char *p);
 void fixURL(char *url);

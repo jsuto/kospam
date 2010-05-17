@@ -1,5 +1,5 @@
 /*
- * cfg.c, 2010.05.14, SJ
+ * cfg.c, 2010.05.17, SJ
  */
 
 #include <stdio.h>
@@ -154,7 +154,6 @@ struct _parse_rule config_parse_rules[] =
    { "spaminess_of_caught_by_surbl", "float", (void*) float_parser, offsetof(struct __config, spaminess_of_caught_by_surbl), "0.9997", sizeof(float)},
    { "spaminess_of_embed_image", "float", (void*) float_parser, offsetof(struct __config, spaminess_of_embed_image), "0.9994", sizeof(float)},
    { "spaminess_of_strange_language_stuff", "float", (void*) float_parser, offsetof(struct __config, spaminess_of_strange_language_stuff), "0.9876", sizeof(float)},
-   { "spaminess_of_text_and_base64", "float", (void*) float_parser, offsetof(struct __config, spaminess_of_text_and_base64), "0", sizeof(float)},
    { "spam_subject_prefix", "string", (void*) string_parser, offsetof(struct __config, spam_subject_prefix), "", MAXVAL-1},
    { "sqlite3", "string", (void*) string_parser, offsetof(struct __config, sqlite3), USER_DATA_DIR "/" PER_USER_SQLITE3_DB_FILE, MAXVAL-1},
    { "sqlite3_pragma", "string", (void*) string_parser, offsetof(struct __config, sqlite3_pragma), "PRAGMA synchronous = OFF", MAXVAL-1},

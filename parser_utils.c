@@ -1,5 +1,5 @@
 /*
- * parser_utils.c, 2010.05.14, SJ
+ * parser_utils.c, 2010.05.17, SJ
  */
 
 #include <stdio.h>
@@ -40,17 +40,14 @@ void init_state(struct _state *state){
 
    state->textplain = 1;
    state->texthtml = 0;
+   state->message_rfc822 = 0;
 
    state->base64 = 0;
    state->utf8 = 0;
 
-   state->iso_8859_2 = 1;
    state->qp = 0;
 
-   state->base64_lines = 0;
    state->html_comment = 0;
-
-   state->base64_text = 0;
 
    state->n_token = 0;
    state->n_body_token = 0;
@@ -66,7 +63,6 @@ void init_state(struct _state *state){
 
    state->train_mode = T_TOE;
 
-   memset(state->ctype, 0, MAXBUFSIZE);
    memset(state->ip, 0, SMALLBUFSIZE);
    snprintf(state->hostname, SMALLBUFSIZE-1, "unknown_or_one_of_my_relay_hosts");
    memset(state->miscbuf, 0, MAX_TOKEN_LEN);
@@ -146,6 +142,98 @@ int extract_boundary(char *p, struct _state *state){
    }
 
    return 0;
+}
+
+
+void fixupEncodedHeaderLine(char *buf){
+   int x;
+   char *p, *q, u[SMALLBUFSIZE], puf[MAXBUFSIZE];
+
+   memset(puf, 0, MAXBUFSIZE);
+
+   q = buf;
+
+   do {
+      q = split_str(q, " ", u, SMALLBUFSIZE-1);
+      x = 0;
+
+      p = strcasestr(u, "?B?");
+      if(p){
+         decodeBase64(p+3);
+         x = 1;
+      }
+      else if((p = strcasestr(u, "?Q?"))){
+         decodeQP(p+3);
+         x = 1;
+      }
+
+      if(x == 1){
+         if(strcasestr(u, "=?utf-8?")) decodeUTF8(p+3);
+         strncat(puf, p+3, MAXBUFSIZE-1);
+      }
+      else {
+         strncat(puf, u, MAXBUFSIZE-1);
+      }
+
+      strncat(puf, " ", MAXBUFSIZE-1);
+
+   } while(q);
+
+   snprintf(buf, MAXBUFSIZE-1, "%s", puf);
+}
+
+
+void fixupSoftBreakInQuotedPritableLine(char *buf, struct _state *state){
+   char *p, puf[MAXBUFSIZE];
+
+   if(strlen(state->qpbuf) > 0){
+      memset(puf, 0, MAXBUFSIZE);
+      strncpy(puf, state->qpbuf, MAXBUFSIZE-1);
+      strncat(puf, buf, MAXBUFSIZE-1);
+
+      memset(buf, 0, MAXBUFSIZE);
+      memcpy(buf, puf, MAXBUFSIZE);
+
+      memset(state->qpbuf, 0, MAX_TOKEN_LEN);
+   }
+
+   if(buf[strlen(buf)-2] == '='){
+      buf[strlen(buf)-2] = '\0';
+
+      p = strrchr(buf, ' ');
+      if(p){
+         memset(state->qpbuf, 0, MAX_TOKEN_LEN);
+         if(strlen(p) < MAX_TOKEN_LEN-1){
+            snprintf(state->qpbuf, MAXBUFSIZE-1, "%s", p);
+            *p = '\0';
+         }
+
+      }
+   }
+}
+
+
+void fixupBase64EncodedLine(char *buf, struct _state *state){
+   char *p, puf[MAXBUFSIZE];
+
+   if(strlen(state->miscbuf) > 0){
+      memset(puf, 0, MAXBUFSIZE);
+      strncpy(puf, state->miscbuf, MAXBUFSIZE-1);
+      strncat(puf, buf, MAXBUFSIZE-1);
+
+      memset(buf, 0, MAXBUFSIZE);
+      memcpy(buf, puf, MAXBUFSIZE);
+
+      memset(state->miscbuf, 0, MAX_TOKEN_LEN);
+   }
+
+   if(buf[strlen(buf)-1] != '\n'){
+      p = strrchr(buf, ' ');
+      if(p){
+         strncpy(state->miscbuf, p+1, MAX_TOKEN_LEN-1);
+         *p = '\0';
+      }
+   }
 }
 
 
@@ -263,6 +351,24 @@ int countInvalidJunkCharacters(char *p, int replace_junk){
       if(invalid_junk_characters[(unsigned char)*p] == *p){
          i++;
          if(replace_junk == 1) *p = JUNK_REPLACEMENT_CHAR;
+      }
+   }
+
+   return i;
+}
+
+
+/*
+ * detect Chinese, Japan, Korean, ... lines
+ */
+
+int countInvalidJunkLines(char *p){
+   int i=0;
+
+   if(*p == '' && *(p+1) == '$' && *(p+2) == 'B'){
+      for(; *p; p++){
+         if(*p == '' && *(p+1) == '(' && *(p+2) == 'B')
+            i++;
       }
    }
 

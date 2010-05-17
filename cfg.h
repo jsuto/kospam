@@ -1,5 +1,5 @@
 /*
- * cfg.h, 2010.05.13, SJ
+ * cfg.h, 2010.05.17, SJ
  */
 
 #ifndef _CFG_H
@@ -104,7 +104,6 @@ struct __config {
 
    float spaminess_of_strange_language_stuff;
    float spaminess_of_blackholed_mail;
-   float spaminess_of_text_and_base64;
    float spaminess_of_caught_by_surbl;
    float spaminess_of_embed_image;
 

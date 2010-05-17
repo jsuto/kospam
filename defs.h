@@ -1,5 +1,5 @@
 /*
- * defs.h, 2010.05.13, SJ
+ * defs.h, 2010.05.17, SJ
  */
 
 #ifndef _DEFS_H
@@ -102,17 +102,14 @@ struct boundary {
 struct _state {
    int message_state;
    int is_header;
-   int cnt_type;
    int textplain;
    int texthtml;
+   int message_rfc822;
    int base64;
    int has_base64;
    int utf8;
-   int iso_8859_2;
    int qp;
    int html_comment;
-   int base64_text;
-   int base64_lines;
    int ipcnt;
    int has_to_dump;
    int fd;
@@ -122,7 +119,6 @@ struct _state {
    unsigned long c_shit;
    unsigned long l_shit;
    unsigned long line_num;
-   char ctype[MAXBUFSIZE];
    char ip[SMALLBUFSIZE];
    char hostname[SMALLBUFSIZE];
    char miscbuf[MAX_TOKEN_LEN];

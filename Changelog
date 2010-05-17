@@ -1,5 +1,36 @@
 0.4.5-rc1:
 
+2010.05.16, SJ
+
+Obsoleted the spaminess_of_text_and_base64 config variable. clapf will
+no longer mark a message as spam merely because it has a base64 encoded
+textual part.
+
+(cfg.*, defs.h, example.conf, score.*, bayes.c, parser.c, parser_utils.c)
+
+2010.05.14, SJ
+
+I have improved the tokeniser. It properly handles HTML entities like &aacuate;
+and is able to skip preconfigured (via clapf.conf) relay entries.
+
+The tokeniser uses only the hostnames - having at least a single dot (.) - and
+IP-addresses from the Received: lines. It's no use to create tokens like
+"by", "from", "esmtp", "8.12.5", dates, etc.
+
+Improved the zombie protection. If your smtp server is behind some other servers
+that hands emails to you, then postfix will always pass their hostname/IP-address
+to you via the XFORWARD mechanism.
+
+So from now, you can define your smtp hosts have to be discarded, to find out the
+real sender host. Let's say, you want to skip *localhost, *.aaa.fu and *.gaaa.fu
+as well as 127.0.0.1, 195.56.111.1-255 and 84.15.1.8[0-9] in the Received: lines.
+The set the following:
+
+skipped_received_hosts=localhost$,.aaa.fu$,.gaaa.fu$
+skipped_received_ips=127.0.0.1$,195.56.111.,84.15.1.8
+
+(parser*.c, cfg.*, antispam.c)
+
 2010.04.23, SJ
 
 Discovered a weird problem in libmemcached-0.3[89]. If you compile

@@ -92,7 +92,7 @@ struct _state parseMessage(struct session_data *sdata, struct __config *cfg){
 
 int parseLine(char *buf, struct _state *state, struct session_data *sdata, struct __config *cfg){
    char *p, *q, puf[MAXBUFSIZE], muf[MAXBUFSIZE], u[SMALLBUFSIZE], token[MAX_TOKEN_LEN], phrase[MAX_TOKEN_LEN];
-   int x, b64_len;
+   int i=0, x, b64_len;
 
    memset(token, 0, MAX_TOKEN_LEN);
 
@@ -315,6 +315,13 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
    state->l_shit += countInvalidJunkLines(buf);
    state->c_shit += countInvalidJunkCharacters(buf, cfg->replace_junk_characters);
 
+   if(state->message_state == MSG_RECEIVED){
+      i = 0;
+      trimBuffer(buf);
+      if(buf[strlen(buf)-2] == ']' && buf[strlen(buf)-1] == ')'){
+         i = 1;
+      }
+   }
 
    translateLine((unsigned char*)buf, state);
 
@@ -370,7 +377,7 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
           *    - ends with a number and not a valid IP-address (8.14.3, 6.0.3790.211, ...)
           */
 
-         if((!strchr(puf, '.') && strcmp(puf, "unknown")) || isItemOnList(puf, cfg->skipped_received_hosts) == 1 || isItemOnList(puf, cfg->skipped_received_ips) == 1 || ( (x >= 0x30 && x <= 0x39) && (isDottedIPv4Address(puf) == 0 ||  countCharacterInBuffer(puf, '.') != 3) ) ){
+         if((!strchr(puf, '.') && strcmp(puf, "unknown")) || ( (x >= 0x30 && x <= 0x39) && (isDottedIPv4Address(puf) == 0 ||  countCharacterInBuffer(puf, '.') != 3) ) ){
             continue;
          }
 
@@ -383,15 +390,14 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
           * which hands this email to us.
           */
 
-         if(state->ipcnt <= 1){
+         if(i == 1 && state->ipcnt <= 1){
             if(isDottedIPv4Address(puf) == 1){
                snprintf(state->ip, SMALLBUFSIZE-1, "%s", puf);
+               if(isItemOnList(puf, cfg->skipped_received_ips) == 0) state->ipcnt = 1;
             }
             else {
                snprintf(state->hostname, SMALLBUFSIZE-1, "%s", puf);
             }
-
-            state->ipcnt = 1;
          }
 
 
@@ -453,9 +459,9 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
 
    } while(p);
 
+
    /* prevent the next Received line to overwrite state.ip and state.hostname */
    if(state->ipcnt == 1) state->ipcnt = 2;
-
 
    /* do not chain between individual headers, 2007.06.09, SJ */
    if(state->is_header == 1) state->n_chain_token = 0;

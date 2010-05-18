@@ -1,5 +1,5 @@
 /*
- * parser_utils.c, 2010.05.17, SJ
+ * parser_utils.c, 2010.05.18, SJ
  */
 
 #include <stdio.h>
@@ -64,7 +64,7 @@ void init_state(struct _state *state){
    state->train_mode = T_TOE;
 
    memset(state->ip, 0, SMALLBUFSIZE);
-   snprintf(state->hostname, SMALLBUFSIZE-1, "one_of_my_relay_hosts");
+   memset(state->hostname, 0, SMALLBUFSIZE);
    memset(state->miscbuf, 0, MAX_TOKEN_LEN);
    memset(state->qpbuf, 0, MAX_TOKEN_LEN);
    memset(state->from, 0, SMALLBUFSIZE);

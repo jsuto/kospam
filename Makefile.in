@@ -20,10 +20,6 @@ INCDIR = -I. @INCDIR@ @mysql_includes@
 LIBDIR = -L. -L$(srcdir)/contrib/spamsum @LIBDIR@ @LDFLAGS@
 LIBS = @LIBS@ @mysql_libs@
 LDAP_LIBS = @ldap_libs@
-##CLAMAV_EXTRA_LIBS = -lclamunrar_iface -lclamunrar
-OBJS = @OBJS@
-USER_OBJ = @user_obj@
-MYSQL_OBJS = @mysql_obj@
 CLAPF_USER = @CLAPF_USER@
 CLAPF_GROUP = `@id_bin@ -gn $(CLAPF_USER)`
 
@@ -36,9 +32,15 @@ MAKE = `which make`
 
 INSTALL = @INSTALL@
 
-all: libclapf.a clapf clapfconf clapf.conf @spamsum@ splitmbox @parsembox@ @spamdrop@ @preparesql@
-install: install-clapf install-splitmbox @parsembox_install@ @spamsum_install@ @spamdrop_install@ @db_install@
+all: @spamsum@ srcs clapf.conf
+install: install-clapf @spamsum_install@ @db_install@
 
+
+srcs:
+	(cd $(srcdir)/src; $(MAKE) all)
+
+spamsum:
+	(cd $(srcdir)/contrib/spamsum; $(MAKE) all)
 
 clapf.conf:
 	sed -e 's%pidfile=.*%pidfile=$(localstatedir)/lib/clapf/clapf.pid%g' \
@@ -60,54 +62,6 @@ clapf.conf:
 	if test `echo $(DEFS) | grep -c USERS_IN_LDAP ` -eq 1 ; then cat $(srcdir)/util/clapf_admin-ldap.sh.in > $(srcdir)/util/clapf_admin.sh; else if test `echo $(DEFS) | grep -c USERS_IN_MYSQL ` -eq 1 ; then cat $(srcdir)/util/clapf_admin-sql.sh.in | sed -e "s%SQLBINPROG%`which mysql` --defaults-file=$(datarootdir)/clapf/.my.cnf%g" > $(srcdir)/util/clapf_admin.sh; else cat $(srcdir)/util/clapf_admin-sql.sh.in | sed -e "s%SQLBINPROG%`which sqlite3` $(localstatedir)/lib/clapf/data/tokens.sdb%g" > $(srcdir)/util/clapf_admin.sh; fi; fi
 
 
-clapf: clapf.c libclapf.a
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ clapf.c -lclapf $(LIBS) $(LDAP_LIBS) $(LIBDIR) @LDFLAGS@ @libclamav_extra_libs@
-
-libclapf.a: $(OBJS) $(MYSQL_OBJS)
-	ar cr libclapf.a $(OBJS) $(MYSQL_OBJS)
-	ranlib libclapf.a
-	#$(CC) -shared -Wl,-soname,libclapf.so.$(CLAPF_VERSION) -o libclapf.so.$(LIBCLAPF_VERSION) $(OBJS) $(MYSQL_OBJS) $(LIBS) $(LDAP_LIBS) @LDFLAGS@
-	$(CC) -shared -Wl -o libclapf.so.$(LIBCLAPF_VERSION) $(OBJS) $(MYSQL_OBJS) $(LIBS) $(LDAP_LIBS) @LDFLAGS@
-	ln -sf libclapf.so.$(LIBCLAPF_VERSION) libclapf.so
-	ln -sf libclapf.so.$(LIBCLAPF_VERSION) libclapf.so.$(CLAPF_VERSION)
-
-
-parsembox: parsembox.c cfg.o misc.o list.o hash.o parser.o parser_utils.o decoder.o boundary.o score.o chi.o
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
-
-clapfconf: clapfconf.c cfg.o misc.o
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS)
-
-spamdrop: spamdrop.c libclapf.a
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ spamdrop.c -lclapf @spamsum_libs@ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
-
-spamstat: spamstat.c libclapf.a
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ spamstat.c -lclapf @spamsum_libs@ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
-
-splitmbox: splitmbox.c misc.o decoder.o list.o boundary.o parser.o parser_utils.o hash.o score.o chi.o
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
-
-aphash: aphash.c misc.o
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS)
-
-prepare-sql: prepare-sql.c misc.o decoder.o list.o boundary.o parser.o parser_utils.o score.o chi.o
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS)
-
-mydb_stat mydb_compress mydb_export: %.o mydb.o misc.o hash.o chi.o score.o cfg.o
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
-
-zombietest: zombietest.c misc.o
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR) -ltre
-
-spamsum:
-	(cd $(srcdir)/contrib/spamsum; $(MAKE) all)
-
-test:
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o spamtest $(srcdir)/test.c -lclapf $(LIBS) $(LDAP_LIBS) @spamsum_libs@ $(LIBDIR) @LDFLAGS@
-
-%.o: $(srcdir)/%.c
-	$(CC) $(CFLAGS) -fPIC $(INCDIR) $(DEFS) -c $< -o $@
-
 install-mysql-new:
 	$(INSTALL) -d $(DESTDIR)$(datarootdir)/clapf
 	$(INSTALL) -m 0644 $(srcdir)/db-mysql.sql $(DESTDIR)$(datarootdir)/clapf/db.sql
@@ -122,84 +76,34 @@ install-sqlite3:
 	if [ ! -f "$(DESTDIR)/$(localstatedir)/lib/clapf/data/tokens.sdb" ]; then sqlite3 @sqlite3_batch@ $(DESTDIR)/$(localstatedir)/lib/clapf/data/tokens.sdb <$(srcdir)/db-sqlite3.sql; \
 		chown -R $(CLAPF_USER):$(CLAPF_GROUP) $(DESTDIR)$(localstatedir)/lib/clapf/data/tokens.sdb; fi
 
-install-clapf: clapf
+install-clapf: src/clapf
 	$(INSTALL) -d $(DESTDIR)$(includedir)
 	$(INSTALL) -d $(DESTDIR)$(includedir)/clapf
-	$(INSTALL) -m 0644 clapf.h $(DESTDIR)$(includedir)/clapf
-	$(INSTALL) -m 0644 defs.h $(DESTDIR)$(includedir)/clapf
-	$(INSTALL) -m 0644 buffer.h $(DESTDIR)$(includedir)/clapf
-	$(INSTALL) -m 0644 users.h $(DESTDIR)$(includedir)/clapf
-	$(INSTALL) -m 0644 policy.h $(DESTDIR)$(includedir)/clapf
-	$(INSTALL) -m 0644 templates.h $(DESTDIR)$(includedir)/clapf
-	$(INSTALL) -m 0644 cfg.h $(DESTDIR)$(includedir)/clapf
-	$(INSTALL) -m 0644 misc.h $(DESTDIR)$(includedir)/clapf
-	$(INSTALL) -m 0644 parser.h $(DESTDIR)$(includedir)/clapf
-	$(INSTALL) -m 0644 bayes.h $(DESTDIR)$(includedir)/clapf
-	$(INSTALL) -m 0644 score.h $(DESTDIR)$(includedir)/clapf
-	$(INSTALL) -m 0644 hash.h $(DESTDIR)$(includedir)/clapf
-	$(INSTALL) -m 0644 config.h $(DESTDIR)$(includedir)/clapf
-	$(INSTALL) -m 0644 clapf-config.h $(DESTDIR)$(includedir)/clapf
-	$(INSTALL) -m 0644 sql.h $(DESTDIR)$(includedir)/clapf
-	$(INSTALL) -m 0644 errmsg.h $(DESTDIR)$(includedir)/clapf
-	$(INSTALL) -m 0644 smtpcodes.h $(DESTDIR)$(includedir)/clapf
-	$(INSTALL) -m 0644 messages.h $(DESTDIR)$(includedir)/clapf
-	$(INSTALL) -m 0644 mydb.h $(DESTDIR)$(includedir)/clapf
-	$(INSTALL) -m 0644 list.h $(DESTDIR)$(includedir)/clapf
-	$(INSTALL) -m 0644 session.h $(DESTDIR)$(includedir)/clapf
-	$(INSTALL) -m 0644 sig.h $(DESTDIR)$(includedir)/clapf
-	$(INSTALL) -m 0644 av.h $(DESTDIR)$(includedir)/clapf
 	$(INSTALL) -d $(DESTDIR)$(bindir)
 	$(INSTALL) -d $(DESTDIR)$(sbindir)
 	$(INSTALL) -d $(DESTDIR)$(libdir)
-	$(INSTALL) -m 0644 libclapf.a $(DESTDIR)$(libdir)
-	$(INSTALL) -m 0755 libclapf.so.$(LIBCLAPF_VERSION) $(DESTDIR)$(libdir)
-	(cd $(DESTDIR)$(libdir) && ln -sf libclapf.so.$(LIBCLAPF_VERSION) libclapf.so)
-	(cd $(DESTDIR)$(libdir) && ln -sf libclapf.so.$(LIBCLAPF_VERSION) libclapf.so.$(CLAPF_VERSION))
-
 	$(INSTALL) -d $(DESTDIR)$(libexecdir)/clapf
+	$(INSTALL) -d $(DESTDIR)$(datarootdir)/clapf
+
 	$(INSTALL) -m 0755 $(srcdir)/stat/clapf-rrd-create.sh $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 $(srcdir)/stat/clapf-rrd-graph-oneline.sh $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 $(srcdir)/stat/clapf-rrd-graph.sh $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 $(srcdir)/stat/clapf-rrd-update.sh $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 $(srcdir)/stat/process_syslog.pl $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 $(srcdir)/stat/spamstat.pl $(DESTDIR)$(libexecdir)/clapf
-
 	$(INSTALL) -m 0755 $(srcdir)/stat/clapf-stat.run.sh $(DESTDIR)$(libexecdir)/clapf
 
-	if [ -f "$(srcdir)/spamstat" ]; then $(INSTALL) -m 0755 $(srcdir)/spamstat $(DESTDIR)$(libexecdir)/clapf; fi
 
-	$(INSTALL) -d $(DESTDIR)$(datarootdir)/clapf
 	$(INSTALL) -m 0644 $(srcdir)/templates/template.virus $(DESTDIR)$(datarootdir)/clapf
 	$(INSTALL) -m 0644 $(srcdir)/zombienets.regex $(DESTDIR)$(datarootdir)/clapf
 	$(INSTALL) -m 0644 $(srcdir)/history/mail.sql $(DESTDIR)$(datarootdir)/clapf
 
 	$(INSTALL) -m 0755 util/check_clapf.sh $(DESTDIR)$(libexecdir)/clapf
-	if [ -f "$(srcdir)/memcached_cleaner" ]; then $(INSTALL) -m 0755 $(srcdir)/memcached_cleaner $(DESTDIR)$(libexecdir)/clapf; fi
-	$(INSTALL) -m 0755 clapf $(DESTDIR)$(sbindir)
-	$(INSTALL) -m 0755 clapfconf $(DESTDIR)$(sbindir)
 	$(INSTALL) -d $(DESTDIR)$(sysconfdir)
 	if [ ! -f "$(DESTDIR)$(sysconfdir)/clapf.conf" ]; then $(INSTALL) -m 0640 $(srcdir)/clapf.conf $(DESTDIR)$(sysconfdir)/clapf.conf; chgrp $(CLAPF_GROUP) $(DESTDIR)$(sysconfdir)/clapf.conf; fi
 
 	$(INSTALL) -d -m 0755 -o $(CLAPF_USER) -g $(CLAPF_GROUP) $(DESTDIR)/var/run/clapf
 
-
-install-spamsum:
-	(cd contrib/spamsum; $(MAKE) install)
-
-install-spamdrop: spamdrop
-	$(INSTALL) -m 0755 spamdrop $(DESTDIR)$(bindir)
-	chown $(CLAPF_USER):$(CLAPF_GROUP) $(DESTDIR)$(bindir)/spamdrop
-	chmod +s $(DESTDIR)$(bindir)/spamdrop
-	$(INSTALL) -m 0755 aphash $(DESTDIR)$(bindir)
-	(cd $(DESTDIR)$(bindir); ln -sf spamdrop blackhole)
-
-install-splitmbox: splitmbox
-	$(INSTALL) -m 0755 splitmbox $(DESTDIR)$(bindir)
-
-install-parsembox:
-	$(INSTALL) -m 0755 parsembox $(DESTDIR)$(bindir)
-	$(INSTALL) -d $(DESTDIR)$(libexecdir)/clapf
-	$(INSTALL) -m 0755 $(srcdir)/prepare-sql $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 $(srcdir)/perl/prepare.pl $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 $(srcdir)/perl/shrink.pl $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 $(srcdir)/perl/uribl.pl $(DESTDIR)$(libexecdir)/clapf
@@ -211,6 +115,11 @@ install-parsembox:
 
 	$(INSTALL) -m 0644 $(srcdir)/history/history-purge-mysql.sql $(DESTDIR)$(datarootdir)/clapf
 	$(INSTALL) -m 0644 $(srcdir)/history/history-purge-sqlite3.sql $(DESTDIR)$(datarootdir)/clapf
+
+	(cd $(srcdir)/src; $(MAKE) install)
+
+install-spamsum:
+	(cd contrib/spamsum; $(MAKE) install)
 
 uninstall:
 	rm -f $(DESTDIR)$(bindir)/parsembox
@@ -231,11 +140,7 @@ clean_db:
 	rm -f ham.tmp spam.tmp num_of_spam.tmp num_of_ham.tmp tokens.mydb temp.*
 
 clean:
-	rm -f *.o *.a libclapf.so* qcache db.sql clapf clapfconf clapf.conf parsembox splitmbox \
-		spamtest spamdrop spamstat aphash prepare-sql mydb_stat mydb_compress mydb_export \
-		zombietest \
-		init.d/*ubuntu init.d/*redhat
-
+	(cd $(srcdir)/src; $(MAKE) clean)
 	(cd $(srcdir)/contrib/spamsum; $(MAKE) clean)
 	(cd $(srcdir)/contrib/spamdrop_helper; $(MAKE) clean)
 

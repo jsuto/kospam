@@ -20,25 +20,19 @@ INCDIR = -I. -I../.. -I../../src @INCDIR@ @mysql_includes@
 LIBDIR = -L. @LIBDIR@ @LDFLAGS@ -L../../src
 LIBS = @LIBS@ @mysql_libs@
 LDAP_LIBS = @ldap_libs@
-OBJS = edit_dist.o spamsum.o
 
 INSTALL = @INSTALL@
 
-all: spamdrop_helper
-
-spamdrop_helper: spamdrop_helper.c
-	cat $(srcdir)/spamdrop_helper.sh.in | sed -e "s%YOUR_STATE_DIR%$(localstatedir)%g" > $(srcdir)/spamdrop_helper
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o spamdrop_helper.bin $< -lclapf  $(LIBS) $(LDAP_LIBS) $(LIBDIR)
-
-
-%.o: $(srcdir)/%.c
-	$(CC) $(CFLAGS) -fPIC $(INCDIR) $(DEFS) -c $< -o $@
+all:
+	sed -e "s%_PREFIX_%$(prefix)%" $(srcdir)/clapf.ubuntu.in > $(srcdir)/clapf.ubuntu
+	sed -e "s%_PREFIX_%$(prefix)%" $(srcdir)/clapf.redhat.in > $(srcdir)/clapf.redhat
+	sed -e "s%_PREFIX_%$(prefix)%" $(srcdir)/clapf-maillog.ubuntu.in > $(srcdir)/clapf-maillog.ubuntu
+	sed -e "s%_PREFIX_%$(prefix)%" $(srcdir)/clapf-maillog.redhat.in > $(srcdir)/clapf-maillog.redhat
 
 install:
-	@echo "Please install manually what you need"
 
 clean:
-	rm -f *.o spamdrop_helper spamdrop_helper.bin
+	rm -f clapf.ubuntu clapf.redhat clapf-maillog.ubuntu clapf-maillog.redhat
 
 distclean: clean
 	rm -f Makefile

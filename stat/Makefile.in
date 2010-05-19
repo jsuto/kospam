@@ -1,0 +1,42 @@
+SHELL = @SHELL@
+
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+bindir = @bindir@
+sbindir = @sbindir@
+includedir = @includedir@
+libdir = @libdir@
+libexecdir = @libexecdir@
+srcdir = @srcdir@
+sysconfdir = @sysconfdir@
+mandir = @mandir@
+datarootdir = @datarootdir@
+localstatedir = @localstatedir@
+
+CC = @CC@
+CFLAGS = @CFLAGS@ @CPPFLAGS@
+DEFS = @defs@
+INCDIR = -I. -I../.. -I../../src @INCDIR@ @mysql_includes@
+LIBDIR = -L. @LIBDIR@ @LDFLAGS@ -L../../src
+LIBS = @LIBS@ @mysql_libs@
+LDAP_LIBS = @ldap_libs@
+
+INSTALL = @INSTALL@
+
+all:
+	cat $(srcdir)/clapf-stat.run.sh.in | sed -e "s%YOUR_LIBEXECDIR%$(libexecdir)%g" -e "s%YOUR_LOCALSTATEDIR%$(localstatedir)%g" > $(srcdir)/clapf-stat.run.sh
+
+install:
+	$(INSTALL) -m 0755 $(srcdir)/clapf-rrd-create.sh $(DESTDIR)$(libexecdir)/clapf
+	$(INSTALL) -m 0755 $(srcdir)/clapf-rrd-graph-oneline.sh $(DESTDIR)$(libexecdir)/clapf
+	$(INSTALL) -m 0755 $(srcdir)/clapf-rrd-graph.sh $(DESTDIR)$(libexecdir)/clapf
+	$(INSTALL) -m 0755 $(srcdir)/clapf-rrd-update.sh $(DESTDIR)$(libexecdir)/clapf
+	$(INSTALL) -m 0755 $(srcdir)/process_syslog.pl $(DESTDIR)$(libexecdir)/clapf
+	$(INSTALL) -m 0755 $(srcdir)/spamstat.pl $(DESTDIR)$(libexecdir)/clapf
+	$(INSTALL) -m 0755 $(srcdir)/clapf-stat.run.sh $(DESTDIR)$(libexecdir)/clapf
+
+clean:
+	rm -f clapf-stat.run.sh
+
+distclean: clean
+	rm -f Makefile

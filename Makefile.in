@@ -19,130 +19,84 @@ DEFS = @defs@
 INCDIR = -I. @INCDIR@ @mysql_includes@
 LIBDIR = -L. -L$(srcdir)/contrib/spamsum @LIBDIR@ @LDFLAGS@
 LIBS = @LIBS@ @mysql_libs@
-LDAP_LIBS = @ldap_libs@
 CLAPF_USER = @CLAPF_USER@
 CLAPF_GROUP = `@id_bin@ -gn $(CLAPF_USER)`
 
-CLAPF_VERSION=0
-CLAPF_REVISION=1
-CLAPF_RELEASE=1
-LIBCLAPF_VERSION=$(CLAPF_VERSION).$(CLAPF_REVISION).$(CLAPF_RELEASE)
+SUBDIRS = @SUBDIRS@
+
+RECURSIVE_TARGETS = all-recursive install-recursive clean-recursive distclean-recursive
 
 MAKE = `which make`
 
 INSTALL = @INSTALL@
 
-all: @spamsum@ srcs clapf.conf
-install: install-clapf @spamsum_install@ @db_install@
+am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
+	clapf-config.h stamp.h params.h
+
+all: all-recursive
+install: installdirs install-recursive
 
 
-srcs:
-	(cd $(srcdir)/src; $(MAKE) all)
-
-spamsum:
-	(cd $(srcdir)/contrib/spamsum; $(MAKE) all)
-
-clapf.conf:
-	sed -e 's%pidfile=.*%pidfile=$(localstatedir)/lib/clapf/clapf.pid%g' \
-	-e 's%sqlite3=.*%sqlite3=$(localstatedir)/lib/clapf/data/tokens.sdb%g' \
-	-e 's%workdir=.*%workdir=$(localstatedir)/spool/clapf/tmp%g' \
-	-e 's%queuedir=.*%queuedir=$(localstatedir)/lib/clapf/queue%g' \
-	-e 's%mydbfile=.*%mydbfile=$(localstatedir)/lib/clapf/tokens.mydb%g' < $(srcdir)/example.conf >$@
-
-
-	sed -e "s%_PREFIX_%$(prefix)%" init.d/clapf.ubuntu.in > init.d/clapf.ubuntu
-	sed -e "s%_PREFIX_%$(prefix)%" init.d/clapf.redhat.in > init.d/clapf.redhat
-	sed -e "s%_PREFIX_%$(prefix)%" init.d/clapf-maillog.ubuntu.in > init.d/clapf-maillog.ubuntu
-	sed -e "s%_PREFIX_%$(prefix)%" init.d/clapf-maillog.redhat.in > init.d/clapf-maillog.redhat
-
-	cat $(srcdir)/util/db_train.sh.in | sed -e "s%YOUR_LIBEXECDIR%$(libexecdir)/clapf%g" -e "s%YOUR_BINDIR%$(bindir)%g" -e "s%YOUR_SHAREDIR%$(datarootdir)/clapf%g" > $(srcdir)/util/db_train.sh
-	cat $(srcdir)/util/check_clapf.sh.in | sed -e "s%YOUR_PATH%$(sbindir)%g" -e "s%YOUR_QUEUE%`grep '^queuedir=' clapf.conf | cut -f2 -d '='`%g" -e "s%USER%$(CLAPF_USER)%g" > $(srcdir)/util/check_clapf.sh
-	cat $(srcdir)/stat/clapf-stat.run.sh.in | sed -e "s%YOUR_LIBEXECDIR%$(libexecdir)%g" -e "s%YOUR_LOCALSTATEDIR%$(localstatedir)%g" > $(srcdir)/stat/clapf-stat.run.sh
-
-	if test `echo $(DEFS) | grep -c USERS_IN_LDAP ` -eq 1 ; then cat $(srcdir)/util/clapf_admin-ldap.sh.in > $(srcdir)/util/clapf_admin.sh; else if test `echo $(DEFS) | grep -c USERS_IN_MYSQL ` -eq 1 ; then cat $(srcdir)/util/clapf_admin-sql.sh.in | sed -e "s%SQLBINPROG%`which mysql` --defaults-file=$(datarootdir)/clapf/.my.cnf%g" > $(srcdir)/util/clapf_admin.sh; else cat $(srcdir)/util/clapf_admin-sql.sh.in | sed -e "s%SQLBINPROG%`which sqlite3` $(localstatedir)/lib/clapf/data/tokens.sdb%g" > $(srcdir)/util/clapf_admin.sh; fi; fi
-
-
-install-mysql-new:
-	$(INSTALL) -d $(DESTDIR)$(datarootdir)/clapf
-	$(INSTALL) -m 0644 $(srcdir)/db-mysql.sql $(DESTDIR)$(datarootdir)/clapf/db.sql
-	$(INSTALL) -m 0644 $(srcdir)/util/purge-mysql.sql $(DESTDIR)$(datarootdir)/clapf
-
-install-sqlite3:
-	$(INSTALL) -d $(DESTDIR)$(datarootdir)/clapf
-	$(INSTALL) -m 0644 $(srcdir)/db-sqlite3.sql $(DESTDIR)$(datarootdir)/clapf/db.sql
-	$(INSTALL) -m 0644 $(srcdir)/util/purge-sqlite3.sql $(DESTDIR)$(datarootdir)/clapf/purge-sqlite3.sql
-	$(INSTALL) -d $(DESTDIR)$(libexecdir)/clapf
-	$(INSTALL) -d $(DESTDIR)$(localstatedir)/lib/clapf/data
-	if [ ! -f "$(DESTDIR)/$(localstatedir)/lib/clapf/data/tokens.sdb" ]; then sqlite3 @sqlite3_batch@ $(DESTDIR)/$(localstatedir)/lib/clapf/data/tokens.sdb <$(srcdir)/db-sqlite3.sql; \
-		chown -R $(CLAPF_USER):$(CLAPF_GROUP) $(DESTDIR)$(localstatedir)/lib/clapf/data/tokens.sdb; fi
-
-install-clapf: src/clapf
-	$(INSTALL) -d $(DESTDIR)$(includedir)
-	$(INSTALL) -d $(DESTDIR)$(includedir)/clapf
-	$(INSTALL) -d $(DESTDIR)$(bindir)
-	$(INSTALL) -d $(DESTDIR)$(sbindir)
-	$(INSTALL) -d $(DESTDIR)$(libdir)
-	$(INSTALL) -d $(DESTDIR)$(libexecdir)/clapf
-	$(INSTALL) -d $(DESTDIR)$(datarootdir)/clapf
-
-	$(INSTALL) -m 0755 $(srcdir)/stat/clapf-rrd-create.sh $(DESTDIR)$(libexecdir)/clapf
-	$(INSTALL) -m 0755 $(srcdir)/stat/clapf-rrd-graph-oneline.sh $(DESTDIR)$(libexecdir)/clapf
-	$(INSTALL) -m 0755 $(srcdir)/stat/clapf-rrd-graph.sh $(DESTDIR)$(libexecdir)/clapf
-	$(INSTALL) -m 0755 $(srcdir)/stat/clapf-rrd-update.sh $(DESTDIR)$(libexecdir)/clapf
-	$(INSTALL) -m 0755 $(srcdir)/stat/process_syslog.pl $(DESTDIR)$(libexecdir)/clapf
-	$(INSTALL) -m 0755 $(srcdir)/stat/spamstat.pl $(DESTDIR)$(libexecdir)/clapf
-	$(INSTALL) -m 0755 $(srcdir)/stat/clapf-stat.run.sh $(DESTDIR)$(libexecdir)/clapf
+$(RECURSIVE_TARGETS):
+	@failcom='exit 1'; \
+	for f in x $$MAKEFLAGS; do \
+	  case $$f in \
+	    *=* | --[!k]*);; \
+	    *k*) failcom='fail=yes';; \
+	  esac; \
+	done; \
+	dot_seen=no; \
+	target=`echo $@ | sed s/-recursive//`; \
+	list='$(SUBDIRS)'; for subdir in $$list; do \
+	  echo "Making $$target in $$subdir"; \
+	  if test "$$subdir" = "."; then \
+	    dot_seen=yes; \
+	    local_target="$$target-am"; \
+	  else \
+	    local_target="$$target"; \
+	  fi; \
+	  (cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) $$local_target) \
+	  || eval $$failcom; \
+	done; \
+	if test "$$dot_seen" = "no"; then \
+	  $(MAKE) $(AM_MAKEFLAGS) "$$target-am" || exit 1; \
+	fi; test -z "$$fail"
 
 
-	$(INSTALL) -m 0644 $(srcdir)/templates/template.virus $(DESTDIR)$(datarootdir)/clapf
-	$(INSTALL) -m 0644 $(srcdir)/zombienets.regex $(DESTDIR)$(datarootdir)/clapf
-	$(INSTALL) -m 0644 $(srcdir)/history/mail.sql $(DESTDIR)$(datarootdir)/clapf
 
-	$(INSTALL) -m 0755 util/check_clapf.sh $(DESTDIR)$(libexecdir)/clapf
-	$(INSTALL) -d $(DESTDIR)$(sysconfdir)
-	if [ ! -f "$(DESTDIR)$(sysconfdir)/clapf.conf" ]; then $(INSTALL) -m 0640 $(srcdir)/clapf.conf $(DESTDIR)$(sysconfdir)/clapf.conf; chgrp $(CLAPF_GROUP) $(DESTDIR)$(sysconfdir)/clapf.conf; fi
+installdirs: mkinstalldirs
+	$(srcdir)/mkinstalldirs \
+		$(DESTDIR)$(bindir) $(DESTDIR)$(sbindir) $(DESTDIR)$(libdir) $(DESTDIR)$(libexecdir)/clapf $(DESTDIR)$(sysconfdir) \
+		$(DESTDIR)$(datarootdir)/clapf $(DESTDIR)$(includedir)/clapf $(DESTDIR)$(localstatedir)/lib/clapf/data
 
 	$(INSTALL) -d -m 0755 -o $(CLAPF_USER) -g $(CLAPF_GROUP) $(DESTDIR)/var/run/clapf
 
-	$(INSTALL) -m 0755 $(srcdir)/perl/prepare.pl $(DESTDIR)$(libexecdir)/clapf
-	$(INSTALL) -m 0755 $(srcdir)/perl/shrink.pl $(DESTDIR)$(libexecdir)/clapf
-	$(INSTALL) -m 0755 $(srcdir)/perl/uribl.pl $(DESTDIR)$(libexecdir)/clapf
 
-	$(INSTALL) -m 0755 $(srcdir)/util/db_init.sh $(DESTDIR)$(libexecdir)/clapf
-	$(INSTALL) -m 0755 $(srcdir)/util/db_train.sh $(DESTDIR)$(libexecdir)/clapf
-	$(INSTALL) -m 0755 $(srcdir)/util/clapf_admin.sh $(DESTDIR)$(libexecdir)/clapf
-	$(INSTALL) -m 0755 $(srcdir)/history/maillog.pl $(DESTDIR)$(libexecdir)/clapf
+install-am:
 
-	$(INSTALL) -m 0644 $(srcdir)/history/history-purge-mysql.sql $(DESTDIR)$(datarootdir)/clapf
-	$(INSTALL) -m 0644 $(srcdir)/history/history-purge-sqlite3.sql $(DESTDIR)$(datarootdir)/clapf
-
-	(cd $(srcdir)/src; $(MAKE) install)
-
-install-spamsum:
-	(cd contrib/spamsum; $(MAKE) install)
 
 uninstall:
-	rm -f $(DESTDIR)$(bindir)/parsembox
-	rm -f $(DESTDIR)$(bindir)/splitmbox
-	rm -f $(DESTDIR)$(bindir)/blackhole
-	rm -f $(DESTDIR)$(bindir)/spamdrop
-	rm -f $(DESTDIR)$(bindir)/aphash
-	rm -f $(DESTDIR)$(sbindir)/clapf
-	rm -f $(DESTDIR)$(sbindir)/clapfconf
-	rm -f $(DESTDIR)$(libdir)/libclapf.*
-	rm -f $(DESTDIR)$(sysconfdir)/clapf.conf
-	rm -rf $(DESTDIR)$(libexecdir)/clapf
-	rm -rf $(DESTDIR)$(includedir)/clapf
-	rm -rf $(DESTDIR)$(datarootdir)/clapf
+	rm -f \
+		$(DESTDIR)$(bindir)/parsembox $(DESTDIR)$(bindir)/splitmbox $(DESTDIR)$(bindir)/blackhole $(DESTDIR)$(bindir)/spamdrop \
+		$(DESTDIR)$(bindir)/aphash $(DESTDIR)$(sbindir)/clapf $(DESTDIR)$(sbindir)/clapfconf $(DESTDIR)$(libdir)/libclapf.* \
+		$(DESTDIR)$(sysconfdir)/clapf.conf
+
+	rm -rf $(DESTDIR)$(libexecdir)/clapf $(DESTDIR)$(includedir)/clapf $(DESTDIR)$(datarootdir)/clapf
 	@echo "I left the $(DESTDIR)$(localstatedir)/lib/clapf directory, remove it for yourself"
 
-clean_db:
+
+all-am: Makefile
+
+clean: clean-recursive
+
+clean-am: clean-generic
+
+clean-generic:
+
+distclean: distclean-recursive
+	rm -f $(am__CONFIG_DISTCLEAN_FILES)
+	rm -f Makefile
 	rm -f ham.tmp spam.tmp num_of_spam.tmp num_of_ham.tmp tokens.mydb temp.*
 
-clean:
-	(cd $(srcdir)/src; $(MAKE) clean)
-	(cd $(srcdir)/contrib/spamsum; $(MAKE) clean)
-	(cd $(srcdir)/contrib/spamdrop_helper; $(MAKE) clean)
+distclean-am: clean-am
 
-dist_clean distclean: clean
-	rm -f Makefile config.log config.status clapf-config.h stamp.h clapf.conf

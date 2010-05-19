@@ -45,16 +45,14 @@ ssum: ssum.c libspamsum.a
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ ssum.c -lspamsum $(LIBDIR) @LDFLAGS@
 
 install:
-	$(INSTALL) -d $(DESTDIR)$(libdir)
 	$(INSTALL) -m 0644 libspamsum.a $(DESTDIR)$(libdir)
 	$(INSTALL) -m 0755 libspamsum.so.$(LIBSPAMSUM_VERSION) $(DESTDIR)$(libdir)
 	(cd $(DESTDIR)$(libdir) && ln -sf libspamsum.so.$(LIBSPAMSUM_VERSION) libspamsum.so)
 	(cd $(DESTDIR)$(libdir) && ln -sf libspamsum.so.$(LIBSPAMSUM_VERSION) libspamsum.so.$(SPAMSUM_VERSION))
-	$(INSTALL) -d $(DESTDIR)$(libexecdir)
 	$(INSTALL) -m 0755 $(srcdir)/ssum $(DESTDIR)$(libexecdir)/clapf/spamsum
 
 clean:
 	rm -f *.o *.a *.so* ssum
 
-dist_clean distclean: clean
+distclean: clean
 	rm -f Makefile

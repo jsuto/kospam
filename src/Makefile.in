@@ -1,0 +1,156 @@
+SHELL = @SHELL@
+
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+bindir = @bindir@
+sbindir = @sbindir@
+includedir = @includedir@
+libdir = @libdir@
+libexecdir = @libexecdir@
+srcdir = @srcdir@
+sysconfdir = @sysconfdir@
+mandir = @mandir@
+datarootdir = @datarootdir@
+localstatedir = @localstatedir@
+
+CC = @CC@
+CFLAGS = @CFLAGS@ @CPPFLAGS@
+DEFS = @defs@
+INCDIR = -I. -I.. @INCDIR@ @mysql_includes@
+LIBDIR = -L. -L../contrib/spamsum @LIBDIR@ @LDFLAGS@
+LIBS = @LIBS@ @mysql_libs@
+LDAP_LIBS = @ldap_libs@
+##CLAMAV_EXTRA_LIBS = -lclamunrar_iface -lclamunrar
+OBJS = @OBJS@
+USER_OBJ = @user_obj@
+MYSQL_OBJS = @mysql_obj@
+CLAPF_USER = @CLAPF_USER@
+CLAPF_GROUP = `@id_bin@ -gn $(CLAPF_USER)`
+
+CLAPF_VERSION=0
+CLAPF_REVISION=1
+CLAPF_RELEASE=1
+LIBCLAPF_VERSION=$(CLAPF_VERSION).$(CLAPF_REVISION).$(CLAPF_RELEASE)
+
+MAKE = `which make`
+
+INSTALL = @INSTALL@
+
+all: libclapf.a clapf clapfconf splitmbox @parsembox@ @spamdrop@ @preparesql@
+install: install-clapf install-includes install-splitmbox @parsembox_install@ @spamdrop_install@
+
+
+clapf: clapf.c libclapf.a
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ clapf.c -lclapf $(LIBS) $(LDAP_LIBS) $(LIBDIR) @LDFLAGS@ @libclamav_extra_libs@
+
+libclapf.a: $(OBJS) $(MYSQL_OBJS)
+	ar cr libclapf.a $(OBJS) $(MYSQL_OBJS)
+	ranlib libclapf.a
+	#$(CC) -shared -Wl,-soname,libclapf.so.$(CLAPF_VERSION) -o libclapf.so.$(LIBCLAPF_VERSION) $(OBJS) $(MYSQL_OBJS) $(LIBS) $(LDAP_LIBS) @LDFLAGS@
+	$(CC) -shared -Wl -o libclapf.so.$(LIBCLAPF_VERSION) $(OBJS) $(MYSQL_OBJS) $(LIBS) $(LDAP_LIBS) @LDFLAGS@
+	ln -sf libclapf.so.$(LIBCLAPF_VERSION) libclapf.so
+	ln -sf libclapf.so.$(LIBCLAPF_VERSION) libclapf.so.$(CLAPF_VERSION)
+
+
+parsembox: parsembox.c cfg.o misc.o list.o hash.o parser.o parser_utils.o decoder.o boundary.o score.o chi.o
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
+
+clapfconf: clapfconf.c cfg.o misc.o
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS)
+
+spamdrop: spamdrop.c libclapf.a
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ spamdrop.c -lclapf @spamsum_libs@ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
+
+spamstat: spamstat.c libclapf.a
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ spamstat.c -lclapf @spamsum_libs@ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
+
+splitmbox: splitmbox.c misc.o decoder.o list.o boundary.o parser.o parser_utils.o hash.o score.o chi.o
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
+
+aphash: aphash.c misc.o
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS)
+
+prepare-sql: prepare-sql.c misc.o decoder.o list.o boundary.o parser.o parser_utils.o score.o chi.o
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS)
+
+mydb_stat mydb_compress mydb_export: %.o mydb.o misc.o hash.o chi.o score.o cfg.o
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
+
+zombietest: zombietest.c misc.o
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR) -ltre
+
+test:
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o spamtest $(srcdir)/test.c -lclapf $(LIBS) $(LDAP_LIBS) @spamsum_libs@ $(LIBDIR) @LDFLAGS@
+
+%.o: $(srcdir)/%.c
+	$(CC) $(CFLAGS) -fPIC $(INCDIR) $(DEFS) -c $< -o $@
+
+
+install-includes:
+	$(INSTALL) -d $(DESTDIR)$(includedir)
+	$(INSTALL) -d $(DESTDIR)$(includedir)/clapf
+	$(INSTALL) -m 0644 clapf.h $(DESTDIR)$(includedir)/clapf
+	$(INSTALL) -m 0644 defs.h $(DESTDIR)$(includedir)/clapf
+	$(INSTALL) -m 0644 buffer.h $(DESTDIR)$(includedir)/clapf
+	$(INSTALL) -m 0644 users.h $(DESTDIR)$(includedir)/clapf
+	$(INSTALL) -m 0644 policy.h $(DESTDIR)$(includedir)/clapf
+	$(INSTALL) -m 0644 templates.h $(DESTDIR)$(includedir)/clapf
+	$(INSTALL) -m 0644 cfg.h $(DESTDIR)$(includedir)/clapf
+	$(INSTALL) -m 0644 misc.h $(DESTDIR)$(includedir)/clapf
+	$(INSTALL) -m 0644 parser.h $(DESTDIR)$(includedir)/clapf
+	$(INSTALL) -m 0644 bayes.h $(DESTDIR)$(includedir)/clapf
+	$(INSTALL) -m 0644 score.h $(DESTDIR)$(includedir)/clapf
+	$(INSTALL) -m 0644 hash.h $(DESTDIR)$(includedir)/clapf
+	$(INSTALL) -m 0644 config.h $(DESTDIR)$(includedir)/clapf
+	$(INSTALL) -m 0644 ../clapf-config.h $(DESTDIR)$(includedir)/clapf
+	$(INSTALL) -m 0644 sql.h $(DESTDIR)$(includedir)/clapf
+	$(INSTALL) -m 0644 errmsg.h $(DESTDIR)$(includedir)/clapf
+	$(INSTALL) -m 0644 smtpcodes.h $(DESTDIR)$(includedir)/clapf
+	$(INSTALL) -m 0644 messages.h $(DESTDIR)$(includedir)/clapf
+	$(INSTALL) -m 0644 mydb.h $(DESTDIR)$(includedir)/clapf
+	$(INSTALL) -m 0644 list.h $(DESTDIR)$(includedir)/clapf
+	$(INSTALL) -m 0644 session.h $(DESTDIR)$(includedir)/clapf
+	$(INSTALL) -m 0644 sig.h $(DESTDIR)$(includedir)/clapf
+	$(INSTALL) -m 0644 av.h $(DESTDIR)$(includedir)/clapf
+
+install-clapf:
+	$(INSTALL) -d $(DESTDIR)$(bindir)
+	$(INSTALL) -d $(DESTDIR)$(sbindir)
+	$(INSTALL) -d $(DESTDIR)$(libdir)
+	$(INSTALL) -m 0644 libclapf.a $(DESTDIR)$(libdir)
+	$(INSTALL) -m 0755 libclapf.so.$(LIBCLAPF_VERSION) $(DESTDIR)$(libdir)
+	(cd $(DESTDIR)$(libdir) && ln -sf libclapf.so.$(LIBCLAPF_VERSION) libclapf.so)
+	(cd $(DESTDIR)$(libdir) && ln -sf libclapf.so.$(LIBCLAPF_VERSION) libclapf.so.$(CLAPF_VERSION))
+
+	$(INSTALL) -d $(DESTDIR)$(libexecdir)/clapf
+
+	if [ -f "$(srcdir)/spamstat" ]; then $(INSTALL) -m 0755 $(srcdir)/spamstat $(DESTDIR)$(libexecdir)/clapf; fi
+
+	$(INSTALL) -d $(DESTDIR)$(datarootdir)/clapf
+
+	$(INSTALL) -m 0755 clapf $(DESTDIR)$(sbindir)
+	$(INSTALL) -m 0755 clapfconf $(DESTDIR)$(sbindir)
+
+install-spamdrop: spamdrop
+	$(INSTALL) -m 0755 spamdrop $(DESTDIR)$(bindir)
+	chown $(CLAPF_USER):$(CLAPF_GROUP) $(DESTDIR)$(bindir)/spamdrop
+	chmod +s $(DESTDIR)$(bindir)/spamdrop
+	$(INSTALL) -m 0755 aphash $(DESTDIR)$(bindir)
+	(cd $(DESTDIR)$(bindir); ln -sf spamdrop blackhole)
+
+install-splitmbox: splitmbox
+	$(INSTALL) -m 0755 splitmbox $(DESTDIR)$(bindir)
+
+install-parsembox:
+	$(INSTALL) -m 0755 parsembox $(DESTDIR)$(bindir)
+	$(INSTALL) -d $(DESTDIR)$(libexecdir)/clapf
+	$(INSTALL) -m 0755 $(srcdir)/prepare-sql $(DESTDIR)$(libexecdir)/clapf
+
+clean:
+	rm -f *.o *.a libclapf.so* clapf clapfconf parsembox splitmbox spamdrop \
+		spamtest spamstat aphash prepare-sql mydb_stat mydb_compress mydb_export \
+		zombietest
+
+distclean: clean
+	rm -f Makefile
+

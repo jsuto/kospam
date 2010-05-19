@@ -20,25 +20,18 @@ INCDIR = -I. -I../.. -I../../src @INCDIR@ @mysql_includes@
 LIBDIR = -L. @LIBDIR@ @LDFLAGS@ -L../../src
 LIBS = @LIBS@ @mysql_libs@
 LDAP_LIBS = @ldap_libs@
-OBJS = edit_dist.o spamsum.o
 
 INSTALL = @INSTALL@
 
-all: spamdrop_helper
-
-spamdrop_helper: spamdrop_helper.c
-	cat $(srcdir)/spamdrop_helper.sh.in | sed -e "s%YOUR_STATE_DIR%$(localstatedir)%g" > $(srcdir)/spamdrop_helper
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o spamdrop_helper.bin $< -lclapf  $(LIBS) $(LDAP_LIBS) $(LIBDIR)
-
-
-%.o: $(srcdir)/%.c
-	$(CC) $(CFLAGS) -fPIC $(INCDIR) $(DEFS) -c $< -o $@
+all:
 
 install:
-	@echo "Please install manually what you need"
+	$(INSTALL) -m 0755 $(srcdir)/maillog.pl $(DESTDIR)$(libexecdir)/clapf
+	$(INSTALL) -m 0644 $(srcdir)/history-purge-mysql.sql $(DESTDIR)$(datarootdir)/clapf
+	$(INSTALL) -m 0644 $(srcdir)/history-purge-sqlite3.sql $(DESTDIR)$(datarootdir)/clapf
+	$(INSTALL) -m 0644 $(srcdir)/mail.sql $(DESTDIR)$(datarootdir)/clapf
 
 clean:
-	rm -f *.o spamdrop_helper spamdrop_helper.bin
 
 distclean: clean
 	rm -f Makefile

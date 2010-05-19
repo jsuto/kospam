@@ -1,5 +1,9 @@
 0.4.5-rc1:
 
+2010.05.19, SJ
+
+Heavy restructuring of the source tree.
+
 2010.05.16, SJ
 
 Obsoleted the spaminess_of_text_and_base64 config variable. clapf will

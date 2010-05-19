@@ -125,7 +125,7 @@ double eval_tokens(struct session_data *sdata, struct _state *state, struct __co
    /* apply some penalties, 2009.06.01, SJ */
    add_penalties(sdata, state, cfg);
 
-   spaminess = calc_score_chi2(state->token_hash, cfg);
+   spaminess = getSpamProbabilityChi2(state->token_hash, cfg);
 
    if(cfg->debug == 1) printf("phrase: %.4f\n", spaminess);
 
@@ -134,7 +134,7 @@ double eval_tokens(struct session_data *sdata, struct _state *state, struct __co
    /* query the single tokens, then use the 'mix' for calculation */
 
    qry_spaminess(sdata, state, 0, cfg);
-   spaminess = calc_score_chi2(state->token_hash, cfg);
+   spaminess = getSpamProbabilityChi2(state->token_hash, cfg);
    if(cfg->debug == 1) printf("mix: %.4f\n", spaminess);
    if(spaminess >= cfg->spam_overall_limit || spaminess <= cfg->max_ham_spamicity) goto END_OF_EVALUATION;
 
@@ -145,7 +145,7 @@ double eval_tokens(struct session_data *sdata, struct _state *state, struct __co
    check_lists(sdata, state, &found_on_rbl, &surbl_match, cfg);
 #endif
 
-   spaminess = calc_score_chi2(state->token_hash, cfg);
+   spaminess = getSpamProbabilityChi2(state->token_hash, cfg);
    if(cfg->debug == 1) printf("mix after blacklists: %.4f\n", spaminess);
 
 
@@ -156,7 +156,7 @@ END_OF_EVALUATION:
    /* if the message is unsure, try to determine if it's a spam, 2008.01.09, SJ */
 
    if(spaminess > cfg->max_ham_spamicity && spaminess < cfg->spam_overall_limit)
-      spaminess = apply_fixes(spaminess, found_on_rbl, surbl_match, has_embed_image, state->c_shit, state->l_shit, cfg);
+      spaminess = applyPostSpaminessFixes(spaminess, found_on_rbl, surbl_match, has_embed_image, state->c_shit, state->l_shit, cfg);
 
 
    /* fix spaminess value if we have to */
@@ -300,11 +300,7 @@ float bayes_file(struct session_data *sdata, struct _state *state, struct __conf
 }
 
 
-/*
- * train with this message
- */
-
-int train_message(struct session_data *sdata, struct _state *state, int rounds, int is_spam, int train_mode, struct __config *cfg){
+int trainMessage(struct session_data *sdata, struct _state *state, int rounds, int is_spam, int train_mode, struct __config *cfg){
 #ifdef HAVE_SQLITE3
    char *err=NULL;
 #endif

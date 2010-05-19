@@ -1,5 +1,5 @@
 /*
- * memcached.c, 2010.04.23, SJ
+ * memcached.c, 2010.05.19, SJ
  */
 
 #include <stdio.h>
@@ -13,7 +13,7 @@
 #include <clapf.h>
 
 
-int get_user_from_memcached(struct session_data *sdata, struct __data *data, char *email, struct __config *cfg){
+int getUserdataFromMemcached(struct session_data *sdata, struct __data *data, char *email, struct __config *cfg){
    size_t len=0;
    uint32_t flags = 0;
    char key[SMALLBUFSIZE], *s=NULL, *p;
@@ -54,7 +54,7 @@ int get_user_from_memcached(struct session_data *sdata, struct __data *data, cha
 }
 
 
-int put_user_to_memcached(struct session_data *sdata, struct __data *data, char *email, struct __config *cfg){
+int putUserdataToMemcached(struct session_data *sdata, struct __data *data, char *email, struct __config *cfg){
    uint32_t flags = 0;
    char key[SMALLBUFSIZE], value[SMALLBUFSIZE];
 
@@ -72,7 +72,7 @@ int put_user_to_memcached(struct session_data *sdata, struct __data *data, char 
 }
 
 
-int get_policy_from_memcached(struct session_data *sdata, struct __data *data, struct __config *cfg, struct __config *my_cfg){
+int getPolicyFromMemcached(struct session_data *sdata, struct __data *data, struct __config *cfg, struct __config *my_cfg){
    size_t len=0;
    uint32_t flags = 0;
    char key[SMALLBUFSIZE], *s=NULL, *p;
@@ -86,7 +86,6 @@ int get_policy_from_memcached(struct session_data *sdata, struct __data *data, s
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: memcached policy query=%s, data=%s (%d)", sdata->ttmpfile, key, s, len);
 
    if(len > 0){
-      /* 0:1:1: :1:65535:::0.9200:1.0100:1:5:1:1:1:1:1:0:1:0:0 */
 
       p = strchr(s, ':'); if(p){ *p = '\0'; my_cfg->deliver_infected_email = atoi(s); s = p+1; }
       p = strchr(s, ':'); if(p){ *p = '\0'; my_cfg->silently_discard_infected_email = atoi(s); s = p+1; }
@@ -120,7 +119,7 @@ int get_policy_from_memcached(struct session_data *sdata, struct __data *data, s
 }
 
 
-int put_policy_to_memcached(struct session_data *sdata, struct __data *data, struct __config *my_cfg){
+int putPolicyToMemcached(struct session_data *sdata, struct __data *data, struct __config *my_cfg){
    uint32_t flags = 0;
    char key[SMALLBUFSIZE], value[SMALLBUFSIZE];
 

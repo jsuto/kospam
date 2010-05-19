@@ -76,11 +76,7 @@ int update_hash(sqlite3 *db, char *qry, struct node *xhash[], struct __config *c
 }
 
 
-/*
- * update the token timestamps
- */
-
-int update_sqlite3_tokens(struct session_data *sdata, struct node *xhash[]){
+int updateTokenTimestamps(struct session_data *sdata, struct node *xhash[]){
    int i, n=0;
    unsigned long now;
    time_t cclock;

@@ -32,11 +32,7 @@ void kill_child(){
 }
 
 
-/*
- * init SMTP session
- */
-
-void init_session_data(struct session_data *sdata){
+void initSessionData(struct session_data *sdata){
    int i;
 
 
@@ -106,7 +102,7 @@ void postfix_to_clapf(int new_sd, struct __data *data, struct __config *cfg){
 
    state = SMTP_STATE_INIT;
 
-   init_session_data(&sdata);
+   initSessionData(&sdata);
 
    sdata.Nham = 0;
    sdata.Nspam = 0;
@@ -282,7 +278,7 @@ void postfix_to_clapf(int new_sd, struct __data *data, struct __config *cfg){
 
                #ifdef HAVE_ANTISPAM
                   if(db_conn == 1){
-                     if(process_message(&sdata, &sstate, data, email, email2, cfg, &my_cfg) == 0){
+                     if(processMessage(&sdata, &sstate, data, email, email2, cfg, &my_cfg) == 0){
                         /* if we have to discard the message */
                         goto SEND_RESULT;
                      }
@@ -368,7 +364,6 @@ void postfix_to_clapf(int new_sd, struct __data *data, struct __config *cfg){
 
 
                unlink(sdata.ttmpfile);
-               //unlink(sdata.deliveryinfo);
 
 
                /* free state lists */
@@ -666,7 +661,7 @@ AFTER_PERIOD:
             if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: removed", sdata.ttmpfile);
             unlink(sdata.ttmpfile);
 
-            init_session_data(&sdata);
+            initSessionData(&sdata);
 
             state = SMTP_STATE_HELO;
 
@@ -707,7 +702,7 @@ AFTER_PERIOD:
 QUITTING:
 
 #ifdef HAVE_MYSQL
-   update_counters(&sdata, data, &counters, cfg);
+   updateCounters(&sdata, data, &counters, cfg);
 #endif
 
 #ifdef HAVE_MYDB

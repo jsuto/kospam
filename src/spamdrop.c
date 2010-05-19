@@ -42,21 +42,12 @@ void query_unix_account(struct session_data *sdata, char *username){
    struct passwd *pwd;
 
    if(username){
-      /*snprintf(sdata->name, SMALLBUFSIZE-1, "%s", username);
-      pwd = getpwnam(username);
-      sdata->uid = pwd->pw_uid;*/
-
       if((pwd = getpwnam(username)) != (struct passwd *)NULL) {
          sdata->uid = pwd->pw_uid;
          snprintf(sdata->name, SMALLBUFSIZE-1, "%s", username);
       }
-
    }
    else {
-      /*sdata->uid = getuid();
-      pwd = getpwuid(sdata->uid);
-      snprintf(sdata->name, SMALLBUFSIZE-1, "%s", pwd->pw_name);*/
-
       if(sdata->uid == -1) sdata->uid = getuid();
       if((pwd = getpwuid(sdata->uid)) != (struct passwd *)NULL) {
          snprintf(sdata->name, SMALLBUFSIZE-1, "%s", pwd->pw_name);
@@ -66,9 +57,7 @@ void query_unix_account(struct session_data *sdata, char *username){
 }
 
 
-/* open database connection */
-
-int open_db(struct session_data *sdata, struct __config *cfg){
+int openDatabase(struct session_data *sdata, struct __config *cfg){
 #ifdef HAVE_MYSQL
    mysql_init(&(sdata->mysql));
    mysql_options(&(sdata->mysql), MYSQL_OPT_CONNECT_TIMEOUT, (const char*)&cfg->mysql_connect_timeout);
@@ -104,9 +93,7 @@ int open_db(struct session_data *sdata, struct __config *cfg){
 }
 
 
-/* close database connection and free lists */
-
-void close_db(struct session_data *sdata, struct _state *state){
+void closeDatabase(struct session_data *sdata){
 
 #ifdef HAVE_MYSQL
    mysql_close(&(sdata->mysql));
@@ -117,7 +104,10 @@ void close_db(struct session_data *sdata, struct _state *state){
 #ifdef HAVE_MYDB
    close_mydb(sdata->mhash);
 #endif
+}
 
+
+void freeLists(struct _state *state){
    free_list(state->urls);
    clearhash(state->token_hash, 0);
 }
@@ -482,9 +472,7 @@ int main(int argc, char **argv, char **envp){
 
 
 
-   /* open database connection */
-
-   if(open_db(&sdata, &cfg) == 0){
+   if(openDatabase(&sdata, &cfg) == 0){
       rc = print_message_stdout(&sdata, NULL, spaminess, &cfg);
       unlink(sdata.ttmpfile);
       if(rc)
@@ -553,9 +541,9 @@ int main(int argc, char **argv, char **envp){
 
       /* ... then train with the message */
 
-      train_message(&sdata, &state, rounds, is_spam, train_mode, &cfg);
+      trainMessage(&sdata, &state, rounds, is_spam, train_mode, &cfg);
 
-      close_db(&sdata, &state);
+      closeDatabase(&sdata); freeLists(&state);
       unlink(sdata.ttmpfile);
 
       return 0;
@@ -600,9 +588,9 @@ int main(int argc, char **argv, char **envp){
 
    #endif
 
-      train_message(&sdata, &state, rounds, is_spam, train_mode, &cfg);
+      trainMessage(&sdata, &state, rounds, is_spam, train_mode, &cfg);
 
-      close_db(&sdata, &state);
+      closeDatabase(&sdata); freeLists(&state);
       unlink(sdata.ttmpfile);
 
       return 0;
@@ -640,7 +628,7 @@ int main(int argc, char **argv, char **envp){
    #ifdef HAVE_BLACKLIST
       if(isSenderOnBlackOrWhiteList(&sdata, from, SQL_BLACK_FIELD_NAME, SQL_BLACK_LIST, &cfg) == 1){
          syslog(LOG_PRIORITY, "%s: sender (%s) found on blacklist", sdata.ttmpfile, from);
-         close_db(&sdata, &state);
+         closeDatabase(&sdata); freeLists(&state);
          unlink(sdata.ttmpfile);
          return 0;
       }
@@ -654,14 +642,10 @@ int main(int argc, char **argv, char **envp){
       /* update tokens unless we are in debug mode */
 
       if(cfg.update_tokens == 1 && debug == 0){
-      #ifdef HAVE_MYSQL
-         update_mysql_tokens(&sdata, state.token_hash);
-      #endif
-      #ifdef HAVE_SQLITE3
-         update_sqlite3_tokens(&sdata, state.token_hash);
-      #endif
       #ifdef HAVE_MYDB
          update_tokens(cfg.mydbfile, sdata.mhash, state.token_hash);
+      #else
+         updateTokenTimestamps(&sdata, state.token_hash);
       #endif
       }
 
@@ -731,7 +715,7 @@ int main(int argc, char **argv, char **envp){
          }
          snprintf(trainbuf, SMALLBUFSIZE-1, "%sTUM%s", cfg.clapf_header_field, CRLF);
 
-         train_message(&sdata, &state, 1, is_spam, train_mode, &cfg);
+         trainMessage(&sdata, &state, 1, is_spam, train_mode, &cfg);
       }
 
    }
@@ -750,7 +734,7 @@ int main(int argc, char **argv, char **envp){
          snprintf(trainbuf, SMALLBUFSIZE-1, "%sTUM on blackhole%s", cfg.clapf_header_field, CRLF);
 
          sdata.uid = 0;
-         train_message(&sdata, &state, rounds, 1, T_TOE, &cfg);
+         trainMessage(&sdata, &state, rounds, 1, T_TOE, &cfg);
       }
    }
 
@@ -842,7 +826,7 @@ ENDE_SPAMDROP:
    }
 
 
-   close_db(&sdata, &state);
+   closeDatabase(&sdata); freeLists(&state);
 
 
    /* save email for later retraining and/or spam quarantine */
@@ -861,7 +845,7 @@ ENDE_SPAMDROP:
          }
       }
 
-      save_email_to_queue(&sdata, spaminess, &cfg);
+      saveMessageToQueue(&sdata, spaminess, &cfg);
    }
 #endif
 

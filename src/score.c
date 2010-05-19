@@ -1,5 +1,5 @@
 /*
- * score.c, 2010.05.17, SJ
+ * score.c, 2010.05.19, SJ
  */
 
 #include <stdio.h>
@@ -8,34 +8,25 @@
 #include "misc.h"
 #include "config.h"
 
-/*
- * calculate the spamicity of the given token
- */
 
-float calc_spamicity(float NHAM, float NSPAM, unsigned int nham, unsigned int nspam, float rob_s, float rob_x){
-   float r=DEFAULT_SPAMICITY;
+float getTokenSpamicity(float NHAM, float NSPAM, unsigned int nham, unsigned int nspam, float rob_s, float rob_x){
+   float spamicity=DEFAULT_SPAMICITY;
    int n;
 
    n = nham + nspam;
    if(n == 0) return DEFAULT_SPAMICITY;
 
-   /* newer calculation, and apply Robinson strength to all tokens, 2008.01.09, SJ */
+   spamicity = nspam * NHAM / (nspam * NHAM + nham * NSPAM);
+   spamicity = (rob_s * rob_x + n * spamicity) / (rob_s + n);
 
-   r = nspam * NHAM / (nspam * NHAM + nham * NSPAM);
-   r = (rob_s * rob_x + n * r) / (rob_s + n);
+   if(spamicity < REAL_HAM_TOKEN_PROBABILITY) spamicity = REAL_HAM_TOKEN_PROBABILITY;
+   if(spamicity > REAL_SPAM_TOKEN_PROBABILITY) spamicity = REAL_SPAM_TOKEN_PROBABILITY;
 
-   if(r < REAL_HAM_TOKEN_PROBABILITY) r = REAL_HAM_TOKEN_PROBABILITY;
-   if(r > REAL_SPAM_TOKEN_PROBABILITY) r = REAL_SPAM_TOKEN_PROBABILITY;
-
-   return r;
+   return spamicity;
 }
 
 
-/*
- * calculate spam probability by the chi square algorithm
- */
-
-double calc_score_chi2(struct node *xhash[], struct __config *cfg){
+double getSpamProbabilityChi2(struct node *xhash[], struct __config *cfg){
    int i, l=0;
    struct node *p, *q;
    double P, Q, H, S, I;
@@ -71,9 +62,6 @@ double calc_score_chi2(struct node *xhash[], struct __config *cfg){
    H = gsl_chi2inv(-2.0 * log(Q), 2.0 * (float)l * cfg->esf_h);
    S = gsl_chi2inv(-2.0 * log(P), 2.0 * (float)l * cfg->esf_s);
 #else
-   /*
-    * using a brand new inverse chi square implementation, 2007.02.26, SJ
-    */
    H = chi2inv(-2.0 * log(Q), 2.0 * (float)l, cfg->esf_h);
    S = chi2inv(-2.0 * log(P), 2.0 * (float)l, cfg->esf_h);
 #endif
@@ -88,13 +76,8 @@ double calc_score_chi2(struct node *xhash[], struct __config *cfg){
 }
 
 
-/*
- * apply some fixes
- */
+double applyPostSpaminessFixes(double spaminess, int found_on_rbl, int surbl_match, int has_embed_image, long c_shit, long l_shit, struct __config *cfg){
 
-double apply_fixes(double spaminess, int found_on_rbl, int surbl_match, int has_embed_image, long c_shit, long l_shit, struct __config *cfg){
-
-   /* in case of a surbl or rbl match */
 #ifdef HAVE_RBL
    if(surbl_match > 0){
       if(cfg->debug == 1)
@@ -111,11 +94,8 @@ double apply_fixes(double spaminess, int found_on_rbl, int surbl_match, int has_
    }
 #endif
 
-   /* if we shall mark the message as spam because of the embedded image */
    if(spaminess > DEFAULT_SPAMICITY && has_embed_image == 1) return cfg->spaminess_of_embed_image;
 
-
-   /* check junk lines, characters */
 
    if(cfg->invalid_junk_limit > 0 && c_shit > cfg->invalid_junk_limit && spaminess < cfg->spam_overall_limit){
       if(cfg->debug == 1)

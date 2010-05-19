@@ -10,7 +10,7 @@
 #include <clapf.h>
 
 
-struct __counters load_counters(struct session_data *sdata, struct __config *cfg){
+struct __counters loadCounters(struct session_data *sdata, struct __config *cfg){
    char buf[SMALLBUFSIZE];
    struct __counters counters;
 
@@ -66,7 +66,7 @@ struct __counters load_counters(struct session_data *sdata, struct __config *cfg
 }
 
 
-void update_counters(struct session_data *sdata, struct __data *data, struct __counters *counters, struct __config *cfg){
+void updateCounters(struct session_data *sdata, struct __data *data, struct __counters *counters, struct __config *cfg){
    char buf[MAXBUFSIZE];
 #ifdef HAVE_SQLITE3
    char *err=NULL;
@@ -134,7 +134,7 @@ void update_counters(struct session_data *sdata, struct __data *data, struct __c
       }
       else {
 
-         c = load_counters(sdata, cfg);
+         c = loadCounters(sdata, cfg);
 
          snprintf(buf, SMALLBUFSIZE-1, "%ld", now); memcached_add(&(data->memc), MEMCACHED_COUNTERS_LAST_UPDATE, strlen(MEMCACHED_COUNTERS_LAST_UPDATE), buf, strlen(buf), 0, 0);
 

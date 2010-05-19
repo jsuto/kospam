@@ -232,7 +232,7 @@ void calcnode(struct node *xhash[], float Nham, float Nspam, struct __config *cf
       q = xhash[i];
       while(q != NULL){
          if(q->nham >= 0 && q->nspam >= 0 && (q->nham + q->nspam) > 0){
-            q->spaminess = calc_spamicity(Nham, Nspam, q->nham, q->nspam, cfg->rob_s, cfg->rob_x);
+            q->spaminess = getTokenSpamicity(Nham, Nspam, q->nham, q->nspam, cfg->rob_s, cfg->rob_x);
             q->deviation = DEVIATION(q->spaminess);
          }
 

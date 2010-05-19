@@ -1,5 +1,5 @@
 /*
- * avir.c, 2010.05.13, SJ
+ * avir.c, 2010.05.19, SJ
  */
 
 #include <stdio.h>
@@ -19,8 +19,8 @@ int do_av_check(struct session_data *sdata, char *email, char *email2, char *vir
 #else
 int do_av_check(struct session_data *sdata, char *email, char *email2, char *virusinfo, struct __config *cfg){
 #endif
-   int ret, rav = AVIR_OK; /* antivirus result is ok by default */
-   char buf[MAXBUFSIZE], avengine[SMALLBUFSIZE];
+   int rav = AVIR_OK;
+   char avengine[SMALLBUFSIZE];
 
    if(sdata->need_scan == 0) return rav;
 
@@ -32,10 +32,8 @@ int do_av_check(struct session_data *sdata, char *email, char *email2, char *vir
 
    options = CL_SCAN_STDOPT | CL_SCAN_ARCHIVE | CL_SCAN_MAIL | CL_SCAN_OLE2;
 
-   /* whether to mark archives as viruses if maxfiles, maxfilesize, or maxreclevel limit is reached */
    if(cfg->use_libclamav_block_max_feature == 1) options |= CL_SCAN_BLOCKMAX;
 
-   /* whether to mark encrypted archives as viruses */
    if(cfg->clamav_block_encrypted_archives == 1) options |= CL_SCAN_BLOCKENCRYPTED;
 
    ret = cl_scanfile(sdata->ttmpfile, &virname, NULL, engine, options);
@@ -72,29 +70,9 @@ int do_av_check(struct session_data *sdata, char *email, char *email2, char *vir
    }
 #endif
 
-   /* if a virus has found */
-
    if(rav == AVIR_VIRUS){
-
       if(strlen(cfg->quarantine_dir) > 3) moveMessageToQuarantine(sdata, cfg);
-
-      /* send notification if localpostmaster is set, 2005.10.04, SJ */
-
-      if(strlen(cfg->localpostmaster) > 3){
-
-         memset(email, 0, SMALLBUFSIZE);
-         extractEmail(sdata->rcptto[0], email);
-
-         if(createEmailFromTemplate(VIRUS_TEMPLATE, buf, cfg->localpostmaster, email, email2, virusinfo, avengine) == 1){
-
-            snprintf(sdata->rcptto[0], SMALLBUFSIZE-1, "RCPT TO: <%s>\r\n", cfg->localpostmaster);
-            sdata->num_of_rcpt_to = 1;
-            ret = inject_mail(sdata, 0, cfg->postfix_addr, cfg->postfix_port, NULL, &buf[0], cfg, buf);
-
-            if(ret == 0)
-               syslog(LOG_PRIORITY, "notification about %s to %s failed", sdata->ttmpfile, cfg->localpostmaster);
-         }
-      }
+      if(strlen(cfg->localpostmaster) > 3) sendNotificationToPostmaster(sdata, email, email2, virusinfo, avengine, cfg);
    }
 
 
@@ -102,17 +80,10 @@ int do_av_check(struct session_data *sdata, char *email, char *email2, char *vir
 }
 
 
-/*
- * move message to quarantine
- */
-
 int moveMessageToQuarantine(struct session_data *sdata, struct __config *cfg){
    char qfile[QUARANTINELEN];
 
    snprintf(qfile, QUARANTINELEN-1, "%s/%s", cfg->quarantine_dir, sdata->ttmpfile);
-
-   /* if we would use rename, we cannot unlink this file later, producing an
-      error message to syslog */
 
    if(link(sdata->ttmpfile, qfile) == 0){
       if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s saved as %s", sdata->ttmpfile, qfile);
@@ -123,6 +94,26 @@ int moveMessageToQuarantine(struct session_data *sdata, struct __config *cfg){
    else {
       syslog(LOG_PRIORITY, "failed to put %s into quarantine: %s", sdata->ttmpfile, qfile);
       return ERR;
+   }
+
+}
+
+
+void sendNotificationToPostmaster(struct session_data *sdata, char *email, char *email2, char *virusinfo, char *avengine, struct __config *cfg){
+   int ret;
+   char buf[MAXBUFSIZE];
+
+   memset(email, 0, SMALLBUFSIZE);
+   extractEmail(sdata->rcptto[0], email);
+
+   if(createMessageFromTemplate(VIRUS_TEMPLATE, buf, cfg->localpostmaster, email, email2, virusinfo, avengine) == 1){
+
+      snprintf(sdata->rcptto[0], SMALLBUFSIZE-1, "RCPT TO: <%s>\r\n", cfg->localpostmaster);
+      sdata->num_of_rcpt_to = 1;
+      ret = inject_mail(sdata, 0, cfg->postfix_addr, cfg->postfix_port, NULL, &buf[0], cfg, buf);
+
+      if(ret == 0)
+         syslog(LOG_PRIORITY, "notification about %s to %s failed", sdata->ttmpfile, cfg->localpostmaster);
    }
 
 }

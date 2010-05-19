@@ -119,7 +119,7 @@ void do_training(struct session_data *sdata, struct _state *state, char *email, 
          }
       }
 
-      i = train_message(sdata, state, MAX_ITERATIVE_TRAIN_LOOPS, is_spam, state->train_mode, cfg);
+      i = trainMessage(sdata, state, MAX_ITERATIVE_TRAIN_LOOPS, is_spam, state->train_mode, cfg);
       syslog(LOG_PRIORITY, "%s: training %s in %d rounds", sdata->ttmpfile, qpath, i);
    }
    else {
@@ -131,11 +131,7 @@ void do_training(struct session_data *sdata, struct _state *state, char *email, 
 }
 
 
-/*
- * save message to queue (local or networked filesystem)
- */
-
-void save_email_to_queue(struct session_data *sdata, float spaminess, struct __config *cfg){
+void saveMessageToQueue(struct session_data *sdata, float spaminess, struct __config *cfg){
    int touch, ret;
    char *p, path[SMALLBUFSIZE], qpath[SMALLBUFSIZE];
 

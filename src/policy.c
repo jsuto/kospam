@@ -1,5 +1,5 @@
 /*
- * policy.c, 2009.09.28, SJ
+ * policy.c, 2010.05.19, SJ
  */
 
 #include <stdio.h>
@@ -14,12 +14,8 @@
 #endif
 
 
-/*
- * get user policy
- */
-
 #ifdef USERS_IN_MYSQL
-int get_policy(struct session_data *sdata, struct __config *cfg, struct __config *my_cfg){
+int getPolicy(struct session_data *sdata, struct __config *cfg, struct __config *my_cfg){
    MYSQL_RES *res;
    MYSQL_ROW row;
    char buf[SMALLBUFSIZE];
@@ -70,7 +66,7 @@ int get_policy(struct session_data *sdata, struct __config *cfg, struct __config
 
 
 #ifdef USERS_IN_SQLITE3
-int get_policy(struct session_data *sdata, struct __config *cfg, struct __config *my_cfg){
+int getPolicy(struct session_data *sdata, struct __config *cfg, struct __config *my_cfg){
    char buf[SMALLBUFSIZE];
    sqlite3_stmt *pStmt;
    const char **pzTail=NULL;
@@ -117,7 +113,7 @@ int get_policy(struct session_data *sdata, struct __config *cfg, struct __config
 
 
 #ifdef USERS_IN_LDAP
-int get_policy(struct session_data *sdata, struct __config *cfg, struct __config *my_cfg){
+int getPolicy(struct session_data *sdata, struct __config *cfg, struct __config *my_cfg){
    int rc;
    char filter[SMALLBUFSIZE], *attrs[] = { NULL }, **vals;
    LDAPMessage *res, *e;

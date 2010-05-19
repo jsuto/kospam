@@ -44,7 +44,6 @@ int getUserdataFromEmail(struct session_data *sdata, char *email, struct __confi
    if(email == NULL) return 0;
 
 
-   /* escape the email address, as it comes from the network, 2009.05.19, SJ */
    mysql_real_escape_string(&(sdata->mysql), _email, email, strlen(email));
 
 
@@ -116,10 +115,6 @@ int getUserdataFromEmail(struct session_data *sdata, char *email, struct __confi
 }
 
 
-/*
- * check whether the email address is on the white list
- */
-
 int isSenderOnBlackOrWhiteList(struct session_data *sdata, char *email, char *fieldname, char *table, struct __config *cfg){
    MYSQL_RES *res;
    MYSQL_ROW row;
@@ -150,10 +145,6 @@ int isSenderOnBlackOrWhiteList(struct session_data *sdata, char *email, char *fi
    return r;
 }
 
-
-/*
- * is it a valid and known email?
- */
 
 int isKnownEmail(struct session_data *sdata, char *email, struct __config *cfg){
    MYSQL_RES *res;
@@ -290,13 +281,8 @@ int isSenderOnBlackOrWhiteList(struct session_data *sdata, char *email, char *fi
 #endif
 
 
-/* LDAP stuff */
 
 #ifdef USERS_IN_LDAP
-
-/*
- * connect to LDAP server
- */
 
 LDAP *do_bind_ldap(char *ldap_host, char *binddn, char *bindpw, int usetls){
    LDAP *ld;
@@ -327,10 +313,6 @@ LDAP *do_bind_ldap(char *ldap_host, char *binddn, char *bindpw, int usetls){
    return ld;
 }
 
-
-/*
- * ask a specific entry about the user from LDAP directory
- */
 
 int getUserdataFromEmail(struct session_data *sdata, char *email, struct __config *cfg){
    int rc=0;

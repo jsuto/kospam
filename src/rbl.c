@@ -14,10 +14,6 @@
 #include "config.h"
 
 
-/*
- * roll the given host through a comma separated domain list
- */
-
 int isIPv4AddressOnRBL(char *ipaddr, char *domainlist){
    char *p, rbldomain[MAX_TOKEN_LEN], host[2*MAX_TOKEN_LEN];
 
@@ -39,10 +35,6 @@ int isIPv4AddressOnRBL(char *ipaddr, char *domainlist){
 }
 
 
-/*
- * roll the given URL through a comma separated domain list
- */
-
 int isURLOnRBL(char *url, char *domainlist){
    char *p, rbldomain[MAX_TOKEN_LEN], host[2*MAX_TOKEN_LEN];
 
@@ -62,10 +54,6 @@ int isURLOnRBL(char *url, char *domainlist){
 }
 
 
-/*
- * reverse the given IPv4 address
- */
-
 int reverseIPv4Address(char *ipaddr){
    struct in_addr addr;
 
@@ -81,10 +69,6 @@ int reverseIPv4Address(char *ipaddr){
    return 0;
 }
 
-
-/*
- * rbl check the given host against an rbl domain
- */
 
 int checkHostOnRBL(char *host, char *rbldomain){
    char domainname[SMALLBUFSIZE];

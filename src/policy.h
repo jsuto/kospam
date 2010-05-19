@@ -1,5 +1,5 @@
 /*
- * policy.h, 2009.01.22, SJ
+ * policy.h, 2010.05.19, SJ
  */
 
 #ifndef _POLICY_H
@@ -7,6 +7,6 @@
 
 #include <clapf.h>
 
-int get_policy(struct session_data *sdata, struct __config *cfg, struct __config *my_cfg);
+int getPolicy(struct session_data *sdata, struct __config *cfg, struct __config *my_cfg);
 
 #endif /* _POLICY_H */

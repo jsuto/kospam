@@ -1,5 +1,5 @@
 /*
- * antispam.c, 2010.05.17, SJ
+ * antispam.c, 2010.05.19, SJ
  */
 
 #include <stdio.h>
@@ -32,52 +32,28 @@
 #endif
 
 
-int process_message(struct session_data *sdata, struct _state *sstate, struct __data *data, char *email, char *email2, struct __config *cfg, struct __config *my_cfg) {
-   int i, is_spam = 0, utokens;
+void getUserFromEmailAddress(struct session_data *sdata, struct __data *data, char *email, struct __config *cfg);
+void getPolicySettings(struct session_data *sdata, struct __data *data, struct __config *cfg, struct __config *my_cfg);
+void checkZombieSender(struct session_data *sdata, struct __data *data, struct _state *state, struct __config *cfg);
+
+
+int processMessage(struct session_data *sdata, struct _state *sstate, struct __data *data, char *email, char *email2, struct __config *cfg, struct __config *my_cfg) {
+   int is_spam = 0, utokens;
    char reason[SMALLBUFSIZE], resp[MAXBUFSIZE], tmpbuf[SMALLBUFSIZE], trainbuf[SMALLBUFSIZE], whitelistbuf[SMALLBUFSIZE];
    struct timezone tz;
    struct timeval tv1, tv2;
-#ifdef HAVE_TRE
-   size_t nmatch=0;
-#endif
 
    memset(sdata->acceptbuf, 0, SMALLBUFSIZE);
 
    strcpy(resp, "-");
 
 
-   /* get user from 'RCPT TO:', 2008.11.24, SJ */
-
 #ifdef HAVE_USERS
-   gettimeofday(&tv1, &tz);
- #ifdef HAVE_MEMCACHED
-   if(get_user_from_memcached(sdata, data, email, cfg) == 0){
- #endif
-      getUserdataFromEmail(sdata, email, cfg);
- #ifdef HAVE_MEMCACHED
-      put_user_to_memcached(sdata, data, email, cfg);
-   }
- #endif
-   gettimeofday(&tv2, &tz);
-   sdata->__user += tvdiff(tv2, tv1);
+   getUserFromEmailAddress(sdata, data, email, cfg);
 #endif
 
-   /* read policy, 2008.11.24, SJ */
-
 #ifdef HAVE_POLICY
-   if(sdata->policy_group > 0){
-      gettimeofday(&tv1, &tz);
-   #ifdef HAVE_MEMCACHED
-      if(get_policy_from_memcached(sdata, data, cfg, my_cfg) == 0){
-   #endif
-         get_policy(sdata, cfg, my_cfg);
-   #ifdef HAVE_MEMCACHED
-         put_policy_to_memcached(sdata, data, my_cfg);
-      }
-   #endif
-      gettimeofday(&tv2, &tz);
-      sdata->__policy = tvdiff(tv2, tv1);
-   }
+   if(sdata->policy_group > 0) getPolicySettings(sdata, data, cfg, my_cfg);
 #endif
 
 
@@ -102,27 +78,11 @@ int process_message(struct session_data *sdata, struct _state *sstate, struct __
 
 
    /* create a default spaminess buffer containing the clapf id */
-
    snprintf(sdata->spaminessbuf, MAXBUFSIZE-1, "%s%s\r\n", cfg->clapf_header_field, sdata->ttmpfile);
 
 
-   /* 
-    * if this email came from a host like ip-1.2.3.4.adsl.isp.net
-    * then we can get rid of it right here or mark it as spam
-    */
-
 #ifdef HAVE_TRE
-   if(sdata->tre != '+'){
-
-      i = 0;
-      while(i < data->n_regex && sdata->tre != '+'){
-         if(regexec(&(data->pregs[i]), sstate->hostname, nmatch, NULL, 0) == 0) sdata->tre = '+';
-         i++;
-      }
-
-      if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: zombie check: %c [%d] %s", sdata->ttmpfile, sdata->tre, i, sstate->hostname);
-   }
-
+   checkZombieSender(sdata, data, sstate, cfg);
    if(sdata->tre == '+'){
       snprintf(sdata->acceptbuf, SMALLBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata->ttmpfile, email);
 
@@ -143,11 +103,9 @@ int process_message(struct session_data *sdata, struct _state *sstate, struct __
 
 
 
-   /* is it a training request? */
-
    if(sdata->training_request == 1){
-   #ifdef HAVE_USERS
 
+   #ifdef HAVE_USERS
       /* get user from 'MAIL FROM:', 2008.10.25, SJ */
 
       gettimeofday(&tv1, &tz);
@@ -195,7 +153,6 @@ int process_message(struct session_data *sdata, struct _state *sstate, struct __
     }
 
 
-   /* force spamcheck if the message sent to the blackhole */
    if(sdata->blackhole == 1) my_cfg->use_antispam = 1;
 
 
@@ -260,8 +217,6 @@ int process_message(struct session_data *sdata, struct _state *sstate, struct __
 
 
 
-      /* check whitelist first */
-
    #ifdef HAVE_WHITELIST
       if(isSenderOnBlackOrWhiteList(sdata, email2, SQL_WHITE_FIELD_NAME, SQL_WHITE_LIST, my_cfg) == 1){
          syslog(LOG_PRIORITY, "%s: sender (%s) found on whitelist", sdata->ttmpfile, email2);
@@ -270,7 +225,6 @@ int process_message(struct session_data *sdata, struct _state *sstate, struct __
       }
    #endif
 
-      /* then give blacklist a try */
 
    #ifdef HAVE_BLACKLIST
       if(isSenderOnBlackOrWhiteList(sdata, email2, SQL_BLACK_FIELD_NAME, SQL_BLACK_LIST, my_cfg) == 1){
@@ -316,7 +270,7 @@ int process_message(struct session_data *sdata, struct _state *sstate, struct __
          snprintf(trainbuf, SMALLBUFSIZE-1, "%sTUM\r\n", cfg->clapf_header_field);
 
          gettimeofday(&tv1, &tz);
-         train_message(sdata, sstate, 1, is_spam, T_TOE, my_cfg);
+         trainMessage(sdata, sstate, 1, is_spam, T_TOE, my_cfg);
          gettimeofday(&tv2, &tz);
          sdata->__training = tvdiff(tv2, tv1);
       }
@@ -328,28 +282,26 @@ int process_message(struct session_data *sdata, struct _state *sstate, struct __
          snprintf(reason, SMALLBUFSIZE-1, "%s%s\r\n", cfg->clapf_header_field, MSG_BLACKHOLED);
 
          if(sdata->spaminess < 0.99){
-            syslog(LOG_PRIORITY, "%s: training on a blackhole message", sdata->ttmpfile);
-            snprintf(trainbuf, SMALLBUFSIZE-1, "%sTUM on blackhole\r\n", cfg->clapf_header_field);
-
             gettimeofday(&tv1, &tz);
-            train_message(sdata, sstate, MAX_ITERATIVE_TRAIN_LOOPS, 1, T_TOE, my_cfg);
+
+            trainMessage(sdata, sstate, MAX_ITERATIVE_TRAIN_LOOPS, 1, T_TOE, my_cfg);
+
             gettimeofday(&tv2, &tz);
             sdata->__training = tvdiff(tv2, tv1);
+
+            snprintf(trainbuf, SMALLBUFSIZE-1, "%sTUM on blackhole\r\n", cfg->clapf_header_field);
+            syslog(LOG_PRIORITY, "%s: training on a blackhole message", sdata->ttmpfile);
+
          }
       }
 
 
 
-      /* update token timestamps */
-
       if(cfg->update_tokens == 1){
          gettimeofday(&tv1, &tz);
-      #ifdef HAVE_MYSQL
-         utokens = update_mysql_tokens(sdata, sstate->token_hash);
-      #endif
-      #ifdef HAVE_SQLITE3
-         utokens = update_sqlite3_tokens(sdata, sstate->token_hash);
-      #endif
+
+         utokens = updateTokenTimestamps(sdata, sstate->token_hash);
+
          gettimeofday(&tv2, &tz);
          sdata->__update = tvdiff(tv2, tv1);
 
@@ -359,11 +311,11 @@ int process_message(struct session_data *sdata, struct _state *sstate, struct __
 
    END_OF_TRAINING:
 
-      /* save email to queue */
-
       if(sdata->uid > 0){
          gettimeofday(&tv1, &tz);
-         save_email_to_queue(sdata, sdata->spaminess, my_cfg);
+
+         saveMessageToQueue(sdata, sdata->spaminess, my_cfg);
+
          gettimeofday(&tv2, &tz);
          sdata->__store = tvdiff(tv2, tv1);
       }
@@ -395,4 +347,52 @@ int process_message(struct session_data *sdata, struct _state *sstate, struct __
    return 1;
 }
 
+
+void getUserFromEmailAddress(struct session_data *sdata, struct __data *data, char *email, struct __config *cfg){
+   struct timezone tz;
+   struct timeval tv1, tv2;
+
+   gettimeofday(&tv1, &tz);
+ #ifdef HAVE_MEMCACHED
+   if(getUserdataFromMemcached(sdata, data, email, cfg) == 0){
+ #endif
+      getUserdataFromEmail(sdata, email, cfg);
+ #ifdef HAVE_MEMCACHED
+      putUserdataToMemcached(sdata, data, email, cfg);
+   }
+ #endif
+   gettimeofday(&tv2, &tz);
+   sdata->__user += tvdiff(tv2, tv1);
+}
+
+
+void getPolicySettings(struct session_data *sdata, struct __data *data, struct __config *cfg, struct __config *my_cfg){
+   struct timezone tz;
+   struct timeval tv1, tv2;
+
+   gettimeofday(&tv1, &tz);
+#ifdef HAVE_MEMCACHED
+   if(getPolicyFromMemcached(sdata, data, cfg, my_cfg) == 0){
+#endif
+      getPolicy(sdata, cfg, my_cfg);
+#ifdef HAVE_MEMCACHED
+      putPolicyToMemcached(sdata, data, my_cfg);
+   }
+#endif
+   gettimeofday(&tv2, &tz);
+   sdata->__policy = tvdiff(tv2, tv1);
+}
+
+
+void checkZombieSender(struct session_data *sdata, struct __data *data, struct _state *state, struct __config *cfg){
+   int i=0;
+   size_t nmatch=0;
+
+   while(i < data->n_regex && sdata->tre != '+'){
+      if(regexec(&(data->pregs[i]), state->hostname, nmatch, NULL, 0) == 0) sdata->tre = '+';
+      i++;
+   }
+
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: zombie check: %c [%d] %s", sdata->ttmpfile, sdata->tre, i, state->hostname);
+}
 

@@ -1,5 +1,5 @@
 /*
-   templates.c, 2010.05.13, SJ
+   templates.c, 2010.05.17, SJ
 */
 
 #include <stdio.h>
@@ -12,7 +12,7 @@
 #include <clapf.h>
 
 
-int createEmailFromTemplate(char *filename, char *msg, char *postmaster, char *recipient, char *sender, char *virus, char *engine){
+int createMessageFromTemplate(char *filename, char *msg, char *postmaster, char *recipient, char *sender, char *virus, char *engine){
    FILE *f;
    char buf[SMALLBUFSIZE], puf[SMALLBUFSIZE], *p;
 

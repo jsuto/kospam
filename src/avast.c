@@ -17,9 +17,6 @@
 #include "misc.h"
 #include "av.h"
 
-/*
- * connect to avast! and tell it what file to scan
- */
 
 int avast_scan(char *tmpfile, char *engine, char *avinfo, struct __config *cfg){
    int n, psd;
@@ -47,8 +44,6 @@ int avast_scan(char *tmpfile, char *engine, char *avinfo, struct __config *cfg){
       return AV_ERROR;
    }
 
-   /* read AVAST banner. The last line should end with '220 Ready' */
-
    n = recvtimeout(psd, buf, MAXBUFSIZE, 0);
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: AVAST got: %s", tmpfile, buf);
 
@@ -59,8 +54,6 @@ int avast_scan(char *tmpfile, char *engine, char *avinfo, struct __config *cfg){
       return AV_ERROR;
    }
 
-   /* issue the SCAN command with full path to the temporary directory */
-
    memset(scan_cmd, 0, SMALLBUFSIZE);
    snprintf(scan_cmd, SMALLBUFSIZE-1, "SCAN %s/%s\r\n", cfg->workdir, tmpfile);
 
@@ -68,20 +61,15 @@ int avast_scan(char *tmpfile, char *engine, char *avinfo, struct __config *cfg){
 
    send(psd, scan_cmd, strlen(scan_cmd), 0);
 
-   /* read AVAST's answers */
-
    n = recvtimeout(psd, buf, MAXBUFSIZE, 0);
 
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: AVAST DEBUG: %d %s", tmpfile, n, buf);
 
    n = recvtimeout(psd, buf, MAXBUFSIZE, 0);
 
-   /* close the connection */
-
    send(psd, AVAST_CMD_QUIT, strlen(AVAST_CMD_QUIT), 0);
    close(psd);
 
-   /* now parse what we got from avast! */
 
    p = buf;
 

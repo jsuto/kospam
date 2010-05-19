@@ -228,8 +228,6 @@ void postfix_to_clapf(int new_sd, struct __data *data, struct __config *cfg){
             #endif
                   sstate = parseMessage(&sdata, cfg);
 
-               syslog(LOG_PRIORITY, "%s: %s/%s", sdata.ttmpfile, sstate.hostname, sstate.ip);
-
                gettimeofday(&tv2, &tz);
                sdata.__parsed = tvdiff(tv2, tv1);
 

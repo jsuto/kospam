@@ -1,5 +1,5 @@
 /*
- * list.c, 2009.01.22, SJ
+ * list.c, SJ
  */
 
 #include <stdio.h>
@@ -28,7 +28,7 @@ int append_list(struct url **urls, char *p){
       q = q->r;
    }
 
-   t = new_list(p);
+   t = createListItem(p);
    if(t){
       if(*urls == NULL)
          *urls = t;
@@ -42,12 +42,7 @@ int append_list(struct url **urls, char *p){
 }
 
 
-
-/*
- * create a new url structure
- */
-
-struct url *new_list(char *s){
+struct url *createListItem(char *s){
    struct url *h=NULL;
 
    if((h = malloc(sizeof(struct url))) == NULL)
@@ -60,11 +55,7 @@ struct url *new_list(char *s){
 }
 
 
-/*
- * free url list
- */
-
-void free_list(struct url *u){
+void freeList(struct url *u){
    struct url *p, *q;
 
    p = u;

@@ -1,5 +1,5 @@
 /*
- * sig.c, 2009.10.27
+ * sig.c
  */
 
 #include <sys/types.h>
@@ -40,6 +40,6 @@ void sig_pause(){
 }
 
 int wait_nohang(int *wstat){
-  return waitpid(-1, wstat, WNOHANG);
+   return waitpid(-1, wstat, WNOHANG);
 }
 

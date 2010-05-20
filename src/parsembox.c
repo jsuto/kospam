@@ -59,7 +59,7 @@ int main(int argc, char **argv){
                unlink(ifile);
             }
 
-            free_list(state.urls);
+            freeList(state.urls);
             clearhash(state.token_hash, 2);
             free_boundary(state.boundaries);
          }
@@ -82,7 +82,7 @@ int main(int argc, char **argv){
          unlink(ifile);
       }
 
-      free_list(state.urls);
+      freeList(state.urls);
       clearhash(state.token_hash, 2);
       free_boundary(state.boundaries);
    }

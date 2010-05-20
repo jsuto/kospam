@@ -89,7 +89,7 @@ void initState(struct _state *state){
 
 
 void freeState(struct _state *state){
-   free_list(state->urls);
+   freeList(state->urls);
    clearhash(state->token_hash, 0);
 }
 

@@ -1,5 +1,5 @@
 /*
- * dirs.c, 2010.03.19, SJ
+ * dirs.c, SJ
  */
 
 #include <stdio.h>
@@ -13,25 +13,10 @@
 #include <clapf.h>
 
 
-void createdir(char *path, uid_t uid, gid_t gid, mode_t mode){
-   struct stat st;
-
-   if(strlen(path) > 2){
-      if(path[strlen(path)-1] == '/') path[strlen(path)-1] = '\0';
-
-      if(stat(path, &st)){
-         if(mkdir(path, mode) == 0){
-            chown(path, uid, gid);
-            syslog(LOG_PRIORITY, "created directory: *%s*", path);
-         }
-         else syslog(LOG_PRIORITY, "could not create directory: *%s*", path);
-      }
-
-   }
-}
+void createdir(char *path, uid_t uid, gid_t gid, mode_t mode);
 
 
-void check_dirs(struct __config *cfg, uid_t uid, gid_t gid){
+void checkAndCreateClapfDirectories(struct __config *cfg, uid_t uid, gid_t gid){
    char *p;
 
    p = strrchr(cfg->queuedir, '/');
@@ -73,6 +58,24 @@ void check_dirs(struct __config *cfg, uid_t uid, gid_t gid){
 
    createdir(cfg->quarantine_dir, uid, gid, 0755);
 
+}
+
+
+void createdir(char *path, uid_t uid, gid_t gid, mode_t mode){
+   struct stat st;
+
+   if(strlen(path) > 2){
+      if(path[strlen(path)-1] == '/') path[strlen(path)-1] = '\0';
+
+      if(stat(path, &st)){
+         if(mkdir(path, mode) == 0){
+            chown(path, uid, gid);
+            syslog(LOG_PRIORITY, "created directory: *%s*", path);
+         }
+         else syslog(LOG_PRIORITY, "could not create directory: *%s*", path);
+      }
+
+   }
 }
 
 

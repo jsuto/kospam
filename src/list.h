@@ -1,5 +1,5 @@
 /*
- * list.h, 2009.01.22, SJ
+ * list.h, SJ
  */
 
 #ifndef _LIST_H
@@ -8,8 +8,8 @@
 #include "parser.h"
 
 int append_list(struct url **urls, char *p);
-struct url *new_list(char *s);
-void free_list(struct url *u);
+struct url *createListItem(char *s);
+void freeList(struct url *u);
 
 #endif /* _LIST_H */
 

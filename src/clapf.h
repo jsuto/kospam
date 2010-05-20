@@ -1,5 +1,5 @@
 /*
- * clapf.h, 2010.05.19, SJ
+ * clapf.h, SJ
  */
 
 #ifndef _CLAPF_H
@@ -53,7 +53,7 @@ struct __config read_config(char *configfile);
 void print_config_all(struct __config *cfg, char *key);
 void print_config(char *configfile, struct __config *cfg);
 
-void check_dirs(struct __config *cfg, uid_t uid, gid_t gid);
+void checkAndCreateClapfDirectories(struct __config *cfg, uid_t uid, gid_t gid);
 
 int getUserdataFromMemcached(struct session_data *sdata, struct __data *data, char *email, struct __config *cfg);
 int putUserdataToMemcached(struct session_data *sdata, struct __data *data, char *email, struct __config *cfg);
@@ -62,6 +62,8 @@ int putPolicyToMemcached(struct session_data *sdata, struct __data *data, struct
 
 void updateCounters(struct session_data *sdata, struct __data *data, struct __counters *counters, struct __config *cfg);
 
+void initialiseZombieList(struct __data *data, struct __config *cfg);
+void freeZombieList(struct __data *data);
 
 #endif /* _CLAPF_H */
 

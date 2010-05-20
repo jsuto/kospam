@@ -17,12 +17,7 @@
 #include <clapf.h>
 
 
-#ifdef HAVE_MYDB
-   #include "mydb.h"
-#endif
-
-
-void postfix_to_clapf(int new_sd, struct __data *data, struct __config *cfg){
+void handleSession(int new_sd, struct __data *data, struct __config *cfg){
    int i, ret, pos, n, inj=ERR_REJECT, state, prevlen=0;
    char *p, buf[MAXBUFSIZE], puf[MAXBUFSIZE], resp[MAXBUFSIZE], prevbuf[MAXBUFSIZE], last2buf[2*MAXBUFSIZE+1];
    char email[SMALLBUFSIZE], email2[SMALLBUFSIZE], virusinfo[SMALLBUFSIZE], reason[SMALLBUFSIZE];

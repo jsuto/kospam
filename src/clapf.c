@@ -1,5 +1,5 @@
 /*
- * clapf.c, 2010.05.13, SJ
+ * clapf.c, SJ
  */
 
 #include <stdio.h>
@@ -39,272 +39,26 @@ struct __config cfg;
 struct __data data;
 struct passwd *pwd;
 
+#ifdef HAVE_LIBCLAMAV
+   unsigned int options=0;
+#endif
 
+void fatal(char *s);
 void clean_exit();
 void fatal(char *s);
+void initialiseConfiguration();
+void dropPrivileges();
+void writePidFile(char *pidfile);
+void sigchld();
+void reloadClamavDB();
 
-#ifdef HAVE_LIBCLAMAV
-   struct cl_stat dbstat;
-   const char *dbdir;
-   unsigned int options=0;
 
-   void reload_clamav_db(){
-      int retval;
-      unsigned int sigs = 0;
-
-      /* release old structure */
-      if(data.engine){
-         cl_engine_free(data.engine);
-         cl_statfree(&dbstat);
-         data.engine = NULL;
-      }
-
-      if((retval = cl_init(CL_INIT_DEFAULT)) != CL_SUCCESS){
-         fatal(ERR_INIT_ERROR);
-      }
-
-      /* get default database directory */
-      dbdir = cl_retdbdir();
-      if(dbdir == NULL)
-         fatal(ERR_NO_DB_DIR);
-
-      /* initialise dbstat structure */
-      memset(&dbstat, 0, sizeof(struct cl_stat));
-      if(cl_statinidir(dbdir, &dbstat) != 0)
-         fatal(ERR_STAT_INI_DIR);
-
-
-      if(!(data.engine = cl_engine_new())){
-         fatal("Can't create new engine");
-      }
-
-      /* load virus signatures from database(s) */
-
-
-      if(cfg.clamav_use_phishing_db == 1){
-         options |= CL_DB_PHISHING;
-         options |= CL_DB_PHISHING_URLS;
-      }
-
-      if((retval = cl_load(cl_retdbdir(), data.engine, &sigs, options)) != CL_SUCCESS){
-         syslog(LOG_PRIORITY, "reloading db failed: %s", cl_strerror(retval));
-         clean_exit();
-      }
-
-      if((retval = cl_engine_compile(data.engine)) != CL_SUCCESS){
-         syslog(LOG_PRIORITY, "Database initialization error: can't build engine: %s", cl_strerror(retval));
-         cl_engine_free(data.engine);
-         clean_exit();
-      }
-
-      syslog(LOG_PRIORITY, "reloaded with %d viruses", sigs);
-   }
-
-#endif
-
-
-/*
- * release everything before we exit
- */
-
-void clean_exit(){
-   if(sd != -1)
-      close(sd);
-
-#ifdef HAVE_LIBCLAMAV
-   if(data.engine)
-      cl_engine_free(data.engine);
-#endif
-
-   free_list(data.blackhole);
-
-#ifdef HAVE_TRE
-   int i;
-   for(i=0; i<data.n_regex; i++){
-      regfree(&(data.pregs[i]));
-   }
-#endif
-
-#ifdef HAVE_MEMCACHED
-   //if(data.memc != NULL) memcached_free(data.memc);
-#endif
-
-   syslog(LOG_PRIORITY, "%s has been terminated", PROGNAME);
-
-   unlink(cfg.pidfile);
-
-   exit(1);
-}
-
-
-/*
- * exit with an error string
- */
-
-void fatal(char *s){
-   syslog(LOG_PRIORITY, "%s\n", s);
-   clean_exit();
-}
-
-
-/*
- * drop privileges
- */
-
-void drop_privileges(struct __config *cfg){
-
-   if(pwd->pw_uid > 0 && pwd->pw_gid > 0){
-
-      if(getgid() != pwd->pw_gid){
-         if(setgid(pwd->pw_gid)) fatal(ERR_SETGID);
-      }
-
-      if(getuid() != pwd->pw_uid){
-         if(setuid(pwd->pw_uid)) fatal(ERR_SETUID);
-      }
-
-   }
-}
-
-
-/*
- * reload configuration
- */
-
-void reload_config(){
-   char *p, puf[SMALLBUFSIZE];
-
-   cfg = read_config(configfile);
-
-   if(strlen(cfg.username) > 1){
-      pwd = getpwnam(cfg.username);
-   }
-
-
-   /* check/create clapf directories if we are root */
-
-   if(getuid() == 0 && pwd){
-      check_dirs(&cfg, pwd->pw_uid, pwd->pw_gid);
-   }
-
-
-   if(chdir(cfg.workdir)){
-      syslog(LOG_PRIORITY, "workdir: *%s*", cfg.workdir);
-      fatal(ERR_CHDIR);
-   }
-
-#ifdef HAVE_LIBCLAMAV
-
-    /* set up limits */
-
-    cl_engine_set_num(data.engine, CL_ENGINE_MAX_FILES, cfg.clamav_maxfile);                    /* maximum number of files to be scanned
-                                                                                              within a single archive */
-    cl_engine_set_num(data.engine, CL_ENGINE_MAX_FILESIZE, cfg.clamav_max_archived_file_size);  /* compressed files will only be decompressed
-                                                                                              and scanned up to this size */
-    cl_engine_set_num(data.engine, CL_ENGINE_MAX_RECURSION, cfg.clamav_max_recursion_level);    /* maximum recursion level for archives */
-
-
-    if(cfg.clamav_use_phishing_db == 1)
-       options = CL_DB_STDOPT|CL_DB_PHISHING|CL_DB_PHISHING_URLS;
-    else
-       options = 0;
-
-#endif
-
-   setlocale(LC_MESSAGES, cfg.locale);
-   setlocale(LC_CTYPE, cfg.locale);
-
-   /* (re)create blackhole list */
-
-   free_list(data.blackhole);
-   data.blackhole = NULL;
-
-   p = cfg.blackhole_email_list;
-   do {
-      p = split(p, ' ', puf, SMALLBUFSIZE-1);
-      if(strlen(puf) > 3) append_list(&(data.blackhole), puf);
-   } while(p);
-
-
-   syslog(LOG_PRIORITY, "reloaded config: %s", configfile);
-
-#ifdef HAVE_TRE
-   int i;
-   char buf[SMALLBUFSIZE];
-   FILE *f;
-
-   if(data.n_regex > 0){
-      for(i=0; i < data.n_regex; i++){
-         regfree(&(data.pregs[i]));
-      }
-   }
-
-
-   data.n_regex = 0;
-
-   f = fopen(ZOMBIE_NET_REGEX, "r");
-   if(f){
-      while(fgets(buf, SMALLBUFSIZE, f)){
-         if(buf[0] != ';' && buf[0] != '#' && buf[0] != '\r' && buf[0] != '\n'){
-            trimBuffer(buf);
-            if(regcomp(&(data.pregs[data.n_regex]), buf, REG_ICASE | REG_EXTENDED) == 0){
-               if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "compiled: %s", buf);
-               data.n_regex++;
-            }   
-            else 
-               syslog(LOG_PRIORITY, "failed to compile: %s", buf);
-         }
-
-         if(data.n_regex == NUM_OF_REGEXES-1) break;
-
-      }
-      fclose(f);
-   }
-   else syslog(LOG_PRIORITY, "cannot open: %s", ZOMBIE_NET_REGEX);
-#endif
-
-
-#ifdef HAVE_MEMCACHED
-   /*memcached_server_st *servers;
-
-   data.memc = memcached_create(NULL);
-
-   if(data.memc != NULL){
-      servers = memcached_servers_parse(cfg.memcached_servers);
-
-      if(memcached_server_push(data.memc, servers) != MEMCACHED_SUCCESS){
-         memcached_free(data.memc);
-         data.memc = NULL;
-      }
-
-      memcached_server_list_free(servers);
-   }*/
-
-   memcached_init(&(data.memc), cfg.memcached_servers, 11211);
-#endif
-
-}
-
-
-/*
- * child handler
- */
-
-void sigchld(){
-  int wstat;
-  int pid;
-
-  while((pid = wait_nohang(&wstat)) > 0){
-    if(nconn > 0) nconn--;
-  }
-}
 
 int main(int argc, char **argv){
     int i, new_sd, yes=1, pid, daemonise=0;
     unsigned int clen;
     struct sockaddr_in client_addr, serv_addr;
     struct in_addr addr;
-    FILE *f;
 
     while((i = getopt(argc, argv, "c:dvVh")) > 0){
        switch(i){
@@ -334,7 +88,7 @@ int main(int argc, char **argv){
     sig_catch(SIGQUIT, clean_exit);
     sig_catch(SIGKILL, clean_exit);
     sig_catch(SIGTERM, clean_exit);
-    sig_catch(SIGHUP, reload_config);
+    sig_catch(SIGHUP, initialiseConfiguration);
 
     data.blackhole = NULL;
 
@@ -343,7 +97,7 @@ int main(int argc, char **argv){
     #endif
     #ifdef HAVE_LIBCLAMAV
        data.engine = NULL;
-       sig_catch(SIGALRM, reload_clamav_db);
+       sig_catch(SIGALRM, reloadClamavDB);
     #endif
 
 
@@ -351,7 +105,8 @@ int main(int argc, char **argv){
     sig_catch(SIGCHLD, sigchld);
 
 
-    reload_config();
+    initialiseConfiguration();
+
 
     if((sd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
        fatal(ERR_OPEN_SOCKET);
@@ -372,33 +127,22 @@ int main(int argc, char **argv){
         fatal(ERR_LISTEN);
 
 
-    /* drop privileges */
-
-    drop_privileges(&cfg);
+    dropPrivileges();
 
 
     syslog(LOG_PRIORITY, "%s %s starting", PROGNAME, VERSION);
 
-    /* libclamav startup */
 
     #ifdef HAVE_LIBCLAMAV
-       reload_clamav_db();
+       reloadClamavDB();
     #endif
 
 
-    /* go to the background */
 #if HAVE_DAEMON == 1
     if(daemonise == 1) i = daemon(1, 0);
 #endif
 
-    /* write pid file */
-
-    f = fopen(cfg.pidfile, "w");
-    if(f){
-       fprintf(f, "%d", (int)getpid());
-       fclose(f);
-    }
-    else syslog(LOG_PRIORITY, "cannot write pidfile: %s", cfg.pidfile);
+    writePidFile(cfg.pidfile);
 
 
     /* main accept loop */
@@ -429,7 +173,7 @@ int main(int argc, char **argv){
           }
        }
        else {
-           /* child process, do initialisation */
+           /* child process */
 
            sig_uncatch(SIGCHLD);
            sig_unblock(SIGCHLD);
@@ -440,9 +184,7 @@ int main(int argc, char **argv){
            sig_uncatch(SIGTERM);
            sig_block(SIGHUP);
 
-           /* handle session */
-
-           postfix_to_clapf(new_sd, &data, &cfg);
+           handleSession(new_sd, &data, &cfg);
        }
 
        close(new_sd);
@@ -450,3 +192,169 @@ int main(int argc, char **argv){
 
     return 0;
 }
+
+
+void fatal(char *s){
+   syslog(LOG_PRIORITY, "%s\n", s);
+   clean_exit();
+}
+
+
+void clean_exit(){
+   if(sd != -1) close(sd);
+
+#ifdef HAVE_LIBCLAMAV
+   if(data.engine) cl_engine_free(data.engine);
+#endif
+
+   freeList(data.blackhole);
+
+#ifdef HAVE_TRE
+   freeZombieList(&data);
+#endif
+
+   syslog(LOG_PRIORITY, "%s has been terminated", PROGNAME);
+
+   unlink(cfg.pidfile);
+
+   exit(1);
+}
+
+
+void initialiseConfiguration(){
+   char *p, puf[SMALLBUFSIZE];
+
+   cfg = read_config(configfile);
+
+   if(strlen(cfg.username) > 1){
+      pwd = getpwnam(cfg.username);
+   }
+
+
+   if(getuid() == 0 && pwd){
+      checkAndCreateClapfDirectories(&cfg, pwd->pw_uid, pwd->pw_gid);
+   }
+
+
+   if(chdir(cfg.workdir)){
+      syslog(LOG_PRIORITY, "workdir: *%s*", cfg.workdir);
+      fatal(ERR_CHDIR);
+   }
+
+#ifdef HAVE_LIBCLAMAV
+   cl_engine_set_num(data.engine, CL_ENGINE_MAX_FILES, cfg.clamav_maxfile);
+   cl_engine_set_num(data.engine, CL_ENGINE_MAX_FILESIZE, cfg.clamav_max_archived_file_size);
+   cl_engine_set_num(data.engine, CL_ENGINE_MAX_RECURSION, cfg.clamav_max_recursion_level);
+
+   options = 0;
+
+   if(cfg.clamav_use_phishing_db == 1) options = CL_DB_STDOPT|CL_DB_PHISHING|CL_DB_PHISHING_URLS;
+#endif
+
+   setlocale(LC_MESSAGES, cfg.locale);
+   setlocale(LC_CTYPE, cfg.locale);
+
+   freeList(data.blackhole);
+   data.blackhole = NULL;
+
+   p = cfg.blackhole_email_list;
+   do {
+      p = split(p, ' ', puf, SMALLBUFSIZE-1);
+      if(strlen(puf) > 3) append_list(&(data.blackhole), puf);
+   } while(p);
+
+
+   syslog(LOG_PRIORITY, "reloaded config: %s", configfile);
+
+#ifdef HAVE_TRE
+   initialiseZombieList(&data, &cfg);
+#endif
+
+
+#ifdef HAVE_MEMCACHED
+   memcached_init(&(data.memc), cfg.memcached_servers, 11211);
+#endif
+}
+
+
+void dropPrivileges(){
+
+   if(pwd->pw_uid > 0 && pwd->pw_gid > 0){
+
+      if(getgid() != pwd->pw_gid){
+         if(setgid(pwd->pw_gid)) fatal(ERR_SETGID);
+      }
+
+      if(getuid() != pwd->pw_uid){
+         if(setuid(pwd->pw_uid)) fatal(ERR_SETUID);
+      }
+
+   }
+}
+
+
+void writePidFile(char *pidfile){
+   FILE *f;
+
+   f = fopen(pidfile, "w");
+   if(f){
+      fprintf(f, "%d", (int)getpid());
+      fclose(f);
+   }
+   else syslog(LOG_PRIORITY, "cannot write pidfile: %s", cfg.pidfile);
+}
+
+
+void sigchld(){
+   int pid, wstat;
+
+   while((pid = wait_nohang(&wstat)) > 0){
+      if(nconn > 0) nconn--;
+   }
+}
+
+
+#ifdef HAVE_LIBCLAMAV
+void reloadClamavDB(){
+   int retval;
+   unsigned int sigs = 0;
+   const char *dbdir;
+   struct cl_stat dbstat;
+
+   if(data.engine){
+      cl_engine_free(data.engine);
+      cl_statfree(&dbstat);
+      data.engine = NULL;
+   }
+
+   if((retval = cl_init(CL_INIT_DEFAULT)) != CL_SUCCESS) fatal(ERR_INIT_ERROR);
+
+   dbdir = cl_retdbdir();
+   if(dbdir == NULL) fatal(ERR_NO_DB_DIR);
+
+   memset(&dbstat, 0, sizeof(struct cl_stat));
+   if(cl_statinidir(dbdir, &dbstat) != 0) fatal(ERR_STAT_INI_DIR);
+
+   if(!(data.engine = cl_engine_new())) fatal("Can't create new engine");
+
+
+   if(cfg.clamav_use_phishing_db == 1){
+      options |= CL_DB_PHISHING;
+      options |= CL_DB_PHISHING_URLS;
+   }
+
+   if((retval = cl_load(cl_retdbdir(), data.engine, &sigs, options)) != CL_SUCCESS){
+      syslog(LOG_PRIORITY, "reloading db failed: %s", cl_strerror(retval));
+      clean_exit();
+   }
+
+   if((retval = cl_engine_compile(data.engine)) != CL_SUCCESS){
+      syslog(LOG_PRIORITY, "Database initialization error: can't build engine: %s", cl_strerror(retval));
+      cl_engine_free(data.engine);
+      clean_exit();
+   }
+
+   syslog(LOG_PRIORITY, "reloaded with %d viruses", sigs);
+}
+#endif
+

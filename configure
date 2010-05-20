@@ -7109,6 +7109,7 @@ fi
 if test "$have_tre" = "yes"; then
    echo "tre library: yes"
    defs="$defs -DHAVE_TRE"
+   objs="$objs zombie.o"
    antispam_libs="$antispam_libs -ltre"
 fi
 

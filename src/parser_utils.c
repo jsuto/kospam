@@ -1,5 +1,5 @@
 /*
- * parser_utils.c, 2010.05.18, SJ
+ * parser_utils.c, SJ
  */
 
 #include <stdio.h>
@@ -25,11 +25,7 @@
 #include "defs.h"
 
 
-/*
- * initialise parser state
- */
-
-void init_state(struct _state *state){
+void initState(struct _state *state){
    int i;
 
    state->message_state = MSG_UNDEF;
@@ -92,9 +88,11 @@ void init_state(struct _state *state){
 }
 
 
-/*
- *
- */
+void freeState(struct _state *state){
+   free_list(state->urls);
+   clearhash(state->token_hash, 0);
+}
+
 
 int attachment_by_type(struct _state *state, char *type){
    int i;

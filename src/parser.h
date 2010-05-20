@@ -1,5 +1,5 @@
 /*
- * parser.h, 2010.05.16, SJ
+ * parser.h, SJ
  */
 
 #ifndef _PARSER_H
@@ -13,7 +13,8 @@ struct _state parseMessage(struct session_data *sdata, struct __config *cfg);
 struct _state parseBuffer(struct session_data *sdata, struct __config *cfg);
 int parseLine(char *buf, struct _state *state, struct session_data *sdata, struct __config *cfg);
 
-void init_state(struct _state *state);
+void initState(struct _state *state);
+void freeState(struct _state *state);
 int extract_boundary(char *p, struct _state *state);
 int attachment_by_type(struct _state *state, char *type);
 void fixupEncodedHeaderLine(char *buf);

@@ -1,5 +1,5 @@
 /*
- * parsembox.c, 2010.05.13, SJ
+ * parsembox.c, SJ
  */
 
 #include <stdio.h>
@@ -37,19 +37,18 @@ int main(int argc, char **argv){
    if(!F)
       __fatal("open");
 
-   init_state(&state);
+   initState(&state);
 
    while(fgets(buf, MAXBUFSIZE-1, F)){
       is_match = 0;
 
       /*
-         a message starts in an mbox file like this:
-
-         From_
-
-         where _ means the space character
-
-      */
+       * a message starts in an mbox file like this:
+       * From_
+       *
+       * where _ means the space character
+       *
+       */
 
       if(buf[0] == 'F' && buf[1] == 'r' && buf[2] == 'o' && buf[3] == 'm' && buf[4] == ' '){
          tot_msgs++;
@@ -65,7 +64,7 @@ int main(int argc, char **argv){
             free_boundary(state.boundaries);
          }
 
-         init_state(&state);
+         initState(&state);
 
          printf("*** NEW_MSG_STARTS_HERE %d ***\n", tot_msgs);
          continue;

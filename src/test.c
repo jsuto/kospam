@@ -1,5 +1,5 @@
 /*
- * test.c, 2010.05.13, SJ
+ * test.c, SJ
  */
 
 #include <stdio.h>
@@ -48,11 +48,6 @@ int main(int argc, char **argv){
 
    fprintf(stderr, "locale: %s\n", setlocale(LC_MESSAGES, cfg.locale));
    setlocale(LC_CTYPE, cfg.locale);
-
-   /*
-    * override training mode to make sure we will not train the token database
-    * since we are just testing the spam decision against a message, SJ
-    */
 
    cfg.training_mode = 0;
    cfg.initial_1000_learning=0;
@@ -112,14 +107,11 @@ int main(int argc, char **argv){
    fprintf(stderr, "lang detected: %s\n", check_lang(state.token_hash));
 #endif
 
-   free_list(state.urls);
-   clearhash(state.token_hash, 0);
+   freeState(&state);
 
    gettimeofday(&tv_spam_stop, &tz);
 
-   fprintf(stderr, "%s: %.4f in %ld [ms]\n", argv[2], spaminess, tvdiff(tv_spam_stop, tv_spam_start)/1000);
-
-   fprintf(stderr, "%ld %ld\n", state.c_shit, state.l_shit);
+   fprintf(stderr, "%s: %.4f in %ld [ms]\n%ld %ld\n", argv[2], spaminess, tvdiff(tv_spam_stop, tv_spam_start)/1000, state.c_shit, state.l_shit);
 
 #ifdef HAVE_SPAMSUM
    gettimeofday(&tv_spam_start, &tz);

@@ -1,5 +1,5 @@
 /*
- * session.c, 2010.05.17, SJ
+ * session.c, SJ
  */
 
 #include <stdio.h>
@@ -20,61 +20,6 @@
 #ifdef HAVE_MYDB
    #include "mydb.h"
 #endif
-
-
-/*
- * kill child if it works too long or is frozen
- */
-
-void kill_child(){
-   syslog(LOG_PRIORITY, "child is killed by force");
-   exit(0);
-}
-
-
-void initSessionData(struct session_data *sdata){
-   int i;
-
-
-   sdata->fd = -1;
-
-   memset(sdata->ttmpfile, 0, SMALLBUFSIZE);
-   createClapfID(&(sdata->ttmpfile[0]));
-   unlink(sdata->ttmpfile);
-
-   memset(sdata->mailfrom, 0, SMALLBUFSIZE);
-   memset(sdata->client_addr, 0, IPLEN);
-   memset(sdata->xforward, 0, SMALLBUFSIZE);
-
-   memset(sdata->clapf_id, 0, SMALLBUFSIZE);
-
-   sdata->uid = 0;
-   sdata->tot_len = 0;
-   sdata->skip_id_check = 0;
-   sdata->num_of_rcpt_to = 0;
-   sdata->trapped_client = 0;
-   sdata->blackhole = 0;
-   sdata->need_signo_check = 0;
-   sdata->training_request = 0;
-
-#ifdef HAVE_MAILBUF
-   sdata->message_size = sdata->mailpos = sdata->discard_mailbuf = 0;
-   memset(sdata->mailbuf, 0, MAILBUFSIZE);
-#endif
-
-   sdata->tre = '-';
-   sdata->statistically_whitelisted = 0;
-
-   sdata->rav = AVIR_OK;
-
-   sdata->__parsed = sdata->__av = sdata->__user = sdata->__policy = sdata->__as = sdata->__minefield = 0;
-   sdata->__training = sdata->__update = sdata->__store = sdata->__inject = sdata->__acquire = 0;
-
-   sdata->spaminess = DEFAULT_SPAMICITY;
-
-   for(i=0; i<MAX_RCPT_TO; i++) memset(sdata->rcptto[i], 0, SMALLBUFSIZE);
-
-}
 
 
 void postfix_to_clapf(int new_sd, struct __data *data, struct __config *cfg){
@@ -98,7 +43,7 @@ void postfix_to_clapf(int new_sd, struct __data *data, struct __config *cfg){
 #endif
 
    alarm(cfg->session_timeout);
-   sig_catch(SIGALRM, kill_child);
+   sig_catch(SIGALRM, killChild);
 
    state = SMTP_STATE_INIT;
 
@@ -111,7 +56,6 @@ void postfix_to_clapf(int new_sd, struct __data *data, struct __config *cfg){
    init_mydb(cfg->mydbfile, &sdata);
 #endif
 
-   /* initialising counters */
    bzero(&counters, sizeof(counters));
 
 
@@ -186,7 +130,7 @@ void postfix_to_clapf(int new_sd, struct __data *data, struct __config *cfg){
 
                state = SMTP_STATE_PERIOD;
 
-               /* make sure we had a successful read, 2007.11.05, SJ */
+               /* make sure we had a successful read */
 
                rc = fsync(sdata.fd);
                close(sdata.fd);
@@ -212,9 +156,6 @@ void postfix_to_clapf(int new_sd, struct __data *data, struct __config *cfg){
                }
 
 
-               //writeDeliveryInfo(&sdata, cfg->workdir);
-
-               /* parse message */
                gettimeofday(&tv1, &tz);
 
             #ifdef HAVE_MAILBUF
@@ -232,8 +173,6 @@ void postfix_to_clapf(int new_sd, struct __data *data, struct __config *cfg){
                else sdata.need_scan = 1;
 
 
-               /* do antivirus check, if we have to */
-
             #ifdef HAVE_ANTIVIRUS
                gettimeofday(&tv1, &tz);
                #ifdef HAVE_LIBCLAMAV
@@ -246,7 +185,6 @@ void postfix_to_clapf(int new_sd, struct __data *data, struct __config *cfg){
             #endif
 
 
-               /* open database backend handler */
 
             #ifdef NEED_SQLITE3
                db_conn = 0;
@@ -364,19 +302,13 @@ void postfix_to_clapf(int new_sd, struct __data *data, struct __config *cfg){
 
 
                unlink(sdata.ttmpfile);
-
-
-               /* free state lists */
-
-               free_list(sstate.urls);
-               clearhash(sstate.token_hash, 0);
+               freeState(&sstate);
 
 
             #ifdef HAVE_SQLITE3
                update_counters(&sdata, data, &counters, cfg);
             #endif
 
-               /* close database backend handler */
 
             #ifdef NEED_SQLITE3
                db_conn = 0;
@@ -387,7 +319,6 @@ void postfix_to_clapf(int new_sd, struct __data *data, struct __config *cfg){
                ldap_unbind_s(sdata.ldap);
             #endif
 
-               /* reset the alarm clock after processing a message, 2009.10.22, SJ */
                alarm(cfg->session_timeout);
 
                /* if we have nothing after the trailing (.), we can read
@@ -444,7 +375,6 @@ AFTER_PERIOD:
       while((p = split_str(p, "\r\n", buf, MAXBUFSIZE-1))){
          if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: got: %s", sdata.ttmpfile, buf);
 
-         // EHLO
 
          if(strncasecmp(buf, SMTP_CMD_EHLO, strlen(SMTP_CMD_EHLO)) == 0 || strncasecmp(buf, LMTP_CMD_LHLO, strlen(LMTP_CMD_LHLO)) == 0){
             if(state == SMTP_STATE_INIT) state = SMTP_STATE_HELO;
@@ -458,9 +388,6 @@ AFTER_PERIOD:
          }
 
 
-
-         // HELO, let's play it simple for kids and grandmas ...
-
          if(strncasecmp(buf, SMTP_CMD_HELO, strlen(SMTP_CMD_HELO)) == 0){
             if(state == SMTP_STATE_INIT) state = SMTP_STATE_HELO;
 
@@ -469,9 +396,6 @@ AFTER_PERIOD:
             continue;
          }
 
-
-
-         // XFORWARD
 
          if(strncasecmp(buf, SMTP_CMD_XFORWARD, strlen(SMTP_CMD_XFORWARD)) == 0){
 
@@ -492,7 +416,6 @@ AFTER_PERIOD:
             continue;
          }
 
-         // MAIL FROM
 
          if(strncasecmp(buf, SMTP_CMD_MAIL_FROM, strlen(SMTP_CMD_MAIL_FROM)) == 0){
 
@@ -522,7 +445,6 @@ AFTER_PERIOD:
                memset(email2, 0, SMALLBUFSIZE);
                extractEmail(sdata.mailfrom, email2);
 
-               //snprintf(buf, MAXBUFSIZE-1, SMTP_RESP_250_210_OK, email2);
                strncat(resp, SMTP_RESP_250_OK, strlen(SMTP_RESP_250_OK));
 
                if((strstr(sdata.mailfrom, "MAILER-DAEMON") || strstr(sdata.mailfrom, "<>")) && strlen(cfg->our_signo) > 3) sdata.need_signo_check = 1;
@@ -531,7 +453,6 @@ AFTER_PERIOD:
             continue;
          }
 
-         // RCPT TO
 
          if(strncasecmp(buf, SMTP_CMD_RCPT_TO, strlen(SMTP_CMD_RCPT_TO)) == 0){
 
@@ -598,7 +519,6 @@ AFTER_PERIOD:
             continue;
          }
 
-         // DATA
 
          if(strncasecmp(buf, SMTP_CMD_DATA, strlen(SMTP_CMD_DATA)) == 0){
 
@@ -626,7 +546,6 @@ AFTER_PERIOD:
             continue; 
          }
 
-         // QUIT
 
          if(strncasecmp(buf, SMTP_CMD_QUIT, strlen(SMTP_CMD_QUIT)) == 0){
 
@@ -642,7 +561,6 @@ AFTER_PERIOD:
             goto QUITTING;
          }
 
-         // NOOP
 
          if(strncasecmp(buf, SMTP_CMD_NOOP, strlen(SMTP_CMD_NOOP)) == 0){
             strncat(resp, SMTP_RESP_250_OK, MAXBUFSIZE-1);
@@ -650,11 +568,7 @@ AFTER_PERIOD:
          }
 
 
-         // RSET
-
          if(strncasecmp(buf, SMTP_CMD_RESET, strlen(SMTP_CMD_RESET)) == 0){
-
-            /* we must send a 250 Ok */
 
             strncat(resp, SMTP_RESP_250_OK, MAXBUFSIZE-1);
 
@@ -669,8 +583,8 @@ AFTER_PERIOD:
          }
 
          /* by default send 502 command not implemented message */
-         syslog(LOG_PRIORITY, "%s: invalid command: %s", sdata.ttmpfile, buf);
 
+         syslog(LOG_PRIORITY, "%s: invalid command: %s", sdata.ttmpfile, buf);
          strncat(resp, SMTP_RESP_502_ERR, MAXBUFSIZE-1);
       }
 
@@ -687,7 +601,7 @@ AFTER_PERIOD:
 
    /*
     * if we are not in SMTP_STATE_QUIT and the message was not injected,
-    * ie. we have timed out than send back 421 error message, 2005.12.29, SJ
+    * ie. we have timed out than send back 421 error message
     */
 
    if(state < SMTP_STATE_QUIT && inj != OK){
@@ -722,3 +636,56 @@ QUITTING:
 
    _exit(0);
 }
+
+
+void initSessionData(struct session_data *sdata){
+   int i;
+
+
+   sdata->fd = -1;
+
+   memset(sdata->ttmpfile, 0, SMALLBUFSIZE);
+   createClapfID(&(sdata->ttmpfile[0]));
+   unlink(sdata->ttmpfile);
+
+   memset(sdata->mailfrom, 0, SMALLBUFSIZE);
+   memset(sdata->client_addr, 0, IPLEN);
+   memset(sdata->xforward, 0, SMALLBUFSIZE);
+
+   memset(sdata->clapf_id, 0, SMALLBUFSIZE);
+
+   sdata->uid = 0;
+   sdata->tot_len = 0;
+   sdata->skip_id_check = 0;
+   sdata->num_of_rcpt_to = 0;
+   sdata->trapped_client = 0;
+   sdata->blackhole = 0;
+   sdata->need_signo_check = 0;
+   sdata->training_request = 0;
+
+#ifdef HAVE_MAILBUF
+   sdata->message_size = sdata->mailpos = sdata->discard_mailbuf = 0;
+   memset(sdata->mailbuf, 0, MAILBUFSIZE);
+#endif
+
+   sdata->tre = '-';
+   sdata->statistically_whitelisted = 0;
+
+   sdata->rav = AVIR_OK;
+
+   sdata->__parsed = sdata->__av = sdata->__user = sdata->__policy = sdata->__as = sdata->__minefield = 0;
+   sdata->__training = sdata->__update = sdata->__store = sdata->__inject = sdata->__acquire = 0;
+
+   sdata->spaminess = DEFAULT_SPAMICITY;
+
+   for(i=0; i<MAX_RCPT_TO; i++) memset(sdata->rcptto[i], 0, SMALLBUFSIZE);
+
+}
+
+
+void killChild(){
+   syslog(LOG_PRIORITY, "child is killed by force");
+   exit(0);
+}
+
+

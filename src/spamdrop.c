@@ -1,5 +1,5 @@
 /*
- * spamdrop.c, 2010.05.17, SJ
+ * spamdrop.c, SJ
  */
 
 #include <stdio.h>
@@ -104,12 +104,6 @@ void closeDatabase(struct session_data *sdata){
 #ifdef HAVE_MYDB
    close_mydb(sdata->mhash);
 #endif
-}
-
-
-void freeLists(struct _state *state){
-   free_list(state->urls);
-   clearhash(state->token_hash, 0);
 }
 
 
@@ -543,7 +537,7 @@ int main(int argc, char **argv, char **envp){
 
       trainMessage(&sdata, &state, rounds, is_spam, train_mode, &cfg);
 
-      closeDatabase(&sdata); freeLists(&state);
+      closeDatabase(&sdata); freeState(&state);
       unlink(sdata.ttmpfile);
 
       return 0;
@@ -590,7 +584,7 @@ int main(int argc, char **argv, char **envp){
 
       trainMessage(&sdata, &state, rounds, is_spam, train_mode, &cfg);
 
-      closeDatabase(&sdata); freeLists(&state);
+      closeDatabase(&sdata); freeState(&state);
       unlink(sdata.ttmpfile);
 
       return 0;
@@ -628,7 +622,7 @@ int main(int argc, char **argv, char **envp){
    #ifdef HAVE_BLACKLIST
       if(isSenderOnBlackOrWhiteList(&sdata, from, SQL_BLACK_FIELD_NAME, SQL_BLACK_LIST, &cfg) == 1){
          syslog(LOG_PRIORITY, "%s: sender (%s) found on blacklist", sdata.ttmpfile, from);
-         closeDatabase(&sdata); freeLists(&state);
+         closeDatabase(&sdata); freeState(&state);
          unlink(sdata.ttmpfile);
          return 0;
       }
@@ -826,7 +820,7 @@ ENDE_SPAMDROP:
    }
 
 
-   closeDatabase(&sdata); freeLists(&state);
+   closeDatabase(&sdata); freeState(&state);
 
 
    /* save email for later retraining and/or spam quarantine */

@@ -1,5 +1,5 @@
 /*
- * parser.c, 2010.05.17, SJ
+ * parser.c, SJ
  */
 
 #include <stdio.h>
@@ -34,7 +34,7 @@ struct _state parseMessage(struct session_data *sdata, struct __config *cfg){
    char buf[MAXBUFSIZE], tumbuf[SMALLBUFSIZE];
    struct _state state;
 
-   init_state(&state);
+   initState(&state);
 
    f = fopen(sdata->ttmpfile, "r");
    if(!f){
@@ -480,7 +480,7 @@ struct _state parseBuffer(struct session_data *sdata, struct __config *cfg){
    char buf[MAXBUFSIZE], tumbuf[SMALLBUFSIZE];
    struct _state state;
 
-   init_state(&state);
+   initState(&state);
 
    if(sdata->mailpos < 10 || sdata->discard_mailbuf == 1){
       syslog(LOG_PRIORITY, "%s: invalid mail buffer", sdata->ttmpfile);

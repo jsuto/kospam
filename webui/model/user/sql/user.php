@@ -88,6 +88,19 @@ class ModelUserUser extends Model {
    }
 
 
+   public function getEmailsByUid($uid = 0) {
+      $emails = "";
+
+      $query = $this->db->query("SELECT email FROM " . TABLE_EMAIL . " WHERE uid=" . (int)$uid);
+
+      foreach ($query->rows as $q) {
+         $emails .= $q['email'] . "\n";
+      }
+
+      return preg_replace("/\n$/", "", $emails);
+   }
+
+
    public function getDomains() {
       $data = array();
 

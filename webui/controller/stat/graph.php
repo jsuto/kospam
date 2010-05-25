@@ -8,6 +8,7 @@ class ControllerStatGraph extends Controller {
 
       $request = Registry::get('request');
       $db = Registry::get('db');
+      $db_history = Registry::get('db_history');
 
       if(DB_DRIVER == "ldap")
          $this->load->model('user/ldap/user');
@@ -18,65 +19,75 @@ class ControllerStatGraph extends Controller {
 
       $this->data['username'] = Registry::get('username');
 
-      $timespan = (int)@$this->request->get['timespan'];
+      $timespan = @$this->request->get['timespan'];
 
 
       $title = $this->data['text_ham_and_spam_messages'];
-      $size_x = 800;
-      $size_y = 480;
-      $color_ham = "#1ac090";
-      $color_spam = "#d03080";
 
       $ydata = array();
       $ydata2 = array();
       $dates = array();
 
-      $chart = new LineChart($size_x, $size_y);
+      $chart = new LineChart(SIZE_X, SIZE_Y);
       $line1 = new XYDataSet();
       $line2 = new XYDataSet();
 
-      $WHERE = "";
-
+      $emails = "";
 
       /* let the admin users see the whole statistics */
 
       if(Registry::get('admin_user') == 0) {
          $uid = $this->model_user_user->getUidByName($this->data['username']);
-         $WHERE = "WHERE uid=" . (int)$uid;
+         $emails = "AND rcpt IN ('" . preg_replace("/\n/", "','", $this->model_user_user->getEmailsByUid((int)$uid)) . "')";
       }
       else if(isset($this->request->get['uid']) && is_numeric($this->request->get['uid']) && $this->request->get['uid'] > 0){
-         $WHERE = "WHERE uid=" . (int)$this->request->get['uid'];
+         $emails = "AND rcpt IN ('" . preg_replace("/\n/", "','", $this->model_user_user->getEmailsByUid((int)$this->request->get['uid'])) . "')";
       }
 
-      if($timespan == 0){
-         $query = $this->db->query("SELECT ts, SUM(nham) AS ham, SUM(nspam) AS spam FROM " . TABLE_STAT . " $WHERE GROUP BY ts ORDER BY ts DESC LIMIT 24");
+
+      if(HISTORY_DRIVER == "sqlite"){
+         if($timespan == "daily"){ $grouping = "GROUP BY strftime('%Y.%m.%d %H', datetime(ts, 'unixepoch'))"; }
+         else { $grouping = "GROUP BY strftime('%Y.%m.%d', datetime(ts, 'unixepoch'))"; }
       }
       else {
-         $query = $this->db->query("SELECT ts, SUM(nham) AS ham, SUM(nspam) AS spam FROM " . TABLE_STAT . " $WHERE GROUP BY FROM_UNIXTIME(ts, '%Y.%m.%d.') ORDER BY ts DESC LIMIT 30");
+         if($timespan == "daily"){ $grouping = "GROUP BY FROM_UNIXTIME(ts, '%Y.%m.%d. %H')"; }
+         else { $grouping = "GROUP BY FROM_UNIXTIME(ts, '%Y.%m.%d.')"; }
       }
 
-      $i = 0;
-
-      foreach ($query->rows as $q) {
-
-         $i++;
-
-         if($timespan == 0){
-            $q['ts'] += 70;
+      if($timespan == "daily"){
+         $query = $this->db_history->query("select ts-(ts%3600) as ts, count(*) as num from clapf where result='HAM' $emails $grouping ORDER BY ts DESC limit 24");
+         $i = 0;
+         foreach ($query->rows as $q) {
+            $i++;
+            array_push($ydata, $q['num']);
             $q['ts'] = date("H:i", $q['ts']);
-         }
-         else {
-            $q['ts'] = date("m.d.", $q['ts']);
+
+            if($i % 3){ $q['ts'] = ""; }
+
+            array_push($dates, $q['ts']);
          }
 
-         if($i % 3){ $q['ts'] = ""; }
+         $query = $this->db_history->query("select ts-(ts%3600) as ts, count(*) as num from clapf where result='SPAM' $emails $grouping ORDER BY ts DESC limit 24");
+         foreach ($query->rows as $q) {
+            array_push($ydata2, $q['num']);
+            //array_push($dates, date("H:i", $q['ts']));
+         }
 
-         array_push($ydata, $q['ham']);
-         array_push($ydata2, $q['spam']);
-         array_push($dates, $q['ts']);
- 
       }
+      else {
+         $query = $this->db_history->query("select ts-(ts%86400) as ts, count(*) as num from clapf where result='HAM' $emails $grouping ORDER BY ts DESC limit 30");
+         foreach ($query->rows as $q) {
+            array_push($ydata, $q['num']);
+            array_push($dates, date("m.d.", $q['ts']));
+         }
 
+         $query = $this->db_history->query("select ts-(ts%86400) as ts, count(*) as num from clapf where result='SPAM' $emails $grouping ORDER BY ts DESC limit 30");
+         foreach ($query->rows as $q) {
+            array_push($ydata2, $q['num']);
+            array_push($dates, date("m.d.", $q['ts']));
+         }
+
+      }
 
 
       $ydata = array_reverse($ydata);
@@ -101,6 +112,8 @@ class ControllerStatGraph extends Controller {
       $chart->getPlot()->setGraphCaptionRatio(0.80);
 
       header("Content-type: image/png");
+      header("Expires: now");
+
       $chart->render();
 
    }

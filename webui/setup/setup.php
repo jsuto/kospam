@@ -129,7 +129,13 @@ function write_stuff() {
       write_line($fp, "TABLE_POLICY", "t_policy");
       write_line($fp, "TABLE_STAT", "t_stat");
       write_line($fp, "TABLE_REMOTE", "t_remote");
+      write_line($fp, "TABLE_SUMMARY", "summary");
    }
+
+   write_line($fp);
+
+   write_line($fp, "SIZE_X", 430);
+   write_line($fp, "SIZE_Y", 250);
 
    write_line($fp);
 

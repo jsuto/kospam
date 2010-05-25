@@ -21,7 +21,7 @@ class ControllerStatStat extends Controller {
 
       $this->document->title = $this->data['text_statistics'];
 
-      $this->data['timespan'] = (int)@$this->request->get['timespan'];
+      $this->data['timespan'] = @$this->request->get['timespan'];
       $this->data['uid'] = @$this->request->get['uid'];
 
       $this->render();

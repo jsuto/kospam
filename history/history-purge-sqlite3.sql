@@ -6,4 +6,5 @@ delete from clapf where ts < strftime('%s','now')-604800;
 delete from qmgr where ts < strftime('%s','now')-604800;
 COMMIT;
 
+VACUUM;
 

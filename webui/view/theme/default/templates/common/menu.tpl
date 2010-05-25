@@ -5,7 +5,7 @@
    <?php if(ENABLE_BLACKLIST == 1) { ?>
           <li><a href="index.php?route=user/blacklist"<?php if(strstr($_SERVER['QUERY_STRING'], "user/blacklist")){ print ' id="active"'; } ?>><?php print $text_blacklist; ?></a></li>
    <?php } ?>
-   <?php if(DB_DRIVER == "mysql" && ENABLE_STATISTICS == 1){ ?>
+   <?php if( (DB_DRIVER == "mysql" || DB_DRIVER == "sqlite") && ENABLE_STATISTICS == 1){ ?>
           <li><a href="index.php?route=stat/stat"<?php if(strstr($_SERVER['QUERY_STRING'], "stat/stat")){ print ' id="active"'; } ?>><?php print $text_statistics; ?></a></li>
    <?php } ?>
    <?php if($admin_user == 1 || $domain_admin == 1){ ?>

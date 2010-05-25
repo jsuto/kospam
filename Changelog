@@ -1,5 +1,37 @@
 0.4.5-rc1:
 
+2010.05.24, SJ
+
+Modified the history schema, and the maillog.pl script.
+
+alter clapf add column rcpt char(64) default null;
+drop index clapf_idx;
+create index clapf_idx on clapf(queue_id, result, rcpt);
+
+
+2010.05.23, SJ
+
+Improved the statistics page of the webui. It has three more
+graphs.
+
+Add the following lines to config.php:
+
+define('TABLE_SUMMARY', 'summary');
+define('SIZE_X', 430);
+define('SIZE_Y', 250);
+
+and create a view to the history database:
+
+create view if not exists summary as select distinct clapf.queue_id, clapf.ts, smtpd.client_ip, \
+    qmgr.`from_domain`, smtp.`to_domain`, smtp.`to`, clapf.result from smtp, smtpd, qmgr, clapf \
+    where smtp.clapf_id=clapf.queue_id and smtpd.queue_id=smtp.queue_id and qmgr.queue_id=smtp.queue_id;
+
+
+(webui/*)
+
+Gathered all the cron jobs to the etc directory.
+(/etc/Makefile.in, etc/cron.jobs.in)
+
 2010.05.19, SJ
 
 Heavy restructuring of the source tree.

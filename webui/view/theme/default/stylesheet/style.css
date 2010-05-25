@@ -221,8 +221,7 @@
 	/* Body styles */
 
 	#body, #noquote {
-		/*width: 760px;*/
-		width: 820px;
+		width: 880px;
 		float: left;
 		margin-right: 20px;
 		clear: both;

@@ -32,11 +32,16 @@ all:
 	-e 's%queuedir=.*%queuedir=$(localstatedir)/lib/clapf/queue%g' \
 	-e 's%mydbfile=.*%mydbfile=$(localstatedir)/lib/clapf/tokens.mydb%g' < $(srcdir)/example.conf > $(srcdir)/clapf.conf
 
+	sed -e 's%LOCALSTATEDIR%$(localstatedir)%g' \
+	-e 's%LIBEXECDIR%$(libexecdir)%g' \
+	-e 's%SYSCONFDIR%$(sysconfdir)%g' \
+	-e 's%DATAROOTDIR%$(datarootdir)%g' < $(srcdir)/cron.jobs.in > $(srcdir)/cron.jobs
+
 install:
 	if [ ! -f "$(DESTDIR)$(sysconfdir)/clapf.conf" ]; then $(INSTALL) -m 0640 $(srcdir)/clapf.conf $(DESTDIR)$(sysconfdir)/clapf.conf; chgrp $(CLAPF_GROUP) $(DESTDIR)$(sysconfdir)/clapf.conf; fi
 
 clean:
-	rm -f clapf.conf
+	rm -f clapf.conf cron.jobs
 
 distclean: clean
 	rm -f Makefile

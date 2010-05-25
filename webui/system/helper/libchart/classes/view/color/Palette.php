@@ -88,11 +88,19 @@
 
 			// Colors for the pie
 			$this->pieColorSet = new ColorSet(array(
-				new Color(2, 78, 0),
-				new Color(148, 170, 36),
-				new Color(233, 191, 49),
-				new Color(240, 127, 41),
-				new Color(243, 63, 34),
+                                new Color(208, 48, 128),
+                                new Color(26, 192, 144),
+                                new Color(0,0,0),
+
+                                new Color(238, 173, 14),
+                                new Color(255, 255, 210),
+                                new Color(255, 0, 0),
+
+                                new Color(233, 191, 49),
+                                new Color(240, 127, 41),
+                                new Color(243, 63, 34),
+                                new Color(148, 170, 36),
+                                new Color(233, 191, 49),
 				new Color(190, 71, 47),
 				new Color(135, 81, 60),
 				new Color(128, 78, 162),
@@ -102,7 +110,8 @@
 				new Color(137, 240, 166),
 				new Color(104, 221, 71),
 				new Color(98, 174, 35),
-				new Color(93, 129, 1)
+				new Color(93, 129, 1),
+                                new Color(2, 78, 0),
 			), 0.7);
 		}
 	}

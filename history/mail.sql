@@ -52,10 +52,13 @@ create table if not exists clapf (
 	queue_id2 char(16) not null,
 	relay char(64) default null,
 	delay float default 0.0,
+	rcpt char(64) not null,
 	result char(16) default null,
 	spaminess float default 0.5,
 	virus char(32) default null
 );
 
-create index clapf_idx on clapf(queue_id, result);
+create index clapf_idx on clapf(queue_id, result, rcpt);
+
+create view if not exists summary as select distinct clapf.queue_id, clapf.ts, smtpd.client_ip, qmgr.`from_domain`, smtp.`to_domain`, smtp.`to`, clapf.result from smtp, smtpd, qmgr, clapf where smtp.clapf_id=clapf.queue_id and smtpd.queue_id=smtp.queue_id and qmgr.queue_id=smtp.queue_id;
 

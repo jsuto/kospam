@@ -61,9 +61,6 @@ clapfconf: clapfconf.c cfg.o misc.o
 spamdrop: spamdrop.c libclapf.a
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ spamdrop.c -lclapf @spamsum_libs@ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
 
-spamstat: spamstat.c libclapf.a
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ spamstat.c -lclapf @spamsum_libs@ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
-
 splitmbox: splitmbox.c misc.o decoder.o list.o boundary.o parser.o parser_utils.o hash.o score.o chi.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
 
@@ -124,8 +121,6 @@ install-clapf:
 
 	$(INSTALL) -d $(DESTDIR)$(libexecdir)/clapf
 
-	if [ -f "$(srcdir)/spamstat" ]; then $(INSTALL) -m 0755 $(srcdir)/spamstat $(DESTDIR)$(libexecdir)/clapf; fi
-
 	$(INSTALL) -d $(DESTDIR)$(datarootdir)/clapf
 
 	$(INSTALL) -m 0755 clapf $(DESTDIR)$(sbindir)
@@ -148,7 +143,7 @@ install-parsembox:
 
 clean:
 	rm -f *.o *.a libclapf.so* clapf clapfconf parsembox splitmbox spamdrop \
-		spamtest spamstat aphash prepare-sql mydb_stat mydb_compress mydb_export \
+		spamtest aphash prepare-sql mydb_stat mydb_compress mydb_export \
 		zombietest
 
 distclean: clean

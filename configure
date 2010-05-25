@@ -6365,7 +6365,7 @@ fi
             have_spamdrop="yes"
             parsembox="$parsembox"
             preparesql="prepare-sql aphash "
-	    spamdrop="spamdrop spamstat"
+	    spamdrop="spamdrop"
 	    spamdrop_install="install-spamdrop"
             db_install="install-mysql-new"
 

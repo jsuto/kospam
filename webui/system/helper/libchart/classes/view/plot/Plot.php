@@ -173,7 +173,7 @@
 				);
 			} else {
 				$graphArea = new Rectangle(
-						$this->imageArea->x1,
+						$this->imageArea->x1+70,
 						$titleUnpaddedBottom,
 						$this->imageArea->x2,
 						$this->imageArea->y2

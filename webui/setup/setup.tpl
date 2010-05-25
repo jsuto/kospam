@@ -52,7 +52,7 @@ function fix1() {
 
 
    if(document.forms.setup.HISTORY_DRIVER.value == "sqlite") {
-      document.forms.setup.HISTORY_DATABASE.value = "/var/lib/clapf/data/log.sdb";
+      document.forms.setup.HISTORY_DATABASE.value = "/var/lib/clapf/stat/history.sdb";
    }
    else {
       document.forms.setup.HISTORY_DATABASE.value = "clapf";

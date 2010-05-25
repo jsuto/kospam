@@ -8,6 +8,8 @@ alter clapf add column rcpt char(64) default null;
 drop index clapf_idx;
 create index clapf_idx on clapf(queue_id, result, rcpt);
 
+Also removed the spamstat utility along with the stat/spamstat.pl
+perl script.
 
 2010.05.23, SJ
 

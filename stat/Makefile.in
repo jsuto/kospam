@@ -34,7 +34,7 @@ install:
 	$(INSTALL) -m 0755 $(srcdir)/process_syslog.pl $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 $(srcdir)/spamstat.pl $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 $(srcdir)/clapf-stat.run.sh $(DESTDIR)$(libexecdir)/clapf
-
+	$(INSTALL) -m 0755 $(srcdir)/summary.php $(DESTDIR)$(libexecdir)/clapf
 clean:
 	rm -f clapf-stat.run.sh
 

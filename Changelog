@@ -1,5 +1,15 @@
 0.4.5-rc1:
 
+2010.05.26, SJ
+
+PDF reports are possible with the stat/summary.php (by using the FPDF PHP library).
+You may create some cron entries, eg.
+
+1 0 * * * LIBEXECDIR/clapf/summary.php /srv/www/webui.yourdomain.com "clapf daily report" "Ham & spam messages" daily
+1 0 * * mon LIBEXECDIR/clapf/summary.php /srv/www/webui.yourdomain.com "clapf weekly report" "Ham & spam messages" weekly
+1 0 1 * * LIBEXECDIR/clapf/summary.php /srv/www/webui.yourdomain.com "clapf monthly report" "Ham & spam messages" monthly
+
+
 2010.05.24, SJ
 
 Modified the history schema, and the maillog.pl script.

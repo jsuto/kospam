@@ -128,4 +128,17 @@ function short_email($email) {
 }
 
 
+function createTempName($dir = '', $prefix = '') {
+   $length = 8;
+   $rnd = "";
+   $aZ09 = array_merge(range('A', 'Z'), range('a', 'z'),range(0, 9));
+
+   for($c=0; $c < $length; $c++) {
+      $rnd .= $aZ09[mt_rand(0, count($aZ09)-1)];
+   }
+
+   return $dir . "/" . $prefix . $rnd;
+}
+
+
 ?>

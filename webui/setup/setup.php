@@ -98,6 +98,7 @@ function write_stuff() {
    write_line($fp, "DIR_APPLICATION", BASEDIR . WEBUI_DIRECTORY . "/controller/");
    write_line($fp, "DIR_TEMPLATE", BASEDIR . WEBUI_DIRECTORY . "/view/theme/" . $_POST['THEME'] . "/templates/");
    write_line($fp, "DIR_CACHE", BASEDIR . "/cache/");
+   write_line($fp, "DIR_REPORT", BASEDIR . "/reports/");
 
    write_line($fp);
 
@@ -149,6 +150,7 @@ function write_stuff() {
    write_line($fp, "ENABLE_STATISTICS", 1);
    write_line($fp);
 
+   write_line($fp, "SITE_NAME", $_SERVER['SERVER_NAME']);
    write_line($fp, "SITE_URL",  isset($_SERVER['SSL_PROTOCOL']) ? "https://" . $_SERVER['SERVER_NAME'] . WEBUI_DIRECTORY . "/" : "http://" . $_SERVER['SERVER_NAME'] . WEBUI_DIRECTORY . "/");
    write_line($fp);
 

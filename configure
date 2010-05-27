@@ -7141,7 +7141,7 @@ CFLAGS="$static -O2 -Wall -g"
 LIBS="$libclamav $antispam_libs $gsl_libs $sqlite3_libs $sunos_libs"
 OBJS="dirs.o misc.o counters.o cfg.o smtp.o sig.o decoder.o list.o boundary.o parser.o parser_utils.o session.o templates.o hash.o score.o chi.o $objs"
 
-ac_config_files="$ac_config_files Makefile contrib/spamsum/Makefile contrib/spamdrop_helper/Makefile contrib/stat/Makefile etc/Makefile history/Makefile init.d/Makefile perl/Makefile src/Makefile templates/Makefile util/Makefile"
+ac_config_files="$ac_config_files Makefile contrib/spamsum/Makefile contrib/spamdrop_helper/Makefile contrib/stat/Makefile.helper etc/Makefile history/Makefile init.d/Makefile perl/Makefile src/Makefile templates/Makefile util/Makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -7751,7 +7751,7 @@ do
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
     "contrib/spamsum/Makefile") CONFIG_FILES="$CONFIG_FILES contrib/spamsum/Makefile" ;;
     "contrib/spamdrop_helper/Makefile") CONFIG_FILES="$CONFIG_FILES contrib/spamdrop_helper/Makefile" ;;
-    "contrib/stat/Makefile") CONFIG_FILES="$CONFIG_FILES contrib/stat/Makefile" ;;
+    "contrib/stat/Makefile.helper") CONFIG_FILES="$CONFIG_FILES contrib/stat/Makefile.helper" ;;
     "etc/Makefile") CONFIG_FILES="$CONFIG_FILES etc/Makefile" ;;
     "history/Makefile") CONFIG_FILES="$CONFIG_FILES history/Makefile" ;;
     "init.d/Makefile") CONFIG_FILES="$CONFIG_FILES init.d/Makefile" ;;

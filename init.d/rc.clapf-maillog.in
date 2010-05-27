@@ -1,0 +1,36 @@
+#!/bin/sh
+##
+##
+
+NAME=maillog.pl
+USER=`SBINDIR/clapfconf -q username | cut -f2 -d '='`
+
+start() {
+	echo "starting ${NAME} . . ."
+	su ${USER} -c "LIBEXECDIR/clapf/maillog.pl SYSCONFDIR/clapf.conf"
+}
+
+stop() {
+	echo "stopping ${NAME}"
+	killall ${NAME}
+}
+
+case "$1" in
+	start)
+		start;
+   	;;
+
+	stop)
+		stop;
+   	;;
+
+	restart)
+		stop;
+		sleep 1;
+		start;
+   	;;
+
+	*)
+		echo "Usage: $0 start|stop|restart"
+esac
+

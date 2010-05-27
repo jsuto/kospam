@@ -23,8 +23,10 @@ class ControllerStatTopdomains extends Controller {
       $what = @$this->request->get['what'];
       $timespan = @$this->request->get['timespan'];
 
-      $aa = new ModelStatChart();
-      $aa->horizontalChartTopDomains($what, $timespan, "Top $what sending domains", "");
+      if(Registry::get('admin_user') == 1) {
+         $aa = new ModelStatChart();
+         $aa->horizontalChartTopDomains($what, $timespan, "Top $what sending domains", "");
+      }
 
    }
 

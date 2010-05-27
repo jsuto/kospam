@@ -20,13 +20,12 @@ class ControllerStatChart extends Controller {
 
       $this->data['username'] = Registry::get('username');
 
-
-
-      $aa = new ModelStatChart();
-
       $timespan = @$this->request->get['timespan'];
 
-      $aa->pieChartHamSpam($timespan, $this->data['text_ham_and_spam_messages'], "");
+      if(Registry::get('admin_user') == 1) {
+         $aa = new ModelStatChart();
+         $aa->pieChartHamSpam($timespan, $this->data['text_ham_and_spam_messages'], "");
+      }
 
    }
 

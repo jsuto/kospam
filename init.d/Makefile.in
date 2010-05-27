@@ -26,13 +26,18 @@ INSTALL = @INSTALL@
 all:
 	sed -e "s%_PREFIX_%$(prefix)%" $(srcdir)/clapf.ubuntu.in > $(srcdir)/clapf.ubuntu
 	sed -e "s%_PREFIX_%$(prefix)%" $(srcdir)/clapf.redhat.in > $(srcdir)/clapf.redhat
+	sed -e "s%SBINDIR%$(sbindir)%" $(srcdir)/rc.clapf.in > $(srcdir)/rc.clapf
 	sed -e "s%_PREFIX_%$(prefix)%" $(srcdir)/clapf-maillog.ubuntu.in > $(srcdir)/clapf-maillog.ubuntu
 	sed -e "s%_PREFIX_%$(prefix)%" $(srcdir)/clapf-maillog.redhat.in > $(srcdir)/clapf-maillog.redhat
+	sed -e "s%SBINDIR%$(sbindir)%" \
+		-e "s%LIBEXECDIR%$(libexecdir)%" \
+		-e "s%SYSCONFDIR%$(sysconfdir)%" < $(srcdir)/rc.clapf-maillog.in > $(srcdir)/rc.clapf-maillog
+
 
 install:
 
 clean:
-	rm -f clapf.ubuntu clapf.redhat clapf-maillog.ubuntu clapf-maillog.redhat
+	rm -f clapf.ubuntu clapf.redhat rc.clapf clapf-maillog.ubuntu clapf-maillog.redhat rc.clapf-maillog
 
 distclean: clean
 	rm -f Makefile

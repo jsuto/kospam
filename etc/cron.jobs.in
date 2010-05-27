@@ -3,16 +3,10 @@
 ### be sure to review it and adjust it for your needs ###
 #########################################################
 
-###  parse your mail log and extract clapf entries
-59 * * * * LIBEXECDIR/clapf/process_syslog.pl `date +%b\ %e\ %H` < /var/log/maillog >> LOCALSTATEDIR/lib/clapf/stat/clapf.stat
-
 1 0 * * * LIBEXECDIR/clapf/summary.php /srv/www/webui.yourdomain.com "clapf daily report" "Ham & spam messages" daily
 1 0 * * mon LIBEXECDIR/clapf/summary.php /srv/www/webui.yourdomain.com "clapf weekly report" "Ham & spam messages" weekly
 1 0 1 * * LIBEXECDIR/clapf/summary.php /srv/www/webui.yourdomain.com "clapf monthly report" "Ham & spam messages" monthly
 
-
-### update the RRD files, and recreate the pngs
-1 * * * * LIBEXECDIR/clapf/clapf-stat.run.sh
 
 ### purge aged history entries
 ### select the proper line, then uncomment it

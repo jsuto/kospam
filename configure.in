@@ -82,7 +82,7 @@ os=`uname -s`
 
 id_bin="id"
 
-SUBDIRS="src stat util perl init.d templates history etc"
+SUBDIRS="src util perl init.d templates history etc"
 
 want_language_detection="no"
 

@@ -1,5 +1,10 @@
 0.4.5-rc1:
 
+2010.05.27, SJ
+
+Better token reassembly.
+(src/parser_utils.c)
+
 2010.05.26, SJ
 
 PDF reports are possible with the stat/summary.php (by using the FPDF PHP library).

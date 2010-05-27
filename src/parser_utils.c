@@ -288,7 +288,7 @@ void reassembleToken(char *p){
 
    for(i=0; i<strlen(p); i++){
 
-      if(!isspace(*(p+i)) && isspace(*(p+i+1)) && !isspace(*(p+i+2)) && isspace(*(p+i+3)) && !isspace(*(p+i+4)) && isspace(*(p+i+5)) ){
+      if(isspace(*(p+i-1)) && !isspace(*(p+i)) && isspace(*(p+i+1)) && !isspace(*(p+i+2)) && isspace(*(p+i+3)) && !isspace(*(p+i+4)) && isspace(*(p+i+5)) ){
          p[k] = *(p+i); k++;
          p[k] = *(p+i+2); k++;
          p[k] = *(p+i+4); k++;

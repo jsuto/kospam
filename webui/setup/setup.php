@@ -131,6 +131,7 @@ function write_stuff() {
       write_line($fp, "TABLE_STAT", "t_stat");
       write_line($fp, "TABLE_REMOTE", "t_remote");
       write_line($fp, "TABLE_SUMMARY", "summary");
+      write_line($fp, "TABLE_COUNTERS", "t_counters");
    }
 
    write_line($fp);
@@ -200,6 +201,8 @@ function write_stuff() {
       $i++;
    }
    fputs($fp, '                          );' . CRLF);
+
+   fputs($fp, '$counters = array(\'_c:rcvd\', \'_c:ham\', \'_c:spam\', \'_c:possible_spam\', \'_c:unsure\', \'_c:minefield\', \'_c:virus\', \'_c:fp\', \'_c:fn\', \'_c:counters_last_update\');' . CRLF);
 
    fputs($fp, "?>\n");
 

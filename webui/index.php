@@ -65,6 +65,8 @@ if(MEMCACHED_ENABLED) {
    Registry::set('memcache', $memcache);
 }
 
+Registry::set('counters', $counters);
+
 
 if(Registry::get('username')) {
 

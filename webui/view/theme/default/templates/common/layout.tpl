@@ -11,8 +11,11 @@
    <meta name="robots" content="all" />
 
    <link rel="stylesheet" type="text/css" href="view/theme/default/stylesheet/style.css" />
+   <link rel="stylesheet" type="text/css" href="view/theme/default/stylesheet/dropdown.css" />
 
    <script type="text/javascript" src="view/javascript/quarantine.js"></script>
+   <script type="text/javascript" src="view/javascript/jquery-1.4.2.min.js"></script>
+   <script type="text/javascript" src="view/javascript/jquery.dropdownPlain.js"></script>
 
 </head>
 
@@ -24,11 +27,8 @@
 <div id="wrap">
 
   <div id="menu">
-    <ul id="menulist">
 
     <?php print $menu; ?>
-
-    </ul>
 
   </div> <!-- menu -->
 

@@ -1,5 +1,11 @@
 0.4.5-rc1:
 
+2010.06.08, SJ
+
+Modified the webui menu structure with jquery to add a dropdown menu.
+Also added a counter page where you can see, and even to reset the
+counters both in memcached and in the database.
+
 2010.05.27, SJ
 
 Better token reassembly.

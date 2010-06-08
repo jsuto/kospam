@@ -5,6 +5,7 @@ $_['text_add_new_email_address'] = "Új email cím";
 $_['text_add_new_domain'] = "Új domain";
 $_['text_add_new_user_alias'] = "Új felhasználó";
 $_['text_add_policy'] = "Új házirend";
+$_['text_administration'] = "Adminisztráció";
 $_['text_admin_user'] = "Admin felhasználó";
 $_['text_admin_user_trains_global_database'] = "Admin felhasználó a globális adatbázist tanítja";
 
@@ -17,6 +18,7 @@ $_['text_bulk_update_selected_uids'] = "Kiválasztott azonosítók szerkesztése";
 $_['text_cancel'] = "Mégse";
 $_['text_clienthost'] = "Kliens gép";
 $_['text_content_filter'] = "Tartalomszûrõ";
+$_['text_counters'] = "Számlálók";
 
 $_['text_daily_report'] = "Napi jelentés";
 $_['text_date'] = "Dátum";
@@ -90,6 +92,7 @@ $_['text_messages'] = "üzenet";
 $_['text_missing_data'] = "Hiányzó adat";
 $_['text_missing_password'] = "Hiányzó jelszó";
 $_['text_modify'] = "Módosítás";
+$_['text_monitor'] = "Monitor";
 $_['text_monthly_report'] = "Havi jelentés";
 
 $_['text_next'] = "Következõ";
@@ -129,6 +132,7 @@ $_['text_remove_selected_uids'] = "Kijelölt azonosítók törlése";
 $_['text_remove_policy'] = "Házirend törlése";
 $_['text_remove_this_policy'] = "Házirend törlése";
 $_['text_remove_this_user'] = "Felhasználó törlése";
+$_['text_reset_counters'] = "Számlálók nullázása";
 $_['text_result'] = "Eredmény";
 
 $_['text_search'] = "Keresés";

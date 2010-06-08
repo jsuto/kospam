@@ -5,6 +5,7 @@ $_['text_add_new_email_address'] = "New email address";
 $_['text_add_new_domain'] = "New domain";
 $_['text_add_new_user_alias'] = "Add new user";
 $_['text_add_policy'] = "Add new policy";
+$_['text_administration'] = "Administration";
 $_['text_admin_user'] = "Admin user";
 $_['text_admin_user_trains_global_database'] = "Admin user trainings go to the global database";
 
@@ -17,6 +18,7 @@ $_['text_bulk_update_selected_uids'] = "Bulk update selected uids";
 $_['text_cancel'] = "Cancel";
 $_['text_clienthost'] = "Client host";
 $_['text_content_filter'] = "Content filter";
+$_['text_counters'] = "Counters";
 
 $_['text_daily_report'] = "Daily report";
 $_['text_date'] = "Date";
@@ -90,6 +92,7 @@ $_['text_messages'] = "messages";
 $_['text_missing_data'] = "Missing data";
 $_['text_missing_password'] = "Missing password";
 $_['text_modify'] = "Modify";
+$_['text_monitor'] = "Monitor";
 $_['text_monthly_report'] = "Monthly report";
 
 $_['text_next'] = "Next";
@@ -129,6 +132,7 @@ $_['text_remove_selected_uids'] = "Remove selected uids";
 $_['text_remove_policy'] = "Remove policy";
 $_['text_remove_this_policy'] = "Remove this policy";
 $_['text_remove_this_user'] = "Remove this user";
+$_['text_reset_counters'] = "Reset counters";
 $_['text_result'] = "Result";
 
 $_['text_search'] = "Search";

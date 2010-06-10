@@ -60,5 +60,5 @@ create table if not exists clapf (
 
 create index clapf_idx on clapf(queue_id, result, rcpt);
 
-create view if not exists summary as select distinct clapf.queue_id, clapf.ts, smtpd.client_ip, qmgr.`from_domain`, smtp.`to_domain`, smtp.`to`, clapf.result from smtp, smtpd, qmgr, clapf where smtp.clapf_id=clapf.queue_id and smtpd.queue_id=smtp.queue_id and qmgr.queue_id=smtp.queue_id;
+create view summary as select distinct clapf.queue_id, clapf.ts, smtpd.client_ip, qmgr.`from_domain`, smtp.`to_domain`, smtp.`to`, clapf.result from smtp, smtpd, qmgr, clapf where smtp.clapf_id=clapf.queue_id and smtpd.queue_id=smtp.queue_id and qmgr.queue_id=smtp.queue_id;
 

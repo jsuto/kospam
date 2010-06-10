@@ -2,7 +2,7 @@
 
 2010.06.10, SJ
 
-Fixed some make and compile time issues.
+Fixed some make and compile time issues, and fixed the schema of the "summary" view.
 (credits: DRu)
 
 2010.06.08, SJ

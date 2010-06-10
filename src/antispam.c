@@ -367,6 +367,7 @@ void getUserFromEmailAddress(struct session_data *sdata, struct __data *data, ch
 
 
 void getPolicySettings(struct session_data *sdata, struct __data *data, struct __config *cfg, struct __config *my_cfg){
+#ifdef HAVE_POLICY
    struct timezone tz;
    struct timeval tv1, tv2;
 
@@ -381,10 +382,12 @@ void getPolicySettings(struct session_data *sdata, struct __data *data, struct _
 #endif
    gettimeofday(&tv2, &tz);
    sdata->__policy = tvdiff(tv2, tv1);
+#endif
 }
 
 
 void checkZombieSender(struct session_data *sdata, struct __data *data, struct _state *state, struct __config *cfg){
+#ifdef HAVE_TRE
    int i=0;
    size_t nmatch=0;
 
@@ -394,5 +397,6 @@ void checkZombieSender(struct session_data *sdata, struct __data *data, struct _
    }
 
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: zombie check: %c [%d] %s", sdata->ttmpfile, sdata->tre, i, state->hostname);
+#endif
 }
 

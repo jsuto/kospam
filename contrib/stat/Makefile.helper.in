@@ -11,3 +11,5 @@ mandir = @mandir@
 datarootdir = @datarootdir@
 localstatedir = @localstatedir@
 
+INSTALL = @INSTALL@
+

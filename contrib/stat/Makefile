@@ -10,8 +10,6 @@ LIBDIR = -L.   -L../../src
 LIBS =   -lm -ldl -ltre    -L/usr/local/mysql/lib -lmysqlclient_r -lz -lpthread -lcrypt -lnsl -lm -lpthread
 LDAP_LIBS = 
 
-INSTALL = /bin/ginstall -c
-
 all:
 	cat $(srcdir)/clapf-stat.run.sh.in | sed -e "s%YOUR_LIBEXECDIR%$(libexecdir)%g" -e "s%YOUR_LOCALSTATEDIR%$(localstatedir)%g" > $(srcdir)/clapf-stat.run.sh
 

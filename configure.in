@@ -772,7 +772,7 @@ fi
 if test "$want_spamsum" = "yes"; then
    echo "spamsum: yes"
    spamsum_install="install-spamsum"
-   SUBDIRS="$SUBDIRS contrib/spamsum"
+   SUBDIRS="contrib/spamsum $SUBDIRS"
 else
    echo "spamsum: no"
 fi

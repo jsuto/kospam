@@ -1,5 +1,10 @@
 0.4.5-rc1:
 
+2010.06.10, SJ
+
+Fixed some make and compile time issues.
+(credits: DRu)
+
 2010.06.08, SJ
 
 Modified the webui menu structure with jquery to add a dropdown menu.

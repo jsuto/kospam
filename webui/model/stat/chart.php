@@ -150,7 +150,13 @@ class ModelStatChart extends Model {
          header("Expires: now");
       }
 
-      $chart->render($output);
+      if($output) {
+         $chart->render($output);
+      }
+      else {
+         $chart->render();
+      }
+
    }
 
 }

@@ -11,6 +11,7 @@
          <li><a class="hide" href="#"<?php if(strstr($_SERVER['QUERY_STRING'], "stat/") || strstr($_SERVER['QUERY_STRING'], "history/")) { print ' id="active"'; } ?>><?php print $text_monitor; ?></a>
             <ul class="sub_menu">
                <li><a href="index.php?route=stat/stat"><?php print $text_statistics; ?></a></li>
+               <li><a href="index.php?route=stat/counter"><?php print $text_counters; ?></a></li>
                <li><a href="index.php?route=history/history"><?php print $text_history; ?></a></li>
             </ul>
          </li>

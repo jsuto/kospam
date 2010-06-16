@@ -24,6 +24,8 @@ class SQLite {
    public function query($sql) {
       //print "sql: $sql<p>\n";
 
+      $time_start = microtime(true);
+
       $i = 0;
       $data = array();
 
@@ -47,6 +49,10 @@ class SQLite {
       $query->query    = $sql;
 
       unset($data);
+
+      $time_end = microtime(true);
+
+      $query->exec_time = $time_end - $time_start;
 
       return $query;
    }

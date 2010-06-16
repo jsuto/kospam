@@ -25,7 +25,7 @@ class ControllerStatTopdomains extends Controller {
 
       if(Registry::get('admin_user') == 1) {
          $aa = new ModelStatChart();
-         $aa->horizontalChartTopDomains($what, $timespan, "Top $what sending domains", "");
+         $aa->horizontalChartTopDomains($what, $timespan, "Top10 $what " . $this->data['text_sending_domains'], "");
       }
 
    }

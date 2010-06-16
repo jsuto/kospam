@@ -37,6 +37,8 @@ class MySQL {
          if(is_resource($resource)){
             $i = 0;
 
+            $time_start = microtime(true);
+
             $data = array();
 
             while ($result = mysql_fetch_assoc($resource)) {
@@ -55,6 +57,10 @@ class MySQL {
 
             unset($data);
 
+            $time_end = microtime(true);
+
+            $query->exec_time = $time_end - $time_start;
+
             return $query;	
          }
          else {
@@ -65,7 +71,6 @@ class MySQL {
          $_SESSION['error'] = 'Error: ' . mysql_error() . '<br />Error No: ' . mysql_errno() . '<br />' . $sql;
          header("Location: " . SITE_URL . "/index.php?route=common/error");
          exit;
-         //exit('Error: ' . mysql_error() . '<br />Error No: ' . mysql_errno() . '<br />' . $sql);
       }
 
    }

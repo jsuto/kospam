@@ -155,6 +155,7 @@ $_['text_successfully_updated'] = "Sikeresen módosítva";
 $_['text_time'] = "Idõpont";
 $_['text_to'] = "Címzett";
 $_['text_too_short_password'] = "Túl rövid jelszó";
+$_['text_sending_domains'] = "küldõ domain";
 $_['text_train_and_deliver'] = "Tanítás és kézbesítés";
 $_['text_train'] = "Tanít";
 $_['text_trained'] = "Tanítva";

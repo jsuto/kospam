@@ -1,55 +1,65 @@
-(i|pp)p-\d{1,3}-\d{1,3}-\d{1,3}-\d{1,3}
-\d{1,3}-\d{1,3}-\d{1,3}-\d{1,3}
-\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\.
+(ip|ppp){0,1}\d{1,3}(\.|-)\d{1,3}(\.|-)\d{1,3}(\.|-)\d{1,3}
 
-;p57B47627.dip.t-dialin.net
-;e177137107.adsl.alicedsl.de [85.177.137.107])
-;3e44ab2a.adsl.enternet.hu [62.68.171.42])
-[a-z]{0,1}[0-9A-Fa-f]{8}\.(adsl){0,1}
+#p57B47627.dip.t-dialin.net
+#e177137107.adsl.alicedsl.de
+#3e44ab2a.adsl.enternet.hu
+#lpzg-4dbdf1c7.pool.mediaWays.net
+[0-9A-Fa-f]{8,11}(\.|\-)(dip|cpe|[xa]{0,1}dsl|cust|pool|static|dynamic){0,1}
 
-;211.pool85-59-57.dynamic.orange.es
-\d{1,3}[a-z\.]{1,8}\d{1,3}-\d{1,3}-\d{1,3}
+#host131-2-static.14-79-b.business.telecomitalia.it
+#host59-192-dynamic.44-79-r.retail.telecomitalia.it
+host\-{0,1}\d{1,3}(\-|\.)\d{1,3}(\-|\.)(static|dynamic){0,1}
+host\-{0,1}\d{1,3}(\-|\.)net
 
-;host131-2-static.14-79-b.business.telecomitalia.it [79.14.2.131])
-;host59-192-dynamic.44-79-r.retail.telecomitalia.it [79.44.192.59])
-host\d{1,3}-\d{1,3}-(static|dynamic)\.\d{1,3}-\d{1,3}
+#n219076200014.netvigator.com
+#cp281839-a.tilbu1.nb.home.nl
+#095160251204.stk.vectranet.pl
+#20158223001.user.veloxzone.com.br
+#chello087206091236.chello.pl
+#public11939.cdma.centertel.pl
+[a-z]{0,6}\d{5,12}(\.|-)
 
-;196.Red-80-25-73.staticIP.rima-tde.net [80.25.73.196])
-\d{1,3}\.[a-z]{1,}-\d{1,3}-\d{1,3}-\d{1,3}\.
+#85.158.broadband6.iol.cz
+#100-64.echostar.pl
+#d57-209.icpnet.pl
+#62-35.dial.szkti.ru
+^[a-z]{0,2}\d{1,3}(\.|-)\d{1,3}(\.|-)
 
-;92.127.99-172.xdsl.ab.ru [92.127.99.172])
-\d{1,3}\.\d{1,3}\.\d{1,3}-\d{1,3}\.
+#abqf5.neoplus.adsl.tpnet.pl
+#gre189.internetdsl.tpnet.pl 
+dsl\.tpnet\.pl
 
-;lpzg-4dbdf1c7.pool.mediaWays.net [77.189.241.199])
--[0-9A-Fa-f]{8}\.
+#pra11-b13.adsl.dial-up.cz
+\.adsl\.dial
 
-;n219076200014.netvigator.com [219.76.200.14])
-;095160251204.stk.vectranet.pl [95.160.251.204])
-;20158223001.user.veloxzone.com.br [201.58.223.1])
-;chello087206091236.chello.pl [87.206.91.236])
-[a-z]{0,6}\d{11,12}\.
+#151-25-112.adsl.terra.cl
+#cpc1-warw10-0-0-cust296.brhm.cable.ntl.com 
+#cablelink-173-217-96.cpe.intercable.net
+#zux221-124-178.adsl.green.ch
+#92.127.99-172.xdsl.ab.ru
+#196.Red-80-25-73.staticIP.rima-tde.net
+#100-176.187-72.tampabay.res.rr.com
+#211.pool85-59-57.dynamic.orange.es
+\d{1,3}(\.|\-)\d{1,3}(\.|\-)\d{1,3}(\.|\-)(cpe|[xa]{0,1}dsl|cust|pool|static|dynamic){0,1}
 
-;100-176.187-72.tampabay.res.rr.com [72.187.176.100])
-\d{1,3}-\d{1,3}\.\d{1,3}-\d{1,3}\.
+#athedsl-420609.home.otenet.gr 
+#athedsl-4496129.home.otenet.gr
+[ax]{0,1}dsl(\.|-){0,1}\d{3,8}(\.|-)
 
-;151-25-112.adsl.terra.cl
-\d{1,3}-\d{1,3}-\d{1,3}\.adsl
+#public2933.xdsl.centertel.pl
+#port-10946.pppoe.wtnet.de
+\d{3,8}(\.|\-)([x]{0,1}dsl|ppp(oe){0,1})
 
-;85.158.broadband6.iol.cz
-;100-64.echostar.pl [213.156.100.64])
-;d57-209.icpnet.pl [77.65.57.209])
-;62-35.dial.szkti.ru
-[a-z]{0,2}\d{1,3}(\.|-)\d{1,3}\.
+(dsl)[\da-fA-F]{2,11}
 
+client(\.|\-){0,1}\d{1,3}(\.|\-)\d{1,3}
 
-;abqf5.neoplus.adsl.tpnet.pl [83.8.73.5])
-\.neoplus\.adsl.tpnet.pl
+([ax]{0,1}dsl|ppp(oe){0,1})(\.|\-){0,1}\d{1,3}(\.|\-)
 
-;pra11-b13.adsl.dial-up.cz
-\.adsl.dial
+#node-7563.tor.pppoe.execulink.com
+node(\.|\-){0,1}\d{3,8}
 
-;cablelink-173-217-96.cpe.intercable.net [201.173.217.96])
-;zux221-124-178.adsl.green.ch [81.221.124.178])
-\d{1,3}-\d{1,3}-\d{1,3}\.(cpe|adsl)\.
+(leased(-line){0,1}|ip|node|net|nat|cable|pool)(\.|\-){0,1}\d{1,3}(\.|\-){0,1}\d{1,3}
 
-; end of regex file
+#^unknown$
+#end_of_regex_file

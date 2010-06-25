@@ -1,5 +1,5 @@
 /*
- * defs.h, 2010.05.17, SJ
+ * defs.h, SJ
  */
 
 #ifndef _DEFS_H

@@ -1,5 +1,5 @@
 /*
- * zombietest.c, 2010.05.13, SJ
+ * zombietest.c, SJ
  */
 
 #include <stdio.h>
@@ -8,6 +8,24 @@
 #include <unistd.h>
 #include "misc.h"
 #include "config.h"
+
+
+void check_host_against_regexp(struct __data *data, char *host){
+   int i=0, found=0;
+   size_t nmatch=0;
+
+   while(i < data->n_regex){
+      if(regexec(&(data->pregs[i]), host, nmatch, NULL, 0) == 0){
+         printf("%s: match at %d\n", host, i);
+         found = 1;
+      }
+
+      i++;
+   }
+
+   if(found == 0) printf("%s: no match\n", host);
+
+}
 
 
 int main(int argc, char **argv){
@@ -20,9 +38,8 @@ int main(int argc, char **argv){
 
 
 #ifdef HAVE_TRE
-   int i=0, j, found=0;
+   int i=0, j;
    char buf[SMALLBUFSIZE];
-   size_t nmatch=0;
    FILE *f;
 
    data.n_regex = 0;
@@ -51,20 +68,7 @@ int main(int argc, char **argv){
    printf("\n\n");
 
    for(j=1; j<argc; j++){
-      i = 0;
-      found = 0;
-
-      while(i < data.n_regex){
-         if(regexec(&(data.pregs[i]), argv[j], nmatch, NULL, 0) == 0){
-            printf("%s: match at %d\n", argv[j], i);
-            found = 1;
-         }
-
-         i++;
-      }
-
-      if(found == 0) printf("%s: no match\n", argv[j]);
-
+      check_host_against_regexp(&data, argv[j]);
    }
 
    for(i=0; i<data.n_regex; i++){

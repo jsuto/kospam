@@ -1,10 +1,17 @@
-0.4.5-rc1:
+0.4.5-rc2:
+
+2010.06.24, SJ
+
+Update the zombie regexp list.
 
 2010.06.10, SJ
 
 Fixed some make and compile time issues, and fixed the schema of the "summary" view.
 Additionally fixed a bug in the chart rendering.
 (credits: DRu)
+
+
+0.4.5-rc1:
 
 2010.06.08, SJ
 

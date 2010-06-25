@@ -1,5 +1,5 @@
 /*
- * bayes.c, 2010.05.17, SJ
+ * bayes.c, SJ
  */
 
 #include <stdio.h>
@@ -126,6 +126,13 @@ double eval_tokens(struct session_data *sdata, struct _state *state, struct __co
    add_penalties(sdata, state, cfg);
 
    spaminess = getSpamProbabilityChi2(state->token_hash, cfg);
+
+   /* in case of training, query only the phrases, and, do not apply any additional fixes */
+   if(sdata->training_request == 1){
+      syslog(LOG_PRIORITY, "%s: training request, query only the phrases: %0.4f", sdata->ttmpfile, spaminess);
+      return spaminess;
+   }
+
 
    if(cfg->debug == 1) printf("phrase: %.4f\n", spaminess);
 

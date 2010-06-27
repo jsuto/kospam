@@ -1,5 +1,15 @@
 0.4.5-rc2:
 
+2010.06.27, SJ
+
+Fix ".." sequences.
+
+Quoted-printable fix.
+
+Submit only URLs with at least a single dot (.) to SURBL check.
+
+Rewrote the mysql part of the training process.
+
 2010.06.24, SJ
 
 Update the zombie regexp list.

@@ -25,7 +25,7 @@
 #include "bayes.h"
 #include "config.h"
 #include "buffer.h"
-
+#include "clapf.h"
 
 #ifdef HAVE_MYSQL
    #include <mysql.h>
@@ -88,11 +88,11 @@ int qry_spaminess(struct session_data *sdata, struct _state *state, char type, s
    else
       buffer_cat(query, ") AND uid=0");
 
-   update_hash(sdata->mysql, query->data, state->token_hash, cfg);
+   update_hash(sdata, query->data, state->token_hash);
 #endif
 #ifdef HAVE_SQLITE3
    buffer_cat(query, ")");
-   update_hash(sdata->db, query->data, state->token_hash, cfg);
+   update_hash(sdata, query->data, state->token_hash);
 #endif
 
    buffer_destroy(query);
@@ -127,11 +127,7 @@ double eval_tokens(struct session_data *sdata, struct _state *state, struct __co
 
    spaminess = getSpamProbabilityChi2(state->token_hash, cfg);
 
-   /* in case of training, query only the phrases, and, do not apply any additional fixes */
-   if(sdata->training_request == 1){
-      syslog(LOG_PRIORITY, "%s: training request, query only the phrases: %0.4f", sdata->ttmpfile, spaminess);
-      return spaminess;
-   }
+   if(sdata->training_request == 1) return spaminess;
 
 
    if(cfg->debug == 1) printf("phrase: %.4f\n", spaminess);
@@ -331,9 +327,13 @@ int trainMessage(struct session_data *sdata, struct _state *state, int rounds, i
 
    if(cfg->group_type == GROUP_SHARED) sdata->uid = 0;
 
+#ifdef HAVE_MYSQL
+   introduceTokens(sdata, state->token_hash); 
+#endif
+
    for(i=0; i<rounds; i++){
    #ifdef HAVE_MYSQL
-      my_walk_hash(sdata->mysql, is_spam, sdata->uid, state->token_hash, tm);
+      updateTokenCounters(sdata, is_spam, state->token_hash, T_TOE);
    #endif
    #ifdef HAVE_SQLITE3
       my_walk_hash(sdata->db, is_spam, state->token_hash, tm);
@@ -361,12 +361,14 @@ int trainMessage(struct session_data *sdata, struct _state *state, int rounds, i
 
       if(tm == T_TUM){
          if(is_spam == 1)
-            snprintf(buf, SMALLBUFSIZE-1, "UPDATE %s SET nham=nham-1 WHERE uid=%ld", SQL_MISC_TABLE, sdata->uid);
+            snprintf(buf, SMALLBUFSIZE-1, "UPDATE %s SET nham=nham-1 WHERE uid=%ld AND nham > 0", SQL_MISC_TABLE, sdata->uid);
          else
-            snprintf(buf, SMALLBUFSIZE-1, "UPDATE %s SET nspam=nspam-1 WHERE uid=%ld", SQL_MISC_TABLE, sdata->uid);
+            snprintf(buf, SMALLBUFSIZE-1, "UPDATE %s SET nspam=nspam-1 WHERE uid=%ld AND nspam > 0", SQL_MISC_TABLE, sdata->uid);
 
       #ifdef HAVE_MYSQL
          mysql_real_query(&(sdata->mysql), buf, strlen(buf));
+
+         updateTokenCounters(sdata, is_spam, state->token_hash, T_TUM);
       #endif
       #ifdef HAVE_SQLITE3
          sqlite3_exec(sdata->db, buf, NULL, NULL, &err);

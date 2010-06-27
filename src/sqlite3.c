@@ -1,5 +1,5 @@
 /*
- * sqlite3.c, 2009.02.17, SJ
+ * sqlite3.c, SJ
  */
 
 #include <stdio.h>
@@ -54,7 +54,7 @@ struct te sqlite3_qry(sqlite3 *db, char *token){
 }
 
 
-int update_hash(sqlite3 *db, char *qry, struct node *xhash[], struct __config *cfg){
+int update_hash(sqlite3 *db, char *qry, struct node *xhash[]){
    sqlite3_stmt *pStmt;
    const char **pzTail=NULL;
    float nham, nspam;

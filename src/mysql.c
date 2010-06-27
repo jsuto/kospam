@@ -1,5 +1,5 @@
 /*
- * mysql.c, 2010.05.13, SJ
+ * mysql.c, SJ
  */
 
 #include <stdio.h>
@@ -75,63 +75,14 @@ struct te getNumberOfHamSpamMessages(MYSQL mysql, char *stmt){
 }
 
 
-/*
- * updates the counter of (or inserts) the given token in the token table
- */
-
-int do_mysql_qry(MYSQL mysql, int ham_or_spam, char *token, unsigned long uid, int train_mode, unsigned long timestamp){
-   char stmt[MAXBUFSIZE], puf[SMALLBUFSIZE];
-   struct te TE;
-   unsigned long long hash = APHash(token);
-
-   snprintf(stmt, MAXBUFSIZE-1, "SELECT nham, nspam FROM %s WHERE token=%llu AND uid=%ld", SQL_TOKEN_TABLE, hash, uid);
-
-   memset(puf, 0, SMALLBUFSIZE);
-
-   /* update token entry ... */
-
-   TE = getNumberOfHamSpamMessages(mysql, stmt);
-
-   if(TE.nham > 0 || TE.nspam > 0){
-      if(ham_or_spam == 1){
-         if(train_mode == T_TUM && TE.nham > 0) snprintf(puf, SMALLBUFSIZE-1, ", nham=nham-1");
-         snprintf(stmt, MAXBUFSIZE-1, "UPDATE %s SET nspam=nspam+1%s WHERE token=%llu AND uid=%ld", SQL_TOKEN_TABLE, puf, hash, uid);
-      }
-      else {
-         if(train_mode == T_TUM && TE.nspam > 0) snprintf(puf, SMALLBUFSIZE-1, ", nspam=nspam-1");
-         snprintf(stmt, MAXBUFSIZE-1, "UPDATE %s SET nham=nham+1%s WHERE token=%llu AND uid=%ld", SQL_TOKEN_TABLE, puf, hash, uid);
-      }
-   }
-
-   /* ... or insert token entry */
-
-   if(TE.nham == 0 && TE.nspam == 0){
-      if(ham_or_spam == 1)
-         TE.nspam = 1;
-      else
-         TE.nham = 1;
-
-      if(uid > 0)
-         snprintf(stmt, MAXBUFSIZE-1, "INSERT INTO %s (token, nham, nspam, uid, timestamp) VALUES(%llu, %d, %d, %ld, %ld)", SQL_TOKEN_TABLE, hash, TE.nham, TE.nspam, uid, timestamp);
-      else
-         snprintf(stmt, MAXBUFSIZE-1, "INSERT INTO %s (token, nham, nspam, timestamp) VALUES(%llu, %d, %d, %ld)", SQL_TOKEN_TABLE, hash, TE.nham, TE.nspam, timestamp);
-   }
-
-   mysql_real_query(&mysql, stmt, strlen(stmt));
-
-   return 0;
-}
-
-
-
-int update_hash(MYSQL mysql, char *qry, struct node *xhash[], struct __config *cfg){
+int update_hash(struct session_data *sdata, char *qry, struct node *xhash[]){
    MYSQL_RES *res;
    MYSQL_ROW row;
    float nham, nspam;
    unsigned long long token;
 
-   if(mysql_real_query(&mysql, qry, strlen(qry)) == 0){
-      res = mysql_store_result(&mysql);
+   if(mysql_real_query(&(sdata->mysql), qry, strlen(qry)) == 0){
+      res = mysql_store_result(&(sdata->mysql));
       if(res != NULL){
          while((row = mysql_fetch_row(res))){
             token = strtoull(row[0], NULL, 10);
@@ -151,15 +102,135 @@ int update_hash(MYSQL mysql, char *qry, struct node *xhash[], struct __config *c
 
 
 /*
- * update the token timestamps
+ * introduce tokens to database with zero (0) values
  */
+
+int introduceTokens(struct session_data *sdata, struct node *xhash[]){
+   int i, n=0;
+   time_t cclock;
+   unsigned long now;
+   char s[SMALLBUFSIZE];
+   struct node *q;
+   buffer *query;
+
+   if(counthash(xhash) <= 0) return 0;
+
+   query = buffer_create(NULL);
+   if(!query) return 0;
+
+   snprintf(s, SMALLBUFSIZE-1, "SELECT token, nham, nspam FROM %s WHERE token in (", SQL_TOKEN_TABLE);
+   buffer_cat(query, s);
+
+   for(i=0; i<MAXHASH; i++){
+      q = xhash[i];
+      while(q != NULL){
+         if(n) snprintf(s, SMALLBUFSIZE-1, ",%llu", q->key);
+         else snprintf(s, SMALLBUFSIZE-1, "%llu", q->key);
+
+         buffer_cat(query, s);
+         n++;
+
+         q = q->r;
+      }
+   }
+
+   snprintf(s, SMALLBUFSIZE-1, ") AND uid=%ld", sdata->uid);
+   buffer_cat(query, s);
+
+   update_hash(sdata, query->data, xhash);
+
+   buffer_destroy(query);
+
+
+   query = buffer_create(NULL);
+   if(!query) return 0;
+
+   snprintf(s, SMALLBUFSIZE-1, "INSERT INTO %s (token, nham, nspam, uid, timestamp) VALUES", SQL_TOKEN_TABLE);
+   buffer_cat(query, s);
+
+   time(&cclock);
+   now = cclock;
+
+   n = 0;
+
+   for(i=0; i<MAXHASH; i++){
+      q = xhash[i];
+      while(q != NULL){
+         if(q->nham + q->nspam == 0){
+            if(n) snprintf(s, SMALLBUFSIZE-1, ",(%llu,0,0,%ld,%ld)", q->key, sdata->uid, now);
+            else snprintf(s, SMALLBUFSIZE-1, "(%llu,0,0,%ld,%ld)", q->key, sdata->uid, now);
+
+            buffer_cat(query, s);
+            n++;
+         }
+
+         q = q->r;
+      }
+   }
+
+   mysql_real_query(&(sdata->mysql), query->data, strlen(query->data));
+
+   buffer_destroy(query);
+
+   return 1;
+}
+
+
+int updateTokenCounters(struct session_data *sdata, int ham_or_spam, struct node *xhash[], int train_mode){
+   int i, n=0;
+   char s[SMALLBUFSIZE];
+   struct node *q;
+   buffer *query;
+
+   if(counthash(xhash) <= 0) return 0;
+
+   query = buffer_create(NULL);
+   if(!query) return n;
+
+   if(ham_or_spam == 1){
+      if(train_mode == T_TUM) snprintf(s, SMALLBUFSIZE-1, "UPDATE %s SET nham=nham-1 WHERE token IN (", SQL_TOKEN_TABLE);
+      else snprintf(s, SMALLBUFSIZE-1, "UPDATE %s SET nspam=nspam+1 WHERE token IN (", SQL_TOKEN_TABLE); 
+   } else {
+      if(train_mode == T_TUM) snprintf(s, SMALLBUFSIZE-1, "UPDATE %s SET nspam=nspam-1 WHERE token IN (", SQL_TOKEN_TABLE); 
+      else snprintf(s, SMALLBUFSIZE-1, "UPDATE %s SET nham=nham+1 WHERE token IN (", SQL_TOKEN_TABLE);
+   }
+
+   buffer_cat(query, s);
+
+   for(i=0; i<MAXHASH; i++){
+      q = xhash[i];
+      while(q != NULL){
+         if(n) snprintf(s, SMALLBUFSIZE-1, ",%llu", q->key);
+         else snprintf(s, SMALLBUFSIZE-1, "%llu", q->key);
+
+         buffer_cat(query, s);
+
+         q = q->r;
+         n++;
+      }
+   }
+
+   buffer_cat(query, ")");
+
+   if(train_mode == T_TUM){
+      if(ham_or_spam == 1) buffer_cat(query, " AND nham > 0");
+      else buffer_cat(query, " AND nspam > 0");
+   }
+
+   mysql_real_query(&(sdata->mysql), query->data, strlen(query->data));
+
+   buffer_destroy(query);
+
+   return 1;
+}
+
 
 int updateTokenTimestamps(struct session_data *sdata, struct node *xhash[]){
    int i, n=0;
    unsigned long now;
    time_t cclock;
    char s[SMALLBUFSIZE];
-   struct node *p, *q;
+   struct node *q;
    buffer *query;
 
    if(counthash(xhash) <= 0) return 0;
@@ -177,10 +248,8 @@ int updateTokenTimestamps(struct session_data *sdata, struct node *xhash[]){
    for(i=0; i<MAXHASH; i++){
       q = xhash[i];
       while(q != NULL){
-         p = q;
-
-         if(p->spaminess != DEFAULT_SPAMICITY){
-            snprintf(s, SMALLBUFSIZE-1, ",%llu", p->key);
+         if(q->spaminess != DEFAULT_SPAMICITY){
+            snprintf(s, SMALLBUFSIZE-1, ",%llu", q->key);
             buffer_cat(query, s);
             n++;
          }
@@ -188,7 +257,6 @@ int updateTokenTimestamps(struct session_data *sdata, struct node *xhash[]){
          q = q->r;
       }
    }
-
 
 
    if(sdata->uid > 0)
@@ -206,32 +274,4 @@ int updateTokenTimestamps(struct session_data *sdata, struct node *xhash[]){
 
    return n;
 }
-
-
-/*
- * walk through the hash table and add/update its elements in sql table
- */
-
-int my_walk_hash(MYSQL mysql, int ham_or_spam, unsigned long uid, struct node *xhash[], int train_mode){
-   int i, n=0;
-   time_t cclock;
-   unsigned long now;
-   struct node *q;
-
-   time(&cclock);
-   now = cclock;
-
-   for(i=0; i<MAXHASH; i++){
-      q = xhash[i];
-      while(q != NULL){
-         do_mysql_qry(mysql, ham_or_spam, q->str, uid, train_mode, now);
-         
-         q = q->r;
-         n++;
-      }
-   }
-
-   return n;
-}
-
 

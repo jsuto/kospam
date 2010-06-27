@@ -98,6 +98,8 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
 
    state->line_num++;
 
+   if(*buf == '.' && *(buf+1) == '.') buf++;
+
    /* undefined message state */
    if(state->is_header == 1 && strchr(buf, ':')) state->message_state = MSG_UNDEF;
 

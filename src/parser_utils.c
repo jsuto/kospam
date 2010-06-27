@@ -182,6 +182,7 @@ void fixupEncodedHeaderLine(char *buf){
 
 
 void fixupSoftBreakInQuotedPritableLine(char *buf, struct _state *state){
+   int i=0;
    char *p, puf[MAXBUFSIZE];
 
    if(strlen(state->qpbuf) > 0){
@@ -197,7 +198,15 @@ void fixupSoftBreakInQuotedPritableLine(char *buf, struct _state *state){
 
    if(buf[strlen(buf)-2] == '='){
       buf[strlen(buf)-2] = '\0';
+      i = 1;
+   }
 
+   if(buf[strlen(buf)-3] == '='){
+      buf[strlen(buf)-3] = '\0';
+      i = 1;
+   }
+
+   if(i == 1){
       p = strrchr(buf, ' ');
       if(p){
          memset(state->qpbuf, 0, MAX_TOKEN_LEN);

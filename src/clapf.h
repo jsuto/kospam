@@ -25,6 +25,8 @@
    #include "memc.h"
 #endif
 
+int introduceTokens(struct session_data *sdata, struct node *xhash[]);
+int updateTokenCounters(struct session_data *sdata, int ham_or_spam, struct node *xhash[], int train_mode);
 int updateTokenTimestamps(struct session_data *sdata, struct node *xhash[]);
 
 #ifdef HAVE_ANTIVIRUS

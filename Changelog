@@ -1,5 +1,10 @@
 0.4.5-rc2:
 
+2010.06,28, SJ
+
+Automatically exclude 127.x.x.x, 192.168.x.x, 172.16.x.x, and 10.x.x.x
+addresses in the isItemOnList() function.
+
 2010.06.27, SJ
 
 Fix ".." sequences.

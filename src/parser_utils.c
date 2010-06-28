@@ -528,6 +528,8 @@ int isItemOnList(char *item, char *list){
 
    if(!item || !list) return 0;
 
+   if(strncmp(item, "127.", 4) == 0 || strncmp(item, "192.168.", 8) == 0 || strncmp(item, "10.", 3) == 0 || strncmp(item, "172.16.", 7) == 0) return 0;
+
    p = list;
 
    do {

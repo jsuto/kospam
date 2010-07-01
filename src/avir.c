@@ -1,5 +1,5 @@
 /*
- * avir.c, 2010.05.19, SJ
+ * avir.c, SJ
  */
 
 #include <stdio.h>
@@ -36,9 +36,7 @@ int do_av_check(struct session_data *sdata, char *email, char *email2, char *vir
 
    if(cfg->clamav_block_encrypted_archives == 1) options |= CL_SCAN_BLOCKENCRYPTED;
 
-   ret = cl_scanfile(sdata->ttmpfile, &virname, NULL, engine, options);
-
-   if(ret == CL_VIRUS){
+   if(cl_scanfile(sdata->ttmpfile, &virname, NULL, engine, options) == CL_VIRUS){
       memset(virusinfo, 0, SMALLBUFSIZE);
       strncpy(virusinfo, virname, SMALLBUFSIZE-1);
       rav = AVIR_VIRUS;

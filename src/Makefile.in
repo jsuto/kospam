@@ -56,7 +56,7 @@ parsembox: parsembox.c cfg.o misc.o list.o hash.o parser.o parser_utils.o decode
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
 
 clapfconf: clapfconf.c cfg.o misc.o
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS)
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LIBDIR)
 
 spamdrop: spamdrop.c libclapf.a
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ spamdrop.c -lclapf @spamsum_libs@ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
@@ -65,10 +65,10 @@ splitmbox: splitmbox.c misc.o decoder.o list.o boundary.o parser.o parser_utils.
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
 
 aphash: aphash.c misc.o
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS)
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LIBDIR)
 
 prepare-sql: prepare-sql.c misc.o decoder.o list.o boundary.o parser.o parser_utils.o score.o chi.o
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS)
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LIBDIR)
 
 mydb_stat mydb_compress mydb_export: %.o mydb.o misc.o hash.o chi.o score.o cfg.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)

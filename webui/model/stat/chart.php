@@ -25,36 +25,33 @@ class ModelStatChart extends Model {
 
       if($timespan == "daily"){
          $query = $this->db_history->query("select ts-(ts%3600) as ts, count(*) as num from clapf where result='HAM' $emails $grouping ORDER BY ts DESC limit $limit");
-         $i = 0;
-         foreach ($query->rows as $q) {
-            $i++;
-            array_push($ydata, $q['num']);
-            $q['ts'] = date("H:i", $q['ts']);
-
-            if($i % 3){ $q['ts'] = ""; }
-
-            array_push($dates, $q['ts']);
-         }
-      
-         $query = $this->db_history->query("select ts-(ts%3600) as ts, count(*) as num from clapf where result='SPAM' $emails $grouping ORDER BY ts DESC limit $limit");
-         foreach ($query->rows as $q) {
-            array_push($ydata2, $q['num']);
-         }
-      }
-      else {
+         $query2 = $this->db_history->query("select ts-(ts%3600) as ts, count(*) as num from clapf where result='SPAM' $emails $grouping ORDER BY ts DESC limit $limit");
+         $date_format = "H:i";
+      } else {
          $query = $this->db_history->query("select ts-(ts%86400) as ts, count(*) as num from clapf where result='HAM' $emails $grouping ORDER BY ts DESC limit $limit");
-         foreach ($query->rows as $q) {
-            array_push($ydata, $q['num']);
-            array_push($dates, date("m.d.", $q['ts']));
-         }
-
-         $query = $this->db_history->query("select ts-(ts%86400) as ts, count(*) as num from clapf where result='SPAM' $emails $grouping ORDER BY ts DESC limit $limit");
-         foreach ($query->rows as $q) {
-            array_push($ydata2, $q['num']);
-            array_push($dates, date("m.d.", $q['ts']));
-         }
-
+         $query2 = $this->db_history->query("select ts-(ts%86400) as ts, count(*) as num from clapf where result='SPAM' $emails $grouping ORDER BY ts DESC limit $limit");
+         $date_format = "m.d.";
       }
+
+      foreach ($query->rows as $q) {
+         array_push($ydata, $q['num']);
+         array_push($dates, date($date_format, $q['ts']));
+      }
+
+      foreach ($query2->rows as $q) {
+         array_push($ydata2, $q['num']);
+         array_push($dates, date($date_format, $q['ts']));
+      }
+
+      if($query->num_rows >= 15) {
+         $i = 0;
+         while(list($k, $v) = each($dates)) {
+            $i++;
+            if($i % 3) { $dates[$k] = ""; }
+         }
+         reset($dates);
+      }
+
 
 
       $ydata = array_reverse($ydata);
@@ -63,7 +60,7 @@ class ModelStatChart extends Model {
 
       for($i=0; $i<count($ydata); $i++){
          $ham = $ydata[$i];
-         $spam = $ydata2[$i];
+         if(isset($ydata2[$i])) { $spam = $ydata2[$i]; } else { $spam = 0; }
          $ts = $dates[$i];
          $line1->addPoint(new Point("$ts", $ham));
          $line2->addPoint(new Point("$ts", $spam));
@@ -112,7 +109,7 @@ class ModelStatChart extends Model {
       $chart = new HorizontalBarChart(SIZE_X, SIZE_Y);
       $dataSet = new XYDataSet();
 
-      $query = $this->db_history->query("SELECT from_domain, COUNT(from_domain) AS sum FROM " . TABLE_SUMMARY . " WHERE ts > $range AND result='" . $this->db_history->escape($what) . "' GROUP BY from_domain ORDER BY sum DESC LIMIT 10");
+      $query = $this->db_history->query("SELECT ts, from_domain, COUNT(from_domain) AS sum FROM " . TABLE_SUMMARY . " WHERE ts > $range AND result='" . $this->db_history->escape($what) . "' GROUP BY from_domain ORDER BY sum DESC LIMIT 10");
 
       foreach($query->rows as $q) {
          $dataSet->addPoint(new Point($q['from_domain'], $q['sum']));
@@ -156,7 +153,6 @@ class ModelStatChart extends Model {
       else {
          $chart->render();
       }
-
    }
 
 }

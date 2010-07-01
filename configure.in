@@ -1,12 +1,13 @@
-AC_INIT(src/clapf.c)
-AM_CONFIG_HEADER(clapf-config.h)
+AC_INIT
+AC_CONFIG_SRCDIR([src/clapf.c])
+AC_CONFIG_HEADER(clapf-config.h)
 
 CONFIGURE_PARAMS_FILE=params.h
 rm -f $CONFIGURE_PARAMS_FILE; echo "#define CONFIGURE_PARAMS \"Build Date: "`date`"\nConfigure command: $@\"" > $CONFIGURE_PARAMS_FILE
 
 dnl Checks for programs.
 AC_PROG_CC
-AM_PROG_CC_STDC
+dnl AM_PROG_CC_STDC
 AC_PROG_MAKE_SET
 AC_PROG_INSTALL
 
@@ -55,6 +56,7 @@ have_antispam="no"
 have_blackhole="no"
 have_spamdrop="no"
 have_mysql="no"
+have_icc_guide="no"
 have_sqlite3="no"
 have_ldap="no"
 have_rbl="no"
@@ -101,14 +103,16 @@ AC_ARG_ENABLE(libclamav,
    if test "$want_clamav" = "yes"; then
 
 	AC_CHECK_HEADERS(clamav.h, have_libclamav=yes, have_libclamav=no)
-	AC_HAVE_LIBRARY(clamav, AC_CHECK_LIB(clamav, cl_scanfile, have_libclamav=yes, have_libclamav=no))
+	AC_CHECK_LIB([clamav],[main],[AC_CHECK_LIB(clamav, cl_scanfile, have_libclamav=yes, have_libclamav=no)],[],[])ac_cv_lib_clamav=ac_cv_lib_clamav_main
+
 
 	if test "$have_libclamav" = "no"; then
    	   echo "clamav not found";
    	   exit 1;
 	fi
 
-        AC_HAVE_LIBRARY(ltdl, AC_CHECK_LIB(ltdl, lt_dlopen, have_libtool=yes, have_libtool=no))
+        AC_CHECK_LIB([ltdl],[main],[AC_CHECK_LIB(ltdl, lt_dlopen, have_libtool=yes, have_libtool=no)],[],[])ac_cv_lib_ltdl=ac_cv_lib_ltdl_main
+
 
         have_antivirus="yes"
    fi
@@ -212,7 +216,8 @@ dnl  if test "$want_antispam" = "yes"; then
     dnl math library
 
     AC_CHECK_HEADERS(math.h, have_math=yes, have_math=no)
-    AC_HAVE_LIBRARY(m, AC_CHECK_LIB(m, fabs), have_math=yes, ""; exit)
+    AC_CHECK_LIB([m],[main],[AC_CHECK_LIB(m, fabs)],[have_math=yes],[""; exit])ac_cv_lib_m=ac_cv_lib_m_main
+
 
     dnl have_antispam="yes"
 
@@ -229,13 +234,15 @@ dnl  if test "$want_antispam" = "yes"; then
     dnl ldap database
 
     AC_CHECK_HEADERS(ldap.h, have_ldap=yes, echo "ldap.h is not found")
-    AC_HAVE_LIBRARY(ldap, AC_CHECK_LIB(ldap, ldap_simple_bind_s, have_ldap=yes, echo "libldap.so is not found"; have_ldap=no))
+    AC_CHECK_LIB([ldap],[main],[AC_CHECK_LIB(ldap, ldap_simple_bind_s, have_ldap=yes, echo "libldap.so is not found"; have_ldap=no)],[],[])ac_cv_lib_ldap=ac_cv_lib_ldap_main
+
 
 
     dnl TRE library
 
     AC_CHECK_HEADERS(tre/tre.h, have_tre=yes, echo "tre.h is not found")
-    AC_HAVE_LIBRARY(tre, AC_CHECK_LIB(tre, regcomp, have_tre=yes, echo "libtre.so is not found"; have_tre=no))
+    AC_CHECK_LIB([tre],[main],[AC_CHECK_LIB(tre, regcomp, have_tre=yes, echo "libtre.so is not found"; have_tre=no)],[],[])ac_cv_lib_tre=ac_cv_lib_tre_main
+
 
 
     dnl (su)rbl support
@@ -298,6 +305,9 @@ AC_ARG_WITH(userdb,
 
             mysql_includes=`mysql_config --cflags`
             mysql_libs=`mysql_config --libs_r`
+
+            AC_CHECK_LIB([guide],[main],[AC_CHECK_LIB(guide, _intel_fast_memset, have_icc_guide=yes, have_icc_guide=no)],[],[])ac_cv_lib_guide=ac_cv_lib_guide_main
+
      else
         echo "MySQL support is not found"
         exit 1;
@@ -307,7 +317,8 @@ AC_ARG_WITH(userdb,
   if test "$withval" = "sqlite3"; then
     AC_CHECK_HEADERS(sqlite3.h, have_sqlite3=yes, echo "sqlite3.h is not found")
 
-    AC_HAVE_LIBRARY(sqlite3, AC_CHECK_LIB(sqlite3, sqlite3_open, have_sqlite3=yes, have_sqlite3=no))
+    AC_CHECK_LIB([sqlite3],[main],[AC_CHECK_LIB(sqlite3, sqlite3_open, have_sqlite3=yes, have_sqlite3=no)],[],[])ac_cv_lib_sqlite3=ac_cv_lib_sqlite3_main
+
 
       if test "$have_sqlite3" = "no"; then
            echo "sqlite3 not found";
@@ -388,7 +399,8 @@ AC_ARG_WITH(tokendb,
   if test "$withval" = "sqlite3"; then
     AC_CHECK_HEADERS(sqlite3.h, have_sqlite3=yes, echo "sqlite3.h is not found")
 
-    AC_HAVE_LIBRARY(sqlite3, AC_CHECK_LIB(sqlite3, sqlite3_open, have_sqlite3=yes, have_sqlite3=no))
+    AC_CHECK_LIB([sqlite3],[main],[AC_CHECK_LIB(sqlite3, sqlite3_open, have_sqlite3=yes, have_sqlite3=no)],[],[])ac_cv_lib_sqlite3=ac_cv_lib_sqlite3_main
+
 
       if test "$have_sqlite3" = "no"; then
            echo "sqlite3 not found";
@@ -570,7 +582,8 @@ dnl tinycdb
 
 if test "$TOKENDB" = "cdb"; then
    AC_CHECK_HEADERS(cdb.h)
-   AC_HAVE_LIBRARY(cdb, AC_CHECK_LIB(cdb, cdb_find, have_cdb=yes, echo "you need the cdb package"; exit))
+   AC_CHECK_LIB([cdb],[main],[AC_CHECK_LIB(cdb, cdb_find, have_cdb=yes, echo "you need the cdb package"; exit)],[],[])ac_cv_lib_cdb=ac_cv_lib_cdb_main
+
    defs="$defs -DHAVE_CDB"
    objs="$objs cdb.o"
    antispam_libs="$antispam_libs -lcdb"
@@ -852,6 +865,10 @@ if test "$have_sqlite3" = "yes"; then
    sqlite3_libs="-lsqlite3 -lpthread"
 fi
 
+
+if test "$have_icc_guide" = "yes" && test "$have_mysql" = "yes"; then
+   mysql_libs="$mysql_libs -lguide"
+fi
 
 
 id -u $CLAPF_USER 2>/dev/null 1>/dev/null

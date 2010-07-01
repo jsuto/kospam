@@ -1,5 +1,24 @@
 0.4.5-rc2:
 
+2010.07.01, SJ
+
+Fixed a libclamav related compile issue.
+(credits: Tamas Papp)
+
+2010.06.30, SJ
+
+Added a modified postgrey to contrib/zombie. See contrib/zombie/README
+and http://clapf.acts.hu/wiki/doku.php/howto:catching-zombies-with-a-modified-postgrey
+for details.
+
+A lineChart cosmetic fix.
+
+Added support for icc compiled mysql distributions. The configure script detects if you
+have installed intel-icc9-libs-9.0-i386.tar.gz. You can get it at http://dev.mysql.com/downloads/os-linux.html
+and activate it at compile time eg. LDFLAGS="-L/usr/local/lib/intel-icc9-libs-9.0-i386" ./configure ...
+
+Updated the configure.in script, and the aclocal.m4 macro file.
+
 2010.06,28, SJ
 
 Automatically exclude 127.x.x.x, 192.168.x.x, 172.16.x.x, and 10.x.x.x
@@ -17,7 +36,7 @@ Rewrote the mysql part of the training process.
 
 2010.06.24, SJ
 
-Update the zombie regexp list.
+Updated the zombie regexp list.
 
 2010.06.10, SJ
 

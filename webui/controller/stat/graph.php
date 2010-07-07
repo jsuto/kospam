@@ -40,7 +40,7 @@ class ControllerStatGraph extends Controller {
 
       $aa = new ModelStatChart();
 
-      $aa->lineChartHamSpam($emails, $timespan, $this->data['text_ham_and_spam_messages'], "");
+      $aa->lineChartHamSpam($emails, $timespan, $this->data['text_ham_and_spam_messages'], SIZE_X, SIZE_Y, "");
 
    }
 

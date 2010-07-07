@@ -2,12 +2,12 @@
 
 class ModelStatChart extends Model {
 
-   public function lineChartHamSpam($emails, $timespan, $title, $output){
+   public function lineChartHamSpam($emails, $timespan, $title, $size_x, $size_y, $output){
       $ydata = array();
       $ydata2 = array();
       $dates = array();
 
-      $chart = new LineChart(SIZE_X, SIZE_Y);
+      $chart = new LineChart($size_x, $size_y);
       $line1 = new XYDataSet();
       $line2 = new XYDataSet();
 

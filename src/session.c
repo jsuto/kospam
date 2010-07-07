@@ -33,7 +33,7 @@ void handleSession(int new_sd, struct __data *data, struct __config *cfg){
    struct timeval tv1, tv2;
 
 #ifdef HAVE_LIBCLAMAV
-   /* http://www.clamav.net/doc/latest/html/node47.html */
+   /* http://www.clamav.net/doc/latest/html/node53.html */
    srand(getpid());
 #endif
 
@@ -46,10 +46,6 @@ void handleSession(int new_sd, struct __data *data, struct __config *cfg){
 
    sdata.Nham = 0;
    sdata.Nspam = 0;
-
-#ifdef HAVE_MYDB
-   init_mydb(cfg->mydbfile, &sdata);
-#endif
 
    bzero(&counters, sizeof(counters));
 
@@ -69,10 +65,12 @@ void handleSession(int new_sd, struct __data *data, struct __config *cfg){
    else
       syslog(LOG_PRIORITY, "%s", ERR_MYSQL_CONNECT);
 #endif
+#ifdef HAVE_MYDB
+   init_mydb(cfg->mydbfile, &sdata);
+#endif
 
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: fork()", sdata.ttmpfile);
 
-   /* send 220 SMTP/LMTP banner */
 
    gettimeofday(&tv1, &tz);
 
@@ -278,7 +276,7 @@ void handleSession(int new_sd, struct __data *data, struct __config *cfg){
                                        sdata.__as/1000000.0, sdata.__training/1000000.0, sdata.__update/1000000.0, sdata.__store/1000000.0, sdata.__inject/1000000.0);
 
                   if(sdata.spaminess >= my_cfg.spam_overall_limit){
-                     if(sdata.blackhole == 0) counters.c_spam++;
+                     if(sdata.rcpt_minefield[i] == 0) counters.c_spam++;
                      syslog(LOG_PRIORITY, "%s: %s got SPAM, %.4f, %d, relay=%s:%d, %s, status=%s", sdata.ttmpfile, email, sdata.spaminess, sdata.tot_len, my_cfg.spam_smtp_addr, my_cfg.spam_smtp_port, reason, resp);
                   } else if(sdata.rav == AVIR_VIRUS) {
                      counters.c_virus++;
@@ -457,9 +455,8 @@ AFTER_PERIOD:
                   continue;
                }
 
-               if(sdata.num_of_rcpt_to < MAX_RCPT_TO){
+               if(sdata.num_of_rcpt_to < MAX_RCPT_TO-1){
                   snprintf(sdata.rcptto[sdata.num_of_rcpt_to], SMALLBUFSIZE-1, "%s\r\n", buf);
-                  sdata.num_of_rcpt_to++;
                }
 
                state = SMTP_STATE_RCPT_TO;
@@ -477,10 +474,11 @@ AFTER_PERIOD:
                         sdata.blackhole = 1;
                         counters.c_minefield++;
 
+                        sdata.rcpt_minefield[sdata.num_of_rcpt_to] = 1;
+
                      #ifdef HAVE_BLACKHOLE
                         gettimeofday(&tv1, &tz);
                         store_minefield_ip(&sdata, cfg);
-
                         gettimeofday(&tv2, &tz);
                         sdata.__minefield = tvdiff(tv2, tv1);
                      #endif
@@ -491,6 +489,8 @@ AFTER_PERIOD:
                   }
                }
 
+
+               if(sdata.num_of_rcpt_to < MAX_RCPT_TO-1) sdata.num_of_rcpt_to++;
 
                /* is it a training request? */
 
@@ -675,6 +675,7 @@ void initSessionData(struct session_data *sdata){
 
    for(i=0; i<MAX_RCPT_TO; i++) memset(sdata->rcptto[i], 0, SMALLBUFSIZE);
 
+   memset(sdata->rcpt_minefield, 0, MAX_RCPT_TO);
 }
 
 

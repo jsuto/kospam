@@ -408,8 +408,7 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
          if(strlen(puf) > MAX_WORD_LEN){
             fixFQDN(puf);
 
-            snprintf(muf, MAXBUFSIZE-1, "%s", puf);
-            getTLDFromName(muf);
+            snprintf(muf, MAXBUFSIZE-1, "HEADER*%s", puf);
             addnode(state->token_hash, muf, DEFAULT_SPAMICITY, 0);
             state->n_token++;
          }

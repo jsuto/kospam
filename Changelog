@@ -3,6 +3,7 @@
 2010.07.08, SJ
 
 Faster training by mass creating new tokens in the SQL database.
+Fixed a bug that was creating unnecessary URL* tokens from header elements.
 
 2010.07.07, SJ
 

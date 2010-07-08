@@ -21,7 +21,6 @@
 #include "parser.h"
 #include "messages.h"
 #include "score.h"
-#include "sql.h"
 #include "bayes.h"
 #include "config.h"
 #include "buffer.h"
@@ -103,11 +102,7 @@ int qry_spaminess(struct session_data *sdata, struct _state *state, char type, s
 }
 
 
-/*
- * evaulate tokens
- */
-
-double eval_tokens(struct session_data *sdata, struct _state *state, struct __config *cfg){
+double evaluateTokens(struct session_data *sdata, struct _state *state, struct __config *cfg){
    float spaminess=DEFAULT_SPAMICITY;
    int has_embed_image=0, found_on_rbl=0, surbl_match=0;
 
@@ -171,20 +166,14 @@ END_OF_EVALUATION:
 }
 
 
-/*
- * Bayesian result of the file
- */
-
 float bayes_file(struct session_data *sdata, struct _state *state, struct __config *cfg){
    char buf[MAXBUFSIZE], *p;
    float ham_from=0, spam_from=0;
    float spaminess = DEFAULT_SPAMICITY;
-
-#ifdef HAVE_MYSQL
-   struct te TE;
-#endif
 #ifdef HAVE_MYDB
    struct mydb_node *Q;
+#else
+   struct te TE;
 #endif
 
 
@@ -195,91 +184,63 @@ float bayes_file(struct session_data *sdata, struct _state *state, struct __conf
       p = sdata->ttmpfile;
 
 
-#ifdef HAVE_MYDB
-   cfg->group_type = GROUP_SHARED;
-#endif
-#ifdef HAVE_SQLITE3
+#ifndef HAVE_MYSQL
    cfg->group_type = GROUP_SHARED;
 #endif
 
+   if(cfg->debug == 1) printf("username: %s, uid: %ld\n", sdata->name, sdata->uid);
 
-   /* assemble sql statement group */
+
+   /* query message counters */
 
    if(cfg->group_type == GROUP_SHARED)
       snprintf(buf, MAXBUFSIZE-1, "SELECT nham, nspam FROM %s WHERE uid=0", SQL_MISC_TABLE);
    else
       snprintf(buf, MAXBUFSIZE-1, "SELECT nham, nspam FROM %s WHERE uid=0 OR uid=%ld", SQL_MISC_TABLE, sdata->uid);
 
-   if(cfg->debug == 1)
-      printf("username: %s, uid: %ld\n", sdata->name, sdata->uid);
-
-   /*
-    * select the number of ham and spam messages, and return error if less than 1
-    */
-
-#ifdef HAVE_MYSQL
-   TE = getNumberOfHamSpamMessages(sdata->mysql, buf);
+#ifndef HAVE_MYDB
+   TE = getHamSpamCounters(sdata, buf);
    sdata->Nham = TE.nham;
    sdata->Nspam = TE.nspam;
 #endif
-#ifdef HAVE_SQLITE3
-   if(sqlite3_prepare_v2(sdata->db, buf, -1, &pStmt, pzTail) == SQLITE_OK){
-      while(sqlite3_step(pStmt) == SQLITE_ROW){
-         sdata->Nham += sqlite3_column_int(pStmt, 0);
-         sdata->Nspam += sqlite3_column_int(pStmt, 1);
-      }
-   }
-   sqlite3_finalize(pStmt);
-#endif
-
 
    if((sdata->Nham + sdata->Nspam == 0) && cfg->initial_1000_learning == 0){
       if(cfg->verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: %s", p, ERR_SQL_DATA);
       return DEFAULT_SPAMICITY;
    }
 
-   if(cfg->debug == 1)
-      printf("nham: %.0f, nspam: %.0f\n", sdata->Nham, sdata->Nspam);
+   if(cfg->debug == 1) printf("nham: %.0f, nspam: %.0f\n", sdata->Nham, sdata->Nspam);
 
-   /*
-    * auto whitelist test, 2007.06.21, SJ
-    * it may be better to only count the users own experiment with this sender...
-    * A further note: this way we will not TUM train the message if it's whitelisted
-    */
+
+   /* check if sender is autowhitelisted */
 
    if(cfg->enable_auto_white_list == 1){
 
-   #ifdef HAVE_MYSQL
-      snprintf(buf, MAXBUFSIZE-1, "SELECT nham, nspam FROM %s WHERE token=%llu AND (uid=0 OR uid=%ld)", SQL_TOKEN_TABLE, APHash(state->from), sdata->uid);
-      TE = getNumberOfHamSpamMessages(sdata->mysql, buf);
-      ham_from = TE.nham;
-      spam_from = TE.nspam;
-   #endif
-   #ifdef HAVE_SQLITE3
-      snprintf(buf, MAXBUFSIZE-1, "SELECT nham, nspam FROM %s WHERE token=%llu", SQL_TOKEN_TABLE, APHash(state->from));
-      if(sqlite3_prepare_v2(sdata->db, buf, -1, &pStmt, pzTail) == SQLITE_OK){
-         if(sqlite3_step(pStmt) == SQLITE_ROW){
-            ham_from = sqlite3_column_int(pStmt, 0);
-            spam_from = sqlite3_column_int(pStmt, 1);
-         }
-      }
-      sqlite3_finalize(pStmt);
-   #endif
    #ifdef HAVE_MYDB
       Q = findmydb_node(sdata->mhash, APHash(state->from));
       if(Q){
          ham_from = Q->nham;
          spam_from = Q->nspam;
       }
+   #else
+      #ifdef HAVE_MYSQL
+         snprintf(buf, MAXBUFSIZE-1, "SELECT nham, nspam FROM %s WHERE token=%llu AND (uid=0 OR uid=%ld)", SQL_TOKEN_TABLE, APHash(state->from), sdata->uid);
+      #endif
+      #ifdef HAVE_SQLITE3
+         snprintf(buf, MAXBUFSIZE-1, "SELECT nham, nspam FROM %s WHERE token=%llu", SQL_TOKEN_TABLE, APHash(state->from));
+      #endif
+      TE = getHamSpamCounters(sdata, buf);
+      ham_from = TE.nham;
+      spam_from = TE.nspam;
    #endif
 
-      if(cfg->debug == 1)
-         printf("from: %.0f, %.0f\n", ham_from, spam_from);
+      if(cfg->debug == 1) printf("from: %.0f, %.0f\n", ham_from, spam_from);
+
 
       if(ham_from >= NUMBER_OF_GOOD_FROM && spam_from == 0){
          if(cfg->verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: sender is statistically whitelisted", sdata->ttmpfile);
 
-         /* we query the spaminess of the token pairs in order to have their timestamp updated */
+         /* query the spaminess of the token pairs in order to have their timestamp updated */
          qry_spaminess(sdata, state, 1, cfg);
 
          sdata->statistically_whitelisted = 1;
@@ -293,8 +254,7 @@ float bayes_file(struct session_data *sdata, struct _state *state, struct __conf
 
    if(cfg->group_type == GROUP_SHARED) sdata->uid = 0;
 
-   /* evaluate the tokens */
-   spaminess = eval_tokens(sdata, state, cfg);
+   spaminess = evaluateTokens(sdata, state, cfg);
 
    /* restore saved uid */
    if(cfg->group_type == GROUP_SHARED) sdata->uid = saved_uid;
@@ -304,14 +264,10 @@ float bayes_file(struct session_data *sdata, struct _state *state, struct __conf
 
 
 int trainMessage(struct session_data *sdata, struct _state *state, int rounds, int is_spam, int train_mode, struct __config *cfg){
-#ifdef HAVE_SQLITE3
-   char *err=NULL;
-#endif
 #ifdef HAVE_MYDB
    int rc;
 #endif
    int i=0, tm=train_mode, saved_uid = sdata->uid;
-   char buf[SMALLBUFSIZE];
    float spaminess = DEFAULT_SPAMICITY;
 
    if(counthash(state->token_hash) <= 0) return 0;
@@ -327,67 +283,38 @@ int trainMessage(struct session_data *sdata, struct _state *state, int rounds, i
 
    if(cfg->group_type == GROUP_SHARED) sdata->uid = 0;
 
-#ifdef HAVE_MYSQL
+
+#ifndef HAVE_MYDB
    introduceTokens(sdata, state->token_hash); 
 #endif
 
    for(i=0; i<rounds; i++){
-   #ifdef HAVE_MYSQL
-      updateTokenCounters(sdata, is_spam, state->token_hash, T_TOE);
-   #endif
-   #ifdef HAVE_SQLITE3
-      my_walk_hash(sdata->db, is_spam, state->token_hash, tm);
-   #endif
+
+      /* first, update the counters */
+
    #ifdef HAVE_MYDB
       my_walk_hash(cfg->mydbfile, sdata->mhash, is_spam, state->token_hash, tm);
    #else
+      updateTokenCounters(sdata, is_spam, state->token_hash, T_TOE);
+      updateMiscTable(sdata, is_spam, T_TOE);
 
-      /* update the t_misc table */
-
-      if(is_spam == 1)
-         snprintf(buf, SMALLBUFSIZE-1, "UPDATE %s SET nspam=nspam+1 WHERE uid=%ld", SQL_MISC_TABLE, sdata->uid);
-      else
-         snprintf(buf, SMALLBUFSIZE-1, "UPDATE %s SET nham=nham+1 WHERE uid=%ld", SQL_MISC_TABLE, sdata->uid);
-   #endif
-
-   #ifdef HAVE_MYSQL
-      mysql_real_query(&(sdata->mysql), buf, strlen(buf));
-   #endif
-   #ifdef HAVE_SQLITE3
-      sqlite3_exec(sdata->db, buf, NULL, NULL, &err);
-   #endif
-
-      /* fix the message counters if it was a TUM training */
+      /* fix counters if it was a TUM training */
 
       if(tm == T_TUM){
-         if(is_spam == 1)
-            snprintf(buf, SMALLBUFSIZE-1, "UPDATE %s SET nham=nham-1 WHERE uid=%ld AND nham > 0", SQL_MISC_TABLE, sdata->uid);
-         else
-            snprintf(buf, SMALLBUFSIZE-1, "UPDATE %s SET nspam=nspam-1 WHERE uid=%ld AND nspam > 0", SQL_MISC_TABLE, sdata->uid);
-
-      #ifdef HAVE_MYSQL
-         mysql_real_query(&(sdata->mysql), buf, strlen(buf));
-
          updateTokenCounters(sdata, is_spam, state->token_hash, T_TUM);
-      #endif
-      #ifdef HAVE_SQLITE3
-         sqlite3_exec(sdata->db, buf, NULL, NULL, &err);
-      #endif
+         updateMiscTable(sdata, is_spam, T_TUM);
       }
-
-
-      /* query the new spamicity value in this round */
-
-   #ifdef HAVE_MYSQL
-      spaminess = bayes_file(sdata, state, cfg);
    #endif
-   #ifdef HAVE_SQLITE3
-      spaminess = bayes_file(sdata, state, cfg);
-   #endif
+
+
+      /* then, query the new spamicity value */
+
    #ifdef HAVE_MYDB
       rc = init_mydb(cfg->mydbfile, sdata);
       if(rc == 1) spaminess = bayes_file(sdata, state, cfg);
       close_mydb(sdata->mhash);
+   #else
+      spaminess = bayes_file(sdata, state, cfg);
    #endif
 
       if(cfg->verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: training round: %d, spaminess: %0.4f", sdata->ttmpfile, i, spaminess);

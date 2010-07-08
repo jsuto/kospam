@@ -100,7 +100,6 @@ install-includes:
 	$(INSTALL) -m 0644 hash.h $(DESTDIR)$(includedir)/clapf
 	$(INSTALL) -m 0644 config.h $(DESTDIR)$(includedir)/clapf
 	$(INSTALL) -m 0644 ../clapf-config.h $(DESTDIR)$(includedir)/clapf
-	$(INSTALL) -m 0644 sql.h $(DESTDIR)$(includedir)/clapf
 	$(INSTALL) -m 0644 errmsg.h $(DESTDIR)$(includedir)/clapf
 	$(INSTALL) -m 0644 smtpcodes.h $(DESTDIR)$(includedir)/clapf
 	$(INSTALL) -m 0644 messages.h $(DESTDIR)$(includedir)/clapf

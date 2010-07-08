@@ -10,7 +10,6 @@
 #include <bayes.h>
 #include <errmsg.h>
 #include <messages.h>
-#include <sql.h>
 #include <smtpcodes.h>
 #include <session.h>
 #include <buffer.h>
@@ -25,8 +24,12 @@
    #include "memc.h"
 #endif
 
+struct te getHamSpamCounters(struct session_data *sdata, char *stmt);
+int update_hash(struct session_data *sdata, char *qry, struct node *xhash[]);
+
 int introduceTokens(struct session_data *sdata, struct node *xhash[]);
 int updateTokenCounters(struct session_data *sdata, int ham_or_spam, struct node *xhash[], int train_mode);
+int updateMiscTable(struct session_data *sdata, int ham_or_spam, int train_mode);
 int updateTokenTimestamps(struct session_data *sdata, struct node *xhash[]);
 
 #ifdef HAVE_ANTIVIRUS

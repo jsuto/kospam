@@ -20,28 +20,19 @@
 #include "parser.h"
 #include "errmsg.h"
 #include "messages.h"
-#include "sql.h"
 #include "score.h"
 #include "buffer.h"
 #include "config.h"
 
 
-/*
- * query the number of occurances from SQLite3 table
- */
-
-struct te sqlite3_qry(sqlite3 *db, char *token){
-   struct te TE;
-   char stmt[MAXBUFSIZE];
-   unsigned long long hash = APHash(token);
+struct te getHamSpamCounters(struct session_data *sdata, char *stmt){
    sqlite3_stmt *pStmt;
    const char **pzTail=NULL;
+   struct te TE;
 
    TE.nham = TE.nspam = 0;
 
-   snprintf(stmt, MAXBUFSIZE-1, "SELECT nham, nspam FROM %s WHERE token=%llu", SQL_TOKEN_TABLE, hash);
-
-   if(sqlite3_prepare_v2(db, stmt, -1, &pStmt, pzTail) != SQLITE_OK) return TE;
+   if(sqlite3_prepare_v2(sdata->db, stmt, -1, &pStmt, pzTail) != SQLITE_OK) return TE;
 
    while(sqlite3_step(pStmt) == SQLITE_ROW){
       TE.nham += sqlite3_column_int(pStmt, 0);
@@ -54,13 +45,13 @@ struct te sqlite3_qry(sqlite3 *db, char *token){
 }
 
 
-int update_hash(sqlite3 *db, char *qry, struct node *xhash[]){
+int update_hash(struct session_data *sdata, char *qry, struct node *xhash[]){
    sqlite3_stmt *pStmt;
    const char **pzTail=NULL;
    float nham, nspam;
    unsigned long long token;
 
-   if(sqlite3_prepare_v2(db, qry, -1, &pStmt, pzTail) != SQLITE_OK) return 0;
+   if(sqlite3_prepare_v2(sdata->db, qry, -1, &pStmt, pzTail) != SQLITE_OK) return 0;
 
    while(sqlite3_step(pStmt) == SQLITE_ROW){
       token = strtoull((char *)sqlite3_column_blob(pStmt, 0), NULL, 10);
@@ -71,6 +62,145 @@ int update_hash(sqlite3 *db, char *qry, struct node *xhash[]){
    }
 
    sqlite3_finalize(pStmt);
+
+   return 1;
+}
+
+
+int introduceTokens(struct session_data *sdata, struct node *xhash[]){
+   int i, n=0, ret=0;
+   time_t cclock;
+   unsigned long now;
+   char *err=NULL, s[SMALLBUFSIZE];
+   struct node *q;
+   buffer *query;
+
+   if(counthash(xhash) <= 0) return 0;
+
+   query = buffer_create(NULL);
+   if(!query) return 0;
+
+   snprintf(s, SMALLBUFSIZE-1, "SELECT token, nham, nspam FROM %s WHERE token in (", SQL_TOKEN_TABLE);
+   buffer_cat(query, s);
+
+   for(i=0; i<MAXHASH; i++){
+      q = xhash[i];
+      while(q != NULL){
+         if(n) snprintf(s, SMALLBUFSIZE-1, ",%llu", q->key);
+         else snprintf(s, SMALLBUFSIZE-1, "%llu", q->key);
+
+         buffer_cat(query, s);
+         n++;
+
+         q = q->r;
+      }
+   }
+
+   buffer_cat(query, ")");
+
+   update_hash(sdata, query->data, xhash);
+
+   buffer_destroy(query);
+
+
+   query = buffer_create(NULL);
+   if(!query) return ret;
+
+   buffer_cat(query, "BEGIN;");
+
+   time(&cclock);
+   now = cclock;
+
+   n = 0;
+
+   for(i=0; i<MAXHASH; i++){
+      q = xhash[i];
+      while(q != NULL){
+         if(q->nham + q->nspam == 0){
+            snprintf(s, SMALLBUFSIZE-1, "INSERT INTO %s (token, nham, nspam, timestamp) VALUES(%llu,0,0,%ld);", SQL_TOKEN_TABLE, q->key, now);
+
+            buffer_cat(query, s);
+            n++;
+         }
+
+         q = q->r;
+      }
+   }
+
+   buffer_cat(query, "COMMIT;");
+
+   
+   if((sqlite3_exec(sdata->db, query->data, NULL, NULL, &err)) == SQLITE_OK) ret = 1;
+
+   buffer_destroy(query);
+
+   return ret;
+}
+
+
+int updateTokenCounters(struct session_data *sdata, int ham_or_spam, struct node *xhash[], int train_mode){
+   int i, n=0;
+   char *err=NULL, s[SMALLBUFSIZE];
+   struct node *q;
+   buffer *query;
+
+   if(counthash(xhash) <= 0) return 0;
+
+   query = buffer_create(NULL);
+   if(!query) return n;
+
+   if(ham_or_spam == 1){
+      if(train_mode == T_TUM) snprintf(s, SMALLBUFSIZE-1, "UPDATE %s SET nham=nham-1 WHERE token IN (", SQL_TOKEN_TABLE);
+      else snprintf(s, SMALLBUFSIZE-1, "UPDATE %s SET nspam=nspam+1 WHERE token IN (", SQL_TOKEN_TABLE); 
+   } else {
+      if(train_mode == T_TUM) snprintf(s, SMALLBUFSIZE-1, "UPDATE %s SET nspam=nspam-1 WHERE token IN (", SQL_TOKEN_TABLE); 
+      else snprintf(s, SMALLBUFSIZE-1, "UPDATE %s SET nham=nham+1 WHERE token IN (", SQL_TOKEN_TABLE);
+   }
+
+   buffer_cat(query, s);
+
+   for(i=0; i<MAXHASH; i++){
+      q = xhash[i];
+      while(q != NULL){
+         if(n) snprintf(s, SMALLBUFSIZE-1, ",%llu", q->key);
+         else snprintf(s, SMALLBUFSIZE-1, "%llu", q->key);
+
+         buffer_cat(query, s);
+
+         q = q->r;
+         n++;
+      }
+   }
+
+   buffer_cat(query, ")");
+
+   if(train_mode == T_TUM){
+      if(ham_or_spam == 1) buffer_cat(query, " AND nham > 0");
+      else buffer_cat(query, " AND nspam > 0");
+   }
+
+   sqlite3_exec(sdata->db, query->data, NULL, NULL, &err);
+
+   buffer_destroy(query);
+
+   sqlite3_exec(sdata->db, s, NULL, NULL, &err);
+
+   return 1;
+}
+
+
+int updateMiscTable(struct session_data *sdata, int ham_or_spam, int train_mode){
+   char *err=NULL, s[SMALLBUFSIZE];
+
+   if(ham_or_spam == 1){
+      if(train_mode == T_TUM) snprintf(s, SMALLBUFSIZE-1, "UPDATE %s SET nham=nham-1 WHERE uid=%ld AND nham > 0", SQL_MISC_TABLE, sdata->uid);
+      else snprintf(s, SMALLBUFSIZE-1, "UPDATE %s SET nspam=nspam+1 WHERE uid=%ld", SQL_MISC_TABLE, sdata->uid);
+   } else {
+      if(train_mode == T_TUM) snprintf(s, SMALLBUFSIZE-1, "UPDATE %s SET nspam=nspam-1 WHERE uid=%ld AND nspam > 0", SQL_MISC_TABLE, sdata->uid);
+      else snprintf(s, SMALLBUFSIZE-1, "UPDATE %s SET nham=nham+1 WHERE uid=%ld", SQL_MISC_TABLE, sdata->uid);
+   }
+
+   sqlite3_exec(sdata->db, s, NULL, NULL, &err);
 
    return 1;
 }
@@ -119,77 +249,6 @@ int updateTokenTimestamps(struct session_data *sdata, struct node *xhash[]){
       n = -1;
 
    buffer_destroy(query);
-
-   return n;
-}
-
-
-
-/*
- * updates the counter of (or inserts) the given token in the token table
- */
-
-int do_sqlite3_qry(sqlite3 *db, int ham_or_spam, char *token, int train_mode, unsigned long timestamp){
-   char stmt[MAXBUFSIZE], puf[SMALLBUFSIZE], *err=NULL;
-   struct te TE;
-   unsigned long long hash = APHash(token);
-
-   memset(puf, 0, SMALLBUFSIZE);
-
-   TE = sqlite3_qry(db, token);
-
-   /* update token entry ... */
-
-   if(TE.nham + TE.nspam > 0){
-      if(ham_or_spam == 1){
-         if(train_mode == T_TUM && TE.nham > 0) snprintf(puf, SMALLBUFSIZE-1, ", nham=nham-1");
-         snprintf(stmt, MAXBUFSIZE-1, "UPDATE %s SET nspam=nspam+1%s WHERE token=%llu", SQL_TOKEN_TABLE, puf, hash);
-      }
-      else {
-         if(train_mode == T_TUM && TE.nspam > 0) snprintf(puf, SMALLBUFSIZE-1, ", nspam=nspam-1");
-         snprintf(stmt, MAXBUFSIZE-1, "UPDATE %s SET nham=nham+1%s WHERE token=%llu", SQL_TOKEN_TABLE, puf, hash);
-      }
-   }
-
-   /* ... or insert token entry */
-
-   else {
-      if(ham_or_spam == 1)
-         TE.nspam = 1;
-      else
-         TE.nham = 1;
-
-      snprintf(stmt, MAXBUFSIZE-1, "INSERT INTO %s (token, nham, nspam, timestamp) VALUES(%llu, %d, %d, %ld)", SQL_TOKEN_TABLE, hash, TE.nham, TE.nspam, timestamp);
-   }
-
-   sqlite3_exec(db, stmt, NULL, NULL, &err);
-   
-   return 0;
-}
-
-
-/*
- * walk through the hash table and add/update its elements in sql table
- */
-
-int my_walk_hash(sqlite3 *db, int ham_or_spam, struct node *xhash[], int train_mode){
-   int i, n=0;
-   time_t cclock;
-   unsigned long now;
-   struct node *q;
-
-   time(&cclock);
-   now = cclock;
-
-   for(i=0; i<MAXHASH; i++){
-      q = xhash[i];
-      while(q != NULL){
-         do_sqlite3_qry(db, ham_or_spam, q->str, train_mode, now);
-         
-         q = q->r;
-         n++;
-      }
-   }
 
    return n;
 }

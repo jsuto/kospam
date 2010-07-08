@@ -20,7 +20,6 @@
 #include "parser.h"
 #include "errmsg.h"
 #include "messages.h"
-#include "sql.h"
 #include "buffer.h"
 #include "score.h"
 #include "defs.h"
@@ -50,19 +49,15 @@ unsigned long get_uid(MYSQL mysql, char *stmt){
 }
 
 
-/*
- * get the total number of ham and spam
- */
-
-struct te getNumberOfHamSpamMessages(MYSQL mysql, char *stmt){
+struct te getHamSpamCounters(struct session_data *sdata, char *stmt){
    struct te TE;
    MYSQL_RES *res;
    MYSQL_ROW row;
 
    TE.nham = TE.nspam = 0;
 
-   if(mysql_real_query(&mysql, stmt, strlen(stmt)) == 0){
-      res = mysql_store_result(&mysql);
+   if(mysql_real_query(&(sdata->mysql), stmt, strlen(stmt)) == 0){
+      res = mysql_store_result(&(sdata->mysql));
       if(res != NULL){
          while((row = mysql_fetch_row(res))){
             TE.nham += atof(row[0]);
@@ -220,6 +215,23 @@ int updateTokenCounters(struct session_data *sdata, int ham_or_spam, struct node
    mysql_real_query(&(sdata->mysql), query->data, strlen(query->data));
 
    buffer_destroy(query);
+
+   return 1;
+}
+
+
+int updateMiscTable(struct session_data *sdata, int ham_or_spam, int train_mode){
+   char s[SMALLBUFSIZE];
+
+   if(ham_or_spam == 1){
+      if(train_mode == T_TUM) snprintf(s, SMALLBUFSIZE-1, "UPDATE %s SET nham=nham-1 WHERE uid=%ld AND nham > 0", SQL_MISC_TABLE, sdata->uid);
+      else snprintf(s, SMALLBUFSIZE-1, "UPDATE %s SET nspam=nspam+1 WHERE uid=%ld", SQL_MISC_TABLE, sdata->uid);
+   } else {
+      if(train_mode == T_TUM) snprintf(s, SMALLBUFSIZE-1, "UPDATE %s SET nspam=nspam-1 WHERE uid=%ld AND nspam > 0", SQL_MISC_TABLE, sdata->uid);
+      else snprintf(s, SMALLBUFSIZE-1, "UPDATE %s SET nham=nham+1 WHERE uid=%ld", SQL_MISC_TABLE, sdata->uid);
+   }
+
+   mysql_real_query(&(sdata->mysql), s, strlen(s));
 
    return 1;
 }

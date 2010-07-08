@@ -299,7 +299,7 @@ void handleSession(int new_sd, struct __data *data, struct __config *cfg){
 
 
             #ifdef HAVE_SQLITE3
-               update_counters(&sdata, data, &counters, cfg);
+               updateCounters(&sdata, data, &counters, cfg);
             #endif
 
 

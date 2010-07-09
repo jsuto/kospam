@@ -260,12 +260,13 @@ void translateLine(unsigned char *p, struct _state *state){
          q = p;
       }
 
+      if(state->message_state == MSG_SUBJECT && *p == '%'){ continue; }
+
       if(state->message_state != MSG_BODY && (*p == '.' || *p == '-') ){ continue; }
 
       if(strncasecmp((char *)p, "http://", 7) == 0){ p += 7; url = 1; continue; }
       if(strncasecmp((char *)p, "https://", 8) == 0){ p += 8; url = 1; continue; }
 
-      //if(url == 1 && *p != ' ' && *p == '.' && isalnum(*p) && *p != '\r' && *p != '\n') continue;
       if(url == 1 && (*p == '.' || *p == '-' || *p == '_' || isalnum(*p)) ) continue;
 
       if(url == 1) url = 0;
@@ -524,13 +525,13 @@ void getTLDFromName(char *name){
 
 
 int isItemOnList(char *item, char *list){
-   char *p, *q, w[SMALLBUFSIZE];
+   char *p, *q, w[SMALLBUFSIZE], my_list[SMALLBUFSIZE];
 
-   if(!item || !list) return 0;
+   if(!item) return 0;
 
-   if(strncmp(item, "127.", 4) == 0 || strncmp(item, "192.168.", 8) == 0 || strncmp(item, "10.", 3) == 0 || strncmp(item, "172.16.", 7) == 0) return 0;
+   snprintf(my_list, SMALLBUFSIZE-1, "127.,192.168.,172.16.,10.,%s", list);
 
-   p = list;
+   p = my_list;
 
    do {
       p = split(p, ',', w, SMALLBUFSIZE-1);

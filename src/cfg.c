@@ -1,5 +1,5 @@
 /*
- * cfg.c, 2010.05.17, SJ
+ * cfg.c, SJ
  */
 
 #include <stdio.h>
@@ -143,7 +143,6 @@ struct _parse_rule config_parse_rules[] =
    { "spam_smtp_addr", "string", (void*) string_parser, offsetof(struct __config, spam_smtp_addr), "127.0.0.1", MAXVAL-1},
    { "spam_smtp_port", "integer", (void*) int_parser, offsetof(struct __config, spam_smtp_port), "10026", sizeof(int)},
    { "quarantine_dir", "string", (void*) string_parser, offsetof(struct __config, quarantine_dir), "", MAXVAL-1},
-   { "skipped_received_hosts", "string", (void*) string_parser, offsetof(struct __config, skipped_received_hosts), "localhost$", MAXVAL-1},
    { "skipped_received_ips", "string", (void*) string_parser, offsetof(struct __config, skipped_received_ips), "127.0.0.1$", MAXVAL-1},
    { "spamc_user", "string", (void*) string_parser, offsetof(struct __config, spamc_user), "spamc", MAXVAL-1},
    { "spamd_addr", "string", (void*) string_parser, offsetof(struct __config, spamd_addr), "127.0.0.1", MAXVAL-1},

@@ -1,5 +1,5 @@
 /*
- * rbl.c, 2010.05.10, SJ
+ * rbl.c, SJ
  */
 
 #include <stdio.h>

@@ -91,7 +91,7 @@ struct _state parseMessage(struct session_data *sdata, struct __config *cfg){
  */
 
 int parseLine(char *buf, struct _state *state, struct session_data *sdata, struct __config *cfg){
-   char *p, *q, puf[MAXBUFSIZE], muf[MAXBUFSIZE], u[SMALLBUFSIZE], token[MAX_TOKEN_LEN], phrase[MAX_TOKEN_LEN];
+   char *p, *q, puf[MAXBUFSIZE], muf[MAXBUFSIZE], u[SMALLBUFSIZE], token[MAX_TOKEN_LEN], phrase[MAX_TOKEN_LEN], triplet[3*MAX_TOKEN_LEN];
    int i=0, x, b64_len;
 
    memset(token, 0, MAX_TOKEN_LEN);
@@ -342,7 +342,7 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
          q = puf;
          do {
             q = split_str(q, "http://", u, SMALLBUFSIZE-1);
-            if(strlen(u) > 2){
+            if(strlen(u) > 2 && strncasecmp(u, "www.w3.org", 10) ){
                snprintf(muf, MAXBUFSIZE-1, "http://%s", u);
 
                fixURL(muf);
@@ -450,8 +450,15 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
 
       if(state->is_header == 0) state->n_body_token++;
 
+      if(state->message_state == MSG_SUBJECT && state->n_subject_token > 1){
+         snprintf(triplet, 3*MAX_TOKEN_LEN-1, "%s+%s", phrase, puf);
+         addnode(state->token_hash, triplet, DEFAULT_SPAMICITY, 0);
+      }
+
       if(((state->is_header == 1 && state->n_chain_token > 1) || state->n_body_token > 1) && strlen(token) >= MIN_WORD_LEN && state->message_state != MSG_CONTENT_TYPE){
-         snprintf(phrase, MAX_TOKEN_LEN-1, "%s+%s", token, muf);
+         if(state->message_state == MSG_SUBJECT) snprintf(phrase, MAX_TOKEN_LEN-1, "%s+%s", token, puf);
+         else snprintf(phrase, MAX_TOKEN_LEN-1, "%s+%s", token, muf);
+
          addnode(state->token_hash, phrase, DEFAULT_SPAMICITY, 0);
       }
       snprintf(token, MAX_TOKEN_LEN-1, "%s", muf);

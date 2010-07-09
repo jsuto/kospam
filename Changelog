@@ -1,5 +1,29 @@
 0.4.5-rc2:
 
+2010.07.09, SJ
+
+The following list is explicitly added to the skipped_received_ips
+option: "127.,10.,192.168.,172.16.". The skipped_received_hosts
+options is removed.
+
+The percent (%) character is now part of the 'Subject*' tokens.
+
+Modified the parser to produce even triplets from the Subject line, ie.
+from the line "Subject: 80% Sale invitation for Henry" you will get eg.:
+
+Subject*80%+sale+invitation
+Subject*sale+invitation+for
+Subject*invitation+for+henry
+
+Also note that I changed the parser to simplify the Subject token pairs.
+Until this you got eg. "Subject*sale+Subject*invitation", however from
+now it reduced to only "Subject*sale+invitation". This change means that
+you will lose your current token pairs in the Subject line, however I
+expect that - at worst case - it will cause a slight and temporary
+drop in the accuracy.
+
+Exclude www.w3.org from the URL* tokens.
+
 2010.07.08, SJ
 
 Faster training by mass creating new tokens in the SQL database.

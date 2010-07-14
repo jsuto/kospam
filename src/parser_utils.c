@@ -260,7 +260,11 @@ void translateLine(unsigned char *p, struct _state *state){
          q = p;
       }
 
+      if( (state->message_state == MSG_RECEIVED || state->message_state == MSG_FROM || state->message_state == MSG_TO) && *p == '@'){ continue; }
+
       if(state->message_state == MSG_SUBJECT && *p == '%'){ continue; }
+
+      if(state->message_state == MSG_CONTENT_TYPE && *p == '_' ){ continue; }
 
       if(state->message_state != MSG_BODY && (*p == '.' || *p == '-') ){ continue; }
 
@@ -397,10 +401,6 @@ int isHexNumber(char *p){
    return 1;
 }
 
-
-/*
- * fix a long URL
- */
 
 void fixURL(char *url){
    char *p, *q, m[MAX_TOKEN_LEN], fixed_url[MAXBUFSIZE];

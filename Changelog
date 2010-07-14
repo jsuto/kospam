@@ -1,5 +1,17 @@
 0.4.5-rc2:
 
+2010.07.13, SJ
+
+From now the parser does not tokenize the skipped Received: lines,
+and includes the @ sign as part of a token, and excludes email
+addresses from the token hash. We only tokenize the sending hostname
+and IP-address, and skip the rest of the Received: tokens.
+
+The parser skips email addresses from To: lines. The reasoning behind
+this is that the recipient's (=your) email address is relatively the
+same for both ham and spam messages. However the 'undisclosed-recipient'
+is a very telling token, just as the names in the To: line.
+
 2010.07.09, SJ
 
 The following list is explicitly added to the skipped_received_ips

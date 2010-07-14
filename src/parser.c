@@ -212,6 +212,9 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
    }
 
 
+   if(state->message_state > 0 && state->message_state <= MSG_SUBJECT && state->message_rfc822 == 1) state->message_rfc822 = 0;
+
+
    /* check for textual base64 encoded part, 2005.03.25, SJ */
 
    if(state->message_state == MSG_CONTENT_TRANSFER_ENCODING){
@@ -269,7 +272,7 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
 
    /* fix encoded From:, To: and Subject: lines, 2008.11.24, SJ */
 
-   if(state->message_state == MSG_FROM || state->message_state == MSG_FROM || state->message_state == MSG_SUBJECT) fixupEncodedHeaderLine(buf);
+   if(state->message_state == MSG_FROM || state->message_state == MSG_TO || state->message_state == MSG_SUBJECT) fixupEncodedHeaderLine(buf);
 
 
    /* fix soft breaks with quoted-printable decoded stuff, 2006.03.01, SJ */
@@ -333,7 +336,7 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
    else p = buf;
 
    if(cfg->debug == 1) printf("%s\n", buf);
-   //if(cfg->debug == 1) printf("%d %d/%d/%d %s\n", state->is_header, state->message_state, state->utf8, state->qp, buf);
+   //if(cfg->debug == 1) printf("%d %d/%d/%d %ld/%ld %s\n", state->is_header, state->message_state, state->utf8, state->qp, state->l_shit, state->c_shit, buf);
 
    do {
       p = split(p, DELIMITER, puf, MAXBUFSIZE-1);
@@ -342,7 +345,14 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
          q = puf;
          do {
             q = split_str(q, "http://", u, SMALLBUFSIZE-1);
-            if(strlen(u) > 2 && strncasecmp(u, "www.w3.org", 10) ){
+
+            if(u[strlen(u)-1] == '.') u[strlen(u)-1] = '\0';
+
+            if(strlen(u) > 2 && strncasecmp(u, "www.w3.org", 10) && strchr(u, '.') ){
+
+               snprintf(muf, MAXBUFSIZE-1, "URL%%%s", u);
+               addnode(state->token_hash, muf, DEFAULT_SPAMICITY, 0);
+
                snprintf(muf, MAXBUFSIZE-1, "http://%s", u);
 
                fixURL(muf);
@@ -365,8 +375,10 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
          continue;
       }
 
+      /* skip email addresses from the To: line, however keep the 'undisclosed-recipient' part */
+      if(state->message_state == MSG_TO && strchr(puf, '@') ) continue;
 
-      /* fixup Received: line tokens, 2010.05.13, SJ */
+
 
       if(state->message_state == MSG_RECEIVED){
          x = puf[strlen(puf)-1];
@@ -402,17 +414,12 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
             }
          }
 
+         /* 
+          * we are interested in the hostname and IP-address of the
+          * sending host so skip the rest, eg. email addresses, ...
+          */
 
-         /* truncate long Received: line tokens */
-
-         if(strlen(puf) > MAX_WORD_LEN){
-            fixFQDN(puf);
-
-            snprintf(muf, MAXBUFSIZE-1, "HEADER*%s", puf);
-            addnode(state->token_hash, muf, DEFAULT_SPAMICITY, 0);
-            state->n_token++;
-         }
-
+         continue;
       }
 
 
@@ -450,13 +457,13 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
 
       if(state->is_header == 0) state->n_body_token++;
 
-      if(state->message_state == MSG_SUBJECT && state->n_subject_token > 1){
+      if(state->message_state == MSG_SUBJECT && state->n_subject_token > 2){
          snprintf(triplet, 3*MAX_TOKEN_LEN-1, "%s+%s", phrase, puf);
          addnode(state->token_hash, triplet, DEFAULT_SPAMICITY, 0);
       }
 
       if(((state->is_header == 1 && state->n_chain_token > 1) || state->n_body_token > 1) && strlen(token) >= MIN_WORD_LEN && state->message_state != MSG_CONTENT_TYPE){
-         if(state->message_state == MSG_SUBJECT) snprintf(phrase, MAX_TOKEN_LEN-1, "%s+%s", token, puf);
+         if(state->message_state == MSG_SUBJECT || state->message_state == MSG_FROM || state->message_state == MSG_TO) snprintf(phrase, MAX_TOKEN_LEN-1, "%s+%s", token, puf);
          else snprintf(phrase, MAX_TOKEN_LEN-1, "%s+%s", token, muf);
 
          addnode(state->token_hash, phrase, DEFAULT_SPAMICITY, 0);
@@ -468,8 +475,27 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
    } while(p);
 
 
-   /* prevent the next Received line to overwrite state.ip and state.hostname */
-   if(state->ipcnt == 1) state->ipcnt = 2;
+   /*
+    * prevent the next Received line to overwrite state.ip
+    * and state.hostname. Additionally add the sender's
+    * hostname and IP-address to the token list
+    */
+
+   if(state->ipcnt == 1){
+      state->ipcnt = 2;
+
+      if(strlen(state->hostname) > MAX_WORD_LEN) fixFQDN(state->hostname);
+
+      snprintf(muf, MAXBUFSIZE-1, "HEADER*%s", state->hostname);
+      addnode(state->token_hash, muf, DEFAULT_SPAMICITY, 0);
+      state->n_token++;
+
+      snprintf(muf, MAXBUFSIZE-1, "HEADER*%s", state->ip);
+      addnode(state->token_hash, muf, DEFAULT_SPAMICITY, 0);
+      state->n_token++;
+
+   }
+
 
    /* do not chain between individual headers, 2007.06.09, SJ */
    if(state->is_header == 1) state->n_chain_token = 0;

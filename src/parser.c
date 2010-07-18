@@ -116,6 +116,9 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
    }
 
 
+   trimBuffer(buf);
+
+
    /* skip the first line, if it's a "From <email address> date" format */
    if(state->line_num == 1 && strncmp(buf, "From ", 5) == 0) return 0;
 
@@ -149,7 +152,6 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
          else p = buf + 5;
 
          snprintf(state->from, SMALLBUFSIZE-1, "FROM*%s", p);
-         trimBuffer(state->from);
       }
 
 
@@ -177,7 +179,6 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
          p++;
          if(*p == ' ' || *p == '\t') p++;
          snprintf(state->attachments[state->n_attachments].type, SMALLBUFSIZE-1, "%s", p);
-         trimBuffer(state->attachments[state->n_attachments].type);
          p = strchr(state->attachments[state->n_attachments].type, ';');
          if(p) *p = '\0';
 
@@ -249,7 +250,7 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
       state->has_to_dump = 0;
 
       state->base64 = 0; state->textplain = 0; state->texthtml = 0;
-      state->html_comment = 0;
+      state->skip_html = 0;
       state->utf8 = 0;
       state->qp = 0;
 
@@ -285,23 +286,8 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
    if(state->base64 == 1) fixupBase64EncodedLine(buf, state);
 
 
-   /* handle html comments, 2007.06.07, SJ */
+   if(state->is_header == 0 && state->texthtml == 1) fixupHTML(buf, state, cfg);
 
-   if(state->texthtml == 1){
-      if(state->html_comment == 1 && strchr(buf, '>')) state->html_comment = 0;
-
-      if(state->is_header == 0 && strstr(buf, "<!")) state->html_comment = 1;
-
-      if(state->html_comment == 1){
-         q = strstr(buf, "<!");
-         if(q){
-            *q = '\0';
-
-            if(cfg->debug == 1)
-               printf("DISCARDED HTML: %s", ++q);
-         }
-      }
-   }
 
 
    if(state->message_state == MSG_BODY){
@@ -322,7 +308,6 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
 
    if(state->message_state == MSG_RECEIVED){
       i = 0;
-      trimBuffer(buf);
       if(buf[strlen(buf)-2] == ']' && buf[strlen(buf)-1] == ')'){
          i = 1;
       }

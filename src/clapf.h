@@ -65,6 +65,10 @@ int putUserdataToMemcached(struct session_data *sdata, struct __data *data, char
 int getPolicyFromMemcached(struct session_data *sdata, struct __data *data, struct __config *cfg, struct __config *my_cfg);
 int putPolicyToMemcached(struct session_data *sdata, struct __data *data, struct __config *cfg);
 
+void getUserFromEmailAddress(struct session_data *sdata, struct __data *data, char *email, struct __config *cfg);
+void getPolicySettings(struct session_data *sdata, struct __data *data, struct __config *cfg, struct __config *my_cfg);
+void checkZombieSender(struct session_data *sdata, struct __data *data, struct _state *state, struct __config *cfg);
+
 void updateCounters(struct session_data *sdata, struct __data *data, struct __counters *counters, struct __config *cfg);
 
 void initialiseZombieList(struct __data *data, struct __config *cfg);

@@ -36,8 +36,6 @@ int deliver_message=0;
 #endif
 
 
-/* query unix account info */
-
 void query_unix_account(struct session_data *sdata, char *username){
    struct passwd *pwd;
 
@@ -180,6 +178,7 @@ int main(int argc, char **argv, char **envp){
    struct timezone tz;
    struct timeval tv_start, tv_stop;
    struct _state state;
+   struct __data data;
    struct __config cfg;
    float spaminess=DEFAULT_SPAMICITY;
 #ifdef HAVE_LANG_DETECT
@@ -275,7 +274,6 @@ int main(int argc, char **argv, char **envp){
       return 0;
    }
 
-   /* read config file */
 
    cfg = read_config(configfile);
 
@@ -290,43 +288,24 @@ int main(int argc, char **argv, char **envp){
    setlocale(LC_CTYPE, cfg.locale);
 
 
-   /* read the 'FROM' environment variable if you have
-      not specified the -f cmdline switch */
+   /*
+    * read the 'FROM' environment variable if you have
+    * not specified the -f cmdline switch
+    */
 
    if(!from) from = getenv("FROM");
 
 
-   /* initialise session data */
-
-   sdata.fd = -1;
-
-   memset(sdata.ttmpfile, 0, SMALLBUFSIZE);
-   createClapfID(&(sdata.ttmpfile[0]));
-   unlink(sdata.ttmpfile);
-
-   memset(sdata.mailfrom, 0, SMALLBUFSIZE);
-   memset(sdata.client_addr, 0, IPLEN);
-
-   sdata.uid = -1;
-   sdata.tot_len = 0;
-   sdata.num_of_rcpt_to = 1;
-   sdata.skip_id_check = 0;
-   sdata.trapped_client = 0;
-   sdata.blackhole = 0;
-   sdata.need_signo_check = 0;
-   sdata.statistically_whitelisted = 0;
-
-   sdata.Nham = sdata.Nspam = 0;
-   memset(whitelistbuf, 0, SMALLBUFSIZE);
-   memset(sdata.name, 0, SMALLBUFSIZE);
-
-   for(i=0; i<MAX_RCPT_TO; i++) memset(sdata.rcptto[i], 0, SMALLBUFSIZE);
+   initSessionData(&sdata);
 
    if(recipient) snprintf(sdata.rcptto[0], SMALLBUFSIZE-1, "%s", recipient);
 
    memset(trainbuf, 0, SMALLBUFSIZE);
    memset(clapf_info, 0, MAXBUFSIZE);
 
+#ifdef HAVE_TRE
+   initialiseZombieList(&data, &cfg);
+#endif
 
    /* spamdrop is now setuid to clapf:clapf, so we can always get to the workdir */
    if(no_chdir == 0) i = chdir(cfg.workdir);
@@ -401,7 +380,6 @@ int main(int argc, char **argv, char **envp){
 
    /* skip spamicity check if message is too long, and we are not debugging nor training */
 
-   //if(print_message == 1 && sdata.tot_len > cfg.max_message_size_to_filter && cfg.debug == 0 && training_request == 0 && train_as_ham == 0 && train_as_spam == 0){
    if(print_message == 1 && cfg.max_message_size_to_filter > 0 && sdata.tot_len > cfg.max_message_size_to_filter && cfg.debug == 0 && training_request == 0 && train_as_ham == 0 && train_as_spam == 0){
 
       gettimeofday(&tv_stop, &tz);
@@ -480,21 +458,14 @@ int main(int argc, char **argv, char **envp){
    if(recipient) getUserdataFromEmail(&sdata, recipient, &cfg);
 #endif
 
-   /****************************/
-   /* handle training requests */
-   /****************************/
-
+   /*
+    * handle training requests
+    */
 
    if(training_request == 1 && (recipient || strlen(trainbuf) > 3)){
       rounds = MAX_ITERATIVE_TRAIN_LOOPS;
-
-      /* we don't have to qry the from address, as
-       * the user sends his email to user+spam@domain
-       * what postfix will write as user@domain
-       */
-      //getUserdataFromEmail(&sdata, from, &cfg);
-
       is_spam = 0;
+
       if(recipient && strcasestr(recipient, "+spam@")) is_spam = 1;
       if(strlen(trainbuf) > 3 && strcasestr(trainbuf, "+spam@")) is_spam = 1;
 
@@ -552,10 +523,13 @@ int main(int argc, char **argv, char **envp){
    /* parse message */
    state = parseMessage(&sdata, &cfg);
 
+   #ifdef HAVE_TRE
+      checkZombieSender(&sdata, &data, &state, &cfg);
+   #endif
 
-   /*******************************************************/
-   /* if this is a training request from the command line */
-   /***************************************************** */
+   /*
+    * if this is a training request from the command line
+    */
 
    if(train_as_ham == 1 || train_as_spam == 1){
       if(train_as_spam == 1) is_spam = 1;
@@ -568,14 +542,13 @@ int main(int argc, char **argv, char **envp){
 
    #ifdef HAVE_USERS
 
-   /*
-       cmdline training (as spam in these examples) can be done several ways:
-
-       spamdrop -S -f email@address < message
-       FROM=email@address spamdrop -S < message
-       spamdrop -S -U uid < message
-
-    */
+      /*
+       * cmdline training (as spam in these examples) can be done several ways:
+       *
+       * spamdrop -S -f email@address < message
+       * FROM=email@address spamdrop -S < message
+       * spamdrop -S -U uid < message
+       */
 
       if(from) getUserdataFromEmail(&sdata, from, &cfg);
       else if(u >= 0) sdata.uid = u;
@@ -642,6 +615,13 @@ int main(int argc, char **argv, char **envp){
          updateTokenTimestamps(&sdata, state.token_hash);
       #endif
       }
+
+
+   #ifdef HAVE_TRE
+      if(sdata.tre == '+'){
+         if(cfg.message_from_a_zombie == 1) spaminess = 0.99;
+      }
+   #endif
 
    #ifdef HAVE_LANG_DETECT
       lang = check_lang(state.token_hash);
@@ -748,9 +728,9 @@ ENDE_SPAMDROP:
    if(cfg.debug == 0 && cfg.verbosity > 0) syslog(LOG_PRIORITY, "%s: %.4f %d in %ld [ms]", sdata.ttmpfile, spaminess, sdata.tot_len, tvdiff(tv_stop, tv_start)/1000);
 
 
-   /********************************/
-   /* print message to stdout/pipe */
-   /********************************/
+   /*
+    * print message to stdout/pipe
+    */
 
    if(print_message == 1){
 

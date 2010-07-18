@@ -20,6 +20,8 @@ int attachment_by_type(struct _state *state, char *type);
 void fixupEncodedHeaderLine(char *buf);
 void fixupSoftBreakInQuotedPritableLine(char *buf, struct _state *state);
 void fixupBase64EncodedLine(char *buf, struct _state *state);
+void fixupHTML(char *buf, struct _state *state, struct __config *cfg);
+int isSkipHTMLTag(char *s);
 void translateLine(unsigned char *p, struct _state *state);
 void reassembleToken(char *p);
 void degenerateToken(unsigned char *p);

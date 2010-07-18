@@ -1,5 +1,5 @@
 /*
- * htmlentities.h, 2010.05.12, SJ
+ * htmlentities.h, SJ
  *
  * taken from dspam's src/decoder.c, then qsort()'ed:
 
@@ -11,12 +11,18 @@
 
  */
 
+
+#ifndef _HTMLENTITIES_H
+ #define _HTMLENTITIES_H
+
 #define NUM_OF_HTML_ENTITIES 258
 
 struct mi {
    unsigned int val;
    char *entity;
-} htmlentities[] = {
+};
+
+struct mi htmlentities[] = {
    { 198, "&AElig" },
    { 193, "&Aacute" },
    { 194, "&Acirc" },
@@ -277,4 +283,6 @@ struct mi {
    { 8204, "&zwnj" }
 };
 
+
+#endif /* _HTMLENTITIES_H */
 

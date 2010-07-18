@@ -1,5 +1,24 @@
 0.4.5-rc2:
 
+2010.07.16, SJ
+
+Introduced a html_tag array to define html tags to be skipped.
+Currently we skip "<html>, </html>, and </body>. So we an get
+rid of this ugly insanity of Word 11:
+
+<html xmlns:v=3D"urn:schemas-microsoft-com:vml" =
+xmlns:o=3D"urn:schemas-microsoft-com:office:office" =
+xmlns:w=3D"urn:schemas-microsoft-com:office:word" =
+xmlns:x=3D"urn:schemas-microsoft-com:office:excel" =
+xmlns:p=3D"urn:schemas-microsoft-com:office:powerpoint" =
+xmlns:a=3D"urn:schemas-microsoft-com:office:access" =
+.... >
+
+
+2010.07.15, SJ
+
+Modified the parser to skip html comments in a smarter way.
+
 2010.07.13, SJ
 
 From now the parser does not tokenize the skipped Received: lines,

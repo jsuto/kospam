@@ -1,5 +1,5 @@
 /*
- * antispam.c, 2010.05.19, SJ
+ * antispam.c, SJ
  */
 
 #include <stdio.h>
@@ -32,9 +32,51 @@
 #endif
 
 
-void getUserFromEmailAddress(struct session_data *sdata, struct __data *data, char *email, struct __config *cfg);
-void getPolicySettings(struct session_data *sdata, struct __data *data, struct __config *cfg, struct __config *my_cfg);
-void checkZombieSender(struct session_data *sdata, struct __data *data, struct _state *state, struct __config *cfg);
+void initSessionData(struct session_data *sdata){
+   int i;
+
+
+   sdata->fd = -1;
+
+   memset(sdata->ttmpfile, 0, SMALLBUFSIZE);
+   createClapfID(&(sdata->ttmpfile[0]));
+   unlink(sdata->ttmpfile);
+
+   memset(sdata->mailfrom, 0, SMALLBUFSIZE);
+   memset(sdata->name, 0, SMALLBUFSIZE);
+   memset(sdata->client_addr, 0, IPLEN);
+   memset(sdata->xforward, 0, SMALLBUFSIZE);
+
+   memset(sdata->clapf_id, 0, SMALLBUFSIZE);
+
+   sdata->uid = 0;
+   sdata->tot_len = 0;
+   sdata->skip_id_check = 0;
+   sdata->num_of_rcpt_to = 0;
+   sdata->trapped_client = 0;
+   sdata->blackhole = 0;
+   sdata->need_signo_check = 0;
+   sdata->training_request = 0;
+
+#ifdef HAVE_MAILBUF
+   sdata->message_size = sdata->mailpos = sdata->discard_mailbuf = 0;
+   memset(sdata->mailbuf, 0, MAILBUFSIZE);
+#endif
+
+   sdata->tre = '-';
+   sdata->statistically_whitelisted = 0;
+
+   sdata->rav = AVIR_OK;
+
+   sdata->__parsed = sdata->__av = sdata->__user = sdata->__policy = sdata->__as = sdata->__minefield = 0;
+   sdata->__training = sdata->__update = sdata->__store = sdata->__inject = sdata->__acquire = 0;
+
+   sdata->spaminess = DEFAULT_SPAMICITY;
+
+   for(i=0; i<MAX_RCPT_TO; i++) memset(sdata->rcptto[i], 0, SMALLBUFSIZE);
+
+   memset(sdata->rcpt_minefield, 0, MAX_RCPT_TO);
+}
 
 
 int processMessage(struct session_data *sdata, struct _state *sstate, struct __data *data, char *email, char *email2, struct __config *cfg, struct __config *my_cfg) {
@@ -114,13 +156,12 @@ int processMessage(struct session_data *sdata, struct _state *sstate, struct __d
       sdata->__user += tvdiff(tv2, tv1);
 
       /*
-        If not found, then try to get it from the RCPT TO address.
-
-        This may happen if your email address is xy@mail.domain.com,
-        but xy@domain.com is set in your email client application as
-        your email address.
-        In this case send training emails to xy+spam@mail.domain.com
-
+       * If not found, then try to get it from the RCPT TO address.
+       *
+       * This may happen if your email address is xy@mail.domain.com,
+       * but xy@domain.com is set in your email client application as
+       * your email address.
+       * In this case send training emails to xy+spam@mail.domain.com
        */
 
        if(sdata->name[0] == 0){
@@ -143,9 +184,10 @@ int processMessage(struct session_data *sdata, struct _state *sstate, struct __d
 
     #else
 
-       /* if you have not specified --with-userdb=.... then we don't know
-          much about the recipient, so you have to do the training with
-          spamdrop
+       /*
+        * if you have not specified --with-userdb=.... then we don't know
+        * much about the recipient, so you have to do the training with
+        * spamdrop
         */
 
        return 1;
@@ -161,8 +203,6 @@ int processMessage(struct session_data *sdata, struct _state *sstate, struct __d
     */
 
    if(my_cfg->use_antispam == 1 && (my_cfg->max_message_size_to_filter == 0 || sdata->tot_len < my_cfg->max_message_size_to_filter || sstate->n_token < my_cfg->max_number_of_tokens_to_filter) ){
-
-      /* evaluate the blackhole result, 2009.09.10, SJ */
 
    #ifdef HAVE_BLACKHOLE
       gettimeofday(&tv1, &tz);

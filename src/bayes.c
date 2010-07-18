@@ -117,7 +117,6 @@ double evaluateTokens(struct session_data *sdata, struct _state *state, struct _
 
    qry_spaminess(sdata, state, 1, cfg);
 
-   /* apply some penalties, 2009.06.01, SJ */
    add_penalties(sdata, state, cfg);
 
    spaminess = getSpamProbabilityChi2(state->token_hash, cfg);

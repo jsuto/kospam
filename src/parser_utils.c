@@ -19,7 +19,7 @@
 #include "boundary.h"
 #include "trans.h"
 #include "ijc.h"
-#include "parser.h"
+#include "html.h"
 #include "hash.h"
 #include "config.h"
 #include "defs.h"
@@ -43,7 +43,7 @@ void initState(struct _state *state){
 
    state->qp = 0;
 
-   state->html_comment = 0;
+   state->skip_html = 0;
 
    state->n_token = 0;
    state->n_body_token = 0;
@@ -196,13 +196,8 @@ void fixupSoftBreakInQuotedPritableLine(char *buf, struct _state *state){
       memset(state->qpbuf, 0, MAX_TOKEN_LEN);
    }
 
-   if(buf[strlen(buf)-2] == '='){
-      buf[strlen(buf)-2] = '\0';
-      i = 1;
-   }
-
-   if(buf[strlen(buf)-3] == '='){
-      buf[strlen(buf)-3] = '\0';
+   if(buf[strlen(buf)-1] == '='){
+      buf[strlen(buf)-1] = '\0';
       i = 1;
    }
 
@@ -244,9 +239,49 @@ void fixupBase64EncodedLine(char *buf, struct _state *state){
 }
 
 
-/*
- * translate buffer
- */
+void fixupHTML(char *buf, struct _state *state, struct __config *cfg){
+   char *p, *q, puf[MAXBUFSIZE], s[SMALLBUFSIZE];
+
+   memset(puf, 0, MAXBUFSIZE);
+
+   p = buf;
+   do {
+      p = split_str(p, "<", s, SMALLBUFSIZE-1);
+      if(s[0] == '!' || isSkipHTMLTag(s) == 1){
+         state->skip_html = 1;
+      }
+
+      if(state->skip_html == 1){
+         q = strchr(s, '>');
+
+         if(q){
+            *q = '\0';
+            strncat(puf, q+1, MAXBUFSIZE-1);
+            state->skip_html = 0;
+         }
+
+         if(cfg->debug == 1) printf("DISCARDED HTML: `%s'", s);
+      }
+      else {
+         strncat(puf, s, MAXBUFSIZE-1);
+      }
+
+   } while(p);
+
+   strcpy(buf, puf);
+}
+
+
+int isSkipHTMLTag(char *s){
+   int i=0;
+
+   for(i=0; i<NUM_OF_SKIP_TAGS; i++){
+      if(strncmp(s, skip_html_tags[i].entity, skip_html_tags[i].length) == 0) return 1;
+   }
+
+   return 0;
+}
+
 
 void translateLine(unsigned char *p, struct _state *state){
    int url=0;

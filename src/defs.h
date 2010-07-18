@@ -109,7 +109,7 @@ struct _state {
    int has_base64;
    int utf8;
    int qp;
-   int html_comment;
+   int skip_html;
    int ipcnt;
    int has_to_dump;
    int fd;

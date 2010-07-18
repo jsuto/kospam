@@ -31,7 +31,7 @@ MAKE = `which make`
 INSTALL = @INSTALL@
 
 am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
-	clapf-config.h stamp.h params.h
+	clapf-config.h stamp.h stamp-h1 params.h
 
 all: all-recursive
 install: installdirs install-recursive

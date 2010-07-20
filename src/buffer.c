@@ -1,5 +1,5 @@
 /*
- * buffer.c, 2008.01.20, SJ
+ * buffer.c, SJ
  * copied from the dspam project
  */
 
@@ -40,6 +40,7 @@ buffer *buffer_create(const char *s){
 
    return b;
 }
+
 
 int buffer_clear(buffer *b){
    if(b == NULL)

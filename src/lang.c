@@ -1,13 +1,11 @@
 /*
- * lang.c, 2009.01.08, SJ
+ * lang.c, SJ
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "misc.h"
-#include "parser.h"
-#include "hash.h"
+#include <clapf.h>
 #include "lang.h"
 
 

@@ -1,5 +1,5 @@
 /*
- * clamd.c, 2010.01.13, SJ
+ * clamd.c, SJ
  */
 
 #include <stdio.h>
@@ -14,10 +14,7 @@
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include "misc.h"
-#include "av.h"
-#include "defs.h"
-#include "config.h"
+#include <clapf.h>
 
 
 int clamd_scan(char *tmpfile, char *engine, char *avinfo, struct __config *cfg){

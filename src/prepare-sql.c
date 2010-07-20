@@ -1,5 +1,5 @@
 /*
- * prepare-sql.c, 2010.05.13, SJ
+ * prepare-sql.c, SJ
  */
 
 #include <stdio.h>
@@ -10,10 +10,7 @@
 #include <fcntl.h>
 #include <time.h>
 #include <unistd.h>
-#include "misc.h"
-#include "messages.h"
-#include "parser.h"
-#include "config.h"
+#include <clapf.h>
 
 
 #define MAX_HASH 74713
@@ -32,7 +29,7 @@ unsigned long nham=0, nspam=0;
    char *f;
 #endif
 
-void inithash(struct aaaa *xhash[MAX_HASH]){
+void _inithash(struct aaaa *xhash[MAX_HASH]){
    int i;
 
    for(i=0;i<MAX_HASH;i++)
@@ -40,7 +37,7 @@ void inithash(struct aaaa *xhash[MAX_HASH]){
 }
 
 
-void clearhash(struct aaaa *xhash[MAX_HASH]){
+void _clearhash(struct aaaa *xhash[MAX_HASH]){
    int i;
    struct aaaa *p, *q;
    time_t cclock;
@@ -104,11 +101,11 @@ void clearhash(struct aaaa *xhash[MAX_HASH]){
 }
 
 
-unsigned long hash(unsigned long long key){
+unsigned long _hash(unsigned long long key){
     return key % MAX_HASH;
 }
 
-struct aaaa *makenewnode(struct aaaa *xhash[MAX_HASH], unsigned long long key, unsigned int nham, unsigned int nspam){
+struct aaaa *_makenewnode(struct aaaa *xhash[MAX_HASH], unsigned long long key, unsigned int nham, unsigned int nspam){
    struct aaaa *h;
 
    if((h = malloc(sizeof(struct aaaa))) == NULL)
@@ -125,14 +122,14 @@ struct aaaa *makenewnode(struct aaaa *xhash[MAX_HASH], unsigned long long key, u
 }
 
 
-int addnode(struct aaaa *xhash[MAX_HASH], unsigned long long key, unsigned int nham, unsigned int nspam){
+int _addnode(struct aaaa *xhash[MAX_HASH], unsigned long long key, unsigned int nham, unsigned int nspam){
    struct aaaa *p=NULL, *q;
 
-   if(xhash[hash(key)] == NULL){
-      xhash[hash(key)] = makenewnode(xhash, key, nham, nspam);
+   if(xhash[_hash(key)] == NULL){
+      xhash[_hash(key)] = _makenewnode(xhash, key, nham, nspam);
    }
    else {
-      q = xhash[hash(key)];
+      q = xhash[_hash(key)];
       while(q != NULL){
          p = q;
          if(q->key == key){
@@ -143,7 +140,7 @@ int addnode(struct aaaa *xhash[MAX_HASH], unsigned long long key, unsigned int n
          else
             q = q->r;
       }
-      p->r = makenewnode(xhash, key, nham, nspam);
+      p->r = _makenewnode(xhash, key, nham, nspam);
    }
 
    return 1;
@@ -180,13 +177,13 @@ int main(int argc, char **argv){
    if(!fspam)
       __fatal("cannot open spam file");
 
-   inithash(tokens);
+   _inithash(tokens);
 
    while(fgets(buf, MAXBUFSIZE-1, fham)){
       trimBuffer(buf);
       if(strlen(buf) > 0){
          key = APHash(buf);
-         addnode(tokens, key, 1, 0);
+         _addnode(tokens, key, 1, 0);
       }
    }
    fclose(fham);
@@ -195,12 +192,12 @@ int main(int argc, char **argv){
       trimBuffer(buf);
       if(strlen(buf) > 0){
          key = APHash(buf);
-         addnode(tokens, key, 0, 1);
+         _addnode(tokens, key, 0, 1);
       }
    }
    fclose(fspam);
 
-   clearhash(tokens);
+   _clearhash(tokens);
 
    return 0;
 }

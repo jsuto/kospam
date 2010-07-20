@@ -23,19 +23,6 @@ extern int optind;
 int deliver_message=0;
 
 
-#ifdef HAVE_MYSQL
-   MYSQL_RES *res;
-   MYSQL_ROW row;
-#endif
-#ifdef HAVE_SQLITE3
-   sqlite3_stmt *pStmt;
-   const char **ppzTail=NULL;
-#endif
-#ifdef HAVE_MYDB
-   #include "mydb.h"
-#endif
-
-
 void query_unix_account(struct session_data *sdata, char *username){
    struct passwd *pwd;
 
@@ -344,7 +331,7 @@ int main(int argc, char **argv, char **envp){
 #ifndef HAVE_LIBCLAMAV
    char virusinfo[SMALLBUFSIZE];
 
-   if(do_av_check(&sdata, recipient, from, &virusinfo[0], &cfg) == AVIR_VIRUS){
+   if(do_av_check(&sdata, recipient, from, &virusinfo[0], &data, &cfg) == AVIR_VIRUS){
       syslog(LOG_PRIORITY, "%s: dropping infected message", sdata.ttmpfile);
       unlink(sdata.ttmpfile);
       return 0;
@@ -485,7 +472,7 @@ int main(int argc, char **argv, char **envp){
       /* determine the path of the original file */
 
       p = &path[0];
-      get_queue_path(&sdata, &p);
+      get_queue_path(&sdata, &p, &cfg);
 
 
       if(is_spam == 1){

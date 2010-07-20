@@ -5,7 +5,7 @@
 #ifndef _LIST_H
  #define _LIST_H
 
-#include "parser.h"
+#include "defs.h"
 
 int append_list(struct url **urls, char *p);
 struct url *createListItem(char *s);

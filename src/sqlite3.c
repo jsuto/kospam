@@ -13,16 +13,7 @@
 #include <time.h>
 #include <syslog.h>
 #include <sys/mman.h>
-#include <sqlite3.h>
-#include "misc.h"
-#include "hash.h"
-#include "decoder.h"
-#include "parser.h"
-#include "errmsg.h"
-#include "messages.h"
-#include "score.h"
-#include "buffer.h"
-#include "config.h"
+#include <clapf.h>
 
 
 struct te getHamSpamCounters(struct session_data *sdata, char *stmt){

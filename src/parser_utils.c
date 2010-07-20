@@ -13,16 +13,10 @@
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include "misc.h"
-#include "decoder.h"
-#include "list.h"
-#include "boundary.h"
+#include <clapf.h>
 #include "trans.h"
 #include "ijc.h"
 #include "html.h"
-#include "hash.h"
-#include "config.h"
-#include "defs.h"
 
 
 void initState(struct _state *state){

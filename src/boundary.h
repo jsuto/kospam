@@ -1,11 +1,9 @@
 /*
- * boundary.h, 2009.04.17, SJ
+ * boundary.h, SJ
  */
 
 #ifndef _BOUNDARY_H
  #define _BOUNDARY_H
-
-#include "parser.h"
 
 int append_boundary(struct boundary **boundaries, char *p);
 struct boundary *new_boundary(char *s);

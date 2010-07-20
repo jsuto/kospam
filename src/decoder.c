@@ -1,5 +1,5 @@
 /*
- * decoder.c, 2010.05.16, SJ
+ * decoder.c, SJ
  */
 
 #include <stdio.h>
@@ -9,6 +9,7 @@
 #include "decoder.h"
 #include "htmlentities.h"
 #include "config.h"
+
 
 static int b64[] = {
 
@@ -33,6 +34,7 @@ static int b64[] = {
      255, 255, 255, 255,   255, 255, 255, 255,   255, 255, 255, 255,  255, 255, 255, 255
 
 };
+
 
 static char hex_table[] = {
    0,  0,  0,  0,   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
@@ -64,10 +66,6 @@ static int compmi(const void *m1, const void *m2){
 }
 
 
-/*
- * sanitise base64 data
- */
-
 void sanitiseBase64(char *s){
    char *p1;
 
@@ -81,10 +79,6 @@ void sanitiseBase64(char *s){
    }
 }
 
-
-/*
- * base64 decode buffer
- */
 
 int decodeBase64(char *p){
    int i, j, n[4], k1, k2, len=0;
@@ -140,10 +134,6 @@ int decodeBase64(char *p){
 }
 
 
-/*
- * decode UTF-8 stuff
- */
-
 void decodeUTF8(char *p){
    int i, k=0, a, b;
    unsigned char c, c1, c2;
@@ -185,10 +175,6 @@ void decodeUTF8(char *p){
 }
 
 
-/*
- * decode Quoted-printable stuff
- */
-
 void decodeQP(char *p){
    int i, k=0, a, b;
    char c;
@@ -214,10 +200,6 @@ void decodeQP(char *p){
    p[k] = '\0';
 }
 
-
-/*
- * decode HTML encoded stuff
- */
 
 void decodeHTML(char *s){
    char *p;
@@ -259,10 +241,6 @@ void decodeHTML(char *s){
    s[k] = '\0';
 }
 
-
-/*
- * url decode buffer
- */
 
 void decodeURL(char *p){
    int i, c, k=0, a, b;

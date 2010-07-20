@@ -11,25 +11,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <syslog.h>
-#include "av.h"
 #include <clapf.h>
-
-
-#ifdef NEED_MYSQL
-   #include <mysql.h>
-#endif
-
-#ifdef NEED_SQLITE3
-   #include <sqlite3.h>
-#endif
-
-#ifdef NEED_LDAP
-   #include <ldap.h>
-#endif
-
-#ifdef HAVE_MYDB
-   #include "mydb.h"
-#endif
 
 
 void initSessionData(struct session_data *sdata){
@@ -79,7 +61,7 @@ void initSessionData(struct session_data *sdata){
 }
 
 
-int processMessage(struct session_data *sdata, struct _state *sstate, struct __data *data, char *email, char *email2, struct __config *cfg, struct __config *my_cfg) {
+int processMessage(struct session_data *sdata, struct _state *sstate, struct __data *data, char *rcpttoemail, char *fromemail, struct __config *cfg, struct __config *my_cfg){
    int is_spam = 0, utokens;
    char reason[SMALLBUFSIZE], resp[MAXBUFSIZE], tmpbuf[SMALLBUFSIZE], trainbuf[SMALLBUFSIZE], whitelistbuf[SMALLBUFSIZE];
    struct timezone tz;
@@ -91,7 +73,7 @@ int processMessage(struct session_data *sdata, struct _state *sstate, struct __d
 
 
 #ifdef HAVE_USERS
-   getUserFromEmailAddress(sdata, data, email, cfg);
+   getUserFromEmailAddress(sdata, data, rcpttoemail, cfg);
 #endif
 
 #ifdef HAVE_POLICY
@@ -102,12 +84,12 @@ int processMessage(struct session_data *sdata, struct _state *sstate, struct __d
    if(sdata->rav == AVIR_VIRUS){
       if(my_cfg->deliver_infected_email == 1) return 1;
 
-      snprintf(sdata->acceptbuf, SMALLBUFSIZE-1, "%s <%s>\r\n", SMTP_RESP_550_ERR_PREF, email);
+      snprintf(sdata->acceptbuf, SMALLBUFSIZE-1, "%s <%s>\r\n", SMTP_RESP_550_ERR_PREF, rcpttoemail);
 
       if(my_cfg->silently_discard_infected_email == 1)
-         snprintf(sdata->acceptbuf, SMALLBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata->ttmpfile, email);
+         snprintf(sdata->acceptbuf, SMALLBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata->ttmpfile, rcpttoemail);
       else
-         snprintf(sdata->acceptbuf, SMALLBUFSIZE-1, "550 %s %s\r\n", sdata->ttmpfile, email);
+         snprintf(sdata->acceptbuf, SMALLBUFSIZE-1, "550 %s %s\r\n", sdata->ttmpfile, rcpttoemail);
 
       return 0;
    }
@@ -126,7 +108,7 @@ int processMessage(struct session_data *sdata, struct _state *sstate, struct __d
 #ifdef HAVE_TRE
    checkZombieSender(sdata, data, sstate, cfg);
    if(sdata->tre == '+'){
-      snprintf(sdata->acceptbuf, SMALLBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata->ttmpfile, email);
+      snprintf(sdata->acceptbuf, SMALLBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata->ttmpfile, rcpttoemail);
 
       if(my_cfg->message_from_a_zombie == 1){
          sdata->spaminess = 0.99;
@@ -151,7 +133,7 @@ int processMessage(struct session_data *sdata, struct _state *sstate, struct __d
       /* get user from 'MAIL FROM:', 2008.10.25, SJ */
 
       gettimeofday(&tv1, &tz);
-      getUserdataFromEmail(sdata, email2, cfg);
+      getUserdataFromEmail(sdata, fromemail, cfg);
       gettimeofday(&tv2, &tz);
       sdata->__user += tvdiff(tv2, tv1);
 
@@ -166,7 +148,7 @@ int processMessage(struct session_data *sdata, struct _state *sstate, struct __d
 
        if(sdata->name[0] == 0){
           gettimeofday(&tv1, &tz);
-          getUserdataFromEmail(sdata, email, cfg);
+          getUserdataFromEmail(sdata, rcpttoemail, cfg);
           gettimeofday(&tv2, &tz);
           sdata->__user += tvdiff(tv2, tv1);
        }
@@ -176,7 +158,7 @@ int processMessage(struct session_data *sdata, struct _state *sstate, struct __d
        if(sdata->name[0] == 0) return 1;
 
        gettimeofday(&tv1, &tz);
-       do_training(sdata, sstate, email, &(sdata->acceptbuf[0]), my_cfg);
+       do_training(sdata, sstate, rcpttoemail, &(sdata->acceptbuf[0]), my_cfg);
        gettimeofday(&tv2, &tz);
        sdata->__training += tvdiff(tv2, tv1);
 
@@ -258,8 +240,8 @@ int processMessage(struct session_data *sdata, struct _state *sstate, struct __d
 
 
    #ifdef HAVE_WHITELIST
-      if(isSenderOnBlackOrWhiteList(sdata, email2, SQL_WHITE_FIELD_NAME, SQL_WHITE_LIST, my_cfg) == 1){
-         syslog(LOG_PRIORITY, "%s: sender (%s) found on whitelist", sdata->ttmpfile, email2);
+      if(isSenderOnBlackOrWhiteList(sdata, fromemail, SQL_WHITE_FIELD_NAME, SQL_WHITE_LIST, my_cfg) == 1){
+         syslog(LOG_PRIORITY, "%s: sender (%s) found on whitelist", sdata->ttmpfile, fromemail);
          snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on whitelist\r\n", cfg->clapf_header_field);
          goto END_OF_TRAINING;
       }
@@ -267,11 +249,11 @@ int processMessage(struct session_data *sdata, struct _state *sstate, struct __d
 
 
    #ifdef HAVE_BLACKLIST
-      if(isSenderOnBlackOrWhiteList(sdata, email2, SQL_BLACK_FIELD_NAME, SQL_BLACK_LIST, my_cfg) == 1){
-         syslog(LOG_PRIORITY, "%s: sender (%s) found on blacklist", sdata->ttmpfile, email2);
+      if(isSenderOnBlackOrWhiteList(sdata, fromemail, SQL_BLACK_FIELD_NAME, SQL_BLACK_LIST, my_cfg) == 1){
+         syslog(LOG_PRIORITY, "%s: sender (%s) found on blacklist", sdata->ttmpfile, fromemail);
          snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on blacklist\r\n", cfg->clapf_header_field);
 
-         snprintf(sdata->acceptbuf, SMALLBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata->ttmpfile, email);
+         snprintf(sdata->acceptbuf, SMALLBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata->ttmpfile, rcpttoemail);
          return 0;
       }
    #endif

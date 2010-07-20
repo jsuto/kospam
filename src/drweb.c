@@ -1,5 +1,5 @@
 /*
- * drweb.c, 2009.01.12, SJ
+ * drweb.c, SJ
  */
 
 #include <stdio.h>
@@ -12,9 +12,8 @@
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include "config.h"
-#include "misc.h"
-#include "av.h"
+#include <clapf.h>
+
 
 int drweb_scan(char *tmpfile, char *engine, char *avinfo, struct __config *cfg){
    int sd, n, fd;

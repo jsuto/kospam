@@ -8,7 +8,7 @@
 #include <strings.h>
 #include <syslog.h>
 #include <unistd.h>
-#include "clapf.h"
+#include <clapf.h>
 
 
 void initialiseZombieList(struct __data *data, struct __config *cfg){

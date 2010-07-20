@@ -7,17 +7,24 @@
 
 #include <misc.h>
 #include <list.h>
+#include <parser.h>
 #include <bayes.h>
-#include <errmsg.h>
 #include <messages.h>
 #include <smtpcodes.h>
 #include <session.h>
 #include <buffer.h>
+#include <decoder.h>
 #include <users.h>
 #include <policy.h>
+#include <score.h>
 #include <templates.h>
 #include <hash.h>
 #include <boundary.h>
+#include <defs.h>
+#include <sig.h>
+#include <rbl.h>
+#include <av.h>
+#include <chi.h>
 #include <config.h>
 
 #ifdef HAVE_MEMCACHED
@@ -32,15 +39,9 @@ int updateTokenCounters(struct session_data *sdata, int ham_or_spam, struct node
 int updateMiscTable(struct session_data *sdata, int ham_or_spam, int train_mode);
 int updateTokenTimestamps(struct session_data *sdata, struct node *xhash[]);
 
-#ifdef HAVE_ANTIVIRUS
-#ifdef HAVE_LIBCLAMAV
-   int do_av_check(struct session_data *sdata, char *email, char *email2, char *virusinfo, struct cl_engine *engine, struct __config *cfg);
-#else
-   int do_av_check(struct session_data *sdata, char *email, char *email2, char *virusinfo, struct __config *cfg);
-#endif
-#endif
+int do_av_check(struct session_data *sdata, char *rcpttoemail, char *fromemail, char *virusinfo, struct __data *data, struct __config *cfg);
 
-void get_queue_path(struct session_data *sdata, char **path);
+void get_queue_path(struct session_data *sdata, char **path, struct __config *cfg);
 void do_training(struct session_data *sdata, struct _state *state, char *email, char *acceptbuf, struct __config *cfg);
 void saveMessageToQueue(struct session_data *sdata, float spaminess, struct __config *cfg);
 int isSenderOnBlackOrWhiteList(struct session_data *sdata, char *email,  char *fieldname, char *table, struct __config *cfg);
@@ -52,11 +53,9 @@ char *check_lang(struct node *xhash[]);
 int store_minefield_ip(struct session_data *sdata, struct __config *cfg);
 void is_sender_on_minefield(struct session_data *sdata, char *ip, struct __config *cfg);
 
-int processMessage(struct session_data *sdata, struct _state *sstate, struct __data *data, char *email, char *email2, struct __config *cfg, struct __config *my_cfg);
+int processMessage(struct session_data *sdata, struct _state *sstate, struct __data *data, char *rcpttoemail, char *fromemail, struct __config *cfg, struct __config *my_cfg);
 
 struct __config read_config(char *configfile);
-void print_config_all(struct __config *cfg, char *key);
-void print_config(char *configfile, struct __config *cfg);
 
 void checkAndCreateClapfDirectories(struct __config *cfg, uid_t uid, gid_t gid);
 

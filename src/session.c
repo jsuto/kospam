@@ -12,15 +12,13 @@
 #include <unistd.h>
 #include <signal.h>
 #include <syslog.h>
-#include "av.h"
-#include "sig.h"
 #include <clapf.h>
 
 
 void handleSession(int new_sd, struct __data *data, struct __config *cfg){
    int i, ret, pos, n, inj=ERR_REJECT, state, prevlen=0;
    char *p, buf[MAXBUFSIZE], puf[MAXBUFSIZE], resp[MAXBUFSIZE], prevbuf[MAXBUFSIZE], last2buf[2*MAXBUFSIZE+1];
-   char email[SMALLBUFSIZE], email2[SMALLBUFSIZE], virusinfo[SMALLBUFSIZE], reason[SMALLBUFSIZE];
+   char rctptoemail[SMALLBUFSIZE], fromemail[SMALLBUFSIZE], virusinfo[SMALLBUFSIZE], reason[SMALLBUFSIZE];
    struct session_data sdata;
    struct _state sstate;
    struct __config my_cfg;
@@ -168,11 +166,7 @@ void handleSession(int new_sd, struct __data *data, struct __config *cfg){
 
             #ifdef HAVE_ANTIVIRUS
                gettimeofday(&tv1, &tz);
-               #ifdef HAVE_LIBCLAMAV
-                  sdata.rav = do_av_check(&sdata, email, email2, &virusinfo[0], data->engine, cfg);
-               #else
-                  sdata.rav = do_av_check(&sdata, email, email2, &virusinfo[0], cfg);
-               #endif
+               sdata.rav = do_av_check(&sdata, rctptoemail, fromemail, &virusinfo[0], data, cfg);
                gettimeofday(&tv2, &tz);
                sdata.__av = tvdiff(tv2, tv1);
             #endif
@@ -202,14 +196,14 @@ void handleSession(int new_sd, struct __data *data, struct __config *cfg){
             #endif
                   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: round %d in injection", sdata.ttmpfile, i);
 
-                  extractEmail(sdata.rcptto[i], email);
+                  extractEmail(sdata.rcptto[i], rctptoemail);
 
                   /* copy default config from clapf.conf, to enable policy support */
                   memcpy(&my_cfg, cfg, sizeof(struct __config));
 
                #ifdef HAVE_ANTISPAM
                   if(db_conn == 1){
-                     if(processMessage(&sdata, &sstate, data, email, email2, cfg, &my_cfg) == 0){
+                     if(processMessage(&sdata, &sstate, data, rctptoemail, fromemail, cfg, &my_cfg) == 0){
                         /* if we have to discard the message */
                         goto SEND_RESULT;
                      }
@@ -247,13 +241,13 @@ void handleSession(int new_sd, struct __data *data, struct __config *cfg){
                   /* set the accept buffer */
 
                   if(inj == OK || inj == ERR_DROP_SPAM){
-                     snprintf(sdata.acceptbuf, SMALLBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata.ttmpfile, email);
+                     snprintf(sdata.acceptbuf, SMALLBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata.ttmpfile, rctptoemail);
                   }
                   else if(inj == ERR_REJECT){
-                     snprintf(sdata.acceptbuf, SMALLBUFSIZE-1, "550 %s <%s>\r\n", sdata.ttmpfile, email);
+                     snprintf(sdata.acceptbuf, SMALLBUFSIZE-1, "550 %s <%s>\r\n", sdata.ttmpfile, rctptoemail);
                   }
                   else {
-                     snprintf(sdata.acceptbuf, SMALLBUFSIZE-1, "451 %s <%s>\r\n", sdata.ttmpfile, email);
+                     snprintf(sdata.acceptbuf, SMALLBUFSIZE-1, "451 %s <%s>\r\n", sdata.ttmpfile, rctptoemail);
                   }
 
             #ifdef HAVE_ANTISPAM
@@ -277,16 +271,16 @@ void handleSession(int new_sd, struct __data *data, struct __config *cfg){
 
                   if(sdata.spaminess >= my_cfg.spam_overall_limit){
                      if(sdata.rcpt_minefield[i] == 0) counters.c_spam++;
-                     syslog(LOG_PRIORITY, "%s: %s got SPAM, %.4f, %d, relay=%s:%d, %s, status=%s", sdata.ttmpfile, email, sdata.spaminess, sdata.tot_len, my_cfg.spam_smtp_addr, my_cfg.spam_smtp_port, reason, resp);
+                     syslog(LOG_PRIORITY, "%s: %s got SPAM, %.4f, %d, relay=%s:%d, %s, status=%s", sdata.ttmpfile, rctptoemail, sdata.spaminess, sdata.tot_len, my_cfg.spam_smtp_addr, my_cfg.spam_smtp_port, reason, resp);
                   } else if(sdata.rav == AVIR_VIRUS) {
                      counters.c_virus++;
-                     syslog(LOG_PRIORITY, "%s: %s got VIRUS (%s), %.4f, %d, relay=%s:%d, %s, status=%s", sdata.ttmpfile, email, virusinfo, sdata.spaminess, sdata.tot_len, my_cfg.postfix_addr, my_cfg.postfix_port, reason, resp);
+                     syslog(LOG_PRIORITY, "%s: %s got VIRUS (%s), %.4f, %d, relay=%s:%d, %s, status=%s", sdata.ttmpfile, rctptoemail, virusinfo, sdata.spaminess, sdata.tot_len, my_cfg.postfix_addr, my_cfg.postfix_port, reason, resp);
                   } else {
                      counters.c_ham++;
                      if(sdata.spaminess < my_cfg.spam_overall_limit && sdata.spaminess > my_cfg.possible_spam_limit) counters.c_possible_spam++;
                      else if(sdata.spaminess < my_cfg.possible_spam_limit && sdata.spaminess > my_cfg.max_ham_spamicity) counters.c_unsure++;
 
-                     syslog(LOG_PRIORITY, "%s: %s got HAM, %.4f, %d, relay=%s:%d, %s, status=%s", sdata.ttmpfile, email, sdata.spaminess, sdata.tot_len, my_cfg.postfix_addr, my_cfg.postfix_port, reason, resp);
+                     syslog(LOG_PRIORITY, "%s: %s got HAM, %.4f, %d, relay=%s:%d, %s, status=%s", sdata.ttmpfile, rctptoemail, sdata.spaminess, sdata.tot_len, my_cfg.postfix_addr, my_cfg.postfix_port, reason, resp);
                   }
 
             #ifdef HAVE_LMTP
@@ -435,8 +429,8 @@ AFTER_PERIOD:
                snprintf(sdata.mailfrom, SMALLBUFSIZE-1, "%s\r\n", buf);
 
 
-               memset(email2, 0, SMALLBUFSIZE);
-               extractEmail(sdata.mailfrom, email2);
+               memset(fromemail, 0, SMALLBUFSIZE);
+               extractEmail(sdata.mailfrom, fromemail);
 
                strncat(resp, SMTP_RESP_250_OK, strlen(SMTP_RESP_250_OK));
 
@@ -463,14 +457,14 @@ AFTER_PERIOD:
 
                /* check against blackhole addresses */
 
-               extractEmail(buf, email);
+               extractEmail(buf, rctptoemail);
 
                if(data->blackhole){
                   a = data->blackhole;
 
                   while(a){
-                     if(strcmp(a->url_str, email) == 0){
-                        if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: we have %s on the blacklist", sdata.ttmpfile, email);
+                     if(strcmp(a->url_str, rctptoemail) == 0){
+                        if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: we have %s on the blacklist", sdata.ttmpfile, rctptoemail);
                         sdata.blackhole = 1;
                         counters.c_minefield++;
 
@@ -494,12 +488,12 @@ AFTER_PERIOD:
 
                /* is it a training request? */
 
-               if(sdata.num_of_rcpt_to == 1 && (strcasestr(sdata.rcptto[0], "+ham@") || strncmp(email, "ham@", 4) == 0 ) ){
+               if(sdata.num_of_rcpt_to == 1 && (strcasestr(sdata.rcptto[0], "+ham@") || strncmp(rctptoemail, "ham@", 4) == 0 ) ){
                   sdata.training_request = 1;
                   counters.c_fp++;
                }
 
-               if(sdata.num_of_rcpt_to == 1 && (strcasestr(sdata.rcptto[0], "+spam@") || strncmp(email, "spam@", 5) == 0) ){
+               if(sdata.num_of_rcpt_to == 1 && (strcasestr(sdata.rcptto[0], "+spam@") || strncmp(rctptoemail, "spam@", 5) == 0) ){
                   sdata.training_request = 1;
                   counters.c_fn++;
                }

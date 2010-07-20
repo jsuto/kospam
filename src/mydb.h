@@ -1,5 +1,5 @@
 /*
- * mydb.h, 2009.01.20, SJ
+ * mydb.h, SJ
  */
 
 #ifndef _MYDB_H

@@ -13,19 +13,8 @@
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include "misc.h"
-#include "decoder.h"
-#include "list.h"
-#include "boundary.h"
-#include "parser.h"
-#include "hash.h"
-#include "config.h"
-#include "defs.h"
+#include <clapf.h>
 
-
-/*
- * parse the message into tokens and return the pointer
- */
 
 struct _state parseMessage(struct session_data *sdata, struct __config *cfg){
    FILE *f;
@@ -85,10 +74,6 @@ struct _state parseMessage(struct session_data *sdata, struct __config *cfg){
    return state;
 }
 
-
-/*
- * parse buffer
- */
 
 int parseLine(char *buf, struct _state *state, struct session_data *sdata, struct __config *cfg){
    char *p, *q, puf[MAXBUFSIZE], muf[MAXBUFSIZE], u[SMALLBUFSIZE], token[MAX_TOKEN_LEN], phrase[MAX_TOKEN_LEN], triplet[3*MAX_TOKEN_LEN];

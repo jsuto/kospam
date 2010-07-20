@@ -1,5 +1,5 @@
 /*
- * buffer.h, 2008.04.05, SJ
+ * buffer.h, SJ
  * copied from the dspam project
  */
 

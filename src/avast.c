@@ -1,5 +1,5 @@
 /*
- * avast.c, 2010.01.13, SJ
+ * avast.c, SJ
  *
  */
 

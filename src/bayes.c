@@ -15,33 +15,7 @@
 #include <math.h>
 #include <time.h>
 #include <ctype.h>
-#include "misc.h"
-#include "hash.h"
-#include "decoder.h"
-#include "parser.h"
-#include "messages.h"
-#include "score.h"
-#include "bayes.h"
-#include "config.h"
-#include "buffer.h"
-#include "clapf.h"
-
-#ifdef HAVE_MYSQL
-   #include <mysql.h>
-   MYSQL_RES *res;
-   MYSQL_ROW row;
-   int mysql_conn = 0;
-#endif
-
-#ifdef HAVE_SQLITE3
-   #include <sqlite3.h>
-   sqlite3_stmt *pStmt;
-   const char **pzTail=NULL;
-#endif
-
-#ifdef HAVE_MYDB
-   #include "mydb.h"
-#endif
+#include <clapf.h>
 
 
 /*
@@ -139,7 +113,7 @@ double evaluateTokens(struct session_data *sdata, struct _state *state, struct _
    /* if we are still unsure, consult blacklists */
  
 #ifdef HAVE_RBL
-   check_lists(sdata, state, &found_on_rbl, &surbl_match, cfg);
+   checkLists(sdata, state, &found_on_rbl, &surbl_match, cfg);
 #endif
 
    spaminess = getSpamProbabilityChi2(state->token_hash, cfg);
@@ -287,7 +261,7 @@ int trainMessage(struct session_data *sdata, struct _state *state, int rounds, i
    introduceTokens(sdata, state->token_hash); 
 #endif
 
-   for(i=0; i<rounds; i++){
+   for(i=1; i<=rounds; i++){
 
       /* first, update the counters */
 
@@ -328,6 +302,39 @@ int trainMessage(struct session_data *sdata, struct _state *state, int rounds, i
 
    sdata->uid = saved_uid;
 
-   return i+1;
+   return i;
+}
+
+
+void add_penalties(struct session_data *sdata, struct _state *state, struct __config *cfg){
+
+   /* add a spammy token if we got a binary, eg. PDF attachment, 2007.07.02, SJ */
+
+   if(cfg->penalize_octet_stream == 1 && (attachment_by_type(state, "application/octet-stream") == 1 || attachment_by_type(state, "application/pdf") == 1
+       || attachment_by_type(state, "application/vnd.ms-excel") == 1
+       || attachment_by_type(state, "application/msword") == 1
+       || attachment_by_type(state, "application/rtf") == 1
+       || attachment_by_type(state, "application/x-zip-compressed") == 1)
+   ){
+       addnode(state->token_hash, "OCTET_STREAM*", REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
+   }
+
+   /* add penalty for images, 2007.07.02, SJ */
+
+   if(cfg->penalize_images == 1 && attachment_by_type(state, "image/") == 1)
+       addnode(state->token_hash, "IMAGE*", REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
+
+   if(state->n_subject_token == 0)
+      addnode(state->token_hash, "NO_SUBJECT*", REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
+
+   if(strcmp(state->hostname, "unknown") == 0 && sdata->Nham > NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED)
+      addnode(state->token_hash, "UNKNOWN_CLIENT*", REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
+
+   if(sdata->trapped_client == 1)
+      addnode(state->token_hash, "TRAPPED_CLIENT*", REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
+
+   if(sdata->tre == '+')
+      addnode(state->token_hash, "ZOMBIE*", REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
+
 }
 

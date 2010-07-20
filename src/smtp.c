@@ -1,5 +1,5 @@
 /*
- * smtp.c, 2010.05.13, SJ
+ * smtp.c, SJ
  */
 
 #include <stdio.h>
@@ -13,12 +13,7 @@
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include "smtpcodes.h"
-#include "config.h"
-#include "misc.h"
-#include "defs.h"
-#include "cfg.h"
-
+#include <clapf.h>
 
 
 int send_headers(int sd, char *bigbuf, int n, char *spaminessbuf, int put_subject_spam_prefix, int put_subject_possible_spam_prefix, struct session_data *sdata, struct __config *cfg){
@@ -31,9 +26,8 @@ int send_headers(int sd, char *bigbuf, int n, char *spaminessbuf, int put_subjec
    memset(headerbuf, 0, MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE);
 
    /* 
-      prepend the clapf id to the mail header. This obsoletes
-      the Outlook hack, and required for store-less training.
-      2009.09.25, SJ
+    * prepend the clapf id to the mail header. This obsoletes
+    * the Outlook hack, and required for store-less training.
     */
 
    snprintf(headerbuf, MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE-1, "Received: %s\r\n", sdata->ttmpfile);
@@ -347,11 +341,11 @@ int inject_mail(struct session_data *sdata, int msg, char *smtpaddr, int smtppor
             put_subject_possible_spam_prefix = 1;
 
          /*
-           the header_size_limit variable of postfix (see the output of postconf)
-           limits the length of the message header. So we read a big one and it
-           will contain the whole header. Now we can rewrite the necessary header
-           lines. 2006.08.21, SJ
-         */
+          * the header_size_limit variable of postfix (see the output of postconf)
+          * limits the length of the message header. So we read a big one and it
+          * will contain the whole header. Now we can rewrite the necessary header
+          * lines.
+          */
 
          while((n = read(fd, bigbuf, MAX_MAIL_HEADER_SIZE)) > 0){
             num_of_reads++;

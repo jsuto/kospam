@@ -1,12 +1,10 @@
 /*
- * score.c, 2010.05.19, SJ
+ * score.c, SJ
  */
 
 #include <stdio.h>
 #include <math.h>
-#include "hash.h"
-#include "misc.h"
-#include "config.h"
+#include <clapf.h>
 
 
 float getTokenSpamicity(float NHAM, float NSPAM, unsigned int nham, unsigned int nspam, float rob_s, float rob_x){

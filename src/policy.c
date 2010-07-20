@@ -1,5 +1,5 @@
 /*
- * policy.c, 2010.05.19, SJ
+ * policy.c, SJ
  */
 
 #include <stdio.h>
@@ -7,11 +7,6 @@
 #include <string.h>
 #include <syslog.h>
 #include <clapf.h>
-
-
-#ifdef USERS_IN_MYSQL
-   #include <mysql.h>
-#endif
 
 
 #ifdef USERS_IN_MYSQL

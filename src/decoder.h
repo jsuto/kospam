@@ -1,5 +1,5 @@
 /*
- * decoder.h, 2010.05.16, SJ
+ * decoder.h, SJ
  */
 
 #ifndef _DECODER_H

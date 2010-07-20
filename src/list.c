@@ -6,14 +6,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include "parser.h"
 #include "list.h"
 #include "config.h"
 
-
-/*
- * append something to list if we have to
- */
 
 int append_list(struct url **urls, char *p){
    struct url *q, *t, *u=NULL;

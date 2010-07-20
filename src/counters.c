@@ -1,5 +1,5 @@
 /*
- * counters.c, 2010.04.23, SJ
+ * counters.c, SJ
  */
 
 #include <stdio.h>

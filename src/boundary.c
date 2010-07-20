@@ -1,13 +1,12 @@
 /*
- * boundary.c, 2009.04.17, SJ
+ * boundary.c, SJ
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include "boundary.h"
-#include "config.h"
+#include <clapf.h>
 
 
 /*

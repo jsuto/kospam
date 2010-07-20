@@ -67,8 +67,8 @@ splitmbox: splitmbox.c misc.o decoder.o list.o boundary.o parser.o parser_utils.
 aphash: aphash.c misc.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LIBDIR)
 
-prepare-sql: prepare-sql.c misc.o decoder.o list.o boundary.o parser.o parser_utils.o score.o chi.o
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LIBDIR)
+prepare-sql: prepare-sql.c libclapf.a
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ prepare-sql.c -lclapf $(LIBS) $(LIBDIR)
 
 mydb_stat mydb_compress mydb_export: %.o mydb.o misc.o hash.o chi.o score.o cfg.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
@@ -86,28 +86,8 @@ test:
 install-includes:
 	$(INSTALL) -d $(DESTDIR)$(includedir)
 	$(INSTALL) -d $(DESTDIR)$(includedir)/clapf
-	$(INSTALL) -m 0644 clapf.h $(DESTDIR)$(includedir)/clapf
-	$(INSTALL) -m 0644 defs.h $(DESTDIR)$(includedir)/clapf
-	$(INSTALL) -m 0644 buffer.h $(DESTDIR)$(includedir)/clapf
-	$(INSTALL) -m 0644 users.h $(DESTDIR)$(includedir)/clapf
-	$(INSTALL) -m 0644 policy.h $(DESTDIR)$(includedir)/clapf
-	$(INSTALL) -m 0644 templates.h $(DESTDIR)$(includedir)/clapf
-	$(INSTALL) -m 0644 cfg.h $(DESTDIR)$(includedir)/clapf
-	$(INSTALL) -m 0644 misc.h $(DESTDIR)$(includedir)/clapf
-	$(INSTALL) -m 0644 parser.h $(DESTDIR)$(includedir)/clapf
-	$(INSTALL) -m 0644 bayes.h $(DESTDIR)$(includedir)/clapf
-	$(INSTALL) -m 0644 score.h $(DESTDIR)$(includedir)/clapf
-	$(INSTALL) -m 0644 hash.h $(DESTDIR)$(includedir)/clapf
-	$(INSTALL) -m 0644 config.h $(DESTDIR)$(includedir)/clapf
+	$(INSTALL) -m 0644 *.h $(DESTDIR)$(includedir)/clapf
 	$(INSTALL) -m 0644 ../clapf-config.h $(DESTDIR)$(includedir)/clapf
-	$(INSTALL) -m 0644 errmsg.h $(DESTDIR)$(includedir)/clapf
-	$(INSTALL) -m 0644 smtpcodes.h $(DESTDIR)$(includedir)/clapf
-	$(INSTALL) -m 0644 messages.h $(DESTDIR)$(includedir)/clapf
-	$(INSTALL) -m 0644 mydb.h $(DESTDIR)$(includedir)/clapf
-	$(INSTALL) -m 0644 list.h $(DESTDIR)$(includedir)/clapf
-	$(INSTALL) -m 0644 session.h $(DESTDIR)$(includedir)/clapf
-	$(INSTALL) -m 0644 sig.h $(DESTDIR)$(includedir)/clapf
-	$(INSTALL) -m 0644 av.h $(DESTDIR)$(includedir)/clapf
 
 install-clapf:
 	$(INSTALL) -d $(DESTDIR)$(bindir)

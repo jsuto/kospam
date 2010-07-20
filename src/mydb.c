@@ -1,5 +1,5 @@
 /*
- * mydb.c, 2008.09.15, SJ
+ * mydb.c, SJ
  */
 
 #include <stdio.h>

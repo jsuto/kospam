@@ -1,5 +1,5 @@
 /*
- * spamc.c, 2010.01.13, SJ
+ * spamc.c, SJ
  *
  */
 
@@ -14,16 +14,12 @@
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include "config.h"
-#include "misc.h"
+#include <clapf.h>
+
 
 #define SPAMD_RESP_SPAM_STRING "Spam: True ; "
 #define SPAMD_RESP_SPAM_STRING_LENGTH strlen(SPAMD_RESP_SPAM_STRING)
 
-
-/*
- * connect to spamd
- */
 
 int spamc_emul(char *tmpfile, int size, struct __config *cfg){
    int fd, n, psd, rc=0;

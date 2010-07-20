@@ -1,5 +1,5 @@
 /*
- * memc.c, 2010.04.23, SJ
+ * memc.c, SJ
  */
 
 #include <stdio.h>
@@ -15,7 +15,7 @@
 #include <poll.h>
 #include <unistd.h>
 #include <errno.h>
-#include "memc.h"
+#include <clapf.h>
 
 
 int __recvtimeout(int s, char *buf, int len, int timeout){

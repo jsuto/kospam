@@ -1,5 +1,5 @@
 /*
- * smtpcodes.h, 2009.10.05, SJ
+ * smtpcodes.h, SJ
  */
 
 // SMTP states

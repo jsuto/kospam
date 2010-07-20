@@ -1,5 +1,5 @@
 /*
- * hash.h, 2009.06.01, SJ
+ * hash.h, SJ
  */
 
 #ifndef _HASH_H

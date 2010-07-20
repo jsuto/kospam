@@ -1,5 +1,5 @@
 /*
- * lang.h, 2008.04.10, SJ
+ * lang.h, SJ
  */
 
 #define MAX_NGRAM 300

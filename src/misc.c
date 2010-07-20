@@ -1,5 +1,5 @@
 /*
- * misc.c, 2010.05.10, SJ
+ * misc.c, SJ
  */
 
 #include <stdio.h>
@@ -20,7 +20,7 @@
 #include <ctype.h>
 #include "misc.h"
 #include "smtpcodes.h"
-#include "errmsg.h"
+#include "messages.h"
 #include "config.h"
 
 

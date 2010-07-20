@@ -1,5 +1,5 @@
 /*
- * users.c, 2010.05.13, SJ
+ * users.c, SJ
  */
 
 #include <stdio.h>
@@ -12,20 +12,6 @@
 #include <syslog.h>
 #include <clapf.h>
 
-
-#ifdef USERS_IN_MYSQL
-   #include <mysql.h>
-#endif
-
-#ifdef USERS_IN_SQLITE3
-   #include <sqlite3.h>
-#endif
-
-
-
-/*
- * get uid and username from email address
- */
 
 #ifdef USERS_IN_MYSQL
 int getUserdataFromEmail(struct session_data *sdata, char *email, struct __config *cfg){

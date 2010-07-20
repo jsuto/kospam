@@ -1,13 +1,9 @@
 /*
- * users.h, 2010.05.10, SJ
+ * users.h, SJ
  */
 
 #ifndef _USERS_H
  #define _USERS_H
-
-#include <clapf.h>
-#include "defs.h"
-
 
 #ifdef USERS_IN_LDAP
    #include <ldap.h>

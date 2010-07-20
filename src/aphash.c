@@ -1,13 +1,11 @@
 /*
- * aphash.c, 2010.05.13, SJ
+ * aphash.c, SJ
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "misc.h"
-#include "messages.h"
-#include "config.h"
+#include <clapf.h>
 
 int main(int argc, char **argv){
    FILE *f;

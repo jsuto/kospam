@@ -7,18 +7,10 @@
 #include <sys/time.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include "defs.h"
-#include "misc.h"
-#include "av.h"
-#include "templates.h"
-#include "session.h"
-#include "config.h"
+#include <clapf.h>
 
-#ifdef HAVE_LIBCLAMAV
-int do_av_check(struct session_data *sdata, char *email, char *email2, char *virusinfo, struct cl_engine *engine, struct __config *cfg){
-#else
-int do_av_check(struct session_data *sdata, char *email, char *email2, char *virusinfo, struct __config *cfg){
-#endif
+
+int do_av_check(struct session_data *sdata, char *rcpttoemail, char *fromemail, char *virusinfo, struct __data *data, struct __config *cfg){
    int rav = AVIR_OK;
    char avengine[SMALLBUFSIZE];
 
@@ -36,7 +28,7 @@ int do_av_check(struct session_data *sdata, char *email, char *email2, char *vir
 
    if(cfg->clamav_block_encrypted_archives == 1) options |= CL_SCAN_BLOCKENCRYPTED;
 
-   if(cl_scanfile(sdata->ttmpfile, &virname, NULL, engine, options) == CL_VIRUS){
+   if(cl_scanfile(sdata->ttmpfile, &virname, NULL, data->engine, options) == CL_VIRUS){
       memset(virusinfo, 0, SMALLBUFSIZE);
       strncpy(virusinfo, virname, SMALLBUFSIZE-1);
       rav = AVIR_VIRUS;
@@ -53,11 +45,11 @@ int do_av_check(struct session_data *sdata, char *email, char *email2, char *vir
 #endif
 
 #ifdef HAVE_KAV
-   if(kav_scan(sdata->ttmpfile, avengine, virusinfo, &cfg) == AV_VIRUS) rav = AVIR_VIRUS;
+   if(kav_scan(sdata->ttmpfile, avengine, virusinfo, cfg) == AV_VIRUS) rav = AVIR_VIRUS;
 #endif
 
 #ifdef HAVE_DRWEB
-   if(drweb_scan(sdata->ttmpfile, avengine, virusinfo, &cfg) == AV_VIRUS) rav = AVIR_VIRUS;
+   if(drweb_scan(sdata->ttmpfile, avengine, virusinfo, cfg) == AV_VIRUS) rav = AVIR_VIRUS;
 #endif
 
 #ifdef HAVE_CLAMD
@@ -70,7 +62,7 @@ int do_av_check(struct session_data *sdata, char *email, char *email2, char *vir
 
    if(rav == AVIR_VIRUS){
       if(strlen(cfg->quarantine_dir) > 3) moveMessageToQuarantine(sdata, cfg);
-      if(strlen(cfg->localpostmaster) > 3) sendNotificationToPostmaster(sdata, email, email2, virusinfo, avengine, cfg);
+      if(strlen(cfg->localpostmaster) > 3) sendNotificationToPostmaster(sdata, rcpttoemail, fromemail, virusinfo, avengine, cfg);
    }
 
 
@@ -97,14 +89,14 @@ int moveMessageToQuarantine(struct session_data *sdata, struct __config *cfg){
 }
 
 
-void sendNotificationToPostmaster(struct session_data *sdata, char *email, char *email2, char *virusinfo, char *avengine, struct __config *cfg){
+void sendNotificationToPostmaster(struct session_data *sdata, char *rcpttoemail, char *fromemail, char *virusinfo, char *avengine, struct __config *cfg){
    int ret;
    char buf[MAXBUFSIZE];
 
-   memset(email, 0, SMALLBUFSIZE);
-   extractEmail(sdata->rcptto[0], email);
+   memset(rcpttoemail, 0, SMALLBUFSIZE);
+   extractEmail(sdata->rcptto[0], rcpttoemail);
 
-   if(createMessageFromTemplate(VIRUS_TEMPLATE, buf, cfg->localpostmaster, email, email2, virusinfo, avengine) == 1){
+   if(createMessageFromTemplate(VIRUS_TEMPLATE, buf, cfg->localpostmaster, rcpttoemail, fromemail, virusinfo, avengine) == 1){
 
       snprintf(sdata->rcptto[0], SMALLBUFSIZE-1, "RCPT TO: <%s>\r\n", cfg->localpostmaster);
       sdata->num_of_rcpt_to = 1;

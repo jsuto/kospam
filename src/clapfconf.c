@@ -1,5 +1,5 @@
 /*
- * clapfconf.c, 2010.01.21, SJ
+ * clapfconf.c, SJ
  */
 
 #include <stdio.h>
@@ -11,6 +11,9 @@
 extern char *optarg;
 extern int optind;
 
+
+void print_config_all(struct __config *cfg, char *key);
+void print_config(char *configfile, struct __config *cfg);
 
 int main(int argc, char **argv){
    int i, print_from_file=0;

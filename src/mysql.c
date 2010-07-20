@@ -12,41 +12,8 @@
 #include <unistd.h>
 #include <time.h>
 #include <syslog.h>
-#include <mysql.h>
 #include <sys/mman.h>
-#include "misc.h"
-#include "hash.h"
-#include "decoder.h"
-#include "parser.h"
-#include "errmsg.h"
-#include "messages.h"
-#include "buffer.h"
-#include "score.h"
-#include "defs.h"
-#include "config.h"
-
-
-/*
- * get uid of the user included in the sql query
- */
-
-unsigned long get_uid(MYSQL mysql, char *stmt){
-   unsigned long uid = 0;
-   MYSQL_RES *res;
-   MYSQL_ROW row;
-
-   if(mysql_real_query(&mysql, stmt, strlen(stmt)) == 0){
-      if((res = mysql_store_result(&mysql))){
-         row = mysql_fetch_row(res);
-         if(row)
-            uid = atol(row[0]);
-
-         mysql_free_result(res);
-      }
-   }
-
-   return uid;
-}
+#include <clapf.h>
 
 
 struct te getHamSpamCounters(struct session_data *sdata, char *stmt){
@@ -97,7 +64,7 @@ int update_hash(struct session_data *sdata, char *qry, struct node *xhash[]){
 
 
 /*
- * introduce tokens to database with zero (0) values
+ * introduce tokens to database with zero (0) counter values
  */
 
 int introduceTokens(struct session_data *sdata, struct node *xhash[]){

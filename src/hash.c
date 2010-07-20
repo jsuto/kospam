@@ -1,15 +1,12 @@
 /*
- * hash.c, 2009.06.01, SJ
+ * hash.c, SJ
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include "hash.h"
-#include "misc.h"
-#include "score.h"
-#include "config.h"
+#include <clapf.h>
 
 
 /*

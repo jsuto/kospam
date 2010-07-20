@@ -1,5 +1,5 @@
 /*
- * misc.h, 2010.05.10, SJ
+ * misc.h, SJ
  */
 
 #ifndef _MISC_H
@@ -11,7 +11,6 @@
 #include <sys/time.h>
 #include <cfg.h>
 #include "defs.h"
-#include <config.h>
 
 void __fatal(char *s);
 long tvdiff(struct timeval a, struct timeval b);
@@ -30,20 +29,10 @@ int isValidClapfID(char *p);
 int extract_id_from_message(char *messagefile, char *clapf_header_field, char *ID);
 void writeDeliveryInfo(struct session_data *sdata, char *dir);
 
-int isIPv4AddressOnRBL(char *ipaddr, char *domainlist);
-int isURLOnRBL(char *url, char *domainlist);
-int reverseIPv4Address(char *ipaddr);
-int checkHostOnRBL(char *host, char *rbldomain);
-
-
-double gsl_chi2inv(double x, double df);
-double chi2inv(double x, double df, double esf);
-
 unsigned int spamsum_match_db(const char *fname, const char *sum, unsigned int threshold);
 char *spamsum_file(const char *fname, unsigned int flags, unsigned int block_size);
 
 int isDottedIPv4Address(char *s);
-
 int isEmailAddressOnList(char *list, char *tmpfile, char *email, struct __config *cfg);
 
 #ifndef _GNU_SOURCE

@@ -12,16 +12,8 @@
 #include <clapf.h>
 
 
-#ifdef HAVE_SQLITE3
-   int rc;
-#endif
-#ifdef HAVE_MYDB
-   #include "mydb.h"
-   int rc;
-#endif
-
-
 int main(int argc, char **argv){
+   int rc;
    struct timezone tz;
    struct timeval tv_spam_start, tv_spam_stop;
    struct session_data sdata;
@@ -53,6 +45,7 @@ int main(int argc, char **argv){
    cfg.initial_1000_learning=0;
 
    cfg.debug = 1;
+   rc = 0;
 
    sdata.uid = 0;
    sdata.num_of_rcpt_to = -1;

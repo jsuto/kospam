@@ -1,11 +1,9 @@
 /*
- * memc.h, 2010.04.22, SJ
+ * memc.h, SJ
  */
 
 #ifndef _MEMC_H
  #define _MEMC_H
-
-#include "defs.h"
 
 void memcached_init(struct memcached_server *ptr, char *server_ip, int server_port);
 int set_socket_options(struct memcached_server *ptr);

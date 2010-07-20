@@ -1,5 +1,5 @@
 /*
- * kav.c, 2009.01.12, SJ
+ * kav.c, SJ
  */
 
 #include <stdio.h>
@@ -9,9 +9,7 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <unistd.h>
-#include "misc.h"
-#include "av.h"
-#include "config.h"
+#include <clapf.h>
 
 int kav_scan(char *tmpfile, char *engine, char *avinfo, struct __config *cfg){
    int s, n;

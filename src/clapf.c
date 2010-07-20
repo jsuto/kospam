@@ -21,13 +21,7 @@
 #include <unistd.h>
 #include <locale.h>
 #include <errno.h>
-#include "misc.h"
-#include "list.h"
-#include "sig.h"
-#include "errmsg.h"
-#include "session.h"
-#include "config.h"
-#include "clapf.h"
+#include <clapf.h>
 
 extern char *optarg;
 extern int optind;

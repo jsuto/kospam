@@ -1,15 +1,13 @@
 /*
- * splitmbox.c, 2010.05.13, SJ
+ * splitmbox.c, SJ
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include "misc.h"
-#include "decoder.h"
-#include "parser.h"
-#include "config.h"
+#include <clapf.h>
+
 
 int main(int argc, char **argv){
    int tot_msgs = 0;

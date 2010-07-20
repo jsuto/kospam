@@ -1,5 +1,5 @@
 /*
- * spam.c, 2010.02.16, SJ
+ * spam.c, SJ
  */
 
 #include <stdio.h>
@@ -11,13 +11,7 @@
 #include <fcntl.h>
 #include <time.h>
 #include <unistd.h>
-#include "defs.h"
-#include "misc.h"
-#include "av.h"
-#include "templates.h"
-#include "list.h"
-#include "session.h"
-#include "config.h"
+#include <clapf.h>
 
 
 /*

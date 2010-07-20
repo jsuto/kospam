@@ -6,8 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include "misc.h"
-#include "config.h"
+#include <clapf.h>
 
 
 void check_host_against_regexp(struct __data *data, char *host){

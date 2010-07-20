@@ -1,11 +1,9 @@
 /*
- * score.h, 2010.05.19, SJ
+ * score.h, SJ
  */
 
 #ifndef _SCORE_H
  #define _SCORE_H
-
-#include "cfg.h"
 
 float getTokenSpamicity(float NHAM, float NSPAM, unsigned int nham, unsigned int nspam, float rob_s, float rob_x);
 double getSpamProbabilityChi2(struct node *xhash[], struct __config *cfg);

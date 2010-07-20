@@ -1,5 +1,5 @@
 /*
- * av.h, 2010.05.19, SJ
+ * av.h, SJ
  */
 
 #ifndef _AV_H
@@ -74,6 +74,6 @@ int avg_scan(char *tmpdir, char *tmpfile, char *engine, char *avinfo, struct __c
 
 
 int moveMessageToQuarantine(struct session_data *sdata, struct __config *cfg);
-void sendNotificationToPostmaster(struct session_data *sdata, char *email, char *email2, char *virusinfo, char *avengine, struct __config *cfg);
+void sendNotificationToPostmaster(struct session_data *sdata, char *rcpttoemail, char *fromemail, char *virusinfo, char *avengine, struct __config *cfg);
 
 #endif /* _AV_H */

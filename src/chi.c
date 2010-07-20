@@ -1,5 +1,5 @@
 /*
- * chi.c, 2008.08.22, SJ
+ * chi.c, SJ
  */
 
 #include <stdio.h>

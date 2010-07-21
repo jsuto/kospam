@@ -454,9 +454,11 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
    if(state->ipcnt == 1){
       state->ipcnt = 2;
 
-      if(strlen(state->hostname) > MAX_WORD_LEN) fixFQDN(state->hostname);
+      snprintf(u, SMALLBUFSIZE-1, "%s", state->hostname);
 
-      snprintf(muf, MAXBUFSIZE-1, "HEADER*%s", state->hostname);
+      if(strlen(u) > MAX_WORD_LEN) fixFQDN(u);
+
+      snprintf(muf, MAXBUFSIZE-1, "HEADER*%s", u);
       addnode(state->token_hash, muf, DEFAULT_SPAMICITY, 0);
       state->n_token++;
 

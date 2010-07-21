@@ -1,5 +1,9 @@
 0.4.5-rc2:
 
+2010.07.20, SJ
+
+Fixed a bug truncating the state.hostname.
+
 2010.07.19, SJ
 
 Code refactoring.

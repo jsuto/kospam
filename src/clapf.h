@@ -25,6 +25,7 @@
 #include <rbl.h>
 #include <av.h>
 #include <chi.h>
+#include <score.h>
 #include <config.h>
 
 #ifdef HAVE_MEMCACHED

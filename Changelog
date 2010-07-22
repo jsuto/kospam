@@ -1,5 +1,13 @@
 0.4.5-rc2:
 
+2010.07.21, SJ
+
+Fixed a weird truncating problem at the statistical
+aggregating function. Code was copied from the
+bogofilter project.
+
+Fixed the zombie regexp file to exclude web80006.mail.sp1.yahoo.com
+
 2010.07.20, SJ
 
 Fixed a bug truncating the state.hostname.

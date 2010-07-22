@@ -257,6 +257,7 @@ void fixupHTML(char *buf, struct _state *state, struct __config *cfg){
          if(cfg->debug == 1) printf("DISCARDED HTML: `%s'", s);
       }
       else {
+         strncat(puf, "<", MAXBUFSIZE-1);
          strncat(puf, s, MAXBUFSIZE-1);
       }
 

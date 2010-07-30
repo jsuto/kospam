@@ -882,7 +882,10 @@ fi
 
 echo; echo
 
+VERSION_STRING=`grep '#define VERSION' src/config.h | cut -f2 -d '"'`
 
+cat webui/view/theme/default/templates/common/footer.tpl | sed "s/VERSION_STRING/$VERSION_STRING/" > aaaa.11
+mv aaaa.11 webui/view/theme/default/templates/common/footer.tpl
 
 CFLAGS="$static -O2 -Wall -g"
 LIBS="$libclamav $antispam_libs $gsl_libs $sqlite3_libs $sunos_libs"

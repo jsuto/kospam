@@ -1,5 +1,10 @@
 0.4.5-rc2:
 
+2010.07.29, SJ
+
+Added a webui fix not to show empty (=0 byte) messages
+in the quarantine view.
+
 2010.07.22, SJ
 
 Fixed the fixupHTML() function.

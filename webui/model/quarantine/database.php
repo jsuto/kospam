@@ -148,6 +148,8 @@ class ModelQuarantineDatabase extends Model {
       $i = $page_len*$page;
 
       foreach ($query->rows as $message){
+         if($message['size'] < 5) { $n--; }
+
          $i++;
 
          $message['subj'] = preg_replace('/"/', "&quot;", $message['subj']);

@@ -14,6 +14,7 @@
       <tr valign="top"><td><?php print $text_email_addresses; ?>:</td><td><textarea name="email" cols="<?php print CGI_INPUT_FIELD_WIDTH; ?>" rows="<?php print CGI_INPUT_FIELD_HEIGHT; ?>"><?php if(isset($post['email'])){ print $post['email']; } ?></textarea></td></tr>
 <?php } ?>
       <tr><td><?php print $text_username; ?>:</td><td><input type="text" name="username" value="<?php if(isset($post['username'])){ print $post['username']; } ?>" size="<?php print CGI_INPUT_FIELD_WIDTH; ?>" /></td></tr>
+      <tr><td><?php print $text_realname; ?>:</td><td><input type="text" name="realname" value="<?php if(isset($post['realname'])){ print $post['realname']; } ?>" size="<?php print CGI_INPUT_FIELD_WIDTH; ?>" /></td></tr
       <tr>
        <td><?php print $text_domain; ?>:</td><td>
          <select name="domain">

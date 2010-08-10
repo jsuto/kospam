@@ -22,14 +22,19 @@ class SQLite {
 
 
    public function query($sql) {
-      //print "sql: $sql<p>\n";
+      $query = new stdClass();
+
+      $query->error = 1;
+      $query->errmsg = "Error";
+      $query->query = $sql;
 
       $time_start = microtime(true);
 
       $i = 0;
       $data = array();
 
-      $s = $this->link->prepare($sql) or exit('Error: ' . $sql);
+      $s = $this->link->prepare($sql) or return $query;
+
       $s->execute();
 
       $this->affected = $s->rowCount();
@@ -41,12 +46,12 @@ class SQLite {
          $i++;
       }
 
-      $query = new stdClass();
-
       $query->row      = isset($data[0]) ? $data[0] : array();
       $query->rows     = $data;
       $query->num_rows = $i;
-      $query->query    = $sql;
+
+      $query->error = 0;
+      $query->errmsg = "";
 
       unset($data);
 

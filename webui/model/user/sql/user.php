@@ -236,7 +236,7 @@ class ModelUserUser extends Model {
       }
 
 
-      $query = $this->db->query("SELECT uid, username, domain, policy_group FROM " . TABLE_USER . " $where_cond $order LIMIT " . (int)$from . ", " . (int)$page_len);
+      $query = $this->db->query("SELECT uid, username, realname, domain, policy_group FROM " . TABLE_USER . " $where_cond $order LIMIT " . (int)$from . ", " . (int)$page_len);
 
       foreach ($query->rows as $q) {
          $email = $this->db->query("SELECT email FROM " . TABLE_EMAIL . " WHERE uid=" . (int)$q['uid'] . " LIMIT 1");
@@ -245,6 +245,7 @@ class ModelUserUser extends Model {
             $users[] = array(
                           'uid'          => $q['uid'],
                           'username'     => $q['username'],
+                          'realname'     => $q['realname'],
                           'domain'       => isset($q['domain']) ? $q['domain'] : "",
                           'policy_group' => $q['policy_group'],
                           'email'        => $email->row['email']
@@ -284,26 +285,35 @@ class ModelUserUser extends Model {
 
    public function addUser($user) {
 
-      $encrypted_password = crypt($user['password']);
-
-      $query = $this->db->query("INSERT INTO " . TABLE_USER . " (uid, username, password, domain, dn, policy_group, isadmin) VALUES(" . (int)$user['uid'] . ", '" . $this->db->escape($user['username']) . "', '" . $this->db->escape($encrypted_password) . "', '" . $this->db->escape($user['domain']) . "', '" . $this->db->escape(@$user['dn']) . "', " . (int)$user['policy_group'] . ", " . (int)$user['isadmin'] . ")");
-
-      if($this->db->countAffected() == 0){ return -1; }
-
       $emails = explode("\n", $user['email']);
       foreach ($emails as $email) {
          $email = rtrim($email);
 
          $query = $this->db->query("SELECT COUNT(*) AS count FROM " . TABLE_EMAIL . " WHERE email='" . $this->db->escape($email) . "'");
 
-         if($query->row['count'] == 0) {
-            $query = $this->db->query("INSERT INTO " . TABLE_EMAIL . " (uid, email) VALUES(" . (int)$user['uid'] . ", '" . $this->db->escape($email) . "')");
+         if($query->row['count'] > 0) {
+            return $email;
          }
       }
 
-      //$query = $this->db->query("INSERT INTO " . TABLE_EMAIL . " (uid, email) VALUES(" . (int)$user['uid'] . ", '" . $this->db->escape($user['email']) . "')");
 
-      if($this->db->countAffected() == 0){ return -2; }
+      $query = $this->db->query("SELECT COUNT(*) AS count FROM " . TABLE_USER . " WHERE username='" . $this->db->escape($user['username']) . "'");
+      if($query->row['count'] > 0) {
+         return $user['username'];
+      }
+
+      $encrypted_password = crypt($user['password']);
+
+      $query = $this->db->query("INSERT INTO " . TABLE_USER . " (uid, username, realname, password, domain, dn, policy_group, isadmin) VALUES(" . (int)$user['uid'] . ", '" . $this->db->escape($user['username']) . "', '" . $this->db->escape($user['realname']) . "', '" . $this->db->escape($encrypted_password) . "', '" . $this->db->escape($user['domain']) . "', '" . $this->db->escape(@$user['dn']) . "', " . (int)$user['policy_group'] . ", " . (int)$user['isadmin'] . ")");
+
+      if($query->error == 1 || $this->db->countAffected() == 0){ return $user['username']; }
+
+      foreach ($emails as $email) {
+         $email = rtrim($email);
+
+         $ret = $this->addEmail((int)$user['uid'], $email);
+         if($ret == 0) { return -2; }
+      }
 
 
       $query = $this->db->query("INSERT INTO " . TABLE_WHITELIST . " (uid, whitelist) VALUES(" . (int)$user['uid'] . ", '" . $this->db->escape($user['whitelist']) . "')");
@@ -327,6 +337,18 @@ class ModelUserUser extends Model {
 
    public function updateUser($user) {
 
+      $emails = explode("\n", $user['email']);
+      foreach ($emails as $email) {
+         $email = rtrim($email);
+
+         $query = $this->db->query("SELECT COUNT(*) AS count FROM " . TABLE_EMAIL . " WHERE uid=" . (int)$user['uid'] . " AND email='" . $this->db->escape($email) . "'");
+
+         if($query->row['count'] > 0) {
+            return $email;
+         }
+      }
+
+
       /* update password field if we have to */
  
       if(strlen($user['password']) > 6) {
@@ -334,7 +356,7 @@ class ModelUserUser extends Model {
          if($this->db->countAffected() != 1) { return 0; }
       }
 
-      $query = $this->db->query("UPDATE " . TABLE_USER . " SET username='" . $this->db->escape($user['username']) ."', domain='" . $this->db->escape($user['domain']) . "', dn='" . @$this->db->escape($user['dn']) . "', policy_group=" . (int)$user['policy_group'] . ", isadmin=" . $user['isadmin'] . " WHERE uid=" . (int)$user['uid']);
+      $query = $this->db->query("UPDATE " . TABLE_USER . " SET username='" . $this->db->escape($user['username']) ."', realname='" . $this->db->escape($user['realname']) ."', domain='" . $this->db->escape($user['domain']) . "', dn='" . @$this->db->escape($user['dn']) . "', policy_group=" . (int)$user['policy_group'] . ", isadmin=" . $user['isadmin'] . " WHERE uid=" . (int)$user['uid']);
 
 
       /* first, remove all his email addresses */
@@ -343,7 +365,6 @@ class ModelUserUser extends Model {
 
       /* then add all the emails we have from the CGI post input */
 
-      $emails = explode("\n", $user['email']);
       foreach ($emails as $email) {
          $email = rtrim($email);
          $query = $this->db->query("INSERT INTO " . TABLE_EMAIL . " (uid, email) VALUES(" . (int)$user['uid'] . ", '" . $this->db->escape($email) . "')");

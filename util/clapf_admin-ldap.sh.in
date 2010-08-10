@@ -4,19 +4,20 @@
 ###
 
 if [ $# -lt 2 ]; then
-	echo; echo "usage: $0 <action> <uid> <username> <encrypted password by slappasswd> <email address> <domain> <policy group id> <basedn>"; echo
-	echo "eg: $0 add 1001 jim '"'{SSHA}iHtdvh+qyBb5BCYblly9qEQ1BHTcoOqA'"' jim@aaaa.fu aaaa.fu 0 ou=clapfusers,dc=yourdomain,dc=com"
+	echo; echo "usage: $0 <action> <uid> <username> <realname> <encrypted password by slappasswd> <email address> <domain> <policy group id> <basedn>"; echo
+	echo "eg: $0 add 1001 jim 'Jim Bim' '"'{SSHA}iHtdvh+qyBb5BCYblly9qEQ1BHTcoOqA'"' jim@aaaa.fu aaaa.fu 0 ou=clapfusers,dc=yourdomain,dc=com"
 	exit 1;
 fi
 
 action=$1
 uid=$2
 username=$3
-encrypted_password=$4
-email=$5
-domain=$6
-poliy_group_id=$7
-basedn=$8
+realname=$4
+encrypted_password=$5
+email=$6
+domain=$7
+poliy_group_id=$8
+basedn=$9
 
 
 ### check parameters ###
@@ -33,6 +34,9 @@ if [ "$x" != "$poliy_group_id" ]; then echo "invalid policy group id: $poliy_gro
 
 x=`echo $username | tr -cd [:alnum:]`
 if [ "$x" != "$username" ]; then echo "invalid username: $username"; exit; fi
+
+x=`echo $realname | tr -cd [:alnum:][@_\.\ ]`
+if [ "$x" != "$realname" ]; then echo "invalid realname: $realname"; exit; fi
 
 # email and domain may contain alphanumeric characters + '.', '@', '-', '_'
 
@@ -51,10 +55,9 @@ if [ "$x" != "$encrypted_password" ]; then echo "invalid encrypted password: $en
 
 
 
-if test $# -eq 7 && test "$action" = "add" ; then
-	echo "dn: $username,$basedn";
-	echo "cn: $username";
-	echo "sn: whatever";
+if test $# -eq 9 && test "$action" = "add" ; then
+	echo "dn: cn=$username,$basedn";
+	echo "sn: $realname";
 	echo "objectClass: top";
 	echo "objectClass: person";
 	echo "objectClass: qmailUser";

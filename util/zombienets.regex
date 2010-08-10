@@ -61,5 +61,8 @@ node(\.|\-){0,1}\d{3,8}
 
 (leased(-line){0,1}|ip|node|net|nat|cable|pool)(\.|\-){0,1}\d{1,3}(\.|\-){0,1}\d{1,3}
 
+#cust-250-109.on1.ontelecoms.gr
+cust(\.|\-){0,1}\d{1,3}(\.|\-)\d{1,3}
+
 #^unknown$
 #end_of_regex_file

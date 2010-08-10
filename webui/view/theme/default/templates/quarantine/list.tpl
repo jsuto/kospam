@@ -41,7 +41,7 @@
    <input type="hidden" name="user" value="<?php print $username; ?>" />
 
 <p>
-   <table border="0">
+   <table border="0" id="thetable">
    <tr align="middle">
       <th>&nbsp;</th>
       <th><?php print $text_date; ?></th>
@@ -65,7 +65,7 @@
 
 <?php foreach ($messages as $message) { ?>
 
-   <tr valign="top">
+   <tr valign="top" id="tr_<?php print $message['id']; ?>">
       <td<?php if(($message['i'] % 2) == 0){ ?> class="odd"<?php } ?>><a href="index.php?route=quarantine/message&amp;id=<?php print $message['id']; ?>&amp;user=<?php print $username; ?>&amp;page=<?php print $page; ?>&amp;from=<?php print $from; ?>&amp;subj=<?php print $subj; ?>&hamspam=<?php print $hamspam; ?>"><?php print $message['i']; ?>.</a></td>
       <td<?php if(($message['i'] % 2) == 0){ ?> class="odd"<?php } ?>><?php print $message['date']; ?></td>
       <td<?php if(($message['i'] % 2) == 0){ ?> class="odd"<?php } ?>><?php if($message['from'] != $message['shortfrom']) { ?><span onmouseover="Tip('<?php print preg_replace("/&/", "&amp;", $message['from']); ?>', BALLOON, true, ABOVE, true)" onmouseout="UnTip()"><?php print $message['shortfrom']; ?></span><?php } else { print $message['from']; } ?></td>
@@ -73,7 +73,7 @@
       <td align="right"><?php print $message['size']; ?></td>
       <td>&nbsp;</td>
       <td class="<?php if($message['id'][0] == 's'){ ?>spam<?php } else { ?>ham<?php } ?>">&nbsp;</td>
-      <td<?php if(($message['i'] % 2) == 0){ ?> class="odd"<?php } ?>><input type="checkbox" name="<?php print $message['id']; ?>" /></td>
+      <td<?php if(($message['i'] % 2) == 0){ ?> class="odd"<?php } ?>><input type="checkbox" name="<?php print $message['id']; ?>" onChange="script:toggle_row_highlight('tr_<?php print $message['id']; ?>');" /></td>
    </tr>
 
 <?php } ?>
@@ -83,7 +83,7 @@
 
 
 <p>
-   <input type="reset" value="<?php print $text_cancel; ?>" />
+   <input type="reset" value="<?php print $text_cancel; ?>"  onClick="highlight_table(false)" />
    <input type="button" value="<?php print $text_select_all; ?>" onClick="mark_all(true)" />
 </p>
 

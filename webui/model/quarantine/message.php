@@ -236,6 +236,10 @@ class ModelQuarantineMessage extends Model {
          $chunk = preg_replace("/\<style\>([\w\W]+)\<\/style\>/i", "", $chunk);
          $chunk = preg_replace("/\<body ([\w\s\;\"\'\#\d\:\-\=]+)\>/i", "<body>", $chunk);
 
+         /* prevent scripts in the HTML part */
+
+         $chunk = preg_replace("/document\.write/", "document.writeee", $chunk);
+         $chunk = preg_replace("/<\s{0,}script([\w\W]+)\/script\s{0,}\>/i", "<!-- disabled javascript here -->", $chunk);
       }
 
       return $chunk;

@@ -42,6 +42,7 @@ $_['text_empty_quarantine_directory_structure'] = "Empty quarantine directory st
 $_['text_error'] = "Error";
 $_['text_exclude'] = "Exclude";
 $_['text_existing_domains'] = "Existing domains";
+$_['text_existing_email'] = "Existing email";
 $_['text_existing_policies'] = "Existing policies";
 $_['text_existing_user'] = "Existing user";
 $_['text_existing_users'] = "Existing users";
@@ -124,6 +125,7 @@ $_['text_purged'] = "Purged";
 
 $_['text_quarantine'] = "Quarantine";
 
+$_['text_realname'] = "Realname";
 $_['text_relay_details'] = "Relay details";
 $_['text_relay_status'] = "Relay status";
 $_['text_remove'] = "Remove";

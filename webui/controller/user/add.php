@@ -48,12 +48,11 @@ class ControllerUserAdd extends Controller {
                if($ret == 1){
                   $this->data['x'] = $this->data['text_successfully_added'];
                } else {
-                  $this->data['errorstring'] = $this->data['text_failed_to_add'];
+                  $this->data['errorstring'] = $this->data['text_failed_to_add'] . ": " . $ret;
                }
             }
             else {
                $this->data['errorstring'] = array_pop($this->error);
-
             }
 
             if($ret == 0) {

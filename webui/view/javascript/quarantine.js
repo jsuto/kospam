@@ -4,9 +4,35 @@ function mark_all(x){
    var len = document.aaa1.elements.length;
 
    for(i=0; i<len; i++){
-      document.aaa1.elements[i].checked = x;
+      if(document.aaa1.elements[i].name.substr(0,2) == "s." || document.aaa1.elements[i].name.substr(0,2) == "h.") {
+         document.aaa1.elements[i].checked = x;
+      }
    }
 
+   highlight_table(true);
+}
+
+
+function highlight_table(action) {
+
+   var table = document.getElementById("thetable");
+   var rows = table.getElementsByTagName("tr");
+   for(i = 2; i < rows.length; i++){
+      if(action == true)
+         rows[i].className = "highlight";
+      else
+         rows[i].className = "";
+   }
+}
+
+
+function toggle_row_highlight(what) {
+   var elem = document.getElementById(what);
+
+   if(elem.className == "highlight")
+      elem.className = "";
+   else
+      elem.className = "highlight";
 }
 
 

@@ -15,7 +15,7 @@ class ModelUserUser extends Model {
          $query = $this->db->ldap_query(LDAP_USER_BASEDN, "(|(cn=*$search*)(mail=*$search*))", array("uid", "mail", "cn", "policygroupid", "domain") );
       }
       else {
-         $query = $this->db->ldap_query(LDAP_USER_BASEDN, "(|(cn=*)(mail=*))", array("uid", "mail", "cn", "policygroupid", "domain") );
+         $query = $this->db->ldap_query(LDAP_USER_BASEDN, "(|(cn=*)(mail=*))", array("uid", "mail", "cn", "sn", "policygroupid", "domain") );
       }
 
       if(Registry::get('domain_admin') == 1) {
@@ -31,6 +31,7 @@ class ModelUserUser extends Model {
                $data[] = array(
                           'uid'          => $result['uid'],
                           'username'     => $result['cn'],
+                          'realname'     => $result['sn'],
                           'email'        => $result['mail'],
                           'policy_group' => $result['policygroupid'],
                           'domain'       => isset($result['domain']) ? $result['domain'] : ""
@@ -73,6 +74,7 @@ class ModelUserUser extends Model {
       $data = array(
                     'uid'          => $result['uid'],
                     'username'     => $result['cn'],
+                    'realname'     => $result['sn'],
                     'email'        => $result['mail'],
                     'policy_group' => $result['policygroupid'],
                     'isadmin'      => $result['isadmin'],
@@ -258,7 +260,7 @@ class ModelUserUser extends Model {
       $entry["objectClass"] = $a;
 
       $entry["cn"] = $user['username'];
-      $entry["sn"] = "x";
+      $entry["sn"] = $user['realname'];
       $entry["uid"] = (int)$user['uid'];
       $entry["mail"] = $user['email'];
       $entry["policygroupid"] = (int)$user['policy_group'];
@@ -298,6 +300,7 @@ class ModelUserUser extends Model {
       $entry = array();
 
       $entry['uid'] = $user['uid'];
+      $entry['sn'] = $user['realname'];
       $entry["mail"] = $user['email'];
       $entry["policygroupid"] = (int)$user['policy_group'];
       $entry["isadmin"] = (int)$user['isadmin'];

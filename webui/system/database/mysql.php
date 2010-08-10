@@ -29,7 +29,11 @@ class MySQL {
 
 
    public function query($sql) {
-      //print "sql: $sql<p>\n";
+      $query = new stdClass();
+
+      $query->query = $sql;
+      $query->error = 0;
+      $query->errmsg = "";
 
       $resource = mysql_query(str_replace('#__', $this->prefix, $sql), $this->link);
 
@@ -49,11 +53,9 @@ class MySQL {
 
             mysql_free_result($resource);
 
-            $query = new stdClass();
             $query->row      = isset($data[0]) ? $data[0] : array();
             $query->rows     = $data;
             $query->num_rows = $i;
-            $query->query    = $sql;
 
             unset($data);
 
@@ -64,13 +66,20 @@ class MySQL {
             return $query;	
          }
          else {
-            return TRUE;
+            return $query;
+            //return TRUE;
          }
       }
       else {
          $_SESSION['error'] = 'Error: ' . mysql_error() . '<br />Error No: ' . mysql_errno() . '<br />' . $sql;
-         header("Location: " . SITE_URL . "/index.php?route=common/error");
-         exit;
+
+         $query->errmsg = 'Error: ' . mysql_error() . '<br />Error No: ' . mysql_errno() . '<br />' . $sql;
+         $query->error = 1;
+
+         return $query;
+
+         //header("Location: " . SITE_URL . "/index.php?route=common/error");
+         //exit;
       }
 
    }

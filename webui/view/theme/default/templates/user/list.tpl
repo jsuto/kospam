@@ -20,10 +20,11 @@
 <table border="1">
    <tr align="center">
       <th>&nbsp;</th>
-      <th><?php print $text_user_id; ?> <a href="index.php?route=user/list&amp;uid=0"><img src="/view/theme/<?php print THEME; ?>/images/arrowup.gif" border="0"></a> <a href="index.php?route=user/list&amp;uid=1"><img src="/view/theme/<?php print THEME; ?>/images/arrowdown.gif" border="0"></a></th>
-      <th><?php print $text_username; ?> <a href="index.php?route=user/list&amp;user=0"><img src="/view/theme/<?php print THEME; ?>/images/arrowup.gif" border="0"></a> <a href="index.php?route=user/list&amp;user=1"><img src="/view/theme/<?php print THEME; ?>/images/arrowdown.gif" border="0"></a></th>
+      <th><?php print $text_user_id; ?> <a href="index.php?route=user/list&amp;uid=0"><img src="view/theme/<?php print THEME; ?>/images/arrowup.gif" border="0"></a> <a href="index.php?route=user/list&amp;uid=1"><img src="view/theme/<?php print THEME; ?>/images/arrowdown.gif" border="0"></a></th>
+      <th><?php print $text_username; ?> <a href="index.php?route=user/list&amp;user=0"><img src="view/theme/<?php print THEME; ?>/images/arrowup.gif" border="0"></a> <a href="index.php?route=user/list&amp;user=1"><img src="view/theme/<?php print THEME; ?>/images/arrowdown.gif" border="0"></a></th>
+      <th><?php print $text_realname; ?></th>
       <th><?php print $text_email; ?></th>
-      <th><?php print $text_domain; ?> <a href="index.php?route=user/list&amp;domain=0"><img src="/view/theme/<?php print THEME; ?>/images/arrowup.gif" border="0"></a> <a href="index.php?route=user/list&amp;domain=1"><img src="/view/theme/<?php print THEME; ?>/images/arrowdown.gif" border="0"></a></th>
+      <th><?php print $text_domain; ?> <a href="index.php?route=user/list&amp;domain=0"><img src="view/theme/<?php print THEME; ?>/images/arrowup.gif" border="0"></a> <a href="index.php?route=user/list&amp;domain=1"><img src="view/theme/<?php print THEME; ?>/images/arrowdown.gif" border="0"></a></th>
       <th><?php print $text_policy_group; ?></th>
       <th>&nbsp;</th>
       <th>&nbsp;</th>
@@ -35,6 +36,7 @@
       <td><input type="checkbox" name="aa_<?php print $user['uid']; ?>" /></td>
       <td><?php print $user['uid']; ?></td>
       <td><?php print $user['username']; ?></td>
+      <td><?php print $user['realname']; ?></td>
       <td><?php if($user['email'] != $user['shortemail']){ ?><span onmouseover="Tip('<?php print $user['email']; ?>', BALLOON, true, ABOVE, true)" onmouseout="UnTip()"><?php print $user['shortemail']; ?></span><?php } else { print $user['email']; } ?></td>
       <td><?php print $user['domain']; ?></td>
       <td><?php print $user['policy_group']; ?></td>

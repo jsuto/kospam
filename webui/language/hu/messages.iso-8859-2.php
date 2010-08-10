@@ -42,6 +42,7 @@ $_['text_empty_quarantine_directory_structure'] = "Üres karantén könyvtár";
 $_['text_error'] = "Hiba";
 $_['text_exclude'] = "Kihagy";
 $_['text_existing_domains'] = "Létezõ domainek";
+$_['text_existing_email'] = "Létezõ email";
 $_['text_existing_policies'] = "Létezõ házirendek";
 $_['text_existing_user'] = "Létezõ felhasználó";
 $_['text_existing_users'] = "Létezõ felhasználók";
@@ -124,6 +125,7 @@ $_['text_purged'] = "Eltávolítva";
 
 $_['text_quarantine'] = "Karantén";
 
+$_['text_realname'] = "Név";
 $_['text_relay_details'] = "Relay részletek";
 $_['text_relay_status'] = "Relay státusz";
 $_['text_remove'] = "Törlés";

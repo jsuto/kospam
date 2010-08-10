@@ -63,7 +63,7 @@ class ControllerUserEdit extends Controller {
                   $this->data['x'] = $this->data['text_successfully_modified'];
                } else {
                   $this->template = "common/error.tpl";
-                  $this->data['errorstring'] = $this->data['text_failed_to_modify'];
+                  $this->data['errorstring'] = $this->data['text_failed_to_modify'] . ": " . $ret;
                }
 
                $this->model_user_user->setWhitelist($this->request->post['username'], $this->request->post['whitelist']);

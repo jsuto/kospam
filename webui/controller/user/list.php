@@ -81,6 +81,7 @@ class ControllerUserList extends Controller {
             $this->data['users'][] = array(
                                           'uid'          => $user['uid'],
                                           'username'     => $user['username'],
+                                          'realname'     => $user['realname'],
                                           'email'        => $user['email'],
                                           'shortemail'   => short_email($user['email']),
                                           'domain'       => $user['domain'],

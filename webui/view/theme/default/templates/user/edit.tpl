@@ -18,6 +18,8 @@
 
       <tr><td><?php print $text_username; ?>:</td><td><input type="text" name="username" value="<?php print $user['username']; ?>" size="<?php print CGI_INPUT_FIELD_WIDTH; ?>" /></td></tr>
 
+      <tr><td><?php print $text_realname; ?>:</td><td><input type="text" name="realname" value="<?php print $user['realname']; ?>" size="<?php print CGI_INPUT_FIELD_WIDTH; ?>" /></td></tr>
+
       <tr>
        <td><?php print $text_domain; ?>:</td><td>
          <select name="domain">

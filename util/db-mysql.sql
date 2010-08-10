@@ -22,6 +22,7 @@ create table if not exists t_token (
 create table if not exists user (
 	uid int unsigned not null primary key,
 	username char(32) not null unique,
+	realname char(32) default null,
 	password char(48) default null,
 	domain char(64) default null,
 	dn char(64) default '*',

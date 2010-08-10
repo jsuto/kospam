@@ -91,13 +91,13 @@
 	}
 
 	#menu li {
-		//border-left: 1px solid #C1C0C0;
+		/*border-left: 1px solid #C1C0C0;*/
 		background-image: none;
-		//line-height: 1.5em;
+		/*line-height: 1.5em;*/
 		font: normal 11px Verdana, Georgia, Arial, Helvetica, sans-serif;
 	}
 
-	//#menu a:link, #menu a:visited { color: #9D9D9D; }
+	/*#menu a:link, #menu a:visited { color: #9D9D9D; }*/
 	#menu a:hover, #menu a:active { color: #AF0B34; }
 	#menu #active { color: #AF0B34; font-weight: bold; }
 
@@ -145,6 +145,10 @@
 		margin-bottom: 15px;
 		font: normal 10px Arial, Helvetica, sans-serif;
 	}
+
+
+	tr.highlight { background:#DDDDDD; }
+
 
 	td.HAM {
 		color: green;

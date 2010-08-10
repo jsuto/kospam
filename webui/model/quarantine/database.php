@@ -69,8 +69,6 @@ class ModelQuarantineDatabase extends Model {
    public function PopulateDatabase($dir = '') {
       if($dir == "" || !file_exists($dir)) { return 0; }
 
-      $expr = '/^([sh]\.[0-9a-f]+)$/';
-
       $Q = Registry::get('Q');
 
 
@@ -79,13 +77,10 @@ class ModelQuarantineDatabase extends Model {
       $oldest_ts = 0;
 
       $files = scandir($dir, 0);
-      while(list($k, $v) = each($files)){
-         if(preg_match($expr, $v)) {
-            $st = stat($dir . "/" . $v);
-            $oldest_ts = $st['ctime'];
-            break;
-         }
-      }
+
+      $oldest_ts = $this->getOldestMessageTimestamp($dir, $files, '/^(h\.[0-9a-f]+)$/');
+      $ts = $this->getOldestMessageTimestamp($dir, $files, '/^(s\.[0-9a-f]+)$/');
+      if($ts > 0 && $ts < $oldest_ts) $oldest_ts = $ts;
 
       if($oldest_ts > 0) {
          $query = $Q->query("delete from quarantine where ts < $oldest_ts");
@@ -120,6 +115,23 @@ class ModelQuarantineDatabase extends Model {
    }
 
 
+   private function getOldestMessageTimestamp($dir = '', $files = array(), $expr = '') {
+      $ts = 0;
+
+      while(list($k, $v) = each($files)){
+         if(preg_match($expr, $v)) {
+            $st = stat($dir . "/" . $v);
+            $ts = $st['ctime'];
+            break;
+         }
+      }
+
+      reset($files);
+
+      return $ts;
+   }
+
+
    public function getMessages($dir = '', $username = '', $page = 0, $page_len = PAGE_LEN, $from = '', $subj = '', $hamspam = '') {
       $n = $total_size = $i = 0;
       $messages = array();
@@ -148,7 +160,7 @@ class ModelQuarantineDatabase extends Model {
       $i = $page_len*$page;
 
       foreach ($query->rows as $message){
-         if($message['size'] < 5) { $n--; }
+         if($message['size'] < 5) { $n--; continue; }
 
          $i++;
 
@@ -168,6 +180,8 @@ class ModelQuarantineDatabase extends Model {
                             );
 
       }
+
+      if($total_size == 0) { $n = 0; }
 
       return array($n, $total_size, $messages);
    }

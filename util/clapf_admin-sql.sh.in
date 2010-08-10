@@ -6,8 +6,8 @@
 SQLPROG='SQLBINPROG'
 
 if [ $# -lt 2 ]; then
-	echo; echo "usage: $0 <action> <uid> <username> <encrypted password> <email address> <domain> <policy group id>"; echo
-	echo "eg. #1: $0 add 1001 jim '"'$1$AQ9XPn$k9zHvBRo.AXPQRkM7HkX2.'"' jim@aaaa.fu aaaa.fu 0"
+	echo; echo "usage: $0 <action> <uid> <username> <realname> <encrypted password> <email address> <domain> <policy group id>"; echo
+	echo "eg. #1: $0 add 1001 jim 'Jim Bim' '"'$1$AQ9XPn$k9zHvBRo.AXPQRkM7HkX2.'"' jim@aaaa.fu aaaa.fu 0"
 	echo "eg. #2: $0 del 1001"; echo
 	exit 1;
 fi
@@ -15,10 +15,11 @@ fi
 action=$1
 uid=$2
 username=$3
-encrypted_password=$4
-email=$5
-domain=$6
-poliy_group_id=$7
+realname=$4
+encrypted_password=$5
+email=$6
+domain=$7
+poliy_group_id=$8
 
 CMD=""
 
@@ -40,6 +41,9 @@ if [ "$x" != "$poliy_group_id" ]; then echo "invalid policy group id: $poliy_gro
 x=`echo $username | tr -cd [:alnum:]`
 if [ "$x" != "$username" ]; then echo "invalid username: $username"; exit; fi
 
+x=`echo $realname | tr -cd [:alnum:][@_\.\ ]`
+if [ "$x" != "$realname" ]; then echo "invalid realname: $realname"; exit; fi
+
 # email and domain may contain alphanumeric characters + '.', '@', '-', '_'
 
 x=`echo $email | tr -cd -- -[:alnum:][@_.]`
@@ -59,7 +63,7 @@ if [ "$x" != "$encrypted_password" ]; then echo "invalid encrypted password: $en
 
 if test $# -eq 6 && test "$action" = "add" ; then
 	CMD=`( echo "INSERT INTO t_misc (nham, nspam, uid) VALUES (0, 0, $uid);" 
-	echo "INSERT INTO user (uid, username, password, domain, policy_group, isadmin) VALUES ($uid, '$username', '$encrypted_password', '$domain', $poliy_group_id, 0);" 
+	echo "INSERT INTO user (uid, username, realname, password, domain, policy_group, isadmin) VALUES ($uid, '$username', '$realname', '$encrypted_password', '$domain', $poliy_group_id, 0);" 
 	echo "INSERT INTO t_email (uid, email) VALUES ($uid, '$email');" 
 	echo "INSERT INTO t_white_list (uid) VALUES ($uid);" 
 	echo "INSERT INTO t_black_list (uid) VALUES ($uid);" )`

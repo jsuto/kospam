@@ -3,7 +3,11 @@
 
 2010.08.10, SJ
 
-Webui fixes.
+Webui fixes. Added a "realname" field, so you should extend the
+user table with the following statement:
+
+alter table user add column realname char(32) default null;
+
 
 2010.08.09, SJ
 

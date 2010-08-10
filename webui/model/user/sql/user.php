@@ -22,6 +22,11 @@ class ModelUserUser extends Model {
 
       $query = $this->db->query("UPDATE " . TABLE_WHITELIST . " SET whitelist='" . $this->db->escape($whitelist) . "' WHERE uid=" . (int)$uid);
 
+      if(MEMCACHED_ENABLED) {
+         $memcache = Registry::get('memcache');
+         $memcache->delete("_c:wbl" . (int)$uid);
+      }
+
       return $this->db->countAffected();
    }
 
@@ -45,6 +50,11 @@ class ModelUserUser extends Model {
       $uid = $this->getUidByName($username);
 
       $query = $this->db->query("UPDATE " . TABLE_BLACKLIST . " SET blacklist='" . $this->db->escape($blacklist) . "' WHERE uid=" . (int)$uid);
+
+      if(MEMCACHED_ENABLED) {
+         $memcache = Registry::get('memcache');
+         $memcache->delete("_c:wbl" . (int)$uid);
+      }
 
       return $this->db->countAffected();
    }

@@ -285,6 +285,10 @@ int main(int argc, char **argv, char **envp){
 
    initSessionData(&sdata);
 
+#ifdef HAVE_MEMCACHED
+   memcached_init(&(data.memc), cfg.memcached_servers, 11211);
+#endif
+
    if(recipient) snprintf(sdata.rcptto[0], SMALLBUFSIZE-1, "%s", recipient);
 
    memset(trainbuf, 0, SMALLBUFSIZE);
@@ -568,7 +572,9 @@ int main(int argc, char **argv, char **envp){
       /* whitelist check first */
 
    #ifdef HAVE_WHITELIST
-      if(isSenderOnBlackOrWhiteList(&sdata, from, SQL_WHITE_FIELD_NAME, SQL_WHITE_LIST, &cfg)){
+      getUsersWBL(&sdata, &data, &cfg);
+
+      if(isEmailAddressOnList(sdata.whitelist, sdata.ttmpfile, from, &cfg) == 1){
          syslog(LOG_PRIORITY, "%s: sender (%s) found on whitelist", sdata.ttmpfile, from);
          snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on whitelist%s", cfg.clapf_header_field, CRLF);
          strncat(clapf_info, whitelistbuf, MAXBUFSIZE-1);
@@ -580,7 +586,7 @@ int main(int argc, char **argv, char **envp){
       /* then give blacklist a try */
 
    #ifdef HAVE_BLACKLIST
-      if(isSenderOnBlackOrWhiteList(&sdata, from, SQL_BLACK_FIELD_NAME, SQL_BLACK_LIST, &cfg) == 1){
+      if(isEmailAddressOnList(sdata.blacklist, sdata.ttmpfile, from, &cfg) == 1){
          syslog(LOG_PRIORITY, "%s: sender (%s) found on blacklist", sdata.ttmpfile, from);
          closeDatabase(&sdata); freeState(&state);
          unlink(sdata.ttmpfile);

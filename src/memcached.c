@@ -1,5 +1,5 @@
 /*
- * memcached.c, 2010.05.19, SJ
+ * memcached.c, SJ
  */
 
 #include <stdio.h>
@@ -18,7 +18,7 @@ int getUserdataFromMemcached(struct session_data *sdata, struct __data *data, ch
    uint32_t flags = 0;
    char key[SMALLBUFSIZE], *s=NULL, *p;
 
-   if(data->memc.initialised == 0) return 0;
+   //if(data->memc.initialised == 0) return 0;
 
    snprintf(key, SMALLBUFSIZE-1, "%s:%s", MEMCACHED_CLAPF_PREFIX, email);
 
@@ -30,7 +30,7 @@ int getUserdataFromMemcached(struct session_data *sdata, struct __data *data, ch
       /* 1000:sj:acts.hu:1 */
 
       if(len == 1 && s[0] == 'U'){
-         if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s is unknown", email);
+         if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: %s is unknown", sdata->ttmpfile, email);
          return 1;
       }
 
@@ -58,8 +58,6 @@ int putUserdataToMemcached(struct session_data *sdata, struct __data *data, char
    uint32_t flags = 0;
    char key[SMALLBUFSIZE], value[SMALLBUFSIZE];
 
-   if(data->memc.initialised == 0) return 0;
-
    snprintf(key, SMALLBUFSIZE-1, "%s:%s", MEMCACHED_CLAPF_PREFIX, email);
    if(sdata->uid == 0)
       strcpy(value, "U");
@@ -77,7 +75,7 @@ int getPolicyFromMemcached(struct session_data *sdata, struct __data *data, stru
    uint32_t flags = 0;
    char key[SMALLBUFSIZE], *s=NULL, *p;
 
-   if(data->memc.initialised == 0 || sdata->policy_group <= 0) return 0;
+   if(sdata->policy_group <= 0) return 0;
 
    snprintf(key, SMALLBUFSIZE-1, "%s:%d", MEMCACHED_CLAPF_PREFIX, sdata->policy_group);
 
@@ -123,7 +121,7 @@ int putPolicyToMemcached(struct session_data *sdata, struct __data *data, struct
    uint32_t flags = 0;
    char key[SMALLBUFSIZE], value[SMALLBUFSIZE];
 
-   if(data->memc.initialised == 0 || sdata->policy_group <= 0) return 0;
+   if(sdata->policy_group <= 0) return 0;
 
    snprintf(key, SMALLBUFSIZE-1, "%s:%d", MEMCACHED_CLAPF_PREFIX, sdata->policy_group);
 
@@ -153,6 +151,49 @@ int putPolicyToMemcached(struct session_data *sdata, struct __data *data, struct
 
 
    if(memcached_add(&(data->memc), key, strlen(key), value, strlen(value), my_cfg->memcached_ttl, flags) == MEMCACHED_SUCCESS) return 1;
+
+   return 0;
+}
+
+
+int getWBLFromMemcached(struct session_data *sdata, struct __data *data, struct __config *cfg){
+   size_t len=0;
+   uint32_t flags = 0;
+   char key[SMALLBUFSIZE], *s=NULL, *p;
+
+   snprintf(key, SMALLBUFSIZE-1, "%s:wbl%ld", MEMCACHED_CLAPF_PREFIX, sdata->uid);
+
+   s = memcached_get(&(data->memc), key, &len, &flags);
+
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: memcached wbl query=%s, data=%s (%d)", sdata->ttmpfile, key, s, len);
+
+   if(len > 0){
+      /* whiteemail1,whiteemail2:blackemail1,blackemail2 */
+
+      p = strchr(s, ':');
+      if(p){
+         *p = '\0';
+         snprintf(sdata->whitelist, MAXBUFSIZE-1, "%s", s);
+         snprintf(sdata->blacklist, MAXBUFSIZE-1, "%s", p+1);
+      }
+
+      return 1;
+   }
+
+   return 0;
+}
+
+
+int putWBLToMemcached(struct session_data *sdata, struct __data *data, struct __config *cfg){
+   uint32_t flags = 0;
+   char key[SMALLBUFSIZE], value[2*MAXBUFSIZE];
+
+   if(sdata->uid <= 0) return 0;
+
+   snprintf(key, SMALLBUFSIZE-1, "%s:wbl%ld", MEMCACHED_CLAPF_PREFIX, sdata->uid);
+   snprintf(value, 2*MAXBUFSIZE-1, "%s:%s", sdata->whitelist, sdata->blacklist);
+
+   if(memcached_add(&(data->memc), key, strlen(key), value, strlen(value), cfg->memcached_ttl, flags) == MEMCACHED_SUCCESS) return 1;
 
    return 0;
 }

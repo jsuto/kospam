@@ -29,6 +29,9 @@ void initSessionData(struct session_data *sdata){
    memset(sdata->client_addr, 0, IPLEN);
    memset(sdata->xforward, 0, SMALLBUFSIZE);
 
+   memset(sdata->whitelist, 0, MAXBUFSIZE);
+   memset(sdata->blacklist, 0, MAXBUFSIZE);
+
    memset(sdata->clapf_id, 0, SMALLBUFSIZE);
 
    sdata->uid = 0;
@@ -238,9 +241,12 @@ int processMessage(struct session_data *sdata, struct _state *sstate, struct __d
       }
 
 
+   #ifdef HAVE_WHITELIST
+      getUsersWBL(sdata, data, cfg);
+   #endif
 
    #ifdef HAVE_WHITELIST
-      if(isSenderOnBlackOrWhiteList(sdata, fromemail, SQL_WHITE_FIELD_NAME, SQL_WHITE_LIST, my_cfg) == 1){
+      if(isEmailAddressOnList(sdata->whitelist, sdata->ttmpfile, fromemail, cfg) == 1){
          syslog(LOG_PRIORITY, "%s: sender (%s) found on whitelist", sdata->ttmpfile, fromemail);
          snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on whitelist\r\n", cfg->clapf_header_field);
          goto END_OF_TRAINING;
@@ -249,7 +255,7 @@ int processMessage(struct session_data *sdata, struct _state *sstate, struct __d
 
 
    #ifdef HAVE_BLACKLIST
-      if(isSenderOnBlackOrWhiteList(sdata, fromemail, SQL_BLACK_FIELD_NAME, SQL_BLACK_LIST, my_cfg) == 1){
+      if(isEmailAddressOnList(sdata->blacklist, sdata->ttmpfile, fromemail, cfg) == 1){
          syslog(LOG_PRIORITY, "%s: sender (%s) found on blacklist", sdata->ttmpfile, fromemail);
          snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on blacklist\r\n", cfg->clapf_header_field);
 
@@ -405,6 +411,31 @@ void getPolicySettings(struct session_data *sdata, struct __data *data, struct _
    gettimeofday(&tv2, &tz);
    sdata->__policy = tvdiff(tv2, tv1);
 #endif
+}
+
+
+void getUsersWBL(struct session_data *sdata, struct __data *data, struct __config *cfg){
+   struct timezone tz;
+   struct timeval tv1, tv2;
+
+#ifdef HAVE_MEMCACHED
+   if(getWBLFromMemcached(sdata, data, cfg) == 0){
+#endif
+      getWBLData(sdata, cfg);
+#ifdef HAVE_MEMCACHED
+      /*
+       * we have to get rid of the '\r' character, because
+       * it inteferes with the memcached control sequences.
+       */
+
+      replaceCharacterInBuffer(sdata->whitelist, '\r', 0);
+      replaceCharacterInBuffer(sdata->blacklist, '\r', 0);
+
+      putWBLToMemcached(sdata, data, cfg);
+   }
+#endif
+   gettimeofday(&tv2, &tz);
+   sdata->__user += tvdiff(tv2, tv1);
 }
 
 

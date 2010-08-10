@@ -84,6 +84,27 @@ int countCharacterInBuffer(char *p, char c){
 }
 
 
+void replaceCharacterInBuffer(char *p, char from, char to){
+   int i, k=0;
+
+   for(i=0; i<strlen(p); i++){
+      if(p[i] == from){
+         if(to > 0){
+            p[k] = to;
+            k++;
+         }
+      }
+      else {
+         p[k] = p[i];
+         k++;
+      }
+
+   }
+
+   p[k] = '\0';
+}
+
+
 /*
  * split a string by a character as delimiter
  */
@@ -470,6 +491,8 @@ int isDottedIPv4Address(char *s){
 int isEmailAddressOnList(char *list, char *tmpfile, char *email, struct __config *cfg){
    char *p, *q, w[SMALLBUFSIZE];
 
+   if(email == NULL) return 0;
+
    p = list;
 
    if(cfg->verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: list: %s", tmpfile, list);
@@ -481,7 +504,7 @@ int isEmailAddressOnList(char *list, char *tmpfile, char *email, struct __config
 
       if(strlen(w) > 2){
 
-         if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: matching %s on %s", tmpfile, w, email);
+         if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: matching '%s' on '%s'", tmpfile, w, email);
 
          if(w[strlen(w)-1] == '$'){
             q = email + strlen(email) - strlen(w) + 1;

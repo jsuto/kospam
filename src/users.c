@@ -101,34 +101,30 @@ int getUserdataFromEmail(struct session_data *sdata, char *email, struct __confi
 }
 
 
-int isSenderOnBlackOrWhiteList(struct session_data *sdata, char *email, char *fieldname, char *table, struct __config *cfg){
+void getWBLData(struct session_data *sdata, struct __config *cfg){
    MYSQL_RES *res;
    MYSQL_ROW row;
    char buf[SMALLBUFSIZE];
-   int r=0;
 
-   if(!email) return 0;
+   memset(sdata->whitelist, 0, MAXBUFSIZE);
+   memset(sdata->blacklist, 0, MAXBUFSIZE);
 
-   snprintf(buf, SMALLBUFSIZE-1, "SELECT %s FROM %s WHERE uid=0 OR uid=%ld", fieldname, table, sdata->uid);
+   snprintf(buf, SMALLBUFSIZE-1, "SELECT whitelist, blacklist FROM %s,%s where %s.uid=1000 and %s.uid=%s.uid", SQL_WHITE_LIST, SQL_BLACK_LIST, SQL_WHITE_LIST, SQL_WHITE_LIST, SQL_BLACK_LIST);
 
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sql: %s", sdata->ttmpfile, buf);
 
    if(mysql_real_query(&(sdata->mysql), buf, strlen(buf)) == 0){
       res = mysql_store_result(&(sdata->mysql));
       if(res != NULL){
-         while((row = mysql_fetch_row(res))){
-            if(row[0]){
-               if(isEmailAddressOnList((char *)row[0], sdata->ttmpfile, email, cfg) == 1){
-                  r = 1;
-                  break;
-               }
-            }
-         }
+         row = mysql_fetch_row(res);
+
+         if(row[0]) snprintf(sdata->whitelist, MAXBUFSIZE-1, "%s", (char *)row[0]);
+         if(row[1]) snprintf(sdata->blacklist, MAXBUFSIZE-1, "%s", (char *)row[1]);
+
          mysql_free_result(res);
       }
    }
 
-   return r;
 }
 
 
@@ -239,29 +235,26 @@ int getUserdataFromEmail(struct session_data *sdata, char *email, struct __confi
 }
 
 
-int isSenderOnBlackOrWhiteList(struct session_data *sdata, char *email, char *fieldname, char *table, struct __config *cfg){
+void getWBLData(struct session_data *sdata, struct __config *cfg){
    sqlite3_stmt *pStmt;
    const char **pzTail=NULL;
    char buf[SMALLBUFSIZE];
-   int r=0;
 
-   if(!email) return 0;
+   memset(sdata->whitelist, 0, MAXBUFSIZE);
+   memset(sdata->blacklist, 0, MAXBUFSIZE);
 
-   snprintf(buf, SMALLBUFSIZE-1, "SELECT %s FROM %s WHERE uid=0 OR uid=%ld", fieldname, table, sdata->uid);
+   snprintf(buf, SMALLBUFSIZE-1, "SELECT whitelist, blacklist FROM %s,%s where %s.uid=1000 and %s.uid=%s.uid", SQL_WHITE_LIST, SQL_BLACK_LIST, SQL_WHITE_LIST, SQL_WHITE_LIST, SQL_BLACK_LIST);
 
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sql: %s", sdata->ttmpfile, buf);
 
    if(sqlite3_prepare_v2(sdata->db, buf, -1, &pStmt, pzTail) == SQLITE_OK){
-      while(sqlite3_step(pStmt) == SQLITE_ROW){
-         if(isEmailAddressOnList((char *)sqlite3_column_blob(pStmt, 0), sdata->ttmpfile, email, cfg) == 1){
-            r = 1;
-            break;
-         }
+      if(sqlite3_step(pStmt) == SQLITE_ROW){
+         if(sqlite3_column_blob(pStmt, 0)) strncpy(sdata->whitelist, (char *)sqlite3_column_blob(pStmt, 0), MAXBUFSIZE-1);
+         if(sqlite3_column_blob(pStmt, 1)) strncpy(sdata->blacklist, (char *)sqlite3_column_blob(pStmt, 1), MAXBUFSIZE-1);
       }
    }
    sqlite3_finalize(pStmt);
 
-   return r;
 }
 
 #endif
@@ -387,37 +380,36 @@ int getUserdataFromEmail(struct session_data *sdata, char *email, struct __confi
 }
 
 
-int isSenderOnBlackOrWhiteList(struct session_data *sdata, char *email, char *fieldname, char *table, struct __config *cfg){
-   int i, rc, ret=0;
+void getWBLData(struct session_data *sdata, struct __config *cfg){
+   int rc;
    char filter[SMALLBUFSIZE], *attrs[] = { NULL }, **vals;
    LDAPMessage *res, *e;
 
-   if(sdata->ldap == NULL) return ret;
+   memset(sdata->whitelist, 0, MAXBUFSIZE);
+   memset(sdata->blacklist, 0, MAXBUFSIZE);
+
+   if(sdata->ldap == NULL) return;
 
    snprintf(filter, SMALLBUFSIZE-1, "uid=%ld", sdata->uid);
 
    rc = ldap_search_s(sdata->ldap, cfg->ldap_base, LDAP_SCOPE, filter, attrs, 0, &res);
-   if(rc) return ret;
+   if(rc) return;
 
    e = ldap_first_entry(sdata->ldap, res);
 
    if(e){
 
-      if(strcmp(table, SQL_WHITE_LIST) == 0)
-         vals = ldap_get_values(sdata->ldap, e, "filterSender");
-      else
-         vals = ldap_get_values(sdata->ldap, e, "filterMember");
+      vals = ldap_get_values(sdata->ldap, e, "filterSender");
+      if(ldap_count_values(vals) > 0) strncpy(sdata->whitelist, vals[0], MAXBUFSIZE-1);
+      ldap_value_free(vals);
 
-      for(i=0; i<ldap_count_values(vals); i++){
-         ret = isEmailAddressOnList((char *)vals[i], sdata->ttmpfile, email, cfg);
-         if(ret == 1) break;
-      }
+      vals = ldap_get_values(sdata->ldap, e, "filterMember");
+      if(ldap_count_values(vals) > 0) strncpy(sdata->blacklist, vals[0], MAXBUFSIZE-1);
       ldap_value_free(vals);
    }
 
    ldap_msgfree(res);
 
-   return ret;
 }
 
 #endif

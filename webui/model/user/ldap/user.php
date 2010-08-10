@@ -412,6 +412,13 @@ class ModelUserUser extends Model {
 
       $entry["filtersender"] = $whitelist;
 
+      $uid = $this->getUidByName($username);
+
+      if(MEMCACHED_ENABLED) {
+         $memcache = Registry::get('memcache');
+         $memcache->delete("_c:wbl" . (int)$uid);
+      }
+
       if($this->db->ldap_replace("cn=$username," . LDAP_USER_BASEDN, $entry) == TRUE) {
          return 1;
       }
@@ -434,6 +441,13 @@ class ModelUserUser extends Model {
       $entry = array();
 
       $entry["blacklist"] = $blacklist;
+
+      $uid = $this->getUidByName($username);
+
+      if(MEMCACHED_ENABLED) {
+         $memcache = Registry::get('memcache');
+         $memcache->delete("_c:wbl" . (int)$uid);
+      }
 
       if($this->db->ldap_replace("cn=$username," . LDAP_USER_BASEDN, $entry) == TRUE) {
          return 1;

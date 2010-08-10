@@ -45,7 +45,7 @@ int do_av_check(struct session_data *sdata, char *rcpttoemail, char *fromemail, 
 void get_queue_path(struct session_data *sdata, char **path, struct __config *cfg);
 void do_training(struct session_data *sdata, struct _state *state, char *email, char *acceptbuf, struct __config *cfg);
 void saveMessageToQueue(struct session_data *sdata, float spaminess, struct __config *cfg);
-int isSenderOnBlackOrWhiteList(struct session_data *sdata, char *email,  char *fieldname, char *table, struct __config *cfg);
+void getWBLData(struct session_data *sdata, struct __config *cfg);
 
 int spamc_emul(char *tmpfile, int size, struct __config *cfg);
 
@@ -64,9 +64,12 @@ int getUserdataFromMemcached(struct session_data *sdata, struct __data *data, ch
 int putUserdataToMemcached(struct session_data *sdata, struct __data *data, char *email, struct __config *cfg);
 int getPolicyFromMemcached(struct session_data *sdata, struct __data *data, struct __config *cfg, struct __config *my_cfg);
 int putPolicyToMemcached(struct session_data *sdata, struct __data *data, struct __config *cfg);
+int getWBLFromMemcached(struct session_data *sdata, struct __data *data, struct __config *cfg);
+int putWBLToMemcached(struct session_data *sdata, struct __data *data, struct __config *cfg);
 
 void getUserFromEmailAddress(struct session_data *sdata, struct __data *data, char *email, struct __config *cfg);
 void getPolicySettings(struct session_data *sdata, struct __data *data, struct __config *cfg, struct __config *my_cfg);
+void getUsersWBL(struct session_data *sdata, struct __data *data, struct __config *cfg);
 void checkZombieSender(struct session_data *sdata, struct __data *data, struct _state *state, struct __config *cfg);
 
 void updateCounters(struct session_data *sdata, struct __data *data, struct __counters *counters, struct __config *cfg);

@@ -33,7 +33,8 @@ class SQLite {
       $i = 0;
       $data = array();
 
-      $s = $this->link->prepare($sql) or return $query;
+      $s = $this->link->prepare($sql);
+      if(!$s) { return $query; }
 
       $s->execute();
 

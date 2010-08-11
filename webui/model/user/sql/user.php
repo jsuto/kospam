@@ -351,7 +351,7 @@ class ModelUserUser extends Model {
       foreach ($emails as $email) {
          $email = rtrim($email);
 
-         $query = $this->db->query("SELECT COUNT(*) AS count FROM " . TABLE_EMAIL . " WHERE uid=" . (int)$user['uid'] . " AND email='" . $this->db->escape($email) . "'");
+         $query = $this->db->query("SELECT COUNT(*) AS count FROM " . TABLE_EMAIL . " WHERE uid!=" . (int)$user['uid'] . " AND email='" . $this->db->escape($email) . "'");
 
          if($query->row['count'] > 0) {
             return $email;

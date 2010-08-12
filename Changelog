@@ -1,5 +1,8 @@
-
 0.4.5:
+
+2010.08.12, SJ
+
+Fixed a whitelist related bug causing clapf to crash introduced at 2010.08.10.
 
 2010.08.10, SJ
 

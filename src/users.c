@@ -117,10 +117,10 @@ void getWBLData(struct session_data *sdata, struct __config *cfg){
       res = mysql_store_result(&(sdata->mysql));
       if(res != NULL){
          row = mysql_fetch_row(res);
-
-         if(row[0]) snprintf(sdata->whitelist, MAXBUFSIZE-1, "%s", (char *)row[0]);
-         if(row[1]) snprintf(sdata->blacklist, MAXBUFSIZE-1, "%s", (char *)row[1]);
-
+         if(row){
+            if(row[0]) snprintf(sdata->whitelist, MAXBUFSIZE-1, "%s", (char *)row[0]);
+            if(row[1]) snprintf(sdata->blacklist, MAXBUFSIZE-1, "%s", (char *)row[1]);
+         }
          mysql_free_result(res);
       }
    }

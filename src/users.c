@@ -105,21 +105,31 @@ void getWBLData(struct session_data *sdata, struct __config *cfg){
    MYSQL_RES *res;
    MYSQL_ROW row;
    char buf[SMALLBUFSIZE];
+   int n=0;
 
    memset(sdata->whitelist, 0, MAXBUFSIZE);
    memset(sdata->blacklist, 0, MAXBUFSIZE);
 
-   snprintf(buf, SMALLBUFSIZE-1, "SELECT whitelist, blacklist FROM %s,%s where %s.uid=%ld and %s.uid=%s.uid", SQL_WHITE_LIST, SQL_BLACK_LIST, SQL_WHITE_LIST, sdata->uid, SQL_WHITE_LIST, SQL_BLACK_LIST);
+   snprintf(buf, SMALLBUFSIZE-1, "SELECT whitelist, blacklist FROM %s,%s where (%s.uid=%ld or %s.uid=0) and %s.uid=%s.uid", SQL_WHITE_LIST, SQL_BLACK_LIST, SQL_WHITE_LIST, sdata->uid, SQL_WHITE_LIST, SQL_WHITE_LIST, SQL_BLACK_LIST);
 
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sql: %s", sdata->ttmpfile, buf);
 
    if(mysql_real_query(&(sdata->mysql), buf, strlen(buf)) == 0){
       res = mysql_store_result(&(sdata->mysql));
       if(res != NULL){
-         row = mysql_fetch_row(res);
-         if(row){
-            if(row[0]) snprintf(sdata->whitelist, MAXBUFSIZE-1, "%s", (char *)row[0]);
-            if(row[1]) snprintf(sdata->blacklist, MAXBUFSIZE-1, "%s", (char *)row[1]);
+         while((row = mysql_fetch_row(res))){
+
+            if(row[0]){
+               if(n > 0) strncat(sdata->whitelist, "\n", MAXBUFSIZE-1);
+               strncat(sdata->whitelist, (char *)row[0], MAXBUFSIZE-1);
+            }
+
+            if(row[1]){
+               if(n > 0) strncat(sdata->blacklist, "\n", MAXBUFSIZE-1);
+               strncat(sdata->blacklist, (char *)row[1], MAXBUFSIZE-1);
+            }
+
+            n++;
          }
          mysql_free_result(res);
       }
@@ -239,22 +249,29 @@ void getWBLData(struct session_data *sdata, struct __config *cfg){
    sqlite3_stmt *pStmt;
    const char **pzTail=NULL;
    char buf[SMALLBUFSIZE];
+   int n=0;
 
    memset(sdata->whitelist, 0, MAXBUFSIZE);
    memset(sdata->blacklist, 0, MAXBUFSIZE);
 
-   snprintf(buf, SMALLBUFSIZE-1, "SELECT whitelist, blacklist FROM %s,%s where %s.uid=%ld and %s.uid=%s.uid", SQL_WHITE_LIST, SQL_BLACK_LIST, SQL_WHITE_LIST, sdata->uid, SQL_WHITE_LIST, SQL_BLACK_LIST);
+   snprintf(buf, SMALLBUFSIZE-1, "SELECT whitelist, blacklist FROM %s,%s where (%s.uid=%ld or %s.uid=0) and %s.uid=%s.uid", SQL_WHITE_LIST, SQL_BLACK_LIST, SQL_WHITE_LIST, sdata->uid, SQL_WHITE_LIST, SQL_WHITE_LIST, SQL_BLACK_LIST);
 
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sql: %s", sdata->ttmpfile, buf);
 
-   if(sqlite3_prepare_v2(sdata->db, buf, -1, &pStmt, pzTail) == SQLITE_OK){
-      if(sqlite3_step(pStmt) == SQLITE_ROW){
-         if(sqlite3_column_blob(pStmt, 0)) strncpy(sdata->whitelist, (char *)sqlite3_column_blob(pStmt, 0), MAXBUFSIZE-1);
-         if(sqlite3_column_blob(pStmt, 1)) strncpy(sdata->blacklist, (char *)sqlite3_column_blob(pStmt, 1), MAXBUFSIZE-1);
-      }
-   }
-   sqlite3_finalize(pStmt);
+   if(sqlite3_prepare_v2(sdata->db, buf, -1, &pStmt, pzTail) != SQLITE_OK) return;
 
+   while(sqlite3_step(pStmt) == SQLITE_ROW){
+
+      if(n > 0) strncat(sdata->whitelist, "\n", MAXBUFSIZE-1);
+      strncat(sdata->whitelist, (char *)sqlite3_column_blob(pStmt, 0), MAXBUFSIZE-1);
+
+      if(n > 0) strncat(sdata->blacklist, "\n", MAXBUFSIZE-1);
+      strncat(sdata->blacklist, (char *)sqlite3_column_blob(pStmt, 1), MAXBUFSIZE-1);
+
+      n++;
+   }
+
+   sqlite3_finalize(pStmt);
 }
 
 #endif

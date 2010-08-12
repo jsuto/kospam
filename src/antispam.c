@@ -419,7 +419,7 @@ void getUsersWBL(struct session_data *sdata, struct __data *data, struct __confi
    struct timeval tv1, tv2;
 
 #ifdef HAVE_MEMCACHED
-   if(getWBLFromMemcached(sdata, data, cfg) == 0){
+   //if(getWBLFromMemcached(sdata, data, cfg) == 0){
 #endif
       getWBLData(sdata, cfg);
 #ifdef HAVE_MEMCACHED
@@ -428,11 +428,11 @@ void getUsersWBL(struct session_data *sdata, struct __data *data, struct __confi
        * it inteferes with the memcached control sequences.
        */
 
-      replaceCharacterInBuffer(sdata->whitelist, '\r', 0);
+      /*replaceCharacterInBuffer(sdata->whitelist, '\r', 0);
       replaceCharacterInBuffer(sdata->blacklist, '\r', 0);
 
-      putWBLToMemcached(sdata, data, cfg);
-   }
+      //putWBLToMemcached(sdata, data, cfg);
+   }*/
 #endif
    gettimeofday(&tv2, &tz);
    sdata->__user += tvdiff(tv2, tv1);

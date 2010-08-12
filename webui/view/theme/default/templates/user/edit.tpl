@@ -2,7 +2,7 @@
 
 <?php if(isset($user)) { ?>
 
-<form action="index.php?route=user/edit" name="adduser" method="post">
+<form action="index.php?route=user/edit" name="adduser" method="post" autocomplete="off">
    <input type="hidden" name="uid" value="<?php print $uid; ?>" />
 
    <table border="0">

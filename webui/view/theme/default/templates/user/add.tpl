@@ -5,7 +5,7 @@
 
 <?php if(isset($policies)) { ?>
 
-<form action="index.php?route=user/add" name="adduser" method="post">
+<form action="index.php?route=user/add" name="adduser" method="post" autocomplete="off">
    <table border="0">
 <?php if(DB_DRIVER == 'ldap') { ?>
       <tr><td><?php print $text_email; ?>:</td><td><input type="text" name="email" value="" size="<?php print CGI_INPUT_FIELD_WIDTH; ?>" /></td></tr>

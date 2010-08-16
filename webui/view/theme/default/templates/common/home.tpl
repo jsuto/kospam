@@ -29,8 +29,8 @@
       <td><?php print $text_admin_user_trains_global_database; ?>:</td>
       <td>
          <select name="global_train">
-            <option value="0"<?php if(isset($_SESSION['train_global']) && $_SESSION['train_global'] == 0) { ?>selected="selected""<?php } ?>>off</option>
-            <option value="1"<?php if(isset($_SESSION['train_global']) && $_SESSION['train_global'] == 1) { ?>selected="selected""<?php } ?>>on</option>
+            <option value="0"<?php if(isset($_SESSION['train_global']) && $_SESSION['train_global'] == 0) { ?>selected="selected""<?php } ?>><?php print $text_off; ?></option>
+            <option value="1"<?php if(isset($_SESSION['train_global']) && $_SESSION['train_global'] == 1) { ?>selected="selected""<?php } ?>><?php print $text_on; ?></option>
          </select>
       </td>
    </tr>
@@ -45,7 +45,7 @@
 
 <p>&nbsp;</p>
 
-
+<?php if(PASSWORD_CHANGE_ENABLED == 1) { ?>
 <form name="pwdchange" action="index.php?route=common/home" method="post">
    <table border="0" cellpadding="0" cellspacing="0">
       <tr><td><?php print $text_password; ?>: </td><td><input type="password" name="password" /></td></tr>
@@ -53,7 +53,7 @@
      <tr><td>&nbsp;</td><td><input type="submit" value="<?php print $text_submit; ?>" /> <input type="reset" value="<?php print $text_cancel; ?>" /></td></tr>
    </table>
 </form>
-
+<?php } ?>
 
 <?php } else { ?>
 <?php print $x; ?>. <a href="index.php?route=common/home"><?php print $text_back; ?></a>

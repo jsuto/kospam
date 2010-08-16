@@ -110,6 +110,9 @@ $_['title_not_found'] = "Az oldal nem található";
 $_['text_number_of_messages_in_quarantine'] = "A keresési feltételnek megfelelõ üzenetek száma a karanténban";
 $_['text_number_of_spam_messages_in_quarantine'] = "A keresési feltételnek megfelelõ spam üzenetek száma a karanténban";
 
+$_['text_off'] = "ki";
+$_['text_on'] = "be";
+
 $_['text_password'] = "Jelszó";
 $_['text_password_again'] = "Jelszó ismét";
 $_['text_password_changed'] = "Jelszó megváltozott";

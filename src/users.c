@@ -420,7 +420,7 @@ void getWBLData(struct session_data *sdata, struct __config *cfg){
       if(ldap_count_values(vals) > 0) strncpy(sdata->whitelist, vals[0], MAXBUFSIZE-1);
       ldap_value_free(vals);
 
-      vals = ldap_get_values(sdata->ldap, e, "filterMember");
+      vals = ldap_get_values(sdata->ldap, e, "blackList");
       if(ldap_count_values(vals) > 0) strncpy(sdata->blacklist, vals[0], MAXBUFSIZE-1);
       ldap_value_free(vals);
    }

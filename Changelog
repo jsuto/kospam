@@ -1,5 +1,27 @@
 0.4.5:
 
+2010.08.16, SJ
+
+Fixed some ubuntu init scripts.
+(credits: Toldi Miklos)
+
+Fixed the ldap auth script to use the user's dn instead of blindly
+join the cn to the base dn.
+(credits: Toldi Miklos)
+
+Added an option to the config.php (PASSWORD_CHANGE_ENABLED) to allow or
+disallow the users to change their passwords.
+(credits: Toldi Miklos)
+
+Fixed a minor template bug.
+(credits: Toldi Miklos)
+
+2010.08.13, SJ
+
+Fixed an ldap related confusion. The webui regards the blacklist entry,
+however the clapf daemon was looking for the filterSender entry. From
+now the daemon also uses the blackList entry.
+
 2010.08.12, SJ
 
 Fixed a whitelist related bug causing clapf to crash introduced at 2010.08.10.

@@ -110,6 +110,9 @@ $_['title_not_found'] = "Page not found";
 $_['text_number_of_messages_in_quarantine'] = "Number of messages in the quarantine matching your search criteria";
 $_['text_number_of_spam_messages_in_quarantine'] = "Number of spam messages in the quarantine matching your search criteria";
 
+$_['text_off'] = "off";
+$_['text_on'] = "on";
+
 $_['text_password'] = "Password";
 $_['text_password_again'] = "Password again";
 $_['text_password_changed'] = "Password changed";

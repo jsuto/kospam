@@ -19,8 +19,8 @@ PID_FILE=`${PREFIX}/sbin/clapfconf |grep ^pidfile |cut -f2 -d=`
 PID_NUMBER=`test -f ${PID_FILE} && cat ${PID_FILE}`
 PID_DIR=`dirname ${PID_FILE}`
 PARAMS="-d"
-UID=`${PREFIX}/sbin/clapfconf |grep ^username |cut -f2 -d=`
-GID=`id -gn ${UID}`
+CLAPF_UID=`${PREFIX}/sbin/clapfconf |grep ^username |cut -f2 -d=`
+CLAPF_GID=`id -gn ${CLAPF_UID}`
 
 . /lib/lsb/init-functions
 
@@ -28,7 +28,7 @@ check_status(){
 	test -f /proc/${PID_NUMBER}/status
 }
 
-test -d ${PID_DIR} || install -m 755 -o ${UID} -g ${GID} -d ${PID_DIR}
+test -d ${PID_DIR} || install -m 755 -o ${CLAPF_UID} -g ${CLAPF_GID} -d ${PID_DIR}
 
 case "$1" in
 	start)

@@ -35,7 +35,7 @@ class ControllerCommonHome extends Controller {
       }
 
 
-      if($this->request->server['REQUEST_METHOD'] == 'POST' && $this->validate() == true) {
+      if($this->request->server['REQUEST_METHOD'] == 'POST' && PASSWORD_CHANGE_ENABLED == 1 && $this->validate() == true) {
 
          if($this->model_user_auth->changePassword(Registry::get('username'), $this->request->post['password']) == 1) {
             $this->data['x'] = $this->data['text_password_changed'];

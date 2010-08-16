@@ -182,6 +182,9 @@ function write_stuff() {
    write_line($fp, "CGI_INPUT_FIELD_HEIGHT", 7);
    write_line($fp);
 
+   write_line($fp, "PASSWORD_CHANGE_ENABLED", 1);
+   write_line($fp);
+
    write_line($fp, "MEMCACHED_ENABLED", $_POST['MEMCACHED_ENABLED']);
    write_line($fp);
 

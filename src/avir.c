@@ -28,12 +28,16 @@ int do_av_check(struct session_data *sdata, char *rcpttoemail, char *fromemail, 
 
    if(cfg->clamav_block_encrypted_archives == 1) options |= CL_SCAN_BLOCKENCRYPTED;
 
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: trying to pass to libclamav", sdata->ttmpfile);
+
    if(cl_scanfile(sdata->ttmpfile, &virname, NULL, data->engine, options) == CL_VIRUS){
       memset(virusinfo, 0, SMALLBUFSIZE);
       strncpy(virusinfo, virname, SMALLBUFSIZE-1);
       rav = AVIR_VIRUS;
       snprintf(avengine, SMALLBUFSIZE-1, "libClamAV");
    }
+
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: virus info: '%s'", sdata->ttmpfile, virname);
 #endif
 
 #ifdef HAVE_AVAST

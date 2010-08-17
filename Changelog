@@ -3,6 +3,9 @@
 2010.08.17, SJ
 
 Modified the LDAP policy scheme to allow accented policy names.
+
+Enhanced the maillog.pl script to allow you to define an arbitrary
+socket path.
 (credits: Toldi Miklos)
 
 2010.08.16, SJ

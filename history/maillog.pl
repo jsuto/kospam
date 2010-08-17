@@ -17,6 +17,7 @@ $maillog = $cfg{'maillog'};
 $database = $cfg{'historydb'};
 $user = $cfg{'mysqluser'};
 $password = $cfg{'mysqlpwd'};
+$socket = $cfg{'mysqlsocket'};
 $host = $cfg{'mysqlhost'};
 $port = $cfg{'mysqlport'};
 $pidfile = $cfg{'historypid'};
@@ -28,7 +29,12 @@ if($maillog eq "" || $db eq "") { &usage; }
 
 
 if($db eq "sqlite3") { $dsn = "dbi:SQLite:dbname=$database"; }
-if($db eq "mysql") { $dsn = "dbi:mysql:database=$database;host=$host;port=$port"; }
+if($db eq "mysql") { 
+  if ($socket eq undef) {
+    $dsn = "dbi:mysql:database=$database;host=$host;port=$port";}
+  else {
+    $dsn = "dbi:mysql:database=$database;mysql_socket=$socket";}
+}
 
 &daemonize;
 

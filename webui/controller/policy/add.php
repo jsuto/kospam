@@ -86,7 +86,7 @@ class ControllerPolicyAdd extends Controller {
          $this->error['aaa'] = $this->data['text_invalid_policy_group'];
       }
 
-      if(strlen(@$this->request->post['name']) < 2 || !preg_match("/^([a-zA-Z0-9\-\_\ ]+)$/", $this->request->post['name'])){
+      if(strlen(@$this->request->post['name']) < 2 || !preg_match("/^([\a-zA-ZµÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝßàáâãäåæçèéêëìíîïðñòóôõöøùúûüýÿ0-9\-\_\ ]+)$/i", iconv("utf-8", "iso-8859-2", $this->request->post['name']) )) {
          $this->error['aaa'] = $this->data['text_invalid_policy_name'];
       }
 

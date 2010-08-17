@@ -1,5 +1,10 @@
 0.4.5:
 
+2010.08.17, SJ
+
+Modified the LDAP policy scheme to allow accented policy names.
+(credits: Toldi Miklos)
+
 2010.08.16, SJ
 
 Fixed some ubuntu init scripts.

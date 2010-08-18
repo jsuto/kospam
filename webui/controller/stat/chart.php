@@ -22,10 +22,20 @@ class ControllerStatChart extends Controller {
 
       $timespan = @$this->request->get['timespan'];
 
-      if(Registry::get('admin_user') == 1) {
-         $aa = new ModelStatChart();
-         $aa->pieChartHamSpam($timespan, $this->data['text_ham_and_spam_messages'], "");
+      $emails = "";
+
+      /* let the admin users see the whole statistics */
+
+      if(Registry::get('admin_user') == 0) {
+         $uid = $this->model_user_user->getUidByName($this->data['username']);
+         $emails = "AND rcpt IN ('" . preg_replace("/\n/", "','", $this->model_user_user->getEmailsByUid((int)$uid)) . "')";
       }
+      else if(isset($this->request->get['uid']) && is_numeric($this->request->get['uid']) && $this->request->get['uid'] > 0){
+         $emails = "AND rcpt IN ('" . preg_replace("/\n/", "','", $this->model_user_user->getEmailsByUid((int)$this->request->get['uid'])) . "')";
+      }
+
+      $aa = new ModelStatChart();
+      $aa->pieChartHamSpam($emails, $timespan, $this->data['text_ham_and_spam_messages'], "");
 
    }
 

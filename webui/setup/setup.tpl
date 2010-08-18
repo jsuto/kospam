@@ -53,9 +53,17 @@ function fix1() {
 
    if(document.forms.setup.HISTORY_DRIVER.value == "sqlite") {
       document.forms.setup.HISTORY_DATABASE.value = "/var/lib/clapf/stat/history.sdb";
+      ShowOption('HISTORY_PASSWORD', 0);
+      ShowOption('HISTORY_USERNAME', 0);
+      ShowOption('HISTORY_PASSWORD', 0);
    }
    else {
       document.forms.setup.HISTORY_DATABASE.value = "clapf";
+      if(document.forms.setup.DB_DRIVER.value != "mysql") {
+         ShowOption('HISTORY_PASSWORD', 1);
+         ShowOption('HISTORY_USERNAME', 1);
+         ShowOption('HISTORY_PASSWORD', 1);
+      }
    }
 
    if(document.forms.setup.MEMCACHED_ENABLED.value == 1) {
@@ -213,6 +221,22 @@ function ShowOption(what, value) {
          </select>
       </td>
    </tr>
+
+   <tr id="DIV_HISTORY_HOSTNAME" style="display:none">
+      <td>Database host: </td>
+      <td><input type="text" name="HISTORY_HOSTNAME" id="HISTORY_HOSTNAME" value="localhost" size="30" /></td>
+   </tr>
+
+   <tr id="DIV_HISTORY_USERNAME" style="display:none">
+      <td>Database user: </td>
+      <td><input type="text" name="HISTORY_USERNAME" id="HISTORY_USERNAME" value="clapf" size="30" /></td>
+   </tr>
+
+   <tr id="DIV_HISTORY_PASSWORD" style="display:none">
+      <td>Database password: </td>
+      <td><input type="password" name="HISTORY_PASSWORD" id="HISTORY_PASSWORD" value="" size="30" /></td>
+   </tr>
+
 
    <tr id="DIV_HISTORY_DATABASE" style="display:show">
       <td>History database name: </td>

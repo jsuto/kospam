@@ -419,7 +419,11 @@ class ModelUserUser extends Model {
          $memcache->delete("_c:wbl" . (int)$uid);
       }
 
-      if($this->db->ldap_replace("cn=$username," . LDAP_USER_BASEDN, $entry) == TRUE) {
+      $query = $this->db->ldap_query(LDAP_USER_BASEDN, "cn=$username", array("cn", "dn") );
+
+      if(!isset($query->row['cn'])){ return 0; }
+
+      if($this->db->ldap_replace($query->row['dn'], $entry) == TRUE) {
          return 1;
       }
 
@@ -449,7 +453,11 @@ class ModelUserUser extends Model {
          $memcache->delete("_c:wbl" . (int)$uid);
       }
 
-      if($this->db->ldap_replace("cn=$username," . LDAP_USER_BASEDN, $entry) == TRUE) {
+      $query = $this->db->ldap_query(LDAP_USER_BASEDN, "cn=$username", array("cn", "dn") );
+
+      if(!isset($query->row['cn'])){ return 0; }
+
+      if($this->db->ldap_replace($query->row['dn'], $entry) == TRUE) {
          return 1;
       }
 

@@ -1,4 +1,12 @@
-0.4.5:
+0.4.5-rc3:
+
+2010.08.18, SJ
+
+Let the regular users see their own statistics in the webui.
+
+Fixed a bug in the webui setup that hides the fact that you have to
+specify some database parameters in case of a mysql history.
+(credits: Toldi Miklos)
 
 2010.08.17, SJ
 

@@ -104,12 +104,19 @@ function write_stuff() {
 
 
    write_line($fp, "DB_DRIVER", $_POST['DB_DRIVER']);
-   write_line($fp, "DB_HOSTNAME", $_POST['DB_HOSTNAME']);
-   write_line($fp, "DB_USERNAME", $_POST['DB_USERNAME']);
-   write_line($fp, "DB_PASSWORD", $_POST['DB_PASSWORD']);
-   write_line($fp, "DB_DATABASE", $_POST['DB_DATABASE']);
    write_line($fp, "DB_PREFIX", "");
-   write_line($fp);
+
+   if($_POST['DB_DRIVER'] == "mysql") {
+      write_line($fp, "DB_HOSTNAME", $_POST['DB_HOSTNAME']);
+      write_line($fp, "DB_USERNAME", $_POST['DB_USERNAME']);
+      write_line($fp, "DB_PASSWORD", $_POST['DB_PASSWORD']);
+      write_line($fp, "DB_DATABASE", $_POST['DB_DATABASE']);
+   }
+   else if($_POST['HISTORY_DRIVER'] == "mysql") {
+      write_line($fp, "DB_HOSTNAME", $_POST['HISTORY_HOSTNAME']);
+      write_line($fp, "DB_USERNAME", $_POST['HISTORY_USERNAME']);
+      write_line($fp, "DB_PASSWORD", $_POST['HISTORY_PASSWORD']);
+   }
 
    if($_POST['DB_DRIVER'] == "ldap") {
       write_line($fp, "LDAP_HOST", $_POST['LDAP_HOST']);
@@ -121,6 +128,8 @@ function write_stuff() {
       write_line($fp);
    }
    else {
+      write_line($fp);
+
       write_line($fp, "TABLE_USER", "user");
       write_line($fp, "TABLE_EMAIL", "t_email");
       write_line($fp, "TABLE_DOMAIN", "t_domain");

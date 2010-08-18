@@ -80,17 +80,17 @@ class ModelStatChart extends Model {
    }
 
 
-   public function pieChartHamSpam($timespan, $title, $output) {
+   public function pieChartHamSpam($emails = '', $timespan, $title, $output) {
 
       $range = $this->getRangeInSeconds($timespan);
 
       $chart = new PieChart(SIZE_X, SIZE_Y);
       $dataSet = new XYDataSet();
 
-      $query = $this->db_history->query("SELECT COUNT(*) AS SPAM FROM clapf WHERE result='SPAM' AND ts > $range");
+      $query = $this->db_history->query("SELECT COUNT(*) AS SPAM FROM clapf WHERE result='SPAM' $emails AND ts > $range");
       if($query->num_rows > 0) { $dataSet->addPoint(new Point("SPAM (" . $query->row['SPAM'] . ")", $query->row['SPAM'])); }
 
-      $query = $this->db_history->query("SELECT COUNT(*) AS HAM FROM clapf WHERE result='HAM' AND ts > $range");
+      $query = $this->db_history->query("SELECT COUNT(*) AS HAM FROM clapf WHERE result='HAM' $emails AND ts > $range");
       if($query->num_rows > 0) { $dataSet->addPoint(new Point("HAM (" . $query->row['HAM'] . ")", $query->row['HAM'])); }
 
       $chart->setDataSet($dataSet);

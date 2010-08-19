@@ -42,6 +42,8 @@ Registry::set('domain_admin', isDomainAdmin());
 
 if(DB_DRIVER == "ldap"){
    $db = new LDAPDB(DB_DRIVER, LDAP_HOST, LDAP_BINDDN, LDAP_BINDPW);
+   $db_token = new DB(TOKEN_DRIVER, TOKEN_HOSTNAME, TOKEN_USERNAME, TOKEN_PASSWORD, TOKEN_DATABASE, TOKEN_PREFIX);
+   Registry::set('db_token', $db_token);
 }
 else {
    $db = new DB(DB_DRIVER, DB_HOSTNAME, DB_USERNAME, DB_PASSWORD, DB_DATABASE, DB_PREFIX);

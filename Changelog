@@ -1,5 +1,10 @@
 0.4.5-rc3:
 
+2010.08.19, SJ
+
+Fixed both the webui setup and the corresponding LDAP model to properly
+handle the t_misc table if the user data are stored in LDAP.
+
 2010.08.18, SJ
 
 Let the regular users see their own statistics in the webui.

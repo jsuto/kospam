@@ -24,6 +24,7 @@ class ControllerStatStat extends Controller {
       $this->data['timespan'] = @$this->request->get['timespan'];
       $this->data['uid'] = @$this->request->get['uid'];
 
+      $this->data['admin_user'] = Registry::get('admin_user');
       $this->render();
    }
 

@@ -277,6 +277,9 @@ class ModelUserUser extends Model {
       $entry["mailMessageStore"] = "";
 
       if($this->db->ldap_add("cn=" . $user['username'] . "," .  LDAP_USER_BASEDN, $entry) == TRUE) {
+
+         $query = $this->db_token->query("INSERT INTO " . TABLE_MISC . " (uid, nham, nspam) VALUES(" . (int)$user['uid'] . ", 0, 0)");
+
          /* remove from memcached */
 
          if(MEMCACHED_ENABLED) {
@@ -347,6 +350,8 @@ class ModelUserUser extends Model {
       if($uid < 1){ return 0; }
 
       $username = $this->getNameByUid((int)$uid);
+
+      $query = $this->db_token->query("DELETE FROM " . TABLE_MISC . " WHERE uid=" . (int)$uid);
 
       if($this->db->ldap_delete("cn=$username," . LDAP_USER_BASEDN) == TRUE) {
          return 1;

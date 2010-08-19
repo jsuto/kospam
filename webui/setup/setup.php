@@ -112,11 +112,7 @@ function write_stuff() {
       write_line($fp, "DB_PASSWORD", $_POST['DB_PASSWORD']);
       write_line($fp, "DB_DATABASE", $_POST['DB_DATABASE']);
    }
-   else if($_POST['HISTORY_DRIVER'] == "mysql") {
-      write_line($fp, "DB_HOSTNAME", $_POST['HISTORY_HOSTNAME']);
-      write_line($fp, "DB_USERNAME", $_POST['HISTORY_USERNAME']);
-      write_line($fp, "DB_PASSWORD", $_POST['HISTORY_PASSWORD']);
-   }
+
 
    if($_POST['DB_DRIVER'] == "ldap") {
       write_line($fp, "LDAP_HOST", $_POST['LDAP_HOST']);
@@ -126,22 +122,28 @@ function write_stuff() {
       write_line($fp, "LDAP_POLICY_BASEDN", $_POST['LDAP_POLICY_BASEDN']);
       write_line($fp, "LDAP_DOMAIN_BASEDN", $_POST['LDAP_DOMAIN_BASEDN']);
       write_line($fp);
-   }
-   else {
-      write_line($fp);
 
-      write_line($fp, "TABLE_USER", "user");
-      write_line($fp, "TABLE_EMAIL", "t_email");
-      write_line($fp, "TABLE_DOMAIN", "t_domain");
-      write_line($fp, "TABLE_MISC", "t_misc");
-      write_line($fp, "TABLE_WHITELIST", "t_white_list");
-      write_line($fp, "TABLE_BLACKLIST", "t_black_list");
-      write_line($fp, "TABLE_POLICY", "t_policy");
-      write_line($fp, "TABLE_STAT", "t_stat");
-      write_line($fp, "TABLE_REMOTE", "t_remote");
-      write_line($fp, "TABLE_SUMMARY", "summary");
-      write_line($fp, "TABLE_COUNTERS", "t_counters");
+      write_line($fp, "TOKEN_DRIVER", $_POST['TOKEN_DRIVER']);
+      write_line($fp, "TOKEN_PREFIX", "");
+      write_line($fp, "TOKEN_HOSTNAME", $_POST['TOKEN_HOSTNAME']);
+      write_line($fp, "TOKEN_USERNAME", $_POST['TOKEN_USERNAME']);
+      write_line($fp, "TOKEN_PASSWORD", $_POST['TOKEN_PASSWORD']);
+      write_line($fp, "TOKEN_DATABASE", $_POST['TOKEN_DATABASE']);
    }
+   write_line($fp);
+
+
+   write_line($fp, "TABLE_USER", "user");
+   write_line($fp, "TABLE_EMAIL", "t_email");
+   write_line($fp, "TABLE_DOMAIN", "t_domain");
+   write_line($fp, "TABLE_MISC", "t_misc");
+   write_line($fp, "TABLE_WHITELIST", "t_white_list");
+   write_line($fp, "TABLE_BLACKLIST", "t_black_list");
+   write_line($fp, "TABLE_POLICY", "t_policy");
+   write_line($fp, "TABLE_STAT", "t_stat");
+   write_line($fp, "TABLE_REMOTE", "t_remote");
+   write_line($fp, "TABLE_SUMMARY", "summary");
+   write_line($fp, "TABLE_COUNTERS", "t_counters");
 
    write_line($fp);
 
@@ -172,8 +174,16 @@ function write_stuff() {
    fputs($fp, "define('HISTORY_WORKER_URL', SITE_URL . 'index.php?route=history/worker');" . CRLF);
    fputs($fp, "define('HISTORY_HELPER_URL', SITE_URL . 'index.php?route=history/helper');" . CRLF);
 
+   /* history stuff */
+
    write_line($fp, "HISTORY_DRIVER", $_POST['HISTORY_DRIVER']);
    write_line($fp, "HISTORY_DATABASE", $_POST['HISTORY_DATABASE']);
+   write_line($fp, "HISTORY_HOSTNAME", $_POST['HISTORY_HOSTNAME']);
+   write_line($fp, "HISTORY_USERNAME", $_POST['HISTORY_USERNAME']);
+   write_line($fp, "HISTORY_PASSWORD", $_POST['HISTORY_PASSWORD']);
+   write_line($fp);
+
+
    write_line($fp, "HISTORY_REFRESH", 5);
    write_line($fp);
 

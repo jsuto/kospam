@@ -15,6 +15,7 @@ class ModelUserAuth extends Model {
       }
 
       $_SESSION['username'] = $query->row['cn'];
+      $_SESSION['dn'] = $query->row['dn'];
       $_SESSION['admin_user'] = (int)$query->row['isadmin'];
 
       return 1;

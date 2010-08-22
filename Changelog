@@ -1,5 +1,10 @@
 0.4.5-rc3:
 
+2010.08.22, SJ
+
+Fixed a few bugs in the LDAP user handling in the webui.
+(credits: Toldi Miklos)
+
 2010.08.19, SJ
 
 Fixed both the webui setup and the corresponding LDAP model to properly

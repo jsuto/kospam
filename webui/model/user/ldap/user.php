@@ -101,7 +101,9 @@ class ModelUserUser extends Model {
       if($username == ""){ return -1; }
 
       //$query = $this->db->ldap_query(LDAP_USER_BASEDN, "(|(mail=" . $_SESSION['username'] . ")(mailalternateaddress=" . $_SESSION['username'] . "))", array("uid") );
-      $query = $this->db->ldap_query(LDAP_USER_BASEDN, "cn=" . $_SESSION['username'], array("uid") );
+      //$query = $this->db->ldap_query(LDAP_USER_BASEDN, "cn=" . $_SESSION['username'], array("uid") );
+      $query = $this->db->ldap_query($_SESSION['dn'], "cn=" . $_SESSION['username'], array("uid") );
+
       if(isset($query->row['uid'])){
          return $query->row['uid'];
       }

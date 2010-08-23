@@ -1,5 +1,9 @@
 0.4.5-rc3:
 
+2010.08.23, SJ
+
+Fixed a bug in the LDAP version of updateUser() function of the webui.
+
 2010.08.22, SJ
 
 Fixed a few bugs in the LDAP user handling in the webui.

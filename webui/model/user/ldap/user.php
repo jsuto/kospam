@@ -74,6 +74,7 @@ class ModelUserUser extends Model {
       $data = array(
                     'uid'          => $result['uid'],
                     'username'     => $result['cn'],
+                    'dn'           => $result['dn'],
                     'realname'     => $result['sn'],
                     'email'        => $result['mail'],
                     'policy_group' => $result['policygroupid'],
@@ -323,12 +324,17 @@ class ModelUserUser extends Model {
 
 
       $old_user = $this->getUserByUid($user['uid']);
+      $dn = $old_user['dn'];
 
       if($old_user['username'] != $user['username']) {
-         $this->db->ldap_rename("cn=" . $old_user['username'] . "," .  LDAP_USER_BASEDN, "cn=" . $user['username'], LDAP_USER_BASEDN);
+         $dn = preg_replace("/cn=" . $old_user['username'] . "/",  "cn=" . $user['username'], $dn);
+         if($this->db->ldap_rename($old_user['dn'], "cn=" . $user['username'], preg_replace("/cn=" . $user['username'] . "\,/", "", $dn) ) != TRUE) {
+            return 0;
+         }
       }
 
-      if($this->db->ldap_modify("cn=" . $user['username'] . "," .  LDAP_USER_BASEDN, $entry) == TRUE) {
+
+      if($this->db->ldap_modify($dn, $entry) == TRUE) {
          /* remove from memcached */
 
          if(MEMCACHED_ENABLED) {

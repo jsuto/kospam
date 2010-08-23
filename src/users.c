@@ -339,7 +339,7 @@ int getUserdataFromEmail(struct session_data *sdata, char *email, struct __confi
    else
       snprintf(filter, SMALLBUFSIZE-1, "(|(%s=%s)(%s=%s))", cfg->email_address_attribute_name, email, cfg->email_alias_attribute_name, email);
 
-   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: ldap filter: %s", sdata->ttmpfile, filter);
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: user filter: %s", sdata->ttmpfile, filter);
 
    rc = ldap_search_s(sdata->ldap, cfg->ldap_base, LDAP_SCOPE, filter, attrs, 0, &res);
 
@@ -374,7 +374,7 @@ int getUserdataFromEmail(struct session_data *sdata, char *email, struct __confi
 
    rc = ldap_search_s(sdata->ldap, cfg->ldap_base, LDAP_SCOPE, filter, attrs, 0, &res);
 
-   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: ldap filter: %s", sdata->ttmpfile, filter);
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: user filter: %s", sdata->ttmpfile, filter);
 
    e = ldap_first_entry(sdata->ldap, res);
    if(e){

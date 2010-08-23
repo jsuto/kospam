@@ -121,6 +121,8 @@ int getPolicy(struct session_data *sdata, struct __config *cfg, struct __config 
 
    snprintf(filter, SMALLBUFSIZE-1, "(policyGroup=%d)", sdata->policy_group);
 
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: policy filter: %s", sdata->ttmpfile, filter);
+
    rc = ldap_search_s(sdata->ldap, cfg->ldap_base, LDAP_SCOPE, filter, attrs, 0, &res);
    if(rc) return 0;
 

@@ -1,5 +1,12 @@
 0.4.5-rc3:
 
+2010.08.27, SJ
+
+The configure script would abort if you specified --with-userdb=ldap
+and you have no ldap develpment packages installed.
+
+Massive LDAP changes to support multiple OUs under LDAP_USER_BASEDN.
+
 2010.08.24, SJ
 
 LDAP related fix in the webui.

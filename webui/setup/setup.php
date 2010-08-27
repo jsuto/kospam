@@ -226,6 +226,10 @@ function write_stuff() {
 
    fputs($fp, '$counters = array(\'_c:rcvd\', \'_c:ham\', \'_c:spam\', \'_c:possible_spam\', \'_c:unsure\', \'_c:minefield\', \'_c:virus\', \'_c:fp\', \'_c:fn\', \'_c:counters_last_update\');' . CRLF);
 
+   write_line($fp);
+
+   fputs($fp, '$ldap_user_DNs = array(LDAP_USER_BASEDN);');
+
    fputs($fp, "?>\n");
 
    fclose($fp);

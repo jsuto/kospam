@@ -90,6 +90,19 @@ class ModelUserUser extends Model {
    }
 
 
+   public function getUserByEmail($email = '') {
+      $username = "";
+
+      if($email == '') { return $username; }
+
+      $query = $this->db->ldap_query(LDAP_USER_BASEDN, "(|(mail=$email)(mailalternateaddress=$email))", array("cn") );
+
+      if(isset($query->row['cn'])) { $username = $query->row['cn']; }
+
+      return $username;
+   }
+
+
    public function howManyUsers($search = '') {
 
       $query = $this->db->ldap_query(LDAP_USER_BASEDN, "(|(cn=$search*)(mail=$search*))", array("uid") );
@@ -111,6 +124,42 @@ class ModelUserUser extends Model {
 
       return -1;
 
+   }
+
+
+   public function getCNFromDN($dn = '') {
+      if($dn == '' || substr($dn, 0, 3) != "cn=") { return ""; }
+
+      $a = explode(",", $dn);
+      return $a[0];
+   }
+
+
+   public function getUidByDN($dn = '') {
+      if($dn == '') { return -1; }
+
+      $cn = $this->getCNFromDN($dn);
+
+      $query = $this->db->ldap_query($dn, "$cn", array("uid") );
+
+      if(isset($query->row['uid'])){
+         return $query->row['uid'];
+      }
+
+      return -1;
+   }
+
+
+   public function getDNByUid($uid = 0) {
+      if(!is_numeric($uid) || $uid < 1) { return ""; }
+
+      $query = $this->db->ldap_query(LDAP_USER_BASEDN, "uid=" . (int)$uid, array("dn") );
+
+      if(isset($query->row['dn'])){
+         return $query->row['dn'];
+      }
+
+      return "";
    }
 
 
@@ -279,7 +328,11 @@ class ModelUserUser extends Model {
 
       $entry["mailMessageStore"] = "";
 
-      if($this->db->ldap_add("cn=" . $user['username'] . "," .  LDAP_USER_BASEDN, $entry) == TRUE) {
+      $basedn = LDAP_USER_BASEDN;
+
+      if(isset($user['ou']) && strlen($user['ou']) > 3) { $basedn = $user['ou']; }
+
+      if($this->db->ldap_add("cn=" . $user['username'] . "," .  $basedn, $entry) == TRUE) {
 
          $query = $this->db_token->query("INSERT INTO " . TABLE_MISC . " (uid, nham, nspam) VALUES(" . (int)$user['uid'] . ", 0, 0)");
 
@@ -335,6 +388,7 @@ class ModelUserUser extends Model {
 
 
       if($this->db->ldap_modify($dn, $entry) == TRUE) {
+
          /* remove from memcached */
 
          if(MEMCACHED_ENABLED) {
@@ -344,6 +398,14 @@ class ModelUserUser extends Model {
 
             foreach ($entry["mailalternateaddress"] as $email) {
                $memcache->delete("_c:" . $email);
+            }
+         }
+
+         /* if the LDAP container is changed */
+
+         if($user['ou'] != preg_replace("/cn=" . $old_user['username'] . "/",  "", $dn) ) {
+            if($this->db->ldap_rename($dn, "cn=" . $user['username'], $user['ou']) != TRUE) {
+               return 0;
             }
          }
 
@@ -410,33 +472,29 @@ class ModelUserUser extends Model {
    }
 
 
-   public function getWhitelist($username = '') {
-      if($username == ""){ return array(); }
+   public function getWhitelist($dn = '') {
+      if($dn == ""){ return array(); }
 
-      $query = $this->db->ldap_query(LDAP_USER_BASEDN, "cn=$username", array("filtersender") );
+      $query = $this->db->ldap_query($dn, $this->getCNFromDN($dn), array("filtersender") );
 
       return $query->row['filtersender'];
    }
 
 
-   public function setWhitelist($username = '', $whitelist = '') {
+   public function setWhitelist($dn = '', $whitelist = '') {
 
       $entry = array();
 
       $entry["filtersender"] = $whitelist;
 
-      $uid = $this->getUidByName($username);
+      $uid = $this->getUidByDN($dn);
 
       if(MEMCACHED_ENABLED) {
          $memcache = Registry::get('memcache');
          $memcache->delete("_c:wbl" . (int)$uid);
       }
 
-      $query = $this->db->ldap_query(LDAP_USER_BASEDN, "cn=$username", array("cn", "dn") );
-
-      if(!isset($query->row['cn'])){ return 0; }
-
-      if($this->db->ldap_replace($query->row['dn'], $entry) == TRUE) {
+      if($this->db->ldap_replace($dn, $entry) == TRUE) {
          return 1;
       }
 
@@ -444,33 +502,29 @@ class ModelUserUser extends Model {
    }
 
 
-   public function getBlacklist($username = '') {
-      if($username == ""){ return array(); }
+   public function getBlacklist($dn = '') {
+      if($dn == ""){ return array(); }
 
-      $query = $this->db->ldap_query(LDAP_USER_BASEDN, "cn=$username", array("blacklist") );
+      $query = $this->db->ldap_query($dn, $this->getCNFromDN($dn), array("blacklist") );
 
       return $query->row['blacklist'];
    }
 
 
-   public function setBlacklist($username = '', $blacklist = '') {
+   public function setBlacklist($dn = '', $blacklist = '') {
 
       $entry = array();
 
       $entry["blacklist"] = $blacklist;
 
-      $uid = $this->getUidByName($username);
+      $uid = $this->getUidByDN($dn);
 
       if(MEMCACHED_ENABLED) {
          $memcache = Registry::get('memcache');
          $memcache->delete("_c:wbl" . (int)$uid);
       }
 
-      $query = $this->db->ldap_query(LDAP_USER_BASEDN, "cn=$username", array("cn", "dn") );
-
-      if(!isset($query->row['cn'])){ return 0; }
-
-      if($this->db->ldap_replace($query->row['dn'], $entry) == TRUE) {
+      if($this->db->ldap_replace($dn, $entry) == TRUE) {
          return 1;
       }
 

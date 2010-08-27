@@ -26,8 +26,14 @@ class ControllerUserWhitelist extends Controller {
       $this->data['text_submit'] = $language->get('text_submit');
       $this->data['text_back'] = $language->get('text_back');
 
+      if(DB_DRIVER == "ldap")
+         $__username = $_SESSION['dn'];
+      else
+         $__username = $_SESSION['username'];
+
+
       if($this->request->server['REQUEST_METHOD'] == 'POST'){
-         $ret = $this->model_user_user->setWhitelist($_SESSION['username'], $this->request->post['whitelist']);
+         $ret = $this->model_user_user->setWhitelist($__username, $this->request->post['whitelist']);
 
          if($ret == 1){
             $this->data['x'] = $language->get('text_successfully_updated');
@@ -36,7 +42,7 @@ class ControllerUserWhitelist extends Controller {
          }
       }
       else {
-         $this->data['whitelist'] = $this->model_user_user->getWhitelist($_SESSION['username']);
+         $this->data['whitelist'] = $this->model_user_user->getWhitelist($__username);
       }
 
       $this->render();

@@ -1,12 +1,26 @@
 
 
-<?php if(isset($user)) { ?>
+<?php if(isset($user)) {
+
+   $userbasedn = preg_replace("/cn=([\w]+),/", "", $user['dn']); ?>
 
 <form action="index.php?route=user/edit" name="adduser" method="post" autocomplete="off">
    <input type="hidden" name="uid" value="<?php print $uid; ?>" />
 
    <table border="0">
 <?php if(DB_DRIVER == 'ldap') { ?>
+      <tr>
+         <td>LDAP OU:</td>
+         <td>
+            <select name="ou">
+            <?php foreach ($ldap_user_DNs as $ou) { ?>
+               <option value="<?php print $ou; ?>"<?php if($userbasedn == $ou) { ?> selected="selected"<?php } ?>><?php print $ou; ?></option>
+            <?php } ?>
+            </select>
+         </td>
+      </tr>
+
+
       <tr><td><?php print $text_email; ?>:</td><td><input type="text" name="email" value="<?php print $email; ?>" size="<?php print CGI_INPUT_FIELD_WIDTH; ?>" /></td></tr>
       <tr valign="top"><td><?php print $text_email_aliases; ?>:</td><td><textarea name="mailalternateaddress" cols="<?php print CGI_INPUT_FIELD_WIDTH; ?>" rows="<?php print CGI_INPUT_FIELD_HEIGHT; ?>"><?php print $user['aliases']; ?></textarea></td></tr>
 <?php } else { ?>

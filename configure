@@ -4419,6 +4419,13 @@ ac_cv_lib_sqlite3=ac_cv_lib_sqlite3_main
   fi
 
 
+  if test "$withval" = "ldap" && test "$have_ldap" = "no"; then
+     echo "ldap (devel package) is not installed"
+     exit 1
+  fi
+
+
+
 fi
 
 

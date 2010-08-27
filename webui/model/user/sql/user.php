@@ -210,6 +210,19 @@ class ModelUserUser extends Model {
    }
 
 
+   public function getUserByEmail($email = '') {
+      $username = "";
+
+      if($email == '') { return $username; }
+
+      $query = $this->db->query("SELECT username FROM " . TABLE_USER . " WHERE uid IN (SELECT uid FROM " . TABLE_EMAIL . " WHERE email='" . $this->db->escape($email) . "')");
+
+      if(isset($query->row['username'])) { $username = $query->row['username']; }
+
+      return $username;
+   }
+
+
    public function getUsers($search = '', $page = 0, $page_len = 0, $uid = '', $user = '', $email = '', $domain = '') {
       $where_cond = "";
       $order = "";

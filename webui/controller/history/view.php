@@ -11,6 +11,12 @@ class ControllerHistoryView extends Controller {
       $request = Registry::get('request');
       $language = Registry::get('language');
 
+      if(DB_DRIVER == "ldap"){
+         $this->load->model('user/ldap/user');
+      } else {
+         $this->load->model('user/sql/user');
+      }
+
       $this->document->title = $language->get('text_history');
 
       date_default_timezone_set(TIMEZONE);
@@ -40,14 +46,11 @@ class ControllerHistoryView extends Controller {
 
       if(Registry::get('admin_user') == 1) {
 
-         $username = "";
+         //if(Registry::get('DB_DRIVER') == 'mysql'){ $db->select_db(Registry::get('DB_DATABASE')); }
 
-         if(Registry::get('DB_DRIVER') == 'mysql'){ $db->select_db(Registry::get('DB_DATABASE')); }
+         $username = $this->model_user_user->getUserByEmail(@$this->request->get['to']);
 
-         $user = $db->query("select user.username from user, t_email where user.uid=t_email.uid and t_email.email='" . $db->escape(@$this->request->get['to']) . "'");
-         if($user->num_rows == 1) { $username = $user->row['username']; }
-
-         if(Registry::get('HISTORY_DRIVER') == 'mysql'){ $db_history->select_db(Registry::get('HISTORY_DATABASE')); }
+         //if(Registry::get('HISTORY_DRIVER') == 'mysql'){ $db_history->select_db(Registry::get('HISTORY_DATABASE')); }
 
 
          $query = $db_history->query("select queue_id, result, spaminess, relay, delay, queue_id2, virus from clapf where queue_id='" . $db_history->escape(@$this->request->get['id']) . "'");
@@ -55,7 +58,7 @@ class ControllerHistoryView extends Controller {
          foreach ($query->rows as $__clapf) {
 
             // smtp/local/virtual records after content filter
-            $__smtp = $db_history->query("select * from smtp where queue_id='" . $db->escape($__clapf['queue_id2']) . "' order by ts desc");
+            $__smtp = $db_history->query("select * from smtp where queue_id='" . $db_history->escape($__clapf['queue_id2']) . "' order by ts desc");
 
             // what we had before the content filter
             $__smtp2 = $db_history->query("select * from smtp where clapf_id='" . $db_history->escape($__clapf['queue_id']) . "'");

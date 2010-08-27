@@ -44,6 +44,7 @@ if(DB_DRIVER == "ldap"){
    $db = new LDAPDB(DB_DRIVER, LDAP_HOST, LDAP_BINDDN, LDAP_BINDPW);
    $db_token = new DB(TOKEN_DRIVER, TOKEN_HOSTNAME, TOKEN_USERNAME, TOKEN_PASSWORD, TOKEN_DATABASE, TOKEN_PREFIX);
    Registry::set('db_token', $db_token);
+   Registry::set('ldap_user_DNs', $ldap_user_DNs);
 }
 else {
    $db = new DB(DB_DRIVER, DB_HOSTNAME, DB_USERNAME, DB_PASSWORD, DB_DATABASE, DB_PREFIX);
@@ -75,7 +76,7 @@ if(Registry::get('username')) {
    if(isset($request->get['route'])){
 
       if($request->get['route'] == "history/worker" || $request->get['route'] == "history/view" || strstr($request->get['route'], "stat/") ) {
-         $db_history = new DB(HISTORY_DRIVER, DB_HOSTNAME, DB_USERNAME, DB_PASSWORD, HISTORY_DATABASE, DB_PREFIX);
+         $db_history = new DB(HISTORY_DRIVER, HISTORY_HOSTNAME, HISTORY_USERNAME, HISTORY_PASSWORD, HISTORY_DATABASE, DB_PREFIX);
          Registry::set('db_history', $db_history);
       }
 

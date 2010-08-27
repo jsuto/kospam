@@ -24,6 +24,7 @@ class ControllerUserAdd extends Controller {
          $this->load->model('policy/sql/policy');
       }
 
+      $this->data['ldap_user_DNs'] = Registry::get('ldap_user_DNs');
 
       $this->document->title = $this->data['text_user_management'];
 

@@ -26,8 +26,13 @@ class ControllerUserBlacklist extends Controller {
       $this->data['text_submit'] = $language->get('text_submit');
       $this->data['text_back'] = $language->get('text_back');
 
+      if(DB_DRIVER == "ldap")
+         $__username = $_SESSION['dn'];
+      else
+         $__username = $_SESSION['username'];
+
       if($this->request->server['REQUEST_METHOD'] == 'POST'){
-         $ret = $this->model_user_user->setBlacklist($_SESSION['username'], $this->request->post['blacklist']);
+         $ret = $this->model_user_user->setBlacklist($__username, $this->request->post['blacklist']);
 
          if($ret == 1){
             $this->data['x'] = $language->get('text_successfully_updated');
@@ -36,7 +41,7 @@ class ControllerUserBlacklist extends Controller {
          }
       }
       else {
-         $this->data['blacklist'] = $this->model_user_user->getBlacklist($_SESSION['username']);
+         $this->data['blacklist'] = $this->model_user_user->getBlacklist($__username);
       }
 
       $this->render();

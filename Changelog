@@ -1,3 +1,15 @@
+0.4.5:
+
+2010.09.04, SJ
+
+Fixed a bug calculating the time spent in the 'user' phase.
+
+2010.09.03, SJ
+
+The webui honors the MIN_PASSWORD_LENGTH variable when the administrator
+wants to change a password.
+
+
 0.4.5-rc3:
 
 2010.08.27, SJ

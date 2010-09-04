@@ -46,7 +46,7 @@
 <p>&nbsp;</p>
 
 <?php if(PASSWORD_CHANGE_ENABLED == 1) { ?>
-<form name="pwdchange" action="index.php?route=common/home" method="post">
+<form name="pwdchange" action="index.php?route=common/home" method="post" autocomplete="off">
    <table border="0" cellpadding="0" cellspacing="0">
       <tr><td><?php print $text_password; ?>: </td><td><input type="password" name="password" /></td></tr>
       <tr><td><?php print $text_password_again; ?>: </td><td><input type="password" name="password2" /></td></tr>

@@ -374,7 +374,7 @@ class ModelUserUser extends Model {
 
       /* update password field if we have to */
  
-      if(strlen($user['password']) > 6) {
+      if(strlen($user['password']) >= MIN_PASSWORD_LENGTH) {
          $query = $this->db->query("UPDATE " . TABLE_USER . " SET password='" . $this->db->escape(crypt($user['password'])) . "' WHERE uid=" . (int)$user['uid']);
          if($this->db->countAffected() != 1) { return 0; }
       }

@@ -418,6 +418,7 @@ void getUsersWBL(struct session_data *sdata, struct __data *data, struct __confi
    struct timezone tz;
    struct timeval tv1, tv2;
 
+   gettimeofday(&tv1, &tz);
 #ifdef HAVE_MEMCACHED
    //if(getWBLFromMemcached(sdata, data, cfg) == 0){
 #endif

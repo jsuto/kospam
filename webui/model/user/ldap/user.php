@@ -367,7 +367,7 @@ class ModelUserUser extends Model {
       if(isset($user['proxydn'])) { $entry["proxydn"] = $user['proxydn']; }
       if(isset($user['domain'])) { $entry["domain"] = $user['domain']; }
 
-      if(strlen($user['password']) > 6) {
+      if(strlen($user['password']) > MIN_PASSWORD_LENGTH) {
          $entry["userPassword"] = "{MD5}" . base64_encode(md5($user['password'], TRUE));
       }
 

@@ -14,7 +14,7 @@
             <?php if($admin_user == 1) { ?>
                <li><a href="index.php?route=stat/counter"><?php print $text_counters; ?></a></li>
             <?php } ?>
-            <?php if($admin_user == 1 || $domain_admin == 1) { ?>
+            <?php if($admin_user == 1) { ?>
                <li><a href="index.php?route=history/history"><?php print $text_history; ?></a></li>
             <?php } ?>
             </ul>

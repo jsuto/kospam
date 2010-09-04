@@ -53,6 +53,7 @@ create table if not exists clapf (
 	relay char(64) default null,
 	delay float default 0.0,
 	rcpt char(64) not null,
+	rcptdomain char(32) not null,
 	result char(16) default null,
 	spaminess float default 0.5,
 	virus char(32) default null

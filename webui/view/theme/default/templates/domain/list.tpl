@@ -18,13 +18,6 @@
 
 <h4><?php print $text_existing_domains; ?></h4>
 
-<!--form method="post" name="search1" action="index.php?route=domain/domain">
-   <input type="text" name="search" value="<?php print $search; ?>" />
-   <input type="submit" value="<?php print $text_search; ?>" />
-</form>
-
-<p>&nbsp;</p-->
-
 <?php if(isset($domains)){ ?>
 
 <table border="1">
@@ -36,7 +29,7 @@
 
 <?php foreach($domains as $domain) { ?>
    <tr align="left">
-      <td><?php print $domain['domain']; ?></td>
+      <td><a href="index.php?route=user/list&search=@<?php print $domain['domain']; ?>"><?php print $domain['domain']; ?></a></td>
       <td><?php print $domain['mapped']; ?></td>
       <td><a href="index.php?route=domain/remove&amp;domain=<?php print urlencode($domain['domain']); ?>"><?php print $text_remove; ?></a></td>
    </tr>

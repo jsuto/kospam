@@ -170,6 +170,9 @@
 		background: green;
 	}
 
+        td.realname {
+		width: 120px;
+	}
 
 	.loginfailed {
 		color: red;

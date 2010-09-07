@@ -29,8 +29,8 @@
       <tr>
        <td><?php print $text_domain; ?>:</td><td>
          <select name="domain">
-<?php foreach ($domains as $domain) { ?>
-            <option value="<?php if(is_array($domain)){ print $domain['mapped']; } else { print $domain; } ?>"<?php if(isset($post) && $domain == $post['domain']){ ?> selected="selected"<?php } ?>><?php if(is_array($domain)){ print $domain['mapped']; } else { print $domain; } ?></option>
+<?php asort($domains); foreach ($domains as $domain) { ?>
+            <option value="<?php if(is_array($domain)){ print $domain['mapped']; } else { print $domain; } ?>"<?php if( (isset($post) && $domain == $post['domain']) || (!isset($post) && isset($_SESSION['last_domain']) && $domain == $_SESSION['last_domain']) ){ ?> selected="selected"<?php } ?>><?php if(is_array($domain)){ print $domain['mapped']; } else { print $domain; } ?></option>
 <?php } ?>
          </select>
        </td>

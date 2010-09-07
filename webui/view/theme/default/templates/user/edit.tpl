@@ -37,7 +37,7 @@
       <tr>
        <td><?php print $text_domain; ?>:</td><td>
          <select name="domain">
-<?php foreach ($domains as $domain) { ?>
+<?php asort($domains); foreach ($domains as $domain) { ?>
             <option value="<?php print $domain; ?>"<?php if($domain == $user['domain']){ ?> selected="selected"<?php } ?>><?php print $domain; ?></option>
 <?php } ?>
          </select>

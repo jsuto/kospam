@@ -47,6 +47,8 @@ class ControllerUserAdd extends Controller {
             if($this->validate() == true){
                $ret = $this->model_user_user->addUser($this->request->post);
 
+               $_SESSION['last_domain'] = $this->request->post['domain'];
+
                if($ret == 1){
                   $this->data['x'] = $this->data['text_successfully_added'];
                } else {

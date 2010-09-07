@@ -36,7 +36,7 @@
       <td><input type="checkbox" name="aa_<?php print $user['uid']; ?>" /></td>
       <td><?php print $user['uid']; ?></td>
       <td><?php print $user['username']; ?></td>
-      <td><?php print $user['realname']; ?></td>
+      <td class="realname"><?php print $user['realname']; ?></td>
       <td><?php if($user['email'] != $user['shortemail']){ ?><span onmouseover="Tip('<?php print $user['email']; ?>', BALLOON, true, ABOVE, true)" onmouseout="UnTip()"><?php print $user['shortemail']; ?></span><?php } else { print $user['email']; } ?></td>
       <td><?php print $user['domain']; ?></td>
       <td><?php print $user['policy_group']; ?></td>

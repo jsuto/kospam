@@ -327,6 +327,7 @@ int processMessage(struct session_data *sdata, struct _state *sstate, struct __d
 
 
 void getUserFromEmailAddress(struct session_data *sdata, struct __data *data, char *email, struct __config *cfg){
+#ifdef HAVE_USERS
    struct timezone tz;
    struct timeval tv1, tv2;
 
@@ -341,6 +342,7 @@ void getUserFromEmailAddress(struct session_data *sdata, struct __data *data, ch
  #endif
    gettimeofday(&tv2, &tz);
    sdata->__user += tvdiff(tv2, tv1);
+#endif
 }
 
 
@@ -365,6 +367,7 @@ void getPolicySettings(struct session_data *sdata, struct __data *data, struct _
 
 
 void getUsersWBL(struct session_data *sdata, struct __data *data, struct __config *cfg){
+#ifdef HAVE_USERS
    struct timezone tz;
    struct timeval tv1, tv2;
 
@@ -387,6 +390,7 @@ void getUsersWBL(struct session_data *sdata, struct __data *data, struct __confi
 #endif
    gettimeofday(&tv2, &tz);
    sdata->__user += tvdiff(tv2, tv1);
+#endif
 }
 
 

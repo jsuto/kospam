@@ -27,6 +27,7 @@
 #include <chi.h>
 #include <score.h>
 #include <config.h>
+#include <unistd.h>
 
 #ifdef HAVE_MEMCACHED
    #include "memc.h"

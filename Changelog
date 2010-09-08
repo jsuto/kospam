@@ -5,6 +5,8 @@
 Moved the initSessionData() function back to src/session.c in
 order to let antivirus only installations to compile as well.
 
+Fix to let the pamc emulation mode be compiled.
+
 2010.09.07, SJ
 
 Minor webui enhancements.

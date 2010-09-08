@@ -314,6 +314,13 @@ class ModelUserUser extends Model {
 
          $query = $this->db->query("SELECT COUNT(*) AS count FROM " . TABLE_EMAIL . " WHERE email='" . $this->db->escape($email) . "'");
 
+         /* remove from memcached */
+
+         if(MEMCACHED_ENABLED) {
+            $memcache = Registry::get('memcache');
+            $memcache->delete("_c:" . $this->db->escape($email));
+         }
+
          if($query->row['count'] > 0) {
             return $email;
          }

@@ -1,5 +1,10 @@
 0.4.5:
 
+2010.09.08, SJ
+
+Moved the initSessionData() function back to src/session.c in
+order to let antivirus only installations to compile as well.
+
 2010.09.07, SJ
 
 Minor webui enhancements.

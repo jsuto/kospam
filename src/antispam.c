@@ -14,56 +14,6 @@
 #include <clapf.h>
 
 
-void initSessionData(struct session_data *sdata){
-   int i;
-
-
-   sdata->fd = -1;
-
-   memset(sdata->ttmpfile, 0, SMALLBUFSIZE);
-   createClapfID(&(sdata->ttmpfile[0]));
-   unlink(sdata->ttmpfile);
-
-   memset(sdata->mailfrom, 0, SMALLBUFSIZE);
-   memset(sdata->name, 0, SMALLBUFSIZE);
-   memset(sdata->client_addr, 0, IPLEN);
-   memset(sdata->xforward, 0, SMALLBUFSIZE);
-
-   memset(sdata->whitelist, 0, MAXBUFSIZE);
-   memset(sdata->blacklist, 0, MAXBUFSIZE);
-
-   memset(sdata->clapf_id, 0, SMALLBUFSIZE);
-
-   sdata->uid = 0;
-   sdata->tot_len = 0;
-   sdata->skip_id_check = 0;
-   sdata->num_of_rcpt_to = 0;
-   sdata->trapped_client = 0;
-   sdata->blackhole = 0;
-   sdata->need_signo_check = 0;
-   sdata->training_request = 0;
-
-#ifdef HAVE_MAILBUF
-   sdata->message_size = sdata->mailpos = sdata->discard_mailbuf = 0;
-   memset(sdata->mailbuf, 0, MAILBUFSIZE);
-#endif
-
-   sdata->tre = '-';
-   sdata->statistically_whitelisted = 0;
-
-   sdata->rav = AVIR_OK;
-
-   sdata->__parsed = sdata->__av = sdata->__user = sdata->__policy = sdata->__as = sdata->__minefield = 0;
-   sdata->__training = sdata->__update = sdata->__store = sdata->__inject = sdata->__acquire = 0;
-
-   sdata->spaminess = DEFAULT_SPAMICITY;
-
-   for(i=0; i<MAX_RCPT_TO; i++) memset(sdata->rcptto[i], 0, SMALLBUFSIZE);
-
-   memset(sdata->rcpt_minefield, 0, MAX_RCPT_TO);
-}
-
-
 int processMessage(struct session_data *sdata, struct _state *sstate, struct __data *data, char *rcpttoemail, char *fromemail, struct __config *cfg, struct __config *my_cfg){
    int is_spam = 0, utokens;
    char reason[SMALLBUFSIZE], resp[MAXBUFSIZE], tmpbuf[SMALLBUFSIZE], trainbuf[SMALLBUFSIZE], whitelistbuf[SMALLBUFSIZE];

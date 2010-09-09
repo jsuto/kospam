@@ -109,11 +109,12 @@ int processMessage(struct session_data *sdata, struct _state *sstate, struct __d
        /* if still not found, then let this email slip through clapf, 2009.03.12, SJ */
 
        if(sdata->name[0] == 0) return 1;
-
+    #ifndef SPAMC_EMUL
        gettimeofday(&tv1, &tz);
        do_training(sdata, sstate, rcpttoemail, &(sdata->acceptbuf[0]), my_cfg);
        gettimeofday(&tv2, &tz);
        sdata->__training += tvdiff(tv2, tv1);
+    #endif
 
        return 0;
 

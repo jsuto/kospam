@@ -1,5 +1,9 @@
 0.4.5:
 
+2010.09.09, SJ
+
+Yet another spamc related fix.
+
 2010.09.08, SJ
 
 Moved the initSessionData() function back to src/session.c in

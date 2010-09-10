@@ -419,11 +419,11 @@ class ModelUserUser extends Model {
    public function deleteUser($uid = 0) {
       if($uid < 1){ return 0; }
 
-      $username = $this->getNameByUid((int)$uid);
-
       $query = $this->db_token->query("DELETE FROM " . TABLE_MISC . " WHERE uid=" . (int)$uid);
 
-      if($this->db->ldap_delete("cn=$username," . LDAP_USER_BASEDN) == TRUE) {
+      $user = $this->getUserByUid($uid);
+
+      if(isset($user['dn']) && $this->db->ldap_delete($user['dn']) == TRUE) {
          return 1;
       }
 

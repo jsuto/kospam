@@ -266,6 +266,7 @@ int main(int argc, char **argv, char **envp){
 
    if(debug == 1){
       print_message = 0;
+      cfg.verbosity = 0;
       cfg.debug = 1;
    }
 

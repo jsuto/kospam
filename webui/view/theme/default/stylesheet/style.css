@@ -57,11 +57,15 @@
 
 	#wrap {
 		margin: 0 auto; padding: 0;
-		width: 1000px;
+		width: 1080px;
 		background-color: white;
 		border: 1px solid #C1C0C0;
 		text-align: left;
 	}
+
+        #user-list-table {
+		width: 1020px;
+        }
 
 	#menu {
 		margin-top: 30px;
@@ -171,7 +175,7 @@
 	}
 
         td.realname {
-		width: 130px;
+		width: 200px;
 	}
 
 	.loginfailed {

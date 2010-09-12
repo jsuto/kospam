@@ -17,7 +17,7 @@
 
 <form method="post" name="massedit" action="index.php?route=user/massedit">
 
-<table border="1">
+<table id="user-list-table" border="1">
    <tr align="center">
       <th>&nbsp;</th>
       <th><?php print $text_user_id; ?> <a href="index.php?route=user/list&amp;uid=0"><img src="view/theme/<?php print THEME; ?>/images/arrowup.gif" border="0"></a> <a href="index.php?route=user/list&amp;uid=1"><img src="view/theme/<?php print THEME; ?>/images/arrowdown.gif" border="0"></a></th>

@@ -240,7 +240,7 @@ int trainMessage(struct session_data *sdata, struct _state *state, int rounds, i
 #ifdef HAVE_MYDB
    int rc;
 #endif
-   int i=0, tm=train_mode, saved_uid = sdata->uid;
+   int i=0, n=0, tm=train_mode, saved_uid = sdata->uid;
    float spaminess = DEFAULT_SPAMICITY;
 
    if(counthash(state->token_hash) <= 0) return 0;
@@ -290,7 +290,9 @@ int trainMessage(struct session_data *sdata, struct _state *state, int rounds, i
       spaminess = bayes_file(sdata, state, cfg);
    #endif
 
-      if(cfg->verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: training round: %d, spaminess: %0.4f", sdata->ttmpfile, i, spaminess);
+      n++;
+
+      if(cfg->verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: training round: %d, spaminess: %0.4f", sdata->ttmpfile, n, spaminess);
 
       if(is_spam == 1 && spaminess > 0.99) break;
       if(is_spam == 0 && spaminess < 0.1) break;
@@ -302,7 +304,7 @@ int trainMessage(struct session_data *sdata, struct _state *state, int rounds, i
 
    sdata->uid = saved_uid;
 
-   return i;
+   return n;
 }
 
 

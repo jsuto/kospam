@@ -1,0 +1,38 @@
+dn: cn=admin,ou=clapfusers,dc=aaaa,dc=fu
+changetype: modify
+replace: objectClass
+objectClass: top
+objectClass: person
+objectClass: qmailUser
+objectClass: qmailGroup
+objectClass: clapfUser
+-
+add: clapfgid
+clapfgid: 0
+
+dn: cn=user1,ou=clapfusers,dc=aaaa,dc=fu
+changetype: modify
+replace: objectClass
+objectClass: top
+objectClass: person
+objectClass: qmailUser
+objectClass: qmailGroup
+objectClass: clapfUser
+-
+add: clapfgid
+clapfgid: 1
+
+
+dn: cn=user2,ou=clapfusers,dc=aaaa,dc=fu
+changetype: modify
+replace: objectClass
+objectClass: top
+objectClass: person
+objectClass: qmailUser
+objectClass: qmailGroup
+objectClass: clapfUser
+-
+add: clapfgid
+clapfgid: 2
+
+

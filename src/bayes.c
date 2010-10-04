@@ -54,8 +54,8 @@ int qry_spaminess(struct session_data *sdata, struct _state *state, char type, s
    }
 
 #ifdef HAVE_MYSQL
-   if(sdata->uid > 0){
-      snprintf(s, SMALLBUFSIZE-1, ") AND (uid=0 OR uid=%ld)", sdata->uid);
+   if(sdata->gid > 0){
+      snprintf(s, SMALLBUFSIZE-1, ") AND (uid=0 OR uid=%ld)", sdata->gid);
       buffer_cat(query, s);
    }
    else
@@ -161,7 +161,7 @@ float bayes_file(struct session_data *sdata, struct _state *state, struct __conf
    cfg->group_type = GROUP_SHARED;
 #endif
 
-   if(cfg->debug == 1) printf("username: %s, uid: %ld\n", sdata->name, sdata->uid);
+   if(cfg->debug == 1) printf("username: %s, uid: %ld, gid: %ld\n", sdata->name, sdata->uid, sdata->gid);
 
 
    /* query message counters */
@@ -169,7 +169,7 @@ float bayes_file(struct session_data *sdata, struct _state *state, struct __conf
    if(cfg->group_type == GROUP_SHARED)
       snprintf(buf, MAXBUFSIZE-1, "SELECT nham, nspam FROM %s WHERE uid=0", SQL_MISC_TABLE);
    else
-      snprintf(buf, MAXBUFSIZE-1, "SELECT nham, nspam FROM %s WHERE uid=0 OR uid=%ld", SQL_MISC_TABLE, sdata->uid);
+      snprintf(buf, MAXBUFSIZE-1, "SELECT nham, nspam FROM %s WHERE uid=0 OR uid=%ld", SQL_MISC_TABLE, sdata->gid);
 
 #ifndef HAVE_MYDB
    TE = getHamSpamCounters(sdata, buf);
@@ -197,7 +197,7 @@ float bayes_file(struct session_data *sdata, struct _state *state, struct __conf
       }
    #else
       #ifdef HAVE_MYSQL
-         snprintf(buf, MAXBUFSIZE-1, "SELECT nham, nspam FROM %s WHERE token=%llu AND (uid=0 OR uid=%ld)", SQL_TOKEN_TABLE, APHash(state->from), sdata->uid);
+         snprintf(buf, MAXBUFSIZE-1, "SELECT nham, nspam FROM %s WHERE token=%llu AND (uid=0 OR uid=%ld)", SQL_TOKEN_TABLE, APHash(state->from), sdata->gid);
       #endif
       #ifdef HAVE_SQLITE3
          snprintf(buf, MAXBUFSIZE-1, "SELECT nham, nspam FROM %s WHERE token=%llu", SQL_TOKEN_TABLE, APHash(state->from));
@@ -223,14 +223,9 @@ float bayes_file(struct session_data *sdata, struct _state *state, struct __conf
    }
 
 
-   int saved_uid = sdata->uid;
-
-   if(cfg->group_type == GROUP_SHARED) sdata->uid = 0;
+   if(cfg->group_type == GROUP_SHARED) sdata->gid = 0;
 
    spaminess = evaluateTokens(sdata, state, cfg);
-
-   /* restore saved uid */
-   if(cfg->group_type == GROUP_SHARED) sdata->uid = saved_uid;
 
    return spaminess;
 }
@@ -240,7 +235,7 @@ int trainMessage(struct session_data *sdata, struct _state *state, int rounds, i
 #ifdef HAVE_MYDB
    int rc;
 #endif
-   int i=0, n=0, tm=train_mode, saved_uid = sdata->uid;
+   int i=0, n=0, tm=train_mode;
    float spaminess = DEFAULT_SPAMICITY;
 
    if(counthash(state->token_hash) <= 0) return 0;
@@ -254,7 +249,7 @@ int trainMessage(struct session_data *sdata, struct _state *state, int rounds, i
    cfg->penalize_octet_stream = 0;
 
 
-   if(cfg->group_type == GROUP_SHARED) sdata->uid = 0;
+   if(cfg->group_type == GROUP_SHARED) sdata->gid = 0;
 
 
 #ifndef HAVE_MYDB
@@ -301,8 +296,6 @@ int trainMessage(struct session_data *sdata, struct _state *state, int rounds, i
       tm = T_TOE;
    }
 
-
-   sdata->uid = saved_uid;
 
    return n;
 }

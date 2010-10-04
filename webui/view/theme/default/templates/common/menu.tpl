@@ -2,7 +2,7 @@
       <ul class="dropdown">
 
          <li><a href="index.php?route=common/home"<?php if(strstr($_SERVER['QUERY_STRING'], "common/home")){ print ' id="active"'; } ?>><?php print $text_home; ?></a></li>
-         <li><a href="index.php?route=quarantine/quarantine"<?php if(strstr($_SERVER['QUERY_STRING'], "quarantine")){ print ' id="active"'; } ?>><?php print $text_quarantine; ?></a></li>
+         <li><a href="index.php?route=quarantine/quarantine&hamspam=SPAM"<?php if(strstr($_SERVER['QUERY_STRING'], "quarantine")){ print ' id="active"'; } ?>><?php print $text_quarantine; ?></a></li>
          <li><a href="index.php?route=user/whitelist"<?php if(strstr($_SERVER['QUERY_STRING'], "user/whitelist")){ print ' id="active"'; } ?>><?php print $text_whitelist; ?></a></li>
    <?php if(ENABLE_BLACKLIST == 1) { ?>
           <li><a href="index.php?route=user/blacklist"<?php if(strstr($_SERVER['QUERY_STRING'], "user/blacklist")){ print ' id="active"'; } ?>><?php print $text_blacklist; ?></a></li>

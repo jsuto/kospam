@@ -12,10 +12,10 @@ class ModelUserUser extends Model {
       $search = preg_replace("/\s{1,}/", "", $search);
 
       if($search) {
-         $query = $this->db->ldap_query(LDAP_USER_BASEDN, "(|(cn=*$search*)(mail=*$search*))", array("uid", "mail", "cn", "policygroupid", "domain") );
+         $query = $this->db->ldap_query(LDAP_USER_BASEDN, "(|(cn=*$search*)(mail=*$search*))", array("uid", "clapfgid", "mail", "cn", "policygroupid", "domain") );
       }
       else {
-         $query = $this->db->ldap_query(LDAP_USER_BASEDN, "(|(cn=*)(mail=*))", array("uid", "mail", "cn", "sn", "policygroupid", "domain") );
+         $query = $this->db->ldap_query(LDAP_USER_BASEDN, "(|(cn=*)(mail=*))", array("uid", "clapfgid", "mail", "cn", "sn", "policygroupid", "domain") );
       }
 
       if(Registry::get('domain_admin') == 1) {
@@ -30,6 +30,7 @@ class ModelUserUser extends Model {
 
                $data[] = array(
                           'uid'          => $result['uid'],
+                          'gid'          => isset($result['clapfgid']) ? $result['clapfgid'] : $result['uid'],
                           'username'     => $result['cn'],
                           'realname'     => $result['sn'],
                           'email'        => $result['mail'],
@@ -73,6 +74,7 @@ class ModelUserUser extends Model {
 
       $data = array(
                     'uid'          => $result['uid'],
+                    'gid'          => isset($result['clapfgid']) ? $result['clapfgid'] : $result['uid'],
                     'username'     => $result['cn'],
                     'dn'           => $result['dn'],
                     'realname'     => $result['sn'],
@@ -308,12 +310,14 @@ class ModelUserUser extends Model {
       $a[1] = "person";
       $a[2] = "qmailUser";
       $a[3] = "qmailGroup";
+      $a[4] = "clapfUser";
 
       $entry["objectClass"] = $a;
 
       $entry["cn"] = $user['username'];
       $entry["sn"] = $user['realname'];
       $entry["uid"] = (int)$user['uid'];
+      $entry["clapfgid"] = (int)$user['gid'];
       $entry["mail"] = $user['email'];
       $entry["policygroupid"] = (int)$user['policy_group'];
       $entry["isadmin"] = (int)$user['isadmin'];
@@ -334,7 +338,7 @@ class ModelUserUser extends Model {
 
       if($this->db->ldap_add("cn=" . $user['username'] . "," .  $basedn, $entry) == TRUE) {
 
-         $query = $this->db_token->query("INSERT INTO " . TABLE_MISC . " (uid, nham, nspam) VALUES(" . (int)$user['uid'] . ", 0, 0)");
+         $query = $this->db_token->query("INSERT INTO " . TABLE_MISC . " (uid, nham, nspam) VALUES(" . (int)$user['gid'] . ", 0, 0)");
 
          /* remove from memcached */
 
@@ -359,6 +363,7 @@ class ModelUserUser extends Model {
       $entry = array();
 
       $entry['uid'] = $user['uid'];
+      $entry['clapfgid'] = (int)$user['gid'];
       $entry['sn'] = $user['realname'];
       $entry["mail"] = $user['email'];
       $entry["policygroupid"] = (int)$user['policy_group'];
@@ -419,9 +424,9 @@ class ModelUserUser extends Model {
    public function deleteUser($uid = 0) {
       if($uid < 1){ return 0; }
 
-      $query = $this->db_token->query("DELETE FROM " . TABLE_MISC . " WHERE uid=" . (int)$uid);
-
       $user = $this->getUserByUid($uid);
+
+      $query = $this->db_token->query("DELETE FROM " . TABLE_MISC . " WHERE uid=" . (int)$user['gid']);
 
       if(isset($user['dn']) && $this->db->ldap_delete($user['dn']) == TRUE) {
          return 1;

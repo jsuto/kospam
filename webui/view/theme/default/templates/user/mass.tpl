@@ -36,6 +36,7 @@
          </select>
        </td>
       </tr>
+      <tr><td><?php print $text_group_id; ?>:</td><td><input type="text" name="gid" value="" /></td></tr>
       <tr valign="top"><td><?php print $text_whitelist; ?>:</td><td><textarea name="whitelist" cols="30" rows="5"></textarea></td></tr>
       <tr valign="top"><td><?php print $text_blacklist; ?>:</td><td><textarea name="blacklist" cols="30" rows="5"></textarea></td></tr>
       <tr><td colspan="2"><input type="submit" value="<?php print $text_update_selected_uids; ?>" /></td></tr>

@@ -28,7 +28,9 @@ objectClass: top
 objectClass: person
 objectClass: qmailUser
 objectClass: qmailGroup
+objectClass: clapfUser
 uid: 0
+clapfgid: 0
 mail: admin@yourdomain.com
 mailAlternateAddress:
 mailMessageStore: x

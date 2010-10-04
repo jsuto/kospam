@@ -63,12 +63,14 @@ $_['text_history'] = "Történet";
 $_['text_home'] = "Kezdőlap";
 
 $_['text_global_training_happened'] = "Globális tanítás.";
+$_['text_group_id'] = "Csoport azonosító";
 
 $_['text_import'] = "Import";
 $_['text_import_users'] = "Import users";
 $_['text_invalid_data'] = "Érvénytelen adat(ok)";
 $_['text_invalid_email'] = "Érvénytelen email cím";
 $_['text_invalid_email_or_password'] = "Érvénytelen email cím vagy jelszó";
+$_['text_invalid_gid'] = "Érvénytelen csoportazonosító";
 $_['text_invalid_password'] = "Érvénytelen jelszó";
 $_['text_invalid_policy_group'] = "Érvénytelen házirend szonosító";
 $_['text_invalid_policy_name'] = "Érvénytelen házirend név";

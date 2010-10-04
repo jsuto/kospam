@@ -47,6 +47,7 @@ class ModelUserImport extends Model {
       $a[1] = "person";
       $a[2] = "qmailUser";
       $a[3] = "qmailGroup";
+      $a[4] = "clapfUser";
 
 
       $ldap = new LDAP($data['ldap_host'], $data['ldap_binddn'], $data['ldap_bindpw']);
@@ -76,7 +77,7 @@ class ModelUserImport extends Model {
             $entry["cn"] = $result['cn'] . '@' . $data['domain'];
             $entry["sn"] = "x";
             $entry["uid"] = $this->getNextUid();
-
+            $entry["clapfgid"] = (int)$entry["uid"];
             $entry["mail"] = $email;
             $entry["policygroupid"] = (int)$data['policy_group'];
             $entry["isadmin"] = 0;

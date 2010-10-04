@@ -154,6 +154,11 @@
 	tr.highlight { background:#DDDDDD; }
 
 
+	#quarantine tr:hover {
+		background: #DDDDDD;
+	}
+
+
 	td.HAM {
 		color: green;
 	}

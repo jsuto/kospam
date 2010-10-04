@@ -74,6 +74,11 @@ int openDatabase(struct session_data *sdata, struct __config *cfg){
       return 0;
 #endif
 
+#ifdef NEED_LDAP
+   sdata->ldap = do_bind_ldap(cfg->ldap_host, cfg->ldap_user, cfg->ldap_pwd, cfg->ldap_use_tls);
+   if(sdata->ldap == NULL) return 0;
+#endif
+
    return 1;
 }
 
@@ -88,6 +93,9 @@ void closeDatabase(struct session_data *sdata){
 #endif
 #ifdef HAVE_MYDB
    close_mydb(sdata->mhash);
+#endif
+#ifdef NEED_LDAP
+   ldap_unbind_s(sdata->ldap);
 #endif
 }
 
@@ -399,6 +407,9 @@ int main(int argc, char **argv, char **envp){
       query_unix_account(&sdata, (char *)NULL);
    }
 
+   sdata.gid = sdata.uid;
+
+
    /* fix database path if we need it */
 
 #ifdef HAVE_SQLITE3
@@ -467,7 +478,7 @@ int main(int argc, char **argv, char **envp){
 
       if(!recipient) recipient = trainbuf;
 
-      syslog(LOG_PRIORITY, "%s: training request for %s (username: %s, uid: %ld), found id: %s", sdata.ttmpfile, recipient, sdata.name, sdata.uid, ID);
+      syslog(LOG_PRIORITY, "%s: training request for %s (username: %s, uid: %ld, gid: %ld), found id: %s", sdata.ttmpfile, recipient, sdata.name, sdata.uid, sdata.gid, ID);
 
       if(strlen(ID) < 5){
          syslog(LOG_PRIORITY, "%s: not found a valid message id (%s)", sdata.ttmpfile, ID);
@@ -509,7 +520,7 @@ int main(int argc, char **argv, char **envp){
 
    memset(trainbuf, 0, SMALLBUFSIZE);
 
-   if(cfg.verbosity >= _LOG_DEBUG && debug == 0) syslog(LOG_PRIORITY, "%s: username: %s, uid: %ld", sdata.ttmpfile, sdata.name, sdata.uid);
+   if(cfg.verbosity >= _LOG_DEBUG && debug == 0) syslog(LOG_PRIORITY, "%s: username: %s, uid: %ld, gid: %ld", sdata.ttmpfile, sdata.name, sdata.uid, sdata.gid);
 
 
    /* parse message */
@@ -539,12 +550,14 @@ int main(int argc, char **argv, char **envp){
        *
        * spamdrop -S -f email@address < message
        * FROM=email@address spamdrop -S < message
-       * spamdrop -S -U uid < message
+       * spamdrop -S -U gid < message
        */
 
       if(from) getUserdataFromEmail(&sdata, from, &cfg);
-      else if(u >= 0) sdata.uid = u;
-
+      else if(u >= 0){
+         sdata.uid = u;
+         sdata.gid = sdata.uid;
+      }
    #endif
 
       trainMessage(&sdata, &state, rounds, is_spam, train_mode, &cfg);
@@ -701,7 +714,7 @@ int main(int argc, char **argv, char **envp){
          if(cfg.verbosity > 0) syslog(LOG_PRIORITY, "%s: training on a blackhole message", sdata.ttmpfile);
          snprintf(trainbuf, SMALLBUFSIZE-1, "%sTUM on blackhole%s", cfg.clapf_header_field, CRLF);
 
-         sdata.uid = 0;
+         sdata.uid = sdata.gid = 0;
          trainMessage(&sdata, &state, rounds, 1, T_TOE, &cfg);
       }
    }

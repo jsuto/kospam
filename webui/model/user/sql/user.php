@@ -267,6 +267,7 @@ class ModelUserUser extends Model {
          if(Registry::get('admin_user') == 1 || (isset($q['domain']) && $q['domain'] == $my_domain[0]) ) {
             $users[] = array(
                           'uid'          => $q['uid'],
+                          'gid'          => $q['gid'],
                           'username'     => $q['username'],
                           'realname'     => $q['realname'],
                           'domain'       => isset($q['domain']) ? $q['domain'] : "",
@@ -334,7 +335,7 @@ class ModelUserUser extends Model {
 
       $encrypted_password = crypt($user['password']);
 
-      $query = $this->db->query("INSERT INTO " . TABLE_USER . " (uid, username, realname, password, domain, dn, policy_group, isadmin) VALUES(" . (int)$user['uid'] . ", '" . $this->db->escape($user['username']) . "', '" . $this->db->escape($user['realname']) . "', '" . $this->db->escape($encrypted_password) . "', '" . $this->db->escape($user['domain']) . "', '" . $this->db->escape(@$user['dn']) . "', " . (int)$user['policy_group'] . ", " . (int)$user['isadmin'] . ")");
+      $query = $this->db->query("INSERT INTO " . TABLE_USER . " (uid, gid, username, realname, password, domain, dn, policy_group, isadmin) VALUES(" . (int)$user['uid'] . ", " . (int)$user['gid'] . ", '" . $this->db->escape($user['username']) . "', '" . $this->db->escape($user['realname']) . "', '" . $this->db->escape($encrypted_password) . "', '" . $this->db->escape($user['domain']) . "', '" . $this->db->escape(@$user['dn']) . "', " . (int)$user['policy_group'] . ", " . (int)$user['isadmin'] . ")");
 
       if($query->error == 1 || $this->db->countAffected() == 0){ return $user['username']; }
 
@@ -350,7 +351,7 @@ class ModelUserUser extends Model {
 
       $query = $this->db->query("INSERT INTO " . TABLE_BLACKLIST . " (uid, blacklist) VALUES(" . (int)$user['uid'] . ", '" . $this->db->escape($user['blacklist']) . "')");
 
-      $query = $this->db->query("INSERT INTO " . TABLE_MISC . " (uid, nham, nspam) VALUES(" . (int)$user['uid'] . ", 0, 0)");
+      $query = $this->db->query("INSERT INTO " . TABLE_MISC . " (uid, nham, nspam) VALUES(" . (int)$user['gid'] . ", 0, 0)");
 
       return 1;
    }

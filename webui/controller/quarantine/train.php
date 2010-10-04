@@ -81,7 +81,7 @@ class ControllerQuarantineTrain extends Controller {
             /* deliver only the the false positives */
 
             if($this->data['id'][0] == 's' && (int)@$this->request->get['nodeliver'] == 0) {
-               header("Location: " . SITE_URL . "/index.php?route=quarantine/deliver&id=" . $this->data['id'] . "&user=" . $this->data['username'] . "&globaltrain=" . $this->data['globaltrain']);
+               header("Location: " . SITE_URL . "/index.php?route=quarantine/deliver&id=" . $this->data['id'] . "&page=" . (int)$this->data['page'] . "&from=" . $this->data['from'] . "&subj=" . $this->data['subj'] . "&hamspam=" . $this->data['hamspam'] . "&user=" . $this->data['username'] . "&globaltrain=" . $this->data['globaltrain']);
             }
             else {
                $this->data['x'] = $this->data['text_successfully_trained'];

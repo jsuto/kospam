@@ -36,6 +36,8 @@
 
 <p><?php print $text_number_of_messages_in_quarantine; ?>: <?php print $n; ?> (<?php print $total_size; ?> bytes)</p>
 
+<div id="quarantine">
+
 <form action="index.php?route=quarantine/remove" name="aaa1" method="post">
    <input type="hidden" name="topurge" value="1" />
    <input type="hidden" name="user" value="<?php print $username; ?>" />
@@ -101,6 +103,9 @@
 </p>
 
 </form>
+
+</div>
+
 
 <p>&nbsp;</p>
 

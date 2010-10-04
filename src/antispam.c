@@ -217,8 +217,8 @@ int processMessage(struct session_data *sdata, struct _state *sstate, struct __d
 
       if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: running Bayesian test", sdata->ttmpfile);
 
-      /* fix uid if it's a blackhole request */
-      if(sdata->blackhole == 1) sdata->uid = 0;
+      /* fix gid if it's a blackhole request */
+      if(sdata->blackhole == 1) sdata->gid = 0;
 
 
       gettimeofday(&tv1, &tz);
@@ -301,7 +301,7 @@ int processMessage(struct session_data *sdata, struct _state *sstate, struct __d
 
 
       if(cfg->verbosity >= _LOG_INFO){
-         snprintf(tmpbuf, SMALLBUFSIZE-1, "%s%ld ms\r\n%s%s", cfg->clapf_header_field, (long)sdata->__as/1000, reason, whitelistbuf);
+         snprintf(tmpbuf, SMALLBUFSIZE-1, "%s%ld ms\r\n%s%s", cfg->clapf_header_field, (long) (sdata->__parsed+sdata->__av+sdata->__user+sdata->__policy+sdata->__minefield+sdata->__as+sdata->__training+sdata->__update+sdata->__store)/1000, reason, whitelistbuf);
          strncat(sdata->spaminessbuf, tmpbuf, MAXBUFSIZE-1);
       }
 

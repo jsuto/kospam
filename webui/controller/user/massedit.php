@@ -47,7 +47,7 @@ class ControllerUserMassedit extends Controller {
             /* bulk update */
 
             if((int)@$this->request->post['edit'] == 1 && $this->validate() == true && $this->validate_uid_list() == true) {
-               $ret = $this->model_user_bulk->bulkUpdateUser($this->request->post['domain'], $this->request->post['policy_group'], $this->request->post['whitelist'], $this->request->post['blacklist']);
+               $ret = $this->model_user_bulk->bulkUpdateUser($this->request->post['domain'], $this->request->post['policy_group'], $this->request->post['whitelist'], $this->request->post['blacklist'], $this->request->post['gid']);
 
                if($ret >= 1){
                   $this->data['x'] = $this->data['text_successfully_modified'];

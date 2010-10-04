@@ -1,6 +1,94 @@
+0.4.6-rc1:
+
+2010.10.03, SJ
+
+Minor webui fixes.
+
+2010.09.20, SJ
+
+Added LDAP support to the token group concept (see below).
+
+Reverted the qmail.schema definition to its original form,
+and moved all the clapf related user attributes to clapf-user.schema.
+You need to reference this in your slapd.conf.
+
+By default clapf makes gid to be the same as uid. You can change
+this to add a clapfgid attribute to the given user, and make sure
+to extend his objectClass to include 'clapfUser' as well, eg.
+
+ldapmodify -x  -D "cn=Manager,dc=yourdomain,dc=com" -W -f upgrade.ldif
+
+upgrade.ldif:
+
+dn: cn=user1,ou=clapfusers,dc=yourdomain,dc=com
+changetype: modify
+replace: objectClass
+objectClass: top
+objectClass: person
+objectClass: qmailUser
+objectClass: qmailGroup
+objectClass: clapfUser
+-
+add: clapfgid
+clapfgid: 123
+
+Added LDAP support to spamdrop, and fixed an LDAP related
+#ifdef reference in the clapf daemon.
+
+
+2010.09.17, SJ
+
+Added token group support for the clapf daemon. (LDAP users,
+please see a note at the end).
+
+You have to extend the user table to add a new field, 'gid':
+
+mysql> alter table user add column gid int unsigned not null;
+
+Important! If you have memcached support enabled, then you have
+to release/flush all clapf related entries. (The easiest way
+to do this is to restart the memcached daemon).
+
+If you are using a shared token database or you are using sqlite3
+database for the tokens, then you are done, the rest should read on.
+
+Execute the 'contrib/db/add-gid-to-user-table.sql' script:
+
+$ mysql -u clapf -p clapf < contrib/db/add-gid-to-user-table.sql
+
+It contains a stored procedure to walk through your user table,
+and sets the gid field to be the same as the uid field. From
+now on, the gid field specifies the uid of the tokens to be used.
+After executing it, it causes clapf to behave just as the 0.4.5.
+
+If you are using a merged database, but you are not interested in
+the 'token group feature' (see below), just make sure the gid field
+is the same as the uid field, and you're done.
+
+
+What is the purpose of the token groups concept? Let's say you are
+a service provider with multiple domains. With the token groups
+you can create a common token set for domain1, then a different
+token set from domain2, etc.
+
+To do this, set the gid to the same for all users in domain1, eg:
+update user set gid=123 where uid in (1,2,3,4,5,6, ...);
+
+and do this for the users in the domain2, eg:
+update user set gid=124 where uid in (45,46,47,48, ...);
+
+Then the token set for all users in domain1 can be "... WHERE (uid=0 OR uid=123)",
+and it can be "... WHERE (uid=0 OR uid=124)" for all users in domain2.
+
+
+Notes for LDAP users: the attribute of the new 'gid' field is not
+decided yet, so with --with-userdb=ldap configurations, clapf
+simply sets gid=uid for now (ie. fallback to 0.4.5 behaviour).
+
+
 0.4.5:
 
-2010.10.12, SJ
+2010.09.12, SJ
 
 Webui fixes for a wider (in length) user list.
 (credits: Tamas Papp)

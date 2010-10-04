@@ -43,6 +43,7 @@
       <tr><td><?php print $text_password; ?>:</td><td><input type="password" name="password" value="" size="<?php print CGI_INPUT_FIELD_WIDTH; ?>" /></td></tr>
       <tr><td><?php print $text_password_again; ?>:</td><td><input type="password" name="password2" value="" size="<?php print CGI_INPUT_FIELD_WIDTH; ?>" /></td></tr>
       <tr><td><?php print $text_user_id; ?>:</td><td><input type="text" name="uid" value="<?php print $next_user_id; ?>" /></td></tr>
+      <tr><td><?php print $text_group_id; ?>:</td><td><input type="text" name="gid" value="<?php print $next_user_id; ?>" /></td></tr>
       <tr>
        <td><?php print $text_policy_group; ?>:</td><td>
          <select name="policy_group">

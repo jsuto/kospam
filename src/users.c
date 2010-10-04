@@ -23,6 +23,7 @@ int getUserdataFromEmail(struct session_data *sdata, char *email, struct __confi
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: query user data from %s", sdata->ttmpfile, email);
 
    sdata->uid = 0;
+   sdata->gid = 0;
    sdata->policy_group = 0;
    memset(sdata->name, 0, SMALLBUFSIZE);
    memset(sdata->domain, 0, SMALLBUFSIZE);
@@ -41,14 +42,14 @@ int getUserdataFromEmail(struct session_data *sdata, char *email, struct __confi
 
       if(!q) return 0;
 
-      snprintf(buf, MAXBUFSIZE-1, "SELECT %s.uid, %s.username, %s.domain, %s.policy_group FROM %s,%s WHERE %s.uid=%s.uid AND %s.email='%s%s'",
-         SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_EMAIL_TABLE, _email, q);
+      snprintf(buf, MAXBUFSIZE-1, "SELECT %s.uid, %s.gid, %s.username, %s.domain, %s.policy_group FROM %s,%s WHERE %s.uid=%s.uid AND %s.email='%s%s'",
+         SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_EMAIL_TABLE, _email, q);
 
       *p = '+';
    }
    else {
-      snprintf(buf, MAXBUFSIZE-1, "SELECT %s.uid, %s.username, %s.domain, %s.policy_group FROM %s,%s WHERE %s.uid=%s.uid AND %s.email='%s'",
-            SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_EMAIL_TABLE, _email);
+      snprintf(buf, MAXBUFSIZE-1, "SELECT %s.uid, %s.gid, %s.username, %s.domain, %s.policy_group FROM %s,%s WHERE %s.uid=%s.uid AND %s.email='%s'",
+            SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_EMAIL_TABLE, _email);
    }
 
 
@@ -57,13 +58,14 @@ int getUserdataFromEmail(struct session_data *sdata, char *email, struct __confi
 
    if(mysql_real_query(&(sdata->mysql), buf, strlen(buf)) == 0){
       res = mysql_store_result(&(sdata->mysql));
-      if(res != NULL && mysql_num_fields(res) == 4){
+      if(res != NULL && mysql_num_fields(res) == 5){
          row = mysql_fetch_row(res);
          if(row){
             sdata->uid = atol(row[0]);
-            if(row[1]) snprintf(sdata->name, SMALLBUFSIZE-1, "%s", (char *)row[1]);
-            if(row[2]) snprintf(sdata->domain, SMALLBUFSIZE-1, "%s", (char *)row[2]);
-            sdata->policy_group = atoi(row[3]);
+            sdata->gid = atoi(row[1]);
+            if(row[2]) snprintf(sdata->name, SMALLBUFSIZE-1, "%s", (char *)row[2]);
+            if(row[3]) snprintf(sdata->domain, SMALLBUFSIZE-1, "%s", (char *)row[3]);
+            sdata->policy_group = atoi(row[4]);
             rc = 1;
          }               
          mysql_free_result(res);
@@ -78,20 +80,21 @@ int getUserdataFromEmail(struct session_data *sdata, char *email, struct __confi
    p = strchr(_email, '@');
    if(!p) return 0;
 
-   snprintf(buf, MAXBUFSIZE-1, "SELECT %s.uid, %s.username, %s.domain, %s.policy_group FROM %s,%s WHERE %s.uid=%s.uid AND %s.email='%s'",
-      SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_EMAIL_TABLE, p);
+   snprintf(buf, MAXBUFSIZE-1, "SELECT %s.uid, %s.gid, %s.username, %s.domain, %s.policy_group FROM %s,%s WHERE %s.uid=%s.uid AND %s.email='%s'",
+      SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_EMAIL_TABLE, p);
 
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: user data stmt2: %s", sdata->ttmpfile, buf);
 
    if(mysql_real_query(&(sdata->mysql), buf, strlen(buf)) == 0){
       res = mysql_store_result(&(sdata->mysql));
-      if(res != NULL && mysql_num_fields(res) == 4){
+      if(res != NULL && mysql_num_fields(res) == 5){
          row = mysql_fetch_row(res);
          if(row){
             sdata->uid = atol(row[0]);
-            if(row[1]) snprintf(sdata->name, SMALLBUFSIZE-1, "%s", (char *)row[1]);
-            if(row[2]) snprintf(sdata->domain, SMALLBUFSIZE-1, "%s", (char *)row[2]);
-            sdata->policy_group = atoi(row[3]);
+            sdata->gid = atoi(row[1]);
+            if(row[2]) snprintf(sdata->name, SMALLBUFSIZE-1, "%s", (char *)row[2]);
+            if(row[3]) snprintf(sdata->domain, SMALLBUFSIZE-1, "%s", (char *)row[3]);
+            sdata->policy_group = atoi(row[4]);
          }
          mysql_free_result(res);
       }
@@ -179,6 +182,7 @@ int getUserdataFromEmail(struct session_data *sdata, char *email, struct __confi
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: query user data from %s", sdata->ttmpfile, email);
 
    sdata->uid = 0;
+   sdata->gid = 0;
    sdata->policy_group = 0;
    memset(sdata->name, 0, SMALLBUFSIZE);
    memset(sdata->domain, 0, SMALLBUFSIZE);
@@ -193,14 +197,14 @@ int getUserdataFromEmail(struct session_data *sdata, char *email, struct __confi
 
       if(!q) return 0;
 
-      snprintf(buf, MAXBUFSIZE-1, "SELECT %s.uid, %s.username, %s.domain, %s.policy_group FROM %s,%s WHERE %s.uid=%s.uid AND %s.email='%s%s'",
-         SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_EMAIL_TABLE, email, q);
+      snprintf(buf, MAXBUFSIZE-1, "SELECT %s.uid, %s.gid, %s.username, %s.domain, %s.policy_group FROM %s,%s WHERE %s.uid=%s.uid AND %s.email='%s%s'",
+         SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_EMAIL_TABLE, email, q);
 
       *p = '+';
    }
    else {
-      snprintf(buf, MAXBUFSIZE-1, "SELECT %s.uid, %s.username, %s.domain, %s.policy_group FROM %s,%s WHERE %s.uid=%s.uid AND %s.email='%s'",
-            SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_EMAIL_TABLE, email);
+      snprintf(buf, MAXBUFSIZE-1, "SELECT %s.uid, %s.gid, %s.username, %s.domain, %s.policy_group FROM %s,%s WHERE %s.uid=%s.uid AND %s.email='%s'",
+            SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_EMAIL_TABLE, email);
    }
 
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: user data stmt: %s", sdata->ttmpfile, buf);
@@ -208,9 +212,10 @@ int getUserdataFromEmail(struct session_data *sdata, char *email, struct __confi
    if(sqlite3_prepare_v2(sdata->db, buf, -1, &pStmt, pzTail) == SQLITE_OK){
       if(sqlite3_step(pStmt) == SQLITE_ROW){
          sdata->uid = sqlite3_column_int(pStmt, 0);
-         if(sqlite3_column_blob(pStmt, 1)) strncpy(sdata->name, (char *)sqlite3_column_blob(pStmt, 1), SMALLBUFSIZE-1);
-         if(sqlite3_column_blob(pStmt, 2)) strncpy(sdata->domain, (char *)sqlite3_column_blob(pStmt, 2), SMALLBUFSIZE-1);
-         sdata->policy_group = sqlite3_column_int(pStmt, 3);
+         sdata->gid = sqlite3_column_int(pStmt, 1);
+         if(sqlite3_column_blob(pStmt, 2)) strncpy(sdata->name, (char *)sqlite3_column_blob(pStmt, 2), SMALLBUFSIZE-1);
+         if(sqlite3_column_blob(pStmt, 3)) strncpy(sdata->domain, (char *)sqlite3_column_blob(pStmt, 3), SMALLBUFSIZE-1);
+         sdata->policy_group = sqlite3_column_int(pStmt, 4);
 
          rc = 1;
       }
@@ -225,17 +230,18 @@ int getUserdataFromEmail(struct session_data *sdata, char *email, struct __confi
    p = strchr(email, '@');
    if(!p) return 0;
 
-   snprintf(buf, MAXBUFSIZE-1, "SELECT %s.uid, %s.username, %s.domain FROM %s,%s WHERE %s.uid=%s.uid AND %s.email='%s'",
-      SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_EMAIL_TABLE, p);
+   snprintf(buf, MAXBUFSIZE-1, "SELECT %s.uid, %s.gid, %s.username, %s.domain FROM %s,%s WHERE %s.uid=%s.uid AND %s.email='%s'",
+      SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_EMAIL_TABLE, p);
 
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: user data stmt: %s", sdata->ttmpfile, buf);
 
    if(sqlite3_prepare_v2(sdata->db, buf, -1, &pStmt, pzTail) == SQLITE_OK){
       if(sqlite3_step(pStmt) == SQLITE_ROW){
          sdata->uid = sqlite3_column_int(pStmt, 0);
-         if(sqlite3_column_blob(pStmt, 1)) strncpy(sdata->name, (char *)sqlite3_column_blob(pStmt, 1), SMALLBUFSIZE-1);
-         if(sqlite3_column_blob(pStmt, 2)) strncpy(sdata->domain, (char *)sqlite3_column_blob(pStmt, 2), SMALLBUFSIZE-1);
-         sdata->policy_group = sqlite3_column_int(pStmt, 3);
+         sdata->gid = sqlite3_column_int(pStmt, 1);
+         if(sqlite3_column_blob(pStmt, 2)) strncpy(sdata->name, (char *)sqlite3_column_blob(pStmt, 2), SMALLBUFSIZE-1);
+         if(sqlite3_column_blob(pStmt, 3)) strncpy(sdata->domain, (char *)sqlite3_column_blob(pStmt, 3), SMALLBUFSIZE-1);
+         sdata->policy_group = sqlite3_column_int(pStmt, 4);
       }
    }
    sqlite3_finalize(pStmt);
@@ -318,6 +324,7 @@ int getUserdataFromEmail(struct session_data *sdata, char *email, struct __confi
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: query user data from %s", sdata->ttmpfile, email);
 
    sdata->uid = 0;
+   sdata->gid = 0;
    sdata->policy_group = 0;
    memset(sdata->name, 0, SMALLBUFSIZE);
    memset(sdata->domain, 0, SMALLBUFSIZE);
@@ -346,7 +353,16 @@ int getUserdataFromEmail(struct session_data *sdata, char *email, struct __confi
    e = ldap_first_entry(sdata->ldap, res);
    if(e){
       vals = ldap_get_values(sdata->ldap, e, "uid");
-      if(ldap_count_values(vals) > 0) sdata->uid = atol(vals[0]);
+      if(ldap_count_values(vals) > 0){
+         sdata->uid = atol(vals[0]);
+
+         /* provide gid=uid in case the clapfgid attribute does not exist */
+         sdata->gid = sdata->uid;
+      }
+      ldap_value_free(vals);
+
+      vals = ldap_get_values(sdata->ldap, e, "clapfgid");
+      if(ldap_count_values(vals) > 0) sdata->gid = atol(vals[0]);
       ldap_value_free(vals);
 
       vals = ldap_get_values(sdata->ldap, e, "cn");
@@ -379,7 +395,14 @@ int getUserdataFromEmail(struct session_data *sdata, char *email, struct __confi
    e = ldap_first_entry(sdata->ldap, res);
    if(e){
       vals = ldap_get_values(sdata->ldap, e, "uid");
-      if(ldap_count_values(vals) > 0) sdata->uid = atol(vals[0]);
+      if(ldap_count_values(vals) > 0){
+         sdata->uid = atol(vals[0]);
+         sdata->gid = sdata->uid;
+      }
+      ldap_value_free(vals);
+
+      vals = ldap_get_values(sdata->ldap, e, "clapfgid");
+      if(ldap_count_values(vals) > 0) sdata->gid = atol(vals[0]);
       ldap_value_free(vals);
 
       vals = ldap_get_values(sdata->ldap, e, "cn");

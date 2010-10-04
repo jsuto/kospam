@@ -96,7 +96,7 @@ int introduceTokens(struct session_data *sdata, struct node *xhash[]){
       }
    }
 
-   snprintf(s, SMALLBUFSIZE-1, ") AND uid=%ld", sdata->uid);
+   snprintf(s, SMALLBUFSIZE-1, ") AND uid=%ld", sdata->gid);
    buffer_cat(query, s);
 
    update_hash(sdata, query->data, xhash);
@@ -119,8 +119,8 @@ int introduceTokens(struct session_data *sdata, struct node *xhash[]){
       q = xhash[i];
       while(q != NULL){
          if(q->nham + q->nspam == 0){
-            if(n) snprintf(s, SMALLBUFSIZE-1, ",(%llu,0,0,%ld,%ld)", q->key, sdata->uid, now);
-            else snprintf(s, SMALLBUFSIZE-1, "(%llu,0,0,%ld,%ld)", q->key, sdata->uid, now);
+            if(n) snprintf(s, SMALLBUFSIZE-1, ",(%llu,0,0,%ld,%ld)", q->key, sdata->gid, now);
+            else snprintf(s, SMALLBUFSIZE-1, "(%llu,0,0,%ld,%ld)", q->key, sdata->gid, now);
 
             buffer_cat(query, s);
             n++;
@@ -179,6 +179,9 @@ int updateTokenCounters(struct session_data *sdata, int ham_or_spam, struct node
       else buffer_cat(query, " AND nspam > 0");
    }
 
+   snprintf(s, SMALLBUFSIZE-1, " AND uid=%ld", sdata->gid);
+   buffer_cat(query, s);
+
    mysql_real_query(&(sdata->mysql), query->data, strlen(query->data));
 
    buffer_destroy(query);
@@ -191,11 +194,11 @@ int updateMiscTable(struct session_data *sdata, int ham_or_spam, int train_mode)
    char s[SMALLBUFSIZE];
 
    if(ham_or_spam == 1){
-      if(train_mode == T_TUM) snprintf(s, SMALLBUFSIZE-1, "UPDATE %s SET nham=nham-1 WHERE uid=%ld AND nham > 0", SQL_MISC_TABLE, sdata->uid);
-      else snprintf(s, SMALLBUFSIZE-1, "UPDATE %s SET nspam=nspam+1 WHERE uid=%ld", SQL_MISC_TABLE, sdata->uid);
+      if(train_mode == T_TUM) snprintf(s, SMALLBUFSIZE-1, "UPDATE %s SET nham=nham-1 WHERE uid=%ld AND nham > 0", SQL_MISC_TABLE, sdata->gid);
+      else snprintf(s, SMALLBUFSIZE-1, "UPDATE %s SET nspam=nspam+1 WHERE uid=%ld", SQL_MISC_TABLE, sdata->gid);
    } else {
-      if(train_mode == T_TUM) snprintf(s, SMALLBUFSIZE-1, "UPDATE %s SET nspam=nspam-1 WHERE uid=%ld AND nspam > 0", SQL_MISC_TABLE, sdata->uid);
-      else snprintf(s, SMALLBUFSIZE-1, "UPDATE %s SET nham=nham+1 WHERE uid=%ld", SQL_MISC_TABLE, sdata->uid);
+      if(train_mode == T_TUM) snprintf(s, SMALLBUFSIZE-1, "UPDATE %s SET nspam=nspam-1 WHERE uid=%ld AND nspam > 0", SQL_MISC_TABLE, sdata->gid);
+      else snprintf(s, SMALLBUFSIZE-1, "UPDATE %s SET nham=nham+1 WHERE uid=%ld", SQL_MISC_TABLE, sdata->gid);
    }
 
    mysql_real_query(&(sdata->mysql), s, strlen(s));
@@ -238,8 +241,8 @@ int updateTokenTimestamps(struct session_data *sdata, struct node *xhash[]){
    }
 
 
-   if(sdata->uid > 0)
-      snprintf(s, SMALLBUFSIZE-1, "0) AND (uid=0 OR uid=%ld)", sdata->uid);
+   if(sdata->gid > 0)
+      snprintf(s, SMALLBUFSIZE-1, "0) AND (uid=0 OR uid=%ld)", sdata->gid);
    else
       snprintf(s, SMALLBUFSIZE-1, "0) AND uid=0");
 

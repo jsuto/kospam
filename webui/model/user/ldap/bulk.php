@@ -22,9 +22,17 @@ class ModelUserBulk extends Model {
    }
 
 
-   public function bulkUpdateUser($domain = '', $policy_group = 0, $whitelist = '', $blacklist = '') {
+   public function bulkUpdateUser($domain = '', $policy_group = 0, $whitelist = '', $blacklist = '', $gid = '') {
       $n = 0;
       $entry = array();
+
+      $a = array();
+
+      $a[0] = "top";
+      $a[1] = "person";
+      $a[2] = "qmailUser";
+      $a[3] = "qmailGroup";
+      $a[4] = "clapfUser";
 
       $uids = explode(",", $this->createUidList());
 
@@ -32,11 +40,17 @@ class ModelUserBulk extends Model {
 
          $dn = $this->model_user_user->getDNByUid((int)$uid);
 
+         $entry["objectClass"] = $a;
+
          $entry["domain"] = $domain;
          $entry["policygroupid"] = (int)$policy_group;
 
          $entry["filtersender"] = $whitelist;
          $entry["blacklist"] = $blacklist;
+
+         if($gid && (int)$gid >= 0) {
+            $entry["clapfgid"] = (int)$gid;
+         }
 
          if($dn) {
             if($this->db->ldap_modify($dn, $entry) == TRUE) {

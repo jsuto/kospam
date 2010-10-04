@@ -48,6 +48,7 @@ int main(int argc, char **argv){
    rc = 0;
 
    sdata.uid = 0;
+   sdata.gid = 0;
    sdata.num_of_rcpt_to = -1;
    memset(sdata.rcptto[0], 0, SMALLBUFSIZE);
    snprintf(sdata.ttmpfile, SMALLBUFSIZE-1, "%s", argv[2]);
@@ -56,7 +57,10 @@ int main(int argc, char **argv){
    spaminess = DEFAULT_SPAMICITY;
    sdata.Nham = sdata.Nspam = 0;
 
-   if(argc >= 4) sdata.uid = atoi(argv[3]);
+   if(argc >= 4){
+      sdata.uid = atoi(argv[3]);
+      sdata.gid = sdata.uid;
+   }
 
    gettimeofday(&tv_spam_start, &tz);
 

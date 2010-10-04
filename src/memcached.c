@@ -27,7 +27,7 @@ int getUserdataFromMemcached(struct session_data *sdata, struct __data *data, ch
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: memcached user query=%s, data=%s (%d)", sdata->ttmpfile, key, s, len);
 
    if(len > 0){
-      /* 1000:sj:acts.hu:1 */
+      /* 1000:8:sj:acts.hu:1 */
 
       if(len == 1 && s[0] == 'U'){
          if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: %s is unknown", sdata->ttmpfile, email);
@@ -35,7 +35,10 @@ int getUserdataFromMemcached(struct session_data *sdata, struct __data *data, ch
       }
 
       p = strchr(s, ':');
-      if(p){ *p = '\0'; sdata->uid = atoi(s); s = p+1; }
+      if(p){ *p = '\0'; sdata->uid = atol(s); s = p+1; }
+
+      p = strchr(s, ':');
+      if(p){ *p = '\0'; sdata->gid = atol(s); s = p+1; }
 
       p = strchr(s, ':');
       if(p){ *p = '\0'; snprintf(sdata->name, SMALLBUFSIZE-1, "%s", s); s = p+1; }
@@ -45,7 +48,7 @@ int getUserdataFromMemcached(struct session_data *sdata, struct __data *data, ch
 
       sdata->policy_group = atoi(s);
 
-      if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: memcached parsed user data: uid: %ld, name: %s, domain: %s, policy group: %d", sdata->ttmpfile, sdata->uid, sdata->name, sdata->domain, sdata->policy_group);
+      if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: memcached parsed user data: uid: %ld, gid: %ld, name: %s, domain: %s, policy group: %d", sdata->ttmpfile, sdata->uid, sdata->gid, sdata->name, sdata->domain, sdata->policy_group);
 
       return 1;
    }
@@ -62,7 +65,7 @@ int putUserdataToMemcached(struct session_data *sdata, struct __data *data, char
    if(sdata->uid == 0)
       strcpy(value, "U");
    else
-      snprintf(value, SMALLBUFSIZE-1, "%ld:%s:%s:%d", sdata->uid, sdata->name, sdata->domain, sdata->policy_group);
+      snprintf(value, SMALLBUFSIZE-1, "%ld:%ld:%s:%s:%d", sdata->uid, sdata->gid, sdata->name, sdata->domain, sdata->policy_group);
 
    if(memcached_add(&(data->memc), key, strlen(key), value, strlen(value), cfg->memcached_ttl, flags) == MEMCACHED_SUCCESS) return 1;
 

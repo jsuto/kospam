@@ -163,6 +163,7 @@ void handleSession(int new_sd, struct __data *data, struct __config *cfg){
                if(sstate.has_base64 == 0 && cfg->always_scan_message == 0) sdata.need_scan = 0;
                else sdata.need_scan = 1;
 
+               if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sender IP: %s", sdata.ttmpfile, sstate.ip);
 
             #ifdef HAVE_ANTIVIRUS
                gettimeofday(&tv1, &tz);
@@ -302,7 +303,7 @@ void handleSession(int new_sd, struct __data *data, struct __config *cfg){
                sqlite3_close(sdata.db);
                rc = SQLITE_ERROR;
             #endif
-            #ifdef NEED_IN_LDAP
+            #ifdef NEED_LDAP
                ldap_unbind_s(sdata.ldap);
             #endif
 
@@ -464,7 +465,7 @@ AFTER_PERIOD:
 
                   while(a){
                      if(strcmp(a->url_str, rctptoemail) == 0){
-                        if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: we have %s on the blacklist", sdata.ttmpfile, rctptoemail);
+                        if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: we have %s on the blackhole", sdata.ttmpfile, rctptoemail);
                         sdata.blackhole = 1;
                         counters.c_minefield++;
 
@@ -654,6 +655,7 @@ void initSessionData(struct session_data *sdata){
    memset(sdata->clapf_id, 0, SMALLBUFSIZE);
 
    sdata->uid = 0;
+   sdata->gid = 0;
    sdata->tot_len = 0;
    sdata->skip_id_check = 0;
    sdata->num_of_rcpt_to = 0;

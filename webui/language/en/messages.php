@@ -58,6 +58,7 @@ $_['text_first'] = "First";
 $_['text_from'] = "From";
 
 $_['text_global_training_happened'] = "Global training.";
+$_['text_group_id'] = "Group id";
 
 $_['text_ham_and_spam_messages'] = "Ham & spam messages";
 $_['text_help'] = "Help";
@@ -69,6 +70,7 @@ $_['text_import_users'] = "Import users";
 $_['text_invalid_data'] = "Invalid data";
 $_['text_invalid_email'] = "Invalid email";
 $_['text_invalid_email_or_password'] = "Invalid email or password";
+$_['text_invalid_gid'] = "Invalid gid";
 $_['text_invalid_password'] = "Invalid password";
 $_['text_invalid_policy_group'] = "Invalid policy group";
 $_['text_invalid_policy_name'] = "Invalid policy name";

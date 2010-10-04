@@ -106,6 +106,10 @@ class ControllerUserAdd extends Controller {
          $this->error['uid'] = $this->data['text_invalid_uid'];
       }
 
+      if(!isset($this->request->post['gid']) || !is_numeric($this->request->post['gid']) || $this->request->post['gid'] < 0) {
+         $this->error['gid'] = $this->data['text_invalid_gid'];
+      }
+
       if(!isset($this->request->post['email']) || strlen($this->request->post['email']) < 3) {
          $this->error['email'] = $this->data['text_invalid_email'];
       }

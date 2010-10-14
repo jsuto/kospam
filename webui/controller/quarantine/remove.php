@@ -63,7 +63,8 @@ class ControllerQuarantineRemove extends Controller {
          while(list($k, $v) = each($_POST)){
             $k = preg_replace("/_/", ".", $k);
 
-            if($this->model_quarantine_message->checkId($k) && file_exists($my_q_dir . "/$k") && unlink($my_q_dir . "/$k") ){
+            //if($this->model_quarantine_message->checkId($k) && file_exists($my_q_dir . "/$k") && unlink($my_q_dir . "/$k") ){
+            if($this->model_quarantine_message->checkId($k) && file_exists($my_q_dir . "/$k") && $this->model_quarantine_database->RemoveEntry($k) ){
                $this->model_quarantine_database->RemoveEntry($k);
                $n++;
             }
@@ -82,7 +83,8 @@ class ControllerQuarantineRemove extends Controller {
          $files = scandir($my_q_dir, 1);
 
          foreach ($files as $file){
-            if($this->model_quarantine_message->checkId($file) && file_exists($my_q_dir . "/$file") && unlink($my_q_dir . "/$file")){
+            //if($this->model_quarantine_message->checkId($file) && file_exists($my_q_dir . "/$file") && unlink($my_q_dir . "/$file")){
+            if($this->model_quarantine_message->checkId($file) && file_exists($my_q_dir . "/$file") && $this->model_quarantine_database->RemoveEntry($k) ){
                $n++;
             }
          }
@@ -95,7 +97,7 @@ class ControllerQuarantineRemove extends Controller {
 
 
       if($this->request->server['REQUEST_METHOD'] == 'GET') {
-         if($this->model_quarantine_message->checkId($this->data['id']) && file_exists($my_q_dir . "/" . $this->data['id']) && unlink($my_q_dir . "/" . $this->data['id'])){
+         if($this->model_quarantine_message->checkId($this->data['id']) && file_exists($my_q_dir . "/" . $this->data['id']) ){
             $this->model_quarantine_database->RemoveEntry($this->data['id']);
             $this->data['x'] = $this->data['text_successfully_removed'];
          } else {

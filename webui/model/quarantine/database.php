@@ -132,7 +132,7 @@ class ModelQuarantineDatabase extends Model {
    }
 
 
-   public function getMessages($dir = '', $username = '', $page = 0, $page_len = PAGE_LEN, $from = '', $subj = '', $hamspam = '') {
+   public function getMessages($dir = '', $username = '', $page = 0, $page_len = PAGE_LEN, $from = '', $subj = '', $hamspam = '', $sort = 'ts', $order = 0) {
       $n = $total_size = $i = 0;
       $messages = array();
 
@@ -148,6 +148,12 @@ class ModelQuarantineDatabase extends Model {
       if($from) { $where_cond .= " AND `from` like '%" . $Q->escape($from) . "%'"; }
       if($subj) { $where_cond .= " AND subj like '%" . $Q->escape($subj) . "%'"; }
 
+      /* sort order */
+
+      if($order == 0) { $order = "ASC"; }
+      else { $order = "DESC"; }
+
+
       /* select total size */
 
       $query = $Q->query("select count(size) as total_num, sum(size) as total_size from quarantine $where_cond");
@@ -155,7 +161,7 @@ class ModelQuarantineDatabase extends Model {
       if(isset($query->row['total_size'])) { $total_size = $query->row['total_size']; }
       if(isset($query->row['total_num'])) { $n = $query->row['total_num']; }
 
-      $query = $Q->query("select * from quarantine $where_cond ORDER BY ts DESC LIMIT " . $page_len*$page . "," . $page_len);
+      $query = $Q->query("select * from quarantine $where_cond ORDER BY `$sort` $order LIMIT " . $page_len*$page . "," . $page_len);
 
       $i = $page_len*$page;
 
@@ -176,7 +182,7 @@ class ModelQuarantineDatabase extends Model {
                              //'shortsubject' => strlen($message['subj']) > 6+MAX_CGI_FROM_SUBJ_LEN ? substr($message['subj'], 0, MAX_CGI_FROM_SUBJ_LEN) . "..." : $message['subj'],
                              'shortsubject' => $this->MakeShortString($message['subj'], MAX_CGI_FROM_SUBJ_LEN),
                              'size' => $this->model_quarantine_message->NiceSize($message['size']),
-                             'date' => date("Y.m.d.", $message['ts']),
+                             'date' => date("Y.m.d.", $message['ts'])
                             );
 
       }
@@ -194,6 +200,8 @@ class ModelQuarantineDatabase extends Model {
       $a = explode(".", $id);
 
       $query = $Q->query("update quarantine set hidden=1 where id='" . $Q->escape($a[1]) . "'");
+
+      if($query->error == 0) { return 1; }
 
       return 0;
    }

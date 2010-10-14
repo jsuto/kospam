@@ -50,13 +50,14 @@ class ControllerUserList extends Controller {
       }
 
 
-      /* get list order */
-      $this->data['order'] = "";
+      $this->data['sort'] = 'username';
 
-      if((int)@$this->request->get['uid'] == 1) { $this->data['order'] = "&amp;uid=1"; }
-      if((int)@$this->request->get['user'] == 1) { $this->data['order'] = "&amp;user=1"; }
-      if((int)@$this->request->get['email'] == 1) { $this->data['order'] = "&amp;email=1"; }
-      if((int)@$this->request->get['domain'] == 1) { $this->data['order'] = "&amp;domain=1"; }
+      $this->data['order'] = (int)@$this->request->get['order'];
+
+      if(@$this->request->get['sort'] == "uid") { $this->data['sort'] = "uid"; }
+      if(@$this->request->get['sort'] == "username") { $this->data['sort'] = "username"; }
+      if(@$this->request->get['sort'] == "email") { $this->data['sort'] = "email"; }
+      if(@$this->request->get['sort'] == "domain") { $this->data['sort'] = "domain"; }
 
 
       /* check if we are admin */
@@ -64,7 +65,7 @@ class ControllerUserList extends Controller {
       if(Registry::get('admin_user') == 1 || Registry::get('domain_admin') == 1) {
 
          $users = $this->model_user_user->getUsers($this->data['search'], $this->data['page'], $this->data['page_len'], 
-                    @$this->request->get['uid'], @$this->request->get['user'], @$this->request->get['email'], @$this->request->get['domain']);
+                    $this->data['sort'], $this->data['order']);
 
          $this->data['total_users'] = $this->model_user_user->howManyUsers($this->data['search']);
 

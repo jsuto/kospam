@@ -36,6 +36,14 @@
 
 <p><?php print $text_number_of_messages_in_quarantine; ?>: <?php print $n; ?> (<?php print $total_size; ?> bytes)</p>
 
+<div id="pagenav">
+   <?php if($page > 0){ ?><a href="index.php?route=quarantine/quarantine&amp;page=0&amp;user=<?php print $username; ?>&amp;from=<?php print $from; ?>&amp;subj=<?php print $subj; ?>&hamspam=<?php print $hamspam; ?>&amp;sort=<?php print $sort; ?>&amp;order=<?php print $order; ?>" class="navlink"><?php } ?> &laquo; <?php if($page > 0){ ?></a><?php } ?>
+   <?php if($page > 0){ ?><a href="index.php?route=quarantine/quarantine&amp;page=<?php print $prev_page; ?>&amp;user=<?php print $username; ?>&amp;from=<?php print $from; ?>&amp;subj=<?php print $subj; ?>&hamspam=<?php print $hamspam;?>&amp;sort=<?php print $sort; ?>&amp;order=<?php print $order; ?>" class="navlink"><?php } ?> &lsaquo; <?php if($page > 0){ ?></a><?php } ?>
+    <?php print $messages[0]['i']; ?> - <?php print $messages[count($messages)-1]['i']; ?>
+   <?php if($n >= $page_len*($page+1) && $n > $page_len){ ?><a href="index.php?route=quarantine/quarantine&amp;page=<?php print $next_page; ?>&amp;user=<?php print $username; ?>&amp;from=<?php print $from; ?>&amp;subj=<?php print $subj; ?>&hamspam=<?php print $hamspam;?>&amp;sort=<?php print $sort; ?>&amp;order=<?php print $order; ?>" class="navlink"><?php } ?> &rsaquo; <?php if($n >= $page_len*($page+1) && $n > $page_len){ ?></a><?php } ?>
+   <?php if($page < $total_pages){ ?><a href="index.php?route=quarantine/quarantine&amp;page=<?php print $total_pages; ?>&amp;user=<?php print $username; ?>&amp;from=<?php print $from; ?>&amp;subj=<?php print $subj; ?>&hamspam=<?php print $hamspam; ?>&amp;sort=<?php print $sort; ?>&amp;order=<?php print $order; ?>" class="navlink"><?php } ?> &raquo; <?php if($page < $total_pages){ ?></a><?php } ?>
+</div>
+
 <div id="quarantine">
 
 <form action="index.php?route=quarantine/remove" name="aaa1" method="post">
@@ -46,10 +54,10 @@
    <table border="0" id="thetable">
    <tr align="middle">
       <th>&nbsp;</th>
-      <th><?php print $text_date; ?></th>
-      <th><?php print $text_from; ?></th>
-      <th><?php print $text_subject; ?></th>
-      <th><?php print $text_size; ?></th>
+      <th><?php print $text_date; ?> <a href="index.php?route=quarantine/quarantine&amp;user=<?php print $username; ?>&amp;from=<?php print $from; ?>&amp;subj=<?php print $subj; ?>&hamspam=<?php print $hamspam; ?>&amp;sort=ts&amp;order=0"><img src="view/theme/<?php print THEME; ?>/images/arrowup.gif" border="0"></a> <a href="index.php?route=quarantine/quarantine&amp;user=<?php print $username; ?>&amp;from=<?php print $from; ?>&amp;subj=<?php print $subj; ?>&hamspam=<?php print $hamspam; ?>&amp;sort=ts&amp;order=1"><img src="view/theme/<?php print THEME; ?>/images/arrowdown.gif" border="0"></a></th>
+      <th><?php print $text_from; ?> <a href="index.php?route=quarantine/quarantine&amp;user=<?php print $username; ?>&amp;from=<?php print $from; ?>&amp;subj=<?php print $subj; ?>&hamspam=<?php print $hamspam; ?>&amp;sort=from&amp;order=0"><img src="view/theme/<?php print THEME; ?>/images/arrowup.gif" border="0"></a> <a href="index.php?route=quarantine/quarantine&amp;user=<?php print $username; ?>&amp;from=<?php print $from; ?>&amp;subj=<?php print $subj; ?>&hamspam=<?php print $hamspam; ?>&amp;sort=from&amp;order=1"><img src="view/theme/<?php print THEME; ?>/images/arrowdown.gif" border="0"></a></th>
+      <th><?php print $text_subject; ?> <a href="index.php?route=quarantine/quarantine&amp;user=<?php print $username; ?>&amp;from=<?php print $from; ?>&amp;subj=<?php print $subj; ?>&hamspam=<?php print $hamspam; ?>&amp;sort=subj&amp;order=0"><img src="view/theme/<?php print THEME; ?>/images/arrowup.gif" border="0"></a> <a href="index.php?route=quarantine/quarantine&amp;user=<?php print $username; ?>&amp;from=<?php print $from; ?>&amp;subj=<?php print $subj; ?>&hamspam=<?php print $hamspam; ?>&amp;sort=subj&amp;order=1"><img src="view/theme/<?php print THEME; ?>/images/arrowdown.gif" border="0"></a></th>
+      <th><?php print $text_size; ?> <a href="index.php?route=quarantine/quarantine&amp;user=<?php print $username; ?>&amp;from=<?php print $from; ?>&amp;subj=<?php print $subj; ?>&hamspam=<?php print $hamspam; ?>&amp;sort=size&amp;order=0"><img src="view/theme/<?php print THEME; ?>/images/arrowup.gif" border="0"></a> <a href="index.php?route=quarantine/quarantine&amp;user=<?php print $username; ?>&amp;from=<?php print $from; ?>&amp;subj=<?php print $subj; ?>&hamspam=<?php print $hamspam; ?>&amp;sort=size&amp;order=1"><img src="view/theme/<?php print THEME; ?>/images/arrowdown.gif" border="0"></a></th>
       <th>&nbsp;</th>
       <th>&nbsp;</th>
       <th>&nbsp;</th>
@@ -57,8 +65,8 @@
    <tr>
       <td>&nbsp;</td>
       <td>&nbsp;</td>
-      <td><img src="<?php print WEBUI_DIRECTORY; ?>/view/theme/<?php print THEME; ?>/images/line.png" alt="xxx" /></td>
-      <td><img src="<?php print WEBUI_DIRECTORY; ?>/view/theme/<?php print THEME; ?>/images/line.png" alt="xxx" /></td>
+      <td width="35%"><img src="<?php print WEBUI_DIRECTORY; ?>/view/theme/<?php print THEME; ?>/images/line.png" alt="xxx" /></td>
+      <td width="40%"><img src="<?php print WEBUI_DIRECTORY; ?>/view/theme/<?php print THEME; ?>/images/line.png" alt="xxx" /></td>
       <td>&nbsp;</td>
       <td>&nbsp;</td>
       <td>&nbsp;</td>
@@ -99,7 +107,7 @@
       <option value="purgeeverything"><?php print $text_purge_all_messages_from_quarantine; ?></option>
    </select>
 
-   <input type="button" name="MassAction" value="Ok" onClick="fix_mass_action('<?php print $subj; ?>', '<?php print $from; ?>', '<?php print $hamspam; ?>', '<?php print $username; ?>');" />
+   <input type="button" name="MassAction" value="Ok" onClick="fix_mass_action('<?php print $subj; ?>', '<?php print $from; ?>', '<?php print $hamspam; ?>', '<?php print $username; ?>', <?php print $page; ?>);" />
 </p>
 
 </form>
@@ -109,22 +117,13 @@
 
 <p>&nbsp;</p>
 
-<?php if($n > $page_len){ ?>
-<p>
-<?php if($page > 0){ ?>
-   <a href="index.php?route=quarantine/quarantine&amp;page=0&amp;user=<?php print $username; ?>&amp;from=<?php print $from; ?>&amp;subj=<?php print $subj; ?>&hamspam=<?php print $hamspam; ?>"><?php print $text_first; ?></a>
-   <a href="index.php?route=quarantine/quarantine&amp;page=<?php print $prev_page; ?>&amp;user=<?php print $username; ?>&amp;from=<?php print $from; ?>&amp;subj=<?php print $subj; ?>&hamspam=<?php print $hamspam; ?>"><?php print $text_previous; ?></a>
-<?php } ?>
-
-<?php if($n >= $page_len*($page+1) && $n > $page_len){ ?>
-   <a href="index.php?route=quarantine/quarantine&amp;page=<?php print $next_page; ?>&amp;user=<?php print $username; ?>&amp;from=<?php print $from; ?>&amp;subj=<?php print $subj; ?>&hamspam=<?php print $hamspam; ?>"><?php print $text_next; ?></a>
-<?php } ?>
-
-<?php if($page < $total_pages){ ?>
-   <a href="index.php?route=quarantine/quarantine&amp;page=<?php print $total_pages; ?>&amp;user=<?php print $username; ?>&amp;from=<?php print $from; ?>&amp;subj=<?php print $subj; ?>&hamspam=<?php print $hamspam; ?>"><?php print $text_last; ?></a>
-<?php } ?>
-</p>
-<?php } ?>
+<div id="pagenav">
+   <?php if($page > 0){ ?><a href="index.php?route=quarantine/quarantine&amp;page=0&amp;user=<?php print $username; ?>&amp;from=<?php print $from; ?>&amp;subj=<?php print $subj; ?>&hamspam=<?php print $hamspam; ?>" class="navlink"><?php } ?> &laquo; <?php if($page > 0){ ?></a><?php } ?>
+   <?php if($page > 0){ ?><a href="index.php?route=quarantine/quarantine&amp;page=<?php print $prev_page; ?>&amp;user=<?php print $username; ?>&amp;from=<?php print $from; ?>&amp;subj=<?php print $subj; ?>&hamspam=<?php print $hamspam;?>" class="navlink"><?php } ?> &lsaquo; <?php if($page > 0){ ?></a><?php } ?>
+    <?php print $messages[0]['i']; ?> - <?php print $messages[count($messages)-1]['i']; ?>
+   <?php if($n >= $page_len*($page+1) && $n > $page_len){ ?><a href="index.php?route=quarantine/quarantine&amp;page=<?php print $next_page; ?>&amp;user=<?php print $username; ?>&amp;from=<?php print $from; ?>&amp;subj=<?php print $subj; ?>&hamspam=<?php print $hamspam;?>" class="navlink"><?php } ?> &rsaquo; <?php if($n >= $page_len*($page+1) && $n > $page_len){ ?></a><?php } ?>
+   <?php if($page < $total_pages){ ?><a href="index.php?route=quarantine/quarantine&amp;page=<?php print $total_pages; ?>&amp;user=<?php print $username; ?>&amp;from=<?php print $from; ?>&amp;subj=<?php print $subj; ?>&hamspam=<?php print $hamspam; ?>" class="navlink"><?php } ?> &raquo; <?php if($page < $total_pages){ ?></a><?php } ?>
+</div>
 
 
 

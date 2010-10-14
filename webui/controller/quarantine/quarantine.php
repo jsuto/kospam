@@ -46,8 +46,20 @@ class ControllerQuarantineQuarantine extends Controller {
       }
 
 
+      $this->data['sort'] = 'ts';
+
+      $this->data['order'] = (int)@$this->request->get['order'];
+
+      if(@$this->request->get['sort'] == "ts") { $this->data['sort'] = "ts"; }
+      if(@$this->request->get['sort'] == "from") { $this->data['sort'] = "from"; }
+      if(@$this->request->get['sort'] == "subj") { $this->data['sort'] = "subj"; }
+      if(@$this->request->get['sort'] == "size") { $this->data['sort'] = "size"; }
+
+      if($this->data['sort'] == "ts" && @$this->request->get['order'] == "") { $this->data['order'] = 1; }
+
+
       /* 
-         if you are an admin user I show you a form to select a user's quarantine
+       * if you are an admin user I show you a form to select a user's quarantine
        */
 
 
@@ -119,7 +131,7 @@ class ControllerQuarantineQuarantine extends Controller {
          /* get messages from quarantine */
 
          list ($this->data['n'], $this->data['total_size'], $this->data['messages']) =
-                 $this->model_quarantine_database->getMessages($my_q_dir, $this->data['username'], $this->data['page'], $this->data['page_len'], $this->data['from'], $this->data['subj'], $this->data['hamspam']);
+                 $this->model_quarantine_database->getMessages($my_q_dir, $this->data['username'], $this->data['page'], $this->data['page_len'], $this->data['from'], $this->data['subj'], $this->data['hamspam'], $this->data['sort'], $this->data['order']);
       }
       else {
          $this->data['n'] = $this->data['total_size'] = 0;

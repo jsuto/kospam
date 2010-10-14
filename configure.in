@@ -188,7 +188,7 @@ AC_ARG_ENABLE(whitelist,
 dnl use blacklist
 
 AC_ARG_ENABLE(blacklist,
-        [  --enable-blacklist      use blacklist (this is _NOT_ rbl)], want_blacklist=$enableval, want_blacklist="no")
+        [  --enable-blacklist      use blacklist (this is _NOT_ RBL)], want_blacklist=$enableval, want_blacklist="no")
 
    if test "$want_blacklist" = "yes"; then
       have_blacklist="yes"
@@ -288,7 +288,7 @@ dnl  if test "$want_antispam" = "yes"; then
 
 
 AC_ARG_WITH(userdb,
-[  --with-userdb[[=mysql|ldap]]      use either ldap or mysql database holding user data (default: none)],[
+[  --with-userdb[[=mysql|sqlite3]]      use either mysql or sqlite3 database holding user data (default: none)],[
   if test "$withval" != "no" -a "$withval" != "yes"; then
     USERDB=$withval
   fi

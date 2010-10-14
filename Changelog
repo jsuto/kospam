@@ -1,5 +1,19 @@
 0.4.6-rc1:
 
+2010.10.14, SJ
+
+Tamas Papp introduced a training shell script useful for dovecot
+installations.
+
+Removed the "autocomplete=off" reference from the login page. It
+caused a problem with Safari.
+
+The webui won't remove any email from the queue directory, only
+hides them. You have to use a cron job to purge aged messages.
+
+The quarantine and the user listing in the webui can be sorted
+and ordered by various fields.
+
 2010.10.03, SJ
 
 Minor webui fixes.

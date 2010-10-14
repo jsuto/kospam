@@ -223,9 +223,9 @@ class ModelUserUser extends Model {
    }
 
 
-   public function getUsers($search = '', $page = 0, $page_len = 0, $uid = '', $user = '', $email = '', $domain = '') {
+   public function getUsers($search = '', $page = 0, $page_len = 0, $sort = 'username', $order = 0) {
       $where_cond = "";
-      $order = "";
+      $_order = "";
       $users = array();
       $my_domain = array();
 
@@ -241,25 +241,15 @@ class ModelUserUser extends Model {
          $my_domain = $this->getDomains();
       }
 
-      /* sort orders */
+      /* sort order */
 
-      if($uid != ""){
-         if((int)$uid == 1) { $order = "ORDER BY uid DESC"; }
-         if((int)$uid == 0) { $order = "ORDER BY uid ASC"; }
-      }
+      if($order == 0) { $order = "ASC"; }
+      else { $order = "DESC"; }
 
-      if($user != ""){
-         if((int)$user == 1) { $order = "ORDER BY username DESC"; }
-         if((int)$user == 0) { $order = "ORDER BY username ASC"; }
-      }
-
-      if($domain != ""){
-         if((int)$domain == 1) { $order = "ORDER BY domain DESC"; }
-         if((int)$domain == 0) { $order = "ORDER BY domain ASC"; }
-      }
+      $_order = "ORDER BY $sort $order";
 
 
-      $query = $this->db->query("SELECT uid, username, realname, domain, policy_group FROM " . TABLE_USER . " $where_cond $order LIMIT " . (int)$from . ", " . (int)$page_len);
+      $query = $this->db->query("SELECT uid, gid, username, realname, domain, policy_group FROM " . TABLE_USER . " $where_cond $_order LIMIT " . (int)$from . ", " . (int)$page_len);
 
       foreach ($query->rows as $q) {
          $email = $this->db->query("SELECT email FROM " . TABLE_EMAIL . " WHERE uid=" . (int)$q['uid'] . " LIMIT 1");

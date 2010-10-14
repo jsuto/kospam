@@ -1328,7 +1328,7 @@ Optional Features:
   --enable-kav            build Kaspersky antivirus support
   --enable-drweb          build Dr.Web antivirus support
   --enable-whitelist      use whitelist
-  --enable-blacklist      use blacklist (this is _NOT_ rbl)
+  --enable-blacklist      use blacklist (this is _NOT_ RBL)
   --enable-case           use case sensitive tokens
   --enable-rbl            use the (SU)RBL database
   --enable-all-received   check all the IP-addresses from "Received: from ..." lines against blacklists
@@ -1345,7 +1345,7 @@ Optional Features:
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
-  --with-userdb[=mysql|ldap]      use either ldap or mysql database holding user data (default: none)
+  --with-userdb[=mysql|sqlite3]      use either mysql or sqlite3 database holding user data (default: none)
   --with-store[=fs|nfs]         use either the local filesystem or NFS to keep emails (default: none)
   --with-tokendb[=mysql|sqlite3]  use either mysql or sqlite3 database holding tokens (default: none)
   --with-clapf-user=username      what user the clapf daemon shall be run as

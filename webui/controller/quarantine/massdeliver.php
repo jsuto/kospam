@@ -60,10 +60,6 @@ class ControllerQuarantineMassdeliver extends Controller {
 
             if($this->model_mail_mail->SendSmtpEmail(SMTP_HOST, SMTP_PORT, SMTP_DOMAIN, SMTP_FROMADDR, $this->data['to'], $message) == 1) {
 
-               /*if(file_exists($my_q_dir . "/" . $k)){
-                  unlink($my_q_dir . "/" . $k);
-               }*/
-
                $this->model_quarantine_database->RemoveEntry($k);
 
                $this->data['n']++;

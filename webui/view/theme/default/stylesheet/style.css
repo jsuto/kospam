@@ -158,6 +158,16 @@
 		background: #DDDDDD;
 	}
 
+	#pagenav {
+		margin-top: 1px;
+		margin-bottom: 20px;
+		font: normal 15px Arial, Helvetica, sans-serif;
+	}
+
+	#pagenav a.navlink {
+		color: black;
+		font: normal 25px Arial, Helvetica, sans-serif;
+	}
 
 	td.HAM {
 		color: green;
@@ -187,7 +197,6 @@
 		color: red;
 		font: normal 11px/1.6em Verdana, Arial, Helvetica, sans-serif;
 	}
-
 
 	#footer p {
 		font-size: 11px;

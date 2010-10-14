@@ -21,19 +21,20 @@ NAME="clapf"
 PREFIX="_PREFIX_"
 PARAMS="-d"
 RETVAL=0
-PID_FILE=`${PREFIX}/sbin/clapfconf |grep ^historypid |cut -f2 -d=`
+PID_FILE=`${PREFIX}/sbin/clapfconf -q historypid | cut -f2 -d '='`
 PID_NUMBER=`test -f ${PID_FILE} && cat ${PID_FILE}`
 PID_DIR=`dirname ${PID_FILE}`
-UID=`${PREFIX}/sbin/clapfconf |grep ^username |cut -f2 -d=`
-GID=`id -gn ${UID}`
+_UID=`${PREFIX}/sbin/clapfconf -q username | cut -f2 -d '='`
+_GID=`id -gn ${_UID}`
 
-test -d ${PID_DIR} || install -m 755 -o ${UID} -g ${GID} -d ${PID_DIR}
+test -d ${PID_DIR} || install -m 755 -o ${_UID} -g ${_GID} -d ${PID_DIR}
 
 start() {
 	echo -n $"Starting $NAME: "
 	${PREFIX}/sbin/clapf -d 2>/dev/null 1>&2 && success || failure $"${NAME} start"
 	RETVAL=$?
 	[ $RETVAL -eq 0 ] && touch /var/lock/subsys/${NAME}
+	echo
 	return $RETVAL
 }
 

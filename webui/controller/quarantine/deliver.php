@@ -61,10 +61,6 @@ class ControllerQuarantineDeliver extends Controller {
 
             $this->model_quarantine_database->RemoveEntry($this->data['id']);
 
-            /*if(file_exists($my_q_dir . "/" . $this->data['id'])){
-               unlink($my_q_dir . "/" . $this->data['id']);
-            }*/
-
             $this->data['x'] = $this->data['text_successfully_delivered'];
          }
       }

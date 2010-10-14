@@ -91,7 +91,6 @@ class ControllerQuarantineMasstrain extends Controller {
                }
 
                if($x == 1 && file_exists($my_q_dir . "/" . $k)){
-                  //unlink($my_q_dir . "/" . $k);
                   $this->model_quarantine_database->RemoveEntry($k);
                }
 

@@ -15,13 +15,8 @@ class ControllerUserList extends Controller {
       $db = Registry::get('db');
       $language = Registry::get('language');
 
-      if(DB_DRIVER == "ldap"){
-         $this->load->model('user/ldap/user');
-         $this->load->model('policy/ldap/policy');
-      } else {
-         $this->load->model('user/sql/user');
-         $this->load->model('policy/sql/policy');
-      }
+      $this->load->model('user/user');
+      $this->load->model('policy/policy');
 
       $this->document->title = $language->get('text_user_management');
 

@@ -18,15 +18,9 @@ class ControllerUserEdit extends Controller {
       $db = Registry::get('db');
       $language = Registry::get('language');
 
-      if(DB_DRIVER == "ldap"){
-         $this->load->model('user/ldap/user');
-         $this->load->model('policy/ldap/policy');
-      } else {
-         $this->load->model('user/sql/user');
-         $this->load->model('policy/sql/policy');
-      }
+      $this->load->model('user/user');
+      $this->load->model('policy/policy');
 
-      $this->data['ldap_user_DNs'] = Registry::get('ldap_user_DNs');
 
       $this->document->title = $language->get('text_user_management');
 
@@ -68,10 +62,7 @@ class ControllerUserEdit extends Controller {
                   $this->data['errorstring'] = $this->data['text_failed_to_modify'] . ": " . $ret;
                }
 
-               if(DB_DRIVER == "ldap")
-                  $__username = "cn=" . $this->request->post['username'] . "," . $this->request->post['ou'];
-               else
-                  $__username = $this->request->post['username'];
+               $__username = $this->request->post['username'];
 
                $this->model_user_user->setWhitelist($__username, $this->request->post['whitelist']);
                $this->model_user_user->setBlacklist($__username, $this->request->post['blacklist']);
@@ -85,20 +76,11 @@ class ControllerUserEdit extends Controller {
          else {
             $this->data['user'] = $this->model_user_user->getUserByUid($this->data['uid']);
 
-            if(DB_DRIVER == 'ldap') {
-               $this->data['user']['whitelist'] = $this->model_user_user->getWhitelist($this->data['user']['dn']);
-               $this->data['user']['blacklist'] = $this->model_user_user->getBlacklist($this->data['user']['dn']);
-            } else {
-               $this->data['user']['whitelist'] = $this->model_user_user->getWhitelist($this->data['user']['username']);
-               $this->data['user']['blacklist'] = $this->model_user_user->getBlacklist($this->data['user']['username']);
-            }
+            $this->data['user']['whitelist'] = $this->model_user_user->getWhitelist($this->data['user']['username']);
+            $this->data['user']['blacklist'] = $this->model_user_user->getBlacklist($this->data['user']['username']);
 
             $this->data['policies'] = $this->model_policy_policy->getPolicies();
             $this->data['emails'] = $this->model_user_user->getEmails($this->data['user']['username']);
-
-            if(DB_DRIVER == 'ldap') {
-               $this->data['email'] = $this->data['user']['email'];
-            }
 
          }
       }

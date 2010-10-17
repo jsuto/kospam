@@ -11,7 +11,6 @@ class ControllerHistoryHistory extends Controller {
 
 
       $request = Registry::get('request');
-      //$db = Registry::get('db');
       $language = Registry::get('language');
 
       $this->document->title = $language->get('text_history');

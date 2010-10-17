@@ -33,38 +33,6 @@ function fix1() {
       document.forms.setup.DB_DATABASE.value = "/var/lib/clapf/data/tokens.sdb";
    }
 
-   if(document.forms.setup.DB_DRIVER.value == "ldap") {
-      ShowOption('LDAP_HOST', 1);
-      ShowOption('LDAP_BINDDN', 1);
-      ShowOption('LDAP_BINDPW', 1);
-      ShowOption('LDAP_USER_BASEDN', 1);
-      ShowOption('LDAP_POLICY_BASEDN', 1);
-      ShowOption('LDAP_DOMAIN_BASEDN', 1);
-
-      ShowOption('TOKEN_SEPARATOR', 1);
-      ShowOption('TOKEN_DRIVER', 1);
-      ShowOption('TOKEN_HOSTNAME', 1);
-      ShowOption('TOKEN_DATABASE', 1);
-      ShowOption('TOKEN_USERNAME', 1);
-      ShowOption('TOKEN_PASSWORD', 1);
-   }
-   else {
-      ShowOption('LDAP_HOST', 0);
-      ShowOption('LDAP_BINDDN', 0);
-      ShowOption('LDAP_BINDPW', 0);
-      ShowOption('LDAP_USER_BASEDN', 0);
-      ShowOption('LDAP_POLICY_BASEDN', 0);
-      ShowOption('LDAP_DOMAIN_BASEDN', 0);
-
-      ShowOption('TOKEN_SEPARATOR', 0);
-      ShowOption('TOKEN_DRIVER', 0);
-      ShowOption('TOKEN_HOSTNAME', 0);
-      ShowOption('TOKEN_DATABASE', 0);
-      ShowOption('TOKEN_USERNAME', 0);
-      ShowOption('TOKEN_PASSWORD', 0);
-   }
-
-
    if(document.forms.setup.MEMCACHED_ENABLED.value == 1) {
       ShowOption('MEMCACHED_SERVERS', 1);
    }
@@ -72,24 +40,6 @@ function fix1() {
       ShowOption('MEMCACHED_SERVERS', 0);
    }
 
-}
-
-
-function fix_token() {
-   if(document.forms.setup.TOKEN_DRIVER.value == "mysql") {
-      ShowOption('TOKEN_HOSTNAME', 1);
-      ShowOption('TOKEN_DATABASE', 1);
-      ShowOption('TOKEN_USERNAME', 1);
-      ShowOption('TOKEN_PASSWORD', 1);
-      document.forms.setup.TOKEN_DATABASE.value = "clapf";
-   }
-   else {
-      ShowOption('TOKEN_HOSTNAME', 0);
-      ShowOption('TOKEN_DATABASE', 1);
-      ShowOption('TOKEN_USERNAME', 0);
-      ShowOption('TOKEN_PASSWORD', 0);
-      document.forms.setup.TOKEN_DATABASE.value = "/var/lib/clapf/data/tokens.sdb";
-   }
 }
 
 
@@ -189,7 +139,6 @@ function ShowOption(what, value) {
          <select name="DB_DRIVER" id="DB_DRIVER" onchange="fix1(); return false;">
             <option value="mysql">MySQL</option>
             <option value="sqlite">SQLite3</option>
-            <option value="ldap">LDAP</option>
          </select>
       </td>
    </tr>
@@ -213,74 +162,6 @@ function ShowOption(what, value) {
       <td>Database password: </td>
       <td><input type="password" name="DB_PASSWORD" id="DB_PASSWORD" value="" size="30" /></td>
    </tr>
-
-   <!-- ldap stuff -->
-
-   <tr id="DIV_LDAP_HOST" style="display:none">
-      <td>LDAP host: </td>
-      <td><input type="text" name="LDAP_HOST" id="LDAP_HOST" value="ldap://127.0.0.1/" size="30" /></td>
-   </tr>
-
-   <tr id="DIV_LDAP_BINDDN" style="display:none">
-      <td>Bind DN : </td>
-      <td><input type="text" name="LDAP_BINDDN" id="LDAP_BINDDN" value="cn=Manager,dc=yourdomain.dc=com" size="30" /></td>
-   </tr>
-
-   <tr id="DIV_LDAP_BINDPW" style="display:none">
-      <td>Bind password: </td>
-      <td><input type="password" name="LDAP_BINDPW" id="LDAP_BINDPW" value="" size="30" /></td>
-   </tr>
-
-   <tr id="DIV_LDAP_USER_BASEDN" style="display:none">
-      <td>Base DN of the users: </td>
-      <td><input type="text" name="LDAP_USER_BASEDN" id="LDAP_USER_BASEDN" value="ou=clapfusers,dc=yourdomain.dc=com" size="30" /></td>
-   </tr>
-
-   <tr id="DIV_LDAP_POLICY_BASEDN" style="display:none">
-      <td>Base DN of the policies: </td>
-      <td><input type="text" name="LDAP_POLICY_BASEDN" id="LDAP_POLICY_BASEDN" value="ou=clapfpolicies,dc=yourdomain.dc=com" size="30" /></td>
-   </tr>
-
-   <tr id="DIV_LDAP_DOMAIN_BASEDN" style="display:none">
-      <td>Base DN of the domains: </td>
-      <td><input type="text" name="LDAP_DOMAIN_BASEDN" id="LDAP_DOMAIN_BASEDN" value="ou=clapfdomains,dc=yourdomain.dc=com" size="30" /></td>
-   </tr>
-
-
-   <tr id="DIV_TOKEN_SEPARATOR" style="display:none">
-      <td colspan="2"><hr><br /><strong>Token database</strong></td>
-   </tr>
-
-   <tr id="DIV_TOKEN_DRIVER" style="display:none">
-      <td>Database driver: </td>
-      <td>
-         <select name="TOKEN_DRIVER" id="TOKEN_DRIVER" onchange="fix_token(); return false;">
-            <option value="mysql">MySQL</option>
-            <option value="sqlite">SQLite3</option>
-         </select>
-      </td>
-   </tr>
-
-   <tr id="DIV_TOKEN_HOSTNAME" style="display:none">
-      <td>Database host: </td>
-      <td><input type="text" name="TOKEN_HOSTNAME" id="TOKEN_HOSTNAME" value="localhost" size="30" /></td>
-   </tr>
-
-   <tr id="DIV_TOKEN_DATABASE" style="display:none">
-      <td>Database name: </td>
-      <td><input type="text" name="TOKEN_DATABASE" id="TOKEN_DATABASE" value="clapf" size="30" /></td>
-   </tr>
-
-   <tr id="DIV_TOKEN_USERNAME" style="display:none">
-      <td>Database user: </td>
-      <td><input type="text" name="TOKEN_USERNAME" id="TOKEN_USERNAME" value="clapf" size="30" /></td>
-   </tr>
-
-   <tr id="DIV_TOKEN_PASSWORD" style="display:none">
-      <td>Database password: </td>
-      <td><input type="password" name="TOKEN_PASSWORD" id="TOKEN_PASSWORD" value="" size="30" /></td>
-   </tr>
-
 
 
    <!-- history stuff -->

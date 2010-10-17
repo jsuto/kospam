@@ -15,10 +15,7 @@ class ControllerLoginLogout extends Controller {
       $request = Registry::get('request');
       $db = Registry::get('db');
 
-      if(DB_DRIVER == "ldap")
-         $this->load->model('user/ldap/auth');
-      else
-         $this->load->model('user/sql/auth');
+      $this->load->model('user/auth');
 
       $this->document->title = $this->data['text_logout'];
 

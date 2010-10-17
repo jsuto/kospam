@@ -15,10 +15,7 @@ class ControllerUserWhitelist extends Controller {
       $db = Registry::get('db');
       $language = Registry::get('language');
 
-      if(DB_DRIVER == "ldap")
-         $this->load->model('user/ldap/user');
-      else
-         $this->load->model('user/sql/user');
+      $this->load->model('user/user');
 
       $this->document->title = $language->get('text_whitelist_settings');
 
@@ -26,10 +23,7 @@ class ControllerUserWhitelist extends Controller {
       $this->data['text_submit'] = $language->get('text_submit');
       $this->data['text_back'] = $language->get('text_back');
 
-      if(DB_DRIVER == "ldap")
-         $__username = $_SESSION['dn'];
-      else
-         $__username = $_SESSION['username'];
+      $__username = $_SESSION['username'];
 
 
       if($this->request->server['REQUEST_METHOD'] == 'POST'){

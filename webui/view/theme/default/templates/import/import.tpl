@@ -9,6 +9,8 @@
 <input type="hidden" name="ldap_binddn" value="<?php print $request['ldap_binddn']; ?>" />
 <input type="hidden" name="ldap_bindpw" value="<?php print $request['ldap_bindpw']; ?>" />
 <input type="hidden" name="ldap_basedn" value="<?php print $request['ldap_basedn']; ?>" />
+<input type="hidden" name="type" value="<?php print $request['type']; ?>" />
+<input type="hidden" name="domain" value="<?php print $request['domain']; ?>" />
 
 <table border="0">
    <tr>
@@ -29,6 +31,10 @@
 <?php } ?>
          </select>
       </td>
+   </tr>
+   <tr>
+      <td>GID:</td>
+      <td><input type="text" name="gid" value="1" /></td>
    </tr>
 </table>
 

@@ -199,6 +199,19 @@ class ModelUserUser extends Model {
    }
 
 
+   public function getUserByDN($dn = '') {
+      if($dn == '') { return array(); }
+
+      $query = $this->db->query("SELECT * FROM " . TABLE_USER . " WHERE dn='" . $this->db->escape($dn) . "'");
+
+      if($query->num_rows == 1) {
+         return $query->row;
+      }
+
+      return array();
+   }
+
+
    public function getUserByUid($uid = 0) {
       if(!is_numeric($uid) || (int)$uid < 0){
          return array();
@@ -356,6 +369,15 @@ class ModelUserUser extends Model {
    }
 
 
+   public function removeEmail($uid = 0, $email = '') {
+      if((int)$uid < 1 || $email == ""){ return 0; }
+
+      $query = $this->db->query("DELETE FROM " . TABLE_EMAIL . " WHERE uid=" . (int)$uid . " AND email='" . $this->db->escape($email) . "'");
+
+      return $this->db->countAffected();
+   }
+
+
    public function updateUser($user) {
 
       $emails = explode("\n", $user['email']);
@@ -410,7 +432,6 @@ class ModelUserUser extends Model {
       $query = $this->db->query("DELETE FROM " . TABLE_USER . " WHERE uid=" . (int)$uid);
       $query = $this->db->query("DELETE FROM " . TABLE_WHITELIST . " WHERE uid=" . (int)$uid);
       $query = $this->db->query("DELETE FROM " . TABLE_BLACKLIST . " WHERE uid=" . (int)$uid);
-      $query = $this->db->query("DELETE FROM " . TABLE_MISC . " WHERE uid=" . (int)$uid);
 
       return 1;
    }

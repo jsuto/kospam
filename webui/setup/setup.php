@@ -114,25 +114,6 @@ function write_stuff() {
    }
 
 
-   if($_POST['DB_DRIVER'] == "ldap") {
-      write_line($fp, "LDAP_HOST", $_POST['LDAP_HOST']);
-      write_line($fp, "LDAP_BINDDN", $_POST['LDAP_BINDDN']);
-      write_line($fp, "LDAP_BINDPW", $_POST['LDAP_BINDPW']);
-      write_line($fp, "LDAP_USER_BASEDN", $_POST['LDAP_USER_BASEDN']);
-      write_line($fp, "LDAP_POLICY_BASEDN", $_POST['LDAP_POLICY_BASEDN']);
-      write_line($fp, "LDAP_DOMAIN_BASEDN", $_POST['LDAP_DOMAIN_BASEDN']);
-      write_line($fp);
-
-      write_line($fp, "TOKEN_DRIVER", $_POST['TOKEN_DRIVER']);
-      write_line($fp, "TOKEN_PREFIX", "");
-      write_line($fp, "TOKEN_HOSTNAME", $_POST['TOKEN_HOSTNAME']);
-      write_line($fp, "TOKEN_USERNAME", $_POST['TOKEN_USERNAME']);
-      write_line($fp, "TOKEN_PASSWORD", $_POST['TOKEN_PASSWORD']);
-      write_line($fp, "TOKEN_DATABASE", $_POST['TOKEN_DATABASE']);
-   }
-   write_line($fp);
-
-
    write_line($fp, "TABLE_USER", "user");
    write_line($fp, "TABLE_EMAIL", "t_email");
    write_line($fp, "TABLE_DOMAIN", "t_domain");
@@ -145,6 +126,9 @@ function write_stuff() {
    write_line($fp, "TABLE_SUMMARY", "summary");
    write_line($fp, "TABLE_COUNTERS", "t_counters");
 
+   write_line($fp);
+
+   write_line($fp, "LDAP_IMPORT_CONFIG_FILE", '/path/to/ldap-import-konfig.cfg');
    write_line($fp);
 
    write_line($fp, "SIZE_X", 430);
@@ -227,8 +211,6 @@ function write_stuff() {
    fputs($fp, '$counters = array(\'_c:rcvd\', \'_c:ham\', \'_c:spam\', \'_c:possible_spam\', \'_c:unsure\', \'_c:minefield\', \'_c:virus\', \'_c:fp\', \'_c:fn\', \'_c:counters_last_update\');' . CRLF);
 
    write_line($fp);
-
-   fputs($fp, '$ldap_user_DNs = array(LDAP_USER_BASEDN);');
 
    fputs($fp, "?>\n");
 

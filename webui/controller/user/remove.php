@@ -16,12 +16,7 @@ class ControllerUserRemove extends Controller {
       $request = Registry::get('request');
       $db = Registry::get('db');
 
-      if(DB_DRIVER == "ldap") {
-         $this->load->model('user/ldap/user');
-         $db_token = Registry::get('db_token');
-      }
-      else
-         $this->load->model('user/sql/user');
+      $this->load->model('user/user');
 
       $this->document->title = $this->data['text_policy'];
 

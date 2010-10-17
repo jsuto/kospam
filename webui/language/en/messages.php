@@ -67,6 +67,7 @@ $_['text_home'] = "Home";
 
 $_['text_import'] = "Import";
 $_['text_import_users'] = "Import users";
+$_['text_import_users_from_LDAP'] = "Import users from LDAP";
 $_['text_invalid_data'] = "Invalid data";
 $_['text_invalid_email'] = "Invalid email";
 $_['text_invalid_email_or_password'] = "Invalid email or password";
@@ -84,6 +85,7 @@ $_['text_ldap_basedn'] = "LDAP base DN";
 $_['text_ldap_binddn'] = "LDAP bind DN";
 $_['text_ldap_bindpw'] = "LDAP bind password";
 $_['text_ldap_host'] = "LDAP host";
+$_['text_ldap_type'] = "LDAP type";
 $_['text_loading'] = "loading";
 $_['text_logged_out'] = "You are logged out";
 $_['text_login'] = "Login";

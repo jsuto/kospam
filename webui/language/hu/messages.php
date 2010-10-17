@@ -66,7 +66,8 @@ $_['text_global_training_happened'] = "Globális tanítás.";
 $_['text_group_id'] = "Csoport azonosító";
 
 $_['text_import'] = "Import";
-$_['text_import_users'] = "Import users";
+$_['text_import_users'] = "Felhasználók importálása";
+$_['text_import_users_from_LDAP'] = "Felhasználók importálása LDAP-ból";
 $_['text_invalid_data'] = "Érvénytelen adat(ok)";
 $_['text_invalid_email'] = "Érvénytelen email cím";
 $_['text_invalid_email_or_password'] = "Érvénytelen email cím vagy jelszó";
@@ -84,6 +85,7 @@ $_['text_ldap_basedn'] = "LDAP alapértelmezett DN";
 $_['text_ldap_binddn'] = "LDAP csatlakozási DN";
 $_['text_ldap_bindpw'] = "LDAP csatlakozási jelszó";
 $_['text_ldap_host'] = "LDAP kiszolgáló";
+$_['text_ldap_type'] = "LDAP típus";
 $_['text_loading'] = "töltődik";
 $_['text_logged_out'] = "Ön kijelentkezett";
 $_['text_login'] = "Bejelentkezés";

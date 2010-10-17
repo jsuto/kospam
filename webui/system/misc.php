@@ -141,4 +141,39 @@ function createTempName($dir = '', $prefix = '') {
 }
 
 
+function read_konfig($configfile = '') {
+   $cfg = array();
+
+   if($configfile == '') { return $cfg; }
+
+   $fp = fopen($configfile, "r");
+   if($fp) {
+      while(($line = fgets($fp, 4096))) {
+         $line = trim($line);
+
+         if($line[0] == '#' || $line[0] == ';') { continue; }
+
+         list($host, $basedn, $binddn, $bindpw, $type, $domain, $gid, $policy_group) = explode(":", $line);
+
+         $cfg[] = array(
+                         'ldap_host'    => $host,
+                         'ldap_basedn'  => $basedn,
+                         'ldap_binddn'  => $binddn,
+                         'ldap_bindpw'  => $bindpw,
+                         'type'         => $type,
+                         'domain'       => $domain,
+                         'gid'          => $gid,
+                         'policy_group' => $policy_group
+                       );
+      }
+
+
+      fclose($fp);
+   }
+
+
+   return $cfg;
+}
+
+
 ?>

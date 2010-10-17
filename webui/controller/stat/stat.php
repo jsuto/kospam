@@ -14,10 +14,7 @@ class ControllerStatStat extends Controller {
       $request = Registry::get('request');
       $db = Registry::get('db');
 
-      if(DB_DRIVER == "ldap")
-         $this->load->model('user/ldap/user');
-      else
-         $this->load->model('user/sql/user');
+      $this->load->model('user/user');
 
       $this->document->title = $this->data['text_statistics'];
 

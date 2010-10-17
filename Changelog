@@ -1,5 +1,31 @@
 0.4.6-rc1:
 
+2010.10.17, SJ
+
+Removed LDAP support from the webui. However, it can import
+users from Active Directory or openldap to its local database.
+
+I also created a cli version of the LDAP sync tool (util/ldap_sync.php).
+It should be used as "php /usr/local/libexec/clapf/ldap_sync.php /path/to/webui/"
+
+You have to upgrade the webui, run setup, then edit config.php
+and set LDAP_IMPORT_CONFIG_FILE. This variable should point to
+a configuration file holding LDAP definitions. For your own
+good, this file should NOT be acessible through the web.
+
+The configuration file syntax is as follows:
+
+ldaphost:basedn:binddn:bindpw:type:domain:gid:policy_group
+
+eg.
+localhost:ou=domain1_fu,dc=aaaa,dc=fu:cn=clapfadmin,dc=aaaa,dc=fu:thepassword:openldap:domain1.fu:3:0
+localhost:ou=domain2_fu,dc=aaaa,dc=fu:cn=clapfadmin,dc=aaaa,dc=fu:thepassword:openldap:domain2.fu:5:0
+
+'type' is either "AD" or "openldap"
+
+Hint: You should create an entry for all of your domains. Thus
+you can manage all of your domain
+
 2010.10.14, SJ
 
 Tamas Papp introduced a training shell script useful for dovecot

@@ -11,11 +11,7 @@ class ControllerHistoryView extends Controller {
       $request = Registry::get('request');
       $language = Registry::get('language');
 
-      if(DB_DRIVER == "ldap"){
-         $this->load->model('user/ldap/user');
-      } else {
-         $this->load->model('user/sql/user');
-      }
+      $this->load->model('user/user');
 
       $this->document->title = $language->get('text_history');
 

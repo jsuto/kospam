@@ -2,7 +2,8 @@
 create table if not exists t_misc (
 	nham int default 0,
 	nspam int default 0,
-	uid int unsigned default 0
+	uid int unsigned default 0,
+	unique(uid)
 );
 
 create index t_misc_idx on t_misc(uid);

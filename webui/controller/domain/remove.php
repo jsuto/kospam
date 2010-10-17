@@ -16,10 +16,7 @@ class ControllerDomainRemove extends Controller {
       $request = Registry::get('request');
       $db = Registry::get('db');
 
-      if(DB_DRIVER == "ldap")
-         $this->load->model('domain/ldap/domain');
-      else
-         $this->load->model('domain/sql/domain');
+      $this->load->model('domain/domain');
 
       $this->document->title = $this->data['text_domain'];
 

@@ -9,10 +9,7 @@ class ControllerStatTopdomains extends Controller {
       $request = Registry::get('request');
       $db_history = Registry::get('db_history');
 
-      if(DB_DRIVER == "ldap")
-         $this->load->model('user/ldap/user');
-      else
-         $this->load->model('user/sql/user');
+      $this->load->model('user/user');
 
       $this->load->model('stat/chart');
 

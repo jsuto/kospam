@@ -15,10 +15,7 @@ class ControllerPolicyView extends Controller {
       $request = Registry::get('request');
       $db = Registry::get('db');
 
-      if(DB_DRIVER == "ldap")
-         $this->load->model('policy/ldap/policy');
-      else
-         $this->load->model('policy/sql/policy');
+      $this->load->model('policy/policy');
 
       $this->document->title = $this->data['text_policy'];
 

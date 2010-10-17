@@ -15,10 +15,7 @@ class ControllerQuarantineMessage extends Controller {
 
       $this->load->model('quarantine/message');
 
-      if(DB_DRIVER == "ldap")
-         $this->load->model('user/ldap/user');
-      else
-         $this->load->model('user/sql/user');
+      $this->load->model('user/user');
 
       $this->document->title = $this->data['text_quarantine'];
 

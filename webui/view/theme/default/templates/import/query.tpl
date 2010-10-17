@@ -20,6 +20,10 @@
       <td><?php print $text_ldap_bindpw; ?>:</td>
       <td><input type="password" name="ldap_bindpw" value="" size="<?php print CGI_INPUT_FIELD_WIDTH; ?>" /></td>
    </tr>
+   <tr>
+      <td><?php print $text_ldap_type; ?></td>
+      <td>Active Directory <input type="radio" name="type" value="AD" />, openldap <input type="radio" name="type" value="openldap" checked="checked"/> </td>
+   <tr>
 </table>
 
 <input type="submit" value="<?php print $text_import_users; ?>" /></form>

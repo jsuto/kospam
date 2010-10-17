@@ -15,10 +15,8 @@ class ControllerImportImport extends Controller {
       $db = Registry::get('db');
       $language = Registry::get('language');
 
-      if(DB_DRIVER == "ldap")
-         $this->load->model('user/ldap/import');
-      else
-         $this->load->model('user/sql/import');
+      $this->load->model('user/user');
+      $this->load->model('user/import');
 
       $this->document->title = $language->get('text_import_users');
 
@@ -28,12 +26,16 @@ class ControllerImportImport extends Controller {
 
       /* check if we are admin */
 
-      if(Registry::get('domain_admin') == 1) {
+      if(Registry::get('admin_user') == 1 || Registry::get('domain_admin') == 1) {
 
          if($this->request->server['REQUEST_METHOD'] == 'POST' && $this->validate() == true) {
             $this->template = "import/imported.tpl";
 
-            $this->data['n'] = $this->model_user_import->importUsers($this->request->post);
+            $users = $this->model_user_import->queryRemoteUsers($this->request->post);
+            $this->data['n'] = $this->model_user_import->processUsers($users, $this->request->post);
+
+            $rc = $this->model_user_import->fillRemoteTable($this->request->post, $this->request->post['domain']);
+
          }
 
       }
@@ -44,6 +46,17 @@ class ControllerImportImport extends Controller {
 
 
       $this->render();
+   }
+
+
+   private function checkdomain($domain = '') {
+      if($domain == '') { return 0; }
+
+      $domains = $this->model_user_user->getEmailDomains();
+
+      if(in_array($domain, $domains)) { return 1; }
+
+      return 0;
    }
 
 
@@ -65,7 +78,7 @@ class ControllerImportImport extends Controller {
          $this->error['ldap_basedn'] = $this->data['text_invalid_data'];
       }
 
-      if(!isset($this->request->post['domain']) || strlen($this->request->post['domain']) < 2) {
+      if(!isset($this->request->post['domain']) || strlen($this->request->post['domain']) < 2 || $this->checkdomain($this->request->post['domain']) == 0) {
          $this->error['domain'] = $this->data['text_invalid_data'];
       }
 
@@ -73,6 +86,9 @@ class ControllerImportImport extends Controller {
          $this->error['policy_group'] = $this->data['text_invalid_policy_group'];
       }
 
+      if(!isset($this->request->post['gid']) || !is_numeric($this->request->post['gid']) || $this->request->post['gid'] < 1) {
+         $this->error['policy_group'] = $this->data['text_invalid_gid'];
+      }
 
       if (!$this->error) {
          return true;

@@ -7,23 +7,7 @@
 
 <form action="index.php?route=user/add" name="adduser" method="post" autocomplete="off">
    <table border="0">
-<?php if(DB_DRIVER == 'ldap') { ?>
-      <tr>
-         <td>LDAP OU:</td>
-         <td>
-            <select name="ou">
-            <?php foreach ($ldap_user_DNs as $ou) { ?>
-               <option value="<?php print $ou; ?>"><?php print $ou; ?></option>
-            <?php } ?>
-            </select>
-         </td>
-      </tr>
-
-      <tr><td><?php print $text_email; ?>:</td><td><input type="text" name="email" value="" size="<?php print CGI_INPUT_FIELD_WIDTH; ?>" /></td></tr>
-      <tr valign="top"><td><?php print $text_email_aliases; ?>:</td><td><textarea name="mailalternateaddress" cols="<?php print CGI_INPUT_FIELD_WIDTH; ?>" rows="<?php print CGI_INPUT_FIELD_HEIGHT; ?>"></textarea></td></tr>
-<?php } else { ?>
       <tr valign="top"><td><?php print $text_email_addresses; ?>:</td><td><textarea name="email" cols="<?php print CGI_INPUT_FIELD_WIDTH; ?>" rows="<?php print CGI_INPUT_FIELD_HEIGHT; ?>"><?php if(isset($post['email'])){ print $post['email']; } ?></textarea></td></tr>
-<?php } ?>
       <tr><td><?php print $text_username; ?>:</td><td><input type="text" name="username" value="<?php if(isset($post['username'])){ print $post['username']; } ?>" size="<?php print CGI_INPUT_FIELD_WIDTH; ?>" /></td></tr>
       <tr><td><?php print $text_realname; ?>:</td><td><input type="text" name="realname" value="<?php if(isset($post['realname'])){ print $post['realname']; } ?>" size="<?php print CGI_INPUT_FIELD_WIDTH; ?>" /></td></tr
       <tr>

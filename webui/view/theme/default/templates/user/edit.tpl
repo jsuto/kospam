@@ -27,7 +27,7 @@
        </td>
       </tr>
 
-<?php if(ENTERPRISE_VERSION == 1) { ?>
+<?php if(ENABLE_LDAP_IMPORT_FEATURE == 1) { ?>
       <tr><td>LDAP DN:</td><td><input type="text" name="dn" value="<?php print $user['dn']; ?>" size="<?php print CGI_INPUT_FIELD_WIDTH; ?>" /></td><td><?php print $text_dn_asterisk_means_skip_sync; ?></td></tr>
 <?php } ?>
 

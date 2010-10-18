@@ -29,7 +29,7 @@
                <li><a href="index.php?route=domain/domain"><?php print $text_domain; ?></a></li>
                <li><a href="index.php?route=policy/policy"><?php print $text_policy; ?></a></li>
       <?php } ?>
-      <?php if(ENTERPRISE_VERSION == 1 && ($admin_user == 1 || $domain_admin == 1) ) { ?>
+      <?php if(ENABLE_LDAP_IMPORT_FEATURE == 1 && ($admin_user == 1 || $domain_admin == 1) ) { ?>
                <li><a href="index.php?route=import/query"><?php print $text_import_users_from_LDAP; ?></a></li>
       <?php } ?>
             </ul>

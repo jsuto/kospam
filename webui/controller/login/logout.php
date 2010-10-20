@@ -10,15 +10,17 @@ class ControllerLoginLogout extends Controller {
       $this->template = "login/logout.tpl";
       $this->layout = "common/layout";
 
-      logout();
-
       $request = Registry::get('request');
+
       $db = Registry::get('db');
 
       $this->load->model('user/auth');
 
       $this->document->title = $this->data['text_logout'];
 
+      LOGGER('logged out');
+
+      logout();
 
       $this->render();
    }

@@ -1,5 +1,22 @@
 <?php
 
+function LOGGER($event = '', $username = '') {
+   if($event == "") { return 0; }
+
+   if($username == '') {
+      if(isset($_SESSION['username'])) { $username = $_SESSION['username']; }
+      else { $username = 'unknown'; }
+   }
+
+   $log_entry = sprintf("[%s]: %s, '%s'\n", date(LOG_DATE_FORMAT), $username, $event);
+
+   if($fp = @fopen(LOG_FILE, 'a')) {
+      fwrite($fp, $log_entry);
+      fflush($fp);
+      fclose($fp);
+    }
+
+}
 
 function getAuthenticatedUsername() {
 

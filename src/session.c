@@ -185,9 +185,6 @@ void handleSession(int new_sd, struct __data *data, struct __config *cfg){
                   if(rc != SQLITE_OK) syslog(LOG_PRIORITY, "%s: could not set pragma", sdata.ttmpfile);
                }
             #endif
-            #ifdef NEED_LDAP
-               sdata.ldap = do_bind_ldap(cfg->ldap_host, cfg->ldap_user, cfg->ldap_pwd, cfg->ldap_use_tls);
-            #endif
 
 
             #ifdef HAVE_LMTP
@@ -302,9 +299,6 @@ void handleSession(int new_sd, struct __data *data, struct __config *cfg){
                db_conn = 0;
                sqlite3_close(sdata.db);
                rc = SQLITE_ERROR;
-            #endif
-            #ifdef NEED_LDAP
-               ldap_unbind_s(sdata.ldap);
             #endif
 
                alarm(cfg->session_timeout);

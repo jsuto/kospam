@@ -36,6 +36,8 @@ class ModelUserPrefs extends Model {
       $_SESSION['lang'] = $prefs['lang'];
       $_SESSION['train_global'] = (int)@$prefs['global_train'];
 
+      LOGGER("set user preference", $username);
+
       return 1;
    }
 

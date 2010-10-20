@@ -27,6 +27,8 @@ class ControllerLoginLogin extends Controller {
 
             $this->model_user_prefs->getUserPrefs($db_session, $_SESSION['username']);
 
+            LOGGER('logged in');
+
             header("Location: " . SITE_URL . "index.php?route=quarantine/quarantine&user=" . $_SESSION['username'] . "&hamspam=SPAM");
             exit;
          }

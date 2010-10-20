@@ -11,9 +11,14 @@ class ModelUserAuth extends Model {
       $pass = crypt($password, $query->row['password']);
 
       if($pass == $query->row['password']){
+         LOGGER('successful auth against user table', $username);
+
          $_SESSION['username'] = $query->row['username'];
          $_SESSION['admin_user'] = $query->row['isadmin'];
          return 1;
+      }
+      else {
+         LOGGER('failed auth against user table', $username);
       }
 
       if(strlen($query->row['dn']) > 3) { return $this->checkLoginAgainstLDAP($query->row, $password); }
@@ -31,12 +36,17 @@ class ModelUserAuth extends Model {
       $ldap = new LDAP($query->row['remotehost'], $user['dn'], $password);
 
       if($ldap->is_bind_ok()) {
+         LOGGER("successful bind to " . $query->row['remotehost'], $user['dn']);
+
          $_SESSION['username'] = $user['username'];
          $_SESSION['admin_user'] = 0;
 
          $this->changePassword($user['username'], $password);
 
          return 1;
+      }
+      else {
+         LOGGER("failed bind to " . $query->row['remotehost'], $user['dn']);
       }
 
       return 0; 
@@ -48,7 +58,11 @@ class ModelUserAuth extends Model {
 
       $query = $this->db->query("UPDATE " . TABLE_USER . " SET password='" . $this->db->escape(crypt($password)) . "' WHERE username='" . $this->db->escape($username) . "'");
 
-      return $this->db->countAffected();
+      $rc = $this->db->countAffected();
+
+      LOGGER("changed password in the user table (rc=$rc)", $username);
+
+      return $rc;
    }
 
 }

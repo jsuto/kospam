@@ -7,7 +7,7 @@ Features:
 - IP-address / URI blacklists
 - email black-, and whitelists
 - zombie detection
-- web user interface (ui) written i PHP for easy administration
+- web user interface (ui) written in PHP for easy administration
 - web based quarantine
 - LDAP support
 - virtual users

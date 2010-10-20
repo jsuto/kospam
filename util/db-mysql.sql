@@ -26,7 +26,7 @@ create table if not exists user (
 	realname char(32) default null,
 	password char(48) default null,
 	domain char(64) default null,
-	dn char(64) default '*',
+	dn char(255) default '*',
 	policy_group int(4) default 0,
 	isadmin tinyint default 0
 );

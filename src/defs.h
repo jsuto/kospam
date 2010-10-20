@@ -18,9 +18,6 @@
   #endif
 
 #endif
-#ifdef NEED_LDAP
-  #include <ldap.h>
-#endif
 #ifdef HAVE_LIBCLAMAV
    #include <clamav.h>
 #endif
@@ -163,9 +160,6 @@ struct session_data {
 #endif
 #ifdef NEED_SQLITE3
    sqlite3 *db;
-#endif
-#ifdef NEED_LDAP
-   LDAP *ldap;
 #endif
 #ifdef HAVE_MYDB
    struct mydb_node *mhash[MAX_MYDB_HASH];

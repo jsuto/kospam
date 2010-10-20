@@ -74,11 +74,6 @@ int openDatabase(struct session_data *sdata, struct __config *cfg){
       return 0;
 #endif
 
-#ifdef NEED_LDAP
-   sdata->ldap = do_bind_ldap(cfg->ldap_host, cfg->ldap_user, cfg->ldap_pwd, cfg->ldap_use_tls);
-   if(sdata->ldap == NULL) return 0;
-#endif
-
    return 1;
 }
 
@@ -93,9 +88,6 @@ void closeDatabase(struct session_data *sdata){
 #endif
 #ifdef HAVE_MYDB
    close_mydb(sdata->mhash);
-#endif
-#ifdef NEED_LDAP
-   ldap_unbind_s(sdata->ldap);
 #endif
 }
 

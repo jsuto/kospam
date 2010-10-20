@@ -27,7 +27,11 @@ class ModelPolicyPolicy extends Model {
 
       $query = $this->db->query("DELETE FROM " . TABLE_POLICY . " WHERE policy_group=" . (int)$policy_group);
 
-      return $this->db->countAffected();
+      $rc = $this->db->countAffected();
+
+      LOGGER("remove policy: id=$policy_group (rc=$rc)");
+
+      return $rc;
    }
 
 
@@ -59,7 +63,11 @@ class ModelPolicyPolicy extends Model {
          $memcache->delete("_c:" . $policy['policy_group']);
       }
 
-      return $this->db->countAffected();
+      $rc = $this->db->countAffected();
+
+      LOGGER("update policy: " . $policy['name'] . " (id=" . (int)$policy['policy_group'] . ") (rc=$rc)");
+
+      return $rc;
    }
 
 
@@ -85,7 +93,11 @@ class ModelPolicyPolicy extends Model {
       );
 
 
-      return $this->db->countAffected();
+      $rc = $this->db->countAffected();
+
+      LOGGER("add policy: " . $policy['name'] . " (rc=$rc)");
+
+      return $rc;
    }
 
 

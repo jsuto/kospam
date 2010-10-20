@@ -3474,7 +3474,6 @@ have_spamdrop="no"
 have_mysql="no"
 have_icc_guide="no"
 have_sqlite3="no"
-have_ldap="no"
 have_rbl="no"
 have_all_received="no"
 have_gsl="no"
@@ -3930,98 +3929,6 @@ ac_cv_lib_m=ac_cv_lib_m_main
 
 
 
-    for ac_header in ldap.h
-do :
-  ac_fn_c_check_header_mongrel "$LINENO" "ldap.h" "ac_cv_header_ldap_h" "$ac_includes_default"
-if test "x$ac_cv_header_ldap_h" = x""yes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_LDAP_H 1
-_ACEOF
- have_ldap=yes
-else
-  echo "ldap.h is not found"
-fi
-
-done
-
-    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for main in -lldap" >&5
-$as_echo_n "checking for main in -lldap... " >&6; }
-if test "${ac_cv_lib_ldap_main+set}" = set; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lldap  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-
-int
-main ()
-{
-return main ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_ldap_main=yes
-else
-  ac_cv_lib_ldap_main=no
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_ldap_main" >&5
-$as_echo "$ac_cv_lib_ldap_main" >&6; }
-if test "x$ac_cv_lib_ldap_main" = x""yes; then :
-  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for ldap_simple_bind_s in -lldap" >&5
-$as_echo_n "checking for ldap_simple_bind_s in -lldap... " >&6; }
-if test "${ac_cv_lib_ldap_ldap_simple_bind_s+set}" = set; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lldap  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-/* Override any GCC internal prototype to avoid an error.
-   Use char because int might match the return type of a GCC
-   builtin and then its argument prototype would still apply.  */
-#ifdef __cplusplus
-extern "C"
-#endif
-char ldap_simple_bind_s ();
-int
-main ()
-{
-return ldap_simple_bind_s ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_ldap_ldap_simple_bind_s=yes
-else
-  ac_cv_lib_ldap_ldap_simple_bind_s=no
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_ldap_ldap_simple_bind_s" >&5
-$as_echo "$ac_cv_lib_ldap_ldap_simple_bind_s" >&6; }
-if test "x$ac_cv_lib_ldap_ldap_simple_bind_s" = x""yes; then :
-  have_ldap=yes
-else
-  echo "libldap.so is not found"; have_ldap=no
-fi
-
-fi
-ac_cv_lib_ldap=ac_cv_lib_ldap_main
-
-
-
 
     for ac_header in tre/tre.h
 do :
@@ -4416,12 +4323,6 @@ ac_cv_lib_sqlite3=ac_cv_lib_sqlite3_main
            echo "sqlite3 not found";
            exit 1;
       fi
-  fi
-
-
-  if test "$withval" = "ldap" && test "$have_ldap" = "no"; then
-     echo "ldap (devel package) is not installed"
-     exit 1
   fi
 
 
@@ -5146,13 +5047,6 @@ fi
 if test "$USERDB" = "sqlite3" && test "$have_sqlite3" = "yes"; then
    echo "user database: sqlite3"
    defs="$defs -DUSERS_IN_SQLITE3 -DHAVE_USERS"
-   objs="$objs users.o"
-fi
-
-if test "$USERDB" = "ldap" && test "$have_ldap" = "yes"; then
-   echo "user database: ldap"
-   defs="$defs -DUSERS_IN_LDAP -DNEED_LDAP -DHAVE_USERS"
-   ldap_libs="-lldap -llber"
    objs="$objs users.o"
 fi
 

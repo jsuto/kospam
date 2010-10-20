@@ -8,9 +8,18 @@ require_once($webuidir . "/config.php");
 require(DIR_SYSTEM . "/startup.php");
 require(DIR_SYSTEM . "/ldap.php");
 
+$trash_passwords = 0;
+
+
 $cfg = read_konfig(LDAP_IMPORT_CONFIG_FILE);
 
-$verbose = 1;
+foreach ($_SERVER['argv'] as $argv) {
+   if($argv == "--trash-passwords") {
+      $trash_passwords = 1;
+   }
+
+}
+
 
 $loader = new Loader();
 
@@ -35,12 +44,18 @@ $loader->model('user/import');
 
 $import = new ModelUserImport();
 
+$_SESSION['username'] = 'cli-admin';
 
 foreach ($cfg as $ldap_params) {
    $users = $import->model_user_import->queryRemoteUsers($ldap_params, $ldap_params['domain']);
    $rc = $import->model_user_import->fillRemoteTable($ldap_params, $ldap_params['domain']);
 
-   $import->model_user_import->processUsers($users, $ldap_params, $verbose);
+   $import->model_user_import->processUsers($users, $ldap_params);
+
+   if($trash_passwords == 1) {
+      $import->model_user_import->trashPassword($users);
+   }
+
 }
 
 

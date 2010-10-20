@@ -154,25 +154,8 @@ struct __config {
 
    char mydbfile[MAXVAL];
 
-   // Qcache
-
-   char qcache_addr[MAXVAL];
-   int qcache_port;
-   char qcache_socket[MAXVAL];
-   int qcache_update;
-
    char spam_smtp_addr[MAXVAL];
    int spam_smtp_port;
-
-   // ldap
-
-   char ldap_host[MAXVAL];
-   char ldap_base[MAXVAL];
-   char ldap_user[MAXVAL];
-   char ldap_pwd[MAXVAL];
-   int ldap_use_tls;
-   char email_address_attribute_name[MAXVAL];
-   char email_alias_attribute_name[MAXVAL];
 
    // spamsum
    char sig_db[MAXVAL];

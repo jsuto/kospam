@@ -27,7 +27,12 @@ class ModelUserUser extends Model {
          $memcache->delete("_c:wbl" . (int)$uid);
       }
 
-      return $this->db->countAffected();
+
+      $rc = $this->db->countAffected();
+
+      LOGGER("set whitelist for $username");
+
+      return $rc;
    }
 
 
@@ -56,7 +61,11 @@ class ModelUserUser extends Model {
          $memcache->delete("_c:wbl" . (int)$uid);
       }
 
-      return $this->db->countAffected();
+      $rc = $this->db->countAffected();
+
+      LOGGER("set blacklist for $username");
+
+      return $rc;
    }
 
 
@@ -311,6 +320,7 @@ class ModelUserUser extends Model {
 
 
    public function addUser($user) {
+      LOGGER("add user: " . $user['username'] . ", uid=" . (int)$user['uid']);
 
       $emails = explode("\n", $user['email']);
       foreach ($emails as $email) {
@@ -365,7 +375,11 @@ class ModelUserUser extends Model {
 
       $query = $this->db->query("INSERT INTO " . TABLE_EMAIL . " (uid, email) VALUES(" . (int)$uid . ", '" . $this->db->escape($email) . "')");
 
-      return $this->db->countAffected(); 
+      $rc = $this->db->countAffected();
+
+      LOGGER("add email: $email, uid=$uid (rc=$rc)");
+
+      return $rc;
    }
 
 
@@ -374,11 +388,16 @@ class ModelUserUser extends Model {
 
       $query = $this->db->query("DELETE FROM " . TABLE_EMAIL . " WHERE uid=" . (int)$uid . " AND email='" . $this->db->escape($email) . "'");
 
-      return $this->db->countAffected();
+      $rc = $this->db->countAffected();
+
+      LOGGER("remove email: $email, uid=$uid (rc=$rc)");
+
+      return $rc;
    }
 
 
    public function updateUser($user) {
+      LOGGER("update user: " . $user['username'] . ", uid=" . (int)$user['uid']);
 
       $emails = explode("\n", $user['email']);
       foreach ($emails as $email) {
@@ -432,6 +451,8 @@ class ModelUserUser extends Model {
       $query = $this->db->query("DELETE FROM " . TABLE_USER . " WHERE uid=" . (int)$uid);
       $query = $this->db->query("DELETE FROM " . TABLE_WHITELIST . " WHERE uid=" . (int)$uid);
       $query = $this->db->query("DELETE FROM " . TABLE_BLACKLIST . " WHERE uid=" . (int)$uid);
+
+      LOGGER("remove user: uid=$uid");
 
       return 1;
    }

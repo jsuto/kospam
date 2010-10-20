@@ -99,7 +99,7 @@ function write_stuff() {
    write_line($fp, "DIR_TEMPLATE", BASEDIR . WEBUI_DIRECTORY . "/view/theme/" . $_POST['THEME'] . "/templates/");
    write_line($fp, "DIR_CACHE", BASEDIR . "/cache/");
    write_line($fp, "DIR_REPORT", BASEDIR . "/reports/");
-
+   write_line($fp, "DIR_LOG", BASEDIR . "/log/");
    write_line($fp);
 
 
@@ -128,6 +128,7 @@ function write_stuff() {
 
    write_line($fp, "ENABLE_LDAP_IMPORT_FEATURE", 0);
    write_line($fp, "LDAP_IMPORT_CONFIG_FILE", '/path/to/ldap-import-konfig.cfg');
+   write_line($fp, "DN_MAX_LEN", 255);
    write_line($fp);
 
    write_line($fp, "SIZE_X", 430);
@@ -172,6 +173,10 @@ function write_stuff() {
 
    write_line($fp, "SESSION_DATABASE", $_POST['SESSION_DATABASE']);
    write_line($fp, "QUARANTINE_DATA", 'quarantine.sdb');
+   write_line($fp);
+
+   fputs($fp, "define('LOG_FILE', DIR_LOG . 'webui.log');" . CRLF);
+   write_line($fp, "LOG_DATE_FORMAT", 'd-M-Y H:i:s O');
    write_line($fp);
 
    write_line($fp, "MIN_PASSWORD_LENGTH", 6);

@@ -58,7 +58,6 @@ have_spamdrop="no"
 have_mysql="no"
 have_icc_guide="no"
 have_sqlite3="no"
-have_ldap="no"
 have_rbl="no"
 have_all_received="no"
 have_gsl="no"
@@ -231,12 +230,6 @@ dnl  if test "$want_antispam" = "yes"; then
     dnl   have_mysql="yes"
     dnl fi
 
-    dnl ldap database
-
-    AC_CHECK_HEADERS(ldap.h, have_ldap=yes, echo "ldap.h is not found")
-    AC_CHECK_LIB([ldap],[main],[AC_CHECK_LIB(ldap, ldap_simple_bind_s, have_ldap=yes, echo "libldap.so is not found"; have_ldap=no)],[],[])ac_cv_lib_ldap=ac_cv_lib_ldap_main
-
-
 
     dnl TRE library
 
@@ -324,12 +317,6 @@ AC_ARG_WITH(userdb,
            echo "sqlite3 not found";
            exit 1;
       fi
-  fi
-
-
-  if test "$withval" = "ldap" && test "$have_ldap" = "no"; then
-     echo "ldap (devel package) is not installed"
-     exit 1
   fi
 
 
@@ -753,13 +740,6 @@ fi
 if test "$USERDB" = "sqlite3" && test "$have_sqlite3" = "yes"; then
    echo "user database: sqlite3"
    defs="$defs -DUSERS_IN_SQLITE3 -DHAVE_USERS"
-   objs="$objs users.o"
-fi
-
-if test "$USERDB" = "ldap" && test "$have_ldap" = "yes"; then
-   echo "user database: ldap"
-   defs="$defs -DUSERS_IN_LDAP -DNEED_LDAP -DHAVE_USERS"
-   ldap_libs="-lldap -llber"
    objs="$objs users.o"
 fi
 

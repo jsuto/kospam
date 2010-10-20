@@ -27,6 +27,8 @@ class ModelUserBulk extends Model {
 
       if($uidlist == ""){ return 0; }
 
+      LOGGER("bulk update uids: $uidlist");
+
       $query = $this->db->query("UPDATE " . TABLE_USER . " SET domain='" . $this->db->escape($domain) . "', policy_group=" . (int)$policy_group . " WHERE uid IN ($uidlist)");
       $query = $this->db->query("UPDATE " . TABLE_WHITELIST . " SET whitelist='" . $this->db->escape($whitelist) . "' WHERE uid IN ($uidlist)");
       $query = $this->db->query("UPDATE " . TABLE_BLACKLIST . " SET blacklist='" . $this->db->escape($blacklist) . "' WHERE uid IN ($uidlist)");
@@ -50,6 +52,8 @@ class ModelUserBulk extends Model {
       $uidlist = $this->createUidList();
 
       if($uidlist == ""){ return 0; }
+
+      LOGGER("bulk remove uids: $uidlist");
 
       $query = $this->db->query("DELETE FROM " . TABLE_EMAIL . " WHERE uid IN ($uidlist)");
       $query = $this->db->query("DELETE FROM " . TABLE_USER . " WHERE uid IN ($uidlist)");

@@ -14,7 +14,11 @@ class ModelDomainDomain extends Model {
 
       $query = $this->db->query("DELETE FROM " . TABLE_DOMAIN . " WHERE domain='" . $this->db->escape($domain) . "'");
 
-      return $this->db->countAffected();
+      $rc = $this->db->countAffected();
+
+      LOGGER("remove domain: $domain (rc=$rc)");
+
+      return $rc;
    }
 
 
@@ -27,7 +31,11 @@ class ModelDomainDomain extends Model {
          $domain = rtrim($domain);
          $query = $this->db->query("INSERT INTO " . TABLE_DOMAIN . " (domain, mapped) VALUES ('" . $this->db->escape($domain) . "', '" . $this->db->escape($mapped) . "')");
 
-         if($this->db->countAffected() != 1){ return 0; }
+         $rc = $this->db->countAffected();
+
+         LOGGER("add domain: $domain (rc=$rc)");
+
+         if($rc != 1){ return 0; }
       }
 
       return 1;

@@ -1,5 +1,16 @@
 0.4.6-rc1:
 
+2010.10.20, SJ
+
+Added logging support to the webui.
+
+2010.10.18, SJ
+
+Fixed a minor issue around creating the spool directory during
+install time.
+
+Purged LDAP support from the clapf source tree.
+
 2010.10.17, SJ
 
 Removed LDAP support from the webui. However, it can import

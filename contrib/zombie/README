@@ -4,9 +4,12 @@ visit http://clapf.acts.hu/wiki/doku.php/howto:catching-zombies-with-a-modified-
 FILES:
 ------
 
+create-rrd.sh: shell script to create RRD file for statistics
 not-zombie.hosts: list of some hosts that are NOT zombies
 postgrey: _modified_ postgrey
 postgrey-1.33.diff: patch to apply to a stock postgrey with
+postgrey_create_graph.sh: create image from RRD file
+postgrey_push_to_rrd.pl: push hourly postgrey data to RRD file
 postgrey_whitelist_*: postgrey whitelists
 zombie.hosts.1: list of some zombie hosts
 zombie.hosts.2: list of some zombie hosts
@@ -63,4 +66,23 @@ NOTES:
 If you add the "--dryrun" command line switch then postgrey will let
 each and every host pass through, it will just syslog what it thinks
 about the connecting hosts.
+
+
+
+
+STATISTICS (optional):
+----------------------
+
+1. create an RRD file:
+
+sh create-rrd.sh /var/lib/clapf/stat/postgrey.rrd `date +%s`
+
+2. Add a cron entry to periodically update the RRD file:
+
+59 * * * * /usr/local/libexec/clapf/postgrey_push_to_rrd.pl
+
+3. Add another cron entry to extract images from the RRD file:
+
+1 * * * * /usr/local/local/libexec/clapf/postgrey_create_graph.sh /path/to/postgrey-week.png "postgrey weekly stat" week
+1 * * * * /usr/local/local/libexec/clapf/postgrey_create_graph.sh /path/to/postgrey-month.png "postgrey monthly stat" month
 

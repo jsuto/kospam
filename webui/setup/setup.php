@@ -209,7 +209,7 @@ function write_stuff() {
    }
    fputs($fp, '                          );' . CRLF);
 
-   fputs($fp, '$counters = array(\'_c:rcvd\', \'_c:ham\', \'_c:spam\', \'_c:possible_spam\', \'_c:unsure\', \'_c:minefield\', \'_c:virus\', \'_c:fp\', \'_c:fn\', \'_c:counters_last_update\');' . CRLF);
+   fputs($fp, '$counters = array(\'_c:rcvd\', \'_c:ham\', \'_c:spam\', \'_c:possible_spam\', \'_c:unsure\', \'_c:minefield\', \'_c:virus\', \'_c:zombie\', \'_c:fp\', \'_c:fn\', \'_c:counters_last_update\');' . CRLF);
 
    write_line($fp);
 

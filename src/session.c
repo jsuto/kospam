@@ -285,6 +285,7 @@ void handleSession(int new_sd, struct __data *data, struct __config *cfg){
                } /* for */
             #endif
 
+               if(sdata.tre == '+') counters.c_zombie++;
 
                unlink(sdata.ttmpfile);
                freeState(&sstate);

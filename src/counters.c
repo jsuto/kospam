@@ -16,7 +16,7 @@ struct __counters loadCounters(struct session_data *sdata, struct __config *cfg)
 
    bzero(&counters, sizeof(counters));
 
-   snprintf(buf, SMALLBUFSIZE-1, "SELECT rcvd, ham, spam, possible_spam, unsure, minefield, virus, fp, fn FROM t_counters");
+   snprintf(buf, SMALLBUFSIZE-1, "SELECT rcvd, ham, spam, possible_spam, unsure, minefield, virus, fp, fn, zombie FROM t_counters");
 
 #ifdef HAVE_MYSQL
    MYSQL_RES *res;
@@ -36,6 +36,7 @@ struct __counters loadCounters(struct session_data *sdata, struct __config *cfg)
             counters.c_virus = strtoull(row[6], NULL, 10);
             counters.c_fp = strtoull(row[7], NULL, 10);
             counters.c_fn = strtoull(row[8], NULL, 10);
+            counters.c_zombie = strtoull(row[9], NULL, 10);
          }
          mysql_free_result(res);
       }
@@ -57,6 +58,7 @@ struct __counters loadCounters(struct session_data *sdata, struct __config *cfg)
          counters.c_virus = sqlite3_column_int64(pStmt, 6);
          counters.c_fp = sqlite3_column_int64(pStmt, 7);
          counters.c_fn = sqlite3_column_int64(pStmt, 8);
+         counters.c_zombie = sqlite3_column_int64(pStmt, 9);
       }
    }
    sqlite3_finalize(pStmt);
@@ -97,13 +99,14 @@ void updateCounters(struct session_data *sdata, struct __data *data, struct __co
          if(counters->c_unsure > 0) memcached_increment(&(data->memc), MEMCACHED_MSGS_UNSURE, strlen(MEMCACHED_MSGS_UNSURE), counters->c_unsure, &mc);
          if(counters->c_minefield > 0) memcached_increment(&(data->memc), MEMCACHED_MSGS_MINEFIELD, strlen(MEMCACHED_MSGS_MINEFIELD), counters->c_minefield, &mc);
          if(counters->c_virus > 0) memcached_increment(&(data->memc), MEMCACHED_MSGS_VIRUS, strlen(MEMCACHED_MSGS_VIRUS), counters->c_virus, &mc);
+         if(counters->c_zombie > 0) memcached_increment(&(data->memc), MEMCACHED_MSGS_ZOMBIE, strlen(MEMCACHED_MSGS_ZOMBIE), counters->c_zombie, &mc);
          if(counters->c_fp > 0) memcached_increment(&(data->memc), MEMCACHED_MSGS_FP, strlen(MEMCACHED_MSGS_FP), counters->c_fp, &mc);
          if(counters->c_fn > 0) memcached_increment(&(data->memc), MEMCACHED_MSGS_FN, strlen(MEMCACHED_MSGS_FN), counters->c_fn, &mc);
 
 
          bzero(&c, sizeof(c)); 
 
-         snprintf(buf, MAXBUFSIZE-1, "%s %s %s %s %s %s %s %s %s %s", MEMCACHED_MSGS_RCVD, MEMCACHED_MSGS_HAM, MEMCACHED_MSGS_SPAM, MEMCACHED_MSGS_POSSIBLE_SPAM, MEMCACHED_MSGS_UNSURE, MEMCACHED_MSGS_MINEFIELD, MEMCACHED_MSGS_VIRUS, MEMCACHED_MSGS_FP, MEMCACHED_MSGS_FN, MEMCACHED_COUNTERS_LAST_UPDATE);
+         snprintf(buf, MAXBUFSIZE-1, "%s %s %s %s %s %s %s %s %s %s %s", MEMCACHED_MSGS_RCVD, MEMCACHED_MSGS_HAM, MEMCACHED_MSGS_SPAM, MEMCACHED_MSGS_POSSIBLE_SPAM, MEMCACHED_MSGS_UNSURE, MEMCACHED_MSGS_MINEFIELD, MEMCACHED_MSGS_VIRUS, MEMCACHED_MSGS_ZOMBIE, MEMCACHED_MSGS_FP, MEMCACHED_MSGS_FN, MEMCACHED_COUNTERS_LAST_UPDATE);
 
          if(memcached_mget(&(data->memc), buf) == MEMCACHED_SUCCESS){
             while((memcached_fetch_result(&(data->memc), &key[0], &buf[0], &flags))){
@@ -114,6 +117,7 @@ void updateCounters(struct session_data *sdata, struct __data *data, struct __co
                else if(!strcmp(key, MEMCACHED_MSGS_UNSURE)) c.c_unsure = strtoull(buf, NULL, 10);
                else if(!strcmp(key, MEMCACHED_MSGS_MINEFIELD)) c.c_minefield = strtoull(buf, NULL, 10);
                else if(!strcmp(key, MEMCACHED_MSGS_VIRUS)) c.c_virus = strtoull(buf, NULL, 10);
+               else if(!strcmp(key, MEMCACHED_MSGS_ZOMBIE)) c.c_zombie = strtoull(buf, NULL, 10);
                else if(!strcmp(key, MEMCACHED_MSGS_FP)) c.c_fp = strtoull(buf, NULL, 10);
                else if(!strcmp(key, MEMCACHED_MSGS_FN)) c.c_fn = strtoull(buf, NULL, 10);
                else if(!strcmp(key, MEMCACHED_COUNTERS_LAST_UPDATE)) mc = strtoull(buf, NULL, 10);
@@ -123,7 +127,7 @@ void updateCounters(struct session_data *sdata, struct __data *data, struct __co
             if(now - mc > cfg->memcached_to_db_interval && c.c_rcvd > 0 && c.c_rcvd >= rcvd){
                snprintf(buf, SMALLBUFSIZE-1, "%ld", now); memcached_set(&(data->memc), MEMCACHED_COUNTERS_LAST_UPDATE, strlen(MEMCACHED_COUNTERS_LAST_UPDATE), buf, strlen(buf), 0, 0);
 
-               snprintf(buf, SMALLBUFSIZE-1, "UPDATE t_counters SET rcvd=%llu, ham=%llu, spam=%llu, possible_spam=%llu, unsure=%llu, minefield=%llu, virus=%llu, fp=%llu, fn=%llu", c.c_rcvd, c.c_ham, c.c_spam, c.c_possible_spam, c.c_unsure, c.c_minefield, c.c_virus, c.c_fp, c.c_fn);
+               snprintf(buf, SMALLBUFSIZE-1, "UPDATE t_counters SET rcvd=%llu, ham=%llu, spam=%llu, possible_spam=%llu, unsure=%llu, minefield=%llu, virus=%llu, zombie=%llu, fp=%llu, fn=%llu", c.c_rcvd, c.c_ham, c.c_spam, c.c_possible_spam, c.c_unsure, c.c_minefield, c.c_virus, c.c_zombie, c.c_fp, c.c_fn);
 
                if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: update counters: %s", sdata->ttmpfile, buf);
 
@@ -144,6 +148,7 @@ void updateCounters(struct session_data *sdata, struct __data *data, struct __co
          snprintf(buf, SMALLBUFSIZE-1, "%llu", c.c_unsure + counters->c_unsure); memcached_add(&(data->memc), MEMCACHED_MSGS_UNSURE, strlen(MEMCACHED_MSGS_UNSURE), buf, strlen(buf), 0, 0);
          snprintf(buf, SMALLBUFSIZE-1, "%llu", c.c_minefield + counters->c_minefield); memcached_add(&(data->memc), MEMCACHED_MSGS_MINEFIELD, strlen(MEMCACHED_MSGS_MINEFIELD), buf, strlen(buf), 0, 0);
          snprintf(buf, SMALLBUFSIZE-1, "%llu", c.c_virus + counters->c_virus); memcached_add(&(data->memc), MEMCACHED_MSGS_VIRUS, strlen(MEMCACHED_MSGS_VIRUS), buf, strlen(buf), 0, 0);
+         snprintf(buf, SMALLBUFSIZE-1, "%llu", c.c_zombie + counters->c_zombie); memcached_add(&(data->memc), MEMCACHED_MSGS_ZOMBIE, strlen(MEMCACHED_MSGS_ZOMBIE), buf, strlen(buf), 0, 0);
          snprintf(buf, SMALLBUFSIZE-1, "%llu", c.c_fp + counters->c_fp); memcached_add(&(data->memc), MEMCACHED_MSGS_FP, strlen(MEMCACHED_MSGS_FP), buf, strlen(buf), 0, 0);
          snprintf(buf, SMALLBUFSIZE-1, "%llu", c.c_fn + counters->c_fn); memcached_add(&(data->memc), MEMCACHED_MSGS_FN, strlen(MEMCACHED_MSGS_FN), buf, strlen(buf), 0, 0);
 
@@ -153,7 +158,7 @@ void updateCounters(struct session_data *sdata, struct __data *data, struct __co
    }
    else {
 #endif
-      snprintf(buf, SMALLBUFSIZE-1, "UPDATE t_counters SET rcvd=rcvd+%llu, ham=ham+%llu, spam=spam+%llu, possible_spam=possible_spam+%llu, unsure=unsure+%llu, minefield=minefield+%llu, virus=virus+%llu, fp=fp+%llu, fn=fn+%llu", counters->c_rcvd, counters->c_ham, counters->c_spam, counters->c_possible_spam, counters->c_unsure, counters->c_minefield, counters->c_virus, counters->c_fp, counters->c_fn);
+      snprintf(buf, SMALLBUFSIZE-1, "UPDATE t_counters SET rcvd=rcvd+%llu, ham=ham+%llu, spam=spam+%llu, possible_spam=possible_spam+%llu, unsure=unsure+%llu, minefield=minefield+%llu, virus=virus+%llu, zombie=zombie+%llu, fp=fp+%llu, fn=fn+%llu", counters->c_rcvd, counters->c_ham, counters->c_spam, counters->c_possible_spam, counters->c_unsure, counters->c_minefield, counters->c_virus, counters->c_zombie, counters->c_fp, counters->c_fn);
 
 #ifdef HAVE_MEMCACHED
 EXEC_SQL:

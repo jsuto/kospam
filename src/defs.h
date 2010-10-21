@@ -240,6 +240,7 @@ struct __counters {
    unsigned long long c_unsure;
    unsigned long long c_minefield;
    unsigned long long c_virus;
+   unsigned long long c_zombie;
    unsigned long long c_fp;
    unsigned long long c_fn;
 };

@@ -146,10 +146,11 @@ create table if not exists t_counters (
         possible_spam bigint unsigned default 0,
         unsure bigint unsigned default 0,
         minefield bigint unsigned default 0,
+        zombie bigint unsigned default 0,
         virus bigint unsigned default 0,
         fp bigint unsigned default 0,
         fn bigint unsigned default 0
 );
 
-insert into t_counters values(0, 0, 0, 0, 0, 0, 0, 0, 0);
+insert into t_counters values(0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 

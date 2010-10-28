@@ -1,5 +1,9 @@
 0.4.6-rc1:
 
+2010.10.28, SJ
+
+Fixed a typo around the octet-stream checking code.
+
 2010.10.26, SJ
 
 Webui enhancements.

@@ -77,7 +77,7 @@ struct _state parseMessage(struct session_data *sdata, struct __config *cfg){
 
 int parseLine(char *buf, struct _state *state, struct session_data *sdata, struct __config *cfg){
    char *p, *q, puf[MAXBUFSIZE], muf[MAXBUFSIZE], u[SMALLBUFSIZE], token[MAX_TOKEN_LEN], phrase[MAX_TOKEN_LEN], triplet[3*MAX_TOKEN_LEN];
-   int i=0, x, b64_len, realbinary=1, boundary_line=0;
+   int i=0, x, b64_len, boundary_line=0;
 
    memset(token, 0, MAX_TOKEN_LEN);
 
@@ -244,6 +244,8 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
       state->utf8 = 0;
       state->qp = 0;
 
+      state->realbinary = 0;
+
       return 0;      
    }
 
@@ -275,15 +277,16 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
     * 2010.10.23, SJ
     */
 
-   if(state->base64 == 1 && state->message_state == MSG_BODY && strcasecmp(state->attachments[state->n_attachments].type, "application/octet-stream") == 0){
-      snprintf(puf, MAXBUFSIZE-1, buf);
-      decodeBase64(puf);   
-      realbinary = countNonPrintableCharacters(puf);
+   if(state->message_state == MSG_BODY && state->realbinary == 0 && strcasecmp(state->attachments[state->n_attachments].type, "application/octet-stream") == 0){
+      snprintf(puf, MAXBUFSIZE-1, "%s", buf);
+      if(state->base64 == 1) decodeBase64(puf);
+      if(state->qp == 1) decodeQP(puf);
+      state->realbinary += countNonPrintableCharacters(puf);
    }
 
 
-   if(state->is_header == 0 && state->textplain == 0 && state->texthtml == 0 && (state->message_state == MSG_BODY || state->message_state == MSG_CONTENT_DISPOSITION) && realbinary > 0) return 0;
-
+   if(state->is_header == 0 && state->textplain == 0 && state->texthtml == 0 && (state->message_state == MSG_BODY || state->message_state == MSG_CONTENT_DISPOSITION) && state->realbinary > 0) return 0;
+   
 
    /* base64 decode buffer */
 

@@ -149,6 +149,8 @@ void handleSession(int new_sd, struct __data *data, struct __config *cfg){
 
                gettimeofday(&tv1, &tz);
 
+               if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: parsing message", sdata.ttmpfile);
+
             #ifdef HAVE_MAILBUF
                if(sdata.mailpos > 0 && sdata.discard_mailbuf == 0)
                   sstate = parseBuffer(&sdata, cfg);

@@ -115,6 +115,7 @@ struct _state {
    int fd;
    int num_of_msword;
    int num_of_images;
+   int realbinary;
    int train_mode;
    unsigned long c_shit;
    unsigned long l_shit;

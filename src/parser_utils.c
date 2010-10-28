@@ -69,6 +69,7 @@ void initState(struct _state *state){
    state->fd = 0;
    state->num_of_images = 0;
    state->num_of_msword = 0;
+   state->realbinary = 0;
 
    state->boundaries = NULL;
 

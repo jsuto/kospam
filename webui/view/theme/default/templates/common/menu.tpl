@@ -14,7 +14,7 @@
             <?php if($admin_user == 1) { ?>
                <li><a href="index.php?route=stat/counter"><?php print $text_counters; ?></a></li>
             <?php } ?>
-            <?php if($admin_user == 1) { ?>
+            <?php if(ENABLE_HISTORY == 1 && $admin_user == 1) { ?>
                <li><a href="index.php?route=history/history"><?php print $text_history; ?></a></li>
             <?php } ?>
             </ul>
@@ -35,7 +35,7 @@
             </ul>
          </li>
    <?php } ?>
-          <li><a href="http://clapf.acts.hu/wiki/doku.php/current:index"><?php print $text_help; ?></a></li>
+          <?php if(HELPURL) { ?><li><a href="<?php print HELPURL; ?>"><?php print $text_help; ?></a></li><?php } ?>
           <li><a href="index.php?route=login/logout"<?php if(strstr($_SERVER['QUERY_STRING'], "login/logout")){ print ' id="active"'; } ?>><?php print $text_logout; ?></a></li>
 
       </ul>

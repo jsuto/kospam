@@ -38,7 +38,7 @@ define('BASEDIR', preg_replace("/\/$/", "", $_SERVER['DOCUMENT_ROOT']) );
 
 function write_line($fp, $key = '', $val = '') {
    if($key){
-      if(is_numeric($val)){
+      if(is_numeric($val) && $val != ''){
          fputs($fp, "define('$key', $val);" . CRLF);
       }
       else {
@@ -141,10 +141,14 @@ function write_stuff() {
 
    write_line($fp, "ENABLE_BLACKLIST", 1);
    write_line($fp, "ENABLE_STATISTICS", 1);
+   write_line($fp, "ENABLE_HISTORY", 1);
    write_line($fp);
 
    write_line($fp, "SITE_NAME", $_SERVER['SERVER_NAME']);
    write_line($fp, "SITE_URL",  isset($_SERVER['SSL_PROTOCOL']) ? "https://" . $_SERVER['SERVER_NAME'] . WEBUI_DIRECTORY . "/" : "http://" . $_SERVER['SERVER_NAME'] . WEBUI_DIRECTORY . "/");
+   write_line($fp);
+
+   write_line($fp, "HELPURL", $_POST['HELPURL']);
    write_line($fp);
 
    write_line($fp, "DATE_FORMAT", "(Y.m.d.)");

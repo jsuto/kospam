@@ -37,6 +37,8 @@ void initState(struct _state *state){
 
    state->qp = 0;
 
+   state->htmltag = 0;
+
    state->skip_html = 0;
 
    state->n_token = 0;
@@ -76,6 +78,7 @@ void initState(struct _state *state){
    for(i=0; i<MAX_ATTACHMENTS; i++){
       state->attachments[i].size = 0;
       memset(state->attachments[i].type, 0, SMALLBUFSIZE);
+      memset(state->attachments[i].filename, 0, SMALLBUFSIZE);
    }
 
    inithash(state->token_hash);
@@ -134,6 +137,37 @@ int extract_boundary(char *p, struct _state *state){
    }
 
    return 0;
+}
+
+
+int extractNameFromHeaderLine(char *s, char *name, char *resultbuf){
+   int rc=0;
+   char buf[SMALLBUFSIZE], *p, *q;
+
+   snprintf(buf, SMALLBUFSIZE-1, "%s", s);
+
+   p = strstr(buf, name);
+   if(p){
+      p += strlen(name);
+      p = strchr(p, '=');
+      if(p){
+         p++;
+         q = strrchr(p, ';');
+         if(q) *q = '\0';
+         q = strrchr(p, '"');
+         if(q){
+            *q = '\0';
+            p = strchr(p, '"');
+            if(p){
+               p++;
+            }
+         }
+         snprintf(resultbuf, SMALLBUFSIZE-1, "%s", p);
+         rc = 1;
+      }
+   }
+
+   return rc;
 }
 
 
@@ -233,6 +267,102 @@ void fixupBase64EncodedLine(char *buf, struct _state *state){
 }
 
 
+void markHTML(char *buf, struct _state *state){
+   char *s, puf[MAXBUFSIZE], html[SMALLBUFSIZE];
+   int k=0, j=0;
+
+   memset(puf, 0, MAXBUFSIZE);
+   memset(html, 0, SMALLBUFSIZE);
+
+   s = buf;
+
+   for(; *s; s++){
+      if(*s == '<'){
+         state->htmltag = 1;
+         puf[k] = ' ';
+         k++;
+
+         memset(html, 0, SMALLBUFSIZE); j=0;
+
+         //printf("start html:%c\n", *s);
+      }
+
+      if(state->htmltag == 1){
+    
+         if(j == 0 && *s == '!'){
+            state->skip_html = 1;
+            //printf("skiphtml=1\n");
+         }
+
+         if(state->skip_html == 0){ 
+            if(*s != '>' && *s != '<' && *s != '"'){
+               //printf("j=%d/%c", j, *s);
+               html[j] = tolower(*s);
+               if(j < SMALLBUFSIZE-10) j++;
+            }
+
+            if(isspace(*s)){
+               k += appendHTMLTag(puf, html);
+               memset(html, 0, SMALLBUFSIZE); j=0;
+            }
+         }
+      }
+      else {
+         puf[k] = *s;
+         k++;
+      }
+
+      if(*s == '>'){
+         state->htmltag = 0;
+         state->skip_html = 0;
+
+         //printf("skiphtml=0\n");
+         //printf("end html:%c\n", *s);
+         strncat(html, " ", SMALLBUFSIZE-1);
+         k += appendHTMLTag(puf, html);
+         memset(html, 0, SMALLBUFSIZE); j=0;
+      }
+
+   }
+
+   //printf("append last in line:%s\n", puf);
+   k += appendHTMLTag(puf, html);
+
+   strcpy(buf, puf);
+}
+
+
+int appendHTMLTag(char *buf, char *htmlbuf){
+   char *p, html[SMALLBUFSIZE];
+   int len;
+
+   snprintf(html, SMALLBUFSIZE-1, "HTML*%s", htmlbuf);
+   len = strlen(html);
+
+   //printf("try to append:*%s*\n", html);
+
+   if(isSkipHTMLTag(html) == 1) return 0;
+
+   if(len > 8 && strchr(html, '=')){
+      p = strstr(html, "cid:");
+      if(p){
+         *(p+3) = '\0';
+         strncat(html, " ", SMALLBUFSIZE-1);
+      }
+
+      strncat(buf, html, MAXBUFSIZE-1);
+      return len;
+   }
+
+   if(strstr(html, "http") ){
+      strncat(buf, html+5, MAXBUFSIZE-1);
+      return len-5;
+   }
+
+   return 0;
+}
+
+
 void fixupHTML(char *buf, struct _state *state, struct __config *cfg){
    char *p, *q, puf[MAXBUFSIZE], s[SMALLBUFSIZE];
 
@@ -271,7 +401,8 @@ int isSkipHTMLTag(char *s){
    int i=0;
 
    for(i=0; i<NUM_OF_SKIP_TAGS; i++){
-      if(strncmp(s, skip_html_tags[i].entity, skip_html_tags[i].length) == 0) return 1;
+      //printf("matching *%s* on *%s*\n", s+5, skip_html_tags[i].entity);
+      if(strncmp(s+5, skip_html_tags[i].entity, skip_html_tags[i].length) == 0) return 1;
    }
 
    return 0;
@@ -301,9 +432,15 @@ void translateLine(unsigned char *p, struct _state *state){
       if(strncasecmp((char *)p, "http://", 7) == 0){ p += 7; url = 1; continue; }
       if(strncasecmp((char *)p, "https://", 8) == 0){ p += 8; url = 1; continue; }
 
-      if(url == 1 && (*p == '.' || *p == '-' || *p == '_' || isalnum(*p)) ) continue;
-
+      if(url == 1 && (*p == '.' || *p == '-' || *p == '_' || *p == '/' || isalnum(*p)) ) continue;
       if(url == 1) url = 0;
+
+      if(state->texthtml == 1 && state->message_state == MSG_BODY && strncmp((char *)p, "HTML*", 5) == 0){
+         p += 5;
+         while(isspace(*p) == 0){
+            p++;
+         }
+      }
 
       if(delimiter_characters[(unsigned int)*p] != ' ' || isalnum(*p) == 0)
          *p = ' ';
@@ -415,6 +552,17 @@ int countInvalidJunkLines(char *p){
    }
 
    return i;
+}
+
+
+int countNonPrintableCharacters(char *p){
+   int n = 0;
+
+   for(; *p; p++){
+      if(!isprint(*p)) n++;
+   }
+
+   return n;
 }
 
 

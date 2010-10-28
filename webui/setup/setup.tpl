@@ -206,11 +206,16 @@ function ShowOption(what, value) {
       <td colspan="2"><hr></td>
    </tr>
 
+   <tr id="DIV_HELPURL" style="display:show">
+      <td>Help URL: </td>
+      <td><input type="text" name="HELPURL" id="HELPURL" value="" size="30" /></td>
+   </tr>
+
+
    <tr id="DIV_SESSION_DATABASE" style="display:show">
       <td>Session database name: </td>
       <td><input type="text" name="SESSION_DATABASE" id="SESSION_DATABASE" value="sessions/sessions.sdb" size="30" /></td>
    </tr>
-
 
 
    <!-- memcached stuff -->

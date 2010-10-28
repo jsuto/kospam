@@ -77,7 +77,7 @@ struct _state parseMessage(struct session_data *sdata, struct __config *cfg){
 
 int parseLine(char *buf, struct _state *state, struct session_data *sdata, struct __config *cfg){
    char *p, *q, puf[MAXBUFSIZE], muf[MAXBUFSIZE], u[SMALLBUFSIZE], token[MAX_TOKEN_LEN], phrase[MAX_TOKEN_LEN], triplet[3*MAX_TOKEN_LEN];
-   int i=0, x, b64_len;
+   int i=0, x, b64_len, realbinary=1, boundary_line=0;
 
    memset(token, 0, MAX_TOKEN_LEN);
 
@@ -115,6 +115,7 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
          state->found_our_signo = 1;
    }
 
+   if(state->is_header == 0 && buf[0] != ' ' && buf[0] != '\t') state->message_state = MSG_BODY;
 
    if(strncasecmp(buf, "Content-Type:", strlen("Content-Type:")) == 0) state->message_state = MSG_CONTENT_TYPE;
    else if(strncasecmp(buf, "Content-Transfer-Encoding:", strlen("Content-Transfer-Encoding:")) == 0) state->message_state = MSG_CONTENT_TRANSFER_ENCODING;
@@ -166,7 +167,6 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
          snprintf(state->attachments[state->n_attachments].type, SMALLBUFSIZE-1, "%s", p);
          p = strchr(state->attachments[state->n_attachments].type, ';');
          if(p) *p = '\0';
-
       }
 
 
@@ -195,7 +195,13 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
 
 
       if(strcasestr(buf, "charset") && strcasestr(buf, "UTF-8")) state->utf8 = 1;
+
+      extractNameFromHeaderLine(buf, "name", state->attachments[state->n_attachments].filename);
    }
+
+
+   if(state->message_state == MSG_CONTENT_DISPOSITION && state->attachments[state->n_attachments].filename[0] == 0)
+      extractNameFromHeaderLine(buf, "name", state->attachments[state->n_attachments].filename);
 
 
    if(state->message_state > 0 && state->message_state <= MSG_SUBJECT && state->message_rfc822 == 1) state->message_rfc822 = 0;
@@ -224,13 +230,12 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
 
    /* skip the boundary itself */
 
-   if(!strstr(buf, "boundary=") && !strstr(buf, "boundary =") && is_boundary(state->boundaries, buf) == 1){
-      if(state->has_to_dump == 1){
-         close(state->fd);
-         if(state->n_attachments < MAX_ATTACHMENTS-1)
-            state->n_attachments++;
-      }
+   boundary_line = is_boundary(state->boundaries, buf);
 
+   if(!strstr(buf, "boundary=") && !strstr(buf, "boundary =") && boundary_line == 1){
+      if(state->has_to_dump == 1) close(state->fd);
+
+      if(state->n_attachments < MAX_ATTACHMENTS-1) state->n_attachments++;
 
       state->has_to_dump = 0;
 
@@ -239,16 +244,45 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
       state->utf8 = 0;
       state->qp = 0;
 
-      //printf("skipping found boundary: %s", buf);
       return 0;      
    }
+
+   if(boundary_line == 1){ return 0; }
+
 
    /* end of boundary check */
 
 
    /* skip non textual stuff */
 
-   if(state->is_header == 0 && state->textplain == 0 && state->texthtml == 0) return 0;
+   if(state->message_state == MSG_BODY){
+      if(state->base64 == 1) state->attachments[state->n_attachments].size += strlen(buf) / BASE64_RATIO;
+      else state->attachments[state->n_attachments].size += strlen(buf);
+   }
+
+
+   /*
+    * sometimes spammers screw up their junk messages, and
+    * use "application/octet-stream" type for textual parts.
+    * Now clapf checks whether the attachment is really
+    * binary. If it has no non-printable characters in a
+    * base64 encoded line, then let's tokenize it.
+    *
+    * Note: in this case we cannot expect fully compliant 
+    * message part. However this case should be very rare
+    * since legitim messages use proper mime types.
+    *
+    * 2010.10.23, SJ
+    */
+
+   if(state->base64 == 1 && state->message_state == MSG_BODY && strcasecmp(state->attachments[state->n_attachments].type, "application/octet-stream") == 0){
+      snprintf(puf, MAXBUFSIZE-1, buf);
+      decodeBase64(puf);   
+      realbinary = countNonPrintableCharacters(puf);
+   }
+
+
+   if(state->is_header == 0 && state->textplain == 0 && state->texthtml == 0 && (state->message_state == MSG_BODY || state->message_state == MSG_CONTENT_DISPOSITION) && realbinary > 0) return 0;
 
 
    /* base64 decode buffer */
@@ -268,10 +302,11 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
 
    /* fix base64 stuff if the line does not end with a line break, 2006.03.01, SJ */
 
-   if(state->base64 == 1) fixupBase64EncodedLine(buf, state);
+   if(state->base64 == 1 && state->message_state == MSG_BODY) fixupBase64EncodedLine(buf, state);
 
+   if(state->texthtml == 1 && state->message_state == MSG_BODY) markHTML(buf, state);
 
-   if(state->is_header == 0 && state->texthtml == 1) fixupHTML(buf, state, cfg);
+   //if(state->is_header == 0 && state->texthtml == 1) fixupHTML(buf, state, cfg);
 
 
 
@@ -306,7 +341,8 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
    else p = buf;
 
    if(cfg->debug == 1) printf("%s\n", buf);
-   //if(cfg->debug == 1) printf("%d %d/%d/%d %ld/%ld %s\n", state->is_header, state->message_state, state->utf8, state->qp, state->l_shit, state->c_shit, buf);
+
+   //if(cfg->debug == 1) printf("%d %d %d/*%d/%d/%d %ld/%ld %s\n", state->is_header, boundary_line, state->message_state, state->texthtml, state->utf8, state->qp, state->l_shit, state->c_shit, buf);
 
    do {
       p = split(p, DELIMITER, puf, MAXBUFSIZE-1);
@@ -397,6 +433,19 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
 
       if(strlen(puf) < MIN_WORD_LEN || strlen(puf) > MAX_WORD_LEN || isHexNumber(puf))
          continue;
+
+      /* deal with HTML tokens */
+
+      if(strncmp(puf, "HTML*", 5) == 0){
+         if(isSkipHTMLTag(puf) == 0){
+            snprintf(muf, MAXBUFSIZE-1, "%s", puf+5);
+            q = strchr(muf, '=');
+            if(q) *q = '+';
+            addnode(state->token_hash, muf, DEFAULT_SPAMICITY, 0);
+         }
+         continue;
+      }
+
 
       if(state->message_state == MSG_SUBJECT){
          snprintf(muf, MAXBUFSIZE-1, "Subject*%s", puf);

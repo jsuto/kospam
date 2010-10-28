@@ -518,6 +518,14 @@ int main(int argc, char **argv, char **envp){
    /* parse message */
    state = parseMessage(&sdata, &cfg);
 
+   if(cfg.debug == 1) {
+      printf("attachment list:\n");
+      for(i=0; i<state.n_attachments; i++){
+         printf("   part-%d: filename:%s, type:%s, len:%d\n", i, state.attachments[i].filename, state.attachments[i].type, state.attachments[i].size);
+      }
+      printf("\n");
+   }
+
    #ifdef HAVE_TRE
       checkZombieSender(&sdata, &data, &state, &cfg);
    #endif

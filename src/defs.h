@@ -47,6 +47,7 @@
 
 #define MAXHASH 8171
 
+#define BASE64_RATIO 1.33333333
 
 struct node {
    char str[MAX_TOKEN_LEN];
@@ -84,6 +85,7 @@ struct x_token {
 struct attachment {
    int size;
    char type[SMALLBUFSIZE];
+   char filename[SMALLBUFSIZE];
 };
 
 struct url {
@@ -106,6 +108,7 @@ struct _state {
    int has_base64;
    int utf8;
    int qp;
+   int htmltag;
    int skip_html;
    int ipcnt;
    int has_to_dump;

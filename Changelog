@@ -1,5 +1,24 @@
 0.4.6-rc1:
 
+2010.10.26, SJ
+
+Webui enhancements.
+
+2010.10.25, SJ
+
+Parser modifications for a smarter HTML tokenisation.
+It won't create chained tokens between HTML elements
+and text any longer.
+
+This modification may have a slight impact on your
+accuracy in the short run, however it would definetely
+improve accuracy in the long run.
+
+2010.10.23, SJ
+
+Added a check to see if an application/octet-stream attachment
+is really binary. If not, then let's tokenize it.
+
 2010.10.21, SJ
 
 Added zombie to the counters.

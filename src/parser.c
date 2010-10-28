@@ -117,7 +117,7 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
 
    if(state->is_header == 0 && buf[0] != ' ' && buf[0] != '\t') state->message_state = MSG_BODY;
 
-   if(strncasecmp(buf, "Content-Type:", strlen("Content-Type:")) == 0) state->message_state = MSG_CONTENT_TYPE;
+   if(state->content_type_is_set == 0 && strncasecmp(buf, "Content-Type:", strlen("Content-Type:")) == 0) state->message_state = MSG_CONTENT_TYPE;
    else if(strncasecmp(buf, "Content-Transfer-Encoding:", strlen("Content-Transfer-Encoding:")) == 0) state->message_state = MSG_CONTENT_TRANSFER_ENCODING;
    else if(strncasecmp(buf, "Content-Disposition:", strlen("Content-Disposition:")) == 0) state->message_state = MSG_CONTENT_DISPOSITION;
 
@@ -165,6 +165,7 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
          p++;
          if(*p == ' ' || *p == '\t') p++;
          snprintf(state->attachments[state->n_attachments].type, SMALLBUFSIZE-1, "%s", p);
+         state->content_type_is_set = 1;
          p = strchr(state->attachments[state->n_attachments].type, ';');
          if(p) *p = '\0';
       }
@@ -182,8 +183,9 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
 
              state->textplain = 1;
       }
-      else if(strcasestr(buf, "text/html"))
+      else if(strcasestr(buf, "text/html")){
              state->texthtml = 1;
+      }
 
       /* switch (back) to header mode if we encounterd an attachment with
          "message/rfc822" content-type, 2010.05.16, SJ */
@@ -193,6 +195,8 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
          state->is_header = 1;
       }
 
+
+      if(strcasestr(buf, "application/octet-stream")) state->octetstream = 1;
 
       if(strcasestr(buf, "charset") && strcasestr(buf, "UTF-8")) state->utf8 = 1;
 
@@ -233,13 +237,15 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
    boundary_line = is_boundary(state->boundaries, buf);
 
    if(!strstr(buf, "boundary=") && !strstr(buf, "boundary =") && boundary_line == 1){
+      state->content_type_is_set = 0;
+
       if(state->has_to_dump == 1) close(state->fd);
 
       if(state->n_attachments < MAX_ATTACHMENTS-1) state->n_attachments++;
 
       state->has_to_dump = 0;
 
-      state->base64 = 0; state->textplain = 0; state->texthtml = 0;
+      state->base64 = 0; state->textplain = 0; state->texthtml = state->octetstream = 0;
       state->skip_html = 0;
       state->utf8 = 0;
       state->qp = 0;
@@ -277,7 +283,7 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
     * 2010.10.23, SJ
     */
 
-   if(state->message_state == MSG_BODY && state->realbinary == 0 && strcasecmp(state->attachments[state->n_attachments].type, "application/octet-stream") == 0){
+   if(state->message_state == MSG_BODY && state->realbinary == 0 && state->octetstream == 1){
       snprintf(puf, MAXBUFSIZE-1, "%s", buf);
       if(state->base64 == 1) decodeBase64(puf);
       if(state->qp == 1) decodeQP(puf);
@@ -285,7 +291,7 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
    }
 
 
-   if(state->is_header == 0 && state->textplain == 0 && state->texthtml == 0 && (state->message_state == MSG_BODY || state->message_state == MSG_CONTENT_DISPOSITION) && state->realbinary > 0) return 0;
+   if(state->is_header == 0 && state->textplain == 0 && state->texthtml == 0 && (state->message_state == MSG_BODY || state->message_state == MSG_CONTENT_DISPOSITION) && (state->octetstream == 0 || state->realbinary > 0) ) return 0;
    
 
    /* base64 decode buffer */

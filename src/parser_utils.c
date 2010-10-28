@@ -31,6 +31,7 @@ void initState(struct _state *state){
    state->textplain = 1;
    state->texthtml = 0;
    state->message_rfc822 = 0;
+   state->octetstream = 0;
 
    state->base64 = 0;
    state->utf8 = 0;
@@ -45,6 +46,8 @@ void initState(struct _state *state){
    state->n_body_token = 0;
    state->n_chain_token = 0;
    state->n_subject_token = 0;
+
+   state->content_type_is_set = 0;
 
    state->c_shit = 0;
    state->l_shit = 0;
@@ -560,7 +563,7 @@ int countNonPrintableCharacters(char *p){
    int n = 0;
 
    for(; *p; p++){
-      if(!isprint(*p)) n++;
+      if(!isprint(*p) && !isspace(*p)) n++;
    }
 
    return n;

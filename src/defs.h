@@ -103,6 +103,7 @@ struct _state {
    int is_header;
    int textplain;
    int texthtml;
+   int octetstream;
    int message_rfc822;
    int base64;
    int has_base64;
@@ -116,6 +117,7 @@ struct _state {
    int num_of_msword;
    int num_of_images;
    int realbinary;
+   int content_type_is_set;
    int train_mode;
    unsigned long c_shit;
    unsigned long l_shit;

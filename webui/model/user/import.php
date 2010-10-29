@@ -228,7 +228,15 @@ class ModelUserImport extends Model {
 
       $user['email'] = $emails;
 
-      $user['username'] = $username . $user['uid'];
+      if(USE_EMAIL_AS_USERNAME == 1) {
+         $email = explode("\n", $emails);
+         $user['username'] = $email[0];
+      }
+      else {
+         $user['username'] = $username . $user['uid'];
+      }
+
+
       $user['password'] = '*';
 
       $user['realname'] = $username;

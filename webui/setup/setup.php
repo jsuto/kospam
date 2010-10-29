@@ -129,6 +129,7 @@ function write_stuff() {
    write_line($fp, "ENABLE_LDAP_IMPORT_FEATURE", 0);
    write_line($fp, "LDAP_IMPORT_CONFIG_FILE", '/path/to/ldap-import-konfig.cfg');
    write_line($fp, "DN_MAX_LEN", 255);
+   write_line($fp, "USE_EMAIL_AS_USERNAME", 1);
    write_line($fp);
 
    write_line($fp, "SIZE_X", 430);

@@ -39,12 +39,15 @@ $RRDTOOL graph $IMAGE \
         DEF:dds0=$RRDFILE:ds0:MAX \
 	DEF:dds1=$RRDFILE:ds1:MAX \
 	DEF:dds2=$RRDFILE:ds2:MAX \
+	DEF:dds3=$RRDFILE:ds3:MAX \
 	"CDEF:greylisted=dds0,1,*" \
 	"CDEF:passed=dds1,1,*" \
         "CDEF:notazombie=dds2,1,*" \
+        "CDEF:whitelisted=dds3,1,*" \
 	"AREA:greylisted#999999" \
         "LINE1:greylisted#999999:greylisted" \
 	"LINE2:passed#990000:passed" \
         "LINE3:notazombie#006600:not a zombie" \
+	"LINE4:whitelisted#00dd00:whitelisted" \
 	> /dev/null
 

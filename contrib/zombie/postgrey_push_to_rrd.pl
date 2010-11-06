@@ -10,6 +10,7 @@ $rrd = "/var/lib/clapf/stat/postgrey.rrd";
 $greylisted = 0;
 $passed_greylist = 0;
 $unaffected = 0;
+$whitelisted = 0;
 
 &usage unless $config_file = $ARGV[0];
 
@@ -37,14 +38,15 @@ while(<F>){
       ##print;
 
       if(/action=greylist, reason=new/){ $greylisted++; }
-      if(/action=pass, reason=unlikely a zombie/){ $unaffected++; }
-      if(/action=pass, reason=triplet found, delay=/){ $passed_greylist++; } 
+      elsif(/action=pass, reason=unlikely a zombie/){ $unaffected++; }
+      elsif(/action=pass, reason=triplet found/){ $passed_greylist++; }
+      elsif(/action=pass, reason=client whitelist/ || /action=pass, reason=recipient whitelist/ || /action=pass, reason=client AWL/){ $whitelisted++; }
    }
 
 }
 
 
-RRDs::update ($rrd,"$hourstart:$greylisted:$passed_greylist:$unaffected");
+RRDs::update ($rrd,"$hourstart:$greylisted:$passed_greylist:$unaffected:$whitelisted");
 
 my $ERR=RRDs::error;
 die "ERROR while updating $rrd: $ERR\n" if $ERR;

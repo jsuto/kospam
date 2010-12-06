@@ -54,7 +54,7 @@ int clamd_scan(char *tmpfile, char *engine, char *avinfo, struct __config *cfg){
 
    /* read CLAMD's answers */
 
-   n = recvtimeout(s, buf, MAXBUFSIZE, 0);
+   n = recvtimeout(s, buf, MAXBUFSIZE, TIMEOUT);
 
    close(s);
 
@@ -115,7 +115,7 @@ int clamd_net_scan(char *tmpfile, char *engine, char *avinfo, struct __config *c
 
    send(psd, scan_cmd, strlen(scan_cmd), 0);
 
-   n = recvtimeout(psd, buf, MAXBUFSIZE, 0);
+   n = recvtimeout(psd, buf, MAXBUFSIZE, TIMEOUT);
    close(psd);
 
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: CLAMD DEBUG: %d %s", tmpfile, n, buf);

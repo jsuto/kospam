@@ -1,6 +1,28 @@
+2010.11.23, SJ
+
+Fixed a character set and collation issue in the webui.
+If you see strange characters in the 'real name' column,
+you may need to fix them:
+
+alter table user change `realname` `realname` char(64) character set latin1;
+alter table user change `realname` `realname` blob;
+alter table user change `realname` `realname` char(64) character set utf8;
+alter table user character set utf8;
+
+alter table t_policy change `name` `name` char(128) character set latin1;
+alter table t_policy change `name` `name` blob;
+alter table t_policy change `name` `name` char(128) character set utf8;
+alter table t_policy character set utf8;
+
+2010.11.18, SJ
+
+Updated the recvtimeout() function to honor the seconds value.
+
 2010.11.06, SJ
 
 Fixed a parser bug.
+
+
 
 0.4.6-rc1:
 

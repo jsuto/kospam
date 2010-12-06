@@ -44,7 +44,7 @@ int avast_scan(char *tmpfile, char *engine, char *avinfo, struct __config *cfg){
       return AV_ERROR;
    }
 
-   n = recvtimeout(psd, buf, MAXBUFSIZE, 0);
+   n = recvtimeout(psd, buf, MAXBUFSIZE, TIMEOUT);
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: AVAST got: %s", tmpfile, buf);
 
    if(strncmp(buf, "220", 3)){
@@ -61,11 +61,11 @@ int avast_scan(char *tmpfile, char *engine, char *avinfo, struct __config *cfg){
 
    send(psd, scan_cmd, strlen(scan_cmd), 0);
 
-   n = recvtimeout(psd, buf, MAXBUFSIZE, 0);
+   n = recvtimeout(psd, buf, MAXBUFSIZE, TIMEOUT);
 
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: AVAST DEBUG: %d %s", tmpfile, n, buf);
 
-   n = recvtimeout(psd, buf, MAXBUFSIZE, 0);
+   n = recvtimeout(psd, buf, MAXBUFSIZE, TIMEOUT);
 
    send(psd, AVAST_CMD_QUIT, strlen(AVAST_CMD_QUIT), 0);
    close(psd);

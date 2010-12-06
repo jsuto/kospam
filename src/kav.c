@@ -35,7 +35,7 @@ int kav_scan(char *tmpfile, char *engine, char *avinfo, struct __config *cfg){
 
    /* read KAV banner. It should start with KAV_READY */
 
-   n = recvtimeout(s, buf, MAXBUFSIZE, 0);
+   n = recvtimeout(s, buf, MAXBUFSIZE, TIMEOUT);
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "KAV got: %s", buf);
 
    if(strncmp(buf, KAV_READY, 4)){
@@ -56,7 +56,7 @@ int kav_scan(char *tmpfile, char *engine, char *avinfo, struct __config *cfg){
 
    /* read KAV's answers */
 
-   while((n = recvtimeout(s, buf, MAXBUFSIZE, 0)) > 0){
+   while((n = recvtimeout(s, buf, MAXBUFSIZE, TIMEOUT)) > 0){
       //buf[n] = '\0';
       if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "KAV DEBUG: %d %s", n, buf);
 

@@ -65,7 +65,7 @@ int spamc_emul(char *tmpfile, int size, struct __config *cfg){
     * just to determine whether it's a spam or not.
     */
 
-   n = recvtimeout(psd, buf, MAXBUFSIZE, 0);
+   n = recvtimeout(psd, buf, MAXBUFSIZE, TIMEOUT);
 
    p = strstr(buf, "\r\n\r\n");
    if(p){

@@ -18,8 +18,8 @@ class MySQL {
 		
       $this->prefix = $prefix;
 
-      /*mysql_query("SET NAMES 'utf8'", $this->link);
-      mysql_query("SET CHARACTER SET utf8", $this->link);*/
+      mysql_query("SET NAMES 'utf8'", $this->link);
+      mysql_query("SET CHARACTER SET utf8", $this->link);
    }
 
 

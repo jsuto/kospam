@@ -23,13 +23,13 @@ create table if not exists user (
 	uid int unsigned not null primary key,
 	gid int unsigned not null,
 	username char(32) not null unique,
-	realname char(32) default null,
+	realname char(64) default null,
 	password char(48) default null,
 	domain char(64) default null,
 	dn char(255) default '*',
 	policy_group int(4) default 0,
 	isadmin tinyint default 0
-);
+) character set utf8;
 
 insert into user (uid, gid, username, password, policy_group, isadmin, domain) values (0, 0, 'admin', '$1$kkBnp0$L/MILe67UGcvHeFlTAQjR1', 0, 1, 'local');
 
@@ -50,14 +50,14 @@ insert into t_domain (domain, mapped) values('local', 'local'), ('yourdomain.com
 create table if not exists t_white_list (
 	uid int unsigned not null primary key,
 	whitelist blob default null
-);
+) character set 'utf8' collate 'utf8_bin';
 
 insert into t_white_list (uid) values(0);
 
 create table if not exists t_black_list (
         uid int unsigned not null primary key,
         blacklist blob default null
-);
+) character set 'utf8' collate 'utf8_bin';
 
 insert into t_black_list (uid) values(0);
 
@@ -98,8 +98,7 @@ create table if not exists t_policy (
 	store_metadata tinyint default 0,
 	store_only_spam tinyint default 0,
 	message_from_a_zombie tinyint default 0
-);
-
+) character set 'utf8';
 
 create table if not exists t_minefield (
 	ip char(15) not null primary key,

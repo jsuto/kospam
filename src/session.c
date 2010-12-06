@@ -81,7 +81,7 @@ void handleSession(int new_sd, struct __data *data, struct __config *cfg){
    send(new_sd, buf, strlen(buf), 0);
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent: %s", sdata.ttmpfile, buf);
 
-   while((n = recvtimeout(new_sd, puf, MAXBUFSIZE, 0)) > 0){
+   while((n = recvtimeout(new_sd, puf, MAXBUFSIZE, TIMEOUT)) > 0){
          pos = 0;
 
          /* accept mail data */
@@ -320,7 +320,7 @@ void handleSession(int new_sd, struct __data *data, struct __config *cfg){
                if(puf[n-2] != '\r' && puf[n-1] != '\n'){
                   memmove(puf, puf+pos, n-pos);
                   memset(puf+n-pos, 0, MAXBUFSIZE-n+pos);
-                  i = recvtimeout(new_sd, buf, MAXBUFSIZE, 0);
+                  i = recvtimeout(new_sd, buf, MAXBUFSIZE, TIMEOUT);
                   strncat(puf, buf, MAXBUFSIZE-1-n+pos);
                   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: partial read: %s", sdata.ttmpfile, puf);
                   pos = 0;

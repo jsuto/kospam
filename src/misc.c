@@ -319,7 +319,7 @@ int recvtimeout(int s, char *buf, int len, int timeout){
     FD_ZERO(&fds);
     FD_SET(s, &fds);
 
-    tv.tv_sec = TIMEOUT;
+    tv.tv_sec = timeout;
     tv.tv_usec = TIMEOUT_USEC;
 
     n = select(s+1, &fds, NULL, NULL, &tv);

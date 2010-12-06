@@ -162,7 +162,7 @@ int smtp_chat(int sd, char *cmd, int ncmd, char *expect, char *buf, char *ttmpfi
    if(verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent in injecting: %s", ttmpfile, cmd);
 
 READ:
-   recvtimeout(sd, buf, MAXBUFSIZE, 0);
+   recvtimeout(sd, buf, MAXBUFSIZE, TIMEOUT);
    if(verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: got in injecting: %s", ttmpfile, buf);
 
    n = 0;
@@ -232,7 +232,7 @@ int inject_mail(struct session_data *sdata, int msg, char *smtpaddr, int smtppor
       return ERR_INJECT;
    }
 
-   n = recvtimeout(psd, buf, MAXBUFSIZE, 0);
+   n = recvtimeout(psd, buf, MAXBUFSIZE, TIMEOUT);
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: got in injecting: %s", sdata->ttmpfile, buf);
 
    /* 220 banner */
@@ -377,7 +377,7 @@ int inject_mail(struct session_data *sdata, int msg, char *smtpaddr, int smtppor
    }
 
 
-   n = recvtimeout(psd, buf, MAXBUFSIZE, 0);
+   n = recvtimeout(psd, buf, MAXBUFSIZE, TIMEOUT);
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: got in injecting: %s", sdata->ttmpfile, buf);
 
    buf[n-2] = '\0';

@@ -35,7 +35,7 @@
 #define SESSION_TIMEOUT 420
 #define MAXBUFSIZE 8192
 #define SMALLBUFSIZE 512
-#define MAXVAL 128
+#define MAXVAL 256
 #define RANDOM_POOL "/dev/urandom"
 #define RND_STR_LEN 32
 #define MESSAGE_ID_LEN 32

@@ -2,6 +2,18 @@
 
 class ModelUserUser extends Model {
 
+
+   public function checkUID($uid) {
+      if($uid == "") { return 0; }
+
+      if(!is_numeric($uid)) { return 0; }
+
+      if($uid < 1) { return 0; }
+
+      return 1;
+   }
+
+
    public function getWhitelist($username = '') {
 
       $uid = $this->getUidByName($username);
@@ -322,6 +334,9 @@ class ModelUserUser extends Model {
    public function addUser($user) {
       LOGGER("add user: " . $user['username'] . ", uid=" . (int)$user['uid']);
 
+      if(!isset($user['domain']) || $user['domain'] == "") { return -1; }
+      if(!isset($user['username']) || $user['username'] == "" || $this->getUidByName($user['username']) > 0) { return -1; }
+
       $emails = explode("\n", $user['email']);
       foreach ($emails as $email) {
          $email = rtrim($email);
@@ -444,8 +459,8 @@ class ModelUserUser extends Model {
    }
 
 
-   public function deleteUser($uid = 0) {
-      if($uid < 1){ return 0; }
+   public function deleteUser($uid) {
+      if(!$this->checkUID($uid)){ return 0; }
 
       $query = $this->db->query("DELETE FROM " . TABLE_EMAIL . " WHERE uid=" . (int)$uid);
       $query = $this->db->query("DELETE FROM " . TABLE_USER . " WHERE uid=" . (int)$uid);

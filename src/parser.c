@@ -77,7 +77,7 @@ struct _state parseMessage(struct session_data *sdata, struct __config *cfg){
 
 int parseLine(char *buf, struct _state *state, struct session_data *sdata, struct __config *cfg){
    char *p, *q, puf[MAXBUFSIZE], muf[MAXBUFSIZE], u[SMALLBUFSIZE], token[MAX_TOKEN_LEN], phrase[MAX_TOKEN_LEN], triplet[3*MAX_TOKEN_LEN];
-   int i=0, x, b64_len, boundary_line=0;
+   int i=0, x, b64_len, boundary_line=0, rcvd_line=0;
 
    memset(token, 0, MAX_TOKEN_LEN);
 
@@ -335,10 +335,18 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
    state->l_shit += countInvalidJunkLines(buf);
    state->c_shit += countInvalidJunkCharacters(buf, cfg->replace_junk_characters);
 
+
+   /*
+    * we are interested in only the lines starting with "Received: from...".
+    * The rest after the " by ..." part has no information to us
+    */
+
    if(state->message_state == MSG_RECEIVED){
-      i = 0;
-      if(buf[strlen(buf)-2] == ']' && buf[strlen(buf)-1] == ')'){
-         i = 1;
+      rcvd_line = 0;
+      if(strncmp(buf, "Received:", strlen("Received:")) == 0){
+         rcvd_line = 1;
+         p = strstr(buf, " by ");
+         if(p) *p = '\0';
       }
    }
 
@@ -395,7 +403,7 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
 
 
 
-      if(state->message_state == MSG_RECEIVED){
+      if(state->message_state == MSG_RECEIVED && rcvd_line == 1){
          x = puf[strlen(puf)-1];
 
          /* 
@@ -419,7 +427,7 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
           * which hands this email to us.
           */
 
-         if(i == 1 && state->ipcnt <= 1){
+         if(state->ipcnt <= 1){
             if(isDottedIPv4Address(puf) == 1){
                snprintf(state->ip, SMALLBUFSIZE-1, "%s", puf);
                if(isItemOnList(puf, cfg->skipped_received_ips) == 0) state->ipcnt = 1;

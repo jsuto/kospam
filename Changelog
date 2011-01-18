@@ -1,3 +1,8 @@
+2011.01.18, SJ
+
+Enhanced the parsing of the "Received: from" lines to properly
+handle non-postfix MTAs.
+
 2010.11.23, SJ
 
 Fixed a character set and collation issue in the webui.

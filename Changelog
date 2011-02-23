@@ -1,7 +1,19 @@
+2011.02.23, SJ
+
+Minor webui fix.
+
+2011.01.26, SJ
+
+Don't parse the not interesting part of the Received: lines, ie.
+after "by ".
+
 2011.01.18, SJ
 
 Enhanced the parsing of the "Received: from" lines to properly
 handle non-postfix MTAs.
+
+Doubled the MAXVAL value, so the clapf.conf lines (=key+value)
+can be up to 256 characters.
 
 2010.11.23, SJ
 

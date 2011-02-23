@@ -7,9 +7,9 @@ class ModelUserPrefs extends Model {
 
       $query = $db_session->query("select * from prefs where username='" . $db_session->escape($username) . "'");
 
-      if(isset($query->row['pagelen'])) { $_SESSION['pagelen'] = $query->row['pagelen']; }
-      if(isset($query->row['lang'])) { $_SESSION['lang'] = $query->row['lang']; }
-      if(isset($query->row['train_global'])) { $_SESSION['train_global'] = $query->row['train_global']; }
+      if(isset($query->row['pagelen'])) { $_SESSION['pagelen'] = $query->row['pagelen']; } else { $_SESSION['pagelen'] = PAGE_LEN; }
+      if(isset($query->row['lang'])) { $_SESSION['lang'] = $query->row['lang']; } else { $_SESSION['lang'] = LANG; }
+      if(isset($query->row['train_global'])) { $_SESSION['train_global'] = $query->row['train_global']; } else { $_SESSION['train_global'] = 0; }
 
       return 1;
    }

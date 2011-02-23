@@ -77,7 +77,7 @@ struct _state parseMessage(struct session_data *sdata, struct __config *cfg){
 
 int parseLine(char *buf, struct _state *state, struct session_data *sdata, struct __config *cfg){
    char *p, *q, puf[MAXBUFSIZE], muf[MAXBUFSIZE], u[SMALLBUFSIZE], token[MAX_TOKEN_LEN], phrase[MAX_TOKEN_LEN], triplet[3*MAX_TOKEN_LEN];
-   int i=0, x, b64_len, boundary_line=0, rcvd_line=0;
+   int x, b64_len, boundary_line=0, rcvd_line=0;
 
    memset(token, 0, MAX_TOKEN_LEN);
 
@@ -348,6 +348,8 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
          p = strstr(buf, " by ");
          if(p) *p = '\0';
       }
+
+      if(rcvd_line == 0) return 0;
    }
 
    translateLine((unsigned char*)buf, state);

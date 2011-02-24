@@ -64,6 +64,9 @@ function write_stuff() {
    write_line($fp, "THEME", $_POST['THEME']);
    write_line($fp);
 
+   fputs($fp, "define('REMOTE_IMAGE_REPLACEMENT', WEBUI_DIRECTORY . 'view/theme/default/images/remote.gif');" . CRLF);
+   write_line($fp);
+
    write_line($fp, "WEBUI_DIRECTORY", WEBUI_DIRECTORY);
    write_line($fp, "QUEUE_DIRECTORY", $_POST['QUEUE_DIRECTORY']);
    write_line($fp);
@@ -143,6 +146,7 @@ function write_stuff() {
    write_line($fp, "ENABLE_BLACKLIST", 1);
    write_line($fp, "ENABLE_STATISTICS", 1);
    write_line($fp, "ENABLE_HISTORY", 1);
+   write_line($fp, "ENABLE_REMOTE_IMAGES", 0);
    write_line($fp);
 
    write_line($fp, "SITE_NAME", $_SERVER['SERVER_NAME']);

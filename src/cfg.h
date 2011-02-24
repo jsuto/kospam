@@ -171,6 +171,10 @@ struct __config {
    char historypid[MAXVAL];
 
    char skipped_received_ips[MAXVAL];
+
+   // webui
+   int days_to_retain_data;
+
 };
 
 

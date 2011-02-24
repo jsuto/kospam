@@ -78,6 +78,7 @@ struct _parse_rule config_parse_rules[] =
    { "clapf_header_field", "string", (void*) string_parser, offsetof(struct __config, clapf_header_field), SPAMINESS_HEADER_FIELD, MAXVAL-1},
    { "clapf_possible_spam_header_field", "string", (void*) string_parser, offsetof(struct __config, clapf_possible_spam_header_field), "", MAXVAL-1},
    { "clapf_spam_header_field", "multi_line_string", (void*) multi_line_string_parser, offsetof(struct __config, clapf_spam_header_field), "", MAXVAL-1},
+   { "days_to_retain_data", "integer", (void*) int_parser, offsetof(struct __config, days_to_retain_data), "14", sizeof(int)},
    { "debug", "integer", (void*) int_parser, offsetof(struct __config, debug), "0", sizeof(int)},
    { "deliver_infected_email", "integer", (void*) int_parser, offsetof(struct __config, deliver_infected_email), "0", sizeof(int)},
    { "delivery_agent", "string", (void*) string_parser, offsetof(struct __config, delivery_agent), "/usr/sbin/sendmail -oi -f", MAXVAL-1},

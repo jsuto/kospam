@@ -1,3 +1,20 @@
+2011.02.24, SJ
+
+Modified the webui to disable remote images. Add the following variables to the config.php:
+
+define('REMOTE_IMAGE_REPLACEMENT', WEBUI_DIRECTORY . 'view/theme/default/images/remote.gif');
+define('ENABLE_REMOTE_IMAGES', 0);
+
+Added a new variable: days_to_retain_data. It defines how long to
+retain data in the webui cache and quarantine directory (14 days
+by default).
+
+To use it, you have to modify the cron jobs, eg:
+
+1 2 * * * find /var/lib/clapf/queue -type f  -atime +`/usr/local/sbin/clapfconf -q days_to_retain_data|cut -f2 -d'='` -exec rm -f '{}' \;
+1 2 * * * find /srv/www/webui.yourdomain.com/cache -type f  -atime +`/usr/local/sbin/clapfconf -q days_to_retain_data|cut -f2 -d'='` -exec rm -f '{}' \;
+
+
 2011.02.23, SJ
 
 Minor webui fix.

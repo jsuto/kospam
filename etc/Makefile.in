@@ -35,6 +35,7 @@ all:
 	sed -e 's%LOCALSTATEDIR%$(localstatedir)%g' \
 	-e 's%LIBEXECDIR%$(libexecdir)%g' \
 	-e 's%SYSCONFDIR%$(sysconfdir)%g' \
+	-e 's%SBINDIR%$(sbindir)%g' \
 	-e 's%DATAROOTDIR%$(datarootdir)%g' < $(srcdir)/cron.jobs.in > $(srcdir)/cron.jobs
 
 install:

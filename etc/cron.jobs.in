@@ -19,8 +19,8 @@
 #3 3 * * * sqlite3 LOCALSTATEDIR/lib/clapf/data/tokens.sdb < DATAROOTDIR/clapf/purge-sqlite3.sql
 
 ### purge of the stored messages from the queue directory
-1 2 * * * find LOCALSTATEDIR/lib/clapf/queue -type f  -atime +14 -exec rm -f '{}' \;
+1 2 * * * find LOCALSTATEDIR/lib/clapf/queue -type f  -atime +`SBINDIR/clapfconf -q days_to_retain_data|cut -f2 -d'='` -exec rm -f '{}' \;
 
 ### remove the aged spam images from cache directory
-1 2 * * * find /srv/www/webui.yourdomain.com/cache -type f  -atime +14 -exec rm -f '{}' \;
+1 2 * * * find /srv/www/webui.yourdomain.com/cache -type f  -atime +`SBINDIR/clapfconf -q days_to_retain_data|cut -f2 -d'='` -exec rm -f '{}' \;
 

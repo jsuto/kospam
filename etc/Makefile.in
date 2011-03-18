@@ -26,7 +26,7 @@ CLAPF_GROUP = `@id_bin@ -gn $(CLAPF_USER)`
 INSTALL = @INSTALL@
 
 all:
-	sed -e 's%pidfile=.*%pidfile=$(localstatedir)/lib/clapf/clapf.pid%g' \
+	sed -e 's%pidfile=.*%pidfile=$(localstatedir)/run/clapf/clapf.pid%g' \
 	-e 's%sqlite3=.*%sqlite3=$(localstatedir)/lib/clapf/data/tokens.sdb%g' \
 	-e 's%workdir=.*%workdir=$(localstatedir)/spool/clapf/tmp%g' \
 	-e 's%queuedir=.*%queuedir=$(localstatedir)/lib/clapf/queue%g' \

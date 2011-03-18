@@ -269,10 +269,10 @@ void getWBLData(struct session_data *sdata, struct __config *cfg){
    while(sqlite3_step(pStmt) == SQLITE_ROW){
 
       if(n > 0) strncat(sdata->whitelist, "\n", MAXBUFSIZE-1);
-      strncat(sdata->whitelist, (char *)sqlite3_column_blob(pStmt, 0), MAXBUFSIZE-1);
+      if(sqlite3_column_blob(pStmt, 0)) strncat(sdata->whitelist, (char *)sqlite3_column_blob(pStmt, 0), MAXBUFSIZE-1);
 
       if(n > 0) strncat(sdata->blacklist, "\n", MAXBUFSIZE-1);
-      strncat(sdata->blacklist, (char *)sqlite3_column_blob(pStmt, 1), MAXBUFSIZE-1);
+      if(sqlite3_column_blob(pStmt, 1)) strncat(sdata->blacklist, (char *)sqlite3_column_blob(pStmt, 1), MAXBUFSIZE-1);
 
       n++;
    }

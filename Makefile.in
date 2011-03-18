@@ -70,7 +70,7 @@ installdirs: mkinstalldirs
 		$(DESTDIR)$(datarootdir)/clapf $(DESTDIR)$(includedir)/clapf $(DESTDIR)$(localstatedir)/lib/clapf/data \
 		$(DESTDIR)$(localstatedir)/spool
 
-	$(INSTALL) -d -m 0755 -o $(CLAPF_USER) -g $(CLAPF_GROUP) $(DESTDIR)/var/run/clapf
+	$(INSTALL) -d -m 0755 -o $(CLAPF_USER) -g $(CLAPF_GROUP) $(DESTDIR)$(localstatedir)/run/clapf
 
 
 install-am:

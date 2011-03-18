@@ -48,7 +48,7 @@ install-mysql-new:
 install-sqlite3:
 	$(INSTALL) -m 0644 $(srcdir)/db-sqlite3.sql $(DESTDIR)$(datarootdir)/clapf/db.sql
 	if [ ! -f "$(DESTDIR)/$(localstatedir)/lib/clapf/data/tokens.sdb" ]; then sqlite3 @sqlite3_batch@ $(DESTDIR)/$(localstatedir)/lib/clapf/data/tokens.sdb <$(srcdir)/db-sqlite3.sql; \
-		chown -R $(CLAPF_USER):$(CLAPF_GROUP) $(DESTDIR)$(localstatedir)/lib/clapf/data/tokens.sdb; fi
+		chown -R $(CLAPF_USER):$(CLAPF_GROUP) $(DESTDIR)$(localstatedir)/lib/clapf/data; fi
 
 clean:
 	rm -f db_train.sh check_clapf.sh clapf_admin-ldap.sh clapf_admin-sql.sh clapf_admin.sh

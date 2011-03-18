@@ -1,3 +1,7 @@
+2011.03.17, SJ
+
+SQLite3 fix around white/blacklist query.
+
 2011.02.24, SJ
 
 Modified the webui to disable remote images. Add the following variables to the config.php:

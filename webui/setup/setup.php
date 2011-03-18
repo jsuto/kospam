@@ -28,12 +28,57 @@
 
 error_reporting(7);
 
-define('CONFIG_FILE', "config.php");
 define('CRLF', "\n");
+
+$pdo_drivers = array_flip(PDO::getAvailableDrivers());
+
+if(isset($pdo_drivers['sqlite'])) { define('SQLITE_DRIVER', 1); } else { define('SQLITE_DRIVER', 0); }
+if(function_exists("mysql_connect")) { define('MYSQL_DRIVER', 1); } else { define('MYSQL_DRIVER', 0); }
 
 
 define('WEBUI_DIRECTORY', preg_replace("/\/setup\/setup\.php/", "", $_SERVER['SCRIPT_NAME']) );
 define('BASEDIR', preg_replace("/\/$/", "", $_SERVER['DOCUMENT_ROOT']) );
+
+define('CONFIG_FILE', BASEDIR . WEBUI_DIRECTORY . "/config.php");
+
+
+function check_post_data() {
+   $error = array();
+
+
+   if(!is_readable($_POST['QUEUE_DIRECTORY'])) { $error['queue_directory'] = "cannot read: " . $_POST['QUEUE_DIRECTORY']; }
+
+
+   $s = $_POST['SESSION_DATABASE'];
+   if(substr($_POST['SESSION_DATABASE'], 0, 1) != "/") { $s = BASEDIR . WEBUI_DIRECTORY . "/" . $_POST['SESSION_DATABASE']; }
+
+   if(!is_writable(dirname($s))) { $error['session_database'] = "cannot write: " . dirname($s); }
+   if(!is_writable($s)) { $error['session_database'] = "cannot write: " . $s; }
+
+
+   if($_POST['HISTORY_DRIVER'] == "sqlite") {
+      //if(!is_writable(dirname($_POST['HISTORY_DATABASE']))) { $error['history_database'] = "cannot write: " . dirname($_POST['HISTORY_DATABASE']); }
+      if(!file_exists($_POST['HISTORY_DATABASE'])) { $error['history_database'] = $_POST['HISTORY_DATABASE'] . " doesn't exist"; }
+   }
+   if($_POST['HISTORY_DRIVER'] == "mysql") {
+      $link = @mysql_connect($_POST['HISTORY_HOSTNAME'], $_POST['HISTORY_USERNAME'], $_POST['HISTORY_PASSWORD']);
+      if(!$link || !mysql_select_db($_POST['HISTORY_DATABASE'], $link)) { $error['history_database'] = "cannot connect to history database"; }
+      else { mysql_close($link); }
+   }
+
+
+   if($_POST['DB_DRIVER'] == "sqlite") {
+      if(!is_writable(dirname($_POST['DB_DATABASE']))) { $error['database'] = "cannot write: " . dirname($_POST['DB_DATABASE']); }
+      if(!is_writable($_POST['DB_DATABASE'])) { $error['database'] = "cannot write: " . $_POST['DB_DATABASE']; }
+   }
+   if($_POST['DB_DRIVER'] == "mysql") {
+      $link = @mysql_connect($_POST['DB_HOSTNAME'], $_POST['DB_USERNAME'], $_POST['DB_PASSWORD']);
+      if(!$link || !mysql_select_db($_POST['DB_DATABASE'], $link)) { $error['database'] = "cannot connect to database"; }
+      else { mysql_close($link); }
+   }
+
+   return $error;
+}
 
 
 function write_line($fp, $key = '', $val = '') {
@@ -53,7 +98,7 @@ function write_line($fp, $key = '', $val = '') {
 
 function write_stuff() {
 
-   $fp = fopen("../" . CONFIG_FILE, "w+");
+   $fp = fopen(CONFIG_FILE, "w+");
    if(!$fp){ return 0; }
 
    fputs($fp, "<?php\n\n");
@@ -64,11 +109,12 @@ function write_stuff() {
    write_line($fp, "THEME", $_POST['THEME']);
    write_line($fp);
 
-   fputs($fp, "define('REMOTE_IMAGE_REPLACEMENT', WEBUI_DIRECTORY . 'view/theme/default/images/remote.gif');" . CRLF);
-   write_line($fp);
 
    write_line($fp, "WEBUI_DIRECTORY", WEBUI_DIRECTORY);
    write_line($fp, "QUEUE_DIRECTORY", $_POST['QUEUE_DIRECTORY']);
+   write_line($fp);
+
+   fputs($fp, "define('REMOTE_IMAGE_REPLACEMENT', WEBUI_DIRECTORY . 'view/theme/default/images/remote.gif');" . CRLF);
    write_line($fp);
 
    write_line($fp, "MAX_CGI_FROM_SUBJ_LEN", 45);
@@ -231,21 +277,30 @@ function write_stuff() {
 
 
 if($_SERVER['REQUEST_METHOD'] == "POST"){
-   write_stuff();
+   $error = check_post_data();
 
-   print "<p>Written configuration. Remove the write access from " . CONFIG_FILE . ", and you can remove the setup directory</p>\n";
-   print "<p>You can <a href='../index.php?route=login/login'>login</a> now.</p>\n";
+   if(count($error) > 0) {
+      require("setup.tpl");
+   } else {
+      write_stuff();
+
+      print "<p>Written configuration. Remove the write access from " . CONFIG_FILE . ", and you can remove the setup directory</p>\n";
+      print "<p>You can <a href='../index.php?route=login/login'>login</a> now.</p>\n";
+   }
+
 }
 else {
-   $stat = stat("../" . CONFIG_FILE);
+   $stat = stat(CONFIG_FILE);
 
    if($stat[7] < 30){
-      if(is_writable("../" . CONFIG_FILE)){
+      if(is_writable(CONFIG_FILE) && is_writable(BASEDIR . "/cache") && is_writable(BASEDIR . "/log")){
          require("setup.tpl");
       }
-      else {
-         print CONFIG_FILE . " is not writable.\n";
-      }
+
+      if(!is_writable(CONFIG_FILE)) { print "<p>" . CONFIG_FILE . " is not writable.</p>\n"; }
+      if(!is_writable(BASEDIR . WEBUI_DIRECTORY . "/cache")) { print "<p>\"cache\" directory is not writable.</p>\n"; }
+      if(!is_writable(BASEDIR . WEBUI_DIRECTORY . "/log")) { print "<p>\"log\" directory is not writable.</p>\n"; }
+
    }
    else {
       print "You have an existing configuration file. Exiting.\n";

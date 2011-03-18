@@ -154,6 +154,9 @@
 	tr.highlight { background:#DDDDDD; }
 
 
+	tr.error { color: red; }
+
+
 	#quarantine tr:hover {
 		background: #DDDDDD;
 	}

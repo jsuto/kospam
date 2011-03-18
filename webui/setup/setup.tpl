@@ -79,8 +79,8 @@ function ShowOption(what, value) {
       <td>Language: </td>
       <td>
          <select name="LANG">
-            <option value="en">English</option>
-            <option value="hu">Hungarian</option>
+            <option value="en"<?php if(isset($_POST['LANG']) && $_POST['LANG'] == "en") { ?> selected="selected"<?php } ?>>English</option>
+            <option value="hu"<?php if(isset($_POST['LANG']) && $_POST['LANG'] == "hu") { ?> selected="selected"<?php } ?>>Hungarian</option>
          </select>
       </td>
    </tr>
@@ -94,39 +94,40 @@ function ShowOption(what, value) {
       </td>
    </tr>
 
-   <tr>
+   <tr<?php if(isset($error['queue_directory'])) { ?> class="error"<?php } ?>
       <td>Queue directory: </td>
-      <td><input type="text" name="QUEUE_DIRECTORY" value="/var/lib/clapf/queue" size="30" /></td>
+      <td><input type="text" name="QUEUE_DIRECTORY" value="<?php if(isset($_POST['QUEUE_DIRECTORY'])) { print $_POST['QUEUE_DIRECTORY']; } else { ?>/var/lib/clapf/queue<?php } ?>" size="30" /></td>
+      <?php if(isset($error['queue_directory'])) { ?><td><?php print $error['queue_directory']; ?></td><?php } ?>
    </tr>
 
    <tr>
       <td>Queue directory splitting: </td>
       <td>
           <select name="QUEUE_DIR_SPLITTING" id="QUEUE_DIR_SPLITTING">
-             <option value="0">by username</option>
-             <option value="1">by uid</option>
+             <option value="0"<?php if(isset($_POST['QUEUE_DIR_SPLITTING']) && $_POST['QUEUE_DIR_SPLITTING'] == 0) { ?> selected="selected"<?php } ?>>by username</option>
+             <option value="1"<?php if(isset($_POST['QUEUE_DIR_SPLITTING']) && $_POST['QUEUE_DIR_SPLITTING'] == 1) { ?> selected="selected"<?php } ?>>by uid</option>
           </select>
       </td>
    </tr>
 
    <tr>
       <td>SMTP host: </td>
-      <td><input type="text" name="SMTP_HOST" value="127.0.0.1" size="30" /></td>
+      <td><input type="text" name="SMTP_HOST" value="<?php if(isset($_POST['SMTP_HOST'])) { print $_POST['SMTP_HOST']; } else { ?>127.0.0.1<?php } ?>" size="30" /></td>
    </tr>
 
    <tr>
       <td>SMTP port: </td>
-      <td><input type="text" name="SMTP_PORT" value="10026" size="30" /></td>
+      <td><input type="text" name="SMTP_PORT" value="<?php if(isset($_POST['SMTP_PORT'])) { print $_POST['SMTP_PORT']; } else { ?>10026<?php } ?>" size="30" /></td>
    </tr>
 
    <tr>
       <td>clapf port: </td>
-      <td><input type="text" name="CLAPF_PORT" value="10025" size="30" /></td>
+      <td><input type="text" name="CLAPF_PORT" value="<?php if(isset($_POST['CLAPF_PORT'])) { print $_POST['CLAPF_PORT']; } else { ?>10025<?php } ?>" size="30" /></td>
    </tr>
 
    <tr>
       <td>SMTP domain: </td>
-      <td><input type="text" name="SMTP_DOMAIN" value="yourdomain.com" size="30" /></td>
+      <td><input type="text" name="SMTP_DOMAIN" value="<?php if(isset($_POST['SMTP_DOMAIN'])) { print $_POST['SMTP_DOMAIN']; } else { ?>yourdomain.com<?php } ?>" size="30" /></td>
    </tr>
 
    <tr>
@@ -137,30 +138,35 @@ function ShowOption(what, value) {
       <td>Database driver: </td>
       <td>
          <select name="DB_DRIVER" id="DB_DRIVER" onchange="fix1(); return false;">
-            <option value="mysql">MySQL</option>
-            <option value="sqlite">SQLite3</option>
+<?php if(MYSQL_DRIVER == 1) { ?>
+            <option value="mysql"<?php if(isset($_POST['DB_DRIVER']) && $_POST['DB_DRIVER'] == "mysql") { ?> selected="selected"<?php } ?>>MySQL</option>
+<?php } ?>
+<?php if(SQLITE_DRIVER == 1) { ?>
+            <option value="sqlite"<?php if(isset($_POST['DB_DRIVER']) && $_POST['DB_DRIVER'] == "sqlite") { ?> selected="selected"<?php } ?>>SQLite3</option>
+<?php } ?>
          </select>
       </td>
    </tr>
 
    <tr id="DIV_DB_HOSTNAME" style="display:show">
       <td>Database host: </td>
-      <td><input type="text" name="DB_HOSTNAME" id="DB_HOSTNAME" value="localhost" size="30" /></td>
+      <td><input type="text" name="DB_HOSTNAME" id="DB_HOSTNAME" value="<?php if(isset($_POST['DB_HOSTNAME'])) { print $_POST['DB_HOSTNAME']; } else { ?>localhost<?php } ?>" size="30" /></td>
    </tr>
 
-   <tr id="DIV_DB_DATABASE" style="display:show">
+   <tr id="DIV_DB_DATABASE" style="display:show"<?php if(isset($error['database'])) { ?> class="error"<?php } ?>>
       <td>Database name: </td>
-      <td><input type="text" name="DB_DATABASE" id="DB_DATABASE" value="clapf" size="30" /></td>
+      <td><input type="text" name="DB_DATABASE" id="DB_DATABASE" value="<?php if(isset($_POST['DB_DATABASE'])) { print $_POST['DB_DATABASE']; } else { ?>clapf<?php } ?>" size="30" /></td>
+      <?php if(isset($error['database'])) { ?><td><?php print $error['database']; ?></td><?php } ?>
    </tr>
 
    <tr id="DIV_DB_USERNAME" style="display:show">
       <td>Database user: </td>
-      <td><input type="text" name="DB_USERNAME" id="DB_USERNAME" value="clapf" size="30" /></td>
+      <td><input type="text" name="DB_USERNAME" id="DB_USERNAME" value="<?php if(isset($_POST['DB_USERNAME'])) { print $_POST['DB_USERNAME']; } else { ?>clapf<?php } ?>" size="30" /></td>
    </tr>
 
    <tr id="DIV_DB_PASSWORD" style="display:show">
       <td>Database password: </td>
-      <td><input type="password" name="DB_PASSWORD" id="DB_PASSWORD" value="" size="30" /></td>
+      <td><input type="password" name="DB_PASSWORD" id="DB_PASSWORD" value="<?php if(isset($_POST['DB_PASSWORD'])) { print $_POST['DB_PASSWORD']; } ?>" size="30" /></td>
    </tr>
 
 
@@ -174,31 +180,36 @@ function ShowOption(what, value) {
       <td>History driver: </td>
       <td>
          <select name="HISTORY_DRIVER" id="HISTORY_DRIVER" onchange="fix_history(); return false;">
-            <option value="mysql" selected="selected">MySQL</option>
-            <option value="sqlite">SQLite3</option>
+<?php if(MYSQL_DRIVER == 1) { ?>
+            <option value="mysql"<?php if(isset($_POST['HISTORY_DRIVER']) && $_POST['HISTORY_DRIVER'] == "mysql") { ?> selected="selected"<?php } ?>>MySQL</option>
+<?php } ?>
+<?php if(SQLITE_DRIVER == 1) { ?>
+            <option value="sqlite"<?php if(isset($_POST['HISTORY_DRIVER']) && $_POST['HISTORY_DRIVER'] == "sqlite") { ?> selected="selected"<?php } ?>>SQLite3</option>
+<?php } ?>
          </select>
       </td>
    </tr>
 
    <tr id="DIV_HISTORY_HOSTNAME" style="display:show">
       <td>Database host: </td>
-      <td><input type="text" name="HISTORY_HOSTNAME" id="HISTORY_HOSTNAME" value="localhost" size="30" /></td>
+      <td><input type="text" name="HISTORY_HOSTNAME" id="HISTORY_HOSTNAME" value="<?php if(isset($_POST['HISTORY_HOSTNAME'])) { print $_POST['HISTORY_HOSTNAME']; } else { ?>localhost<?php } ?>" size="30" /></td>
    </tr>
 
    <tr id="DIV_HISTORY_USERNAME" style="display:show">
       <td>Database user: </td>
-      <td><input type="text" name="HISTORY_USERNAME" id="HISTORY_USERNAME" value="clapf" size="30" /></td>
+      <td><input type="text" name="HISTORY_USERNAME" id="HISTORY_USERNAME" value="<?php if(isset($_POST['HISTORY_USERNAME'])) { print $_POST['HISTORY_USERNAME']; } else { ?>clapf<?php } ?>" size="30" /></td>
    </tr>
 
    <tr id="DIV_HISTORY_PASSWORD" style="display:show">
       <td>Database password: </td>
-      <td><input type="password" name="HISTORY_PASSWORD" id="HISTORY_PASSWORD" value="" size="30" /></td>
+      <td><input type="password" name="HISTORY_PASSWORD" id="HISTORY_PASSWORD" value="<?php if(isset($_POST['HISTORY_PASSWORD'])) { print $_POST['HISTORY_PASSWORD']; } ?>" size="30" /></td>
    </tr>
 
 
-   <tr id="DIV_HISTORY_DATABASE" style="display:show">
+   <tr id="DIV_HISTORY_DATABASE" style="display:show"<?php if(isset($error['history_database'])) { ?> class="error"<?php } ?>>
       <td>History database name: </td>
-      <td><input type="text" name="HISTORY_DATABASE" id="HISTORY_DATABASE" value="clapf" size="30" /></td>
+      <td><input type="text" name="HISTORY_DATABASE" id="HISTORY_DATABASE" value="<?php if(isset($_POST['HISTORY_DATABASE'])) { print $_POST['HISTORY_DATABASE']; } else { ?>clapf<?php } ?>" size="30" /></td>
+      <?php if(isset($error['history_database'])) { ?><td><?php print $error['history_database']; ?></td><?php } ?>
    </tr>
 
 
@@ -208,13 +219,14 @@ function ShowOption(what, value) {
 
    <tr id="DIV_HELPURL" style="display:show">
       <td>Help URL: </td>
-      <td><input type="text" name="HELPURL" id="HELPURL" value="" size="30" /></td>
+      <td><input type="text" name="HELPURL" id="HELPURL" value="<?php if(isset($_POST['HELPURL'])) { print $_POST['HELPURL']; } ?>" size="30" /></td>
    </tr>
 
 
-   <tr id="DIV_SESSION_DATABASE" style="display:show">
+   <tr id="DIV_SESSION_DATABASE" style="display:show"<?php if(isset($error['session_database'])) { ?> class="error"<?php } ?>>
       <td>Session database name: </td>
-      <td><input type="text" name="SESSION_DATABASE" id="SESSION_DATABASE" value="sessions/sessions.sdb" size="30" /></td>
+      <td><input type="text" name="SESSION_DATABASE" id="SESSION_DATABASE" value="<?php if(isset($_POST['SESSION_DATABASE'])) { print $_POST['SESSION_DATABASE']; } else { ?>sessions/sessions.sdb<?php } ?>" size="30" /></td>
+      <?php if(isset($error['session_database'])) { ?><td><?php print $error['session_database']; ?></td><?php } ?>
    </tr>
 
 
@@ -228,15 +240,15 @@ function ShowOption(what, value) {
       <td>Memcached support: </td>
       <td>
          <select name="MEMCACHED_ENABLED" id="MEMCACHED_ENABLED" onchange="fix1(); return false;">
-            <option value="0">No</option>
-            <option value="1">Yes</option>
+            <option value="0"<?php if(isset($_POST['MEMCACHED_ENABLED']) && $_POST['MEMCACHED_ENABLED'] == 0) { ?> selected="selected"<?php } ?>>No</option>
+            <option value="1"<?php if(isset($_POST['MEMCACHED_ENABLED']) && $_POST['MEMCACHED_ENABLED'] == 1) { ?> selected="selected"<?php } ?>>Yes</option>
          </select>
       </td>
    </tr>
 
    <tr id="DIV_MEMCACHED_SERVERS" style="display:none">
       <td>Comma separated list of memcached servers: </td>
-      <td><input type="text" name="MEMCACHED_SERVERS" id="MEMCACHED_SERVERS" value="127.0.0.1:11211" size="30" /></td>
+      <td><input type="text" name="MEMCACHED_SERVERS" id="MEMCACHED_SERVERS" value="<?php if(isset($_POST['MEMCACHED_SERVERS'])) { print $_POST['MEMCACHED_SERVERS']; } else { ?>127.0.0.1:11211<?php } ?>" size="30" /></td>
    </tr>
 
    <tr>
@@ -250,4 +262,8 @@ function ShowOption(what, value) {
 </table>
 
 </form>
+
+<?php if($_SERVER['REQUEST_METHOD'] == "POST"){ ?>
+<script>fix1(); fix_history();</script>
+<?php } ?>
 

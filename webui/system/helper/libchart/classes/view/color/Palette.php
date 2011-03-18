@@ -88,8 +88,8 @@
 
 			// Colors for the pie
 			$this->pieColorSet = new ColorSet(array(
+				new Color(26, 192, 144),
                                 new Color(208, 48, 128),
-                                new Color(26, 192, 144),
                                 new Color(0,0,0),
 
                                 new Color(238, 173, 14),

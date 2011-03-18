@@ -71,6 +71,7 @@ installdirs: mkinstalldirs
 		$(DESTDIR)$(localstatedir)/spool
 
 	$(INSTALL) -d -m 0755 -o $(CLAPF_USER) -g $(CLAPF_GROUP) $(DESTDIR)$(localstatedir)/run/clapf
+	$(INSTALL) -d -m 0755 -o $(CLAPF_USER) -g $(CLAPF_GROUP) $(DESTDIR)$(localstatedir)/lib/clapf/stat
 
 
 install-am:

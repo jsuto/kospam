@@ -33,11 +33,17 @@ int processMessage(struct session_data *sdata, struct _state *sstate, struct __d
    if(sdata->policy_group > 0) getPolicySettings(sdata, data, cfg, my_cfg);
 #endif
 
+   memset(sdata->spaminessbuf, 0, MAXBUFSIZE);
+
+   /* create a default spaminess buffer containing the clapf id */
+   snprintf(sdata->spaminessbuf, MAXBUFSIZE-1, "%s%s\r\n", cfg->clapf_header_field, sdata->ttmpfile);
 
    if(sdata->rav == AVIR_VIRUS){
-      if(my_cfg->deliver_infected_email == 1) return 1;
 
-      snprintf(sdata->acceptbuf, SMALLBUFSIZE-1, "%s <%s>\r\n", SMTP_RESP_550_ERR_PREF, rcpttoemail);
+      snprintf(tmpbuf, SMALLBUFSIZE-1, "%sVIRUS\r\n", cfg->clapf_header_field);
+      strncat(sdata->spaminessbuf, tmpbuf, MAXBUFSIZE-1);
+
+      if(my_cfg->deliver_infected_email == 1) return 1;
 
       if(my_cfg->silently_discard_infected_email == 1)
          snprintf(sdata->acceptbuf, SMALLBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata->ttmpfile, rcpttoemail);
@@ -51,11 +57,7 @@ int processMessage(struct session_data *sdata, struct _state *sstate, struct __d
    memset(reason, 0, SMALLBUFSIZE);
    memset(trainbuf, 0, SMALLBUFSIZE);
    memset(whitelistbuf, 0, SMALLBUFSIZE);
-   memset(sdata->spaminessbuf, 0, MAXBUFSIZE);
 
-
-   /* create a default spaminess buffer containing the clapf id */
-   snprintf(sdata->spaminessbuf, MAXBUFSIZE-1, "%s%s\r\n", cfg->clapf_header_field, sdata->ttmpfile);
 
 
 #ifdef HAVE_TRE

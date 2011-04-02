@@ -10,7 +10,7 @@ Let's say, your postfix box running clapf relays emails coming from your LAN
 All you have to do is to specify your LAN, eg. "mynetwork=11.22.33."
 
 If the client IP-address matches "mynetwork", clapf will add
-"<clapf-id>: mynetwork" to the message header.
+"<clapf-header-field>: mynetwork" to the message header.
 
 Note 1: clapf checks for viruses even in emails coming from "mynetwork".
 Note 2: the following addresses are explicitly on "mynetwork": 127.,192.168.,172.16.,10.

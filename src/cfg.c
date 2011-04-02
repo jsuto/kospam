@@ -109,6 +109,7 @@ struct _parse_rule config_parse_rules[] =
    { "memcached_ttl", "integer", (void*) int_parser, offsetof(struct __config, memcached_ttl), "86400", sizeof(int)},
    { "message_from_a_zombie", "integer", (void*) int_parser, offsetof(struct __config, message_from_a_zombie), "0", sizeof(int)},
    { "mydbfile", "string", (void*) string_parser, offsetof(struct __config, mydbfile), USER_DATA_DIR "/" MYDB_FILE, MAXVAL-1},
+   { "mynetwork", "string", (void*) string_parser, offsetof(struct __config, mynetwork), "", MAXVAL-1},
    { "mysqlhost", "string", (void*) string_parser, offsetof(struct __config, mysqlhost), "", MAXVAL-1},
    { "mysqlport", "integer", (void*) int_parser, offsetof(struct __config, mysqlport), "", sizeof(int)},
    { "mysqlsocket", "string", (void*) string_parser, offsetof(struct __config, mysqlsocket), "/tmp/mysql.sock", MAXVAL-1},

@@ -1,3 +1,65 @@
+2011.04.02, SJ
+
+Added the mynetwork feature to prevent clapf running spam check on
+emails coming from certain IP-addresses.
+
+The mynetwork variable is a similar comma separated list like skipped_received_ips.
+
+Let's say, your postfix box running clapf relays emails coming from your LAN
+(11.22.33.0/24), and you don't want clapf to spamcheck these emails.
+All you have to do is to specify your LAN, eg. "mynetwork=11.22.33."
+
+If the client IP-address matches "mynetwork", clapf will add
+"<clapf-id>: mynetwork" to the message header.
+
+Note 1: clapf checks for viruses even in emails coming from "mynetwork".
+Note 2: the following addresses are explicitly on "mynetwork": 127.,192.168.,172.16.,10.
+
+To use this feature, you have to activate XFORWARD in postfix, ie.
+/etc/postfix/main.cf:
+
+lmtp_send_xforward_command = yes
+smtp_send_xforward_command = yes
+smtpd_authorized_xforward_hosts = 127.0.0.0/8
+
+2011.04.01, SJ
+
+Added a health monitor feature to the webui. It displays the smtp status of
+clapf and postfix. It also reveals the output of qshape. Qshape is a postfix
+utility, see http://www.postfix.org/QSHAPE_README.html for details.
+
+To enable the qshape stats in the health monitor, you have to create the
+following cronjob for _root_ user:
+
+*/5 * * * * PATH=$PATH:/usr/local/sbin /usr/local/bin/qshape > /var/lib/clapf/stat/active+incoming
+*/5 * * * * PATH=$PATH:/usr/local/sbin /usr/local/bin/qshape -s > /var/lib/clapf/stat/active+incoming-sender
+*/5 * * * * PATH=$PATH:/usr/local/sbin /usr/local/bin/qshape deferred > /var/lib/clapf/stat/deferred
+*/5 * * * * PATH=$PATH:/usr/local/sbin /usr/local/bin/qshape -s deferred > /var/lib/clapf/stat/deferred-sender
+
+It's important that the postqueue utility must be in the default path or you have to adjust the
+PATH environment variable as above.
+
+
+
+The setup utility is able to read data from previous config.php
+in case of an upgrade.
+
+Lowercase all email addresses and domains in the maillog collector script.
+
+History fix. The webui form calls the loadHistory() function right after clicking
+on the "Set" button.
+
+2011.03.31, SJ
+
+util/summary.php fix.
+
+Added a new utility to send a daily quarantine report (util/quarantine-daily-report.php)
+You can run it as php /usr/local/libexec/clapf/quarantine-daily-report.php /path/to/webui/installation
+
+2011.03.30, SJ
+
+Log the IP-address to the webui log.
+
 2011.03.18, SJ
 
 Webui setup enhancements.

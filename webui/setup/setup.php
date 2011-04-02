@@ -47,7 +47,7 @@ function check_post_data() {
 
 
    if(!is_readable($_POST['QUEUE_DIRECTORY'])) { $error['queue_directory'] = "cannot read: " . $_POST['QUEUE_DIRECTORY']; }
-
+   if(!is_readable($_POST['STAT_DIRECTORY'])) { $error['stat_directory'] = "cannot read: " . $_POST['STAT_DIRECTORY']; }
 
    $s = $_POST['SESSION_DATABASE'];
    if(substr($_POST['SESSION_DATABASE'], 0, 1) != "/") { $s = BASEDIR . WEBUI_DIRECTORY . "/" . $_POST['SESSION_DATABASE']; }
@@ -57,7 +57,6 @@ function check_post_data() {
 
 
    if($_POST['HISTORY_DRIVER'] == "sqlite") {
-      //if(!is_writable(dirname($_POST['HISTORY_DATABASE']))) { $error['history_database'] = "cannot write: " . dirname($_POST['HISTORY_DATABASE']); }
       if(!file_exists($_POST['HISTORY_DATABASE'])) { $error['history_database'] = $_POST['HISTORY_DATABASE'] . " doesn't exist"; }
    }
    if($_POST['HISTORY_DRIVER'] == "mysql") {
@@ -112,6 +111,7 @@ function write_stuff() {
 
    write_line($fp, "WEBUI_DIRECTORY", WEBUI_DIRECTORY);
    write_line($fp, "QUEUE_DIRECTORY", $_POST['QUEUE_DIRECTORY']);
+   write_line($fp, "STAT_DIRECTORY", $_POST['STAT_DIRECTORY']);
    write_line($fp);
 
    fputs($fp, "define('REMOTE_IMAGE_REPLACEMENT', WEBUI_DIRECTORY . 'view/theme/default/images/remote.gif');" . CRLF);
@@ -130,6 +130,7 @@ function write_stuff() {
    write_line($fp, "SMTP_FROMADDR", "no-reply@" . $_POST['SMTP_DOMAIN']);
    write_line($fp, "HAM_TRAIN_ADDRESS", "ham@" . $_POST['SMTP_DOMAIN']);
    write_line($fp, "SPAM_TRAIN_ADDRESS", "spam@" . $_POST['SMTP_DOMAIN']);
+   fputs($fp, 'define(\'EOL\', "\n");' . CRLF);
    write_line($fp);
     
    write_line($fp, "CLAPF_HEADER_FIELD", "X-Clapf-spamicity: ");
@@ -151,6 +152,14 @@ function write_stuff() {
    write_line($fp, "DIR_LOG", BASEDIR . "/log/");
    write_line($fp);
 
+   fputs($fp, "define('QSHAPE_ACTIVE_INCOMING', STAT_DIRECTORY . '/active+incoming');" . CRLF);
+   fputs($fp, "define('QSHAPE_ACTIVE_INCOMING_SENDER', STAT_DIRECTORY . '/active+incoming-sender');" . CRLF);
+   fputs($fp, "define('QSHAPE_DEFERRED', STAT_DIRECTORY . '/deferred');" . CRLF);
+   fputs($fp, "define('QSHAPE_DEFERRED_SENDER', STAT_DIRECTORY . '/deferred-sender');" . CRLF);
+
+
+   fputs($fp, "define('LOCK_FILE', DIR_LOG . 'lock');" . CRLF);
+   write_line($fp);
 
    write_line($fp, "DB_DRIVER", $_POST['DB_DRIVER']);
    write_line($fp, "DB_PREFIX", "");
@@ -226,6 +235,12 @@ function write_stuff() {
    write_line($fp, "FROM_LENGTH_TO_SHOW", 28);
    write_line($fp);
 
+
+   fputs($fp, "define('HEALTH_WORKER_URL', SITE_URL . 'index.php?route=health/worker');" . CRLF);
+   fputs($fp, "define('HEALTH_REFRESH', 60);" . CRLF);
+   write_line($fp);
+
+
    write_line($fp, "SESSION_DATABASE", $_POST['SESSION_DATABASE']);
    write_line($fp, "QUARANTINE_DATA", 'quarantine.sdb');
    write_line($fp);
@@ -292,18 +307,22 @@ if($_SERVER['REQUEST_METHOD'] == "POST"){
 else {
    $stat = stat(CONFIG_FILE);
 
-   if($stat[7] < 30){
-      if(is_writable(CONFIG_FILE) && is_writable(BASEDIR . "/cache") && is_writable(BASEDIR . "/log")){
-         require("setup.tpl");
-      }
-
-      if(!is_writable(CONFIG_FILE)) { print "<p>" . CONFIG_FILE . " is not writable.</p>\n"; }
-      if(!is_writable(BASEDIR . WEBUI_DIRECTORY . "/cache")) { print "<p>\"cache\" directory is not writable.</p>\n"; }
-      if(!is_writable(BASEDIR . WEBUI_DIRECTORY . "/log")) { print "<p>\"log\" directory is not writable.</p>\n"; }
-
+   if($stat[7] > 30){
+      include_once(CONFIG_FILE);
+      $a = get_defined_constants();
    }
-   else {
-      print "You have an existing configuration file. Exiting.\n";
+
+   if(is_writable(CONFIG_FILE) && is_writable(BASEDIR . "/cache") && is_writable(BASEDIR . "/log")){
+      require("setup.tpl");
+   }
+
+   if(!is_writable(CONFIG_FILE)) { print "<p>" . CONFIG_FILE . " is not writable.</p>\n"; }
+   if(!is_writable(BASEDIR . WEBUI_DIRECTORY . "/cache")) { print "<p>\"cache\" directory is not writable.</p>\n"; }
+   if(!is_writable(BASEDIR . WEBUI_DIRECTORY . "/log")) { print "<p>\"log\" directory is not writable.</p>\n"; }
+
+
+   if($stat[7] > 30) {
+      print "You have an existing configuration file. Click on submit to upgrade.\n";
    }
 }
 

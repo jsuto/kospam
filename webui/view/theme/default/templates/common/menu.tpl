@@ -8,7 +8,7 @@
           <li><a href="index.php?route=user/blacklist"<?php if(strstr($_SERVER['QUERY_STRING'], "user/blacklist")){ print ' id="active"'; } ?>><?php print $text_blacklist; ?></a></li>
    <?php } ?>
    <?php if(ENABLE_HISTORY == 1) { ?>
-         <li><a class="hide" href="#"<?php if(strstr($_SERVER['QUERY_STRING'], "stat/") || strstr($_SERVER['QUERY_STRING'], "history/")) { print ' id="active"'; } ?>><?php print $text_monitor; ?></a>
+         <li><a class="hide" href="#"<?php if(strstr($_SERVER['QUERY_STRING'], "stat/") || strstr($_SERVER['QUERY_STRING'], "history/") || strstr($_SERVER['QUERY_STRING'], "health/") ) { print ' id="active"'; } ?>><?php print $text_monitor; ?></a>
             <ul class="sub_menu">
                <li><a href="index.php?route=stat/stat"><?php print $text_statistics; ?></a></li>
             <?php if($admin_user == 1) { ?>
@@ -16,6 +16,9 @@
             <?php } ?>
             <?php if($admin_user == 1) { ?>
                <li><a href="index.php?route=history/history"><?php print $text_history; ?></a></li>
+            <?php } ?>
+            <?php if($admin_user == 1) { ?>
+               <li><a href="index.php?route=health/health"><?php print $text_health; ?></a></li>
             <?php } ?>
             </ul>
          </li>

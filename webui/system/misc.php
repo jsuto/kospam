@@ -8,7 +8,7 @@ function LOGGER($event = '', $username = '') {
       else { $username = 'unknown'; }
    }
 
-   $log_entry = sprintf("[%s]: %s, '%s'\n", date(LOG_DATE_FORMAT), $username, $event);
+   $log_entry = sprintf("[%s]: %s, %s, '%s'\n", date(LOG_DATE_FORMAT), $username, $_SERVER['REMOTE_ADDR'], $event);
 
    if($fp = @fopen(LOG_FILE, 'a')) {
       fwrite($fp, $log_entry);
@@ -68,21 +68,28 @@ function getPageLength() {
 
 
 function checkemail($email, $domains) {
-   if($email == ""){
+   if(validemail($email) == 0){
       return 0;
    }
 
    if($email == 'admin@local') { return 1; }
 
-   if (preg_match('/^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,4})$/', $email)) {
 
-      list($u, $d) = explode('@', $email);
+   list($u, $d) = explode('@', $email);
 
-      foreach ($domains as $domain) {
-         if($domain == $d){ return 1; }
-      }
+   foreach ($domains as $domain) {
+      if($domain == $d){ return 1; }
+   }
 
-      return -1;
+   return -1;
+}
+
+
+function validemail($email = '') {
+   if($email == '') { return 0; }
+
+   if(preg_match('/^[_a-zA-Z0-9-]+(\.[_a-zA-Z0-9-]+)*@[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*(\.[a-zA-Z]{2,4})$/', $email)) {
+      return 1;
    }
 
    return 0;
@@ -190,6 +197,45 @@ function read_konfig($configfile = '') {
 
 
    return $cfg;
+}
+
+
+function my_qp_encode($s){
+      $res = "";
+
+      $a = explode("\n", $s);
+      while(list($k, $v) = each($a)){
+         $part = "";
+
+         for($i=0; $i<strlen($v); $i++){
+            //if($i > 0 && ($i % 76) == 0) $part .= "=\r\n";
+
+            $c = substr($v, $i, 1);
+            if(ord($c) >= 128){
+               $c = "=" . strtoupper(dechex(ord($c)));
+            }
+
+            if($c == ' ') { $c = '_'; }
+
+            $part .= $c;
+         }
+
+         $res .= $part . "\n";
+      }
+
+      return $res;
+}
+
+
+function format_qshape($desc = '', $filename = '') {
+
+   if($filename == '' || !file_exists($filename) ) { return array(); }
+
+   $stat = stat($filename);
+
+   $a = explode("\n", file_get_contents($filename));
+
+   return array('desc' => $desc, 'date' => date(LOG_DATE_FORMAT, $stat['ctime']), 'lines' => $a);
 }
 
 

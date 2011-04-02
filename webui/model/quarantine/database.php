@@ -80,6 +80,7 @@ class ModelQuarantineDatabase extends Model {
 
       $oldest_ts = $this->getOldestMessageTimestamp($dir, $files, '/^(h\.[0-9a-f]+)$/');
       $ts = $this->getOldestMessageTimestamp($dir, $files, '/^(s\.[0-9a-f]+)$/');
+
       if($ts > 0 && $ts < $oldest_ts) $oldest_ts = $ts;
 
       if($oldest_ts > 0) {
@@ -135,6 +136,7 @@ class ModelQuarantineDatabase extends Model {
    public function getMessages($dir = '', $username = '', $page = 0, $page_len = PAGE_LEN, $from = '', $subj = '', $hamspam = '', $sort = 'ts', $order = 0) {
       $n = $total_size = $i = 0;
       $messages = array();
+      $limit = "";
 
       $where_cond = "WHERE hidden=0";
 
@@ -161,7 +163,9 @@ class ModelQuarantineDatabase extends Model {
       if(isset($query->row['total_size'])) { $total_size = $query->row['total_size']; }
       if(isset($query->row['total_num'])) { $n = $query->row['total_num']; }
 
-      $query = $Q->query("select * from quarantine $where_cond ORDER BY `$sort` $order LIMIT " . $page_len*$page . "," . $page_len);
+      if($page_len > 0) { $limit = " LIMIT " . $page_len*$page . "," . $page_len; }
+
+      $query = $Q->query("select * from quarantine $where_cond ORDER BY `$sort` $order $limit");
 
       $i = $page_len*$page;
 

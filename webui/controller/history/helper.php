@@ -7,8 +7,8 @@ class ControllerHistoryHelper extends Controller {
    public function index(){
 
 
-      require_once(DIR_DATABASE . "/sqlite3.php");
-      $db = new DB("sqlite3", DB_HOSTNAME, DB_USERNAME, DB_PASSWORD, HISTORY_DATA, DB_PREFIX);
+      require_once(DIR_DATABASE . "/sqlite.php");
+      $db = new DB("sqlite", DB_HOSTNAME, DB_USERNAME, DB_PASSWORD, HISTORY_DATABASE, DB_PREFIX);
 
       $query = $db->query("select ts from cleanup order by ts desc limit 1");
 

@@ -1,5 +1,7 @@
 <?php
 
+$_['text_active_incoming_queue'] = "active + incoming queue";
+$_['text_active_incoming_queue_sender'] = "active + incoming queue vs. sender";
 $_['text_add'] = "Add";
 $_['text_add_new_email_address'] = "New email address";
 $_['text_add_new_domain'] = "New domain";
@@ -20,8 +22,11 @@ $_['text_clienthost'] = "Client host";
 $_['text_content_filter'] = "Content filter";
 $_['text_counters'] = "Counters";
 
+$_['text_daily_quarantine_report'] = "Daily quarantine report";
 $_['text_daily_report'] = "Daily report";
 $_['text_date'] = "Date";
+$_['text_deferred_queue'] = "deferred queue";
+$_['text_deferred_queue_sender'] = "deferred queue vs. sender";
 $_['text_delay'] = "Delay";
 $_['text_deliver'] = "Deliver";
 $_['text_delivered'] = "Delivered";
@@ -40,6 +45,7 @@ $_['text_email_aliases'] = "Email aliases";
 $_['text_email_in_unknown_domain'] = "Email address is in an unknown domain";
 $_['text_empty_quarantine_directory_structure'] = "Empty quarantine directory structure";
 $_['text_error'] = "Error";
+$_['text_exact_domain_name_or_email_address'] = "exact domain name or email address";
 $_['text_exclude'] = "Exclude";
 $_['text_existing_domains'] = "Existing domains";
 $_['text_existing_email'] = "Existing email";
@@ -61,6 +67,8 @@ $_['text_global_training_happened'] = "Global training.";
 $_['text_group_id'] = "Group id";
 
 $_['text_ham_and_spam_messages'] = "Ham & spam messages";
+$_['text_health'] = "Health";
+$_['text_health_monitor'] = "Health monitor";
 $_['text_help'] = "Help";
 $_['text_history'] = "History";
 $_['text_home'] = "Home";
@@ -81,6 +89,7 @@ $_['text_invalid_username'] = "Invalid username";
 
 $_['text_language'] = "Language";
 $_['text_last'] = "Last";
+$_['text_last_update'] = "Last update";
 $_['text_ldap_basedn'] = "LDAP base DN";
 $_['text_ldap_binddn'] = "LDAP bind DN";
 $_['text_ldap_bindpw'] = "LDAP bind password";
@@ -133,6 +142,8 @@ $_['text_purged'] = "Purged";
 $_['text_quarantine'] = "Quarantine";
 
 $_['text_realname'] = "Realname";
+$_['text_recipient'] = "Recipient";
+$_['text_refresh_period'] = "Refresh period";
 $_['text_relay_details'] = "Relay details";
 $_['text_relay_status'] = "Relay status";
 $_['text_remove'] = "Remove";
@@ -148,6 +159,7 @@ $_['text_search'] = "Search";
 $_['text_search_terms'] = "Search terms";
 $_['text_select_action'] = "Select action";
 $_['text_select_all'] = "Select all";
+$_['text_sender'] = "Sender";
 $_['text_set'] = "Set";
 $_['text_size'] = "Size";
 $_['text_statistics'] = "Statistics";

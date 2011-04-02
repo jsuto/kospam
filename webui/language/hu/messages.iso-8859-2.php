@@ -1,5 +1,7 @@
 <?php
 
+$_['text_active_incoming_queue'] = "active + incoming queue";
+$_['text_active_incoming_queue_sender'] = "active + incoming queue vs. sender";
 $_['text_add'] = "Felvesz";
 $_['text_add_new_email_address'] = "Új email cím";
 $_['text_add_new_domain'] = "Új domain";
@@ -20,8 +22,11 @@ $_['text_clienthost'] = "Kliens gép";
 $_['text_content_filter'] = "Tartalomszûrõ";
 $_['text_counters'] = "Számlálók";
 
+$_['text_daily_quarantine_report'] = "Napi karantén riport";
 $_['text_daily_report'] = "Napi jelentés";
 $_['text_date'] = "Dátum";
+$_['text_deferred_queue'] = "deferred queue";
+$_['text_deferred_queue_sender'] = "deferred queue vs. sender";
 $_['text_delay'] = "Késleltetés";
 $_['text_deliver'] = "Kézbesítés";
 $_['text_delivered'] = "Kézbesített";
@@ -40,6 +45,7 @@ $_['text_email_aliases'] = "Email álcímek";
 $_['text_email_in_unknown_domain'] = "Az email cím ismeretlen domainben van";
 $_['text_empty_quarantine_directory_structure'] = "Üres karantén könyvtár";
 $_['text_error'] = "Hiba";
+$_['text_exact_domain_name_or_email_address'] = "pontos domainnév vagy email cím";
 $_['text_exclude'] = "Kihagy";
 $_['text_existing_domains'] = "Létezõ domainek";
 $_['text_existing_email'] = "Létezõ email";
@@ -58,6 +64,8 @@ $_['text_first'] = "Elsõ";
 $_['text_from'] = "Feladó";
 
 $_['text_ham_and_spam_messages'] = "Ham & spam üzenetek";
+$_['text_health'] = "Rendszerállapot";
+$_['text_health_monitor'] = "Rendszerállapot";
 $_['text_help'] = "Segítség";
 $_['text_history'] = "Történet";
 $_['text_home'] = "Kezdõlap";
@@ -81,6 +89,7 @@ $_['text_invalid_username'] = "Érvénytelen felhasználónév";
 
 $_['text_language'] = "Nyelv";
 $_['text_last'] = "Utolsó";
+$_['text_last_update'] = "Utolsó frissítés";
 $_['text_ldap_basedn'] = "LDAP alapértelmezett DN";
 $_['text_ldap_binddn'] = "LDAP csatlakozási DN";
 $_['text_ldap_bindpw'] = "LDAP csatlakozási jelszó";
@@ -133,6 +142,8 @@ $_['text_purged'] = "Eltávolítva";
 $_['text_quarantine'] = "Karantén";
 
 $_['text_realname'] = "Név";
+$_['text_recipient'] = "Címzett";
+$_['text_refresh_period'] = "Frissítési periódus";
 $_['text_relay_details'] = "Relay részletek";
 $_['text_relay_status'] = "Relay státusz";
 $_['text_remove'] = "Törlés";
@@ -148,6 +159,7 @@ $_['text_search'] = "Keresés";
 $_['text_search_terms'] = "Keresési feltételek";
 $_['text_select_action'] = "Mûvelet választás";
 $_['text_select_all'] = "Mindegyik kijelölése";
+$_['text_sender'] = "Feladó";
 $_['text_set'] = "Beállít";
 $_['text_size'] = "Méret";
 $_['text_statistics'] = "Statisztika";

@@ -19,7 +19,8 @@ PID_FILE=`${PREFIX}/sbin/clapfconf |grep ^historypid |cut -f2 -d=`
 PID_NUMBER=`test -f ${PID_FILE} && cat ${PID_FILE}`
 PID_DIR=`dirname ${PID_FILE}`
 CONFIG="${PREFIX}/etc/clapf.conf"
-CLAPF_UID=`${PREFIX}/sbin/clapfconf |grep ^username |cut -f2 -d=`
+CLAPF_USER=`${PREFIX}/sbin/clapfconf |grep ^username |cut -f2 -d=`
+CLAPF_UID=`id -un ${CLAPF_USER}`
 CLAPF_GID=`id -gn ${CLAPF_UID}`
 
 . /lib/lsb/init-functions

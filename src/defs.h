@@ -146,7 +146,7 @@ struct _state {
 
 struct session_data {
    char ttmpfile[SMALLBUFSIZE], deliveryinfo[SMALLBUFSIZE], clapf_id[SMALLBUFSIZE], xforward[SMALLBUFSIZE], tre, statistically_whitelisted;
-   char mailfrom[SMALLBUFSIZE], rcptto[MAX_RCPT_TO][SMALLBUFSIZE], rcpt_minefield[MAX_RCPT_TO], client_addr[IPLEN], name[SMALLBUFSIZE], domain[SMALLBUFSIZE];
+   char mailfrom[SMALLBUFSIZE], rcptto[MAX_RCPT_TO][SMALLBUFSIZE], rcpt_minefield[MAX_RCPT_TO], client_addr[SMALLBUFSIZE], name[SMALLBUFSIZE], domain[SMALLBUFSIZE];
    char spaminessbuf[MAXBUFSIZE], acceptbuf[SMALLBUFSIZE];
    char whitelist[MAXBUFSIZE], blacklist[MAXBUFSIZE];
    unsigned long uid, gid;

@@ -15,7 +15,7 @@
 #ifdef HAVE_MYSQL
 
 int store_minefield_ip(struct session_data *sdata, struct __config *cfg){
-   char stmt[SMALLBUFSIZE], _ip[2*IPLEN+1];
+   char stmt[SMALLBUFSIZE], _ip[2*SMALLBUFSIZE+1];
    time_t cclock;
    unsigned long now;
 
@@ -36,7 +36,7 @@ int store_minefield_ip(struct session_data *sdata, struct __config *cfg){
 
 
 void is_sender_on_minefield(struct session_data *sdata, char *ip, struct __config *cfg){
-   char stmt[SMALLBUFSIZE], _ip[2*IPLEN+1];
+   char stmt[SMALLBUFSIZE], _ip[2*SMALLBUFSIZE+1];
    MYSQL_RES *res;
    MYSQL_ROW row;
 

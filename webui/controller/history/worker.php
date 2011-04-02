@@ -58,9 +58,14 @@ class ControllerHistoryWorker extends Controller {
 
       $cookie = @$this->request->cookie['rcpt_domain'];
 
-      if($cookie && preg_match('/^[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,5})$/', $cookie)) {
+      if($cookie && (preg_match('/^[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,5})$/', $cookie) || validemail($cookie) == 1) ) {
          $this->data['rcpt_domain'] = $cookie;
-         $CLAPF_FILTER ? $CLAPF_FILTER .= " and clapf.queue_id2=smtp.queue_id and (smtp.to_domain='" . $db->escape($cookie) . "' or smtp.orig_to_domain='" . $db->escape($cookie) . "')" : $CLAPF_FILTER .= " clapf.queue_id2=smtp.queue_id and (smtp.to_domain='" . $db->escape($cookie) . "' or smtp.orig_to_domain='" . $db->escape($cookie) . "')";
+
+         $to = "to_domain"; $orig_to = "orig_to_domain";
+
+         if(strchr($this->data['rcpt_domain'], '@')) { $to = "to"; $orig_to = "orig_to"; }
+
+         $CLAPF_FILTER ? $CLAPF_FILTER .= " and clapf.queue_id2=smtp.queue_id and (smtp.`$to`='" . $db->escape($cookie) . "' or smtp.$orig_to='" . $db->escape($cookie) . "')" : $CLAPF_FILTER .= " clapf.queue_id2=smtp.queue_id and (smtp.`$to`='" . $db->escape($cookie) . "' or smtp.$orig_to='" . $db->escape($cookie) . "')";
 
          $SMTP_TABLE = ", smtp";
       }
@@ -70,9 +75,14 @@ class ControllerHistoryWorker extends Controller {
 
       $cookie = @$this->request->cookie['sender_domain'];
 
-      if($cookie && preg_match('/^[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,5})$/', $cookie)) {
+      if($cookie && (preg_match('/^[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,5})$/', $cookie) || validemail($cookie) == 1) ) {
          $this->data['sender_domain'] = $cookie;
-         $CLAPF_FILTER ? $CLAPF_FILTER .= " and clapf.queue_id2=qmgr.queue_id and qmgr.from_domain='" . $db->escape($cookie) . "'" : $CLAPF_FILTER .= "clapf.queue_id2=qmgr.queue_id and qmgr.from_domain='" . $db->escape($cookie) . "'";
+
+         $from = "from_domain";
+
+         if(strchr($this->data['sender_domain'], '@')) { $from = "from"; }
+
+         $CLAPF_FILTER ? $CLAPF_FILTER .= " and clapf.queue_id2=qmgr.queue_id and qmgr.`$from`='" . $db->escape($cookie) . "'" : $CLAPF_FILTER .= "clapf.queue_id2=qmgr.queue_id and qmgr.`$from`='" . $db->escape($cookie) . "'";
 
          $QMGR_TABLE = ", qmgr ";
       }
@@ -102,6 +112,7 @@ class ControllerHistoryWorker extends Controller {
          $i = 0;
 
          $query = $db->query("select count(*) as total from clapf $QMGR_TABLE $SMTP_TABLE $CLAPF_FILTER");
+
          $this->data['total'] = $query->row['total'];
 
          $query = $db->query("select clapf.queue_id, clapf.result, clapf.spaminess, clapf.relay, clapf.delay, clapf.queue_id2, clapf.virus from clapf $QMGR_TABLE $SMTP_TABLE $CLAPF_FILTER order by clapf.ts desc limit " . (int)$this->data['page'] * (int)$this->data['page_len'] . ", " . $this->data['page_len']);
@@ -138,6 +149,7 @@ class ControllerHistoryWorker extends Controller {
             }
 
             foreach ($__smtp->rows as $smtp) {
+
                $x = explode(" ", $smtp['result']);
                $status = array_shift($x);
 
@@ -155,7 +167,7 @@ class ControllerHistoryWorker extends Controller {
 
                if(isset($smtp['orig_to']) && strlen($smtp['orig_to']) > 3) { $smtp['to'] = $smtp['orig_to']; }
 
-               if($this->data['rcpt_domain'] && !preg_match("/@" . $this->data['rcpt_domain'] . "$/", $smtp['to']) ) { continue; }
+               if($this->data['rcpt_domain'] && !preg_match("/@" . $this->data['rcpt_domain'] . "$/", $smtp['to']) && $this->data['rcpt_domain'] != $smtp['to']) { continue; }
 
                $this->data['entries'][] = array(
                                                'timedate'       => date("Y.m.d. H:i:s", $__smtp2->row['ts']),

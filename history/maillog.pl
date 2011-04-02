@@ -129,7 +129,7 @@ while (defined($line = $file->read)) {
 
          $size =~ s/\,//;
 
-         $sth_qmgr->execute($ts, $queue_id, $from, $from_domain, $size) || print $line . "\n";
+         $sth_qmgr->execute($ts, $queue_id, lc $from, lc $from_domain, $size) || print $line . "\n";
       }
 
 
@@ -161,7 +161,7 @@ while (defined($line = $file->read)) {
             $clapf_id = $1;
          }
 
-         $sth_smtp->execute($ts, $queue_id, $to, $to_domain, $orig_to, $orig_to_domain, $relay, $delay, $status, $clapf_id) || print $line . "\n";
+         $sth_smtp->execute($ts, $queue_id, lc $to, lc $to_domain, lc $orig_to, lc $orig_to_domain, $relay, $delay, $status, $clapf_id) || print $line . "\n";
       }
 
 
@@ -202,7 +202,7 @@ while (defined($line = $file->read)) {
             $clapf_id = $1;
          }
 
-         $sth_smtp->execute($ts, $queue_id, $to, $to_domain, $orig_to, $orig_to_domain, $relay, $delay, $status, $clapf_id) || print $line . "\n";
+         $sth_smtp->execute($ts, $queue_id, lc $to, lc $to_domain, lc $orig_to, lc $orig_to_domain, $relay, $delay, $status, $clapf_id) || print $line . "\n";
       }
 
 
@@ -240,7 +240,7 @@ while (defined($line = $file->read)) {
             (undef, $queue_id2) = split(/queued\ as\ /, $x);
          }
 
-         $sth_clapf->execute($ts, $queue_id, $rcpt, $rcptdomain, $result, $spaminess, $relay, $delay, $queue_id2, $virus) || print $line . "\n";
+         $sth_clapf->execute($ts, $queue_id, lc $rcpt, lc $rcptdomain, $result, $spaminess, $relay, $delay, $queue_id2, $virus) || print $line . "\n";
 
       }
 

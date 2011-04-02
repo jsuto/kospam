@@ -17,7 +17,7 @@
 
 void handleSession(int new_sd, struct __data *data, struct __config *cfg){
    int i, ret, pos, n, inj=ERR_REJECT, state, prevlen=0;
-   char *p, buf[MAXBUFSIZE], puf[MAXBUFSIZE], resp[MAXBUFSIZE], prevbuf[MAXBUFSIZE], last2buf[2*MAXBUFSIZE+1];
+   char *p, *q, buf[MAXBUFSIZE], puf[MAXBUFSIZE], resp[MAXBUFSIZE], prevbuf[MAXBUFSIZE], last2buf[2*MAXBUFSIZE+1];
    char rctptoemail[SMALLBUFSIZE], fromemail[SMALLBUFSIZE], virusinfo[SMALLBUFSIZE], reason[SMALLBUFSIZE];
    struct session_data sdata;
    struct _state sstate;
@@ -396,6 +396,15 @@ AFTER_PERIOD:
 
             trimBuffer(buf);
 
+            q = strstr(buf, "ADDR=");
+            if(q){
+               snprintf(sdata.client_addr, SMALLBUFSIZE-1, "%s", q+5);
+               q = strchr(sdata.client_addr, ' ');
+               if(q) *q = '\0';
+
+               if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: smtp client address: *%s*", sdata.ttmpfile, sdata.client_addr);
+            }
+
             strncat(resp, SMTP_RESP_250_OK, MAXBUFSIZE-1);
 
             continue;
@@ -643,7 +652,7 @@ void initSessionData(struct session_data *sdata){
 
    memset(sdata->mailfrom, 0, SMALLBUFSIZE);
    memset(sdata->name, 0, SMALLBUFSIZE);
-   memset(sdata->client_addr, 0, IPLEN);
+   memset(sdata->client_addr, 0, SMALLBUFSIZE);
    memset(sdata->xforward, 0, SMALLBUFSIZE);
 
    memset(sdata->whitelist, 0, MAXBUFSIZE);

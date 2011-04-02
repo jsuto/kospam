@@ -88,11 +88,11 @@ $pdf->AddPage();
 $pdf->SetFont('Times','',12);
 
 $tempfile = createTempName(DIR_REPORT, $timespan) . ".png";
-$aa->lineChartHamSpam("", $timespan, $title, $tempfile);
+$aa->lineChartHamSpam("", $timespan, $title, SIZE_X, SIZE_Y, $tempfile);
 $pdf->Image($tempfile, 5, 20); unlink($tempfile);
 
 $tempfile = createTempName(DIR_REPORT, $timespan) . ".png";
-$aa->pieChartHamSpam($timespan, $title, $tempfile);
+$aa->pieChartHamSpam("", $timespan, $title, $tempfile);
 $pdf->Image($tempfile, 150, 20); unlink($tempfile);
 
 $tempfile = createTempName(DIR_REPORT, $timespan) . ".png";

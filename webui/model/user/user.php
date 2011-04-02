@@ -262,6 +262,7 @@ class ModelUserUser extends Model {
       $_order = "";
       $users = array();
       $my_domain = array();
+      $limit = "";
 
       $from = (int)$page * (int)$page_len;
 
@@ -282,8 +283,9 @@ class ModelUserUser extends Model {
 
       $_order = "ORDER BY $sort $order";
 
+      if($page_len > 0) { $limit = " LIMIT " . (int)$from . ", " . (int)$page_len; }
 
-      $query = $this->db->query("SELECT uid, gid, username, realname, domain, policy_group FROM " . TABLE_USER . " $where_cond $_order LIMIT " . (int)$from . ", " . (int)$page_len);
+      $query = $this->db->query("SELECT uid, gid, username, realname, domain, policy_group FROM " . TABLE_USER . " $where_cond $_order $limit");
 
       foreach ($query->rows as $q) {
          $email = $this->db->query("SELECT email FROM " . TABLE_EMAIL . " WHERE uid=" . (int)$q['uid'] . " LIMIT 1");

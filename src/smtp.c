@@ -257,14 +257,14 @@ int inject_mail(struct session_data *sdata, int msg, char *smtpaddr, int smtppor
    memset(buf, 0, MAXBUFSIZE);
 
 
-   /* pass XFORWARD info if we have any */
+   /* we could pass XFORWARD info, but let's not do so for now, 2011.04.02, SJ */
 
-   int n_xforward = countCharacterInBuffer(sdata->xforward, '\n');
+   /*int n_xforward = countCharacterInBuffer(sdata->xforward, '\n');
 
    if(n_xforward > 0 && has_pipelining == 1){
       snprintf(buf,  MAXBUFSIZE-1, "%s", sdata->xforward);
       ncmd += n_xforward;
-   }
+   }*/
 
 
    /*

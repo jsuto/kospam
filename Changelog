@@ -1,3 +1,8 @@
+2011.04.04, SJ
+
+Changed the default "mynetwork" feature to contain only the local
+network (127.0.0.0/8).
+
 2011.04.02, SJ
 
 Added the mynetwork feature to prevent clapf running spam check on

@@ -711,7 +711,7 @@ int isItemOnList(char *item, char *list){
 
    if(!item) return 0;
 
-   snprintf(my_list, SMALLBUFSIZE-1, "127.,192.168.,172.16.,10.,%s", list);
+   snprintf(my_list, SMALLBUFSIZE-1, "%s", list);
 
    p = my_list;
 

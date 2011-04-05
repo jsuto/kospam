@@ -145,7 +145,7 @@ struct _state {
 };
 
 struct session_data {
-   char ttmpfile[SMALLBUFSIZE], deliveryinfo[SMALLBUFSIZE], clapf_id[SMALLBUFSIZE], xforward[SMALLBUFSIZE], tre, statistically_whitelisted;
+   char ttmpfile[SMALLBUFSIZE], deliveryinfo[SMALLBUFSIZE], clapf_id[SMALLBUFSIZE], xforward[SMALLBUFSIZE], tre, statistically_whitelisted, mynetwork;
    char mailfrom[SMALLBUFSIZE], rcptto[MAX_RCPT_TO][SMALLBUFSIZE], rcpt_minefield[MAX_RCPT_TO], client_addr[SMALLBUFSIZE], name[SMALLBUFSIZE], domain[SMALLBUFSIZE];
    char spaminessbuf[MAXBUFSIZE], acceptbuf[SMALLBUFSIZE];
    char whitelist[MAXBUFSIZE], blacklist[MAXBUFSIZE];
@@ -249,6 +249,7 @@ struct __counters {
    unsigned long long c_zombie;
    unsigned long long c_fp;
    unsigned long long c_fn;
+   unsigned long long c_mynetwork;
 };
 
 #endif /* _DEFS_H */

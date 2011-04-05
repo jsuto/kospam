@@ -33,7 +33,7 @@ class ModelStatCounter extends Model {
          }
       }
 
-      $query = $this->db->query("UPDATE " . TABLE_COUNTERS . " set rcvd=0, ham=0, spam=0, possible_spam=0, unsure=0, minefield=0, virus=0, zombie=0, fp=0, fn=0");
+      $query = $this->db->query("UPDATE " . TABLE_COUNTERS . " set rcvd=0, mynetwork=0, ham=0, spam=0, possible_spam=0, unsure=0, minefield=0, virus=0, zombie=0, fp=0, fn=0");
 
       return 0;
    }

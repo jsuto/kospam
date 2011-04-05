@@ -165,6 +165,12 @@ void handleSession(int new_sd, struct __data *data, struct __config *cfg){
                if(sstate.has_base64 == 0 && cfg->always_scan_message == 0) sdata.need_scan = 0;
                else sdata.need_scan = 1;
 
+
+               if(isItemOnList(sdata.client_addr, cfg->mynetwork) == 1){
+                  sdata.mynetwork = 1;
+               }
+
+
                if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sender IP: %s", sdata.ttmpfile, sstate.ip);
 
             #ifdef HAVE_ANTIVIRUS
@@ -282,6 +288,9 @@ void handleSession(int new_sd, struct __data *data, struct __config *cfg){
 
                      syslog(LOG_PRIORITY, "%s: %s got HAM, %.4f, %d, relay=%s:%d, %s, status=%s", sdata.ttmpfile, rctptoemail, sdata.spaminess, sdata.tot_len, my_cfg.postfix_addr, my_cfg.postfix_port, reason, resp);
                   }
+
+                  if(sdata.mynetwork == 1) counters.c_mynetwork++;
+
 
             #ifdef HAVE_LMTP
                } /* for */
@@ -677,6 +686,7 @@ void initSessionData(struct session_data *sdata){
 
    sdata->tre = '-';
    sdata->statistically_whitelisted = 0;
+   sdata->mynetwork = 0;
 
    sdata->rav = AVIR_OK;
 

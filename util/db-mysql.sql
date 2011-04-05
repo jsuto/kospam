@@ -121,6 +121,7 @@ create table if not exists t_transport (
 
 create table if not exists t_counters (
 	rcvd bigint unsigned default 0,
+	mynetwork bigint unsigned default 0,
 	ham bigint unsigned default 0,
 	spam bigint unsigned default 0,
 	possible_spam bigint unsigned default 0,
@@ -132,6 +133,6 @@ create table if not exists t_counters (
 	fn bigint unsigned default 0
 ) Engine=InnoDB;
 
-insert into t_counters values(0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+insert into t_counters values(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
 

@@ -29,6 +29,10 @@ class ControllerStatCounter extends Controller {
 
          $this->data['counters'] = $this->model_stat_counter->getCounters();
 
+         $this->data['prefix'] = '';
+
+         if(isset($this->data['counters']['_c:rcvd'])) { $this->data['prefix'] = '_c:'; }
+
       }
       else {
          $this->template = "common/error.tpl";

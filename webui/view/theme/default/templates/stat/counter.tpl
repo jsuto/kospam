@@ -6,6 +6,9 @@
 <?php while(list($k, $v) = each($counters)) { ?>
    <tr><td><?php print $k; ?></td><td><?php print $v; ?></td></tr>
 <?php } ?>
+   <?php if($counters[$prefix . 'rcvd'] > 0) { ?><tr><td>spam / <?php print $text_total_ratio; ?></td><td><?php print sprintf("%.2f", 100*$counters[$prefix . 'spam'] / $counters[$prefix . 'rcvd']); ?> %</td></tr><?php } ?>
+   <?php if($counters[$prefix . 'rcvd'] > 0) { ?><tr><td>virus / <?php print $text_total_ratio; ?></td><td><?php print sprintf("%.2f", 100*$counters[$prefix . 'virus'] / $counters[$prefix . 'rcvd']); ?> %</td></tr><?php } ?>
+
 </table>
 </p>
 

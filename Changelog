@@ -10,6 +10,11 @@ mynetwork=null
 Beware, that exim has no 'XFORWARD' feature, so you should _NOT_ define 'null'
 in your mynetwork.
 
+Added the mynetwork feature to the counters, so be sure to extend the t_counters
+table, then flush the clapf related memcached entries.
+
+alter table t_counters add column mynetwork bigint default 0;
+
 2011.04.04, SJ
 
 Changed the default "mynetwork" feature to contain only the local

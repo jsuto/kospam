@@ -135,7 +135,7 @@ int processMessage(struct session_data *sdata, struct _state *sstate, struct __d
 
    /* skip the antispam engine if the email comes from mynetwork */
 
-   if(isItemOnList(sdata->client_addr, cfg->mynetwork) == 1){
+   if(sdata->mynetwork == 1){
       snprintf(tmpbuf, SMALLBUFSIZE-1, "%smynetwork\r\n", cfg->clapf_header_field);
       strncat(sdata->spaminessbuf, tmpbuf, MAXBUFSIZE-1);
 

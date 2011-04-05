@@ -652,7 +652,7 @@ void initSessionData(struct session_data *sdata){
 
    memset(sdata->mailfrom, 0, SMALLBUFSIZE);
    memset(sdata->name, 0, SMALLBUFSIZE);
-   memset(sdata->client_addr, 0, SMALLBUFSIZE);
+   snprintf(sdata->client_addr, SMALLBUFSIZE-1, "null");
    memset(sdata->xforward, 0, SMALLBUFSIZE);
 
    memset(sdata->whitelist, 0, MAXBUFSIZE);

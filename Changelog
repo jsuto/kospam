@@ -1,3 +1,15 @@
+2011.04.05, SJ
+
+If postfix does not send any XFORWARD info (ie. it's disabled in main.cf OR
+the email was submitted locally without the smtpd service), the client_addr
+variable will be set to 'null' (ie. a 4 letter string).
+
+So you can set the following to skip antispam tests for emails sent locally:
+mynetwork=null
+
+Beware, that exim has no 'XFORWARD' feature, so you should _NOT_ define 'null'
+in your mynetwork.
+
 2011.04.04, SJ
 
 Changed the default "mynetwork" feature to contain only the local

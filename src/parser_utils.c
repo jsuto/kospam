@@ -706,12 +706,12 @@ void getTLDFromName(char *name){
 }
 
 
-int isItemOnList(char *item, char *list){
+int isItemOnList(char *item, char *list, char *extralist){
    char *p, *q, w[SMALLBUFSIZE], my_list[SMALLBUFSIZE];
 
    if(!item) return 0;
 
-   snprintf(my_list, SMALLBUFSIZE-1, "%s", list);
+   snprintf(my_list, SMALLBUFSIZE-1, "%s,%s", extralist, list);
 
    p = my_list;
 

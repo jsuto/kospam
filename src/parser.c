@@ -432,7 +432,7 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
          if(state->ipcnt <= 1){
             if(isDottedIPv4Address(puf) == 1){
                snprintf(state->ip, SMALLBUFSIZE-1, "%s", puf);
-               if(isItemOnList(puf, cfg->skipped_received_ips) == 0) state->ipcnt = 1;
+               if(isItemOnList(puf, cfg->skipped_received_ips, "127.,10.,192.168.,172.16.") == 0) state->ipcnt = 1;
             }
             else {
                snprintf(state->hostname, SMALLBUFSIZE-1, "%s", puf);

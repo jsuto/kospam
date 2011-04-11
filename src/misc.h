@@ -9,6 +9,7 @@
 #define FLAG_IGNORE_HEADERS 2
 
 #include <sys/time.h>
+#include <pwd.h>
 #include <cfg.h>
 #include "defs.h"
 
@@ -35,6 +36,9 @@ char *spamsum_file(const char *fname, unsigned int flags, unsigned int block_siz
 
 int isDottedIPv4Address(char *s);
 int isEmailAddressOnList(char *list, char *tmpfile, char *email, struct __config *cfg);
+
+void write_pid_file(char *pidfile);
+int drop_privileges(struct passwd *pwd);
 
 #ifndef _GNU_SOURCE
    char *strcasestr(const char *s, const char *find);

@@ -65,39 +65,11 @@ void fatal(char *s){
 }
 
 
-void writePidFile(char *pidfile){
-   FILE *f;
-
-   f = fopen(pidfile, "w");
-   if(f){
-      fprintf(f, "%d", (int)getpid());
-      fclose(f);
-   }
-   else syslog(LOG_PRIORITY, "cannot write pidfile: %s", cfg.pidfile);
-}
-
-
 void sigchld(){
    int pid, wstat;
 
    while((pid = wait_nohang(&wstat)) > 0){
       if(nconn > 0) nconn--;
-   }
-}
-
-
-void dropPrivileges(){
-
-   if(pwd->pw_uid > 0 && pwd->pw_gid > 0){
-
-      if(getgid() != pwd->pw_gid){
-         if(setgid(pwd->pw_gid)) fatal(ERR_SETGID);
-      }
-
-      if(getuid() != pwd->pw_uid){
-         if(setuid(pwd->pw_uid)) fatal(ERR_SETUID);
-      }
-
    }
 }
 
@@ -277,7 +249,7 @@ int main(int argc, char **argv){
       fatal(ERR_LISTEN);
 
 
-   dropPrivileges();
+   if(drop_privileges(pwd)) fatal(ERR_SETUID);
 
 
    syslog(LOG_PRIORITY, "%s %s starting", PROGNAME, VERSION);
@@ -292,7 +264,7 @@ int main(int argc, char **argv){
    if(daemonise == 1) i = daemon(1, 0);
 #endif
 
-   writePidFile(cfg.pidfile);
+   write_pid_file(cfg.pidfile);
 
 
    /* main accept loop */
@@ -311,19 +283,9 @@ int main(int argc, char **argv){
 
       if(new_sd == -1) continue;
 
-      nconn++;
-
       pid = fork();
 
-      if(pid != 0){
-         if(pid == -1){
-            nconn--;
-            syslog(LOG_PRIORITY, "%s", ERR_FORK_FAILED);
-         }
-      }
-      else {
-          /* child process */
-
+      if(pid == 0){
           sig_uncatch(SIGCHLD);
           sig_unblock(SIGCHLD);
 
@@ -334,6 +296,16 @@ int main(int argc, char **argv){
           sig_block(SIGHUP);
 
           handleSession(new_sd, &data, &cfg);
+
+          _exit(0);
+      }
+
+      else if(pid > 0){
+         nconn++;
+      }
+
+      else {
+         syslog(LOG_PRIORITY, "%s", ERR_FORK_FAILED);
       }
 
       close(new_sd);

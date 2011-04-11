@@ -166,7 +166,7 @@ void handleSession(int new_sd, struct __data *data, struct __config *cfg){
                else sdata.need_scan = 1;
 
 
-               if(isItemOnList(sdata.client_addr, cfg->mynetwork) == 1){
+               if(isItemOnList(sdata.client_addr, cfg->mynetwork, NULL) == 1){
                   sdata.mynetwork = 1;
                }
 
@@ -639,7 +639,6 @@ QUITTING:
 
    if(cfg->verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "processed %llu messages", counters.c_rcvd);
 
-   _exit(0);
 }
 
 

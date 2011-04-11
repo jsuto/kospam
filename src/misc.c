@@ -522,6 +522,36 @@ int isEmailAddressOnList(char *list, char *tmpfile, char *email, struct __config
 }
 
 
+void write_pid_file(char *pidfile){
+   FILE *f;
+
+   f = fopen(pidfile, "w");
+   if(f){
+      fprintf(f, "%d", (int)getpid());
+      fclose(f);
+   }
+   else syslog(LOG_PRIORITY, "cannot write pidfile: %s", pidfile);
+}
+
+
+int drop_privileges(struct passwd *pwd){
+
+   if(pwd->pw_uid > 0 && pwd->pw_gid > 0){
+
+      if(getgid() != pwd->pw_gid){
+         if(setgid(pwd->pw_gid)) return -1;
+      }
+
+      if(getuid() != pwd->pw_uid){
+         if(setuid(pwd->pw_uid)) return -1;
+      }
+
+   }
+
+   return 0;
+}
+
+
 #ifndef _GNU_SOURCE
 char *strcasestr(const char *s, const char *find){
    char c, sc;

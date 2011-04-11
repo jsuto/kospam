@@ -138,7 +138,7 @@ struct _parse_rule config_parse_rules[] =
    { "spam_smtp_addr", "string", (void*) string_parser, offsetof(struct __config, spam_smtp_addr), "127.0.0.1", MAXVAL-1},
    { "spam_smtp_port", "integer", (void*) int_parser, offsetof(struct __config, spam_smtp_port), "10026", sizeof(int)},
    { "quarantine_dir", "string", (void*) string_parser, offsetof(struct __config, quarantine_dir), "", MAXVAL-1},
-   { "skipped_received_ips", "string", (void*) string_parser, offsetof(struct __config, skipped_received_ips), "127.0.0.1$", 2*MAXVAL-1},
+   { "skipped_received_ips", "string", (void*) string_parser, offsetof(struct __config, skipped_received_ips), "127.,192.168.,172.16.,10.", 2*MAXVAL-1},
    { "spamc_user", "string", (void*) string_parser, offsetof(struct __config, spamc_user), "spamc", MAXVAL-1},
    { "spamd_addr", "string", (void*) string_parser, offsetof(struct __config, spamd_addr), "127.0.0.1", MAXVAL-1},
    { "spamd_port", "integer", (void*) int_parser, offsetof(struct __config, spamd_port), "783", sizeof(int)},
@@ -229,7 +229,6 @@ int load_default_config(struct __config *cfg, struct _parse_rule *rules){
  */
 
 struct __config read_config(char *configfile){
-   char tmpbuf[2*MAXVAL];
    struct __config cfg;
 
    /* reset config structure and fill it with defaults */
@@ -242,11 +241,6 @@ struct __config read_config(char *configfile){
    /* parse the config file */
 
    if(parse_config_file(configfile, &cfg, config_parse_rules) == -1) printf("error parsing the configfile: %s\n", configfile);
-
-   /* fix the skipped_received_ips variable */
-
-   snprintf(tmpbuf, 2*MAXVAL-1, "127.,192.168.,172.16.,10.,%s", (char*)&cfg + offsetof(struct __config, skipped_received_ips));
-   string_parser(tmpbuf, (char *)&cfg + offsetof(struct __config, skipped_received_ips), 2*MAXVAL-1);
 
    return cfg;
 }

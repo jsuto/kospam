@@ -35,6 +35,6 @@ int isHexNumber(char *p);
 void fixURL(char *url);
 void fixFQDN(char *fqdn);
 void getTLDFromName(char *name);
-int isItemOnList(char *ipaddr, char *list);
+int isItemOnList(char *item, char *list, char *extralist);
 
 #endif /* _PARSER_H */

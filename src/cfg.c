@@ -243,10 +243,7 @@ struct __config read_config(char *configfile){
 
    if(parse_config_file(configfile, &cfg, config_parse_rules) == -1) printf("error parsing the configfile: %s\n", configfile);
 
-   /* fix the mynetwork and skipped_received_ips variables */
-
-   snprintf(tmpbuf, 2*MAXVAL-1, "127.,%s", (char*)&cfg + offsetof(struct __config, mynetwork));
-   string_parser(tmpbuf, (char *)&cfg + offsetof(struct __config, mynetwork), 2*MAXVAL-1);
+   /* fix the skipped_received_ips variable */
 
    snprintf(tmpbuf, 2*MAXVAL-1, "127.,192.168.,172.16.,10.,%s", (char*)&cfg + offsetof(struct __config, skipped_received_ips));
    string_parser(tmpbuf, (char *)&cfg + offsetof(struct __config, skipped_received_ips), 2*MAXVAL-1);

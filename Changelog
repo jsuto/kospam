@@ -1,3 +1,9 @@
+2011.04.11, SJ
+
+Modified the mynetwork feature: the "127.$" is no longer added explicitly.
+If you need it, you have to add it manually, eg.
+mynetwork=127.$,11.22.33.44,....
+
 2011.04.05, SJ
 
 If postfix does not send any XFORWARD info (ie. it's disabled in main.cf OR

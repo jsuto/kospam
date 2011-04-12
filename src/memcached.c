@@ -14,7 +14,7 @@
 
 
 int getUserdataFromMemcached(struct session_data *sdata, struct __data *data, char *email, struct __config *cfg){
-   size_t len=0;
+   unsigned int len=0;
    uint32_t flags = 0;
    char key[SMALLBUFSIZE], *s=NULL, *p;
 
@@ -74,7 +74,7 @@ int putUserdataToMemcached(struct session_data *sdata, struct __data *data, char
 
 
 int getPolicyFromMemcached(struct session_data *sdata, struct __data *data, struct __config *cfg, struct __config *my_cfg){
-   size_t len=0;
+   unsigned int len=0;
    uint32_t flags = 0;
    char key[SMALLBUFSIZE], *s=NULL, *p;
 
@@ -160,7 +160,7 @@ int putPolicyToMemcached(struct session_data *sdata, struct __data *data, struct
 
 
 int getWBLFromMemcached(struct session_data *sdata, struct __data *data, struct __config *cfg){
-   size_t len=0;
+   unsigned int len=0;
    uint32_t flags = 0;
    char key[SMALLBUFSIZE], *s=NULL, *p;
 

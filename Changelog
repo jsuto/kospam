@@ -1,3 +1,9 @@
+2011.04.12, SJ
+
+Minor fix in memcached.c
+
+Fixed a bug causing segfault in certain cases if are using libclamav.
+
 2011.04.11, SJ
 
 Modified the mynetwork feature: the "127.$" is no longer added explicitly.

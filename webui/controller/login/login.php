@@ -29,7 +29,12 @@ class ControllerLoginLogin extends Controller {
 
             LOGGER('logged in');
 
-            header("Location: " . SITE_URL . "index.php?route=quarantine/quarantine&user=" . $_SESSION['username'] . "&hamspam=SPAM");
+            if(isset($_POST['relocation']) && $_POST['relocation']) {
+               header("Location: " . SITE_URL . "index.php?" . $_POST['relocation']);
+            } else {
+               header("Location: " . SITE_URL . "index.php?route=quarantine/quarantine&user=" . $_SESSION['username'] . "&hamspam=SPAM");
+            }
+
             exit;
          }
 

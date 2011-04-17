@@ -87,19 +87,17 @@ foreach ($users as $user) {
       $msg .= "Content-Type: text/html; charset=\"utf-8\"" . EOL;
       $msg .= EOL . EOL;
 
-      $msg .= "<p>$text_number_of_messages_in_quarantine: $n ($total_size bytes)</p>\n";
+      ob_start();
 
-      $msg .= "<table>\n<tr><td></td><td><strong>$text_date</strong></td><td><strong>$text_size</strong></td><td><strong>$text_from</strong></td><td><strong>$text_subject</strong></td></tr>\n";
+      include($webuidir . "/language/" . LANG . "/quarantine-daily-digest.tpl");
 
-      foreach ($messages as $message) {
-         $link = "<a href=\"" . SITE_URL . "/index.php?route=quarantine/message&amp;id=" . $message['id'] . "&amp;user=" . $user['username'] . "&amp;page=0&amp;from=&amp;subj=&amp;hamspam=SPAM" . "\">";
-         $msg .= "<tr><td>$link" . $message['i'] . "</a></td><td>" . $message['date'] . "</td><td>" .$message['size'] . "</td><td>" . $message['shortfrom'] . "</td><td>". $message['shortsubject'] . "</td></tr>\n";
-      }
+      $msg .= ob_get_contents();
 
-      $msg .= "</table>\n";
+      ob_end_clean();
 
       $x = $mail->SendSmtpEmail(SMTP_HOST, SMTP_PORT, SMTP_DOMAIN, SMTP_FROMADDR, $user['email'], $msg);
       if($x == 0) { $failed_notifications++; }
+
 
    }
 }

@@ -373,6 +373,7 @@ int inject_mail(struct session_data *sdata, int msg, char *smtpaddr, int smtppor
    }
    else {
       /* or send notification about the virus found */
+      if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sending notification, %s", sdata->ttmpfile, sdata->rcptto[0]);
       send(psd, notify, strlen(notify), 0);
    }
 

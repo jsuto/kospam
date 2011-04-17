@@ -104,6 +104,7 @@ struct __config {
 
    float spaminess_of_strange_language_stuff;
    float spaminess_of_blackholed_mail;
+   float spaminess_of_caught_by_rbl;
    float spaminess_of_caught_by_surbl;
    float spaminess_of_embed_image;
 

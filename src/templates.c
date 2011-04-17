@@ -1,6 +1,6 @@
 /*
-   templates.c, 2010.05.17, SJ
-*/
+ * templates.c, SJ
+ */
 
 #include <stdio.h>
 #include <stdlib.h>

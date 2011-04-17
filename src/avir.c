@@ -81,13 +81,13 @@ int moveMessageToQuarantine(struct session_data *sdata, struct __config *cfg){
    snprintf(qfile, QUARANTINELEN-1, "%s/%s", cfg->quarantine_dir, sdata->ttmpfile);
 
    if(link(sdata->ttmpfile, qfile) == 0){
-      if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s saved as %s", sdata->ttmpfile, qfile);
+      if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: saved as %s", sdata->ttmpfile, qfile);
       chmod(qfile, 0644);
 
       return OK;
    }
    else {
-      syslog(LOG_PRIORITY, "failed to put %s into quarantine: %s", sdata->ttmpfile, qfile);
+      syslog(LOG_PRIORITY, "%s: failed to move into quarantine: %s", sdata->ttmpfile, qfile);
       return ERR;
    }
 
@@ -96,19 +96,20 @@ int moveMessageToQuarantine(struct session_data *sdata, struct __config *cfg){
 
 void sendNotificationToPostmaster(struct session_data *sdata, char *rcpttoemail, char *fromemail, char *virusinfo, char *avengine, struct __config *cfg){
    int ret;
-   char buf[MAXBUFSIZE];
+   char buf[MAXBUFSIZE], notify[MAXBUFSIZE];
 
    memset(rcpttoemail, 0, SMALLBUFSIZE);
    extractEmail(sdata->rcptto[0], rcpttoemail);
 
-   if(createMessageFromTemplate(VIRUS_TEMPLATE, buf, cfg->localpostmaster, rcpttoemail, fromemail, virusinfo, avengine) == 1){
+   if(createMessageFromTemplate(VIRUS_TEMPLATE, &notify[0], cfg->localpostmaster, rcpttoemail, fromemail, virusinfo, avengine) == 1){
 
       snprintf(sdata->rcptto[0], SMALLBUFSIZE-1, "RCPT TO: <%s>\r\n", cfg->localpostmaster);
       sdata->num_of_rcpt_to = 1;
-      ret = inject_mail(sdata, 0, cfg->postfix_addr, cfg->postfix_port, NULL, &buf[0], cfg, buf);
 
-      if(ret == 0)
-         syslog(LOG_PRIORITY, "notification about %s to %s failed", sdata->ttmpfile, cfg->localpostmaster);
+      ret = inject_mail(sdata, 0, cfg->postfix_addr, cfg->postfix_port, NULL, &buf[0], cfg, notify);
+
+      if(ret != OK)
+         syslog(LOG_PRIORITY, "%s: notification failed to %s", sdata->ttmpfile, cfg->localpostmaster);
    }
 
 }

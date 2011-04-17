@@ -1,3 +1,16 @@
+2011.04.17, SJ
+
+Fixed a bug preventing clapf to send virus notification emails.
+
+2011.04.16, SJ
+
+Fixed logging in src/avir.c
+
+2011.04.13, SJ
+
+Enhanced quarantine report with i18n. Please look at
+webui/languages/*/quarantine-daily-digest.tpl
+
 2011.04.12, SJ
 
 Minor fix in memcached.c

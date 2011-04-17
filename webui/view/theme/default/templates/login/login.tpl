@@ -1,6 +1,8 @@
 
 <?php if(!isset($_SESSION['username'])){ ?>
 <form name="login" action="index.php?route=login/login" method="post">
+   <input type="hidden" name="relocation" value="<?php if(isset($_GET['route']) && !preg_match("/^login/", $_GET['route']) ) { print $_SERVER['QUERY_STRING']; } ?>" />
+
    <table border="0">
       <tr><td><?php print $text_email; ?>:</td><td><input type="text" name="username" /></td></tr>
       <tr><td><?php print $text_password; ?>:</td><td><input type="password" name="password" /></td></tr>

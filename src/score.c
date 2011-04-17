@@ -102,7 +102,7 @@ double applyPostSpaminessFixes(double spaminess, int found_on_rbl, int surbl_mat
       if(cfg->debug == 1)
          printf("caught by rbl\n");
 
-      return cfg->spaminess_of_caught_by_surbl;
+      return cfg->spaminess_of_caught_by_rbl;
    }
 #endif
 

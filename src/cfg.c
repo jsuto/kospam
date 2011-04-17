@@ -145,6 +145,7 @@ struct _parse_rule config_parse_rules[] =
    { "spam_overall_limit", "float", (void*) float_parser, offsetof(struct __config, spam_overall_limit), "0.92", sizeof(float)},
    { "spaminess_oblivion_limit", "float", (void*) float_parser, offsetof(struct __config, spaminess_oblivion_limit), "1.01", sizeof(float)},
    { "spaminess_of_blackholed_mail", "float", (void*) float_parser, offsetof(struct __config, spaminess_of_blackholed_mail), "0.9995", sizeof(float)},
+   { "spaminess_of_caught_by_rbl", "float", (void*) float_parser, offsetof(struct __config, spaminess_of_caught_by_rbl), "0.9998", sizeof(float)},
    { "spaminess_of_caught_by_surbl", "float", (void*) float_parser, offsetof(struct __config, spaminess_of_caught_by_surbl), "0.9997", sizeof(float)},
    { "spaminess_of_embed_image", "float", (void*) float_parser, offsetof(struct __config, spaminess_of_embed_image), "0.9994", sizeof(float)},
    { "spaminess_of_strange_language_stuff", "float", (void*) float_parser, offsetof(struct __config, spaminess_of_strange_language_stuff), "0.9876", sizeof(float)},

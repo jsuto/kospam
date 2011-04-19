@@ -147,6 +147,8 @@
 #define OK 0
 #define ERR 1
 
+#define DISCARD 1
+
 #define ERR_INJECT 20
 #define ERR_REJECT 21
 #define ERR_DROP_SPAM 27

@@ -7,6 +7,9 @@ Minor fix in the white-/blacklist query function.
 Minor change in the logging of clapf. It will syslog "status=dropped"
 if the message was discarded by clapf.
 
+If the sender email address is found blacklist, then clapf will syslog
+'SPAM' instead of 'HAM'.
+
 2011.04.18, SJ
 
 Added an Outlook macro to automate the trainig, and make it very easy.

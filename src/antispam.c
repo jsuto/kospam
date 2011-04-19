@@ -43,14 +43,14 @@ int processMessage(struct session_data *sdata, struct _state *sstate, struct __d
       snprintf(tmpbuf, SMALLBUFSIZE-1, "%sVIRUS\r\n", cfg->clapf_header_field);
       strncat(sdata->spaminessbuf, tmpbuf, MAXBUFSIZE-1);
 
-      if(my_cfg->deliver_infected_email == 1) return 1;
+      if(my_cfg->deliver_infected_email == 1) return OK;
 
       if(my_cfg->silently_discard_infected_email == 1)
          snprintf(sdata->acceptbuf, SMALLBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata->ttmpfile, rcpttoemail);
       else
          snprintf(sdata->acceptbuf, SMALLBUFSIZE-1, "550 %s %s\r\n", sdata->ttmpfile, rcpttoemail);
 
-      return 0;
+      return DISCARD;
    }
 
 
@@ -69,13 +69,13 @@ int processMessage(struct session_data *sdata, struct _state *sstate, struct __d
          sdata->spaminess = 0.99;
          strncat(sdata->spaminessbuf, cfg->clapf_spam_header_field, MAXBUFSIZE-1);
 
-         return 1;
+         return OK;
       }
 
       if(my_cfg->message_from_a_zombie == 2){
          syslog(LOG_PRIORITY, "%s: dropping message from a zombie as spam", sdata->ttmpfile);
 
-         return 0;
+         return DISCARD;
       }
    }
 #endif
@@ -110,7 +110,7 @@ int processMessage(struct session_data *sdata, struct _state *sstate, struct __d
 
        /* if still not found, then let this email slip through clapf, 2009.03.12, SJ */
 
-       if(sdata->name[0] == 0) return 1;
+       if(sdata->name[0] == 0) return OK;
     #ifndef SPAMC_EMUL
        gettimeofday(&tv1, &tz);
        do_training(sdata, sstate, rcpttoemail, &(sdata->acceptbuf[0]), my_cfg);
@@ -118,7 +118,7 @@ int processMessage(struct session_data *sdata, struct _state *sstate, struct __d
        sdata->__training += tvdiff(tv2, tv1);
     #endif
 
-       return 0;
+       return DISCARD;
 
     #else
 
@@ -128,7 +128,7 @@ int processMessage(struct session_data *sdata, struct _state *sstate, struct __d
         * spamdrop
         */
 
-       return 1;
+       return OK;
     #endif
     }
 
@@ -139,7 +139,7 @@ int processMessage(struct session_data *sdata, struct _state *sstate, struct __d
       snprintf(tmpbuf, SMALLBUFSIZE-1, "%smynetwork\r\n", cfg->clapf_header_field);
       strncat(sdata->spaminessbuf, tmpbuf, MAXBUFSIZE-1);
 
-      return 1;
+      return OK;
    }
 
 
@@ -176,7 +176,7 @@ int processMessage(struct session_data *sdata, struct _state *sstate, struct __d
          strncat(sdata->spaminessbuf, tmpbuf, MAXBUFSIZE-1);
       }
 
-      return 1;
+      return OK;
    #endif
 
    #ifdef HAVE_MYDB
@@ -223,7 +223,10 @@ int processMessage(struct session_data *sdata, struct _state *sstate, struct __d
          snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on blacklist\r\n", cfg->clapf_header_field);
 
          snprintf(sdata->acceptbuf, SMALLBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata->ttmpfile, rcpttoemail);
-         return 0;
+
+         sdata->spaminess = 0.99;
+
+         return DISCARD;
       }
    #endif
 
@@ -335,7 +338,7 @@ int processMessage(struct session_data *sdata, struct _state *sstate, struct __d
 
    } /* end of running spam check */
 
-   return 1;
+   return OK;
 }
 
 

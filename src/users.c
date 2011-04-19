@@ -108,7 +108,6 @@ void getWBLData(struct session_data *sdata, struct __config *cfg){
    MYSQL_RES *res;
    MYSQL_ROW row;
    char buf[SMALLBUFSIZE];
-   int n=0;
 
    memset(sdata->whitelist, 0, MAXBUFSIZE);
    memset(sdata->blacklist, 0, MAXBUFSIZE);
@@ -123,16 +122,14 @@ void getWBLData(struct session_data *sdata, struct __config *cfg){
          while((row = mysql_fetch_row(res))){
 
             if(row[0]){
-               if(n > 0) strncat(sdata->whitelist, "\n", MAXBUFSIZE-1);
+               if(strlen(sdata->whitelist) > 0) strncat(sdata->whitelist, "\n", MAXBUFSIZE-1);
                strncat(sdata->whitelist, (char *)row[0], MAXBUFSIZE-1);
             }
 
             if(row[1]){
-               if(n > 0) strncat(sdata->blacklist, "\n", MAXBUFSIZE-1);
+               if(strlen(sdata->blacklist) > 0) strncat(sdata->blacklist, "\n", MAXBUFSIZE-1);
                strncat(sdata->blacklist, (char *)row[1], MAXBUFSIZE-1);
             }
-
-            n++;
          }
          mysql_free_result(res);
       }
@@ -255,7 +252,6 @@ void getWBLData(struct session_data *sdata, struct __config *cfg){
    sqlite3_stmt *pStmt;
    const char **pzTail=NULL;
    char buf[SMALLBUFSIZE];
-   int n=0;
 
    memset(sdata->whitelist, 0, MAXBUFSIZE);
    memset(sdata->blacklist, 0, MAXBUFSIZE);
@@ -268,13 +264,11 @@ void getWBLData(struct session_data *sdata, struct __config *cfg){
 
    while(sqlite3_step(pStmt) == SQLITE_ROW){
 
-      if(n > 0) strncat(sdata->whitelist, "\n", MAXBUFSIZE-1);
+      if(strlen(sdata->whitelist) > 0) strncat(sdata->whitelist, "\n", MAXBUFSIZE-1);
       if(sqlite3_column_blob(pStmt, 0)) strncat(sdata->whitelist, (char *)sqlite3_column_blob(pStmt, 0), MAXBUFSIZE-1);
 
-      if(n > 0) strncat(sdata->blacklist, "\n", MAXBUFSIZE-1);
+      if(strlen(sdata->blacklist) > 0) strncat(sdata->blacklist, "\n", MAXBUFSIZE-1);
       if(sqlite3_column_blob(pStmt, 1)) strncat(sdata->blacklist, (char *)sqlite3_column_blob(pStmt, 1), MAXBUFSIZE-1);
-
-      n++;
    }
 
    sqlite3_finalize(pStmt);

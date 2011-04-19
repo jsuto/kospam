@@ -211,6 +211,7 @@ void handleSession(int new_sd, struct __data *data, struct __config *cfg){
                   if(db_conn == 1){
                      if(processMessage(&sdata, &sstate, data, rctptoemail, fromemail, cfg, &my_cfg) == 0){
                         /* if we have to discard the message */
+                        snprintf(resp, MAXBUFSIZE-1, "dropped");
                         goto SEND_RESULT;
                      }
                   }

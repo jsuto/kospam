@@ -122,7 +122,7 @@ class ControllerHistoryWorker extends Controller {
             // smtp/local/virtual records after content filter
             $__smtp = $db->query("select * from smtp where queue_id='" . $db->escape($__clapf['queue_id2']) . "' order by ts desc");
 
-            if($i == 0) { $last_update = $__smtp->row['ts']; }
+            if($i == 0 && isset($__smtp->row['ts'])) { $last_update = $__smtp->row['ts']; }
 
             // what we had before the content filter
             $__smtp2 = $db->query("select * from smtp where clapf_id='" . $db->escape($__clapf['queue_id']) . "'");

@@ -2,6 +2,11 @@
 
 Fixed a bug in the webui affecting domain admins listing users.
 
+Minor fix in the white-/blacklist query function.
+
+Minor change in the logging of clapf. It will syslog "status=dropped"
+if the message was discarded by clapf.
+
 2011.04.18, SJ
 
 Added an Outlook macro to automate the trainig, and make it very easy.

@@ -1,3 +1,17 @@
+2011.04.19, SJ
+
+Fixed a bug in the webui affecting domain admins listing users.
+
+2011.04.18, SJ
+
+Added an Outlook macro to automate the trainig, and make it very easy.
+This will create two extra buttons on the menubar, so retraining is
+a matter of a single click.
+
+You can find it in the contrib/plugin/outlook directory. See the
+README file for deployment.
+
+
 2011.04.17, SJ
 
 Fixed a bug preventing clapf to send virus notification emails.

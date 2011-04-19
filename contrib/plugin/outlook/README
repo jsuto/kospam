@@ -1,0 +1,49 @@
+What is this?
+-------------
+
+This is a macro for Outlook. It adds to buttons to the menubar.
+Users can learn the clapf spamfilter by clicking either on the "HAM"
+or the "SPAM" button.
+
+By clicking on the HAM button, the macro will move the message to the
+INBOX folder, and send the email to ham@yourdomain, ie. training it as
+a ham message.
+
+If you click on the SPAM button, the selected message(s) will be forwarded
+to the spam@yourdomain address, and moved into the Junk folder.
+
+
+Install
+-------
+
+0. Close Outlook
+
+1. Copy "VbaProject.OTM" and "outcmd.dat" files to the following directory:
+C:\Documents and Settings\<username>\Application Data\Microsoft\Outlook
+
+2. Start Outlook, then select Tools -> Macro -> Security menu, and set
+"Warning for all macro", then click "OK". This will enable our custom macro.
+
+3. Select Tools -> Macro -> Macros, then select "HAM" from the macro list.
+
+4. Locate the "Sub HAM()" and "Sub SPAM()" lines, and set the foldername,
+and the forwarded email addresses to match the settings of your site.
+
+5. Save the macro, and exit the Visual basic editor.
+
+
+How to deploy it on a large scale?
+----------------------------------
+
+Close Outlook, and copy the _updated_ VbaProject.OTM" and "outcmd.dat" files
+to the C:\Documents and Settings\<username>\Application Data\Microsoft\Outlook
+directory of your clients.
+
+
+
+
+Compatibility
+-------------
+
+This macro was developed and tested with Outlook 2007
+

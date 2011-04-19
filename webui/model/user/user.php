@@ -266,14 +266,20 @@ class ModelUserUser extends Model {
 
       $from = (int)$page * (int)$page_len;
 
+      if(Registry::get('domain_admin') == 1) {
+         $my_domain = $this->getDomains();
+         $where_cond = " WHERE domain='" . $this->db->escape($my_domain[0]) . "'";
+      }
+
+
       $search = preg_replace("/\s{1,}/", "", $search);
 
       if($search){
-         $where_cond .= " WHERE uid IN (SELECT DISTINCT uid FROM " . TABLE_USER . " WHERE username LIKE '%" . $this->db->escape($search) . "%') OR uid IN (SELECT DISTINCT uid FROM " . TABLE_EMAIL . " WHERE email LIKE '%" . $this->db->escape($search) . "%')";
-      }
-
-      if(Registry::get('domain_admin') == 1) {
-         $my_domain = $this->getDomains();
+         if($where_cond) {
+            $where_cond .= " AND (uid IN (SELECT DISTINCT uid FROM " . TABLE_USER . " WHERE username LIKE '%" . $this->db->escape($search) . "%') OR uid IN (SELECT DISTINCT uid FROM " . TABLE_EMAIL . " WHERE email LIKE '%" . $this->db->escape($search) . "%') )";
+         } else {
+            $where_cond = " WHERE uid IN (SELECT DISTINCT uid FROM " . TABLE_USER . " WHERE username LIKE '%" . $this->db->escape($search) . "%') OR uid IN (SELECT DISTINCT uid FROM " . TABLE_EMAIL . " WHERE email LIKE '%" . $this->db->escape($search) . "%')";
+         }
       }
 
       /* sort order */

@@ -1,3 +1,7 @@
+2011.04.22, SJ
+
+Parser fix to correctly handle multiline header fields.
+
 2011.04.19, SJ
 
 Fixed a bug in the webui affecting domain admins listing users.

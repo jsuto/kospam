@@ -71,8 +71,6 @@ int clamd_scan(char *tmpfile, char *engine, char *avinfo, struct __config *cfg){
          }
       }
 
-      snprintf(engine, SMALLBUFSIZE-1, "ClamAV");
-
       return AV_VIRUS;
    }
 
@@ -130,8 +128,6 @@ int clamd_net_scan(char *tmpfile, char *engine, char *avinfo, struct __config *c
             strncpy(avinfo, p, SMALLBUFSIZE-1);
          }
       }
-
-      snprintf(engine, SMALLBUFSIZE-1, "ClamAV");
 
       return AV_VIRUS;
    }

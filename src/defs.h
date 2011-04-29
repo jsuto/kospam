@@ -161,6 +161,9 @@ struct session_data {
    char mailbuf[MAILBUFSIZE], discard_mailbuf;
    int message_size, mailpos;
 #endif
+#ifdef HAVE_ESET
+   char eset[SMALLBUFSIZE];
+#endif
 #ifdef NEED_MYSQL
    MYSQL mysql;
 #endif

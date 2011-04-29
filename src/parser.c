@@ -126,6 +126,12 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
 
    if(state->is_header == 1){
 
+   #ifdef HAVE_ESET
+      if(strncmp(buf, "X-EsetResult: ", 14) == 0){
+         snprintf(sdata->eset, SMALLBUFSIZE-1, "%s", &buf[14]);
+      }
+   #endif
+
       if(strncmp(buf, "Received: from ", strlen("Received: from ")) == 0) state->message_state = MSG_RECEIVED;
       else if(strncmp(buf, "From:", strlen("From:")) == 0) state->message_state = MSG_FROM;
       else if(strncmp(buf, "To:", 3) == 0) state->message_state = MSG_TO;
@@ -292,8 +298,8 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
 
 
    if(state->is_header == 0 && state->textplain == 0 && state->texthtml == 0 && (state->message_state == MSG_BODY || state->message_state == MSG_CONTENT_DISPOSITION) && (state->octetstream == 0 || state->realbinary > 0) ) return 0;
-   
 
+ 
    /* base64 decode buffer */
 
    if(state->base64 == 1 && state->message_state == MSG_BODY) b64_len = decodeBase64(buf);
@@ -314,8 +320,6 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
    if(state->base64 == 1 && state->message_state == MSG_BODY) fixupBase64EncodedLine(buf, state);
 
    if(state->texthtml == 1 && state->message_state == MSG_BODY) markHTML(buf, state);
-
-   //if(state->is_header == 0 && state->texthtml == 1) fixupHTML(buf, state, cfg);
 
 
 
@@ -453,6 +457,10 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
       if(strlen(puf) < MIN_WORD_LEN || strlen(puf) > MAX_WORD_LEN || isHexNumber(puf))
          continue;
 
+      if(state->message_state == MSG_CONTENT_TYPE && strncmp(puf, "content-type", 12) == 0) continue;
+      if(state->message_state == MSG_CONTENT_DISPOSITION && strncmp(puf, "content-disposition", 19) == 0) continue;
+      if(state->message_state == MSG_CONTENT_TRANSFER_ENCODING && strncmp(puf, "content-transfer-encoding", 25) == 0) continue;
+
       /* deal with HTML tokens */
 
       if(strncmp(puf, "HTML*", 5) == 0){
@@ -472,6 +480,12 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
       }
       else if(state->message_state == MSG_FROM)
          snprintf(muf, MAXBUFSIZE-1, "FROM*%s", puf);
+      else if(state->message_state == MSG_CONTENT_TYPE)
+         snprintf(muf, MAXBUFSIZE-1, "TYPE*%s", puf);
+      else if(state->message_state == MSG_CONTENT_TRANSFER_ENCODING)
+         snprintf(muf, MAXBUFSIZE-1, "ENCODING*%s", puf);
+      else if(state->message_state == MSG_CONTENT_DISPOSITION)
+         snprintf(muf, MAXBUFSIZE-1, "DISPOSITION*%s", puf);
       else if(state->is_header == 1)
          snprintf(muf, MAXBUFSIZE-1, "HEADER*%s", puf);
       else
@@ -488,7 +502,8 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
 
       /* add single token to list */
 
-      addnode(state->token_hash, muf, DEFAULT_SPAMICITY, 0);
+      if(state->message_state != MSG_CONTENT_TYPE && state->message_state != MSG_CONTENT_DISPOSITION)
+         addnode(state->token_hash, muf, DEFAULT_SPAMICITY, 0);
 
 
       /* create token pairs, 2007.06.06, SJ */
@@ -500,8 +515,8 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
          addnode(state->token_hash, triplet, DEFAULT_SPAMICITY, 0);
       }
 
-      if(((state->is_header == 1 && state->n_chain_token > 1) || state->n_body_token > 1) && strlen(token) >= MIN_WORD_LEN && state->message_state != MSG_CONTENT_TYPE){
-         if(state->message_state == MSG_SUBJECT || state->message_state == MSG_FROM || state->message_state == MSG_TO) snprintf(phrase, MAX_TOKEN_LEN-1, "%s+%s", token, puf);
+      if(((state->is_header == 1 && state->n_chain_token > 1) || state->n_body_token > 1) && strlen(token) >= MIN_WORD_LEN){
+         if(state->message_state == MSG_SUBJECT || state->message_state == MSG_FROM || state->message_state == MSG_TO || state->message_state == MSG_CONTENT_TYPE || state->message_state == MSG_CONTENT_DISPOSITION) snprintf(phrase, MAX_TOKEN_LEN-1, "%s+%s", token, puf);
          else snprintf(phrase, MAX_TOKEN_LEN-1, "%s+%s", token, muf);
 
          addnode(state->token_hash, phrase, DEFAULT_SPAMICITY, 0);

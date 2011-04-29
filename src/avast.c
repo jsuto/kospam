@@ -84,8 +84,6 @@ int avast_scan(char *tmpfile, char *engine, char *avinfo, struct __config *cfg){
          strncpy(avinfo, q+1, SMALLBUFSIZE-1);
          avinfo[strlen(avinfo)-1] = '\0';
 
-         snprintf(engine, SMALLBUFSIZE-1, "Avast");
-
          return AV_VIRUS;
       }
 
@@ -110,8 +108,6 @@ int avast_cmd_scan(char *tmpfile, char *engine, char *avinfo, struct __config *c
          if(q){
             strncpy(avinfo, q+1, SMALLBUFSIZE-1);
             avinfo[strlen(avinfo)-1] = '\0';
-
-            snprintf(engine, SMALLBUFSIZE-1, "Avast Home");
 
             pclose(f);
             return AV_VIRUS;

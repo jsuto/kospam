@@ -669,6 +669,10 @@ void initSessionData(struct session_data *sdata){
 
    memset(sdata->clapf_id, 0, SMALLBUFSIZE);
 
+#ifdef HAVE_ESET
+   memset(sdata->eset, 0, SMALLBUFSIZE);
+#endif
+
    sdata->uid = 0;
    sdata->gid = 0;
    sdata->tot_len = 0;

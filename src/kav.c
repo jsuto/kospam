@@ -77,7 +77,6 @@ int kav_scan(char *tmpfile, char *engine, char *avinfo, struct __config *cfg){
    close(s);
 
    if(strncmp(buf, KAV_RESP_INFECTED, strlen(KAV_RESP_INFECTED)) == 0){
-      snprintf(engine, SMALLBUFSIZE-1, "Kaspersky");
       return AV_VIRUS;
    }
 

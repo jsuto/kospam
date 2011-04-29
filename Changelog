@@ -1,3 +1,48 @@
+2011.04.29, SJ
+
+Modified the parser to handle the Content-* headers better.
+The modification will introduce new tokens, as well as discard
+some old tokens, so this may affect your accuracy slightly.
+
+2011.04.28, SJ
+
+Added ESET support to clapf. To enable it, use the --enable-eset
+configure option.
+
+Please note that you need a fully working ESET Mail Security product 
+installed. Other ESET product is currently not supported.
+
+To enable the clapf + ESET cooperation, configure ESET daemon as usual,
+ie. as an smtp service (eg. 127.0.0.1:2525).
+
+Then configure postfix to pass emails to ESET (and not clapf!).
+
+Configure ESET to pass emails to clapf (eg. 127.0.0.1:10025), and
+finally clapf will pass the email back to postfix.
+
+To sum it up:
+
+postfix -> ESET (127.0.0.1:2525) -> clapf (127.0.0.1:10025) -> postfix (127.0.0.1:10026)
+
+The ESET daemon is needed to configure the following way (esets.cfg):
+
+##################
+av_clean_mode = "none"
+action_av_infected = "accept"
+av_eml_header_modification_mask = "clean:cleaned:deleted:infected:notscanned"
+av_eml_header_template = "%avstatus% %virus%"
+
+listen_addr = "127.0.0.1"
+listen_port = 2525
+server_addr = "127.0.0.1"
+server_port = 10025
+##################
+
+The config above will tell ESET to pass all virus infected emails, after
+putting "X-EsetResult: infected virusname" to the mail header. Clapf
+checks for this line, and takes the appropriate action on it.
+
+
 2011.04.22, SJ
 
 Parser fix to correctly handle multiline header fields.

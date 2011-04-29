@@ -32,37 +32,72 @@ int do_av_check(struct session_data *sdata, char *rcpttoemail, char *fromemail, 
 
    memset(virusinfo, 0, SMALLBUFSIZE);
 
+   snprintf(avengine, SMALLBUFSIZE-1, "libClamAV");
+
    if(cl_scanfile(sdata->ttmpfile, &virname, NULL, data->engine, options) == CL_VIRUS){
       strncpy(virusinfo, virname, SMALLBUFSIZE-1);
       rav = AVIR_VIRUS;
-      snprintf(avengine, SMALLBUFSIZE-1, "libClamAV");
    }
 
-   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: virus info: '%s'", sdata->ttmpfile, virusinfo);
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: engine: %s, virus info: '%s'", sdata->ttmpfile, avengine, virusinfo);
+#endif
+
+#ifdef HAVE_ESET
+
+   /*
+    * X-EsetResult: clean is OK
+    * X-EsetResult: infected Win32/Sober.G worm
+    */
+
+   snprintf(avengine, SMALLBUFSIZE-1, "ESET");
+
+   if(strncmp(sdata->eset, "infected ", 9) == 0){
+      rav = AVIR_VIRUS;
+
+      snprintf(virusinfo, SMALLBUFSIZE-1, "%s", &(sdata->eset[9]));
+   }
+
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: engine: %s, virus info: '%s'", sdata->ttmpfile, avengine, virusinfo);
 #endif
 
 #ifdef HAVE_AVAST
+   snprintf(avengine, SMALLBUFSIZE-1, "Avast");
+
    if(avast_scan(sdata->ttmpfile, avengine, virusinfo, cfg) == AV_VIRUS) rav = AVIR_VIRUS;
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: engine: %s, virus info: '%s'", sdata->ttmpfile, avengine, virusinfo);
 #endif
 
 #ifdef HAVE_AVAST_HOME
+   snprintf(avengine, SMALLBUFSIZE-1, "Avast Home");
+
    if(avast_cmd_scan(sdata->ttmpfile, avengine, virusinfo, cfg) == AV_VIRUS) rav = AVIR_VIRUS;
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: engine: %s, virus info: '%s'", sdata->ttmpfile, avengine, virusinfo);
 #endif
 
 #ifdef HAVE_KAV
+   snprintf(avengine, SMALLBUFSIZE-1, "Kaspersky");
+
    if(kav_scan(sdata->ttmpfile, avengine, virusinfo, cfg) == AV_VIRUS) rav = AVIR_VIRUS;
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: engine: %s, virus info: '%s'", sdata->ttmpfile, avengine, virusinfo);
 #endif
 
 #ifdef HAVE_DRWEB
+   snprintf(avengine, SMALLBUFSIZE-1, "DR.Web");
+
    if(drweb_scan(sdata->ttmpfile, avengine, virusinfo, cfg) == AV_VIRUS) rav = AVIR_VIRUS;
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: engine: %s, virus info: '%s'", sdata->ttmpfile, avengine, virusinfo);
 #endif
 
 #ifdef HAVE_CLAMD
+   snprintf(avengine, SMALLBUFSIZE-1, "clamd");
+
    if(strlen(cfg->clamd_addr) > 3 && cfg->clamd_port > 0){
       if(clamd_net_scan(sdata->ttmpfile, avengine, virusinfo, cfg) == AV_VIRUS) rav = AVIR_VIRUS;
    } else {
       if(clamd_scan(sdata->ttmpfile, avengine, virusinfo, cfg) == AV_VIRUS) rav = AVIR_VIRUS;
    }
+
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: engine: %s, virus info: '%s'", sdata->ttmpfile, avengine, virusinfo);
 #endif
 
    if(rav == AVIR_VIRUS){

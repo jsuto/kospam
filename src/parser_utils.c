@@ -576,7 +576,7 @@ int countNonPrintableCharacters(char *p){
 
 int isHexNumber(char *p){
    for(; *p; p++){
-      if(!(*p == '-' || (*p >= 0x30 && *p <= 0x39) || (*p >= 0x41 && *p <= 0x47) || (*p >= 0x61 && *p <= 0x67)) )
+      if(!(*p == '-' || (*p >= 0x30 && *p <= 0x39) || (*p >= 0x41 && *p <= 0x46) || (*p >= 0x61 && *p <= 0x66)) )
          return 0;
    }
 

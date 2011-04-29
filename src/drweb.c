@@ -80,8 +80,6 @@ int drweb_scan(char *tmpfile, char *engine, char *avinfo, struct __config *cfg){
 
    if(ntohl(q) == DRWEB_RESP_VIRUS){
       strncpy(avinfo, DRWEB_VIRUS_HAS_FOUND_MESSAGE, SMALLBUFSIZE-1);
-      snprintf(engine, SMALLBUFSIZE-1, "DR.Web");
-
       return AV_VIRUS;
    }
 

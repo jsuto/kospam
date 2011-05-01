@@ -17,6 +17,7 @@ int do_av_check(struct session_data *sdata, char *rcpttoemail, char *fromemail, 
    if(sdata->need_scan == 0) return rav;
 
    memset(avengine, 0, SMALLBUFSIZE);
+   memset(virusinfo, 0, SMALLBUFSIZE);
 
 #ifdef HAVE_LIBCLAMAV
    const char *virname;

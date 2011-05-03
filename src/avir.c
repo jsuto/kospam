@@ -31,8 +31,6 @@ int do_av_check(struct session_data *sdata, char *rcpttoemail, char *fromemail, 
 
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: trying to pass to libclamav", sdata->ttmpfile);
 
-   memset(virusinfo, 0, SMALLBUFSIZE);
-
    snprintf(avengine, SMALLBUFSIZE-1, "libClamAV");
 
    if(cl_scanfile(sdata->ttmpfile, &virname, NULL, data->engine, options) == CL_VIRUS){

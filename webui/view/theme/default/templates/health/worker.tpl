@@ -19,6 +19,8 @@
 
 <?php foreach ($queues as $queue) { ?>
 
+<?php if(isset($queue['desc'])) { ?>
+
 <p>
 <table border="1">
    <tr><td colspan="12"><strong><?php print $queue['desc']; ?></strong> <?php print $queue['date']; ?></td></tr>
@@ -38,4 +40,4 @@
 
 <?php } ?>
 
-
+<?php } ?>

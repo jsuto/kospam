@@ -1,3 +1,7 @@
+2011.05.03, SJ
+
+Released 0.4.6-rc3.
+
 2011.04.29, SJ
 
 Modified the parser to handle the Content-* headers better.

@@ -1,3 +1,9 @@
+2011.05.05, SJ
+
+Enhanced the parser the skip <style>blabla</style>. Spammers
+usually use this 'fetaure' to hide word salad, or disclaimers
+from legitimate emails.
+
 2011.05.03, SJ
 
 Released 0.4.6-rc3.

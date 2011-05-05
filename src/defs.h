@@ -110,6 +110,7 @@ struct _state {
    int utf8;
    int qp;
    int htmltag;
+   int style;
    int skip_html;
    int ipcnt;
    int has_to_dump;

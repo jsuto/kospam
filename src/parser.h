@@ -22,7 +22,7 @@ void fixupEncodedHeaderLine(char *buf);
 void fixupSoftBreakInQuotedPritableLine(char *buf, struct _state *state);
 void fixupBase64EncodedLine(char *buf, struct _state *state);
 void markHTML(char *buf, struct _state *state);
-int appendHTMLTag(char *buf, char *htmlbuf);
+int appendHTMLTag(char *buf, char *htmlbuf, int pos, struct _state *state);
 void fixupHTML(char *buf, struct _state *state, struct __config *cfg);
 int isSkipHTMLTag(char *s);
 void translateLine(unsigned char *p, struct _state *state);

@@ -39,6 +39,7 @@ void initState(struct _state *state){
    state->qp = 0;
 
    state->htmltag = 0;
+   state->style = 0;
 
    state->skip_html = 0;
 
@@ -118,6 +119,18 @@ int extract_boundary(char *p, struct _state *state){
 
    q = strchr(p, '"');
    if(q) *q = ' ';
+
+   /*
+    * I've seen an idiot spammer using the following boundary definition in the header:
+    *
+    * Content-Type: multipart/alternative;
+    *     boundary=3D"b1_52b92b01a943615aff28b7f4d2f2d69d"
+    */
+
+   if(strncmp(p, "=3D", 3) == 0){
+      *(p+3) = '=';
+      p += 3;
+   }
 
    p = strchr(p, '=');
    if(p){
@@ -273,7 +286,7 @@ void fixupBase64EncodedLine(char *buf, struct _state *state){
 
 void markHTML(char *buf, struct _state *state){
    char *s, puf[MAXBUFSIZE], html[SMALLBUFSIZE];
-   int k=0, j=0;
+   int k=0, j=0, pos=0;
 
    memset(puf, 0, MAXBUFSIZE);
    memset(html, 0, SMALLBUFSIZE);
@@ -287,6 +300,8 @@ void markHTML(char *buf, struct _state *state){
          k++;
 
          memset(html, 0, SMALLBUFSIZE); j=0;
+
+         pos = 0;
 
          //printf("start html:%c\n", *s);
       }
@@ -306,14 +321,17 @@ void markHTML(char *buf, struct _state *state){
             }
 
             if(isspace(*s)){
-               k += appendHTMLTag(puf, html);
+               k += appendHTMLTag(puf, html, pos, state);
                memset(html, 0, SMALLBUFSIZE); j=0;
+               pos++;
             }
          }
       }
       else {
-         puf[k] = *s;
-         k++;
+         if(state->style == 0){
+            puf[k] = *s;
+            k++;
+         }
       }
 
       if(*s == '>'){
@@ -323,27 +341,32 @@ void markHTML(char *buf, struct _state *state){
          //printf("skiphtml=0\n");
          //printf("end html:%c\n", *s);
          strncat(html, " ", SMALLBUFSIZE-1);
-         k += appendHTMLTag(puf, html);
+         k += appendHTMLTag(puf, html, pos, state);
          memset(html, 0, SMALLBUFSIZE); j=0;
       }
 
    }
 
    //printf("append last in line:%s\n", puf);
-   k += appendHTMLTag(puf, html);
+   k += appendHTMLTag(puf, html, pos, state);
 
    strcpy(buf, puf);
 }
 
 
-int appendHTMLTag(char *buf, char *htmlbuf){
+int appendHTMLTag(char *buf, char *htmlbuf, int pos, struct _state *state){
    char *p, html[SMALLBUFSIZE];
    int len;
 
+   if(pos == 0 && strncmp(htmlbuf, "style ", 6) == 0) state->style = 1;
+   if(pos == 0 && strncmp(htmlbuf, "/style ", 7) == 0) state->style = 0;
+
+   //printf("appendHTML: pos:%d, +%s+\n", pos, htmlbuf);
+
+   if(state->style == 1) return 0;
+
    snprintf(html, SMALLBUFSIZE-1, "HTML*%s", htmlbuf);
    len = strlen(html);
-
-   //printf("try to append:*%s*\n", html);
 
    if(isSkipHTMLTag(html) == 1) return 0;
 

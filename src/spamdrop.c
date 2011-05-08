@@ -684,7 +684,7 @@ int main(int argc, char **argv, char **envp){
 
       if(
          (blackhole_request == 0 && debug == 0 && cfg.training_mode == T_TUM && ( (spaminess >= cfg.spam_overall_limit && spaminess < 0.99) || (spaminess < cfg.max_ham_spamicity && spaminess > 0.1) )) ||
-         (cfg.initial_1000_learning == 1 && (sdata.Nham < NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED || sdata.Nspam < NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED))
+         (cfg.initial_1000_learning == 1 && debug == 0 && (sdata.Nham < NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED || sdata.Nspam < NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED))
         )
       {
 
@@ -707,7 +707,7 @@ int main(int argc, char **argv, char **envp){
    /* if this is a blackhole request and spaminess < 0.99, then learn the message in an iterative loop */
 
 
-   if(blackhole_request == 1){
+   if(blackhole_request == 1 && debug == 0){
       if(spaminess < 0.99){
          rounds = MAX_ITERATIVE_TRAIN_LOOPS;
 

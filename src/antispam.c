@@ -245,6 +245,9 @@ int processMessage(struct session_data *sdata, struct _state *sstate, struct __d
 
       if(sdata->spaminess > 0.9999) snprintf(reason, SMALLBUFSIZE-1, "%s%s\r\n", cfg->clapf_header_field, MSG_ABSOLUTELY_SPAM);
 
+      /* discard any training in debug mode */
+      if(cfg->debug == 1) goto END_OF_TRAINING;
+
 
       /* skip TUM training on a blackhole message, unless it may learn a missed spam as a good email */
 

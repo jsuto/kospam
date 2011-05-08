@@ -1,3 +1,73 @@
+2011.05.08, SJ
+
+Fixed a nasty training issue.
+
+Description:
+
+If you have less than 1000 ham emails or less than 1000
+spam emails in the token database and the initial_1000_training
+variable is set to 1 in clapf.conf (it is by default), then
+checking a single email with spamdrop (eg. spamdrop -D < email)
+will learn the email either as a ham or as a spam (it depends
+on the original spamicity of the email).
+
+To determine whether you are affected:
+
+- you are not affected if you have at least 1000 ham and 100 spam
+emails in your token database, AND/OR
+
+- you are running version >= 0.4.6-stable or >= nightly-20110508, AND/OR
+
+- you have neve used "spamdrop -D"
+
+Fix:
+
+- upgrade to the latest nightly build (20100508), OR
+
+- apply the following patches:
+
+--- a/src/spamdrop.c
++++ b/src/spamdrop.c
+@@ -684,7 +684,7 @@
+ 
+       if(
+          (blackhole_request == 0 && debug == 0 && cfg.training_mode == T_TUM && ( (spaminess >= cfg.spam_overall_limit && spaminess < 0.99) || (spaminess < cfg.max_ham_spamicity && spaminess > 0.1) )) ||
+-         (cfg.initial_1000_learning == 1 && (sdata.Nham < NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED || sdata.Nspam < NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED))
++         (cfg.initial_1000_learning == 1 && debug == 0 && (sdata.Nham < NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED || sdata.Nspam < NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED))
+         )
+       {
+ 
+@@ -707,7 +707,7 @@
+    /* if this is a blackhole request and spaminess < 0.99, then learn the message in an iterative loop */
+ 
+ 
+-   if(blackhole_request == 1){
++   if(blackhole_request == 1 && debug == 0){
+       if(spaminess < 0.99){
+          rounds = MAX_ITERATIVE_TRAIN_LOOPS;
+ 
+ 
+
+--- a/src/antispam.c
++++ b/src/antispam.c
+@@ -240,6 +245,9 @@
+ 
+       if(sdata->spaminess > 0.9999) snprintf(reason, SMALLBUFSIZE-1, "%s%s\r\n", cfg->clapf_header_field, MSG_ABSOLUTELY_SPAM);
+ 
++      /* discard any training in debug mode */
++      if(cfg->debug == 1) goto END_OF_TRAINING;
++
+
+ 
+
+Workaround:
+- set initial_1000_learning=0 in clapf.conf, OR
+- never use "spamdrop -D" until you get at least 1000 ham and 100 spam emails in your token database.
+
+
+Credits: Tamas Papp
+
+
 2011.05.07, SJ
 
 spamdrop (in debug mode) will print out the nham and nspam

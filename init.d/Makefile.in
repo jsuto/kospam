@@ -24,11 +24,11 @@ LDAP_LIBS = @ldap_libs@
 INSTALL = @INSTALL@
 
 all:
-	sed -e "s%_PREFIX_%$(prefix)%" $(srcdir)/clapf.ubuntu.in > $(srcdir)/clapf.ubuntu
-	sed -e "s%_PREFIX_%$(prefix)%" $(srcdir)/clapf.redhat.in > $(srcdir)/clapf.redhat
-	sed -e "s%SBINDIR%$(sbindir)%" $(srcdir)/rc.clapf.in > $(srcdir)/rc.clapf
-	sed -e "s%_PREFIX_%$(prefix)%" $(srcdir)/clapf-maillog.ubuntu.in > $(srcdir)/clapf-maillog.ubuntu
-	sed -e "s%_PREFIX_%$(prefix)%" $(srcdir)/clapf-maillog.redhat.in > $(srcdir)/clapf-maillog.redhat
+	sed -e "s%_PREFIX_%$(prefix)%" -e "s%SYSCONFDIR%$(sysconfdir)%" $(srcdir)/clapf.ubuntu.in > $(srcdir)/clapf.ubuntu
+	sed -e "s%_PREFIX_%$(prefix)%" -e "s%SYSCONFDIR%$(sysconfdir)%" $(srcdir)/clapf.redhat.in > $(srcdir)/clapf.redhat
+	sed -e "s%SBINDIR%$(sbindir)%" -e "s%SYSCONFDIR%$(sysconfdir)%" $(srcdir)/rc.clapf.in > $(srcdir)/rc.clapf
+	sed -e "s%_PREFIX_%$(prefix)%" -e "s%SYSCONFDIR%$(sysconfdir)%" $(srcdir)/clapf-maillog.ubuntu.in > $(srcdir)/clapf-maillog.ubuntu
+	sed -e "s%_PREFIX_%$(prefix)%" -e "s%SYSCONFDIR%$(sysconfdir)%" $(srcdir)/clapf-maillog.redhat.in > $(srcdir)/clapf-maillog.redhat
 	sed -e "s%SBINDIR%$(sbindir)%" \
 		-e "s%LIBEXECDIR%$(libexecdir)%" \
 		-e "s%SYSCONFDIR%$(sysconfdir)%" < $(srcdir)/rc.clapf-maillog.in > $(srcdir)/rc.clapf-maillog

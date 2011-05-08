@@ -60,7 +60,7 @@ double getSpamProbabilityChi2(struct node *xhash[], struct __config *cfg){
                P.exp += e;
             }
 
-            if(cfg->debug == 1) printf("%s (%llu) %.4f %ld\n", q->str, q->key, q->spaminess, q->num);
+            if(cfg->debug == 1) printf("%s (%llu) %.4f %.0f/%.0f %ld\n", q->str, q->key, q->spaminess, q->nham, q->nspam, q->num);
          }
 
          p = q;

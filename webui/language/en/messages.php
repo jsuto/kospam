@@ -90,6 +90,7 @@ $_['text_invalid_username'] = "Invalid username";
 $_['text_language'] = "Language";
 $_['text_last'] = "Last";
 $_['text_last_update'] = "Last update";
+$_['text_latest_emails'] = "Latest emails";
 $_['text_ldap_basedn'] = "LDAP base DN";
 $_['text_ldap_binddn'] = "LDAP bind DN";
 $_['text_ldap_bindpw'] = "LDAP bind password";

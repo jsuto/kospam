@@ -41,3 +41,35 @@
 <?php } ?>
 
 <?php } ?>
+
+
+<p><strong><?php print $text_latest_emails; ?></strong></p>
+
+<p>
+<table border="1">
+   <tr align="center">
+   <th><?php print $text_time; ?></th>
+   <th><?php print $text_recipient; ?></th>
+   <th>clapf id</th>
+   <th>Relay</th>
+   <th><?php print $text_result; ?></th>
+   </tr>
+
+<?php foreach ($emails as $email) {
+
+   if(isset($email['queue_id'])) { ?>
+
+   <tr>
+      <td><a href="index.php?route=history/view&id=<?php print $email['queue_id']; ?>&to=<?php print $email['rcpt']; ?>"><?php print date("Y.m.d. H:i:s", $email['ts']); ?></a></td>
+      <td><?php print $email['rcpt']; ?></td>
+      <td><?php print $email['queue_id']; ?></td>
+      <td><?php print $email['relay']; ?></td>
+      <td><?php print $email['result']; ?></td>
+   </tr>
+
+<?php } } ?>
+
+</table>
+</p>
+
+

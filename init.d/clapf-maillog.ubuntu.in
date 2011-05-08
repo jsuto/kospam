@@ -18,7 +18,7 @@ DESC="Clapf mail log data collector daemon"
 PID_FILE=`${PREFIX}/sbin/clapfconf |grep ^historypid |cut -f2 -d=`
 PID_NUMBER=`test -f ${PID_FILE} && cat ${PID_FILE}`
 PID_DIR=`dirname ${PID_FILE}`
-CONFIG="${PREFIX}/etc/clapf.conf"
+CONFIG=SYSCONFDIR/clapf.conf"
 CLAPF_USER=`${PREFIX}/sbin/clapfconf |grep ^username |cut -f2 -d=`
 CLAPF_UID=`id -un ${CLAPF_USER}`
 CLAPF_GID=`id -gn ${CLAPF_UID}`

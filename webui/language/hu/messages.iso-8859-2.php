@@ -89,6 +89,7 @@ $_['text_invalid_username'] = "Érvénytelen felhasználónév";
 
 $_['text_language'] = "Nyelv";
 $_['text_last'] = "Utolsó";
+$_['text_latest_emails'] = "Legfrissebb emailek";
 $_['text_last_update'] = "Utolsó frissítés";
 $_['text_ldap_basedn'] = "LDAP alapértelmezett DN";
 $_['text_ldap_binddn'] = "LDAP csatlakozási DN";

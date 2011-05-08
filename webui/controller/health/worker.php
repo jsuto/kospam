@@ -10,13 +10,14 @@ class ControllerHealthWorker extends Controller {
       $this->template = "health/worker.tpl";
       $this->layout = "common/layout-empty";
 
+      $db_history = Registry::get('db_history');
+
       $this->load->model('health/health');
 
       $request = Registry::get('request');
 
       $lang = Registry::get('language');
 
-      $db = Registry::get('db');
 
       $this->data['health'] = array();
 
@@ -32,6 +33,8 @@ class ControllerHealthWorker extends Controller {
       $this->data['queues'][] = format_qshape($lang->data['text_active_incoming_queue_sender'], QSHAPE_ACTIVE_INCOMING_SENDER);
       $this->data['queues'][] = format_qshape($lang->data['text_deferred_queue'], QSHAPE_DEFERRED);
       $this->data['queues'][] = format_qshape($lang->data['text_deferred_queue_sender'], QSHAPE_DEFERRED_SENDER);
+
+      $this->data['emails'] = $this->model_health_health->get_last_maillog_entries();
 
       $this->render();
    }

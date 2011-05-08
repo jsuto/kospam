@@ -1,3 +1,11 @@
+2011.05.07, SJ
+
+spamdrop (in debug mode) will print out the nham and nspam
+counters of each tokens in addition to the spamicity and
+deviation values..
+
+clapf will syslog the fact if the sender is found on mynetwork.
+
 2011.05.05, SJ
 
 Enhanced the parser the skip <style>blabla</style>. Spammers

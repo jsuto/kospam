@@ -139,6 +139,8 @@ int processMessage(struct session_data *sdata, struct _state *sstate, struct __d
       snprintf(tmpbuf, SMALLBUFSIZE-1, "%smynetwork\r\n", cfg->clapf_header_field);
       strncat(sdata->spaminessbuf, tmpbuf, MAXBUFSIZE-1);
 
+      if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: mynetwork: %s", sdata->ttmpfile, sdata->client_addr);
+
       return OK;
    }
 

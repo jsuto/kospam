@@ -18,7 +18,7 @@
 
 NAME="maillog.pl"
 PREFIX="_PREFIX_"
-PARAMS="${PREFIX}/etc/clapf.conf"
+PARAMS="SYSCONFDIR/clapf.conf"
 RETVAL=0
 PID_FILE=`${PREFIX}/sbin/clapfconf -q historypid | cut -f2 -d '='`
 PID_NUMBER=`test -f ${PID_FILE} && cat ${PID_FILE}`

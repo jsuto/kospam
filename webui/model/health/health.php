@@ -2,7 +2,7 @@
 
 class ModelHealthHealth extends Model {
 
-   function format_time($time = 0) {
+   public function format_time($time = 0) {
       if($time >= 1) {
          return $time . " sec";
       }
@@ -12,7 +12,7 @@ class ModelHealthHealth extends Model {
    }
 
 
-   function checksmtp($host = '', $port = 0, $error = '') {
+   public function checksmtp($host = '', $port = 0, $error = '') {
       $ret = $error;
       $time = 0;
 
@@ -30,6 +30,15 @@ class ModelHealthHealth extends Model {
 
       $time = microtime(true) - $time_start;
       return array("$host:$port", $ret, $this->format_time($time));
+   }
+
+
+   public function get_last_maillog_entries($n = 10) {
+      $query = $this->db_history->query("select * from clapf order by ts desc limit 0," . (int)$n);
+
+      if(isset($query->rows)) { return $query->rows; }
+
+      return array();
    }
 
 }

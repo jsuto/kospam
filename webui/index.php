@@ -67,7 +67,7 @@ if(Registry::get('username')) {
 
    if(isset($request->get['route'])){
 
-      if($request->get['route'] == "history/worker" || $request->get['route'] == "history/view" || strstr($request->get['route'], "stat/") ) {
+      if($request->get['route'] == "history/worker" || $request->get['route'] == "history/view" || strstr($request->get['route'], "stat/") || strstr($request->get['route'], "health/") ) {
          $db_history = new DB(HISTORY_DRIVER, DB_HOSTNAME, DB_USERNAME, DB_PASSWORD, HISTORY_DATABASE, DB_PREFIX);
          Registry::set('db_history', $db_history);
       }

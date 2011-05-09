@@ -71,15 +71,6 @@ create table if not exists t_queue (
 create index t_queue_idx on t_queue(uid, id);
 create index t_queue_idx2 on t_queue(ts);
 
-create table if not exists t_stat (
-	uid int unsigned not null,
-	ts bigint unsigned not null,
-	nham int default 0,
-	nspam int default 0
-);
-
-create index t_stat_idx on t_stat(uid);
-
 create table if not exists t_policy (
         policy_group int(4) not null,
         name char(128) not null,

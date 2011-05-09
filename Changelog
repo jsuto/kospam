@@ -68,6 +68,8 @@ Workaround:
 Credits: Tamas Papp
 
 
+Removed the t_stat table. It's no longer used.
+
 2011.05.07, SJ
 
 spamdrop (in debug mode) will print out the nham and nspam

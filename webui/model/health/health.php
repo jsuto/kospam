@@ -34,12 +34,51 @@ class ModelHealthHealth extends Model {
 
 
    public function get_last_maillog_entries($n = 10) {
-      $query = $this->db_history->query("select * from clapf order by ts desc limit 0," . (int)$n);
+      $query = $this->db_history->query("select * from " . TABLE_SUMMARY . " order by ts desc limit 0," . (int)$n);
 
       if(isset($query->rows)) { return $query->rows; }
 
       return array();
    }
+
+
+   public function count_processed_emails() {
+      $today = $last_7_days = $last_30_days = 0;
+      $now = time();
+
+      $ts = $now - 86400;
+      $query = $this->db_history->query("select count(*) as count from clapf where ts > $ts");
+      if(isset($query->row['count'])) { $today = $query->row['count']; }
+
+      $ts = $now - 604800;
+      $query = $this->db_history->query("select count(*) as count from clapf where ts > $ts");
+      if(isset($query->row['count'])) { $last_7_days = $query->row['count']; }
+
+      $ts = $now - 2592000;
+      $query = $this->db_history->query("select count(*) as count from clapf where ts > $ts");
+      if(isset($query->row['count'])) { $last_30_days = $query->row['count']; }
+
+      return array($today, $last_7_days, $last_30_days);
+   }
+
+
+   public function uptime() {
+      $s = exec("uptime");
+      return $s;
+   }
+
+
+   public function meminfo() {
+      $s = exec("free", $output);
+      return implode("\n", $output);
+   }
+
+
+   public function diskinfo() {
+      $s = exec("df -h", $output);
+      return implode("\n", $output);
+   }
+
 
 }
 

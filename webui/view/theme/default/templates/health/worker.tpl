@@ -1,7 +1,16 @@
 
 <p>&nbsp;</p>
 
-<p><?php print $text_last_update; ?>: <?php print date("Y.m.d. H:i:s"); ?>. <?php print $text_refresh_period; ?>: <?php print HEALTH_REFRESH; ?> sec</p>
+<p><?php print $text_refresh_period; ?>: <?php print HEALTH_REFRESH; ?> sec</p>
+
+<p><strong><?php print $text_uptime; ?>: </strong><?php print $uptime; ?></p>
+
+<p><strong><?php print $text_processed_emails_in; ?>:</strong> <?php print $processed_emails[0]; ?>/<?php print $processed_emails[1]; ?>/<?php print $processed_emails[2]; ?></p>
+
+<p><strong><?php print $text_quarantined_emails; ?>: </strong><?php print "aaaa"; ?></p>
+
+
+<p><strong><?php print $text_smtp_status; ?>: </strong></p>
 
 <p>
 <table border="1">
@@ -16,6 +25,37 @@
 </table>
 </p>
 
+
+<p><strong><?php print $text_latest_emails; ?></strong></p>
+
+<p>
+<table border="1">
+   <tr align="center">
+   <th><?php print $text_time; ?></th>
+   <th><?php print $text_from; ?></th>
+   <th><?php print $text_recipient; ?></th>
+   <th><?php print $text_subject; ?></th>
+   </tr>
+
+<?php foreach ($emails as $email) {
+
+   if(isset($email['queue_id'])) { ?>
+
+   <tr>
+      <td><a href="index.php?route=history/view&id=<?php print $email['queue_id']; ?>&to=<?php print $email['to']; ?>"><?php print date("Y.m.d. H:i:s", $email['ts']); ?></a></td>
+      <td><?php print $email['from']; ?></td>
+      <td><?php print $email['to']; ?></td>
+      <td><?php if(strlen($email['subject'])) { print substr($email['subject'], 0, 2*FROM_LENGTH_TO_SHOW) . "..."; } else { print $email['subject']; } ?></td>
+
+   </tr>
+
+<?php } } ?>
+
+</table>
+</p>
+
+
+<p><strong><?php print $text_queue_status; ?>: </strong></p>
 
 <?php foreach ($queues as $queue) { ?>
 
@@ -43,33 +83,14 @@
 <?php } ?>
 
 
-<p><strong><?php print $text_latest_emails; ?></strong></p>
+<p><strong><?php print $text_memory_usage; ?>: </strong></p>
+<pre>
+<?php print $meminfo; ?>
+</pre>
 
-<p>
-<table border="1">
-   <tr align="center">
-   <th><?php print $text_time; ?></th>
-   <th><?php print $text_recipient; ?></th>
-   <th>clapf id</th>
-   <th>Relay</th>
-   <th><?php print $text_result; ?></th>
-   </tr>
-
-<?php foreach ($emails as $email) {
-
-   if(isset($email['queue_id'])) { ?>
-
-   <tr>
-      <td><a href="index.php?route=history/view&id=<?php print $email['queue_id']; ?>&to=<?php print $email['rcpt']; ?>"><?php print date("Y.m.d. H:i:s", $email['ts']); ?></a></td>
-      <td><?php print $email['rcpt']; ?></td>
-      <td><?php print $email['queue_id']; ?></td>
-      <td><?php print $email['relay']; ?></td>
-      <td><?php print $email['result']; ?></td>
-   </tr>
-
-<?php } } ?>
-
-</table>
-</p>
+<p><strong><?php print $text_disk_usage; ?>: </strong></p>
+<pre>
+<?php print $diskinfo; ?>
+</pre>
 
 

@@ -61,15 +61,6 @@ create table if not exists t_black_list (
 
 insert into t_black_list (uid) values(0);
 
-create table if not exists t_stat (
-	uid int unsigned not null,
-	ts bigint unsigned not null,
-	nham int default 0,
-	nspam int default 0
-);
-
-create index t_stat_idx on t_stat(uid);
-
 
 create table if not exists t_policy (
 	policy_group int(4) not null primary key,

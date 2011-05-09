@@ -124,7 +124,6 @@
 #define SQL_WHITE_LIST "t_white_list"
 #define SQL_BLACK_LIST "t_black_list"
 #define SQL_QUEUE_TABLE "t_queue"
-#define SQL_STAT_TABLE "t_stat"
 #define SQL_POLICY_TABLE "t_policy"
 #define SQL_MINEFIELD_TABLE "t_minefield"
 

@@ -137,6 +137,14 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
       else if(strncmp(buf, "To:", 3) == 0) state->message_state = MSG_TO;
       else if(strncmp(buf, "Subject:", strlen("Subject:")) == 0) state->message_state = MSG_SUBJECT;
 
+      if(state->message_state == MSG_SUBJECT){
+         p = &buf[0];
+         if(strncmp(buf, "Subject:", strlen("Subject:")) == 0) p = &buf[8];
+         if(*p == ' ') p++;
+
+         if(strlen(sdata->subject) + strlen(p) < SMALLBUFSIZE-1) strncat(sdata->subject, p, SMALLBUFSIZE-1);
+      }
+
 
       if(state->message_state == MSG_FROM){
          p = strchr(buf+5, ' ');

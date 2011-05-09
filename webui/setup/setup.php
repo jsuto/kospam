@@ -177,7 +177,6 @@ function write_stuff() {
    write_line($fp, "TABLE_WHITELIST", "t_white_list");
    write_line($fp, "TABLE_BLACKLIST", "t_black_list");
    write_line($fp, "TABLE_POLICY", "t_policy");
-   write_line($fp, "TABLE_STAT", "t_stat");
    write_line($fp, "TABLE_REMOTE", "t_remote");
    write_line($fp, "TABLE_SUMMARY", "summary");
    write_line($fp, "TABLE_COUNTERS", "t_counters");
@@ -280,6 +279,10 @@ function write_stuff() {
    fputs($fp, '                          );' . CRLF);
 
    fputs($fp, '$counters = array(\'_c:rcvd\', \'_c:mynetwork\', \'_c:ham\', \'_c:spam\', \'_c:possible_spam\', \'_c:unsure\', \'_c:minefield\', \'_c:virus\', \'_c:zombie\', \'_c:fp\', \'_c:fn\', \'_c:counters_last_update\');' . CRLF);
+
+   write_line($fp);
+
+   fputs($fp, '$health_smtp_servers = array( array("0.0.0.0", POSTFIX_PORT), array(SMTP_HOST, CLAPF_PORT), array(SMTP_HOST, SMTP_PORT) );' . CRLF);
 
    write_line($fp);
 

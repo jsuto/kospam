@@ -25,9 +25,9 @@ class ControllerHealthWorker extends Controller {
          die("go away");
       }
 
-      $this->data['health'][] = $this->model_health_health->checksmtp("0.0.0.0", POSTFIX_PORT, $lang->data['text_error']);
-      $this->data['health'][] = $this->model_health_health->checksmtp(SMTP_HOST, CLAPF_PORT, $lang->data['text_error']);
-      $this->data['health'][] = $this->model_health_health->checksmtp(SMTP_HOST, SMTP_PORT, $lang->data['text_error']);
+      foreach (Registry::get('health_smtp_servers') as $smtp) {
+         $this->data['health'][] = $this->model_health_health->checksmtp($smtp[0], $smtp[1], $lang->data['text_error']);
+      }
 
       $this->data['queues'][] = format_qshape($lang->data['text_active_incoming_queue'], QSHAPE_ACTIVE_INCOMING);
       $this->data['queues'][] = format_qshape($lang->data['text_active_incoming_queue_sender'], QSHAPE_ACTIVE_INCOMING_SENDER);
@@ -35,6 +35,14 @@ class ControllerHealthWorker extends Controller {
       $this->data['queues'][] = format_qshape($lang->data['text_deferred_queue_sender'], QSHAPE_DEFERRED_SENDER);
 
       $this->data['emails'] = $this->model_health_health->get_last_maillog_entries();
+
+      $this->data['processed_emails'] = $this->model_health_health->count_processed_emails();
+
+      $this->data['uptime'] = $this->model_health_health->uptime();
+
+      $this->data['meminfo'] = $this->model_health_health->meminfo();
+      $this->data['diskinfo'] = $this->model_health_health->diskinfo();
+
 
       $this->render();
    }

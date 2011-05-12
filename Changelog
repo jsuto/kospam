@@ -1,3 +1,15 @@
+2011.05.12, SJ
+
+Fixed the ubuntu clapf init script, and removed the "reload"
+section. It provided an error under debian 6.
+
+Renamed the modified postgrey daemon to clapf-postgrey.
+
+Cron fixes.
+
+Health monitor fixes.
+
+
 2011.05.08, SJ
 
 Fixed a nasty training issue.

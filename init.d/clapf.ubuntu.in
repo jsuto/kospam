@@ -69,13 +69,6 @@ case "$1" in
 		$0 start
    ;;
 
-	reload)
-		echo -n "Reloading $DESC: "
-        	start-stop-daemon --stop --pidfile $PIDFILE --signal HUP --exec $XNAME
-        	echo "$NAME."
-   ;;
-
-
 	status)
 		if check_status;
 		 then
@@ -86,6 +79,6 @@ case "$1" in
    ;;
 
 	*)
-		echo "Usage: $0 start|stop|restart|reload|status"
+		echo "Usage: $0 start|stop|restart|status"
 esac
 

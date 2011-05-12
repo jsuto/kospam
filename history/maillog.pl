@@ -237,7 +237,7 @@ while (defined($line = $file->read)) {
          $delay =~ s/\,//;
          $s = "";
 
-         if($line =~ /status=([\w\W]+)\,\ subject=([\w\W]+)/) {
+         if($line =~ /status=([\w\W]{0,})\,\ subject=([\w\W]+)/) {
             $subject = $2;
             $s = $1;
 

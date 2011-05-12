@@ -7,7 +7,7 @@
 
 <p><strong><?php print $text_processed_emails_in; ?>:</strong> <?php print $processed_emails[0]; ?>/<?php print $processed_emails[1]; ?>/<?php print $processed_emails[2]; ?></p>
 
-<p><strong><?php print $text_quarantined_emails; ?>: </strong><?php print "aaaa"; ?></p>
+<p><strong><?php print $text_quarantined_emails; ?>: </strong><?php print $number_of_quarantined_messages; ?></p>
 
 
 <p><strong><?php print $text_smtp_status; ?>: </strong></p>

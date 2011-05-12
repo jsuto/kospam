@@ -8,10 +8,21 @@
 1 0 1 * * /usr/bin/php LIBEXECDIR/clapf/summary.php /srv/www/webui.yourdomain.com "clapf monthly report" "Ham & spam messages" monthly
 
 
+root's crontab:
+
+*/5 * * * * PATH=$PATH:/usr/sbin:/usr/local/sbin /usr/sbin/qshape > LOCALSTATEDIR/lib/clapf/stat/active+incoming
+*/5 * * * * PATH=$PATH:/usr/sbin:/usr/local/sbin /usr/sbin/qshape -s > LOCALSTATEDIR/lib/clapf/stat/active+incoming-sender
+*/5 * * * * PATH=$PATH:/usr/sbin:/usr/local/sbin /usr/sbin/qshape deferred > LOCALSTATEDIR/lib/clapf/stat/deferred
+*/5 * * * * PATH=$PATH:/usr/sbin:/usr/local/sbin /usr/sbin/qshape -s deferred > LOCALSTATEDIR/lib/clapf/stat/deferred-sender
+
+
+clapf's crontab:
+
+
 ### purge aged history entries
 ### select the proper line, then uncomment it
-#2 2 * * * sqlite3 `clapfconf -q historydb|cut -f2 -d '='` DATAROOTDIR/clapf/history-purge-sqlite3.sql
-#2 2 * * * mysql -u ... -p `clapfconf -q historydb|cut -f2 -d '='` < DATAROOTDIR/clapf/history-purge-mysql.sql
+#2 2 * * * sqlite3 `clapfconf -q historydb|cut -f2 -d '='` < DATAROOTDIR/clapf/history-purge-sqlite3.sql
+#2 2 * * * mysql --defaults-file=DATAROOTDIR/clapf/.my.cnf `SBINDIR/clapfconf -q clapfhistory | cut -f2 -d '='` < DATAROOTDIR/clapf/history-purge-mysql.sql
 
 ### removed aged tokens
 ### select the proper line, then uncomment it
@@ -23,4 +34,7 @@
 
 ### remove the aged spam images from cache directory
 1 2 * * * find /srv/www/webui.yourdomain.com/cache -type f  -atime +`SBINDIR/clapfconf -q days_to_retain_data|cut -f2 -d'='` -exec rm -f '{}' \;
+
+### count the number of quarantined messages
+*/5 * * * * find LOCALSTATEDIR/lib/clapf/queue/ -name s\.\* | wc -l > LOCALSTATEDIR/lib/clapf/stat/quarantined.messages
 

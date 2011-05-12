@@ -80,6 +80,10 @@ class ModelHealthHealth extends Model {
    }
 
 
+   public function get_number_of_quarantined_messages() {
+       return file_get_contents(NUMBER_OF_QUARANTINED_MESSAGES);
+   }
+
 }
 
 

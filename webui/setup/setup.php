@@ -156,6 +156,8 @@ function write_stuff() {
    fputs($fp, "define('QSHAPE_ACTIVE_INCOMING_SENDER', STAT_DIRECTORY . '/active+incoming-sender');" . CRLF);
    fputs($fp, "define('QSHAPE_DEFERRED', STAT_DIRECTORY . '/deferred');" . CRLF);
    fputs($fp, "define('QSHAPE_DEFERRED_SENDER', STAT_DIRECTORY . '/deferred-sender');" . CRLF);
+   fputs($fp, "define('NUMBER_OF_QUARANTINED_MESSAGES', STAT_DIRECTORY . '/quarantined.messages');" . CRLF);
+
 
 
    fputs($fp, "define('LOCK_FILE', DIR_LOG . 'lock');" . CRLF);

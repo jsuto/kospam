@@ -43,6 +43,8 @@ class ControllerHealthWorker extends Controller {
       $this->data['meminfo'] = $this->model_health_health->meminfo();
       $this->data['diskinfo'] = $this->model_health_health->diskinfo();
 
+      $this->data['number_of_quarantined_messages'] = $this->model_health_health->get_number_of_quarantined_messages();
+
 
       $this->render();
    }

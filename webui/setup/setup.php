@@ -288,6 +288,10 @@ function write_stuff() {
 
    write_line($fp);
 
+   fputs($fp, '$postgrey_servers = array( );' . CRLF);
+
+   write_line($fp);
+
    fputs($fp, "?>\n");
 
    fclose($fp);

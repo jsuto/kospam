@@ -17,9 +17,9 @@
 <?php foreach($health as $h) { ?>
    <tr>
       <td><?php print $h[0]; ?></td>
-      <td class="<?php if(!preg_match("/^220/", $h[1])) { ?>SPAM<?php } ?>"><?php print $h[1]; ?></td>
+      <td class="<?php if(preg_match("/^220/", $h[1]) || preg_match("/^action=DUNNO/", $h[1])) { ?><?php } else { ?>spam<?php } ?>"><?php print $h[1]; ?></td>
       <td><?php print $h[2]; ?></td>
-      <td class="<?php if(preg_match("/^220/", $h[1])) { ?>ham<?php } else { ?>spam<?php } ?>">&nbsp;</td>
+      <td class="<?php if(preg_match("/^220/", $h[1]) || preg_match("/^action=DUNNO/", $h[1])) { ?>ham<?php } else { ?>spam<?php } ?>">&nbsp;</td>
    </tr>
 <?php } ?>
 </table>
@@ -35,6 +35,8 @@
    <th><?php print $text_from; ?></th>
    <th><?php print $text_recipient; ?></th>
    <th><?php print $text_subject; ?></th>
+   <th><?php print $text_size; ?></th>
+   <th><?php print $text_result; ?></th>
    </tr>
 
 <?php foreach ($emails as $email) {
@@ -45,8 +47,9 @@
       <td><a href="index.php?route=history/view&id=<?php print $email['queue_id']; ?>&to=<?php print $email['to']; ?>"><?php print date("Y.m.d. H:i:s", $email['ts']); ?></a></td>
       <td><?php print $email['from']; ?></td>
       <td><?php print $email['to']; ?></td>
-      <td><?php if(strlen($email['subject'])) { print substr($email['subject'], 0, 2*FROM_LENGTH_TO_SHOW) . "..."; } else { print $email['subject']; } ?></td>
-
+      <td><?php if(strlen($email['subject'])) { print substr($email['subject'], 0, 1.7*FROM_LENGTH_TO_SHOW) . "..."; } else { print $email['subject']; } ?></td>
+      <td align="right"><?php print $email['size']; ?></td>
+      <td><?php print $email['result']; ?></td>
    </tr>
 
 <?php } } ?>

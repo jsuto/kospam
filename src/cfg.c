@@ -89,7 +89,7 @@ struct _parse_rule config_parse_rules[] =
    { "exclusion_radius", "float", (void*) float_parser, offsetof(struct __config, exclusion_radius), "0.375", sizeof(float)},
    { "group_type", "integer", (void*) int_parser, offsetof(struct __config, group_type), "1", sizeof(int)},
    { "historydb", "string", (void*) string_parser, offsetof(struct __config, historydb), "", MAXVAL-1},
-   { "historypid", "string", (void*) string_parser, offsetof(struct __config, historypid), "", MAXVAL-1},
+   { "historypid", "string", (void*) string_parser, offsetof(struct __config, historypid), HISTORY_PIDFILE, MAXVAL-1},
    { "hostid", "string", (void*) string_parser, offsetof(struct __config, hostid), HOSTID, MAXVAL-1},
    { "initial_1000_learning", "integer", (void*) int_parser, offsetof(struct __config, initial_1000_learning), "0", sizeof(int)},
    { "invalid_junk_limit", "integer", (void*) int_parser, offsetof(struct __config, invalid_junk_limit), "5", sizeof(int)},

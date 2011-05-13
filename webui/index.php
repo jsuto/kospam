@@ -63,6 +63,7 @@ if(MEMCACHED_ENABLED) {
 Registry::set('counters', $counters);
 
 Registry::set('health_smtp_servers', $health_smtp_servers);
+Registry::set('postgrey_servers', $postgrey_servers);
 
 
 if(Registry::get('username')) {

@@ -11,16 +11,16 @@
 
 #define PROGNAME "clapf"
 
-#define VERSION "0.4.6-20110512"
+#define VERSION "0.4.6-20110513"
 
 #define PROGINFO VERSION ", Janos SUTO <sj@acts.hu>\n\n" CONFIGURE_PARAMS "\n\nSend bugs/issues to https://jira.acts.hu:8443/\n"
 
 #define HOSTID "av-engine.localhost"
 
 #define CONFIG_FILE CONFDIR "/clapf.conf"
-#define USER_DATA_DIR DATADIR "/lib/clapf/data"
-#define USER_QUEUE_DIR DATADIR "/lib/clapf/queue"
-#define WORK_DIR DATADIR "/spool/clapf/tmp"
+#define USER_DATA_DIR LOCALSTATEDIR "/lib/clapf/data"
+#define USER_QUEUE_DIR LOCALSTATEDIR "/lib/clapf/queue"
+#define WORK_DIR LOCALSTATEDIR "/spool/clapf/tmp"
 #define PER_USER_SQLITE3_DB_FILE "tokens.sdb"
 #define MYDB_FILE "tokens.mydb"
 
@@ -28,7 +28,6 @@
 #define DRWEB_SOCKET "/var/drweb/run/.daemon"
 #define KAV_SOCKET "/var/run/aveserver"
 
-#define PIDFILE "/var/run/clapf/clapf.pid"
 #define QUARANTINELEN 255
 #define TIMEOUT 60
 #define TIMEOUT_USEC 500000

@@ -10,6 +10,7 @@ class DB {
       }
 
       $this->driver = new $driver($hostname, $username, $password, $database, $prefix);
+      $this->database = $database;
    }
 
 

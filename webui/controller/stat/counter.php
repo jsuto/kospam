@@ -12,7 +12,9 @@ class ControllerStatCounter extends Controller {
 
 
       $request = Registry::get('request');
+
       $db = Registry::get('db');
+      $db->select_db($db->database);
 
       $this->load->model('stat/counter');
 

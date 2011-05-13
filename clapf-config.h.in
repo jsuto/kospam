@@ -1,15 +1,18 @@
 /*
- * clapf-config.h.in, 2010.01.13, SJ
+ * clapf-config.h.in, SJ
  */
 
 #define CONFDIR "/usr/local/etc"
-#define DATADIR "/usr/local/var"
+#define LOCALSTATEDIR "/usr/local/var"
 
 #define SPAMDROP_HELPER_PROGRAM "/usr/local/libexec/clapf/spamdrop_helper"
 
-#define VIRUS_TEMPLATE "/usr/local/share/clapf/template.virus"
+#define VIRUS_TEMPLATE DATAROOTDIR "/clapf/template.virus"
 
-#define ZOMBIE_NET_REGEX "/usr/local/share/clapf/zombienets.regex"
+#define ZOMBIE_NET_REGEX DATAROOTDIR "/clapf/zombienets.regex"
+
+#define PIDFILE LOCALSTATEDIR "/run/clapf/clapf.pid"
+#define HISTORY_PIDFILE LOCALSTATEDIR "/run/clapf/clapf-maillog.pid"
 
 #define HAVE_DAEMON 1
 

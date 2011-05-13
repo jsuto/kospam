@@ -562,9 +562,14 @@ else
     data_dir="$localstatedir"
 fi
 
-DATADIR=$data_dir
-AC_SUBST(DATADIR)
-AC_DEFINE_UNQUOTED(DATADIR,"$data_dir",[where to look for the data files])
+LOCALSTATEDIR=$data_dir
+AC_SUBST(LOCALSTATEDIR)
+AC_DEFINE_UNQUOTED(LOCALSTATEDIR,"$data_dir",[where to look for the data files])
+
+DATAROOTDIR=$datarootdir
+AC_SUBST(DATAROOTDIR)
+AC_DEFINE_UNQUOTED(DATAROOTDIR,"$datarootdir",[where to look for the read-only data directory])
+
 
 dnl spamdrop helper program
 
@@ -577,8 +582,8 @@ dnl spamdrop helper program
 
 
 AC_DEFINE_UNQUOTED(SPAMDROP_HELPER_PROGRAM,"$my_prefix/libexec/clapf/spamdrop_helper",[where to look for the spamdrop helper file])
-AC_DEFINE_UNQUOTED(VIRUS_TEMPLATE, "$my_prefix/share/clapf/template.virus", [where the virus template is])
-AC_DEFINE_UNQUOTED(ZOMBIE_NET_REGEX, "$my_prefix/share/clapf/zombienets.regex", [where the virus template is])
+AC_DEFINE_UNQUOTED(VIRUS_TEMPLATE, "$datarootdir/clapf/template.virus", [where the virus template is])
+AC_DEFINE_UNQUOTED(ZOMBIE_NET_REGEX, "$datarootdir/clapf/zombienets.regex", [where the virus template is])
 
 
 

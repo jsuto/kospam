@@ -1,3 +1,13 @@
+2011.05.13, SJ
+
+Extended the username field 32->64 characters.
+
+Improved init scripts.
+
+Extended the history/summary view.
+
+Webui improvements.
+
 2011.05.12, SJ
 
 Fixed the ubuntu clapf init script, and removed the "reload"

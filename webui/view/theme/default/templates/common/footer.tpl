@@ -1,3 +1,3 @@
 
-   <p>clapf web UI, VERSION_STRING</p>
+   <p>clapf web UI, 0.4.6</p>
 

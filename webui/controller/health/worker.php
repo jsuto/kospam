@@ -13,6 +13,7 @@ class ControllerHealthWorker extends Controller {
       $db_history = Registry::get('db_history');
 
       $this->load->model('health/health');
+      $this->load->model('quarantine/message');
 
       $request = Registry::get('request');
 

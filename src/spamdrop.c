@@ -275,6 +275,9 @@ int main(int argc, char **argv, char **envp){
    setlocale(LC_MESSAGES, cfg.locale);
    setlocale(LC_CTYPE, cfg.locale);
 
+   data.n_regex = 0;
+   data.blackhole = NULL;
+
 
    /*
     * read the 'FROM' environment variable if you have

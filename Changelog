@@ -1,3 +1,13 @@
+2011.05.15, SJ
+
+Fixed a bug in spamdrop causing segfault due to an uninitialised
+variable.
+
+2011.05.14, SJ
+
+Simplified the quarantine menu when viewing a message. Removed the "train"
+and the toggle links to view the message in raw format.
+
 2011.05.13, SJ
 
 Extended the username field 32->64 characters.

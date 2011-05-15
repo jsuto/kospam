@@ -1,5 +1,5 @@
 /*
- * sig.h, 2009.10.27
+ * sig.h, SJ
  */
 
 #ifndef _SIG_H

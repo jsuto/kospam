@@ -48,7 +48,7 @@
       <td><?php print $email['from']; ?></td>
       <td><?php print $email['to']; ?></td>
       <td><?php if(strlen($email['subject'])) { print substr($email['subject'], 0, 1.7*FROM_LENGTH_TO_SHOW) . "..."; } else { print $email['subject']; } ?></td>
-      <td align="right"><?php print $email['size']; ?></td>
+      <td align="right"><?php print $this->model_quarantine_message->NiceSize($email['size']); ?></td>
       <td><?php print $email['result']; ?></td>
    </tr>
 

@@ -88,7 +88,7 @@ int processMessage(struct session_data *sdata, struct _state *sstate, struct __d
       /* get user from 'MAIL FROM:', 2008.10.25, SJ */
 
       gettimeofday(&tv1, &tz);
-      getUserdataFromEmail(sdata, fromemail, cfg);
+      getUserFromEmailAddress(sdata, data, fromemail, cfg);
       gettimeofday(&tv2, &tz);
       sdata->__user += tvdiff(tv2, tv1);
 
@@ -103,10 +103,14 @@ int processMessage(struct session_data *sdata, struct _state *sstate, struct __d
 
        if(sdata->name[0] == 0){
           gettimeofday(&tv1, &tz);
-          getUserdataFromEmail(sdata, rcpttoemail, cfg);
+          getUserFromEmailAddress(sdata, data, rcpttoemail, cfg);
           gettimeofday(&tv2, &tz);
           sdata->__user += tvdiff(tv2, tv1);
        }
+
+    #ifdef HAVE_POLICY
+       if(sdata->policy_group > 0) getPolicySettings(sdata, data, cfg, my_cfg);
+    #endif
 
        /* if still not found, then let this email slip through clapf, 2009.03.12, SJ */
 

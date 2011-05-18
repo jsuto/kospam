@@ -68,15 +68,6 @@ class ModelHealthHealth extends Model {
    }
 
 
-   public function get_last_maillog_entries($n = 10) {
-      $query = $this->db_history->query("select * from " . TABLE_SUMMARY . " order by ts desc limit 0," . (int)$n);
-
-      if(isset($query->rows)) { return $query->rows; }
-
-      return array();
-   }
-
-
    public function count_processed_emails() {
       $today = $last_7_days = $last_30_days = 0;
       $now = time();
@@ -114,10 +105,6 @@ class ModelHealthHealth extends Model {
       return implode("\n", $output);
    }
 
-
-   public function get_number_of_quarantined_messages() {
-       return file_get_contents(NUMBER_OF_QUARANTINED_MESSAGES);
-   }
 
 }
 

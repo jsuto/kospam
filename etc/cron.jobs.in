@@ -21,8 +21,8 @@ clapf's crontab:
 
 ### purge aged history entries
 ### select the proper line, then uncomment it
-#2 2 * * * sqlite3 `clapfconf -q historydb|cut -f2 -d '='` < DATAROOTDIR/clapf/history-purge-sqlite3.sql
-#2 2 * * * mysql --defaults-file=DATAROOTDIR/clapf/.my.cnf `SBINDIR/clapfconf -q clapfhistory | cut -f2 -d '='` < DATAROOTDIR/clapf/history-purge-mysql.sql
+#2 2 * * * sed "s/DAYS_TO_RETAIN/`SBINDIR/clapfconf -q days_to_retain_data|cut -f2 -d = `/" DATAROOTDIR/clapf/history-purge-sqlite3.sql | sqlite3 `SBINDIR/clapfconf -q historydb | cut -f2 -d '='`
+#2 2 * * * sed "s/DAYS_TO_RETAIN/`SBINDIR/clapfconf -q days_to_retain_data|cut -f2 -d = `/" DATAROOTDIR/clapf/history-purge-mysql.sql | mysql --defaults-file=DATAROOTDIR/clapf/.my.cnf `SBINDIR/clapfconf -q historydb | cut -f2 -d '='`
 
 ### removed aged tokens
 ### select the proper line, then uncomment it
@@ -37,4 +37,7 @@ clapf's crontab:
 
 ### count the number of quarantined messages
 */5 * * * * find LOCALSTATEDIR/lib/clapf/queue/ -name s\.\* | wc -l > LOCALSTATEDIR/lib/clapf/stat/quarantined.messages
+
+### show cpu usage
+*/5 * * * * mpstat -P ALL > /var/lib/clapf/stat/cpu.stat
 

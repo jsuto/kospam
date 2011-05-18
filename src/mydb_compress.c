@@ -1,5 +1,5 @@
 /*
- * mydb_compress.c, 2008.05.11, SJ
+ * mydb_compress.c, SJ
  */
 
 #include <stdio.h>

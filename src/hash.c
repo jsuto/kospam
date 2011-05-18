@@ -46,6 +46,20 @@ void clearhash(struct node *xhash[], int print){
 }
 
 
+void resethash(struct node *xhash[]){
+   int i;
+   struct node *q;
+
+   for(i=0;i<MAXHASH;i++){
+      q = xhash[i];
+      while(q != NULL){
+         q->nham = q->nspam = 0;
+         q = q->r;
+      }
+   }
+}
+
+
 void printhash(struct node *xhash[]){
    int i;
    struct node *p, *q;

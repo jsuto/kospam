@@ -278,16 +278,16 @@ void handleSession(int new_sd, struct __data *data, struct __config *cfg){
 
                   if(sdata.spaminess >= my_cfg.spam_overall_limit){
                      if(sdata.rcpt_minefield[i] == 0) counters.c_spam++;
-                     syslog(LOG_PRIORITY, "%s: %s got SPAM, %.4f, %d, relay=%s:%d, %s, status=%s, subject=%s", sdata.ttmpfile, rctptoemail, sdata.spaminess, sdata.tot_len, my_cfg.spam_smtp_addr, my_cfg.spam_smtp_port, reason, resp, sdata.subject);
+                     syslog(LOG_PRIORITY, "%s: from=<%s>, to=<%s>, spaminess=%.4f, result=SPAM, size=%d, relay=%s:%d, %s, status=%s, subject=%s", sdata.ttmpfile, fromemail, rctptoemail, sdata.spaminess, sdata.tot_len, my_cfg.spam_smtp_addr, my_cfg.spam_smtp_port, reason, resp, sdata.subject);
                   } else if(sdata.rav == AVIR_VIRUS) {
                      counters.c_virus++;
-                     syslog(LOG_PRIORITY, "%s: %s got VIRUS (%s), %.4f, %d, relay=%s:%d, %s, status=%s, subject=%s", sdata.ttmpfile, rctptoemail, virusinfo, sdata.spaminess, sdata.tot_len, my_cfg.postfix_addr, my_cfg.postfix_port, reason, resp, sdata.subject);
+                     syslog(LOG_PRIORITY, "%s: from=<%s>, to=<%s>, spaminess=%.4f, result=VIRUS (%s), size=%d, relay=%s:%d, %s, status=%s, subject=%s", sdata.ttmpfile, fromemail, rctptoemail, sdata.spaminess, virusinfo, sdata.tot_len, my_cfg.spam_smtp_addr, my_cfg.spam_smtp_port, reason, resp, sdata.subject);
                   } else {
                      counters.c_ham++;
                      if(sdata.spaminess < my_cfg.spam_overall_limit && sdata.spaminess > my_cfg.possible_spam_limit) counters.c_possible_spam++;
                      else if(sdata.spaminess < my_cfg.possible_spam_limit && sdata.spaminess > my_cfg.max_ham_spamicity) counters.c_unsure++;
 
-                     syslog(LOG_PRIORITY, "%s: %s got HAM, %.4f, %d, relay=%s:%d, %s, status=%s, subject=%s", sdata.ttmpfile, rctptoemail, sdata.spaminess, sdata.tot_len, my_cfg.postfix_addr, my_cfg.postfix_port, reason, resp, sdata.subject);
+                     syslog(LOG_PRIORITY, "%s: from=<%s>, to=<%s>, spaminess=%.4f, result=HAM, size=%d, relay=%s:%d, %s, status=%s, subject=%s", sdata.ttmpfile, fromemail, rctptoemail, sdata.spaminess, sdata.tot_len, my_cfg.spam_smtp_addr, my_cfg.spam_smtp_port, reason, resp, sdata.subject);
                   }
 
                   if(sdata.mynetwork == 1) counters.c_mynetwork++;

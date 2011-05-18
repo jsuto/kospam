@@ -1,5 +1,5 @@
 /*
- * mydb_export.c, 2008.05.11, SJ
+ * mydb_export.c, SJ
  */
 
 #include <stdio.h>

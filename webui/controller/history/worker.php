@@ -15,6 +15,8 @@ class ControllerHistoryWorker extends Controller {
 
       date_default_timezone_set(TIMEZONE);
 
+      $this->load->model('quarantine/message');
+
       $this->data['page'] = 0;
       $this->data['page_len'] = getPageLength();
 
@@ -36,8 +38,6 @@ class ControllerHistoryWorker extends Controller {
       /* assemble filter restrictions */
 
       $CLAPF_FILTER = "";
-      $QMGR_TABLE = "";
-      $SMTP_TABLE = "";
 
       $this->data['hamspam'] = "";
       $this->data['sender_domain'] = "";
@@ -61,13 +61,11 @@ class ControllerHistoryWorker extends Controller {
       if($cookie && (preg_match('/^[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,5})$/', $cookie) || validemail($cookie) == 1) ) {
          $this->data['rcpt_domain'] = $cookie;
 
-         $to = "to_domain"; $orig_to = "orig_to_domain";
+         $to = "rcptdomain";
 
-         if(strchr($this->data['rcpt_domain'], '@')) { $to = "to"; $orig_to = "orig_to"; }
+         if(strchr($this->data['rcpt_domain'], '@')) { $to = "rcpt"; }
 
-         $CLAPF_FILTER ? $CLAPF_FILTER .= " and clapf.queue_id2=smtp.queue_id and (smtp.`$to`='" . $db->escape($cookie) . "' or smtp.$orig_to='" . $db->escape($cookie) . "')" : $CLAPF_FILTER .= " clapf.queue_id2=smtp.queue_id and (smtp.`$to`='" . $db->escape($cookie) . "' or smtp.$orig_to='" . $db->escape($cookie) . "')";
-
-         $SMTP_TABLE = ", smtp";
+         $CLAPF_FILTER ? $CLAPF_FILTER .= " and clapf.`$to`='" . $db->escape($cookie) . "'" : $CLAPF_FILTER .= " clapf.`$to`='" . $db->escape($cookie) . "'";
       }
 
 
@@ -78,13 +76,11 @@ class ControllerHistoryWorker extends Controller {
       if($cookie && (preg_match('/^[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,5})$/', $cookie) || validemail($cookie) == 1) ) {
          $this->data['sender_domain'] = $cookie;
 
-         $from = "from_domain";
+         $from = "fromdomain";
 
          if(strchr($this->data['sender_domain'], '@')) { $from = "from"; }
 
-         $CLAPF_FILTER ? $CLAPF_FILTER .= " and clapf.queue_id2=qmgr.queue_id and qmgr.`$from`='" . $db->escape($cookie) . "'" : $CLAPF_FILTER .= "clapf.queue_id2=qmgr.queue_id and qmgr.`$from`='" . $db->escape($cookie) . "'";
-
-         $QMGR_TABLE = ", qmgr ";
+         $CLAPF_FILTER ? $CLAPF_FILTER .= " and clapf.`$from`='" . $db->escape($cookie) . "'" : $CLAPF_FILTER .= "clapf.`$from`='" . $db->escape($cookie) . "'";
       }
 
 
@@ -111,39 +107,40 @@ class ControllerHistoryWorker extends Controller {
 
          $i = 0;
 
-         $query = $db->query("select count(*) as total from clapf $QMGR_TABLE $SMTP_TABLE $CLAPF_FILTER");
+         $query = $db->query("select count(*) as total from clapf $CLAPF_FILTER");
 
          $this->data['total'] = $query->row['total'];
 
-         $query = $db->query("select clapf.queue_id, clapf.result, clapf.spaminess, clapf.relay, clapf.delay, clapf.queue_id2, clapf.virus from clapf $QMGR_TABLE $SMTP_TABLE $CLAPF_FILTER order by clapf.ts desc limit " . (int)$this->data['page'] * (int)$this->data['page_len'] . ", " . $this->data['page_len']);
+         $query = $db->query("select * from clapf $CLAPF_FILTER order by ts desc limit " . (int)$this->data['page'] * (int)$this->data['page_len'] . ", " . $this->data['page_len']);
 
          foreach ($query->rows as $__clapf) {
 
             // smtp/local/virtual records after content filter
             $__smtp = $db->query("select * from smtp where queue_id='" . $db->escape($__clapf['queue_id2']) . "' order by ts desc");
+            $__cleanup = $db->query("select message_id from cleanup where queue_id='" . $db->escape($__clapf['queue_id2']) . "'");
 
             if($i == 0 && isset($__smtp->row['ts'])) { $last_update = $__smtp->row['ts']; }
 
             // what we had before the content filter
-            $__smtp2 = $db->query("select * from smtp where clapf_id='" . $db->escape($__clapf['queue_id']) . "'");
-            $__qmgr = $db->query("select * from qmgr where queue_id='" . $db->escape($__smtp2->row['queue_id']) . "'");
-            $__cleanup = $db->query("select message_id from cleanup where queue_id='" . $db->escape($__smtp2->row['queue_id']) . "'");
-            $__smtpd = $db->query("select client_ip from smtpd where queue_id='" . $db->escape($__smtp2->row['queue_id']) . "'");
+            $__smtp2 = $db->query("select * from smtp where clapf_id='" . $db->escape($__clapf['clapf_id']) . "'");
+            if(isset($__smtp2->row['queue_id'])) {
+               $__smtpd = $db->query("select client_ip from smtpd where queue_id='" . $db->escape($__smtp2->row['queue_id']) . "'");
+            }
 
             $i++;
 
             /* fix null sender (<>) */
-            if(strlen($__qmgr->row['from']) == 0) { $__qmgr->row['from'] = "&lt;&gt;"; }
+            if(strlen($__clapf['from']) == 0) { $__clapf['from'] = "&lt;&gt;"; }
 
 
             /* if there's no smtp record after clapf (ie. a dropped VIRUS), then fake an smtp entry */
 
             if(!isset($__smtp->row['to'])) {
                $__smtp->rows[] = array(
-                                      'to'     => $__smtp2->row['to'],
+                                      'to'     => $__clapf['rcpt'],
                                       'result' => 'dropped',
-                                      'relay'  => 'Virus: ' . $__clapf['virus'],
-                                      'ts'     => $__smtp2->row['ts'],
+                                      'relay'  => $__clapf['virus'] ? 'Virus: ' . $__clapf['virus'] : '',
+                                      'ts'     => $__clapf['ts'],
                                       
                );
             }
@@ -170,18 +167,18 @@ class ControllerHistoryWorker extends Controller {
                if($this->data['rcpt_domain'] && !preg_match("/@" . $this->data['rcpt_domain'] . "$/", $smtp['to']) && $this->data['rcpt_domain'] != $smtp['to']) { continue; }
 
                $this->data['entries'][] = array(
-                                               'timedate'       => date("Y.m.d. H:i:s", $__smtp2->row['ts']),
+                                               'timedate'       => date("Y.m.d. H:i:s", $__clapf['ts']),
                                                'client'         => @$__smtpd->row['client_ip'],
-                                               'queue_id1'      => $__qmgr->row['queue_id'],
-                                               'message_id'     => $__cleanup->row['message_id'],
-                                               'shortfrom'      => strlen($__qmgr->row['from']) > FROM_LENGTH_TO_SHOW ? substr($__qmgr->row['from'], 0, FROM_LENGTH_TO_SHOW) . "..." : $__qmgr->row['from'],
-                                               'from'           => $__qmgr->row['from'],
+                                               'queue_id1'      => isset($__smtp2->row['queue_id']) ? $__smtp2->row['queue_id'] : 'NOQUEUE',
+                                               'message_id'     => isset($__cleanup->row['message_id']) ? $__cleanup->row['message_id'] : 'N/A',
+                                               'shortfrom'      => strlen($__clapf['from']) > FROM_LENGTH_TO_SHOW ? substr($__clapf['from'], 0, FROM_LENGTH_TO_SHOW) . "..." : $__clapf['from'],
+                                               'from'           => $__clapf['from'],
                                                'shortto'        => strlen($smtp['to']) > FROM_LENGTH_TO_SHOW ? substr($smtp['to'], 0, FROM_LENGTH_TO_SHOW) . "..." : $smtp['to'],
                                                'to'             => $smtp['to'],
-                                               'size'           => $__qmgr->row['size'],
-                                               'content_filter' => $__smtp2->row['relay'],
-                                               'relay'          => $__clapf['relay'],
-                                               'clapf_id'       => $__clapf['queue_id'],
+                                               'size'           => $this->model_quarantine_message->NiceSize($__clapf['size']),
+                                               'content_filter' => isset($__smtp2->row['relay']) ? $__smtp2->row['relay'] : 'none',
+                                               'relay'          => $__clapf['relay'] ? $__clapf['relay'] : 'N/A',
+                                               'clapf_id'       => $__clapf['clapf_id'],
                                                'spaminess'      => $__clapf['spaminess'],
                                                'delay'          => $__clapf['delay'],
                                                'result'         => $__clapf['result'],

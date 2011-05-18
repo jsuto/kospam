@@ -12,6 +12,8 @@ class ControllerHistoryView extends Controller {
       $language = Registry::get('language');
 
       $this->load->model('user/user');
+      $this->load->model('quarantine/message');
+
 
       $this->document->title = $language->get('text_history');
 
@@ -32,9 +34,6 @@ class ControllerHistoryView extends Controller {
       }
 
 
-      $db = Registry::get('db');
-      $db_history = Registry::get('db_history');
-
 
       $this->data['entries'] = array();
 
@@ -44,27 +43,29 @@ class ControllerHistoryView extends Controller {
 
          //if(Registry::get('DB_DRIVER') == 'mysql'){ $db->select_db(Registry::get('DB_DATABASE')); }
 
+         $db = Registry::get('db');
          $username = $this->model_user_user->getUserByEmail(@$this->request->get['to']);
 
-         //if(Registry::get('HISTORY_DRIVER') == 'mysql'){ $db_history->select_db(Registry::get('HISTORY_DATABASE')); }
+         $db_history = Registry::get('db_history');
+         $db_history->select_db($db_history->database);
 
 
-         $query = $db_history->query("select queue_id, result, spaminess, relay, delay, queue_id2, virus from clapf where queue_id='" . $db_history->escape(@$this->request->get['id']) . "'");
+         $query = $db_history->query("select * from clapf where clapf_id='" . $db_history->escape(@$this->request->get['id']) . "'");
 
          foreach ($query->rows as $__clapf) {
 
             // smtp/local/virtual records after content filter
             $__smtp = $db_history->query("select * from smtp where queue_id='" . $db_history->escape($__clapf['queue_id2']) . "' order by ts desc");
+            $__cleanup = $db_history->query("select message_id from cleanup where queue_id='" . $db->escape($__clapf['queue_id2']) . "'");
 
             // what we had before the content filter
-            $__smtp2 = $db_history->query("select * from smtp where clapf_id='" . $db_history->escape($__clapf['queue_id']) . "'");
-            $__qmgr = $db_history->query("select * from qmgr where queue_id='" . $db_history->escape($__smtp2->row['queue_id']) . "'");
-            $__cleanup = $db_history->query("select message_id from cleanup where queue_id='" . $db_history->escape($__smtp2->row['queue_id']) . "'");
-            $__smtpd = $db_history->query("select client_ip from smtpd where queue_id='" . $db_history->escape($__smtp2->row['queue_id']) . "'");
-
+            $__smtp2 = $db_history->query("select * from smtp where clapf_id='" . $db_history->escape($__clapf['clapf_id']) . "'");
+            if(isset($__smtp2->row['queue_id'])) {
+               $__smtpd = $db_history->query("select client_ip from smtpd where queue_id='" . $db->escape($__smtp2->row['queue_id']) . "'");
+            }
 
             /* fix null sender (<>) */
-            if(strlen($__qmgr->row['from']) == 0) { $__qmgr->row['from'] = "&lt;&gt;"; }
+            if(strlen($__clapf['from']) == 0) { $__clapf['from'] = "&lt;&gt;"; }
 
 
             /* if there's no smtp record after clapf (ie. a dropped VIRUS), then fake an smtp entry */
@@ -100,18 +101,18 @@ class ControllerHistoryView extends Controller {
 
 
                $this->data['entry'] = array(
-                                               'timedate'       => date("Y.m.d. H:i:s", $__smtp2->row['ts']),
+                                               'timedate'       => date("Y.m.d. H:i:s", $__clapf['ts']),
                                                'client'         => @$__smtpd->row['client_ip'],
-                                               'queue_id1'      => $__qmgr->row['queue_id'],
-                                               'message_id'     => $__cleanup->row['message_id'],
-                                               'shortfrom'      => strlen($__qmgr->row['from']) > FROM_LENGTH_TO_SHOW ? substr($__qmgr->row['from'], 0, FROM_LENGTH_TO_SHOW) . "..." : $__qmgr->row['from'],
-                                               'from'           => $__qmgr->row['from'],
+                                               'queue_id1'      => isset($__smtp2->row['queue_id']) ? $__smtp2->row['queue_id'] : 'NOQUEUE',
+                                               'message_id'     => isset($__cleanup->row['message_id']) ? $__cleanup->row['message_id'] : 'N/A',
+                                               'shortfrom'      => strlen($__clapf['from']) > FROM_LENGTH_TO_SHOW ? substr($__clapf['from'], 0, FROM_LENGTH_TO_SHOW) . "..." : $__clapf['from'],
+                                               'from'           => $__clapf['from'],
                                                'shortto'        => strlen($smtp['to']) > FROM_LENGTH_TO_SHOW ? substr($smtp['to'], 0, FROM_LENGTH_TO_SHOW) . "..." : $smtp['to'],
                                                'to'             => $smtp['to'],
-                                               'size'           => $__qmgr->row['size'],
-                                               'content_filter' => $__smtp2->row['relay'],
-                                               'relay'          => $__clapf['relay'],
-                                               'clapf_id'       => $__clapf['queue_id'],
+                                               'size'           => $this->model_quarantine_message->NiceSize($__clapf['size']),
+                                               'content_filter' => isset($__smtp2->row['relay']) ? $__smtp2->row['relay'] : 'none',
+                                               'relay'          => $__clapf['relay'] ? $__clapf['relay'] : 'N/A',
+                                               'clapf_id'       => $__clapf['clapf_id'],
                                                'spaminess'      => $__clapf['spaminess'],
                                                'delay'          => $__clapf['delay'],
                                                'result'         => $__clapf['result'],

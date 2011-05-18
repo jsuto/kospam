@@ -40,17 +40,15 @@ class ControllerHealthWorker extends Controller {
       $this->data['queues'][] = format_qshape($lang->data['text_deferred_queue'], QSHAPE_DEFERRED);
       $this->data['queues'][] = format_qshape($lang->data['text_deferred_queue_sender'], QSHAPE_DEFERRED_SENDER);
 
-      $this->data['emails'] = $this->model_health_health->get_last_maillog_entries();
-
       $this->data['processed_emails'] = $this->model_health_health->count_processed_emails();
 
       $this->data['uptime'] = $this->model_health_health->uptime();
 
+      $this->data['cpuinfo'] = file_get_contents(CPUSTAT);
       $this->data['meminfo'] = $this->model_health_health->meminfo();
       $this->data['diskinfo'] = $this->model_health_health->diskinfo();
 
-      $this->data['number_of_quarantined_messages'] = $this->model_health_health->get_number_of_quarantined_messages();
-
+      $this->data['number_of_quarantined_messages'] = file_get_contents(NUMBER_OF_QUARANTINED_MESSAGES);
 
       $this->render();
    }

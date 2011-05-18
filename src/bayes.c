@@ -240,25 +240,32 @@ int trainMessage(struct session_data *sdata, struct _state *state, int rounds, i
 
    if(counthash(state->token_hash) <= 0) return 0;
 
-   /* disable some configuration settings, 2008.06.28, SJ */
-
-   memset(cfg->rbl_domain, 0, MAXVAL);
-   memset(cfg->surbl_domain, 0, MAXVAL);
-   cfg->penalize_images = 0;
-   cfg->penalize_embed_images = 0;
-   cfg->penalize_octet_stream = 0;
-
-
    if(cfg->group_type == GROUP_SHARED) sdata->gid = 0;
 
-
 #ifndef HAVE_MYDB
-   introduceTokens(sdata, state->token_hash); 
+   introduceTokens(sdata, state->token_hash);
 #endif
 
    for(i=1; i<=rounds; i++){
 
-      /* first, update the counters */
+      /* query the spaminess to see if we still have to train the message */
+
+      resethash(state->token_hash);
+
+   #ifdef HAVE_MYDB
+      rc = init_mydb(cfg->mydbfile, sdata);
+      if(rc == 1) spaminess = bayes_file(sdata, state, cfg);
+      close_mydb(sdata->mhash);
+   #else
+      spaminess = bayes_file(sdata, state, cfg);
+   #endif
+
+      if(cfg->verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: training %d, round: %d spaminess was: %0.4f", sdata->ttmpfile, is_spam, n, spaminess);
+
+      if(is_spam == 1 && spaminess > 0.99) break;
+      if(is_spam == 0 && spaminess < 0.1) break;
+
+      /* then update the counters */
 
    #ifdef HAVE_MYDB
       my_walk_hash(cfg->mydbfile, sdata->mhash, is_spam, state->token_hash, tm);
@@ -274,24 +281,7 @@ int trainMessage(struct session_data *sdata, struct _state *state, int rounds, i
       }
    #endif
 
-
-      /* then, query the new spamicity value */
-
-   #ifdef HAVE_MYDB
-      rc = init_mydb(cfg->mydbfile, sdata);
-      if(rc == 1) spaminess = bayes_file(sdata, state, cfg);
-      close_mydb(sdata->mhash);
-   #else
-      spaminess = bayes_file(sdata, state, cfg);
-   #endif
-
       n++;
-
-      if(cfg->verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: training round: %d, spaminess: %0.4f", sdata->ttmpfile, n, spaminess);
-
-      if(is_spam == 1 && spaminess > 0.99) break;
-      if(is_spam == 0 && spaminess < 0.1) break;
-
 
       tm = T_TOE;
    }

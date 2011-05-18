@@ -21,6 +21,7 @@ $_['text_cancel'] = "Cancel";
 $_['text_clienthost'] = "Client host";
 $_['text_content_filter'] = "Content filter";
 $_['text_counters'] = "Counters";
+$_['text_cpu_usage'] = "CPU usage";
 
 $_['text_daily_quarantine_report'] = "Daily quarantine report";
 $_['text_daily_report'] = "Daily report";

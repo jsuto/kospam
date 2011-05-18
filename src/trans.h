@@ -1,5 +1,5 @@
 /*
- * trans.h, 2010.05.13, SJ
+ * trans.h, SJ
  */
 
 static char delimiter_characters[] = {

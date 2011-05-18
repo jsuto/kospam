@@ -56,20 +56,19 @@ $sth_smtpd = $dbh->prepare($stmt);
 $stmt = "INSERT INTO cleanup (ts, queue_id, message_id) VALUES(?, ?, ?)";
 $sth_cleanup = $dbh->prepare($stmt);
 
-$stmt = "INSERT INTO qmgr (ts, queue_id, `from`, `from_domain`, size) VALUES(?, ?, ?, ?, ?)";
-$sth_qmgr = $dbh->prepare($stmt);
-
 $stmt = "INSERT INTO smtp (ts, queue_id, `to`, to_domain, orig_to, orig_to_domain, relay, delay, result, clapf_id) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 $sth_smtp = $dbh->prepare($stmt);
 
-$stmt = "INSERT INTO clapf (ts, queue_id, rcpt, rcptdomain, result, spaminess, relay, delay, queue_id2, virus, subject) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+$stmt = "INSERT INTO clapf (ts, clapf_id, `from`, `fromdomain`, rcpt, rcptdomain, result, spaminess, `size`, relay, delay, queue_id2, subject, virus) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 $sth_clapf = $dbh->prepare($stmt);
 
+
+srand;
 
 
 while (defined($line = $file->read)) {
 
-   if($line =~ /\ postfix\/smtpd\[/ || $line =~ /\ postfix\/cleanup\[/ || $line =~ /\ postfix\/qmgr\[/ || $line =~ /\ postfix\/(l|s)mtp\[/ || $line =~ /\ postfix\/local\[/ || $line =~ /\ clapf\[/ || $line =~ /\ postfix\/virtual\[/ || $line =~ /\ postfix\/pipe\[/) {
+   if($line =~ /\ postfix\/smtpd\[/ || $line =~ /\ postfix\/cleanup\[/ || $line =~ /\ postfix\/(l|s)mtp\[/ || $line =~ /\ postfix\/local\[/ || $line =~ /\ clapf\[/ || $line =~ /\ postfix\/virtual\[/ || $line =~ /\ postfix\/pipe\[/) {
       chomp($line);
 
       $queue_id = $to = $orig_to = $to_domain = $orig_to_domain = $clapf_id = $relay = $status = $result = $queue_id2 = "";
@@ -87,49 +86,36 @@ while (defined($line = $file->read)) {
       $hostname = $l[3];
 
 
+      # ... postfix/smtpd[8371]: NOQUEUE: reject: RCPT from unknown[70.96.35.34]: 554 5.7.1 Service unavailable; Client host [70.96.35.34] blocked using zen.spamhaus.org; http://www.spamhaus.org/query/bl?ip=70.96.35.34; from=<d2221028@ms29.hinet.net> to=<sj@acts.hu> proto=ESMTP helo=<[70.96.35.34]>
+
+      if($line =~ /\ postfix\/smtpd\[/ && $line =~ /from=\<([\w\W]{0,})\> to=\<([\w\W]{3,})\> proto=([\w]+) helo=/) {
+
+         $clapf_id = "xxxxxxxx" . &randomstring(22);
+         $spaminess = 0.5; $delay = $size = 0;
+         $subject = $queue_id2 = $virus = $relay = "";
+         $result = "SPAM";
+
+         $from = $1;
+         $rcpt = $2;
+
+         (undef, $fromdomain) = split(/\@/, $from);
+         (undef, $rcptdomain) = split(/\@/, $rcpt);
+
+         $sth_clapf->execute($ts, $clapf_id, lc $from, lc $fromdomain, lc $rcpt, lc $rcptdomain, $result, $spaminess, $size, $relay, $delay, $queue_id2, $subject, $virus) || print $line . "\n";
+      }
+
+
       # ... postfix/smtpd[12038]: 0561617020: client=unknown[92.84.77.34]
 
-      if($line =~ /\ postfix\/smtpd\[/ && $line =~ /client=/) {
-         ($queue_id, undef) = split(/\:/, $l[5]);
-
-         (undef, $client_ip) = split(/client=/, $line);
-         ($client_ip, undef) = split(/,/, $client_ip);
-
-         $sth_smtpd->execute($ts, $queue_id, $client_ip) || print $line . "\n";
+      if($line =~ /\ postfix\/smtpd\[/ && $line =~ /\]\:\ ([\w]+)\: client=([\w\W]{3,})/) {
+         $sth_smtpd->execute($ts, $1, $2) || print $line . "\n";
       }
 
 
       #Sep  3 09:30:22 thorium postfix/cleanup[2311]: D20E617022: message-id=<f14f01c89af3$8a784f50$3bc40658@acts.hu>
 
-      if($line =~ /\ postfix\/cleanup\[/ && $line =~ /message\-id=/) {
-         $message_id = "";
-
-         ($queue_id, undef) = split(/\:/, $l[5]);
-         (undef, $message_id) = split(/=/, $l[6]);
-
-         $message_id =~ s/\<|\>|\,//g;
-
-         $sth_cleanup->execute($ts, $queue_id, $message_id) || print $line . "\n";
-      }
-
-
-      # Sep 3 09:30:22 thorium postfix/qmgr[3010]: D20E617022: from=<aaa@freemail.hu>, size=2731, nrcpt=1 (queue active)
-
-      if($line =~ /\ postfix\/qmgr\[/ && $line =~ /from=/) {
-         $from = ""; $from_domain = ""; $size = 0;
-
-         ($queue_id, undef) = split(/\:/, $l[5]);
-
-         if($line =~ /from=\<([\w\W]+)\>/){
-            $from = $1;
-            (undef, $from_domain) = split(/\@/, $from);
-         }
-
-         (undef, $size) = split(/=/, $l[7]);
-
-         $size =~ s/\,//;
-
-         $sth_qmgr->execute($ts, $queue_id, lc $from, lc $from_domain, $size) || print $line . "\n";
+      if($line =~ /\ postfix\/cleanup\[/ && $line =~ /\]\:\ ([\w]+)\: message\-id=<([\w\W]+)>/) {
+         $sth_cleanup->execute($ts, $1, $2) || print $line . "\n";
       }
 
 
@@ -209,46 +195,45 @@ while (defined($line = $file->read)) {
       # Sep  3 10:00:07 thorium clapf[2578]: 4a9f7787c9b56ae1a646fd8ca6cc5b: sj@acts.hu got SPAM, 1.0000, 2731, relay=127.0.0.1:10026, delay=0.06, delays=0.00/0.00/0.00/0.00/0.00/0.00/0.01/0.00/0.04, status=250 2.0.0 Ok: queued as E691917023
 
       if($line =~ /\ clapf\[/ && $line =~ /status=/) {
+
+         $clapf_id = $from = $fromdomain = $rcpt = $rcptdomain = "";
+         $delay = $size = 0;
          $spaminess = 0.5;
          $virus = "";
-         $subject = "";
+         $subject = $queue_id2 = "";
 
-         ($queue_id, undef) = split(/\:/, $l[5]);
 
-         (undef, $relay) = split(/relay=/, $line);
-         ($relay, undef) = split(/,/, $relay);
+         ($clapf_id, undef) = split(/\:/, $l[5]);
 
-         $rcpt = $l[6];
+
+         if($line =~ /from=\<([\w\W]{0,})\>, to=\<([\w\W]{3,})\>, spaminess=([\d\.]+), result=([\w\W]{3,}), size=([\d]+), relay=([\w\W]{3,}), delay=([\d\.]+), delays=([\d\.\/]+), status=([\w\W]{0,})\,\ subject=([\w\W]+)/) {
+            $from = $1; $rcpt = $2;
+            $spaminess = $3;
+            $result = $4;
+            $size = $5;
+            $relay = $6;
+            $delay = $7;
+            $status = $9;
+            $subject = $10;
+         }
+
+
+         if($status =~ /250/ && $status =~ /Ok/i) {
+            (undef, $queue_id2) = split(/queued\ as\ /, $status);
+         }
+
+
+         (undef, $fromdomain) = split(/\@/, $from);
          (undef, $rcptdomain) = split(/\@/, $rcpt);
 
-         $result = $l[8];
-         $spaminess = $l[9];
 
-         if($line =~ /VIRUS\ \(([\w\W]+)\)\,\ ([\w\.]+),/){
+         if($result =~ /VIRUS\ \(([\w\W]+)\)/){
+            $result = 'VIRUS';
             $virus = $1;
-            $spaminess = $2;
          }
 
-         (undef, $x) = split(/delay=/, $line);
-         ($delay, undef) = split(/ /, $x);
 
-         $result =~ s/\,//;
-         $spaminess =~ s/\,//;
-         $delay =~ s/\,//;
-         $s = "";
-
-         if($line =~ /status=([\w\W]{0,})\,\ subject=([\w\W]+)/) {
-            $subject = $2;
-            $s = $1;
-
-            if($s =~ /250/ && $s =~ /Ok/i) {
-               (undef, $queue_id2) = split(/queued\ as\ /, $s);
-            }
-
-         }
-
-         $sth_clapf->execute($ts, $queue_id, lc $rcpt, lc $rcptdomain, $result, $spaminess, $relay, $delay, $queue_id2, $virus, $subject) || print $line . "\n";
-
+         $sth_clapf->execute($ts, $clapf_id, lc $from, lc $fromdomain, lc $rcpt, lc $rcptdomain, $result, $spaminess, $size, $relay, $delay, $queue_id2, $subject, $virus) || print $line . "\n";
       }
 
 
@@ -314,4 +299,16 @@ sub nice_exit {
    exit;
 }
 
+
+sub randomstring {
+   my ($length) = @_;
+   my @chars = ('a'..'f', '0'..'9');
+   my $s = "";
+
+   for (my $i=0; $i <= $length; $i++) {
+      $s .= $chars[rand @chars];
+   }
+
+   return $s;
+}
 

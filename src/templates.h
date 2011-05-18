@@ -1,5 +1,5 @@
 /*
- * templates.h, 2010.05.19, SJ
+ * templates.h, SJ
  */
 
 #ifndef _TEMPLATES_H

@@ -1,7 +1,7 @@
 <?php
 
-$_['text_active_incoming_queue'] = "active + incoming queue";
-$_['text_active_incoming_queue_sender'] = "active + incoming queue vs. sender";
+$_['text_active_incoming_queue'] = "aktív + bejövő üzenetsor";
+$_['text_active_incoming_queue_sender'] = "aktív + bejövő üzenetsor (feladó szerint)";
 $_['text_add'] = "Felvesz";
 $_['text_add_new_email_address'] = "Új email cím";
 $_['text_add_new_domain'] = "Új domain";
@@ -21,12 +21,13 @@ $_['text_cancel'] = "Mégse";
 $_['text_clienthost'] = "Kliens gép";
 $_['text_content_filter'] = "Tartalomszűrő";
 $_['text_counters'] = "Számlálók";
+$_['text_cpu_usage'] = "CPU használat";
 
 $_['text_daily_quarantine_report'] = "Napi karantén riport";
 $_['text_daily_report'] = "Napi jelentés";
 $_['text_date'] = "Dátum";
-$_['text_deferred_queue'] = "deferred queue";
-$_['text_deferred_queue_sender'] = "deferred queue vs. sender";
+$_['text_deferred_queue'] = "későbbi kiküldésre váró üzenetsor";
+$_['text_deferred_queue_sender'] = "későbbi kiküldésre váró üzenetsor (feladó szerint)";
 $_['text_delay'] = "Késleltetés";
 $_['text_deliver'] = "Kézbesítés";
 $_['text_delivered'] = "Kézbesített";

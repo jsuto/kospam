@@ -1,5 +1,5 @@
 /*
- * mydb_stat.c, 2008.05.11, SJ
+ * mydb_stat.c, SJ
  */
 
 #include <stdio.h>

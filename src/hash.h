@@ -11,6 +11,7 @@
 
 void inithash(struct node *xhash[]);
 void clearhash(struct node *xhash[], int print);
+void resethash(struct node *xhash[]);
 void printhash(struct node *xhash[]);
 int counthash(struct node *xhash[]);
 struct node *makenewnode(struct node *xhash[], char *s, double spaminess, double deviation);

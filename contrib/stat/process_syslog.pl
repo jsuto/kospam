@@ -30,10 +30,11 @@ while(<STDIN>){
 
       @x = split(/ /, $_);
 
-      #Sep 11 16:16:35 thorium clapf[28688]: 4aaa5bc2e143b68ed701d8833be296: sj@acts.hu got SPAM, 1.000, 2378, relay=127.0.0.1:10026, delay=0.12, delays=0.01/0.01/0.00/0.00/0.00/0.02/0.00/0.04/0.00/0.05, status=250 2.0.0 Ok: queued as 5597A17021
+      #May 17 13:56:36 thorium clapf[16321]: 4dd262744d3f7d59ac17b8b756416a: from=<0-ka@renault.com>, to=<sj@acts.hu>, spaminess=1.0000, result=SPAM, size=1914, relay=127.0.0.1:10026, delay=0.09, delays=0.00/0.00/0.00/0.00/0.00/0.00/0.00/0.00/0.03/0.00/0.05, status=250 2.0.0 Ok: queued as 66D4D47001, subject=Do you need additional work? We seek employees
 
-      $is_spam = $x[8];
-      $size = $x[10];
+      $is_spam = $x[9];
+
+      (undef, $size) = split(/=/, $x[10]);
       (undef, $time) = split(/=/, $x[12]);
 
       $time *= 1000;
@@ -42,7 +43,7 @@ while(<STDIN>){
       $tot_size += $size;
       $tot_time += $time;
 
-      if($is_spam eq "HAM"){
+      if($is_spam eq "result=HAM"){
          $n_ham++;
          $tot_spam_size += $size;
          $tot_spam_time += $time;

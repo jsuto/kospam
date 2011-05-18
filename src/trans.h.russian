@@ -1,5 +1,5 @@
 /*
- * trans.h.russian, 2008.08.18, SJ
+ * trans.h.russian, SJ
  *
  * if you want to have Russian language support copy this file over trans.h
  * then (re)compile clapf.

@@ -1,3 +1,22 @@
+2011.05.18, SJ
+
+Fixed a nasty training bug causing a somewhat biased counters.
+
+2011.05.17, SJ
+
+Revised the logging of clapf to get a more efficient history.
+You should also extend the clapf table in the history database:
+
+alter table clapf add column `size` int default 0;
+alter table clapf add column `from` char(64) not null;
+alter table clapf add column `fromdomain` char(64) not null;
+alter table clapf add column clapf_id char(32) not null;
+
+Additionally, do not forget to update maillog.pl!
+
+Changed the versioning of clapf for the nightly builds: it will be
+"nigthly-YYYYMMDD" without the version number of closest release.
+
 2011.05.15, SJ
 
 Fixed a bug in spamdrop causing segfault due to an uninitialised

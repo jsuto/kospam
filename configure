@@ -4820,12 +4820,12 @@ _ACEOF
 
 
 cat >>confdefs.h <<_ACEOF
-#define VIRUS_TEMPLATE "$datarootdir/clapf/template.virus"
+#define VIRUS_TEMPLATE "$my_prefix/share/clapf/template.virus"
 _ACEOF
 
 
 cat >>confdefs.h <<_ACEOF
-#define ZOMBIE_NET_REGEX "$datarootdir/clapf/zombienets.regex"
+#define ZOMBIE_NET_REGEX "$my_prefix/share/clapf/zombienets.regex"
 _ACEOF
 
 

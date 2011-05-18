@@ -166,7 +166,7 @@ int main(int argc, char **argv, char **envp){
    struct timeval tv_start, tv_stop;
    struct _state state;
    struct __data data;
-   struct __config cfg;
+   struct __config cfg, my_cfg;
    float spaminess=DEFAULT_SPAMICITY;
 #ifdef HAVE_LANG_DETECT
    char *lang="unknown";
@@ -264,6 +264,7 @@ int main(int argc, char **argv, char **envp){
 
    cfg = read_config(configfile);
 
+
    if(debug == 1){
       print_message = 0;
       cfg.verbosity = 0;
@@ -274,6 +275,9 @@ int main(int argc, char **argv, char **envp){
 
    setlocale(LC_MESSAGES, cfg.locale);
    setlocale(LC_CTYPE, cfg.locale);
+
+   memcpy(&my_cfg, &cfg, sizeof(struct __config));
+
 
    data.n_regex = 0;
    data.blackhole = NULL;
@@ -354,6 +358,7 @@ int main(int argc, char **argv, char **envp){
 
    if(recipient && (strcasestr(recipient, "+ham@") || strcasestr(recipient, "+spam@"))){
       training_request = 1;
+      sdata.training_request = 1;
    }
    else {
       FILE *f;
@@ -363,6 +368,7 @@ int main(int argc, char **argv, char **envp){
             if(strncmp(trainbuf, "To:", 3) == 0 && (strcasestr(trainbuf, "+ham@") || strcasestr(trainbuf, "+spam@")) ){
                trimBuffer(trainbuf);
                training_request = 1;
+               sdata.training_request = 1;
                break;
             }
 
@@ -455,6 +461,9 @@ int main(int argc, char **argv, char **envp){
 #ifdef HAVE_USERS
    if(recipient) getUserdataFromEmail(&sdata, recipient, &cfg);
 #endif
+#ifdef HAVE_POLICY
+   if(sdata.policy_group > 0) getPolicy(&sdata, &cfg, &my_cfg);
+#endif
 
    /*
     * handle training requests
@@ -504,7 +513,7 @@ int main(int argc, char **argv, char **envp){
 
       /* ... then train with the message */
 
-      trainMessage(&sdata, &state, rounds, is_spam, train_mode, &cfg);
+      trainMessage(&sdata, &state, rounds, is_spam, train_mode, &my_cfg);
 
       closeDatabase(&sdata); freeState(&state);
       unlink(sdata.ttmpfile);
@@ -530,7 +539,7 @@ int main(int argc, char **argv, char **envp){
    }
 
    #ifdef HAVE_TRE
-      checkZombieSender(&sdata, &data, &state, &cfg);
+      checkZombieSender(&sdata, &data, &state, &my_cfg);
    #endif
 
    /*
@@ -563,7 +572,13 @@ int main(int argc, char **argv, char **envp){
       }
    #endif
 
-      trainMessage(&sdata, &state, rounds, is_spam, train_mode, &cfg);
+   #ifdef HAVE_POLICY
+      if(sdata.policy_group > 0) getPolicy(&sdata, &cfg, &my_cfg);
+   #endif
+
+      sdata.training_request = 1;
+
+      trainMessage(&sdata, &state, rounds, is_spam, train_mode, &my_cfg);
 
       closeDatabase(&sdata); freeState(&state);
       unlink(sdata.ttmpfile);
@@ -589,9 +604,9 @@ int main(int argc, char **argv, char **envp){
       /* whitelist check first */
 
    #ifdef HAVE_WHITELIST
-      getUsersWBL(&sdata, &data, &cfg);
+      getUsersWBL(&sdata, &data, &my_cfg);
 
-      if(isEmailAddressOnList(sdata.whitelist, sdata.ttmpfile, from, &cfg) == 1){
+      if(isEmailAddressOnList(sdata.whitelist, sdata.ttmpfile, from, &my_cfg) == 1){
          syslog(LOG_PRIORITY, "%s: sender (%s) found on whitelist", sdata.ttmpfile, from);
          snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on whitelist%s", cfg.clapf_header_field, CRLF);
          strncat(clapf_info, whitelistbuf, MAXBUFSIZE-1);
@@ -603,7 +618,7 @@ int main(int argc, char **argv, char **envp){
       /* then give blacklist a try */
 
    #ifdef HAVE_BLACKLIST
-      if(isEmailAddressOnList(sdata.blacklist, sdata.ttmpfile, from, &cfg) == 1){
+      if(isEmailAddressOnList(sdata.blacklist, sdata.ttmpfile, from, &my_cfg) == 1){
          syslog(LOG_PRIORITY, "%s: sender (%s) found on blacklist", sdata.ttmpfile, from);
          closeDatabase(&sdata); freeState(&state);
          unlink(sdata.ttmpfile);
@@ -614,11 +629,11 @@ int main(int argc, char **argv, char **envp){
 
       /* query spaminess */
 
-      spaminess = bayes_file(&sdata, &state, &cfg);
+      spaminess = bayes_file(&sdata, &state, &my_cfg);
 
       /* update tokens unless we are in debug mode */
 
-      if(cfg.update_tokens == 1 && debug == 0){
+      if(my_cfg.update_tokens == 1 && debug == 0){
       #ifdef HAVE_MYDB
          update_tokens(cfg.mydbfile, sdata.mhash, state.token_hash);
       #else
@@ -629,7 +644,7 @@ int main(int argc, char **argv, char **envp){
 
    #ifdef HAVE_TRE
       if(sdata.tre == '+'){
-         if(cfg.message_from_a_zombie == 1) spaminess = 0.99;
+         if(my_cfg.message_from_a_zombie == 1) spaminess = 0.99;
       }
    #endif
 
@@ -637,7 +652,7 @@ int main(int argc, char **argv, char **envp){
       lang = check_lang(state.token_hash);
 
       if(quiet < 2){
-         strncat(clapf_info, cfg.clapf_header_field, MAXBUFSIZE-1);
+         strncat(clapf_info, my_cfg.clapf_header_field, MAXBUFSIZE-1);
          strncat(clapf_info, lang, MAXBUFSIZE-1);
          strncat(clapf_info, CRLF, MAXBUFSIZE-1);
       }
@@ -648,7 +663,7 @@ int main(int argc, char **argv, char **envp){
    #ifdef HAVE_SPAMSUM
       /* if we are uncertain, try the spamsum module, 2008.04.28, SJ */
 
-      if(spaminess > cfg.max_ham_spamicity && spaminess < cfg.spam_overall_limit){
+      if(spaminess > my_cfg.max_ham_spamicity && spaminess < my_cfg.spam_overall_limit){
          flags |= FLAG_IGNORE_HEADERS;
          sum = spamsum_file(sdata.ttmpfile, flags, 0);
          if(sum){
@@ -676,7 +691,7 @@ int main(int argc, char **argv, char **envp){
       }
 
 
-      if(spaminess >= cfg.spam_overall_limit)
+      if(spaminess >= my_cfg.spam_overall_limit)
          is_spam = 1;
       else
          is_spam = 0;
@@ -686,8 +701,8 @@ int main(int argc, char **argv, char **envp){
       /* don't TUM train if this is a blackhole message or we are just spamtest'ing */
 
       if(
-         (blackhole_request == 0 && debug == 0 && cfg.training_mode == T_TUM && ( (spaminess >= cfg.spam_overall_limit && spaminess < 0.99) || (spaminess < cfg.max_ham_spamicity && spaminess > 0.1) )) ||
-         (cfg.initial_1000_learning == 1 && debug == 0 && (sdata.Nham < NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED || sdata.Nspam < NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED))
+         (blackhole_request == 0 && debug == 0 && my_cfg.training_mode == T_TUM && ( (spaminess >= my_cfg.spam_overall_limit && spaminess < 0.99) || (spaminess < my_cfg.max_ham_spamicity && spaminess > 0.1) )) ||
+         (my_cfg.initial_1000_learning == 1 && debug == 0 && (sdata.Nham < NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED || sdata.Nspam < NUMBER_OF_INITIAL_1000_MESSAGES_TO_BE_LEARNED))
         )
       {
 
@@ -699,7 +714,7 @@ int main(int argc, char **argv, char **envp){
          }
          snprintf(trainbuf, SMALLBUFSIZE-1, "%sTUM%s", cfg.clapf_header_field, CRLF);
 
-         trainMessage(&sdata, &state, 1, is_spam, train_mode, &cfg);
+         trainMessage(&sdata, &state, 1, is_spam, train_mode, &my_cfg);
       }
 
    }
@@ -718,7 +733,7 @@ int main(int argc, char **argv, char **envp){
          snprintf(trainbuf, SMALLBUFSIZE-1, "%sTUM on blackhole%s", cfg.clapf_header_field, CRLF);
 
          sdata.uid = sdata.gid = 0;
-         trainMessage(&sdata, &state, rounds, 1, T_TOE, &cfg);
+         trainMessage(&sdata, &state, rounds, 1, T_TOE, &my_cfg);
       }
    }
 
@@ -768,14 +783,14 @@ ENDE_SPAMDROP:
       }
 
       if(compact == 1){
-         if(spaminess >= cfg.spam_overall_limit && spaminess < 1.01)
+         if(spaminess >= my_cfg.spam_overall_limit && spaminess < 1.01)
             snprintf(buf, MAXBUFSIZE-1, "%sYes, %.4f%s", cfg.clapf_header_field, spaminess, CRLF);
          else
             snprintf(buf, MAXBUFSIZE-1, "%sNo, %.4f%s", cfg.clapf_header_field, spaminess, CRLF);
 
          strncat(clapf_info, buf, MAXBUFSIZE-1);
       }
-      else if(spaminess >= cfg.spam_overall_limit && spaminess < 1.01){
+      else if(spaminess >= my_cfg.spam_overall_limit && spaminess < 1.01){
          snprintf(buf, MAXBUFSIZE-1, "%sYes%s", cfg.clapf_header_field, CRLF);
          strncat(clapf_info, buf, MAXBUFSIZE-1);
       }
@@ -816,7 +831,7 @@ ENDE_SPAMDROP:
    /* save email for later retraining and/or spam quarantine */
 
 #ifdef HAVE_STORE
-   if( (sdata.tot_len <= cfg.max_message_size_to_filter || cfg.max_message_size_to_filter == 0) && blackhole_request == 0 && debug == 0){
+   if( (sdata.tot_len <= my_cfg.max_message_size_to_filter || my_cfg.max_message_size_to_filter == 0) && blackhole_request == 0 && debug == 0){
 
       /* add trailing dot to the file, 2010.02.18, SJ */
 
@@ -837,7 +852,7 @@ ENDE_SPAMDROP:
 
 
 
-   if(print_message == 0 && spaminess >= cfg.spam_overall_limit && spaminess < 1.01)
+   if(print_message == 0 && spaminess >= my_cfg.spam_overall_limit && spaminess < 1.01)
       return 1;
 
    /* maildrop requires us to exit with 0 */

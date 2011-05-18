@@ -48,21 +48,23 @@ create index smtp_idx on smtp(queue_id, to_domain, orig_to_domain, clapf_id);
 drop table if exists clapf;
 create table if not exists clapf (
 	ts int default 0,
-	queue_id char(32) not null,
+	clapf_id char(32) not null,
 	queue_id2 char(16) not null,
 	relay char(64) default null,
 	delay float default 0.0,
+        `from` char(64) not null,
+        `fromdomain` char(64) not null,
 	rcpt char(64) not null,
 	rcptdomain char(32) not null,
 	subject char(64) not null,
+        `size` int default 0,
 	result char(16) default null,
 	spaminess float default 0.5,
 	virus char(32) default null
 );
 
-create index clapf_idx on clapf(queue_id, result, ts, rcpt, rcptdomain);
 
-create view summary as select distinct clapf.subject, clapf.queue_id, clapf.ts, smtpd.client_ip, qmgr.`from`, qmgr.`from_domain`, qmgr.`size`, smtp.`to_domain`, smtp.`to`, clapf.result, clapf.rcptdomain from smtp, smtpd, qmgr, clapf where smtp.clapf_id=clapf.queue_id and smtpd.queue_id=smtp.queue_id and qmgr.queue_id=smtp.queue_id;
+create index clapf_idx on clapf(clapf_id, result, ts, `from`, `fromdomain`, rcpt, rcptdomain);
 
 drop table if exists postgrey;
 create table if not exists postgrey (

@@ -60,17 +60,6 @@ create table if not exists t_black_list (
 create index t_black_list_idx on t_black_list (uid);
 insert into t_black_list (uid) values(0);
 
-create table if not exists t_queue (
-	id char(32) not null,
-	uid int unsigned not null,
-	ts bigint unsigned not null,
-	is_spam integer(1) default 0,
-	data blob not null
-);
-
-create index t_queue_idx on t_queue(uid, id);
-create index t_queue_idx2 on t_queue(ts);
-
 create table if not exists t_policy (
         policy_group int(4) not null,
         name char(128) not null,
@@ -129,6 +118,11 @@ create table if not exists t_remote (
 );
 
 create index t_remote_idx on t_remote(remotedomain);
+
+create table if not exists t_transport (
+        domain char(64) not null primary key,
+        destination char(64) not null
+);
 
 create table if not exists t_counters (
         rcvd bigint unsigned default 0,

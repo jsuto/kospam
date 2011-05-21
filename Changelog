@@ -1,3 +1,20 @@
+2011.05.21, SJ
+
+Modified the maillog collector script that (in case of mysql) it
+puts data into table partitions by days, and it purges old partitions
+by itself, ie. you don't need a cron job to do so.
+
+If you are using sqlite3 history table then you _need_ a cron job
+to purge aged history data.
+
+2011.05.20, SJ
+
+Bugfixes.
+
+(credits: Gabor Varadi)
+
+Simplified history feature.
+
 2011.05.18, SJ
 
 Fixed a nasty training bug causing a somewhat biased counters.

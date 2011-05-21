@@ -19,10 +19,8 @@ root's crontab:
 clapf's crontab:
 
 
-### purge aged history entries
-### select the proper line, then uncomment it
+### purge aged history entries (you only need this if you use sqlite3 history database)
 #2 2 * * * sed "s/DAYS_TO_RETAIN/`SBINDIR/clapfconf -q days_to_retain_data|cut -f2 -d = `/" DATAROOTDIR/clapf/history-purge-sqlite3.sql | sqlite3 `SBINDIR/clapfconf -q historydb | cut -f2 -d '='`
-#2 2 * * * sed "s/DAYS_TO_RETAIN/`SBINDIR/clapfconf -q days_to_retain_data|cut -f2 -d = `/" DATAROOTDIR/clapf/history-purge-mysql.sql | mysql --defaults-file=DATAROOTDIR/clapf/.my.cnf `SBINDIR/clapfconf -q historydb | cut -f2 -d '='`
 
 ### removed aged tokens
 ### select the proper line, then uncomment it

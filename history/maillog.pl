@@ -2,12 +2,26 @@
 
 use File::Tail;
 use Date::Parse;
-
 use DBI;
 use POSIX qw(setsid);
+use POSIX qw(strftime);
 
+use Sys::Syslog;
+use Sys::Syslog qw(:DEFAULT setlogsock);
+
+$program = "clapf-maillog";
+$priority = "mail|info";
+
+$flush_interval = 10;
+$this_partition = "";
+$last_dropped_partition = "";
 
 $db = "";
+
+%clapf = ();
+%connection = ();
+%smtp = ();
+
 
 &usage unless $config_file = $ARGV[0];
 
@@ -20,7 +34,8 @@ $password = $cfg{'mysqlpwd'};
 $socket = $cfg{'mysqlsocket'};
 $host = $cfg{'mysqlhost'};
 $port = $cfg{'mysqlport'};
-$pidfile = $cfg{'historypid'};
+$pidfile = $cfg{'historypid'} || '/var/run/clapf/clapf-maillog.pid';
+$days_to_retain_data = $cfg{'days_to_retain_data'} || 14;
 
 if($database =~ /\//){ $db = "sqlite3"; }
 else { $db = "mysql"; }
@@ -36,13 +51,20 @@ if($db eq "mysql") {
     $dsn = "dbi:mysql:database=$database;mysql_socket=$socket";}
 }
 
+openlog($program, 'pid', 'mail');
+
 &daemonize;
+
+syslog($priority, "started");
 
 if($pidfile) { &writepid($pidfile); }
 
 
 $SIG{'INT'} = 'nice_exit';
 $SIG{'TERM'} = 'nice_exit';
+$SIG{'ALRM'} = 'flush_results';
+
+alarm $flush_interval;
 
 
 $file = File::Tail->new(name => $maillog, maxinterval=> 5) or die "cannot read $maillog";
@@ -50,13 +72,12 @@ $file = File::Tail->new(name => $maillog, maxinterval=> 5) or die "cannot read $
 
 $dbh = DBI->connect($dsn, $user, $password) or die "cannot open database: $database";
 
-$stmt = "INSERT INTO smtpd (ts, queue_id, client_ip) VALUES(?, ?, ?)";
-$sth_smtpd = $dbh->prepare($stmt);
+if($db eq "mysql") { $dbh->{mysql_auto_reconnect} = 1; }
 
-$stmt = "INSERT INTO cleanup (ts, queue_id, message_id) VALUES(?, ?, ?)";
-$sth_cleanup = $dbh->prepare($stmt);
+$stmt = "INSERT INTO `connection` (ts, queue_id, client, `from`, `from_domain`, `size`) VALUES(?, ?, ?, ?, ?, ?)";
+$sth_connection = $dbh->prepare($stmt);
 
-$stmt = "INSERT INTO smtp (ts, queue_id, `to`, to_domain, orig_to, orig_to_domain, relay, delay, result, clapf_id) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+$stmt = "INSERT INTO smtp (ts, queue_id, `to`, to_domain, orig_to, orig_to_domain, relay, delay, `status`, clapf_id) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 $sth_smtp = $dbh->prepare($stmt);
 
 $stmt = "INSERT INTO clapf (ts, clapf_id, `from`, `fromdomain`, rcpt, rcptdomain, result, spaminess, `size`, relay, delay, queue_id2, subject, virus) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -67,14 +88,11 @@ srand;
 
 
 while (defined($line = $file->read)) {
-
-   if($line =~ /\ postfix\/smtpd\[/ || $line =~ /\ postfix\/cleanup\[/ || $line =~ /\ postfix\/(l|s)mtp\[/ || $line =~ /\ postfix\/local\[/ || $line =~ /\ clapf\[/ || $line =~ /\ postfix\/virtual\[/ || $line =~ /\ postfix\/pipe\[/) {
+   if( ($line =~ /\ postfix([\w\W]{0,})\// && ($line =~ /\/smtpd\[/ || $line =~ /\/qmgr\[/ || $line =~ /\/(l|s)mtp\[/ || $line =~ /\/local\[/ || $line =~ /\/virtual\[/ || $line =~ /\/pipe\[/) ) || ($line =~ /\ clapf\[/) ) {
       chomp($line);
 
       $queue_id = $to = $orig_to = $to_domain = $orig_to_domain = $clapf_id = $relay = $status = $result = $queue_id2 = "";
       $delay = 0;
-
-      ##print "xx: " . $line;
 
       $line =~ s/\ {1,}/ /g;
 
@@ -85,155 +103,150 @@ while (defined($line = $file->read)) {
       $ts = str2time($l[0] . " " . $l[1] . " " . $l[2]);
       $hostname = $l[3];
 
+      $now = time();
 
       # ... postfix/smtpd[8371]: NOQUEUE: reject: RCPT from unknown[70.96.35.34]: 554 5.7.1 Service unavailable; Client host [70.96.35.34] blocked using zen.spamhaus.org; http://www.spamhaus.org/query/bl?ip=70.96.35.34; from=<d2221028@ms29.hinet.net> to=<sj@acts.hu> proto=ESMTP helo=<[70.96.35.34]>
 
-      if($line =~ /\ postfix\/smtpd\[/ && $line =~ /from=\<([\w\W]{0,})\> to=\<([\w\W]{3,})\> proto=([\w]+) helo=/) {
+      if($line =~ /\/smtpd\[/ && $line =~ /from=\<([\w\W]{0,})\> to=\<([\w\W]{3,})\> proto=([\w]+) helo=/) {
 
-         $clapf_id = "xxxxxxxx" . &randomstring(22);
-         $spaminess = 0.5; $delay = $size = 0;
-         $subject = $queue_id2 = $virus = $relay = "";
-         $result = "SPAM";
+         $queue_id = "xxxxxxxx" . &randomstring(8);
 
-         $from = $1;
-         $rcpt = $2;
+         $connection{$queue_id}{'now'} = $now;
 
-         (undef, $fromdomain) = split(/\@/, $from);
-         (undef, $rcptdomain) = split(/\@/, $rcpt);
+         $connection{$queue_id}{'client'} = 'x.x.x.x'; # !!!FIXME!!!
+         $connection{$queue_id}{'ts'} = $ts;
+         $connection{$queue_id}{'from'} = lc $1;
 
-         $sth_clapf->execute($ts, $clapf_id, lc $from, lc $fromdomain, lc $rcpt, lc $rcptdomain, $result, $spaminess, $size, $relay, $delay, $queue_id2, $subject, $virus) || print $line . "\n";
+         (undef, $connection{$queue_id}{'from_domain'}) = split(/\@/, $connection{$queue_id}{'from'});
+         $connection{$queue_id}{'size'} = 0;
+
+         $smtp{$queue_id}{'ts'} = $ts;
+         $smtp{$queue_id}{'to'} = lc $2;
+         (undef, $smtp{$queue_id}{'to_domain'}) = split(/\@/, $smtp{$queue_id}{'to'});
       }
 
 
       # ... postfix/smtpd[12038]: 0561617020: client=unknown[92.84.77.34]
 
-      if($line =~ /\ postfix\/smtpd\[/ && $line =~ /\]\:\ ([\w]+)\: client=([\w\W]{3,})/) {
-         $sth_smtpd->execute($ts, $1, $2) || print $line . "\n";
+      if($line =~ /\/smtpd\[/ && $line =~ /\]\:\ ([\w]+)\: client=([\w\W]{3,})/) {
+         $queue_id = $1;
+
+         $connection{$queue_id}{'now'} = $now;
+         $connection{$queue_id}{'ts'} = $ts;
+         $connection{$queue_id}{'client'} = $2;
       }
 
 
-      #Sep  3 09:30:22 thorium postfix/cleanup[2311]: D20E617022: message-id=<f14f01c89af3$8a784f50$3bc40658@acts.hu>
+      # Sep 3 09:30:22 thorium postfix/qmgr[3010]: D20E617022: from=<aaa@freemail.hu>, size=2731, nrcpt=1 (queue active)
 
-      if($line =~ /\ postfix\/cleanup\[/ && $line =~ /\]\:\ ([\w]+)\: message\-id=<([\w\W]+)>/) {
-         $sth_cleanup->execute($ts, $1, $2) || print $line . "\n";
+      if($line =~ /\/qmgr\[/ && $line =~ /\]\:\ ([\w]+)\: from=\<([\w\W]{0,})\>, size=([\d]+),/) {
+         $queue_id = $1;
+
+         $connection{$queue_id}{'size'} = $3;
+         $connection{$queue_id}{'from'} = lc $2;
+
+         # fix the null sender, ie. from=<>
+         if($connection{$queue_id}{'from'} eq "") { $connection{$queue_id}{'from'} = 'null'; }
+
+         (undef, $connection{$queue_id}{'from_domain'}) = split(/\@/, $connection{$queue_id}{'from'});
+         if($connection{$queue_id}{'from_domain'} eq "") { $connection{$queue_id}{'from_domain'} = 'null'; }
       }
 
 
-      if($line =~ /\ postfix\/(l|s)mtp\[/ && $line =~ /to=/) {
+      if( ($line =~ /\/(l|s)mtp\[/ || $line =~ /\/local\[/ || $line =~ /\/virtual\[/ || $line =~ /\/pipe\[/ ) && $line =~ /to=/) {
          ($queue_id, undef) = split(/\:/, $l[5]);
 
-         ###if($line =~ /to=\<([\w\W]+)\>,/){
+         $smtp{$queue_id}{'ts'} = $ts;
+         $smtp{$queue_id}{'clapf_id'} = "";
+
          if($line =~ /\ to=\<([\w\d\.\-\_@\=\+]+)\>,/){
-            $to = $1;
+            $to = lc $1;
          }
 
          next if $to eq "";
 
-         (undef, $to_domain) = split(/\@/, $to);
+         $smtp{$queue_id}{'to'} = $to;
 
-         (undef, $relay) = split(/relay=/, $line);
-         ($relay, undef) = split(/,/, $relay);
-
-         (undef, $delay) = split(/delay=/, $line);
-         ($delay, undef) = split(/,/, $delay);
-
-         $status = "";
-
-         if($line =~ /status=([\w\ ]+) \(([\w\W]+)\)/){
-            $status = "$1 $2";
-         }
-
-         if($line =~ / ([a-f0-9]{30,32}) /){
-            $clapf_id = $1;
-         }
-
-         $sth_smtp->execute($ts, $queue_id, lc $to, lc $to_domain, lc $orig_to, lc $orig_to_domain, $relay, $delay, $status, $clapf_id) || print $line . "\n";
-      }
-
-
-      if($line =~ /\ postfix\/local\[/ || $line =~ /\ postfix\/virtual\[/ || $line =~ /\ postfix\/pipe\[/) {
-         ($queue_id, undef) = split(/\:/, $l[5]);
-
-         ###if($line =~ /to=\<([\w\W]+)\>,/){
-         if($line =~ /\ to=\<([\w\d\.\-\_@\=\+]+)\>,/){
-            $to = $1;
-         }
-
-         next if $to eq "";
-
-         (undef, $to_domain) = split(/\@/, $to);
-
+         (undef, $smtp{$queue_id}{'to_domain'}) = split(/\@/, $smtp{$queue_id}{'to'});
 
          (undef, $x) = split(/orig_to=/, $line);
-         ($orig_to, undef) = split(/ /, $x);
+         ($smtp{$queue_id}{'orig_to'}, undef) = split(/ /, $x);
 
-         $orig_to =~ s/\<|\>|\,//g;
-         (undef, $orig_to_domain) = split(/\@/, $orig_to);
+         $smtp{$queue_id}{'orig_to'} =~ s/\<|\>|\,//g;
+         $smtp{$queue_id}{'orig_to'} = lc $smtp{$queue_id}{'orig_to'};
 
-         (undef, $relay) = split(/relay=/, $line);
-         ($relay, undef) = split(/,/, $relay);
+         (undef, $smtp{$queue_id}{'orig_to_domain'}) = split(/\@/, $smtp{$queue_id}{'orig_to'});
+
+
+         (undef, $smtp{$queue_id}{'relay'}) = split(/relay=/, $line);
+         ($smtp{$queue_id}{'relay'}, undef) = split(/,/, $smtp{$queue_id}{'relay'});
 
          (undef, $x) = split(/delay=/, $line);
-         ($delay, undef) = split(/ /, $x);
+         ($smtp{$queue_id}{'delay'}, undef) = split(/ /, $x);
 
-         $delay =~ s/\,//;
+         $smtp{$queue_id}{'delay'} =~ s/\,//;
 
-         $status = "";
+         $smtp{$queue_id}{'status'} = "";
 
          if($line =~ /status=([\w\ ]+) \(([\w\W]+)\)/){
-            $status = "$1 $2";
+            $smtp{$queue_id}{'status'} = "$1 $2";
          }
 
          if($line =~ / ([a-f0-9]{30,32}) /){
-            $clapf_id = $1;
+            $smtp{$queue_id}{'clapf_id'} = $1;
          }
 
-         $sth_smtp->execute($ts, $queue_id, lc $to, lc $to_domain, lc $orig_to, lc $orig_to_domain, $relay, $delay, $status, $clapf_id) || print $line . "\n";
       }
 
-
-      # Sep  3 10:00:07 thorium clapf[2578]: 4a9f7787c9b56ae1a646fd8ca6cc5b: sj@acts.hu got SPAM, 1.0000, 2731, relay=127.0.0.1:10026, delay=0.06, delays=0.00/0.00/0.00/0.00/0.00/0.00/0.01/0.00/0.04, status=250 2.0.0 Ok: queued as E691917023
 
       if($line =~ /\ clapf\[/ && $line =~ /status=/) {
 
-         $clapf_id = $from = $fromdomain = $rcpt = $rcptdomain = "";
-         $delay = $size = 0;
-         $spaminess = 0.5;
-         $virus = "";
-         $subject = $queue_id2 = "";
-
-
          ($clapf_id, undef) = split(/\:/, $l[5]);
+         ###$clapf{$clapf_id}{'line'} = $line;
 
+         $clapf{$clapf_id}{'ts'} = $ts;
+
+         $clapf{$clapf_id}{'from'} = "";
+         $clapf{$clapf_id}{'fromdomain'} = "";
+         $clapf{$clapf_id}{'rcpt'} = "";
+         $clapf{$clapf_id}{'rcptdomain'} = "";
+         $clapf{$clapf_id}{'spaminess'} = 0.5;
+         $clapf{$clapf_id}{'result'} = "";
+         $clapf{$clapf_id}{'size'} = 0;
+         $clapf{$clapf_id}{'relay'} = "";
+         $clapf{$clapf_id}{'delay'} = 0;
+         $clapf{$clapf_id}{'status'} = "";
+         $clapf{$clapf_id}{'subject'} = "";
+         $clapf{$clapf_id}{'queue_id2'} = "";
+         $clapf{$clapf_id}{'virus'} = "";
 
          if($line =~ /from=\<([\w\W]{0,})\>, to=\<([\w\W]{3,})\>, spaminess=([\d\.]+), result=([\w\W]{3,}), size=([\d]+), relay=([\w\W]{3,}), delay=([\d\.]+), delays=([\d\.\/]+), status=([\w\W]{0,})\,\ subject=([\w\W]+)/) {
-            $from = $1; $rcpt = $2;
-            $spaminess = $3;
-            $result = $4;
-            $size = $5;
-            $relay = $6;
-            $delay = $7;
+            $clapf{$clapf_id}{'from'} = $1;
+            $clapf{$clapf_id}{'rcpt'} = $2;
+            $clapf{$clapf_id}{'spaminess'} = $3;
+            $clapf{$clapf_id}{'result'} = $4;
+            $clapf{$clapf_id}{'size'} = $5;
+            $clapf{$clapf_id}{'relay'} = $6;
+            $clapf{$clapf_id}{'delay'} = $7;
+            $clapf{$clapf_id}{'subject'} = $10;
+
             $status = $9;
-            $subject = $10;
          }
 
 
          if($status =~ /250/ && $status =~ /Ok/i) {
-            (undef, $queue_id2) = split(/queued\ as\ /, $status);
+            (undef, $clapf{$clapf_id}{'queue_id2'}) = split(/queued\ as\ /, $status);
          }
 
 
-         (undef, $fromdomain) = split(/\@/, $from);
-         (undef, $rcptdomain) = split(/\@/, $rcpt);
-
+         (undef, $clapf{$clapf_id}{'fromdomain'}) = split(/\@/, $clapf{$clapf_id}{'from'});
+         (undef, $clapf{$clapf_id}{'rcptdomain'}) = split(/\@/, $clapf{$clapf_id}{'rcpt'});
 
          if($result =~ /VIRUS\ \(([\w\W]+)\)/){
-            $result = 'VIRUS';
-            $virus = $1;
+            $clapf{$clapf_id}{'result'} = 'VIRUS';
+            $clapf{$clapf_id}{'virus'} = $1;
          }
 
-
-         $sth_clapf->execute($ts, $clapf_id, lc $from, lc $fromdomain, lc $rcpt, lc $rcptdomain, $result, $spaminess, $size, $relay, $delay, $queue_id2, $subject, $virus) || print $line . "\n";
       }
 
 
@@ -241,6 +254,7 @@ while (defined($line = $file->read)) {
    }
 
 }
+
 
 
 sub usage {
@@ -296,6 +310,10 @@ sub writepid {
 sub nice_exit {
    if($pidfile) { unlink $pidfile; }
 
+   syslog($priority, "terminated");
+
+   closelog();
+
    exit;
 }
 
@@ -311,4 +329,78 @@ sub randomstring {
 
    return $s;
 }
+
+
+sub flush_results {
+   $now = time();
+
+   # determine if we have to create a new partition
+   if($db eq "mysql") {
+      $partition_name = strftime("p%Y%m%d", localtime);
+
+      if($partition_name ne $this_partition) {
+
+         $ts = $now + 86400;
+
+         syslog($priority, "creating partitions: $partition_name (less than $ts)");
+
+         $dbh->do("ALTER TABLE clapf ADD PARTITION ( PARTITION $partition_name VALUES LESS THAN ($ts) )");
+         $dbh->do("ALTER TABLE `connection` ADD PARTITION ( PARTITION $partition_name VALUES LESS THAN ($ts) )");
+         $dbh->do("ALTER TABLE smtp ADD PARTITION ( PARTITION $partition_name VALUES LESS THAN ($ts) )");
+
+         $this_partition = $partition_name;
+      }
+
+      $partition_to_drop = strftime("p%Y%m%d", localtime(time() - $days_to_retain_data*86400));
+
+      if($last_dropped_partition ne $partition_to_drop) {
+         syslog($priority, "dropping partitions: $partition_to_drop");
+      
+         $dbh->do("ALTER TABLE clapf DROP PARTITION $partition_to_drop");
+         $dbh->do("ALTER TABLE `connection` DROP PARTITION $partition_to_drop");
+         $dbh->do("ALTER TABLE smtp DROP PARTITION $partition_to_drop");
+   
+         $last_dropped_partition = $partition_to_drop;
+      }
+   }
+
+
+   foreach $queue_id (keys %connection) {
+      if($connection{$queue_id}{'from'} && $connection{$queue_id}{'client'}) {
+         $sth_connection->execute($connection{$queue_id}{'ts'}, $queue_id, $connection{$queue_id}{'client'}, $connection{$queue_id}{'from'}, $connection{$queue_id}{'from_domain'}, $connection{$queue_id}{'size'});
+         delete $connection{$queue_id};
+      }
+      else {
+         if($now > $connection{$queue_id}{'now'} + 2*$flush_interval) {
+            delete $connection{$queue_id};
+         }
+      }
+   }
+
+
+   foreach $clapf_id (keys %clapf) {
+      if($clapf{$clapf_id}{'result'} && $clapf{$clapf_id}{'from'}) {
+         $sth_clapf->execute($clapf{$clapf_id}{'ts'}, $clapf_id, lc $clapf{$clapf_id}{'from'}, lc $clapf{$clapf_id}{'fromdomain'}, lc $clapf{$clapf_id}{'rcpt'}, lc $clapf{$clapf_id}{'rcptdomain'}, $clapf{$clapf_id}{'result'}, $clapf{$clapf_id}{'spaminess'}, $clapf{$clapf_id}{'size'}, $clapf{$clapf_id}{'relay'}, $clapf{$clapf_id}{'delay'}, $clapf{$clapf_id}{'queue_id2'}, $clapf{$clapf_id}{'subject'}, $clapf{$clapf_id}{'virus'});
+      }
+
+      delete $clapf{$clapf_id};
+   }
+
+
+   foreach $queue_id (keys %smtp) {
+
+      #$e = "ts:" . $postfix{$queue_id}{'ts'} . ", id:$queue_id, client:" . $postfix{$queue_id}{'client'} . ", to:" . $postfix{$queue_id}{'to'} . ", orig_to:" . $postfix{$queue_id}{'orig_to'} . ", relay:" . $postfix{$queue_id}{'relay'} . ", delay:" . $postfix{$queue_id}{'delay'} . ", status:" . $postfix{$queue_id}{'status'} . ", clapf_id:" . $postfix{$queue_id}{'clapf_id'};
+
+
+      if($smtp{$queue_id}{'to'}) {
+         $sth_smtp->execute($smtp{$queue_id}{'ts'}, $queue_id, $smtp{$queue_id}{'to'}, $smtp{$queue_id}{'to_domain'}, $smtp{$queue_id}{'orig_to'}, $smtp{$queue_id}{'orig_to_domain'}, $smtp{$queue_id}{'relay'}, $smtp{$queue_id}{'delay'}, $smtp{$queue_id}{'status'}, $smtp{$queue_id}{'clapf_id'});
+      }
+
+      delete $smtp{$queue_id};
+   }
+
+
+   alarm $flush_interval;
+}
+
 

@@ -189,8 +189,8 @@ int extractNameFromHeaderLine(char *s, char *name, char *resultbuf){
 
 
 void fixupEncodedHeaderLine(char *buf){
-   int x;
    char *p, *q, u[SMALLBUFSIZE], puf[MAXBUFSIZE];
+   char *end;
 
    memset(puf, 0, MAXBUFSIZE);
 
@@ -198,21 +198,37 @@ void fixupEncodedHeaderLine(char *buf){
 
    do {
       q = split_str(q, " ", u, SMALLBUFSIZE-1);
-      x = 0;
+      end = (char *)NULL;
 
       p = strcasestr(u, "?B?");
       if(p){
-         decodeBase64(p+3);
-         x = 1;
+         end = strcasestr(p, "?=");
+         if(end) {
+            decodeBase64(p+3);
+         }
+
       }
       else if((p = strcasestr(u, "?Q?"))){
-         decodeQP(p+3);
-         x = 1;
+         end = strcasestr(p, "?=");
+         if(end) {
+            decodeQP(p+3);
+         }
       }
 
-      if(x == 1){
-         if(strcasestr(u, "=?utf-8?")) decodeUTF8(p+3);
-         strncat(puf, p+3, MAXBUFSIZE-1);
+      if(end){
+         char *start1 = strcasestr(u, "=?");
+         char *start2 = strcasestr(u, "=?utf-8?");
+         if(start1){
+            *start1 = '\0';
+            strncat(puf, u, MAXBUFSIZE-1);
+            if(start2)
+               decodeUTF8(p+3);
+            strncat(puf, p+3, MAXBUFSIZE-1);
+            strncat(puf, end+2, MAXBUFSIZE-1);
+         }
+         else {
+            strncat(puf, u, MAXBUFSIZE-1);
+         }
       }
       else {
          strncat(puf, u, MAXBUFSIZE-1);

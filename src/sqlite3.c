@@ -174,8 +174,6 @@ int updateTokenCounters(struct session_data *sdata, int ham_or_spam, struct node
 
    buffer_destroy(query);
 
-   sqlite3_exec(sdata->db, s, NULL, NULL, &err);
-
    return 1;
 }
 
@@ -213,7 +211,7 @@ int updateTokenTimestamps(struct session_data *sdata, struct node *xhash[]){
    time(&cclock);
    now = cclock;
 
-   snprintf(buf, SMALLBUFSIZE-1, "UPDATE %s SET timestamp=%ld WHERE token in (0", SQL_TOKEN_TABLE, now);
+   snprintf(buf, SMALLBUFSIZE-1, "UPDATE %s SET timestamp=%ld WHERE token in (", SQL_TOKEN_TABLE, now);
 
    buffer_cat(query, buf);
 
@@ -222,7 +220,8 @@ int updateTokenTimestamps(struct session_data *sdata, struct node *xhash[]){
       q = xhash[i];
       while(q != NULL){
          if(q->spaminess != DEFAULT_SPAMICITY){
-            snprintf(buf, SMALLBUFSIZE-1, ",%llu", q->key);
+            if(n) snprintf(s, SMALLBUFSIZE-1, ",%llu", q->key);
+            else snprintf(s, SMALLBUFSIZE-1, "%llu", q->key);
             buffer_cat(query, buf);
             n++;
          }
@@ -233,7 +232,7 @@ int updateTokenTimestamps(struct session_data *sdata, struct node *xhash[]){
 
 
 
-   snprintf(buf, SMALLBUFSIZE-1, "0)");
+   snprintf(buf, SMALLBUFSIZE-1, ")");
    buffer_cat(query, buf);
 
    if((sqlite3_exec(sdata->db, query->data, NULL, NULL, &err)) != SQLITE_OK)

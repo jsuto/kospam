@@ -46,7 +46,7 @@ void clearhash(struct node *xhash[], int print){
 }
 
 
-void resethash(struct node *xhash[]){
+void resetcounters(struct node *xhash[]){
    int i;
    struct node *q;
 

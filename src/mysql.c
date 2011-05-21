@@ -223,7 +223,7 @@ int updateTokenTimestamps(struct session_data *sdata, struct node *xhash[]){
    time(&cclock);
    now = cclock;
 
-   snprintf(s, SMALLBUFSIZE-1, "UPDATE %s SET timestamp=%ld WHERE token in (0", SQL_TOKEN_TABLE, now);
+   snprintf(s, SMALLBUFSIZE-1, "UPDATE %s SET timestamp=%ld WHERE token in (", SQL_TOKEN_TABLE, now);
 
    buffer_cat(query, s);
 
@@ -231,7 +231,8 @@ int updateTokenTimestamps(struct session_data *sdata, struct node *xhash[]){
       q = xhash[i];
       while(q != NULL){
          if(q->spaminess != DEFAULT_SPAMICITY){
-            snprintf(s, SMALLBUFSIZE-1, ",%llu", q->key);
+            if(n) snprintf(s, SMALLBUFSIZE-1, ",%llu", q->key);
+            else snprintf(s, SMALLBUFSIZE-1, "%llu", q->key);
             buffer_cat(query, s);
             n++;
          }
@@ -242,9 +243,9 @@ int updateTokenTimestamps(struct session_data *sdata, struct node *xhash[]){
 
 
    if(sdata->gid > 0)
-      snprintf(s, SMALLBUFSIZE-1, "0) AND (uid=0 OR uid=%ld)", sdata->gid);
+      snprintf(s, SMALLBUFSIZE-1, ") AND (uid=0 OR uid=%ld)", sdata->gid);
    else
-      snprintf(s, SMALLBUFSIZE-1, "0) AND uid=0");
+      snprintf(s, SMALLBUFSIZE-1, ") AND uid=0");
 
    buffer_cat(query, s);
 

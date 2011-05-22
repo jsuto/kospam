@@ -14,7 +14,7 @@ by itself, ie. you don't need a cron job to do so.
 If you are using sqlite3 history table then you _need_ a cron job
 to purge aged history data.
 
-Please note that the old history database is not compatibel with the
+Please note that the old history database is not compatible with the
 new log entries and the maillog collector script, so be sure to drop
 it, and recreate it from scratch.
 

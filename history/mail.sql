@@ -48,5 +48,5 @@ create index clapf_idx on clapf(clapf_id, result, ts, `from`, `fromdomain`, rcpt
 
 
 drop view if exists summary;
-create view summary as select smtp.ts, smtp.queue_id, connection.`from`, connection.client, connection.size, smtp.clapf_id, clapf.result, clapf.relay, clapf.queue_id2 from connection, smtp, clapf where smtp.queue_id=connection.queue_id and smtp.clapf_id=clapf.clapf_id;
+create view summary as select smtp.ts, smtp.queue_id, connection.`from`, connection.`from_domain`, connection.client, connection.size, smtp.clapf_id, clapf.result, clapf.relay, clapf.queue_id2 from connection, smtp, clapf where smtp.queue_id=connection.queue_id and smtp.clapf_id=clapf.clapf_id;
 

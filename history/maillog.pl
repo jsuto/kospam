@@ -220,7 +220,7 @@ while (defined($line = $file->read)) {
          $clapf{$clapf_id}{'queue_id2'} = "";
          $clapf{$clapf_id}{'virus'} = "";
 
-         if($line =~ /from=\<([\w\W]{0,})\>, to=\<([\w\W]{3,})\>, spaminess=([\d\.]+), result=([\w\W]{3,}), size=([\d]+), relay=([\w\W]{3,}), delay=([\d\.]+), delays=([\d\.\/]+), status=([\w\W]{0,})\,\ subject=([\w\W]+)/) {
+         if($line =~ /from=\<([\w\W]{0,})\>, to=\<([\w\W]{3,})\>, spaminess=([\d\.]+), result=([\w\W]{3,}), size=([\d]+), relay=([\w\W]{3,}), delay=([\d\.]+), delays=([\d\.\/]+), status=([\w\W]{0,})\,\ subject=([\w\W]{0,})/) {
             $clapf{$clapf_id}{'from'} = $1;
             $clapf{$clapf_id}{'rcpt'} = $2;
             $clapf{$clapf_id}{'spaminess'} = $3;

@@ -12,9 +12,12 @@
 
    <link rel="stylesheet" type="text/css" href="view/theme/default/stylesheet/style.css" />
    <link rel="stylesheet" type="text/css" href="view/theme/default/stylesheet/dropdown.css" />
+   <link rel="stylesheet" type="text/css" href="view/theme/default/stylesheet/jquery.ui.all.css" />
 
    <script type="text/javascript" src="view/javascript/quarantine.js"></script>
    <script type="text/javascript" src="view/javascript/jquery-1.4.2.min.js"></script>
+   <script type="text/javascript" src="view/javascript/jquery-ui-1.8.13.custom.min.js"></script>
+   <script type="text/javascript" src="view/javascript/jquery-ui-i18n.js"></script>
    <script type="text/javascript" src="view/javascript/jquery.dropdownPlain.js"></script>
 
 </head>
@@ -108,6 +111,13 @@ function f_helper() {
       }
    }
 }
+
+
+$(document).ready(function() {
+   $.datepicker.setDefaults($.datepicker.regional['<?php if(LANG == 'en') { ?>en-GB<?php } else { print LANG; } ?>']);
+   $("#date1").datepicker( { dateFormat: 'yy-mm-dd' } );
+   $("#date2").datepicker( { dateFormat: 'yy-mm-dd' } );
+  });
 
 </script>
 

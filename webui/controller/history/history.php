@@ -22,6 +22,8 @@ class ControllerHistoryHistory extends Controller {
          $this->data['hamspam'] = @$this->request->cookie['hamspam'];
          $this->data['sender_domain'] = @$this->request->cookie['sender_domain'];
          $this->data['rcpt_domain'] = @$this->request->cookie['rcpt_domain'];
+         $this->data['fromdate'] = @$this->request->cookie['fromdate'];
+         $this->data['todate'] = @$this->request->cookie['todate'];
 
          if(isset($this->request->get['page']) && is_numeric($this->request->get['page']) && $this->request->get['page'] > 0) {
             $this->data['page'] = $this->request->get['page'];

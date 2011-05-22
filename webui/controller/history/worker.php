@@ -46,7 +46,6 @@ class ControllerHistoryWorker extends Controller {
       $this->data['sender_domain'] = "";
       $this->data['rcpt_domain'] = "";
 
-
       /* ham or spam */
 
       $cookie = @$this->request->cookie['hamspam'];
@@ -56,6 +55,24 @@ class ControllerHistoryWorker extends Controller {
          $CLAPF_FILTER = " and result='$cookie'";
       }
 
+
+      /* dates */
+
+      $cookie = @$this->request->cookie['date1'];
+      if($cookie) {
+         if(HISTORY_DRIVER == 'mysql') { $datesql = "UNIX_TIMESTAMP('" . $db->escape($cookie) . " 00:00:00') "; }
+         else { $datesql = "strftime('%s', '" . $db->escape($cookie) . " 00:00:00') "; }
+
+         $FILTER ? $FILTER .= " and ts >= $datesql" : $FILTER .= "ts >= $datesql";
+      }
+
+      $cookie = @$this->request->cookie['date2'];
+      if($cookie) {
+         if(HISTORY_DRIVER == 'mysql') { $datesql = "UNIX_TIMESTAMP('" . $db->escape($cookie) . " 23:59:59') "; }
+         else { $datesql = "strftime('%s', '" . $db->escape($cookie) . " 23:59:59') "; }
+
+         $FILTER ? $FILTER .= " and ts <= $datesql" : $FILTER .= "ts <= $datesql";
+      }
 
       /* rcpt domain */
 

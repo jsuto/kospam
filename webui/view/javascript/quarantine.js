@@ -38,7 +38,8 @@ function toggle_row_highlight(what) {
 
 function fix_search(){
    location = "index.php?route=quarantine/quarantine&subj=" + document.forms.aaa0.subj.value + 
-         "&from=" + document.forms.aaa0.from.value + "&hamspam=" + document.forms.aaa0.hamspam.value +
+         "&from=" + document.forms.aaa0.from.value +
+           "&hamspam=" + document.forms.aaa0.hamspam.value +
            "&user=" + document.forms.aaa0.user.value;
 }
 
@@ -100,6 +101,12 @@ function filterhistory(){
 
    x = document.forms[0].rcpt_domain.value;
    setCookie("rcpt_domain", x, 1);
+
+   x = document.forms[0].date1.value;
+   setCookie("date1", x, 1);
+
+   x = document.forms[0].date2.value;
+   setCookie("date2", x, 1);
 }
 
 

@@ -54,6 +54,9 @@ if($verbose >= 1) { print "queried users: " . count($users) . "\n"; }
 
 extract($language->data);
 
+$Q = new DB("sqlite", "", "", "", $webuidir . "/" . QUARANTINE_DATA, "");
+Registry::set('Q', $Q);
+
 
 foreach ($users as $user) {
    $domain = $u->getDomainsByUid($user['uid']);
@@ -63,41 +66,30 @@ foreach ($users as $user) {
 
       $total_notifications++;
 
-      $Q = new DB("sqlite", "", "", "", $my_q_dir . "/" . QUARANTINE_DATA, "");
-      Registry::set('Q', $Q);
+      $additional_uids = $u->get_additional_uids($user['uid']);
 
-      /* create schema if it's a 0 byte length file */
+      list ($n, $total_size, $messages) = $qd->getMessages($user['uid'], $additional_uids, 0, 0, '', '', 'SPAM', 'ts', 1);
 
-      $st = stat($my_q_dir . "/" . QUARANTINE_DATA);
-      if(isset($st['size']) && $st['size'] < 1024) {
-         $qd->CreateDatabase();
+
+      if($n > 0) {
+         $msg = "From: " . SMTP_FROMADDR . EOL;
+         $msg .= "To: " . $user['email'] . EOL;
+         $msg .= "Subject: =?UTF-8?Q?" . preg_replace("/\n/", "", my_qp_encode($text_daily_quarantine_report)) . "?=" . EOL;
+         $msg .= "MIME-Version: 1.0" . EOL;
+         $msg .= "Content-Type: text/html; charset=\"utf-8\"" . EOL;
+         $msg .= EOL . EOL;
+
+         ob_start();
+
+         include($webuidir . "/language/" . LANG . "/quarantine-daily-digest.tpl");
+
+         $msg .= ob_get_contents();
+
+         ob_end_clean();
+
+         $x = $mail->SendSmtpEmail(SMTP_HOST, SMTP_PORT, SMTP_DOMAIN, SMTP_FROMADDR, $user['email'], $msg);
+         if($x == 0) { $failed_notifications++; }
       }
-
-
-      /* populate quarantine files to database if we are on the 1st page */
-
-      $qd->PopulateDatabase($my_q_dir);
-
-      list ($n, $total_size, $messages) = $qd->getMessages($my_q_dir, $user['username'], 0, 0, '', '', 'SPAM', 'ts', 1);
-
-      $msg = "From: " . SMTP_FROMADDR . EOL;
-      $msg .= "To: " . $user['email'] . EOL;
-      $msg .= "Subject: =?UTF-8?Q?" . preg_replace("/\n/", "", my_qp_encode($text_daily_quarantine_report)) . "?=" . EOL;
-      $msg .= "MIME-Version: 1.0" . EOL;
-      $msg .= "Content-Type: text/html; charset=\"utf-8\"" . EOL;
-      $msg .= EOL . EOL;
-
-      ob_start();
-
-      include($webuidir . "/language/" . LANG . "/quarantine-daily-digest.tpl");
-
-      $msg .= ob_get_contents();
-
-      ob_end_clean();
-
-      $x = $mail->SendSmtpEmail(SMTP_HOST, SMTP_PORT, SMTP_DOMAIN, SMTP_FROMADDR, $user['email'], $msg);
-      if($x == 0) { $failed_notifications++; }
-
 
    }
 }

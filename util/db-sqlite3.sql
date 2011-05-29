@@ -109,6 +109,15 @@ insert into t_domain (domain, mapped) values('local', 'local');
 create index t_domain_idx on t_domain (domain);
 
 
+create table if not exists t_quarantine_group (
+	uid int unsigned not null,
+	gid int unsigned not null,
+	unique(uid, gid)
+);
+
+create index t_quarantine_group_idx on t_quarantine_group (uid, gid);
+
+
 create table if not exists t_remote (
 	remotedomain char(64) not null unique,
 	remotehost char(64) not null,

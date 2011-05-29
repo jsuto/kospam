@@ -2,6 +2,7 @@
 
 $_['text_active_incoming_queue'] = "active + incoming queue";
 $_['text_active_incoming_queue_sender'] = "active + incoming queue vs. sender";
+$_['text_ad_sync_status'] = "AD synchronisation status";
 $_['text_add'] = "Add";
 $_['text_add_new_email_address'] = "New email address";
 $_['text_add_new_domain'] = "New domain";
@@ -21,14 +22,19 @@ $_['text_cancel'] = "Cancel";
 $_['text_clienthost'] = "Client host";
 $_['text_content_filter'] = "Content filter";
 $_['text_counters'] = "Counters";
+$_['text_cpu_load'] = "CPU load";
 $_['text_cpu_usage'] = "CPU usage";
 
 $_['text_daily_quarantine_report'] = "Daily quarantine report";
 $_['text_daily_report'] = "Daily report";
+$_['text_database_emails'] = "email addresses in clapf database";
 $_['text_date'] = "Date";
+$_['text_date_from'] = "Date from";
+$_['text_date_to'] = "Date to";
 $_['text_deferred_queue'] = "deferred queue";
 $_['text_deferred_queue_sender'] = "deferred queue vs. sender";
 $_['text_delay'] = "Delay";
+$_['text_deleted_users'] = "deleted users";
 $_['text_deliver'] = "Deliver";
 $_['text_delivered'] = "Delivered";
 $_['text_deliver_and_train_selected_messages'] = "Deliver and train selected messages";
@@ -60,7 +66,6 @@ $_['text_failed_to_change_password'] = "Failed to change password";
 $_['text_failed_to_deliver'] = "Failed to deliver";
 $_['text_failed_to_modify'] = "Failed to modify";
 $_['text_failed_to_remove'] = "Failed to remove";
-$_['text_message_failed_to_train'] = "Message failed to train";
 $_['text_failed_to_update'] = "Failed to update";
 $_['text_first'] = "First";
 $_['text_from'] = "From";
@@ -107,12 +112,14 @@ $_['text_main_title'] = "clapf web UI";
 $_['text_mapped_domain'] = "Mapped domain";
 $_['text_memory_usage'] = "Memory usage";
 $_['text_messages'] = "messages";
+$_['text_message_failed_to_train'] = "Message failed to train";
 $_['text_missing_data'] = "Missing data";
 $_['text_missing_password'] = "Missing password";
 $_['text_modify'] = "Modify";
 $_['text_monitor'] = "Monitor";
 $_['text_monthly_report'] = "Monthly report";
 
+$_['text_new_users'] = "new users";
 $_['text_next'] = "Next";
 $_['text_no_message_in_the_quarantine'] = "No message in the quarantine matching the search criteria";
 $_['text_no_records'] = "No records";
@@ -167,6 +174,7 @@ $_['text_search_terms'] = "Search terms";
 $_['text_select_action'] = "Select action";
 $_['text_select_all'] = "Select all";
 $_['text_sender'] = "Sender";
+$_['text_sending_domains'] = "sending domains";
 $_['text_set'] = "Set";
 $_['text_size'] = "Size";
 $_['text_smtp_status'] = "SMTP status";
@@ -180,14 +188,16 @@ $_['text_successfully_modified'] = "Successfully modified";
 $_['text_successfully_removed'] = "Successfully removed";
 $_['text_successfully_trained'] = "Successfully trained";
 $_['text_successfully_updated'] = "Successfully modified";
+$_['text_swap_usage'] = "Swap usage";
 
 $_['text_time'] = "Time";
 $_['text_to'] = "To";
 $_['text_too_short_password'] = "Too short password";
 $_['text_total_ratio'] = "total ratio";
-$_['text_sending_domains'] = "sending domains";
+$_['text_total_users'] = "total users";
 $_['text_train'] = "Train";
-$_['text_train_and_deliver'] = "Train and deliver";
+$_['text_train_and_deliver_as_ham'] = "Train and deliver as HAM";
+$_['text_train_and_deliver_as_spam'] = "Train and deliver as SPAM";
 $_['text_trained'] = "Trained";
 $_['text_train_selected_messages'] = "Train selected messages";
 
@@ -215,5 +225,8 @@ $_['text_whitelist_settings'] = "Whitelist settings";
 $_['text_you_are'] = "You are";
 $_['text_you_are_not_admin'] = "You are not an admin user";
 
+
+$_['fn'] = "false negative error";
+$_['fp'] = "false positive error";
 
 ?>

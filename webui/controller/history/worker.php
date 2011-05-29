@@ -163,7 +163,7 @@ class ControllerHistoryWorker extends Controller {
 
                }
                else if(preg_match("/^xxxxxxxx/", $smtp['queue_id'])) {
-                  $delivery = 'rejected';
+                  $delivery = $smtp['status'];
                }
                else {
                   $delivery = $smtp['status'] . ", " . $smtp['relay'];

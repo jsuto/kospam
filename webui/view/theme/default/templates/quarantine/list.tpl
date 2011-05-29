@@ -55,6 +55,7 @@
    <tr align="middle">
       <th>&nbsp;</th>
       <th><?php print $text_date; ?> <a href="index.php?route=quarantine/quarantine&amp;user=<?php print $username; ?>&amp;from=<?php print $from; ?>&amp;subj=<?php print $subj; ?>&hamspam=<?php print $hamspam; ?>&amp;sort=ts&amp;order=0"><img src="view/theme/<?php print THEME; ?>/images/arrowup.gif" border="0"></a> <a href="index.php?route=quarantine/quarantine&amp;user=<?php print $username; ?>&amp;from=<?php print $from; ?>&amp;subj=<?php print $subj; ?>&hamspam=<?php print $hamspam; ?>&amp;sort=ts&amp;order=1"><img src="view/theme/<?php print THEME; ?>/images/arrowdown.gif" border="0"></a></th>
+      <th><?php print $text_username; ?></th>
       <th><?php print $text_from; ?> <a href="index.php?route=quarantine/quarantine&amp;user=<?php print $username; ?>&amp;from=<?php print $from; ?>&amp;subj=<?php print $subj; ?>&hamspam=<?php print $hamspam; ?>&amp;sort=from&amp;order=0"><img src="view/theme/<?php print THEME; ?>/images/arrowup.gif" border="0"></a> <a href="index.php?route=quarantine/quarantine&amp;user=<?php print $username; ?>&amp;from=<?php print $from; ?>&amp;subj=<?php print $subj; ?>&hamspam=<?php print $hamspam; ?>&amp;sort=from&amp;order=1"><img src="view/theme/<?php print THEME; ?>/images/arrowdown.gif" border="0"></a></th>
       <th><?php print $text_subject; ?> <a href="index.php?route=quarantine/quarantine&amp;user=<?php print $username; ?>&amp;from=<?php print $from; ?>&amp;subj=<?php print $subj; ?>&hamspam=<?php print $hamspam; ?>&amp;sort=subj&amp;order=0"><img src="view/theme/<?php print THEME; ?>/images/arrowup.gif" border="0"></a> <a href="index.php?route=quarantine/quarantine&amp;user=<?php print $username; ?>&amp;from=<?php print $from; ?>&amp;subj=<?php print $subj; ?>&hamspam=<?php print $hamspam; ?>&amp;sort=subj&amp;order=1"><img src="view/theme/<?php print THEME; ?>/images/arrowdown.gif" border="0"></a></th>
       <th><?php print $text_size; ?> <a href="index.php?route=quarantine/quarantine&amp;user=<?php print $username; ?>&amp;from=<?php print $from; ?>&amp;subj=<?php print $subj; ?>&hamspam=<?php print $hamspam; ?>&amp;sort=size&amp;order=0"><img src="view/theme/<?php print THEME; ?>/images/arrowup.gif" border="0"></a> <a href="index.php?route=quarantine/quarantine&amp;user=<?php print $username; ?>&amp;from=<?php print $from; ?>&amp;subj=<?php print $subj; ?>&hamspam=<?php print $hamspam; ?>&amp;sort=size&amp;order=1"><img src="view/theme/<?php print THEME; ?>/images/arrowdown.gif" border="0"></a></th>
@@ -63,6 +64,7 @@
       <th>&nbsp;</th>
    </tr>
    <tr>
+      <td>&nbsp;</td>
       <td>&nbsp;</td>
       <td>&nbsp;</td>
       <td width="35%"><img src="<?php print WEBUI_DIRECTORY; ?>/view/theme/<?php print THEME; ?>/images/line.png" alt="xxx" /></td>
@@ -78,6 +80,7 @@
    <tr valign="top" id="tr_<?php print $message['id']; ?>">
       <td<?php if(($message['i'] % 2) == 0){ ?> class="odd"<?php } ?>><a href="index.php?route=quarantine/message&amp;id=<?php print $message['id']; ?>&amp;user=<?php print $username; ?>&amp;page=<?php print $page; ?>&amp;from=<?php print $from; ?>&amp;subj=<?php print $subj; ?>&hamspam=<?php print $hamspam; ?>"><?php print $message['i']; ?>.</a></td>
       <td<?php if(($message['i'] % 2) == 0){ ?> class="odd"<?php } ?>><?php print $message['date']; ?></td>
+      <td align="center"<?php if(($message['i'] % 2) == 0){ ?> class="odd"<?php } ?>><?php print $message['uid']; ?></td>
       <td<?php if(($message['i'] % 2) == 0){ ?> class="odd"<?php } ?>><?php if($message['from'] != $message['shortfrom']) { ?><span onmouseover="Tip('<?php print preg_replace("/&/", "&amp;", $message['from']); ?>', BALLOON, true, ABOVE, true)" onmouseout="UnTip()"><?php print $message['shortfrom']; ?></span><?php } else { print $message['from']; } ?></td>
       <td<?php if(($message['i'] % 2) == 0){ ?> class="odd"<?php } ?>><a href="index.php?route=quarantine/message&amp;id=<?php print $message['id']; ?>&amp;user=<?php print $username; ?>&amp;page=<?php print $page; ?>&amp;from=<?php print $from; ?>&amp;subj=<?php print $subj; ?>&hamspam=<?php print $hamspam; ?>"><?php if($message['subject'] != $message['shortsubject']) { ?><span onmouseover="Tip('<?php print preg_replace("/&/", "&amp;", $message['subject']); ?>', BALLOON, true, ABOVE, true)" onmouseout="UnTip()"><?php print $message['shortsubject']; ?></span><?php } else { print $message['subject']; } ?></a></td>
       <td align="right"><?php print $message['size']; ?></td>

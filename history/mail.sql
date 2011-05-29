@@ -21,7 +21,7 @@ create table if not exists smtp (
 	orig_to_domain char(48) default null,
 	relay char(64) default null,
 	delay float default 0.0,
-	`status` char(64) default null,
+	`status` char(128) default null,
 	clapf_id char(32) default null
 ) ENGINE=InnoDB PARTITION BY RANGE (ts) ( PARTITION p0 VALUES LESS THAN (1) );
 create index smtp_idx on smtp(queue_id, to_domain, orig_to_domain, clapf_id);

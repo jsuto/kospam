@@ -43,7 +43,7 @@ class ControllerQuarantineMassdeliver extends Controller {
       $domain = $this->model_user_user->getDomainsByUid($uid);
       $my_q_dir = get_per_user_queue_dir($domain[0], $this->data['username'], $uid);
 
-      $Q = new DB("sqlite", "", "", "", $my_q_dir . "/" . QUARANTINE_DATA, "");
+      $Q = new DB("sqlite", "", "", "", QUARANTINE_DATA, "");
       Registry::set('Q', $Q);
 
       $this->data['to'] = $this->model_user_user->getEmailAddress($this->data['username']);
@@ -58,6 +58,8 @@ class ControllerQuarantineMassdeliver extends Controller {
             if($this->model_mail_mail->SendSmtpEmail(SMTP_HOST, SMTP_PORT, SMTP_DOMAIN, SMTP_FROMADDR, $this->data['to'], $message) == 1) {
 
                $this->model_quarantine_database->RemoveEntry($k);
+
+               if(REMOVE_FROM_QUARANTINE_WILL_UNLINK_FROM_FILESYSTEM == 1) { unlink($my_q_dir . "/" . $k); }
 
                $this->data['n']++;
             }

@@ -2,6 +2,7 @@
 
 $_['text_active_incoming_queue'] = "aktív + bejövő üzenetsor";
 $_['text_active_incoming_queue_sender'] = "aktív + bejövő üzenetsor (feladó szerint)";
+$_['text_ad_sync_status'] = "AD szinkronizáció státusz";
 $_['text_add'] = "Felvesz";
 $_['text_add_new_email_address'] = "Új email cím";
 $_['text_add_new_domain'] = "Új domain";
@@ -21,14 +22,19 @@ $_['text_cancel'] = "Mégse";
 $_['text_clienthost'] = "Kliens gép";
 $_['text_content_filter'] = "Tartalomszűrő";
 $_['text_counters'] = "Számlálók";
+$_['text_cpu_load'] = "CPU terhelés";
 $_['text_cpu_usage'] = "CPU használat";
 
 $_['text_daily_quarantine_report'] = "Napi karantén riport";
 $_['text_daily_report'] = "Napi jelentés";
+$_['text_database_emails'] = "email címek a clapf adatbázisban";
 $_['text_date'] = "Dátum";
+$_['text_date_from'] = "Dátumtól";
+$_['text_date_to'] = "Dátumig";
 $_['text_deferred_queue'] = "későbbi kiküldésre váró üzenetsor";
 $_['text_deferred_queue_sender'] = "későbbi kiküldésre váró üzenetsor (feladó szerint)";
 $_['text_delay'] = "Késleltetés";
+$_['text_deleted_users'] = "törölt felhasználók";
 $_['text_deliver'] = "Kézbesítés";
 $_['text_delivered'] = "Kézbesített";
 $_['text_deliver_and_train_selected_messages'] = "Kiválasztott üzenetek tanítása és kézbesítése";
@@ -60,7 +66,6 @@ $_['text_failed_to_change_password'] = "Nem sikerült jelszót váltani";
 $_['text_failed_to_deliver'] = "Nem sikerült kézbesíteni";
 $_['text_failed_to_modify'] = "Nem sikerült módosítani";
 $_['text_failed_to_remove'] = "Hiba az eltávolításkor";
-$_['text_message_failed_to_train'] = "Hiba a tanítás során";
 $_['text_failed_to_update'] = "Nem sikerült módosítani";
 $_['text_first'] = "Első";
 $_['text_from'] = "Feladó";
@@ -107,12 +112,14 @@ $_['text_main_title'] = "clapf web UI";
 $_['text_mapped_domain'] = "Hozzárendelt domain";
 $_['text_memory_usage'] = "Memória használat";
 $_['text_messages'] = "üzenet";
+$_['text_message_failed_to_train'] = "Hiba a tanítás során";
 $_['text_missing_data'] = "Hiányzó adat";
 $_['text_missing_password'] = "Hiányzó jelszó";
 $_['text_modify'] = "Módosítás";
 $_['text_monitor'] = "Monitor";
 $_['text_monthly_report'] = "Havi jelentés";
 
+$_['text_new_users'] = "új felhasználók";
 $_['text_next'] = "Következő";
 $_['text_no_message_in_the_quarantine'] = "Nincs a keresési feltételnek megfelelő üzenet a karanténban";
 $_['text_no_records'] = "nincs találat";
@@ -167,6 +174,7 @@ $_['text_search_terms'] = "Keresési feltételek";
 $_['text_select_action'] = "Művelet választás";
 $_['text_select_all'] = "Mindegyik kijelölése";
 $_['text_sender'] = "Feladó";
+$_['text_sending_domains'] = "küldő domain";
 $_['text_set'] = "Beállít";
 $_['text_size'] = "Méret";
 $_['text_smtp_status'] = "SMTP státusz";
@@ -180,13 +188,15 @@ $_['text_successfully_modified'] = "Sikeresen módosítva";
 $_['text_successfully_removed'] = "Sikeresen eltávolítva";
 $_['text_successfully_trained'] = "Sikeresen tanítva";
 $_['text_successfully_updated'] = "Sikeresen módosítva";
+$_['text_swap_usage'] = "Swap használat";
 
 $_['text_time'] = "Időpont";
 $_['text_to'] = "Címzett";
 $_['text_too_short_password'] = "Túl rövid jelszó";
 $_['text_total_ratio'] = "összes arány";
-$_['text_sending_domains'] = "küldő domain";
-$_['text_train_and_deliver'] = "Tanítás és kézbesítés";
+$_['text_total_users'] = "összes felhasználó";
+$_['text_train_and_deliver_as_ham'] = "Tanítás és kézbesítés, mint jó levél";
+$_['text_train_and_deliver_as_spam'] = "Tanítás és kézbesítés, mint SPAM";
 $_['text_train'] = "Tanít";
 $_['text_trained'] = "Tanítva";
 $_['text_train_selected_messages'] = "Kijelölt üzenetek tanítása";
@@ -213,6 +223,9 @@ $_['text_whitelist_settings'] = "Fehérlista beállítások";
 
 $_['text_you_are'] = "Ön";
 $_['text_you_are_not_admin'] = "Önnek nincs jogosultsága a mvelethez";
+
+$_['fn'] = "fals negatív hiba";
+$_['fp'] = "fals pozitív hiba";
 
 
 ?>

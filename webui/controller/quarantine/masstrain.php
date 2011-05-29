@@ -49,7 +49,7 @@ class ControllerQuarantineMasstrain extends Controller {
       $fromaddr = $this->data['to'] = $this->model_user_user->getEmailAddress($this->data['username']);
 
 
-      $Q = new DB("sqlite", "", "", "", $my_q_dir . "/" . QUARANTINE_DATA, "");
+      $Q = new DB("sqlite", "", "", "", QUARANTINE_DATA, "");
       Registry::set('Q', $Q);
 
 
@@ -89,6 +89,7 @@ class ControllerQuarantineMasstrain extends Controller {
 
                if($x == 1 && file_exists($my_q_dir . "/" . $k)){
                   $this->model_quarantine_database->RemoveEntry($k);
+                  if(REMOVE_FROM_QUARANTINE_WILL_UNLINK_FROM_FILESYSTEM == 1) { unlink($my_q_dir . "/" . $k); }
                }
 
                $this->data['n']++;

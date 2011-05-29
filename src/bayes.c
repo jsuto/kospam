@@ -53,7 +53,7 @@ int qry_spaminess(struct session_data *sdata, struct _state *state, char type, s
       }
    }
 
-#ifdef HAVE_MYSQL
+#ifndef HAVE_MYDB
    if(sdata->gid > 0){
       snprintf(s, SMALLBUFSIZE-1, ") AND (uid=0 OR uid=%ld)", sdata->gid);
       buffer_cat(query, s);
@@ -61,10 +61,6 @@ int qry_spaminess(struct session_data *sdata, struct _state *state, char type, s
    else
       buffer_cat(query, ") AND uid=0");
 
-   update_hash(sdata, query->data, state->token_hash);
-#endif
-#ifdef HAVE_SQLITE3
-   buffer_cat(query, ")");
    update_hash(sdata, query->data, state->token_hash);
 #endif
 
@@ -196,12 +192,8 @@ float bayes_file(struct session_data *sdata, struct _state *state, struct __conf
          spam_from = Q->nspam;
       }
    #else
-      #ifdef HAVE_MYSQL
-         snprintf(buf, MAXBUFSIZE-1, "SELECT nham, nspam FROM %s WHERE token=%llu AND (uid=0 OR uid=%ld)", SQL_TOKEN_TABLE, APHash(state->from), sdata->gid);
-      #endif
-      #ifdef HAVE_SQLITE3
-         snprintf(buf, MAXBUFSIZE-1, "SELECT nham, nspam FROM %s WHERE token=%llu", SQL_TOKEN_TABLE, APHash(state->from));
-      #endif
+      snprintf(buf, MAXBUFSIZE-1, "SELECT nham, nspam FROM %s WHERE token=%llu AND (uid=0 OR uid=%ld)", SQL_TOKEN_TABLE, APHash(state->from), sdata->gid);
+
       TE = getHamSpamCounters(sdata, buf);
       ham_from = TE.nham;
       spam_from = TE.nspam;

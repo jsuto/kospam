@@ -93,8 +93,6 @@ function state_Change() {
 
       <h3><?php print $title; ?></h3>
 
-      <?php if(isset($_SESSION['username']) && !strstr($_SERVER['QUERY_STRING'], "login/logout") ){ ?><p><?php print $text_you_are; ?>: <?php print $_SESSION['username']; ?></p><?php } ?>
-
       <div id="body">
 
 <?php print $content; ?>

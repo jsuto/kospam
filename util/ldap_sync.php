@@ -46,11 +46,23 @@ $import = new ModelUserImport();
 
 $_SESSION['username'] = 'cli-admin';
 
+$totalusers = 0;
+$totalnewusers = 0;
+$totaldeletedusers = 0;
+
+extract($language->data);
+
+
 foreach ($cfg as $ldap_params) {
    $users = $import->model_user_import->queryRemoteUsers($ldap_params, $ldap_params['domain']);
    $rc = $import->model_user_import->fillRemoteTable($ldap_params, $ldap_params['domain']);
 
-   $import->model_user_import->processUsers($users, $ldap_params);
+   $totalusers += count($users);
+
+   list($newusers, $deletedusers) = $import->model_user_import->processUsers($users, $ldap_params);
+
+   $totalnewusers += $newusers;
+   $totaldeletedusers += $deletedusers;
 
    if($trash_passwords == 1) {
       $import->model_user_import->trashPassword($users);
@@ -58,7 +70,6 @@ foreach ($cfg as $ldap_params) {
 
 }
 
+$total_emails_in_database = $import->model_user_import->count_email_addresses();
 
-?>
-
-Done.
+print date(LOG_DATE_FORMAT); ?>: <?php print $text_total_users; ?>/<?php print $text_new_users; ?>/<?php print $text_deleted_users; ?>/<?php print $text_database_emails; ?> = <?php print $totalusers; ?>/<?php print $totalnewusers; ?>/<?php print $totaldeletedusers; ?>/<?php print $total_emails_in_database; ?>

@@ -94,6 +94,31 @@ class ModelUserUser extends Model {
    }
 
 
+   public function getUsernameByUid($uid = 0) {
+
+      $query = $this->db->query("SELECT username FROM " . TABLE_USER . " WHERE uid=" . (int)$uid);
+
+      if(isset($query->row['username'])){
+         return $query->row['username'];
+      }
+
+      return "";
+   }
+
+
+   public function get_additional_uids($uid = 0) {
+      if($uid > 0) {
+         $query = $this->db->query("SELECT gid FROM " . TABLE_QUARANTINE_GROUP . " WHERE uid=" . (int)$uid);
+
+         if(isset($query->rows)) {
+            return $query->rows;
+         }
+      }
+
+      return array();
+   }
+
+
    public function getEmailAddress($username = '') {
 
       $query = $this->db->query("SELECT " . TABLE_EMAIL . ".email AS email FROM " . TABLE_EMAIL . "," . TABLE_USER . " WHERE " . TABLE_EMAIL . ".uid=" . TABLE_USER . ".uid AND " . TABLE_USER . ".username='" . $this->db->escape($username) . "' LIMIT 1");

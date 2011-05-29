@@ -8,7 +8,7 @@ class ControllerHistoryHelper extends Controller {
 
       $db = Registry::get('db_history');
 
-      $query = $db->query("select ts from clapf order by ts desc limit 1");
+      $query = $db->query("select ts from `connection` order by ts desc limit 1");
 
       if(isset($query->row['ts']) && $query->row['ts'] > 0) {
          print $query->row['ts'];

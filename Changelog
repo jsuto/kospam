@@ -1,3 +1,32 @@
+2011.05.28, SJ
+
+Added a global quarantine feature for administrators.
+
+Webui enhancements.
+
+2011.05.27, SJ
+
+Added 'gid' support for the sqlite3 database backend.
+
+
+2011.05.26, SJ
+
+Several bugfixes, improvements.
+
+2011.05.24, SJ
+
+Improved the AD snychronisation utility to support multiple email
+addresses, and omit X400 entries.
+
+Changed the LDAP attribute name from proxyAddresses to proxyaddresses.
+
+Fixed a bug in the webui to prevent users to login with a password having
+an '&' character.
+
+The maillog.pl script now correctly grabs the client name and IP-address
+if the sender was rejected by a blacklist.
+
+
 
 0.4.6:
 

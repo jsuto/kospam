@@ -1,3 +1,4 @@
+<?php if(Registry::get('username')) { ?>
 
       <ul class="dropdown">
 
@@ -11,9 +12,6 @@
          <li><a class="hide" href="#"<?php if(strstr($_SERVER['QUERY_STRING'], "stat/") || strstr($_SERVER['QUERY_STRING'], "history/") || strstr($_SERVER['QUERY_STRING'], "health/") ) { print ' id="active"'; } ?>><?php print $text_monitor; ?></a>
             <ul class="sub_menu">
                <li><a href="index.php?route=stat/stat"><?php print $text_statistics; ?></a></li>
-            <?php if($admin_user == 1) { ?>
-               <li><a href="index.php?route=stat/counter"><?php print $text_counters; ?></a></li>
-            <?php } ?>
             <?php if($admin_user == 1) { ?>
                <li><a href="index.php?route=history/history"><?php print $text_history; ?></a></li>
             <?php } ?>
@@ -43,3 +41,4 @@
 
       </ul>
 
+<?php } ?>

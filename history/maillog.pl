@@ -107,21 +107,24 @@ while (defined($line = $file->read)) {
 
       # ... postfix/smtpd[8371]: NOQUEUE: reject: RCPT from unknown[70.96.35.34]: 554 5.7.1 Service unavailable; Client host [70.96.35.34] blocked using zen.spamhaus.org; http://www.spamhaus.org/query/bl?ip=70.96.35.34; from=<d2221028@ms29.hinet.net> to=<sj@acts.hu> proto=ESMTP helo=<[70.96.35.34]>
 
-      if($line =~ /\/smtpd\[/ && $line =~ /from=\<([\w\W]{0,})\> to=\<([\w\W]{3,})\> proto=([\w]+) helo=/) {
+      if($line =~ /\/smtpd\[/ && $line =~ /reject: RCPT from ([\w\W]{0,})\: 554 5.7.1 Service unavailable\; Client ([\w\W]{1,}) from=\<([\w\W]{0,})\> to=\<([\w\W]{3,})\> proto=([\w]+) helo=/) {
 
          $queue_id = "xxxxxxxx" . &randomstring(8);
 
          $connection{$queue_id}{'now'} = $now;
 
-         $connection{$queue_id}{'client'} = 'x.x.x.x'; # !!!FIXME!!!
+         $connection{$queue_id}{'client'} = 'x.x.x.x';
+         ($connection{$queue_id}{'client'}, undef) = split(/\:/, $1);
+
          $connection{$queue_id}{'ts'} = $ts;
-         $connection{$queue_id}{'from'} = lc $1;
+         $connection{$queue_id}{'from'} = lc $3;
 
          (undef, $connection{$queue_id}{'from_domain'}) = split(/\@/, $connection{$queue_id}{'from'});
          $connection{$queue_id}{'size'} = 0;
 
          $smtp{$queue_id}{'ts'} = $ts;
-         $smtp{$queue_id}{'to'} = lc $2;
+         $smtp{$queue_id}{'status'} = 'rejected, ' . $2;
+         $smtp{$queue_id}{'to'} = lc $4;
          (undef, $smtp{$queue_id}{'to_domain'}) = split(/\@/, $smtp{$queue_id}{'to'});
       }
 

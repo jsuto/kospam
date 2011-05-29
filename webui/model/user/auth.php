@@ -16,6 +16,8 @@ class ModelUserAuth extends Model {
          $_SESSION['username'] = $query->row['username'];
          $_SESSION['gid'] = $query->row['gid'];
          $_SESSION['admin_user'] = $query->row['isadmin'];
+         $_SESSION['email'] = $username;
+
          return 1;
       }
       else {

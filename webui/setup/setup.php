@@ -158,10 +158,13 @@ function write_stuff() {
    fputs($fp, "define('QSHAPE_DEFERRED_SENDER', STAT_DIRECTORY . '/deferred-sender');" . CRLF);
    fputs($fp, "define('NUMBER_OF_QUARANTINED_MESSAGES', STAT_DIRECTORY . '/quarantined.messages');" . CRLF);
    fputs($fp, "define('CPUSTAT', STAT_DIRECTORY . '/cpu.stat');" . CRLF);
+   fputs($fp, "define('AD_SYNC_STAT', STAT_DIRECTORY . '/adsync.stat');" . CRLF);
 
 
 
    fputs($fp, "define('LOCK_FILE', DIR_LOG . 'lock');" . CRLF);
+   fputs($fp, "define('QRUNNER_LOCK_FILE', DIR_LOG . 'qrunner.lock');" . CRLF);
+
    write_line($fp);
 
    write_line($fp, "DB_DRIVER", $_POST['DB_DRIVER']);
@@ -183,6 +186,7 @@ function write_stuff() {
    write_line($fp, "TABLE_REMOTE", "t_remote");
    write_line($fp, "TABLE_SUMMARY", "summary");
    write_line($fp, "TABLE_COUNTERS", "t_counters");
+   write_line($fp, "TABLE_QUARANTINE_GROUP", "t_quarantine_group");
 
    write_line($fp);
 
@@ -190,6 +194,8 @@ function write_stuff() {
    write_line($fp, "LDAP_IMPORT_CONFIG_FILE", '/path/to/ldap-import-konfig.cfg');
    write_line($fp, "DN_MAX_LEN", 255);
    write_line($fp, "USE_EMAIL_AS_USERNAME", 1);
+   write_line($fp, "LDAP_IMPORT_MINIMUM_NUMBER_OF_USERS_TO_HEALTH_OK", 100);
+
    write_line($fp);
 
    write_line($fp, "SIZE_X", 430);
@@ -240,11 +246,13 @@ function write_stuff() {
 
    fputs($fp, "define('HEALTH_WORKER_URL', SITE_URL . 'index.php?route=health/worker');" . CRLF);
    fputs($fp, "define('HEALTH_REFRESH', 60);" . CRLF);
+   fputs($fp, "define('HEALTH_RATIO', 80);" . CRLF);
    write_line($fp);
 
 
    write_line($fp, "SESSION_DATABASE", $_POST['SESSION_DATABASE']);
-   write_line($fp, "QUARANTINE_DATA", 'quarantine.sdb');
+   write_line($fp, "QUARANTINE_DATA", 'sessions/quarantine.sdb');
+   write_line($fp, "REMOVE_FROM_QUARANTINE_WILL_UNLINK_FROM_FILESYSTEM", 1);
    write_line($fp);
 
    fputs($fp, "define('LOG_FILE', DIR_LOG . 'webui.log');" . CRLF);
@@ -285,7 +293,7 @@ function write_stuff() {
 
    write_line($fp);
 
-   fputs($fp, '$health_smtp_servers = array( array("0.0.0.0", POSTFIX_PORT), array(SMTP_HOST, CLAPF_PORT), array(SMTP_HOST, SMTP_PORT) );' . CRLF);
+   fputs($fp, '$health_smtp_servers = array( array("0.0.0.0", POSTFIX_PORT, "postfix-in"), array(SMTP_HOST, CLAPF_PORT, "clapf"), array(SMTP_HOST, SMTP_PORT, "postfix after content-filter") );' . CRLF);
 
    write_line($fp);
 

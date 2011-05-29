@@ -57,7 +57,7 @@
 
 	#wrap {
 		margin: 0 auto; padding: 0;
-		width: 1080px;
+		width: 1180px;
 		background-color: white;
 		border: 1px solid #C1C0C0;
 		text-align: left;
@@ -109,10 +109,11 @@
 	/* Body styles */
 
 	#body, #noquote {
-		width: 940px;
+		width: 1100px;
 		float: left;
 		margin-right: 20px;
 		clear: both;
+		/*border: 1px solid red;*/
 	}
 
 	#body p, #noquote p { text-align: left; }
@@ -156,6 +157,7 @@
 
 	tr.error { color: red; }
 
+	tr.queue { color:#000000; font: normal 10.5px Arial, Helvetica, sans-serif; }
 
 	#quarantine tr:hover {
 		background: #DDDDDD;
@@ -199,6 +201,14 @@
 	.loginfailed {
 		color: red;
 		font: normal 11px/1.6em Verdana, Arial, Helvetica, sans-serif;
+	}
+
+	.health-ok {
+		color: green;
+	}
+
+	.health-alert {
+		color: red;
 	}
 
 	#footer p {

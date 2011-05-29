@@ -137,7 +137,7 @@ $(document).ready(function() {
 
       <h3><?php print $title; ?></h3>
 
-      <?php if(isset($_SESSION['username']) && !strstr($_SERVER['QUERY_STRING'], "login/logout") ){ ?><p><?php print $text_you_are; ?>: <?php print $_SESSION['username']; ?></p><?php } ?>
+      <?php if(isset($_SESSION['username']) && !strstr($_SERVER['QUERY_STRING'], "login/logout") ){ ?><p><?php print $text_you_are; ?>: <?php print $_SESSION['email']; ?></p><?php } ?>
 
       <div id="body">
 

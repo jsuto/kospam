@@ -21,7 +21,8 @@ class ControllerLoginLogin extends Controller {
       $this->document->title = $this->data['text_login'];
 
       if($this->request->server['REQUEST_METHOD'] == 'POST' && $this->validate() == true) {
-         if($this->model_user_auth->checkLogin($this->request->post['username'], $this->request->post['password']) == 1) {
+
+         if($this->model_user_auth->checkLogin($this->request->post['username'], $_POST['password']) == 1) {
 
             $db_session = new DB("sqlite", "", "", "", SESSION_DATABASE, "");
 

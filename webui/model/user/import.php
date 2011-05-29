@@ -31,10 +31,10 @@ class ModelUserImport extends Model {
       LOGGER("LDAP type: " . $host['type']);
 
       if($host['type'] == "AD") {
-         $attrs = array("cn", "proxyAddresses");
+         $attrs = array("cn", "proxyaddresses");
 
-         $mailAttr = "proxyAddresses";
-         $mailAttrs = array("proxyAddresses");
+         $mailAttr = "proxyaddresses";
+         $mailAttrs = array("proxyaddresses");
       }
 
 
@@ -51,22 +51,28 @@ class ModelUserImport extends Model {
             if(isset($result[$__mail_attr]) ) {
 
                if(is_array($result[$__mail_attr]) ) {
+
                   for($i = 0; $i < $result[$__mail_attr]['count']; $i++) {
                      LOGGER("found email entry: " . $result['dn'] . " => $__mail_attr:" . $result[$__mail_attr][$i]);
-                     $emails .= preg_replace("/smtp\:/i", "", $result[$__mail_attr][$i]) . "\n";
+                     if(preg_match("/^smtp\:/i", $result[$__mail_attr][$i])) {
+                        $emails .= strtolower(preg_replace("/^smtp\:/i", "", $result[$__mail_attr][$i])) . "\n";
+                     }
                   }
                }
                else {
                   LOGGER("found email entry: " . $result['dn'] . " => $__mail_attr:" . $result[$__mail_attr]);
-                  $emails .= preg_replace("/smtp\:/i", "", $result[$__mail_attr]) . "\n";
+                  $emails .= strtolower(preg_replace("/smtp\:/i", "", $result[$__mail_attr])) . "\n";
                }
 
             }
 
          }
 
+         $__emails = explode("\n", $emails);
+
          $data[] = array(
-                         'username'     => $result['cn'],
+                         'username'     => preg_replace("/\n{1,}$/", "", $__emails[0]),
+                         'realname'     => $result['cn'],
                          'dn'           => $result['dn'],
                          'emails'       => preg_replace("/\n{1,}$/", "", $emails)
                         );
@@ -114,7 +120,8 @@ class ModelUserImport extends Model {
       $late_add = array();
       $uids = array();
       $exclude = array();
-      $n = 0;
+      $newuser = 0;
+      $deleteduser = 0;
 
       LOGGER("running processUsers() ...");
 
@@ -188,11 +195,11 @@ class ModelUserImport extends Model {
 
             /* or add the new user */
 
-            $user = $this->createNewUserArray($_user['dn'], $_user['username'], $_user['emails'], $globals);
+            $user = $this->createNewUserArray($_user['dn'], $_user['username'], $_user['realname'], $_user['emails'], $globals);
             array_push($uids, $user['uid']);
 
             $rc = $this->model_user_user->addUser($user);
-            if($rc == 1) { $n++; }
+            if($rc == 1) { $newuser++; }
          }
       }
 
@@ -201,7 +208,7 @@ class ModelUserImport extends Model {
 
       foreach ($late_add as $new) {
          $rc = $this->model_user_user->addEmail($new['uid'], $new['email']);
-         if($rc == 1) { $n++; }
+         if($rc == 1) { $newuser++; }
       }
 
 
@@ -209,18 +216,19 @@ class ModelUserImport extends Model {
 
       if(count($uids) > 0) {
          $uidlist = implode("','", $uids);
-         $query = $this->db->query("SELECT uid, username FROM " . TABLE_USER . " WHERE domain='" . $this->db->escape($globals['domain']) . "' AND dn != '*' AND dn is NOT NULL AND uid NOT IN ('$uidlist')");
+         $query = $this->db->query("SELECT uid, username FROM " . TABLE_USER . " WHERE domain='" . $this->db->escape($globals['domain']) . "' AND dn != '*' AND dn LIKE '%" . $globals['ldap_basedn'] . "' AND dn is NOT NULL AND uid NOT IN ('$uidlist')");
 
          foreach ($query->rows as $deleted) {
+            $deleteduser++;
             $this->model_user_user->deleteUser($deleted['uid']);
          }
       }
 
-      return $n;
+      return array($newuser, $deleteduser);
    }
 
 
-   private function createNewUserArray($dn = '', $username = '', $emails = '', $globals = array()) {
+   private function createNewUserArray($dn = '', $username = '', $realname = '', $emails = '', $globals = array()) {
       $user = array();
 
       $user['uid'] = $this->model_user_user->getNextUid();
@@ -239,7 +247,9 @@ class ModelUserImport extends Model {
 
       $user['password'] = '*';
 
-      $user['realname'] = $username;
+      $user['realname'] = $realname;
+
+      if($realname == '') { $user['realname'] = $username; }
 
       $user['domain'] = $globals['domain'];
       $user['dn'] = $dn;
@@ -258,6 +268,15 @@ class ModelUserImport extends Model {
          $rc = $this->db->countAffected();
          LOGGER("setting default password for " . $user['dn'] . " (rc=$rc)");
       }
+   }
+
+
+   public function count_email_addresses() {
+      $query = $this->db->query("select count(*) as num from " . TABLE_EMAIL);
+
+      if(isset($query->row['num'])) { return $query->row['num']; }
+
+      return 0;
    }
 
 }

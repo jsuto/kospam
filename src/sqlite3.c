@@ -87,7 +87,8 @@ int introduceTokens(struct session_data *sdata, struct node *xhash[]){
       }
    }
 
-   buffer_cat(query, ")");
+   snprintf(s, SMALLBUFSIZE-1, ") AND uid=%ld", sdata->gid);
+   buffer_cat(query, s);
 
    update_hash(sdata, query->data, xhash);
 
@@ -108,7 +109,7 @@ int introduceTokens(struct session_data *sdata, struct node *xhash[]){
       q = xhash[i];
       while(q != NULL){
          if(q->nham + q->nspam == 0){
-            snprintf(s, SMALLBUFSIZE-1, "INSERT INTO %s (token, nham, nspam, timestamp) VALUES(%llu,0,0,%ld);", SQL_TOKEN_TABLE, q->key, now);
+            snprintf(s, SMALLBUFSIZE-1, "INSERT INTO %s (token, nham, nspam, uid, timestamp) VALUES(%llu,0,0,%ld,%ld);", SQL_TOKEN_TABLE, q->key, sdata->gid, now);
 
             buffer_cat(query, s);
             n++;
@@ -170,6 +171,9 @@ int updateTokenCounters(struct session_data *sdata, int ham_or_spam, struct node
       else buffer_cat(query, " AND nspam > 0");
    }
 
+   snprintf(s, SMALLBUFSIZE-1, " AND uid=%ld", sdata->gid);
+   buffer_cat(query, s);
+
    sqlite3_exec(sdata->db, query->data, NULL, NULL, &err);
 
    buffer_destroy(query);
@@ -199,7 +203,7 @@ int updateTokenTimestamps(struct session_data *sdata, struct node *xhash[]){
    int i, n=0;
    unsigned long now;
    time_t cclock;
-   char *err=NULL, buf[SMALLBUFSIZE];
+   char *err=NULL, s[SMALLBUFSIZE];
    buffer *query;
    struct node *q;
 
@@ -211,9 +215,9 @@ int updateTokenTimestamps(struct session_data *sdata, struct node *xhash[]){
    time(&cclock);
    now = cclock;
 
-   snprintf(buf, SMALLBUFSIZE-1, "UPDATE %s SET timestamp=%ld WHERE token in (", SQL_TOKEN_TABLE, now);
+   snprintf(s, SMALLBUFSIZE-1, "UPDATE %s SET timestamp=%ld WHERE token in (", SQL_TOKEN_TABLE, now);
 
-   buffer_cat(query, buf);
+   buffer_cat(query, s);
 
 
    for(i=0; i<MAXHASH; i++){
@@ -222,7 +226,7 @@ int updateTokenTimestamps(struct session_data *sdata, struct node *xhash[]){
          if(q->spaminess != DEFAULT_SPAMICITY){
             if(n) snprintf(s, SMALLBUFSIZE-1, ",%llu", q->key);
             else snprintf(s, SMALLBUFSIZE-1, "%llu", q->key);
-            buffer_cat(query, buf);
+            buffer_cat(query, s);
             n++;
          }
 
@@ -231,9 +235,13 @@ int updateTokenTimestamps(struct session_data *sdata, struct node *xhash[]){
    }
 
 
+   if(sdata->gid > 0)
+      snprintf(s, SMALLBUFSIZE-1, ") AND (uid=0 OR uid=%ld)", sdata->gid);
+   else
+      snprintf(s, SMALLBUFSIZE-1, ") AND uid=0");
 
-   snprintf(buf, SMALLBUFSIZE-1, ")");
-   buffer_cat(query, buf);
+   buffer_cat(query, s);
+
 
    if((sqlite3_exec(sdata->db, query->data, NULL, NULL, &err)) != SQLITE_OK)
       n = -1;

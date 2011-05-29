@@ -12,14 +12,15 @@ class ModelHealthHealth extends Model {
    }
 
 
-   public function checksmtp($host = '', $port = 0, $error = '') {
+   public function checksmtp($smtp = array(), $error = '') {
+
       $ret = $error;
       $time = 0;
 
-      if($host && $port && is_numeric($port) &&  $port > 0 && $port < 65536) {
+      if($smtp[0] && $smtp[1] && is_numeric($smtp[1]) && $smtp[1] > 0 && $smtp[1] < 65536) {
          $time_start = microtime(true);
 
-         $s = @fsockopen($host, $port);
+         $s = @fsockopen($smtp[0], $smtp[1]);
 
          if($s) {
             $ret = trim(fgets($s, 4096));
@@ -29,18 +30,18 @@ class ModelHealthHealth extends Model {
       }
 
       $time = microtime(true) - $time_start;
-      return array("$host:$port", $ret, $this->format_time($time));
+      return array($smtp[0] . ":" . $smtp[1], $ret, $this->format_time($time), $smtp[2]);
    }
 
 
-   public function check_postgrey($host = '', $port = 0, $error = '') {
+   public function check_postgrey($policy = array(), $error = '') {
       $ret = $error;
       $time = 0;
 
-      if($host && $port && is_numeric($port) &&  $port > 0 && $port < 65536) {
+      if($policy[0] && $policy[1] && is_numeric($policy[1]) &&  $policy[1] > 0 && $policy[1] < 65536) {
          $time_start = microtime(true);
 
-         $s = @fsockopen($host, $port);
+         $s = @fsockopen($policy[0], $policy[1]);
 
          if($s) {
             $req  = "request=smtpd_access_policy" . EOL;
@@ -64,7 +65,7 @@ class ModelHealthHealth extends Model {
       }
 
       $time = microtime(true) - $time_start;
-      return array("$host:$port", $ret, $this->format_time($time));
+      return array($policy[0] . ":" . $policy[1], $ret, $this->format_time($time));
    }
 
 
@@ -90,19 +91,43 @@ class ModelHealthHealth extends Model {
 
    public function uptime() {
       $s = exec("uptime");
-      return $s;
+      list ($uptime, $loadavg) = preg_split("/ load average\: /", $s);
+
+      return array(preg_replace("/\,\ {0,}$/", "", $uptime), $loadavg);
    }
 
 
    public function meminfo() {
-      $s = exec("free", $output);
-      return implode("\n", $output);
+      $m = explode("\n", file_get_contents("/proc/meminfo"));
+
+      while(list($k, $v) = each($m)) {
+         $a = preg_split("/\ {1,}/", $v);
+         if(isset($a[0]) && $a[0]) { $_m[$a[0]] = $a[1]; }
+      }
+
+      $mem_percentage = sprintf("%.2f", 100*($_m['MemTotal:'] - $_m['MemFree:'] - $_m['Cached:']) / $_m['MemTotal:']);
+      $swap_percentage = sprintf("%.2f", 100*($_m['SwapTotal:'] - $_m['SwapFree:']) / $_m['SwapTotal:']);
+
+      return array(sprintf("%.0f", $_m['MemTotal:'] / 1000), $mem_percentage, sprintf("%.0f", $_m['SwapTotal:'] / 1000), $swap_percentage);
    }
 
 
    public function diskinfo() {
+      $shortinfo = array();
+
       $s = exec("df -h", $output);
-      return implode("\n", $output);
+
+      while(list($k, $v) = each($output)) {
+         if($k > 0) {
+            $p = preg_split("/\ {1,}/", $v);
+            $shortinfo[] = array(
+                             'partition' => $p[5],
+                             'utilization' => preg_replace("/\%/", "", $p[4])
+                           );
+         }
+      }
+
+      return $shortinfo;
    }
 
 

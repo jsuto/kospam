@@ -108,6 +108,11 @@ class ControllerQuarantineQuarantine extends Controller {
       list ($this->data['n'], $this->data['total_size'], $this->data['messages']) =
                  $this->model_quarantine_database->getMessages($this->data['uids'], $this->data['page'], $this->data['page_len'], $this->data['from'], $this->data['subj'], $this->data['hamspam'], $this->data['sort'], $this->data['order']);
 
+      if(count($this->data['messages']) == 0 && $this->data['page'] > 0) {
+         $this->data['page']--;
+         list ($this->data['n'], $this->data['total_size'], $this->data['messages']) = $this->model_quarantine_database->getMessages($this->data['uids'], $this->data['page'], $this->data['page_len'], $this->data['from'], $this->data['subj'], $this->data['hamspam'], $this->data['sort'], $this->data['order']);
+      }
+
 
       /* print paging info */
 

@@ -3,8 +3,11 @@
 class ModelQuarantineDatabase extends Model {
 
    public function CreateDatabase() {
+      $type = "";
 
       $Q = Registry::get('Q');
+
+      if(QUARANTINE_DRIVER == "mysql") { $type = " Engine=InnoDB character set utf8 "; }
 
       $query = $Q->query("
          create table if not exists " . TABLE_QUARANTINE . " (
@@ -16,14 +19,18 @@ class ModelQuarantineDatabase extends Model {
             size int default 0,
             ts int default 0,
             hidden integer(1)
-         )");
+         ) $type");
+
+      $query = $Q->query("create index " . TABLE_QUARANTINE . "_idx on " . TABLE_QUARANTINE . " (uid, is_spam, ts, hidden) ");
 
       $query = $Q->query("
          create table if not exists " . TABLE_SEARCH . " (
             uid int default 0,
             term char(128) not null,
             ts int default 0
-         )");
+         ) $type");
+
+      $query = $Q->query("create index " . TABLE_SEARCH . "_idx on " . TABLE_SEARCH . " (uid) ");
 
       return 0;
    }
@@ -69,6 +76,8 @@ class ModelQuarantineDatabase extends Model {
 
 
    public function PopulateDatabase($dir = '', $uid = 0, $group_q_dirs = array() ) {
+      $count = 0;
+
       if($dir == "" || !file_exists($dir)) { return 0; }
 
       $Q = Registry::get('Q');
@@ -131,11 +140,12 @@ class ModelQuarantineDatabase extends Model {
             link($dir . "/" . $file['is_spam'] . "." . $file['id'], "$v/" . $file['is_spam'] . "." . $file['id']);
          }
 
+         $count++;
       }
 
       $query = $Q->query("COMMIT");
 
-      return 0;
+      return $count;
    }
 
 

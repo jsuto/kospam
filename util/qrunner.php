@@ -3,6 +3,8 @@
 $webuidir = "";
 $verbose = 0;
 
+$time_start = microtime(true);
+
 if(isset($_SERVER['argv'][1])) { $webuidir = $_SERVER['argv'][1]; }
 
 for($i=2; $i<$_SERVER['argc']; $i++){
@@ -65,6 +67,8 @@ if(QUARANTINE_DRIVER == "sqlite") {
 }
 
 
+$total = 0;
+
 foreach ($users as $user) {
 
    $my_q_dir = get_per_user_queue_dir($user['domain'], $user['username'], $user['uid']);
@@ -72,11 +76,11 @@ foreach ($users as $user) {
    $group_q_dirs = $u->get_quarantine_directories($user['uid']);
 
    if(file_exists($my_q_dir)) {
-      $qd->PopulateDatabase($my_q_dir, $user['uid'], $group_q_dirs);
+      $total += $qd->PopulateDatabase($my_q_dir, $user['uid'], $group_q_dirs);
    }
 }
 
-$Q->query("vacuum");
+if(QUARANTINE_DRIVER == "sqlite") { $Q->query("vacuum"); }
 
 
 /* release lock */
@@ -84,5 +88,12 @@ $Q->query("vacuum");
 flock($fp, LOCK_UN);
 fclose($fp);
 
+
+$time_end = microtime(true);
+
+$exec_time = $time_end - $time_start;
+
+openlog("qrunner", LOG_PID, LOG_MAIL);
+syslog(LOG_INFO, sprintf("processed %d messages in %.2f sec", $total, $exec_time));
 
 ?>

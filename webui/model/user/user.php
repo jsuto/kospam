@@ -107,15 +107,19 @@ class ModelUserUser extends Model {
 
 
    public function get_additional_uids($uid = 0) {
+      $data = array();
+
       if($uid > 0) {
          $query = $this->db->query("SELECT gid FROM " . TABLE_QUARANTINE_GROUP . " WHERE uid=" . (int)$uid);
 
          if(isset($query->rows)) {
-            return $query->rows;
+            foreach ($query->rows as $q) {
+               array_push($data, $q['gid']);
+            }
          }
       }
 
-      return array();
+      return $data;
    }
 
 
@@ -182,6 +186,39 @@ class ModelUserUser extends Model {
 
       foreach ($query->rows as $q) {
          array_push($data, $q['domain']);
+      }
+
+      return $data;
+   }
+
+
+   public function getUidsByDomain($domain = '') {
+      $data = array();
+
+      $query = $this->db->query("SELECT uid FROM " . TABLE_USER . " WHERE domain='" . $this->db->escape($domain) . "'");
+
+      foreach ($query->rows as $q) {
+         array_push($data, $q['uid']);
+
+         $u = $this->get_additional_uids($q['uid']);
+
+         $data = array_merge($data, $u);
+      }
+
+      return $data;
+   }
+
+
+   public function get_quarantine_directories($uid = 0) {
+      $data = array();
+
+      $query = $this->db->query("SELECT " . TABLE_USER . ".username, " . TABLE_USER . ".domain, " . TABLE_USER . ".uid FROM " . TABLE_USER . "," . TABLE_QUARANTINE_GROUP . " WHERE " . TABLE_QUARANTINE_GROUP . ".gid=" . (int)$uid . " AND " . TABLE_USER . ".uid=" . TABLE_QUARANTINE_GROUP . ".uid");
+
+
+      if(isset($query->rows)) {
+         foreach($query->rows as $q) {
+            array_push($data, get_per_user_queue_dir($q['domain'], $q['username'], $q['uid']));
+         }
       }
 
       return $data;

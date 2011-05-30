@@ -235,7 +235,9 @@ function format_qshape($desc = '', $filename = '') {
 
    $stat = stat($filename);
 
-   $a = explode("\n", file_get_contents($filename));
+   $s = preg_replace("/ {1,}/", "</td><td>", file_get_contents($filename));
+
+   $a = explode("\n", $s);
 
    return array('desc' => $desc, 'date' => date(LOG_DATE_FORMAT, $stat['ctime']), 'lines' => $a);
 }

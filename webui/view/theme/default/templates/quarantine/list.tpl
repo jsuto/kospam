@@ -20,6 +20,7 @@
       <td colspan="3">
          <select name="searchterm" onChange="fix_search_terms('<?php print $username; ?>');">
             <option value=""><?php print $text_search_terms; ?></option>
+            <option value="index.php?route=quarantine/quarantine"><?php print $text_empty_search_criteria; ?></option>
 <?php foreach($searchterms as $term) { ?>
             <option value="index.php?route=quarantine/quarantine&<?php print $term['term']; ?>&user=<?php print $username; ?>"<?php if(strncmp($_SERVER['QUERY_STRING'], "route=quarantine/quarantine&" . $term['term'] . "&user=" . $username, strlen("route=quarantine/quarantine&" . $term['term'] . "&user=" . $username)) == 0){ ?> selected="selected"<?php } ?>><?php $q1 = 0; parse_str($term['term'], $x1); if($x1['subj']){ print "subj: " . $x1['subj']; $q1++; } if($x1['from']){ if($q1) print ", "; print "from: " . $x1['from']; $q1++; } if($x1['hamspam']){  if($q1) print ", "; print $x1['hamspam']; } ?></option>
 <?php } ?>
@@ -80,7 +81,7 @@
    <tr valign="top" id="tr_<?php print $message['id']; ?>">
       <td<?php if(($message['i'] % 2) == 0){ ?> class="odd"<?php } ?>><a href="index.php?route=quarantine/message&amp;id=<?php print $message['id']; ?>&amp;user=<?php print $username; ?>&amp;page=<?php print $page; ?>&amp;from=<?php print $from; ?>&amp;subj=<?php print $subj; ?>&hamspam=<?php print $hamspam; ?>"><?php print $message['i']; ?>.</a></td>
       <td<?php if(($message['i'] % 2) == 0){ ?> class="odd"<?php } ?>><?php print $message['date']; ?></td>
-      <td align="center"<?php if(($message['i'] % 2) == 0){ ?> class="odd"<?php } ?>><?php print $message['uid']; ?></td>
+      <td align="center"<?php if(($message['i'] % 2) == 0){ ?> class="odd"<?php } ?>><a href="index.php?route=quarantine/quarantine&user=<?php print $message['username']; ?>"><?php print $message['username']; ?></a></td>
       <td<?php if(($message['i'] % 2) == 0){ ?> class="odd"<?php } ?>><?php if($message['from'] != $message['shortfrom']) { ?><span onmouseover="Tip('<?php print preg_replace("/&/", "&amp;", $message['from']); ?>', BALLOON, true, ABOVE, true)" onmouseout="UnTip()"><?php print $message['shortfrom']; ?></span><?php } else { print $message['from']; } ?></td>
       <td<?php if(($message['i'] % 2) == 0){ ?> class="odd"<?php } ?>><a href="index.php?route=quarantine/message&amp;id=<?php print $message['id']; ?>&amp;user=<?php print $username; ?>&amp;page=<?php print $page; ?>&amp;from=<?php print $from; ?>&amp;subj=<?php print $subj; ?>&hamspam=<?php print $hamspam; ?>"><?php if($message['subject'] != $message['shortsubject']) { ?><span onmouseover="Tip('<?php print preg_replace("/&/", "&amp;", $message['subject']); ?>', BALLOON, true, ABOVE, true)" onmouseout="UnTip()"><?php print $message['shortsubject']; ?></span><?php } else { print $message['subject']; } ?></a></td>
       <td align="right"><?php print $message['size']; ?></td>

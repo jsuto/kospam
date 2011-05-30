@@ -5,10 +5,10 @@
 #ifndef _DEFS_H
    #define _DEFS_H
 
-#ifdef NEED_MYSQL
+#ifdef HAVE_MYSQL
   #include <mysql.h>
 #endif
-#ifdef NEED_SQLITE3
+#ifdef HAVE_SQLITE3
   #include <sqlite3.h>
 
    /* for older versions of sqlite3 do not have the sqlite3_prepare_v2() function, 2009.12.30, SJ */
@@ -165,10 +165,10 @@ struct session_data {
 #ifdef HAVE_ESET
    char eset[SMALLBUFSIZE];
 #endif
-#ifdef NEED_MYSQL
+#ifdef HAVE_MYSQL
    MYSQL mysql;
 #endif
-#ifdef NEED_SQLITE3
+#ifdef HAVE_SQLITE3
    sqlite3 *db;
 #endif
 #ifdef HAVE_MYDB

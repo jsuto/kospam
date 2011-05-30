@@ -237,6 +237,13 @@ function ShowOption(what, value) {
    </tr>
 
 
+   <tr id="DIV_QUARANTINE_DRIVER" style="display:show"<?php if(isset($error['quarantine_database'])) { ?> class="error"<?php } ?>>
+      <td>Quarantine database driver: </td>
+      <td>mysql <input type="radio" name="QUARANTINE_DRIVER" id="QUARANTINE_DRIVER" value="mysql" <?php if(isset($a['QUARANTINE_DRIVER']) && $a['QUARANTINE_DRIVER'] == "mysql") { ?>checked="checked"<?php } ?> />, sqlite3 <input type="radio" name="QUARANTINE_DRIVER" id="QUARANTINE_DRIVER" value="sqlite" <?php if(isset($a['QUARANTINE_DRIVER']) && $a['QUARANTINE_DRIVER'] == "sqlite") { ?>checked="checked"<?php } ?> /></td>
+      <?php if(isset($error['quarantine_database'])) { ?><td><?php print $error['quarantine_database']; ?></td><?php } ?>
+   </tr>
+
+
    <!-- memcached stuff -->
 
    <tr>

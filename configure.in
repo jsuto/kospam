@@ -23,8 +23,6 @@ AC_SUBST(OBJS)
 AC_SUBST(CLAPF_USER)
 AC_SUBST(SUBDIRS)
 AC_SUBST(parsembox)
-AC_SUBST(clapfstore)
-AC_SUBST(clapfstore_install)
 AC_SUBST(parsembox_install)
 AC_SUBST(spamdrop)
 AC_SUBST(spamdrop_install)
@@ -34,7 +32,7 @@ AC_SUBST(mysql_includes)
 AC_SUBST(mysql_libs)
 AC_SUBST(user_obj)
 AC_SUBST(ldap_libs)
-AC_SUBST(mysql_obj)
+AC_SUBST(sql_obj)
 AC_SUBST(db_install)
 AC_SUBST(spamsum_libs)
 AC_SUBST(spamsum)
@@ -75,7 +73,7 @@ antispam_libs=""
 defs=""
 objs=""
 user_obj=""
-mysql_obj=""
+sql_obj=""
 ldap_libs=""
 sqlite3_libs=""
 spamsum_libs=""
@@ -290,50 +288,6 @@ dnl  if test "$want_antispam" = "yes"; then
        have_blackhole="yes"
        echo "So you've selected the blackhole feature ... good"
     fi
-
-
-
-AC_ARG_WITH(userdb,
-[  --with-userdb[[=mysql|sqlite3]]      use either mysql or sqlite3 database holding user data (default: none)],[
-  if test "$withval" != "no" -a "$withval" != "yes"; then
-    USERDB=$withval
-  fi
-
-  if test "$withval" = "mysql"; then
-     AC_CHECK_PROG(MYSQL_CONFIG, mysql_config, yes)
-
-     if test x$MYSQL_CONFIG = xyes; then
-       have_mysql="yes"
-     fi
-
-     if test "$have_mysql" = "yes"; then
-            dnl AC_DEFINE(USE_MYSQL, 1, [MySQL database support enabled])
-
-            mysql_includes=`mysql_config --cflags`
-            mysql_libs=`mysql_config --libs_r`
-
-            AC_CHECK_LIB([guide],[main],[AC_CHECK_LIB(guide, _intel_fast_memset, have_icc_guide=yes, have_icc_guide=no)],[],[])ac_cv_lib_guide=ac_cv_lib_guide_main
-
-     else
-        echo "MySQL support is not found"
-        exit 1;
-     fi
-   fi
-
-  if test "$withval" = "sqlite3"; then
-    AC_CHECK_HEADERS(sqlite3.h, have_sqlite3=yes, echo "sqlite3.h is not found")
-
-    AC_CHECK_LIB([sqlite3],[main],[AC_CHECK_LIB(sqlite3, sqlite3_open, have_sqlite3=yes, have_sqlite3=no)],[],[])ac_cv_lib_sqlite3=ac_cv_lib_sqlite3_main
-
-
-      if test "$have_sqlite3" = "no"; then
-           echo "sqlite3 not found";
-           exit 1;
-      fi
-  fi
-
-
-])
 
 
 
@@ -603,17 +557,17 @@ fi
 
 if test "$TOKENDB" = "sqlite3"; then
    defs="$defs -DHAVE_SQLITE3"
-   mysql_obj="sqlite3.o "
+   sql_obj="sqlite3.o "
 fi
 
 if test "$TOKENDB" = "mysql"; then
    defs="$defs -DHAVE_MYSQL"
-   mysql_obj="mysql.o "
+   sql_obj="mysql.o "
 fi
 
 if test "$TOKENDB" = "mydb"; then
    defs="$defs -DHAVE_MYDB"
-   mysql_obj="mydb.o"
+   sql_obj="mydb.o"
 fi
 
 if test "x$QCACHE" != "x"; then
@@ -621,16 +575,6 @@ if test "x$QCACHE" != "x"; then
       echo "please specify the --with-tokendb option"
       exit 1
    fi
-fi
-
-#if test "x$TOKENDB" != "x" && test "x$USERDB" = "x"; then
-#   echo "please specify the --with-userdb option"
-#   exit 1
-#fi
-
-if test "$have_policy" = "yes" && test "x$USERDB" = "x"; then
-   echo "please specify the --with-userdb option"
-   exit 1
 fi
 
 if test "$have_antivirus" = "no" && test "$have_antispam" = "no"; then
@@ -754,18 +698,6 @@ else
    echo "(SU)RBL support: no"
 fi
 
-if test "$USERDB" = "mysql" && test "$have_mysql" = "yes"; then
-   echo "user database: mysql"
-   defs="$defs -DUSERS_IN_MYSQL -DHAVE_USERS"
-   objs="$objs users.o"
-fi
-
-if test "$USERDB" = "sqlite3" && test "$have_sqlite3" = "yes"; then
-   echo "user database: sqlite3"
-   defs="$defs -DUSERS_IN_SQLITE3 -DHAVE_USERS"
-   objs="$objs users.o"
-fi
-
 echo "token database backend: $TOKENDB"
 
 
@@ -866,12 +798,7 @@ if test "$have_tre" = "yes"; then
    antispam_libs="$antispam_libs -ltre"
 fi
 
-if test "$have_mysql" = "yes"; then
-   defs="$defs -DNEED_MYSQL"
-fi
-
 if test "$have_sqlite3" = "yes"; then
-   defs="$defs -DNEED_SQLITE3"
    sqlite3_libs="-lsqlite3 -lpthread"
 fi
 
@@ -897,9 +824,10 @@ VERSION_STRING=`grep '#define VERSION' src/config.h | cut -f2 -d '"'`
 cat webui/view/theme/default/templates/common/footer.tpl | sed "s/VERSION_STRING/$VERSION_STRING/" > aaaa.11
 mv aaaa.11 webui/view/theme/default/templates/common/footer.tpl
 
+defs="$defs -DHAVE_USERS"
 CFLAGS="$static -O2 -Wall -g"
 LIBS="$libclamav $antispam_libs $gsl_libs $sqlite3_libs $sunos_libs"
-OBJS="dirs.o misc.o counters.o cfg.o smtp.o sig.o decoder.o list.o boundary.o parser.o parser_utils.o session.o templates.o hash.o score.o chi.o $objs"
+OBJS="dirs.o misc.o counters.o cfg.o smtp.o sig.o decoder.o list.o boundary.o parser.o parser_utils.o session.o templates.o hash.o score.o chi.o users.o $objs"
 
 AC_CONFIG_FILES([Makefile contrib/spamsum/Makefile contrib/spamdrop_helper/Makefile contrib/stat/Makefile.helper etc/Makefile history/Makefile init.d/Makefile perl/Makefile src/Makefile templates/Makefile util/Makefile])
 AC_OUTPUT

@@ -9,7 +9,7 @@
 #include <clapf.h>
 
 
-#ifdef USERS_IN_MYSQL
+#ifdef HAVE_MYSQL
 int getPolicy(struct session_data *sdata, struct __config *cfg, struct __config *my_cfg){
    MYSQL_RES *res;
    MYSQL_ROW row;
@@ -60,7 +60,7 @@ int getPolicy(struct session_data *sdata, struct __config *cfg, struct __config 
 #endif
 
 
-#ifdef USERS_IN_SQLITE3
+#ifdef HAVE_SQLITE3
 int getPolicy(struct session_data *sdata, struct __config *cfg, struct __config *my_cfg){
    char buf[SMALLBUFSIZE];
    sqlite3_stmt *pStmt;

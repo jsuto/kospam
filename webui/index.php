@@ -75,6 +75,17 @@ if(Registry::get('username')) {
          Registry::set('db_history', $db_history);
       }
 
+      if(strstr($request->get['route'], "quarantine/")) {
+         if(QUARANTINE_DRIVER == "mysql") {
+            Registry::set('Q', $db);
+         }
+         if(QUARANTINE_DRIVER == "sqlite") {
+            $Q = new DB(QUARANTINE_DRIVER, "", "", "", QUARANTINE_DATABASE, "");
+            Registry::set('Q', $Q);
+         }
+
+      }
+
       $action = new Router($request->get['route']);
    }
    else {

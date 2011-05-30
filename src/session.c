@@ -52,7 +52,7 @@ void handleSession(int new_sd, struct __data *data, struct __config *cfg){
 
    db_conn = 0;
 
-#ifdef NEED_MYSQL
+#ifdef HAVE_MYSQL
    rc = 1;
    mysql_init(&(sdata.mysql));
    mysql_options(&(sdata.mysql), MYSQL_OPT_CONNECT_TIMEOUT, (const char*)&cfg->mysql_connect_timeout);
@@ -182,7 +182,7 @@ void handleSession(int new_sd, struct __data *data, struct __config *cfg){
 
 
 
-            #ifdef NEED_SQLITE3
+            #ifdef HAVE_SQLITE3
                db_conn = 0;
                rc = sqlite3_open(cfg->sqlite3, &(sdata.db));
                if(rc)
@@ -308,7 +308,7 @@ void handleSession(int new_sd, struct __data *data, struct __config *cfg){
             #endif
 
 
-            #ifdef NEED_SQLITE3
+            #ifdef HAVE_SQLITE3
                db_conn = 0;
                sqlite3_close(sdata.db);
                rc = SQLITE_ERROR;
@@ -628,7 +628,7 @@ QUITTING:
 #ifdef HAVE_MYDB
    close_mydb(sdata.mhash);
 #endif
-#ifdef NEED_MYSQL
+#ifdef HAVE_MYSQL
    mysql_close(&(sdata.mysql));
 #endif
 

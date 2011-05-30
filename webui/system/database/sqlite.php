@@ -6,6 +6,9 @@ class SQLite {
    private $affected;
 
    public function __construct($hostname, $username, $password, $database, $prefix = NULL) {
+      $fixperm = 0;
+
+      if(!file_exists($database)) { $fixperm = 1; }
 
       try {
          $this->link = new PDO("sqlite:$database", 'OPEN_CREATE');
@@ -13,6 +16,8 @@ class SQLite {
       catch(PDOException $exception) {
          exit('Error: ' . $exception->getMessage() . " on $database<br />");
       }
+
+      if($fixperm == 1) { chmod($database, 0660); }
 
       $this->affected = 0;
    }

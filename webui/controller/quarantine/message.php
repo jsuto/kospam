@@ -40,6 +40,7 @@ class ControllerQuarantineMessage extends Controller {
       $domain = $this->model_user_user->getDomainsByUid($uid);
       $my_q_dir = get_per_user_queue_dir($domain[0], $this->data['username'], $uid);
 
+      $Q = Registry::get('Q');
 
       if($this->data['raw'] == 1){
          $this->data['message'] = $this->model_quarantine_message->ShowRawMessage($my_q_dir, $this->data['id']);

@@ -23,7 +23,7 @@ LDAP_LIBS = @ldap_libs@
 ##CLAMAV_EXTRA_LIBS = -lclamunrar_iface -lclamunrar
 OBJS = @OBJS@
 USER_OBJ = @user_obj@
-MYSQL_OBJS = @mysql_obj@
+SQL_OBJS = @sql_obj@
 CLAPF_USER = @CLAPF_USER@
 CLAPF_GROUP = `@id_bin@ -gn $(CLAPF_USER)`
 
@@ -43,11 +43,11 @@ install: install-clapf install-includes install-splitmbox @parsembox_install@ @s
 clapf: clapf.c libclapf.a
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ clapf.c -lclapf $(LIBS) $(LDAP_LIBS) $(LIBDIR) @LDFLAGS@ @libclamav_extra_libs@
 
-libclapf.a: $(OBJS) $(MYSQL_OBJS)
-	ar cr libclapf.a $(OBJS) $(MYSQL_OBJS)
+libclapf.a: $(OBJS) $(SQL_OBJS)
+	ar cr libclapf.a $(OBJS) $(SQL_OBJS)
 	ranlib libclapf.a
-	#$(CC) -shared -Wl,-soname,libclapf.so.$(CLAPF_VERSION) -o libclapf.so.$(LIBCLAPF_VERSION) $(OBJS) $(MYSQL_OBJS) $(LIBS) $(LDAP_LIBS) @LDFLAGS@
-	$(CC) -shared -Wl -o libclapf.so.$(LIBCLAPF_VERSION) $(OBJS) $(MYSQL_OBJS) $(LIBS) $(LDAP_LIBS) @LDFLAGS@
+	#$(CC) -shared -Wl,-soname,libclapf.so.$(CLAPF_VERSION) -o libclapf.so.$(LIBCLAPF_VERSION) $(OBJS) $(SQL_OBJS) $(LIBS) $(LDAP_LIBS) @LDFLAGS@
+	$(CC) -shared -Wl -o libclapf.so.$(LIBCLAPF_VERSION) $(OBJS) $(SQL_OBJS) $(LIBS) $(LDAP_LIBS) @LDFLAGS@
 	ln -sf libclapf.so.$(LIBCLAPF_VERSION) libclapf.so
 	ln -sf libclapf.so.$(LIBCLAPF_VERSION) libclapf.so.$(CLAPF_VERSION)
 

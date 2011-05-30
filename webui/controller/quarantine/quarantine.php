@@ -30,6 +30,7 @@ class ControllerQuarantineQuarantine extends Controller {
       $this->data['subj'] = @$this->request->get['subj'];
       $this->data['hamspam'] = @$this->request->get['hamspam'];
       $this->data['uid'] = 0;
+      $this->data['uids'] = array();
 
 
       if(isset($this->request->get['page']) && is_numeric($this->request->get['page']) && $this->request->get['page'] > 0) {
@@ -39,16 +40,33 @@ class ControllerQuarantineQuarantine extends Controller {
       $this->data['username'] = Registry::get('username');
       $uid = $this->model_user_user->getUidByName($this->data['username']);
 
-      if(Registry::get('admin_user') != 1 && Registry::get('domain_admin') != 1) {
-         $this->data['uid'] = $this->model_user_user->getUidByName($this->data['username']);
+
+
+      if(Registry::get('admin_user') == 1 || Registry::get('domain_admin') == 1) {
+
+         if(isset($this->request->get['user']) && strlen($this->request->get['user']) > 1) {
+
+            /* fix username if given */
+
+            if(Registry::get('admin_user') == 1 || $this->model_user_user->isUserInMyDomain($this->request->get['user']) == 1) {
+               $this->data['username'] = $this->request->get['user'];
+               $this->data['uid'] = $this->model_user_user->getUidByName($this->data['username']);
+               array_push($this->data['uids'], $this->data['uid']);
+            }
+
+            /* or restrict user list for domain admin */
+
+            else if(Registry::get('domain_admin') == 1) {
+               $this->data['uids'] = $this->model_user_user->getUidsByDomain($_SESSION['domain']);
+            }
+         }
+
+      }
+      else {
+         array_push($this->data['uids'], $this->model_user_user->getUidByName($this->data['username']));
       }
 
-      /* fix username if we are admin */
 
-      if(isset($this->request->get['user']) && strlen($this->request->get['user']) > 1 && (Registry::get('admin_user') == 1 || $this->model_user_user->isUserInMyDomain($this->request->get['user']) == 1) ) {
-         $this->data['username'] = $this->request->get['user'];
-         $this->data['uid'] = $this->model_user_user->getUidByName($this->data['username']);
-      }
 
       $this->data['sort'] = 'ts';
 
@@ -72,8 +90,7 @@ class ControllerQuarantineQuarantine extends Controller {
          exit;
       }
 
-      $Q = new DB("sqlite", "", "", "", QUARANTINE_DATA, "");
-      Registry::set('Q', $Q);
+      $Q = Registry::get('Q');
 
       /* add search term if there's any */
 
@@ -86,14 +103,10 @@ class ControllerQuarantineQuarantine extends Controller {
       $this->data['searchterms'] = $this->model_quarantine_database->getSearchTerms($uid);
 
 
-      /* get additional groups we are member of */
-
-      $this->data['additional_uids'] = $this->model_user_user->get_additional_uids($uid);
-
       /* get messages from quarantine */
 
       list ($this->data['n'], $this->data['total_size'], $this->data['messages']) =
-                 $this->model_quarantine_database->getMessages($this->data['uid'], $this->data['additional_uids'], $this->data['page'], $this->data['page_len'], $this->data['from'], $this->data['subj'], $this->data['hamspam'], $this->data['sort'], $this->data['order']);
+                 $this->model_quarantine_database->getMessages($this->data['uids'], $this->data['page'], $this->data['page_len'], $this->data['from'], $this->data['subj'], $this->data['hamspam'], $this->data['sort'], $this->data['order']);
 
 
       /* print paging info */

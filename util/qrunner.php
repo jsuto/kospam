@@ -47,13 +47,21 @@ $users = $u->getUsers();
 
 if($verbose >= 1) { print "queried users: " . count($users) . "\n"; }
 
-$Q = new DB("sqlite", "", "", "", "$webuidir/" . QUARANTINE_DATA, "");
-Registry::set('Q', $Q);
 
-$st = stat("$webuidir/" . QUARANTINE_DATA);
-if(isset($st['size']) && $st['size'] < 1024) {
-   $qd->model_quarantine_database->CreateDatabase();
-   chmod("$webuidir/" . QUARANTINE_DATA, 0660);
+if(QUARANTINE_DRIVER == "mysql") {
+   Registry::set('Q', $db);
+   $qd->CreateDatabase();
+}
+
+if(QUARANTINE_DRIVER == "sqlite") {
+   $Q = new DB(QUARANTINE_DRIVER, "", "", "", QUARANTINE_DATABASE, "");
+   Registry::set('Q', $Q);
+
+   $st = stat(QUARANTINE_DATABASE);
+   if(isset($st['size']) && $st['size'] < 1024) {
+      $qd->CreateDatabase();
+      @chmod(QUARANTINE_DATABASE, 0660);
+   }
 }
 
 
@@ -61,8 +69,10 @@ foreach ($users as $user) {
 
    $my_q_dir = get_per_user_queue_dir($user['domain'], $user['username'], $user['uid']);
 
+   $group_q_dirs = $u->get_quarantine_directories($user['uid']);
+
    if(file_exists($my_q_dir)) {
-      $qd->PopulateDatabase($my_q_dir, $user['uid']);
+      $qd->PopulateDatabase($my_q_dir, $user['uid'], $group_q_dirs);
    }
 }
 

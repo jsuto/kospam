@@ -52,6 +52,7 @@ $_['text_email_addresses'] = "Email address(es)";
 $_['text_email_aliases'] = "Email aliases";
 $_['text_email_in_unknown_domain'] = "Email address is in an unknown domain";
 $_['text_empty_quarantine_directory_structure'] = "Empty quarantine directory structure";
+$_['text_empty_search_criteria'] = "'Empty criteria'";
 $_['text_error'] = "Error";
 $_['text_exact_domain_name_or_email_address'] = "exact domain name or email address";
 $_['text_exclude'] = "Exclude";

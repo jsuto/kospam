@@ -48,9 +48,7 @@ class ControllerQuarantineRemove extends Controller {
       $domain = $this->model_user_user->getDomainsByUid($uid);
       $my_q_dir = get_per_user_queue_dir($domain[0], $this->data['username'], $uid);
 
-      $Q = new DB("sqlite", "", "", "", QUARANTINE_DATA, "");
-      Registry::set('Q', $Q);
-
+      $Q = Registry::get('Q');
 
       /* purge selected messages */
 

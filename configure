@@ -612,7 +612,7 @@ spamsum_install
 spamsum
 spamsum_libs
 db_install
-mysql_obj
+sql_obj
 ldap_libs
 user_obj
 mysql_libs
@@ -622,8 +622,6 @@ preparesql
 spamdrop_install
 spamdrop
 parsembox_install
-clapfstore_install
-clapfstore
 parsembox
 SUBDIRS
 CLAPF_USER
@@ -700,7 +698,6 @@ enable_case
 enable_rbl
 enable_all_received
 enable_blackhole
-with_userdb
 with_store
 enable_policy
 enable_memcached
@@ -1357,7 +1354,6 @@ Optional Features:
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
-  --with-userdb[=mysql|sqlite3]      use either mysql or sqlite3 database holding user data (default: none)
   --with-store[=fs|nfs]         use either the local filesystem or NFS to keep emails (default: none)
   --with-tokendb[=mysql|sqlite3]  use either mysql or sqlite3 database holding tokens (default: none)
   --with-clapf-user=username      what user the clapf daemon shall be run as
@@ -3473,8 +3469,6 @@ done
 
 
 
-
-
 have_libclamav="no"
 have_libtool="no"
 have_clamd="no"
@@ -3507,7 +3501,7 @@ antispam_libs=""
 defs=""
 objs=""
 user_obj=""
-mysql_obj=""
+sql_obj=""
 ldap_libs=""
 sqlite3_libs=""
 spamsum_libs=""
@@ -4122,250 +4116,6 @@ fi
 
 
 
-# Check whether --with-userdb was given.
-if test "${with_userdb+set}" = set; then :
-  withval=$with_userdb;
-  if test "$withval" != "no" -a "$withval" != "yes"; then
-    USERDB=$withval
-  fi
-
-  if test "$withval" = "mysql"; then
-     # Extract the first word of "mysql_config", so it can be a program name with args.
-set dummy mysql_config; ac_word=$2
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
-$as_echo_n "checking for $ac_word... " >&6; }
-if ${ac_cv_prog_MYSQL_CONFIG+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  if test -n "$MYSQL_CONFIG"; then
-  ac_cv_prog_MYSQL_CONFIG="$MYSQL_CONFIG" # Let the user override the test.
-else
-as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
-    for ac_exec_ext in '' $ac_executable_extensions; do
-  if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
-    ac_cv_prog_MYSQL_CONFIG="yes"
-    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-  done
-IFS=$as_save_IFS
-
-fi
-fi
-MYSQL_CONFIG=$ac_cv_prog_MYSQL_CONFIG
-if test -n "$MYSQL_CONFIG"; then
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $MYSQL_CONFIG" >&5
-$as_echo "$MYSQL_CONFIG" >&6; }
-else
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-fi
-
-
-
-     if test x$MYSQL_CONFIG = xyes; then
-       have_mysql="yes"
-     fi
-
-     if test "$have_mysql" = "yes"; then
-
-            mysql_includes=`mysql_config --cflags`
-            mysql_libs=`mysql_config --libs_r`
-
-            { $as_echo "$as_me:${as_lineno-$LINENO}: checking for main in -lguide" >&5
-$as_echo_n "checking for main in -lguide... " >&6; }
-if ${ac_cv_lib_guide_main+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lguide  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-
-int
-main ()
-{
-return main ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_guide_main=yes
-else
-  ac_cv_lib_guide_main=no
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_guide_main" >&5
-$as_echo "$ac_cv_lib_guide_main" >&6; }
-if test "x$ac_cv_lib_guide_main" = xyes; then :
-  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for _intel_fast_memset in -lguide" >&5
-$as_echo_n "checking for _intel_fast_memset in -lguide... " >&6; }
-if ${ac_cv_lib_guide__intel_fast_memset+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lguide  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-/* Override any GCC internal prototype to avoid an error.
-   Use char because int might match the return type of a GCC
-   builtin and then its argument prototype would still apply.  */
-#ifdef __cplusplus
-extern "C"
-#endif
-char _intel_fast_memset ();
-int
-main ()
-{
-return _intel_fast_memset ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_guide__intel_fast_memset=yes
-else
-  ac_cv_lib_guide__intel_fast_memset=no
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_guide__intel_fast_memset" >&5
-$as_echo "$ac_cv_lib_guide__intel_fast_memset" >&6; }
-if test "x$ac_cv_lib_guide__intel_fast_memset" = xyes; then :
-  have_icc_guide=yes
-else
-  have_icc_guide=no
-fi
-
-fi
-ac_cv_lib_guide=ac_cv_lib_guide_main
-
-     else
-        echo "MySQL support is not found"
-        exit 1;
-     fi
-   fi
-
-  if test "$withval" = "sqlite3"; then
-    for ac_header in sqlite3.h
-do :
-  ac_fn_c_check_header_mongrel "$LINENO" "sqlite3.h" "ac_cv_header_sqlite3_h" "$ac_includes_default"
-if test "x$ac_cv_header_sqlite3_h" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_SQLITE3_H 1
-_ACEOF
- have_sqlite3=yes
-else
-  echo "sqlite3.h is not found"
-fi
-
-done
-
-
-    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for main in -lsqlite3" >&5
-$as_echo_n "checking for main in -lsqlite3... " >&6; }
-if ${ac_cv_lib_sqlite3_main+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lsqlite3  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-
-int
-main ()
-{
-return main ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_sqlite3_main=yes
-else
-  ac_cv_lib_sqlite3_main=no
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_sqlite3_main" >&5
-$as_echo "$ac_cv_lib_sqlite3_main" >&6; }
-if test "x$ac_cv_lib_sqlite3_main" = xyes; then :
-  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for sqlite3_open in -lsqlite3" >&5
-$as_echo_n "checking for sqlite3_open in -lsqlite3... " >&6; }
-if ${ac_cv_lib_sqlite3_sqlite3_open+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lsqlite3  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-/* Override any GCC internal prototype to avoid an error.
-   Use char because int might match the return type of a GCC
-   builtin and then its argument prototype would still apply.  */
-#ifdef __cplusplus
-extern "C"
-#endif
-char sqlite3_open ();
-int
-main ()
-{
-return sqlite3_open ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_sqlite3_sqlite3_open=yes
-else
-  ac_cv_lib_sqlite3_sqlite3_open=no
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_sqlite3_sqlite3_open" >&5
-$as_echo "$ac_cv_lib_sqlite3_sqlite3_open" >&6; }
-if test "x$ac_cv_lib_sqlite3_sqlite3_open" = xyes; then :
-  have_sqlite3=yes
-else
-  have_sqlite3=no
-fi
-
-fi
-ac_cv_lib_sqlite3=ac_cv_lib_sqlite3_main
-
-
-      if test "$have_sqlite3" = "no"; then
-           echo "sqlite3 not found";
-           exit 1;
-      fi
-  fi
-
-
-
-fi
-
-
-
-
-
 
 # Check whether --with-store was given.
 if test "${with_store+set}" = set; then :
@@ -4931,17 +4681,17 @@ fi
 
 if test "$TOKENDB" = "sqlite3"; then
    defs="$defs -DHAVE_SQLITE3"
-   mysql_obj="sqlite3.o "
+   sql_obj="sqlite3.o "
 fi
 
 if test "$TOKENDB" = "mysql"; then
    defs="$defs -DHAVE_MYSQL"
-   mysql_obj="mysql.o "
+   sql_obj="mysql.o "
 fi
 
 if test "$TOKENDB" = "mydb"; then
    defs="$defs -DHAVE_MYDB"
-   mysql_obj="mydb.o"
+   sql_obj="mydb.o"
 fi
 
 if test "x$QCACHE" != "x"; then
@@ -4949,16 +4699,6 @@ if test "x$QCACHE" != "x"; then
       echo "please specify the --with-tokendb option"
       exit 1
    fi
-fi
-
-#if test "x$TOKENDB" != "x" && test "x$USERDB" = "x"; then
-#   echo "please specify the --with-userdb option"
-#   exit 1
-#fi
-
-if test "$have_policy" = "yes" && test "x$USERDB" = "x"; then
-   echo "please specify the --with-userdb option"
-   exit 1
 fi
 
 if test "$have_antivirus" = "no" && test "$have_antispam" = "no"; then
@@ -5085,18 +4825,6 @@ else
    echo "(SU)RBL support: no"
 fi
 
-if test "$USERDB" = "mysql" && test "$have_mysql" = "yes"; then
-   echo "user database: mysql"
-   defs="$defs -DUSERS_IN_MYSQL -DHAVE_USERS"
-   objs="$objs users.o"
-fi
-
-if test "$USERDB" = "sqlite3" && test "$have_sqlite3" = "yes"; then
-   echo "user database: sqlite3"
-   defs="$defs -DUSERS_IN_SQLITE3 -DHAVE_USERS"
-   objs="$objs users.o"
-fi
-
 echo "token database backend: $TOKENDB"
 
 
@@ -5197,12 +4925,7 @@ if test "$have_tre" = "yes"; then
    antispam_libs="$antispam_libs -ltre"
 fi
 
-if test "$have_mysql" = "yes"; then
-   defs="$defs -DNEED_MYSQL"
-fi
-
 if test "$have_sqlite3" = "yes"; then
-   defs="$defs -DNEED_SQLITE3"
    sqlite3_libs="-lsqlite3 -lpthread"
 fi
 
@@ -5228,9 +4951,10 @@ VERSION_STRING=`grep '#define VERSION' src/config.h | cut -f2 -d '"'`
 cat webui/view/theme/default/templates/common/footer.tpl | sed "s/VERSION_STRING/$VERSION_STRING/" > aaaa.11
 mv aaaa.11 webui/view/theme/default/templates/common/footer.tpl
 
+defs="$defs -DHAVE_USERS"
 CFLAGS="$static -O2 -Wall -g"
 LIBS="$libclamav $antispam_libs $gsl_libs $sqlite3_libs $sunos_libs"
-OBJS="dirs.o misc.o counters.o cfg.o smtp.o sig.o decoder.o list.o boundary.o parser.o parser_utils.o session.o templates.o hash.o score.o chi.o $objs"
+OBJS="dirs.o misc.o counters.o cfg.o smtp.o sig.o decoder.o list.o boundary.o parser.o parser_utils.o session.o templates.o hash.o score.o chi.o users.o $objs"
 
 ac_config_files="$ac_config_files Makefile contrib/spamsum/Makefile contrib/spamdrop_helper/Makefile contrib/stat/Makefile.helper etc/Makefile history/Makefile init.d/Makefile perl/Makefile src/Makefile templates/Makefile util/Makefile"
 

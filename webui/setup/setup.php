@@ -187,7 +187,8 @@ function write_stuff() {
    write_line($fp, "TABLE_SUMMARY", "summary");
    write_line($fp, "TABLE_COUNTERS", "t_counters");
    write_line($fp, "TABLE_QUARANTINE_GROUP", "t_quarantine_group");
-
+   write_line($fp, "TABLE_QUARANTINE", "t_quarantine");
+   write_line($fp, "TABLE_SEARCH", "t_search");
    write_line($fp);
 
    write_line($fp, "ENABLE_LDAP_IMPORT_FEATURE", 0);
@@ -237,7 +238,7 @@ function write_stuff() {
    write_line($fp);
 
 
-   write_line($fp, "HISTORY_REFRESH", 5);
+   write_line($fp, "HISTORY_REFRESH", 60);
    write_line($fp);
 
    write_line($fp, "FROM_LENGTH_TO_SHOW", 28);
@@ -251,7 +252,14 @@ function write_stuff() {
 
 
    write_line($fp, "SESSION_DATABASE", $_POST['SESSION_DATABASE']);
-   write_line($fp, "QUARANTINE_DATA", 'sessions/quarantine.sdb');
+   write_line($fp);
+
+   write_line($fp, "QUARANTINE_DRIVER", $_POST['QUARANTINE_DRIVER']);
+
+   if($_POST['QUARANTINE_DRIVER'] == "sqlite") {
+      write_line($fp, "QUARANTINE_DATABASE", BASEDIR . WEBUI_DIRECTORY . '/sessions/quarantine.sdb');
+   }
+
    write_line($fp, "REMOVE_FROM_QUARANTINE_WILL_UNLINK_FROM_FILESYSTEM", 1);
    write_line($fp);
 

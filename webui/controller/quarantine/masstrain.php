@@ -49,9 +49,7 @@ class ControllerQuarantineMasstrain extends Controller {
       $fromaddr = $this->data['to'] = $this->model_user_user->getEmailAddress($this->data['username']);
 
 
-      $Q = new DB("sqlite", "", "", "", QUARANTINE_DATA, "");
-      Registry::set('Q', $Q);
-
+      $Q = Registry::get('Q');
 
       while(list($k, $v) = each($_POST)){
          if(preg_match("/^[sh][\._][a-f0-9]{28,36}$/", $k) && $v == "on"){

@@ -1,3 +1,9 @@
+2011.05.30, SJ
+
+Added a global quarantine feature where administrators are able
+to view the whole quarantine. This feature obsoletes the old
+per user quarantine.sdb files.
+
 2011.05.28, SJ
 
 Added a global quarantine feature for administrators.

@@ -46,15 +46,14 @@ class ControllerQuarantineDeliver extends Controller {
       $this->data['x'] = $this->data['text_failed_to_deliver'];
       $this->data['to'] = $this->model_user_user->getEmailAddress($this->data['username']);
 
+      $Q = Registry::get('Q');
+
       if($this->model_quarantine_message->checkId($this->data['id']) && strlen($this->data['to']) > 3){
          $message = $this->model_quarantine_message->getMessageForDelivery($my_q_dir . "/" . $this->data['id']);
 
          $x = $this->model_mail_mail->SendSmtpEmail(SMTP_HOST, SMTP_PORT, SMTP_DOMAIN, SMTP_FROMADDR, $this->data['to'], $message);
 
          if($x == 1){
-
-            $Q = new DB("sqlite", "", "", "", QUARANTINE_DATA, "");
-            Registry::set('Q', $Q);
 
             $this->model_quarantine_database->RemoveEntry($this->data['id']);
 

@@ -70,8 +70,7 @@ class ControllerQuarantineTrain extends Controller {
 
          if($x == 1){
 
-            $Q = new DB("sqlite", "", "", "", QUARANTINE_DATA, "");
-            Registry::set('Q', $Q);
+            $Q = Registry::get('Q');
 
             $this->model_quarantine_database->RemoveEntry($this->data['id']);
             if(REMOVE_FROM_QUARANTINE_WILL_UNLINK_FROM_FILESYSTEM == 1) { unlink($my_q_dir . "/" . $this->data['id']); }

@@ -13,7 +13,7 @@
 #include <clapf.h>
 
 
-#ifdef USERS_IN_MYSQL
+#ifdef HAVE_MYSQL
 int getUserdataFromEmail(struct session_data *sdata, char *email, struct __config *cfg){
    MYSQL_RES *res;
    MYSQL_ROW row;
@@ -169,7 +169,7 @@ int isKnownEmail(struct session_data *sdata, char *email, struct __config *cfg){
 #endif
 
 
-#ifdef USERS_IN_SQLITE3
+#ifdef HAVE_SQLITE3
 int getUserdataFromEmail(struct session_data *sdata, char *email, struct __config *cfg){
    sqlite3_stmt *pStmt;
    const char **pzTail=NULL;

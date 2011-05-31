@@ -44,6 +44,7 @@ class ModelUserAuth extends Model {
 
          $_SESSION['username'] = $user['username'];
          $_SESSION['admin_user'] = 0;
+         $_SESSION['email'] = $user['username'];
 
          $this->changePassword($user['username'], $password);
 

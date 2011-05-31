@@ -45,6 +45,7 @@ $loader->model('user/import');
 $import = new ModelUserImport();
 
 $_SESSION['username'] = 'cli-admin';
+$_SERVER['REMOTE_ADDR'] = '127.0.0.1';
 
 $totalusers = 0;
 $totalnewusers = 0;

@@ -338,9 +338,9 @@ class ModelUserUser extends Model {
 
       if($search){
          if($where_cond) {
-            $where_cond .= " AND (uid IN (SELECT DISTINCT uid FROM " . TABLE_USER . " WHERE username LIKE '%" . $this->db->escape($search) . "%') OR uid IN (SELECT DISTINCT uid FROM " . TABLE_EMAIL . " WHERE email LIKE '%" . $this->db->escape($search) . "%') )";
+            $where_cond .= " AND " . TABLE_EMAIL . ".uid=" . TABLE_USER . ".uid and email like '%" . $this->db->escape($search) . "%' ";
          } else {
-            $where_cond = " WHERE uid IN (SELECT DISTINCT uid FROM " . TABLE_USER . " WHERE username LIKE '%" . $this->db->escape($search) . "%') OR uid IN (SELECT DISTINCT uid FROM " . TABLE_EMAIL . " WHERE email LIKE '%" . $this->db->escape($search) . "%')";
+            $where_cond .= " WHERE " . TABLE_EMAIL . ".uid=" . TABLE_USER . ".uid and email like '%" . $this->db->escape($search) . "%' ";
          }
       }
 
@@ -353,10 +353,9 @@ class ModelUserUser extends Model {
 
       if($page_len > 0) { $limit = " LIMIT " . (int)$from . ", " . (int)$page_len; }
 
-      $query = $this->db->query("SELECT uid, gid, username, realname, domain, policy_group FROM " . TABLE_USER . " $where_cond $_order $limit");
+      $query = $this->db->query("SELECT " . TABLE_USER . ".uid, gid, username, realname, domain, policy_group, email FROM " . TABLE_USER . "," . TABLE_EMAIL . " $where_cond group by uid $_order $limit");
 
       foreach ($query->rows as $q) {
-         $email = $this->db->query("SELECT email FROM " . TABLE_EMAIL . " WHERE uid=" . (int)$q['uid'] . " LIMIT 1");
 
          if(Registry::get('admin_user') == 1 || (isset($q['domain']) && $q['domain'] == $my_domain[0]) ) {
             $users[] = array(
@@ -366,7 +365,7 @@ class ModelUserUser extends Model {
                           'realname'     => $q['realname'],
                           'domain'       => isset($q['domain']) ? $q['domain'] : "",
                           'policy_group' => $q['policy_group'],
-                          'email'        => $email->row['email']
+                          'email'        => $q['email']
                          );
          }
 
@@ -380,12 +379,12 @@ class ModelUserUser extends Model {
       $where_cond = "";
 
       if($search){
-         $where_cond .= " WHERE uid IN (SELECT DISTINCT uid FROM " . TABLE_USER . " WHERE username LIKE '%" . $this->db->escape($search) . "%') OR uid IN (SELECT DISTINCT uid FROM " . TABLE_EMAIL . " WHERE email LIKE '%" . $this->db->escape($search) . "%')";
+         $where_cond .= " WHERE email like '%" . $this->db->escape($search) . "%' ";
       }
 
-      $query = $this->db->query("SELECT COUNT(*) AS num_users FROM " . TABLE_USER . $where_cond);
+      $query = $this->db->query("SELECT COUNT(*) AS num, uid FROM " . TABLE_EMAIL . " $where_cond group by uid");
 
-      return $query->row['num_users'];
+      return $query->num_rows;
    }
 
 

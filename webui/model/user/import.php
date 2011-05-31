@@ -122,6 +122,7 @@ class ModelUserImport extends Model {
       $exclude = array();
       $newuser = 0;
       $deleteduser = 0;
+      $n = 0;
 
       LOGGER("running processUsers() ...");
 

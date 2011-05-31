@@ -62,7 +62,7 @@ function fix_mass_action(subj, from, hamspam, username, page) {
    var query_params = "&subj=" + document.forms.aaa0.subj.value + 
                       "&from=" + document.forms.aaa0.from.value +
                       "&hamspam=" + document.forms.aaa0.hamspam.value +
-                      "&user=" + username +
+                      //"&user=" + username +
                       "&page=" + page;
 
    if(document.forms.aaa1.massaction.value == "purge") document.forms.aaa1.action="index.php?route=quarantine/remove&topurge=1" + query_params;

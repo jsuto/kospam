@@ -1,3 +1,7 @@
+2011.05.31, SJ
+
+Clarified some webui variables, eg. SMTP_HOST, SMTP_PORT, ...
+
 2011.05.30, SJ
 
 Added a global quarantine feature where administrators are able

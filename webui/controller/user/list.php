@@ -53,6 +53,7 @@ class ControllerUserList extends Controller {
       if(@$this->request->get['sort'] == "username") { $this->data['sort'] = "username"; }
       if(@$this->request->get['sort'] == "email") { $this->data['sort'] = "email"; }
       if(@$this->request->get['sort'] == "domain") { $this->data['sort'] = "domain"; }
+      if(@$this->request->get['sort'] == "policy") { $this->data['sort'] = "policy_group"; }
 
 
       /* check if we are admin */

@@ -52,6 +52,19 @@ class ControllerQuarantineMasstrain extends Controller {
       $Q = Registry::get('Q');
 
       while(list($k, $v) = each($_POST)){
+
+         $a = preg_split("/\+/", $k);
+         if(count($a) == 2) {
+            $k = $a[0];
+            $username = $a[1];
+
+            $uid = $this->model_user_user->getUidByName($username);
+            $domain = $this->model_user_user->getDomainsByUid($uid);
+            $my_q_dir = get_per_user_queue_dir($domain[0], $username, $uid);
+
+            $fromaddr = $this->data['to'] = $this->model_user_user->getEmailAddress($username);
+         }
+
          if(preg_match("/^[sh][\._][a-f0-9]{28,36}$/", $k) && $v == "on"){
 
             $k = preg_replace("/_/", ".", $k);
@@ -77,16 +90,16 @@ class ControllerQuarantineMasstrain extends Controller {
             $training_message .= "Received: " . substr($k, 2, strlen($k)) . "\r\n" . $message;
 
 
-            $x = $this->model_mail_mail->SendSmtpEmail(SMTP_HOST, POSTFIX_PORT, SMTP_DOMAIN, $fromaddr, $training_address, $training_message);
+            $x = $this->model_mail_mail->SendSmtpEmail(POSTFIX_LISTEN_ADDRESS, POSTFIX_LISTEN_PORT, SMTP_DOMAIN, $fromaddr, $training_address, $training_message);
 
             if($x == 1) {
 
                if($k[0] == 's' && (int)@$this->request->get['nodeliver'] == 0) {
-                  $x = $this->model_mail_mail->SendSmtpEmail(SMTP_HOST, SMTP_PORT, SMTP_DOMAIN, SMTP_FROMADDR, $this->data['to'], $message);
+                  $x = $this->model_mail_mail->SendSmtpEmail(LOCALHOST, POSTFIX_PORT_AFTER_CONTENT_FILTER, SMTP_DOMAIN, SMTP_FROMADDR, $this->data['to'], $message);
                }
 
                if($x == 1 && file_exists($my_q_dir . "/" . $k)){
-                  $this->model_quarantine_database->RemoveEntry($k);
+                  $this->model_quarantine_database->RemoveEntry($k, $uid);
                   if(REMOVE_FROM_QUARANTINE_WILL_UNLINK_FROM_FILESYSTEM == 1) { unlink($my_q_dir . "/" . $k); }
                }
 

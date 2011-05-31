@@ -33,7 +33,7 @@
       <th><?php print $text_realname; ?></th>
       <th><?php print $text_email; ?></th>
       <th><?php print $text_domain; ?> <a href="index.php?route=user/list&amp;sort=domain&amp;order=0"><img src="view/theme/<?php print THEME; ?>/images/arrowup.gif" border="0"></a> <a href="index.php?route=user/list&amp;sort=domain&amp;order=1"><img src="view/theme/<?php print THEME; ?>/images/arrowdown.gif" border="0"></a></th>
-      <th><?php print $text_policy_group; ?></th>
+      <th><?php print $text_policy_group; ?> <a href="index.php?route=user/list&amp;sort=policy&amp;order=0"><img src="view/theme/<?php print THEME; ?>/images/arrowup.gif" border="0"></a> <a href="index.php?route=user/list&amp;sort=policy&amp;order=1"><img src="view/theme/<?php print THEME; ?>/images/arrowdown.gif" border="0"></a></th>
       <th>&nbsp;</th>
       <th>&nbsp;</th>
       <th>&nbsp;</th>

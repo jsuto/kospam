@@ -58,9 +58,20 @@ class ControllerQuarantineRemove extends Controller {
          while(list($k, $v) = each($_POST)){
             $k = preg_replace("/_/", ".", $k);
 
-            if($this->model_quarantine_message->checkId($k) && file_exists($my_q_dir . "/$k") && $this->model_quarantine_database->RemoveEntry($k) ){
-               if(REMOVE_FROM_QUARANTINE_WILL_UNLINK_FROM_FILESYSTEM == 1) { unlink($my_q_dir . "/$k"); }
-               $n++;
+            $a = preg_split("/\+/", $k);
+            if(count($a) == 2) {
+               $k = $a[0];
+               $username = $a[1];
+
+               $uid = $this->model_user_user->getUidByName($username);
+               $domain = $this->model_user_user->getDomainsByUid($uid);
+               $my_q_dir = get_per_user_queue_dir($domain[0], $username, $uid);
+
+               if($this->model_quarantine_message->checkId($k) && file_exists($my_q_dir . "/$k") && $this->model_quarantine_database->RemoveEntry($k, $uid) ){
+                  if(REMOVE_FROM_QUARANTINE_WILL_UNLINK_FROM_FILESYSTEM == 1) { unlink($my_q_dir . "/$k"); }
+                  $n++;
+               }
+
             }
          }
 
@@ -77,7 +88,7 @@ class ControllerQuarantineRemove extends Controller {
          $files = scandir($my_q_dir, 1);
 
          foreach ($files as $file){
-            if($this->model_quarantine_message->checkId($file) && file_exists($my_q_dir . "/$file") && $this->model_quarantine_database->RemoveEntry($k) ){
+            if($this->model_quarantine_message->checkId($file) && file_exists($my_q_dir . "/$file") && $this->model_quarantine_database->RemoveEntry($file, $uid) ){
                if(REMOVE_FROM_QUARANTINE_WILL_UNLINK_FROM_FILESYSTEM == 1) { unlink($my_q_dir . "/$file"); }
                $n++;
             }
@@ -92,7 +103,7 @@ class ControllerQuarantineRemove extends Controller {
 
       if($this->request->server['REQUEST_METHOD'] == 'GET') {
          if($this->model_quarantine_message->checkId($this->data['id']) && file_exists($my_q_dir . "/" . $this->data['id']) ){
-            $this->model_quarantine_database->RemoveEntry($this->data['id']);
+            $this->model_quarantine_database->RemoveEntry($this->data['id'], $uid);
             if(REMOVE_FROM_QUARANTINE_WILL_UNLINK_FROM_FILESYSTEM == 1) { unlink($my_q_dir . "/" . $this->data['id']); }
             $this->data['x'] = $this->data['text_successfully_removed'];
          } else {

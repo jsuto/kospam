@@ -48,15 +48,29 @@ class ControllerQuarantineMassdeliver extends Controller {
       $Q = Registry::get('Q');
 
       while(list($k, $v) = each($_POST)){
+
+         $a = preg_split("/\+/", $k);
+         if(count($a) == 2) {
+            $k = $a[0];
+            $username = $a[1];
+
+            $uid = $this->model_user_user->getUidByName($username);
+            $domain = $this->model_user_user->getDomainsByUid($uid);
+            $my_q_dir = get_per_user_queue_dir($domain[0], $username, $uid);
+
+            $this->data['to'] = $this->model_user_user->getEmailAddress($username);
+         }
+
+
          if(preg_match("/^[sh][\._][a-f0-9]{28,36}$/", $k) && $v == "on"){
 
             $k = preg_replace("/_/", ".", $k);
 
             $message = $this->model_quarantine_message->getMessageForDelivery($my_q_dir . "/" . $k);
 
-            if($this->model_mail_mail->SendSmtpEmail(SMTP_HOST, SMTP_PORT, SMTP_DOMAIN, SMTP_FROMADDR, $this->data['to'], $message) == 1) {
+            if($this->model_mail_mail->SendSmtpEmail(LOCALHOST, POSTFIX_PORT_AFTER_CONTENT_FILTER, SMTP_DOMAIN, SMTP_FROMADDR, $this->data['to'], $message) == 1) {
 
-               $this->model_quarantine_database->RemoveEntry($k);
+               $this->model_quarantine_database->RemoveEntry($k, $uid);
 
                if(REMOVE_FROM_QUARANTINE_WILL_UNLINK_FROM_FILESYSTEM == 1) { unlink($my_q_dir . "/" . $k); }
 

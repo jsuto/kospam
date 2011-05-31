@@ -252,13 +252,13 @@ class ModelQuarantineDatabase extends Model {
    }
 
 
-   public function RemoveEntry($id) {
+   public function RemoveEntry($id = '', $uid = 0) {
 
       $Q = Registry::get('Q');
 
       $a = explode(".", $id);
 
-      $query = $Q->query("update " . TABLE_QUARANTINE . " set hidden=1 where id='" . $Q->escape($a[1]) . "'");
+      $query = $Q->query("update " . TABLE_QUARANTINE . " set hidden=1 where uid=" . (int)$uid . " AND id='" . $Q->escape($a[1]) . "'");
 
       if($query->error == 0 && $Q->countAffected() == 1) { return 1; }
 

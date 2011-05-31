@@ -122,9 +122,10 @@ function write_stuff() {
    write_line($fp);
 
 
-   write_line($fp, "SMTP_HOST", $_POST['SMTP_HOST']);
-   write_line($fp, "SMTP_PORT", $_POST['SMTP_PORT']);
-   write_line($fp, "POSTFIX_PORT", 25);
+   write_line($fp, "LOCALHOST", "127.0.0.1");
+   write_line($fp, "POSTFIX_LISTEN_ADDRESS", $_POST['POSTFIX_LISTEN_ADDRESS']);
+   write_line($fp, "POSTFIX_LISTEN_PORT", 25);
+   write_line($fp, "POSTFIX_PORT_AFTER_CONTENT_FILTER", $_POST['POSTFIX_PORT_AFTER_CONTENT_FILTER']);
    write_line($fp, "CLAPF_PORT", $_POST['CLAPF_PORT']);
    write_line($fp, "SMTP_DOMAIN", $_POST['SMTP_DOMAIN']);
    write_line($fp, "SMTP_FROMADDR", "no-reply@" . $_POST['SMTP_DOMAIN']);
@@ -277,6 +278,9 @@ function write_stuff() {
    write_line($fp, "PASSWORD_CHANGE_ENABLED", 1);
    write_line($fp);
 
+   write_line($fp, "SPAM_ONLY_QUARANTINE", 1);
+   write_line($fp);
+
    write_line($fp, "MEMCACHED_ENABLED", $_POST['MEMCACHED_ENABLED']);
    write_line($fp);
 
@@ -301,7 +305,7 @@ function write_stuff() {
 
    write_line($fp);
 
-   fputs($fp, '$health_smtp_servers = array( array("0.0.0.0", POSTFIX_PORT, "postfix-in"), array(SMTP_HOST, CLAPF_PORT, "clapf"), array(SMTP_HOST, SMTP_PORT, "postfix after content-filter") );' . CRLF);
+   fputs($fp, '$health_smtp_servers = array( array(POSTFIX_LISTEN_ADDRESS, POSTFIX_LISTEN_PORT, "postfix before content-filter"), array(LOCALHOST, CLAPF_PORT, "content-filter"), array(LOCALHOST, POSTFIX_PORT_AFTER_CONTENT_FILTER, "postfix after content-filter") );' . CRLF);
 
    write_line($fp);
 

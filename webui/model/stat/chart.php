@@ -109,10 +109,10 @@ class ModelStatChart extends Model {
       $chart = new HorizontalBarChart(SIZE_X, SIZE_Y);
       $dataSet = new XYDataSet();
 
-      $query = $this->db_history->query("SELECT ts, from_domain, COUNT(from_domain) AS sum FROM " . TABLE_SUMMARY . " WHERE ts > $range AND result='" . $this->db_history->escape($what) . "' GROUP BY from_domain ORDER BY sum DESC LIMIT 10");
+      $query = $this->db_history->query("SELECT ts, fromdomain, COUNT(fromdomain) AS sum FROM clapf WHERE ts > $range AND result='" . $this->db_history->escape($what) . "' GROUP BY fromdomain ORDER BY sum DESC LIMIT 10");
 
       foreach($query->rows as $q) {
-         $dataSet->addPoint(new Point($q['from_domain'], $q['sum']));
+         $dataSet->addPoint(new Point($q['fromdomain'], $q['sum']));
       }
 
       $chart->setDataSet($dataSet);

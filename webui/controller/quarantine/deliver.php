@@ -51,7 +51,7 @@ class ControllerQuarantineDeliver extends Controller {
       if($this->model_quarantine_message->checkId($this->data['id']) && strlen($this->data['to']) > 3){
          $message = $this->model_quarantine_message->getMessageForDelivery($my_q_dir . "/" . $this->data['id']);
 
-         $x = $this->model_mail_mail->SendSmtpEmail(SMTP_HOST, SMTP_PORT, SMTP_DOMAIN, SMTP_FROMADDR, $this->data['to'], $message);
+         $x = $this->model_mail_mail->SendSmtpEmail(LOCALHOST, POSTFIX_PORT_AFTER_CONTENT_FILTER, SMTP_DOMAIN, SMTP_FROMADDR, $this->data['to'], $message);
 
          if($x == 1){
 

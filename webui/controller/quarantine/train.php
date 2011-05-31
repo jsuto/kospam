@@ -66,7 +66,7 @@ class ControllerQuarantineTrain extends Controller {
          $training_message  = "From: " . $fromaddr . "\r\nTo: " . $training_address . "\r\nSubject: training message\r\n\r\n\r\n";
          $training_message .= "Received: " . preg_replace("/^[sh]\./", "", $this->data['id']) . "\r\n" . $message;
 
-         $x = $this->model_mail_mail->SendSmtpEmail(SMTP_HOST, POSTFIX_PORT, SMTP_DOMAIN, $fromaddr, $training_address, $training_message);
+         $x = $this->model_mail_mail->SendSmtpEmail(POSTFIX_LISTEN_ADDRESS, POSTFIX_LISTEN_PORT, SMTP_DOMAIN, $fromaddr, $training_address, $training_message);
 
          if($x == 1){
 

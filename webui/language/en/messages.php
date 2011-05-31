@@ -38,6 +38,7 @@ $_['text_deleted_users'] = "deleted users";
 $_['text_deliver'] = "Deliver";
 $_['text_delivered'] = "Delivered";
 $_['text_deliver_and_train_selected_messages'] = "Deliver and train selected messages";
+$_['text_deliver_and_train_selected_messages_as_ham'] = "Deliver and train selected messages AS HAM";
 $_['text_deliver_selected_messages'] = "Deliver selected messages";
 $_['text_disk_usage'] = "Disk usage";
 $_['text_dn_asterisk_means_skip_sync'] = "Asterisk (*) means this user entry will be not part of AD synchronisation";
@@ -148,7 +149,7 @@ $_['text_policy_group'] = "Policy group";
 $_['text_policy_name'] = "Policy name";
 $_['text_previous'] = "Previous";
 $_['text_processed_emails_in'] = "Processed emails in 24 hours/1 week/30 days";
-$_['text_purge_all_messages_from_quarantine'] = "Purge all messages from quarantine";
+$_['text_purge_all_messages_from_quarantine'] = "Purge all your own messages from quarantine";
 $_['text_purge_selected_messages'] = "Purge selected messages";
 $_['text_purged'] = "Purged";
 
@@ -201,6 +202,7 @@ $_['text_train_and_deliver_as_ham'] = "Train and deliver as HAM";
 $_['text_train_and_deliver_as_spam'] = "Train and deliver as SPAM";
 $_['text_trained'] = "Trained";
 $_['text_train_selected_messages'] = "Train selected messages";
+$_['text_train_selected_messages_as_ham'] = "Train selected messages AS HAM";
 
 $_['text_uids'] = "uids";
 $_['text_unauthorized_domain'] = "Unauthorized domain";

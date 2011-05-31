@@ -119,13 +119,13 @@ function ShowOption(what, value) {
    </tr>
 
    <tr>
-      <td>SMTP host: </td>
-      <td><input type="text" name="SMTP_HOST" value="<?php if(isset($a['SMTP_HOST'])) { print SMTP_HOST; } else if(isset($_POST['SMTP_HOST'])) { print $_POST['SMTP_HOST']; } else { ?>127.0.0.1<?php } ?>" size="30" /></td>
+      <td>Postfix listen address before content filter: </td>
+      <td><input type="text" name="POSTFIX_LISTEN_ADDRESS" value="<?php if(isset($a['POSTFIX_LISTEN_ADDRESS'])) { print POSTFIX_LISTEN_ADDRESS; } else if(isset($_POST['POSTFIX_LISTEN_ADDRESS'])) { print $_POST['POSTFIX_LISTEN_ADDRESS']; } else { ?>0.0.0.0<?php } ?>" size="30" /></td>
    </tr>
 
    <tr>
-      <td>SMTP port: </td>
-      <td><input type="text" name="SMTP_PORT" value="<?php if(isset($a['SMTP_PORT'])) { print SMTP_PORT; } else if(isset($_POST['SMTP_PORT'])) { print $_POST['SMTP_PORT']; } else { ?>10026<?php } ?>" size="30" /></td>
+      <td>Postfix listen port after content filter: </td>
+      <td><input type="text" name="POSTFIX_PORT_AFTER_CONTENT_FILTER" value="<?php if(isset($a['POSTFIX_PORT_AFTER_CONTENT_FILTER'])) { print POSTFIX_PORT_AFTER_CONTENT_FILTER; } else if(isset($_POST['POSTFIX_PORT_AFTER_CONTENT_FILTER'])) { print $_POST['POSTFIX_PORT_AFTER_CONTENT_FILTER']; } else { ?>10026<?php } ?>" size="30" /></td>
    </tr>
 
    <tr>

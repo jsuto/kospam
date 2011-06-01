@@ -32,7 +32,7 @@ class ControllerImportImport extends Controller {
             $this->template = "import/imported.tpl";
 
             $users = $this->model_user_import->queryRemoteUsers($this->request->post);
-            $this->data['n'] = $this->model_user_import->processUsers($users, $this->request->post);
+            list($this->data['n'], $a) = $this->model_user_import->processUsers($users, $this->request->post);
 
             $rc = $this->model_user_import->fillRemoteTable($this->request->post, $this->request->post['domain']);
 

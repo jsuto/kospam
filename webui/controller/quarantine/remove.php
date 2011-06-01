@@ -50,6 +50,11 @@ class ControllerQuarantineRemove extends Controller {
 
       $Q = Registry::get('Q');
 
+      if( (Registry::get('admin_user') == 1 || Registry::get('domain_admin') == 1) && (!isset($this->request->get['user']) || strlen($this->request->get['user']) < 1) ) {
+         $this->data['username'] = '';
+      }
+
+
       /* purge selected messages */
 
       if($this->request->server['REQUEST_METHOD'] == 'POST' && isset($this->request->post['topurge'])){

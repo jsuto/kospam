@@ -353,7 +353,7 @@ class ModelUserUser extends Model {
 
       if($page_len > 0) { $limit = " LIMIT " . (int)$from . ", " . (int)$page_len; }
 
-      $query = $this->db->query("SELECT " . TABLE_USER . ".uid, gid, username, realname, domain, policy_group, email FROM " . TABLE_USER . "," . TABLE_EMAIL . " $where_cond group by uid $_order $limit");
+      $query = $this->db->query("SELECT " . TABLE_USER . ".uid, gid, username, realname, domain, policy_group, email FROM " . TABLE_USER . "," . TABLE_EMAIL . " $where_cond group by " . TABLE_USER . ".uid $_order $limit");
 
       foreach ($query->rows as $q) {
 

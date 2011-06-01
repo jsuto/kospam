@@ -61,11 +61,14 @@ class ControllerQuarantineQuarantine extends Controller {
             }
          }
 
+         else if(Registry::get('admin_user') == 1) {
+            $this->data['username'] = '';
+         }
+
       }
       else {
          array_push($this->data['uids'], $this->model_user_user->getUidByName($this->data['username']));
       }
-
 
 
       $this->data['sort'] = 'ts';

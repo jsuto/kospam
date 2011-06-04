@@ -157,6 +157,8 @@ float bayes_file(struct session_data *sdata, struct _state *state, struct __conf
    cfg->group_type = GROUP_SHARED;
 #endif
 
+   if(cfg->group_type == GROUP_SHARED) sdata->gid = 0;
+
    if(cfg->debug == 1) printf("username: %s, uid: %ld, gid: %ld\n", sdata->name, sdata->uid, sdata->gid);
 
 
@@ -214,8 +216,6 @@ float bayes_file(struct session_data *sdata, struct _state *state, struct __conf
       }
    }
 
-
-   if(cfg->group_type == GROUP_SHARED) sdata->gid = 0;
 
    spaminess = evaluateTokens(sdata, state, cfg);
 

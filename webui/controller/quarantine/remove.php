@@ -24,8 +24,10 @@ class ControllerQuarantineRemove extends Controller {
 
       $this->data['id'] = @$this->request->get['id'];
       $this->data['from'] = @$this->request->get['from'];
+      $this->data['to'] = @$this->request->get['to'];
       $this->data['subj'] = @$this->request->get['subj'];
       $this->data['hamspam'] = @$this->request->get['hamspam'];
+      $this->data['date'] = @$this->request->get['date'];
       $this->data['page'] = @$this->request->get['page'];
 
 

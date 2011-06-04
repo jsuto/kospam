@@ -20,6 +20,7 @@ $_['text_bulk_update_selected_uids'] = "Kiválasztott azonosítók szerkesztése
 
 $_['text_cancel'] = "Mégse";
 $_['text_clienthost'] = "Kliens gép";
+$_['text_confirm_to_reset_counters'] = "Számlálók nullázásának megerősítése";
 $_['text_content_filter'] = "Tartalomszűrő";
 $_['text_counters'] = "Számlálók";
 $_['text_cpu_load'] = "CPU terhelés";
@@ -196,6 +197,7 @@ $_['text_time'] = "Időpont";
 $_['text_to'] = "Címzett";
 $_['text_too_short_password'] = "Túl rövid jelszó";
 $_['text_total_ratio'] = "összes arány";
+$_['text_total_query_time'] = "SQL lekérdezések összideje";
 $_['text_total_users'] = "összes felhasználó";
 $_['text_train_and_deliver_as_ham'] = "Tanítás és kézbesítés, mint JÓ LEVÉL";
 $_['text_train_and_deliver_as_spam'] = "Tanítás és kézbesítés, mint SPAM";
@@ -227,6 +229,15 @@ $_['text_whitelist_settings'] = "Fehérlista beállítások";
 $_['text_you_are'] = "Ön";
 $_['text_you_are_not_admin'] = "Önnek nincs jogosultsága a mvelethez";
 
+
+$_['rcvd'] = "fogadott levél";
+$_['mynetwork'] = "saját hálózatról küldött levél";
+$_['ham'] = "jó levél";
+$_['possible_spam'] = "valószínűleg spam";
+$_['unsure'] = "bizonytalan kategorizálású levél";
+$_['minefield'] = "csapda címre érkezett levél";
+$_['zombie'] = "zombi hálózatról érkezett levél";
+$_['virus'] = "vírusos levél";
 $_['fn'] = "fals negatív hiba";
 $_['fp'] = "fals pozitív hiba";
 

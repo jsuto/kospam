@@ -106,6 +106,24 @@ class ModelUserUser extends Model {
    }
 
 
+   public function get_uid_by_email($email = '') {
+      $query = $this->db->query("SELECT uid FROM " . TABLE_EMAIL . " WHERE email='" . $this->db->escape($email) . "'");
+
+      if(isset($query->row['uid'])){ return $query->row['uid']; }
+
+      return -1;
+   }
+
+
+   public function get_username_by_email($email = '') {
+      $query = $this->db->query("SELECT username FROM " . TABLE_USER . ", " . TABLE_EMAIL . " WHERE " . TABLE_USER . ".uid=" . TABLE_EMAIL . ".uid AND email='" . $this->db->escape($email) . "'");
+
+      if(isset($query->row['username'])){ return $query->row['username']; }
+
+      return "";
+   }
+
+
    public function get_additional_uids($uid = 0) {
       $data = array();
 
@@ -277,6 +295,29 @@ class ModelUserUser extends Model {
       if(!isset($query2->row['domain'])) { return 0; }
 
       if($query->row['domain'] == $query2->row['domain']) { return 1; }
+
+      return 0;
+   }
+
+
+   public function is_email_in_my_domain($email = '') {
+      if($email == "") { return 0; }
+
+      /* determine mapped domain of the email address */
+
+      list($u, $d) = preg_split("/\@/", $email);
+      if($d == "") { return 0; }
+
+      $query = $this->db->query("SELECT mapped FROM " . TABLE_DOMAIN . " WHERE domain='" . $this->db->escape($d) . "'");
+      if(!isset($query->row['mapped'])) { return 0; }
+
+
+      /* query my domain */
+
+      $query2 = $this->db->query("SELECT domain FROM " . TABLE_USER . " WHERE username='" . $this->db->escape($_SESSION['username']) . "'");
+      if(!isset($query2->row['domain'])) { return 0; }
+
+      if($query2->row['domain'] == $query->row['mapped']) { return 1; }
 
       return 0;
    }

@@ -39,8 +39,10 @@ function toggle_row_highlight(what) {
 function fix_search(){
    location = "index.php?route=quarantine/quarantine&subj=" + document.forms.aaa0.subj.value + 
          "&from=" + document.forms.aaa0.from.value +
-           "&hamspam=" + document.forms.aaa0.hamspam.value +
-           "&user=" + document.forms.aaa0.user.value;
+         "&to=" + document.forms.aaa0.to.value +
+         "&hamspam=" + document.forms.aaa0.hamspam.value +
+         "&user=" + document.forms.aaa0.user.value +
+         "&date=" + document.forms.aaa0.date.value;
 }
 
 
@@ -61,8 +63,9 @@ function fix_mass_action(subj, from, hamspam, username, page) {
 
    var query_params = "&subj=" + document.forms.aaa0.subj.value + 
                       "&from=" + document.forms.aaa0.from.value +
+                      "&to=" + document.forms.aaa0.to.value +
                       "&hamspam=" + document.forms.aaa0.hamspam.value +
-                      //"&user=" + username +
+                      "&user=" + username +
                       "&page=" + page;
 
    if(document.forms.aaa1.massaction.value == "purge") document.forms.aaa1.action="index.php?route=quarantine/remove&topurge=1" + query_params;
@@ -107,6 +110,10 @@ function filterhistory(){
 
    x = document.forms[0].date2.value;
    setCookie("date2", x, 1);
+
+   x = document.forms[0].subject.value;
+   setCookie("subject", x, 1);
+
 }
 
 

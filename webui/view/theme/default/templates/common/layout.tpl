@@ -12,9 +12,12 @@
 
    <link rel="stylesheet" type="text/css" href="view/theme/default/stylesheet/style.css" />
    <link rel="stylesheet" type="text/css" href="view/theme/default/stylesheet/dropdown.css" />
+   <link rel="stylesheet" type="text/css" href="view/theme/default/stylesheet/jquery.ui.all.css" />
 
    <script type="text/javascript" src="view/javascript/quarantine.js"></script>
    <script type="text/javascript" src="view/javascript/jquery-1.4.2.min.js"></script>
+   <script type="text/javascript" src="view/javascript/jquery-ui-1.8.13.custom.min.js"></script>
+   <script type="text/javascript" src="view/javascript/jquery-ui-i18n.js"></script>
    <script type="text/javascript" src="view/javascript/jquery.dropdownPlain.js"></script>
 
 </head>
@@ -37,8 +40,7 @@
       <h3><?php print $title; ?></h3>
 
       <?php if(isset($_SESSION['username']) && !strstr($_SERVER['QUERY_STRING'], "login/logout") ){ ?>
-<p><?php print $text_you_are; ?>: <?php print $_SESSION['email']; ?>
-<?php if(strstr($_SERVER['QUERY_STRING'], "quarantine/quarantine") && isset($_GET['user']) && $_GET['user'] != $_SESSION['username']) { ?>&nbsp; (<?php print $text_quarantine; ?>: <?php print $_GET['user']; ?>)<?php } ?></p>
+<p><?php print $text_you_are; ?>: <?php print $_SESSION['email']; ?></p>
       <?php } ?>
 
       <div id="body">

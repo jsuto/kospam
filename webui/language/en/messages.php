@@ -20,6 +20,7 @@ $_['text_bulk_update_selected_uids'] = "Bulk update selected uids";
 
 $_['text_cancel'] = "Cancel";
 $_['text_clienthost'] = "Client host";
+$_['text_confirm_to_reset_counters'] = "Confirm to reset counters";
 $_['text_content_filter'] = "Content filter";
 $_['text_counters'] = "Counters";
 $_['text_cpu_load'] = "CPU load";
@@ -196,6 +197,7 @@ $_['text_time'] = "Time";
 $_['text_to'] = "To";
 $_['text_too_short_password'] = "Too short password";
 $_['text_total_ratio'] = "total ratio";
+$_['text_total_query_time'] = "Total SQL query time";
 $_['text_total_users'] = "total users";
 $_['text_train'] = "Train";
 $_['text_train_and_deliver_as_ham'] = "Train and deliver as HAM";

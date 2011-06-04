@@ -6,6 +6,7 @@
    <th><?php print $text_from; ?></th>
    <th><?php print $text_to; ?></th>
    <th><?php print $text_size; ?></th>
+   <th><?php print $text_subject; ?></th>
    <th>SPAM</th>
    <th><?php print $text_status; ?></th>
    </tr>
@@ -13,9 +14,10 @@
 <?php foreach ($entries as $entry) { ?>
    <tr>
       <td><?php print $entry['timedate']; ?></td>
-      <td><span onmouseover="Tip('client host: <?php print $entry['client']; ?><br/>sender:  <?php print $entry['from']; ?><br/>queue id: <?php print $entry['queue_id']; ?><br/>', BALLOON, true, ABOVE, true)" onmouseout="UnTip()"><?php print $entry['shortfrom']; ?></span></td>
+      <td><span onmouseover="Tip('<?php if($entry['client']) { ?>client host: <?php print $entry['client']; ?><br/><?php } ?>sender:  <?php print $entry['from']; ?><br/><?php if($entry['queue_id']) { ?>queue id: <?php print $entry['queue_id']; ?><br/><?php } ?>', BALLOON, true, ABOVE, true)" onmouseout="UnTip()"><?php print $entry['shortfrom']; ?></span></td>
       <td><?php if($entry['to'] != $entry['shortto']) { ?><span onmouseover="Tip('Recipient: <?php print $entry['to']; ?>', BALLOON, true, ABOVE, true)" onmouseout="UnTip()"><?php } print $entry['shortto']; ?><?php if($entry['to'] != $entry['shortto']) { ?></span><?php } ?></td>
       <td align="right"><?php print $entry['size']; ?></td>
+      <td align="left"><span onmouseover="Tip('<?php print $entry['subject']; ?>', BALLOON, true, ABOVE, true)" onmouseout="UnTip()"><?php print $entry['shortsubject']; ?></span></td>
       <td align="center" class="<?php print $entry['result']; ?>"><?php print $entry['result']; ?></td>
       <td align="center"><span onmouseover="Tip('<?php print $entry['delivery']; ?>', BALLOON, true, ABOVE, true)" onmouseout="UnTip()"><?php print $entry['shortdelivery']; ?></span></td>
    </tr>
@@ -23,6 +25,7 @@
 
 </table>
 
+<p><?php print $text_total_query_time; ?>: <?php print sprintf("%.4f", $tot_time); ?> sec</p>
 
 <?php if($total > $page_len){ ?>
 <p>

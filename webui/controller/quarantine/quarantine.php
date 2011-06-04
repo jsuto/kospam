@@ -26,98 +26,114 @@ class ControllerQuarantineQuarantine extends Controller {
       $this->data['page'] = 0;
 
       $this->data['page_len'] = getPageLength();
-      $this->data['from'] = @$this->request->get['from'];
-      $this->data['subj'] = @$this->request->get['subj'];
-      $this->data['hamspam'] = @$this->request->get['hamspam'];
+
+      $this->data['user'] = $this->data['from'] = $this->data['to'] = $this->data['subj'] = $this->data['date'] = "";
+      $this->data['hamspam'] = "SPAM";
+
+      if(isset($this->request->get['user'])) { $this->data['user'] = $this->request->get['user']; }
+      if(isset($this->request->get['from'])) { $this->data['from'] = $this->request->get['from']; }
+      if(isset($this->request->get['to'])) { $this->data['to'] = $this->request->get['to']; }
+      if(isset($this->request->get['subj'])) { $this->data['subj'] = $this->request->get['subj']; }
+      if(isset($this->request->get['hamspam'])) { $this->data['hamspam'] = $this->request->get['hamspam']; }
+      if(isset($this->request->get['date'])) { $this->data['date'] = $this->request->get['date']; }
+
+
+
       $this->data['uid'] = 0;
       $this->data['uids'] = array();
+
+      $this->data['username'] = Registry::get('username');
 
 
       if(isset($this->request->get['page']) && is_numeric($this->request->get['page']) && $this->request->get['page'] > 0) {
          $this->data['page'] = $this->request->get['page'];
       }
 
-      $this->data['username'] = Registry::get('username');
-      $uid = $this->model_user_user->getUidByName($this->data['username']);
 
+      if($this->data['to']) {
+         $this->data['user'] = $this->model_user_user->get_username_by_email($this->data['to']);
 
+         if($this->data['user'] == "") {
+            $this->template = "common/error.tpl";
+            $this->data['errorstring'] = $this->data['text_non_existing_user'] . ": " . $this->data['to'];
 
-      if(Registry::get('admin_user') == 1 || Registry::get('domain_admin') == 1) {
-
-         if(isset($this->request->get['user']) && strlen($this->request->get['user']) > 1) {
-
-            /* fix username if given */
-
-            if(Registry::get('admin_user') == 1 || $this->model_user_user->isUserInMyDomain($this->request->get['user']) == 1) {
-               $this->data['username'] = $this->request->get['user'];
-               $this->data['uid'] = $this->model_user_user->getUidByName($this->data['username']);
-               array_push($this->data['uids'], $this->data['uid']);
-            }
-
-            /* or restrict user list for domain admin */
-
-            else if(Registry::get('domain_admin') == 1) {
-               $this->data['uids'] = $this->model_user_user->getUidsByDomain($_SESSION['domain']);
-            }
+            $this->render();
+            exit;
          }
-
-         else if(Registry::get('admin_user') == 1) {
-            $this->data['username'] = '';
-         }
-
       }
+
+
+      /* determine uids to query from quarantine database */
+
+      if(Registry::get('admin_user') == 1) {
+         if($this->data['user']) {
+            array_push($this->data['uids'], $this->model_user_user->getUidByName($this->data['user']));
+            $this->data['username'] = $this->data['user'];
+         }
+      }
+
+      else if(Registry::get('domain_admin') == 1) {
+
+         if($this->data['user'] && $this->model_user_user->isUserInMyDomain($this->request->get['user']) == 1) {
+            array_push($this->data['uids'], $this->model_user_user->getUidByName($this->data['user']));
+         }
+         else {
+            $this->data['uids'] = $this->model_user_user->getUidsByDomain($_SESSION['domain']);
+         }
+      }
+
       else {
-         array_push($this->data['uids'], $this->model_user_user->getUidByName($this->data['username']));
+         array_push($this->data['uids'], $this->model_user_user->getUidByName(Registry::get('username')));
       }
 
+
+
+      /* sort and order */
 
       $this->data['sort'] = 'ts';
 
       $this->data['order'] = (int)@$this->request->get['order'];
 
-      if(@$this->request->get['sort'] == "ts") { $this->data['sort'] = "ts"; }
-      if(@$this->request->get['sort'] == "from") { $this->data['sort'] = "from"; }
-      if(@$this->request->get['sort'] == "subj") { $this->data['sort'] = "subj"; }
-      if(@$this->request->get['sort'] == "size") { $this->data['sort'] = "size"; }
+      if(isset($this->request->get['sort'])) {
+         if($this->request->get['sort'] == "ts") { $this->data['sort'] = "ts"; }
+         if($this->request->get['sort'] == "from") { $this->data['sort'] = "from"; }
+         if($this->request->get['sort'] == "to") { $this->data['sort'] = "to"; }
+         if($this->request->get['sort'] == "subj") { $this->data['sort'] = "subj"; }
+         if($this->request->get['sort'] == "size") { $this->data['sort'] = "size"; }
+      }
 
       if($this->data['sort'] == "ts" && @$this->request->get['order'] == "") { $this->data['order'] = 1; }
 
 
-      /* check if he's a valid user */
-
-      if($this->data['uid'] == -1) {
-         $this->template = "common/error.tpl";
-         $this->data['errorstring'] = $this->data['text_non_existing_user'] . ": " . $this->data['username'];
-
-         $this->render();
-         exit;
-      }
 
       $Q = Registry::get('Q');
 
-      /* add search term if there's any */
 
-      if($this->data['from'] || $this->data['subj'] || $this->data['hamspam']) {
-         $this->model_quarantine_database->addSearchTerm($this->data['from'], $this->data['subj'], $this->data['hamspam'], $uid);
+      /* search terms */
+
+      $uid = $this->model_user_user->getUidByName(Registry::get('username'));
+
+      if($this->data['from'] || $this->data['to'] || $this->data['subj'] || $this->data['hamspam']) {
+         $this->model_quarantine_database->addSearchTerm($this->data['date'], $this->data['from'], $this->data['to'], $this->data['subj'], $this->data['hamspam'], $uid);
       }
 
-
-      /* read search terms */
       $this->data['searchterms'] = $this->model_quarantine_database->getSearchTerms($uid);
+
+
 
 
       /* get messages from quarantine */
 
       list ($this->data['n'], $this->data['total_size'], $this->data['messages']) =
-                 $this->model_quarantine_database->getMessages($this->data['uids'], $this->data['page'], $this->data['page_len'], $this->data['from'], $this->data['subj'], $this->data['hamspam'], $this->data['sort'], $this->data['order']);
+                 $this->model_quarantine_database->getMessages($this->data['uids'], $this->data['page'], $this->data['page_len'], $this->data['date'], $this->data['from'], $this->data['subj'], $this->data['hamspam'], $this->data['sort'], $this->data['order']);
 
       if(count($this->data['messages']) == 0 && $this->data['page'] > 0) {
          $this->data['page']--;
-         list ($this->data['n'], $this->data['total_size'], $this->data['messages']) = $this->model_quarantine_database->getMessages($this->data['uids'], $this->data['page'], $this->data['page_len'], $this->data['from'], $this->data['subj'], $this->data['hamspam'], $this->data['sort'], $this->data['order']);
+         list ($this->data['n'], $this->data['total_size'], $this->data['messages']) = $this->model_quarantine_database->getMessages($this->data['uids'], $this->data['page'], $this->data['page_len'], $this->data['date'], $this->data['from'], $this->data['subj'], $this->data['hamspam'], $this->data['sort'], $this->data['order']);
       }
 
 
-      /* print paging info */
+      /* paging info */
 
       $this->data['prev_page'] = $this->data['page'] - 1;
       $this->data['next_page'] = $this->data['page'] + 1;

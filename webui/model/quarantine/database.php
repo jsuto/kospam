@@ -166,13 +166,29 @@ class ModelQuarantineDatabase extends Model {
    }
 
 
-   public function getMessages($uids = array(), $page = 0, $page_len = PAGE_LEN, $from = '', $subj = '', $hamspam = '', $sort = 'ts', $order = 0) {
+   public function getMessages($uids = array(), $page = 0, $page_len = PAGE_LEN, $date = '', $from = '', $subj = '', $hamspam = '', $sort = 'ts', $order = 0) {
       $n = $total_size = $i = 0;
       $messages = array();
       $limit = "";
       $uid_list = "";
 
+
+      $Q = Registry::get('Q');
+
+
       $where_cond = "WHERE hidden=0";
+
+      if($date) {
+         if(QUARANTINE_DRIVER == 'mysql') { $datesql = "UNIX_TIMESTAMP('" . $Q->escape($date) . " 00:00:00') "; }
+         if(QUARANTINE_DRIVER == 'sqlite') { $datesql = "strftime('%s', '" . $Q->escape($date) . " 00:00:00') "; }
+
+         $where_cond .= " AND ts >= $datesql";
+
+         if(QUARANTINE_DRIVER == 'mysql') { $datesql = "UNIX_TIMESTAMP('" . $Q->escape($date) . " 23:59:59') "; }
+         if(QUARANTINE_DRIVER == 'sqlite') { $datesql = "strftime('%s', '" . $Q->escape($date) . " 23:59:59') "; }
+
+         $where_cond .= " AND ts < $datesql";
+      }
 
       if(count($uids) > 0) {
 
@@ -184,8 +200,6 @@ class ModelQuarantineDatabase extends Model {
       }
 
 
-
-      $Q = Registry::get('Q');
 
       if($hamspam == "HAM") { $where_cond .= " AND is_spam='h'"; }
       if($hamspam == "SPAM") { $where_cond .= " AND is_spam='s'"; }
@@ -202,6 +216,7 @@ class ModelQuarantineDatabase extends Model {
       /* select total size */
 
       $query = $Q->query("select count(size) as total_num, sum(size) as total_size from " . TABLE_QUARANTINE . " $where_cond");
+
 
       if(isset($query->row['total_size'])) { $total_size = $query->row['total_size']; }
       if(isset($query->row['total_num'])) { $n = $query->row['total_num']; }
@@ -235,10 +250,8 @@ class ModelQuarantineDatabase extends Model {
                              'uid' => $message['uid'],
                              'username' => $username,
                              'from' => $message['from'],
-                             //'shortfrom' => strlen($message['from']) > 6+MAX_CGI_FROM_SUBJ_LEN ? substr($message['from'], 0, MAX_CGI_FROM_SUBJ_LEN) . "..." : $message['from'],
                              'shortfrom' => $this->MakeShortString($message['from'], MAX_CGI_FROM_SUBJ_LEN),
                              'subject' => $message['subj'],
-                             //'shortsubject' => strlen($message['subj']) > 6+MAX_CGI_FROM_SUBJ_LEN ? substr($message['subj'], 0, MAX_CGI_FROM_SUBJ_LEN) . "..." : $message['subj'],
                              'shortsubject' => $this->MakeShortString($message['subj'], MAX_CGI_FROM_SUBJ_LEN),
                              'size' => $this->model_quarantine_message->NiceSize($message['size']),
                              'date' => date("Y.m.d.", $message['ts'])
@@ -290,8 +303,8 @@ class ModelQuarantineDatabase extends Model {
    }
 
 
-   public function addSearchTerm($from = '', $subj = '', $hamspam = '', $uid = 0) {
-      $term = "subj=$subj&from=$from&hamspam=$hamspam";
+   public function addSearchTerm($date = '', $from = '', $to = '', $subj = '', $hamspam = '', $uid = 0) {
+      $term = "date=$date&subj=$subj&from=$from&to=$to&hamspam=$hamspam";
 
       $Q = Registry::get('Q');
 

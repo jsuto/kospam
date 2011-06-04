@@ -123,7 +123,7 @@ while (defined($line = $file->read)) {
          $connection{$queue_id}{'size'} = 0;
 
          $smtp{$queue_id}{'ts'} = $ts;
-         $smtp{$queue_id}{'status'} = 'rejected, ' . $2;
+         $smtp{$queue_id}{'status'} = 'rejected ' . $2;
          $smtp{$queue_id}{'to'} = lc $4;
          (undef, $smtp{$queue_id}{'to_domain'}) = split(/\@/, $smtp{$queue_id}{'to'});
       }
@@ -205,25 +205,28 @@ while (defined($line = $file->read)) {
       if($line =~ /\ clapf\[/ && $line =~ /status=/) {
 
          ($clapf_id, undef) = split(/\:/, $l[5]);
-         ###$clapf{$clapf_id}{'line'} = $line;
-
-         $clapf{$clapf_id}{'ts'} = $ts;
-
-         $clapf{$clapf_id}{'from'} = "";
-         $clapf{$clapf_id}{'fromdomain'} = "";
-         $clapf{$clapf_id}{'rcpt'} = "";
-         $clapf{$clapf_id}{'rcptdomain'} = "";
-         $clapf{$clapf_id}{'spaminess'} = 0.5;
-         $clapf{$clapf_id}{'result'} = "";
-         $clapf{$clapf_id}{'size'} = 0;
-         $clapf{$clapf_id}{'relay'} = "";
-         $clapf{$clapf_id}{'delay'} = 0;
-         $clapf{$clapf_id}{'status'} = "";
-         $clapf{$clapf_id}{'subject'} = "";
-         $clapf{$clapf_id}{'queue_id2'} = "";
-         $clapf{$clapf_id}{'virus'} = "";
 
          if($line =~ /from=\<([\w\W]{0,})\>, to=\<([\w\W]{3,})\>, spaminess=([\d\.]+), result=([\w\W]{3,}), size=([\d]+), relay=([\w\W]{3,}), delay=([\d\.]+), delays=([\d\.\/]+), status=([\w\W]{0,})\,\ subject=([\w\W]{0,})/) {
+            $clapf_id = $clapf_id . " " . $2;
+
+
+            $clapf{$clapf_id}{'ts'} = $ts;
+
+            $clapf{$clapf_id}{'from'} = "";
+            $clapf{$clapf_id}{'fromdomain'} = "";
+            $clapf{$clapf_id}{'rcpt'} = "";
+            $clapf{$clapf_id}{'rcptdomain'} = "";
+            $clapf{$clapf_id}{'spaminess'} = 0.5;
+            $clapf{$clapf_id}{'result'} = "";
+            $clapf{$clapf_id}{'size'} = 0;
+            $clapf{$clapf_id}{'relay'} = "";
+            $clapf{$clapf_id}{'delay'} = 0;
+            $clapf{$clapf_id}{'status'} = "";
+            $clapf{$clapf_id}{'subject'} = "";
+            $clapf{$clapf_id}{'queue_id2'} = "";
+            $clapf{$clapf_id}{'virus'} = "";
+
+
             $clapf{$clapf_id}{'from'} = $1;
             $clapf{$clapf_id}{'rcpt'} = $2;
             $clapf{$clapf_id}{'spaminess'} = $3;
@@ -234,20 +237,20 @@ while (defined($line = $file->read)) {
             $clapf{$clapf_id}{'subject'} = $10;
 
             $status = $9;
-         }
 
 
-         if($status =~ /250/ && $status =~ /Ok/i) {
-            (undef, $clapf{$clapf_id}{'queue_id2'}) = split(/queued\ as\ /, $status);
-         }
+            if($status =~ /250/ && $status =~ /Ok/i) {
+               (undef, $clapf{$clapf_id}{'queue_id2'}) = split(/queued\ as\ /, $status);
+            }
 
 
-         (undef, $clapf{$clapf_id}{'fromdomain'}) = split(/\@/, $clapf{$clapf_id}{'from'});
-         (undef, $clapf{$clapf_id}{'rcptdomain'}) = split(/\@/, $clapf{$clapf_id}{'rcpt'});
+            (undef, $clapf{$clapf_id}{'fromdomain'}) = split(/\@/, $clapf{$clapf_id}{'from'});
+            (undef, $clapf{$clapf_id}{'rcptdomain'}) = split(/\@/, $clapf{$clapf_id}{'rcpt'});
 
-         if($result =~ /VIRUS\ \(([\w\W]+)\)/){
-            $clapf{$clapf_id}{'result'} = 'VIRUS';
-            $clapf{$clapf_id}{'virus'} = $1;
+            if($result =~ /VIRUS\ \(([\w\W]+)\)/){
+               $clapf{$clapf_id}{'result'} = 'VIRUS';
+               $clapf{$clapf_id}{'virus'} = $1;
+            }
          }
 
       }
@@ -382,8 +385,10 @@ sub flush_results {
 
 
    foreach $clapf_id (keys %clapf) {
+      ($__clapf_id, undef) = split(/ /, $clapf_id);
+
       if($clapf{$clapf_id}{'result'} && $clapf{$clapf_id}{'from'}) {
-         $sth_clapf->execute($clapf{$clapf_id}{'ts'}, $clapf_id, lc $clapf{$clapf_id}{'from'}, lc $clapf{$clapf_id}{'fromdomain'}, lc $clapf{$clapf_id}{'rcpt'}, lc $clapf{$clapf_id}{'rcptdomain'}, $clapf{$clapf_id}{'result'}, $clapf{$clapf_id}{'spaminess'}, $clapf{$clapf_id}{'size'}, $clapf{$clapf_id}{'relay'}, $clapf{$clapf_id}{'delay'}, $clapf{$clapf_id}{'queue_id2'}, $clapf{$clapf_id}{'subject'}, $clapf{$clapf_id}{'virus'});
+         $sth_clapf->execute($clapf{$clapf_id}{'ts'}, $__clapf_id, lc $clapf{$clapf_id}{'from'}, lc $clapf{$clapf_id}{'fromdomain'}, lc $clapf{$clapf_id}{'rcpt'}, lc $clapf{$clapf_id}{'rcptdomain'}, $clapf{$clapf_id}{'result'}, $clapf{$clapf_id}{'spaminess'}, $clapf{$clapf_id}{'size'}, $clapf{$clapf_id}{'relay'}, $clapf{$clapf_id}{'delay'}, $clapf{$clapf_id}{'queue_id2'}, $clapf{$clapf_id}{'subject'}, $clapf{$clapf_id}{'virus'});
       }
 
       delete $clapf{$clapf_id};

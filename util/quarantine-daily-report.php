@@ -54,24 +54,23 @@ if($verbose >= 1) { print "queried users: " . count($users) . "\n"; }
 
 extract($language->data);
 
-$Q = new DB("sqlite", "", "", "", $webuidir . "/" . QUARANTINE_DATA, "");
-Registry::set('Q', $Q);
+if(QUARANTINE_DRIVER == "mysql") {
+   Registry::set('Q', $db);
+}
+if(QUARANTINE_DRIVER == "sqlite") {
+   $Q = new DB(QUARANTINE_DRIVER, "", "", "", QUARANTINE_DATABASE, "");
+   Registry::set('Q', $Q);
+}
 
 
 foreach ($users as $user) {
-   $domain = $u->getDomainsByUid($user['uid']);
-   $my_q_dir = get_per_user_queue_dir($domain[0], $user['username'], $user['uid']);
 
-   if(file_exists($my_q_dir)) {
-
-      $total_notifications++;
-
-      $additional_uids = $u->get_additional_uids($user['uid']);
-
-      list ($n, $total_size, $messages) = $qd->getMessages($user['uid'], $additional_uids, 0, 0, '', '', 'SPAM', 'ts', 1);
-
+      list ($n, $total_size, $messages) = $qd->getMessages(array($user['uid']), 0, 0, '', '', '', 'SPAM', 'ts', 1);
 
       if($n > 0) {
+
+         $total_notifications++;
+
          $msg = "From: " . SMTP_FROMADDR . EOL;
          $msg .= "To: " . $user['email'] . EOL;
          $msg .= "Subject: =?UTF-8?Q?" . preg_replace("/\n/", "", my_qp_encode($text_daily_quarantine_report)) . "?=" . EOL;
@@ -87,11 +86,11 @@ foreach ($users as $user) {
 
          ob_end_clean();
 
-         $x = $mail->SendSmtpEmail(SMTP_HOST, SMTP_PORT, SMTP_DOMAIN, SMTP_FROMADDR, $user['email'], $msg);
+         $x = $mail->SendSmtpEmail(LOCALHOST, POSTFIX_PORT_AFTER_CONTENT_FILTER, SMTP_DOMAIN, SMTP_FROMADDR, $user['email'], $msg);
+
          if($x == 0) { $failed_notifications++; }
       }
 
-   }
 }
 
 
@@ -100,8 +99,10 @@ if($verbose >= 1) { print "total/failed notifications: $total_notifications/$fai
 
 /* release lock */
 
-flock($fp, LOCK_UN);
-fclose($fp);
+if($fp) {
+   flock($fp, LOCK_UN);
+   fclose($fp);
+}
 
 
 ?>

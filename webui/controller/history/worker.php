@@ -57,7 +57,7 @@ class ControllerHistoryWorker extends Controller {
 
       if(isset($this->request->cookie['subject']) && $this->request->cookie['subject']) {
          $this->data['subject'] = $this->request->cookie['subject'];
-         $FILTER = " subject LIKE '%" . $this->db->escape($this->request->cookie['subject']) . "%'";
+         $FILTER = " `subject` LIKE '%" . $this->db->escape($this->request->cookie['subject']) . "%'";
 
          $view = "hist_out";
       }
@@ -123,7 +123,7 @@ class ControllerHistoryWorker extends Controller {
 
       /* check if we are admin */
 
-      if(Registry::get('admin_user') == 1) {
+      if(Registry::get('admin_user') == 1 || Registry::get('readonly_admin') == 1) {
 
          $this->get_history($view, $FILTER);
 
@@ -150,6 +150,7 @@ class ControllerHistoryWorker extends Controller {
 
 
       $query = $this->db->query("select count(*) as total from $view $filter");
+
       $this->data['total'] = $query->row['total'];
       $this->data['tot_time'] += $query->exec_time;
 

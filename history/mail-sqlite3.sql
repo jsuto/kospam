@@ -7,7 +7,7 @@ create table if not exists `connection` (
 	`from` char(64) default null,
 	`from_domain` char(64) default null,
 	`size` int default 0
-) ENGINE=InnoDB PARTITION BY RANGE (ts) ( PARTITION p0 VALUES LESS THAN (1) );
+);
 create index connection_idx on connection(queue_id, ts, `from`, `from_domain`);
 
 
@@ -23,7 +23,7 @@ create table if not exists smtp (
 	delay float default 0.0,
 	`status` char(255) default null,
 	clapf_id char(32) default null
-) ENGINE=InnoDB PARTITION BY RANGE (ts) ( PARTITION p0 VALUES LESS THAN (1) );
+);
 create index smtp_idx on smtp(queue_id, to_domain, orig_to_domain, clapf_id);
 
 
@@ -43,7 +43,7 @@ create table if not exists clapf (
 	result char(16) default null,
 	spaminess float default 0.5,
 	virus char(32) default null
-) ENGINE=InnoDB PARTITION BY RANGE (ts) ( PARTITION p0 VALUES LESS THAN (1) );
+);
 create index clapf_idx on clapf(clapf_id, result, ts, `from`, `fromdomain`, rcpt, rcptdomain);
 
 

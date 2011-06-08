@@ -202,7 +202,9 @@ class ModelQuarantineDatabase extends Model {
 
 
       if($hamspam == "HAM") { $where_cond .= " AND is_spam='h'"; }
-      if($hamspam == "SPAM") { $where_cond .= " AND is_spam='s'"; }
+      else if($hamspam == "SPAM") { $where_cond .= " AND is_spam='s'"; }
+      else { $where_cond .= " AND (is_spam='s' or (is_spam='h' and size>0))"; }
+
 
       if($from) { $where_cond .= " AND `from` like '%" . $Q->escape($from) . "%'"; }
       if($subj) { $where_cond .= " AND subj like '%" . $Q->escape($subj) . "%'"; }

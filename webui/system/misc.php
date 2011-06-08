@@ -40,6 +40,13 @@ function isDomainAdmin() {
 }
 
 
+function isReadonlyAdmin() {
+   if(isset($_SESSION['admin_user']) && $_SESSION['admin_user'] == 3){ return 1; }
+
+   return 0;
+}
+
+
 function logout() {
    $_SESSION['username'] = "";
    $_SESSION['admin_user'] = 0;

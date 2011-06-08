@@ -18,7 +18,7 @@ class ControllerHistoryHistory extends Controller {
 
       /* check if we are admin */
 
-      if(Registry::get('admin_user') == 1) {
+      if(Registry::get('admin_user') == 1 || Registry::get('readonly_admin') == 1) {
          $this->data['hamspam'] = @$this->request->cookie['hamspam'];
          $this->data['sender_domain'] = @$this->request->cookie['sender_domain'];
          $this->data['rcpt_domain'] = @$this->request->cookie['rcpt_domain'];

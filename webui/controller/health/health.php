@@ -18,7 +18,7 @@ class ControllerHealthHealth extends Controller {
 
       /* check if we are admin */
 
-      if(Registry::get('admin_user') != 1) {
+      if(Registry::get('admin_user') != 1 && Registry::get('readonly_admin') != 1) {
          $this->template = "common/error.tpl";
          $this->data['errorstring'] = $this->data['text_you_are_not_admin'];
       }

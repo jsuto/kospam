@@ -52,10 +52,12 @@ true)" onmouseout="UnTip()"><?php print $status; ?></span></td>
 </table>
 </p>
 
+<?php if(Registry::get('admin_user') == 1) { ?>
 <form action="index.php?route=health/worker" method="post">
    <input type="hidden" name="resetcounters" value="1" />
    <input type="submit" name="submit" value="<?php print $text_reset_counters; ?>" />
 </form>
+<?php } ?>
 
    </td>
    <td>

@@ -1,3 +1,12 @@
+2011.06.08, SJ
+
+Added support for AD distribution lists.
+
+2011.06.06, SJ
+
+Added a 'read-only' admin feature to be able to view the "Monitor"
+section in the webui.
+
 2011.05.31, SJ
 
 Clarified some webui variables, eg. SMTP_HOST, SMTP_PORT, ...

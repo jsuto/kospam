@@ -25,7 +25,7 @@ class ControllerStatGraph extends Controller {
 
       /* let the admin users see the whole statistics */
 
-      if(Registry::get('admin_user') == 0) {
+      if(Registry::get('admin_user') == 0 && Registry::get('readonly_admin') == 0) {
          $uid = $this->model_user_user->getUidByName($this->data['username']);
          $emails = "AND rcpt IN ('" . preg_replace("/\n/", "','", $this->model_user_user->getEmailsByUid((int)$uid)) . "')";
       }

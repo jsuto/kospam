@@ -22,6 +22,8 @@ class ControllerStatStat extends Controller {
       $this->data['uid'] = @$this->request->get['uid'];
 
       $this->data['admin_user'] = Registry::get('admin_user');
+      $this->data['readonly_admin'] = Registry::get('readonly_admin');
+
       $this->render();
    }
 

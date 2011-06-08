@@ -361,7 +361,7 @@ class ModelUserUser extends Model {
 
 
    public function getUsers($search = '', $page = 0, $page_len = 0, $sort = 'username', $order = 0) {
-      $where_cond = "";
+      $where_cond = " WHERE " . TABLE_USER . ".uid=" . TABLE_EMAIL . ".uid ";
       $_order = "";
       $users = array();
       $my_domain = array();
@@ -371,18 +371,14 @@ class ModelUserUser extends Model {
 
       if(Registry::get('domain_admin') == 1) {
          $my_domain = $this->getDomains();
-         $where_cond = " WHERE domain='" . $this->db->escape($my_domain[0]) . "'";
+         $where_cond .= " AND domain='" . $this->db->escape($my_domain[0]) . "'";
       }
 
 
       $search = preg_replace("/\s{1,}/", "", $search);
 
       if($search){
-         if($where_cond) {
-            $where_cond .= " AND " . TABLE_EMAIL . ".uid=" . TABLE_USER . ".uid and email like '%" . $this->db->escape($search) . "%' ";
-         } else {
-            $where_cond .= " WHERE " . TABLE_EMAIL . ".uid=" . TABLE_USER . ".uid and email like '%" . $this->db->escape($search) . "%' ";
-         }
+         $where_cond .= " AND email like '%" . $this->db->escape($search) . "%' ";
       }
 
       /* sort order */

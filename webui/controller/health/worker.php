@@ -23,7 +23,7 @@ class ControllerHealthWorker extends Controller {
 
       $this->data['health'] = array();
 
-      if(Registry::get('admin_user') != 1) {
+      if(Registry::get('admin_user') != 1 && Registry::get('readonly_admin') != 1) {
          die("go away");
       }
 
@@ -65,7 +65,7 @@ class ControllerHealthWorker extends Controller {
       $db->select_db($db->database);
 
       if($this->request->server['REQUEST_METHOD'] == 'POST' && isset($this->request->post['resetcounters']) && $this->request->post['resetcounters'] == 1) {
-         if(isset($this->request->post['confirmed']) && $this->request->post['confirmed'] == 1) {
+         if(isset($this->request->post['confirmed']) && $this->request->post['confirmed'] == 1 && Registry::get('admin_user') == 1) {
             $this->model_stat_counter->resetCounters();
             header("Location: index.php?route=health/health");
             exit;

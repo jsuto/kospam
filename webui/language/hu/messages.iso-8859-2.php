@@ -214,6 +214,7 @@ $_['text_user_id'] = "Felhasználó azonosító";
 $_['text_user_domainadmin'] = "Domain admin";
 $_['text_user_management'] = "Felhasználó menedzselés";
 $_['text_user_masteradmin'] = "Mester admin";
+$_['text_user_read_only_admin'] = "Read-only admin";
 $_['text_user_regular'] = "Sima felhasználó";
 $_['text_userlist'] = "Felhasználók listája";
 $_['text_username'] = "Felhasználónév";
@@ -227,12 +228,13 @@ $_['text_whitelist'] = "Fehérlista";
 $_['text_whitelist_settings'] = "Fehérlista beállítások";
 
 $_['text_you_are'] = "Ön";
-$_['text_you_are_not_admin'] = "Önnek nincs jogosultsága a mvelethez";
+$_['text_you_are_not_admin'] = "Önnek nincs jogosultsága a mûvelethez";
 
 
 $_['rcvd'] = "fogadott levél";
 $_['mynetwork'] = "saját hálózatról küldött levél";
 $_['ham'] = "jó levél";
+$_['spam'] = "spam";
 $_['possible_spam'] = "valószínûleg spam";
 $_['unsure'] = "bizonytalan kategorizálású levél";
 $_['minefield'] = "csapda címre érkezett levél";
@@ -240,6 +242,6 @@ $_['zombie'] = "zombi hálózatról érkezett levél";
 $_['virus'] = "vírusos levél";
 $_['fn'] = "fals negatív hiba";
 $_['fp'] = "fals pozitív hiba";
-
+$_['counters_last_update'] = "számlálók frissítve";
 
 ?>

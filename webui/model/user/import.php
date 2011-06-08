@@ -21,20 +21,24 @@ class ModelUserImport extends Model {
       $mailAttr = 'mail';
       $mailAttrs = array("mail", "mailalternateaddress");
 
+      $memberAttrs = array("member");
+
       $ldap = new LDAP($host['ldap_host'], $host['ldap_binddn'], $host['ldap_bindpw']);
       if($ldap->is_bind_ok() == 0) {
          LOGGER($host['ldap_binddn'] . ": failed bind to " . $host['ldap_host']);
-         return 0;
+         return array();
       }
 
       LOGGER($host['ldap_binddn'] . ": successful bind to " . $host['ldap_host']);
       LOGGER("LDAP type: " . $host['type']);
 
       if($host['type'] == "AD") {
-         $attrs = array("cn", "proxyaddresses");
+         $attrs = array("cn", "proxyaddresses", "member");
 
          $mailAttr = "proxyaddresses";
          $mailAttrs = array("proxyaddresses");
+
+         $memberAttrs = array("member");
       }
 
 
@@ -70,11 +74,32 @@ class ModelUserImport extends Model {
 
          $__emails = explode("\n", $emails);
 
+
+         $members = "";
+
+         foreach($memberAttrs as $__member_attr) {
+
+            if(isset($result[$__member_attr]) ) {
+               if(is_array($result[$__member_attr]) ) {
+                  for($i = 0; $i < $result[$__member_attr]['count']; $i++) {
+                     LOGGER("found member entry: " . $result['dn'] . " => $__member_attr:" . $result[$__member_attr][$i]);
+                     $members .= $result[$__member_attr][$i] . "\n";
+                  }
+               }
+               else {
+                  LOGGER("found member entry: " . $result['dn'] . " => $__member_attr:" . $result[$__member_attr]);
+                  $members .= $result[$__member_attr] . "\n";
+               }
+            }
+
+         }
+
          $data[] = array(
                          'username'     => preg_replace("/\n{1,}$/", "", $__emails[0]),
                          'realname'     => $result['cn'],
                          'dn'           => $result['dn'],
-                         'emails'       => preg_replace("/\n{1,}$/", "", $emails)
+                         'emails'       => preg_replace("/\n{1,}$/", "", $emails),
+                         'members'      => preg_replace("/\n{1,}$/", "", $members)
                         );
 
       }
@@ -222,6 +247,34 @@ class ModelUserImport extends Model {
          foreach ($query->rows as $deleted) {
             $deleteduser++;
             $this->model_user_user->deleteUser($deleted['uid']);
+         }
+      }
+
+
+      /* try to add new membership entries */
+
+      reset($users);
+
+      foreach ($users as $user) {
+         if($user['members']) {
+
+            $group = $this->model_user_user->getUserByDN($user['dn']);
+
+            $members = explode("\n", $user['members']);
+            if(count($members) > 0) {
+
+               $query = $this->db->query("DELETE FROM " . TABLE_QUARANTINE_GROUP . " WHERE gid=" . $group['uid'] );
+
+               foreach ($members as $member) {
+                  $__user = $this->model_user_user->getUserByDN($member);
+
+                  if(isset($group['uid']) && isset($__user['uid'])) {
+                     $query = $this->db->query("INSERT INTO " . TABLE_QUARANTINE_GROUP . " (uid, gid) VALUES(" . (int)$__user['uid'] . "," . $group['uid'] . ")");
+                  }
+
+               }
+            }
+            
          }
       }
 

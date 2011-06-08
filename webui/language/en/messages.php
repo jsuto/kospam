@@ -214,6 +214,7 @@ $_['text_user_id'] = "User id";
 $_['text_user_domainadmin'] = "Domain admin";
 $_['text_user_management'] = "User management";
 $_['text_user_masteradmin'] = "Master admin";
+$_['text_user_read_only_admin'] = "Read-only admin";
 $_['text_user_regular'] = "Regular user";
 $_['text_userlist'] = "Userlist";
 $_['text_username'] = "Username";

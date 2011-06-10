@@ -174,8 +174,8 @@ struct __config {
    char skipped_received_ips[2*MAXVAL];
    char mynetwork[2*MAXVAL];
 
-   // webui
-   int days_to_retain_data;
+   int days_to_retain_history_data;
+   int days_to_retain_quarantine_data;
 
 };
 

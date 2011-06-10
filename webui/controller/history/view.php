@@ -44,7 +44,7 @@ class ControllerHistoryView extends Controller {
          //if(Registry::get('DB_DRIVER') == 'mysql'){ $db->select_db(Registry::get('DB_DATABASE')); }
 
          $db = Registry::get('db');
-         $username = $this->model_user_user->getUserByEmail(@$this->request->get['to']);
+         $username = $this->model_user_user->getUsernameByEmail(@$this->request->get['to']);
 
          $db_history = Registry::get('db_history');
          $db_history->select_db($db_history->database);

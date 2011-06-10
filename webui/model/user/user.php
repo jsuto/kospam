@@ -348,6 +348,17 @@ class ModelUserUser extends Model {
 
 
    public function getUserByEmail($email = '') {
+      if($email == '') {
+         return array();
+      }
+
+      $query = $this->db->query("SELECT * FROM " . TABLE_USER . "," . TABLE_EMAIL . " WHERE " . TABLE_USER . ".uid=" . TABLE_EMAIL . ".uid AND email='" . $this->db->escape($email) . "'");
+
+      return $query->row;
+   }
+
+
+   public function getUsernameByEmail($email = '') {
       $username = "";
 
       if($email == '') { return $username; }

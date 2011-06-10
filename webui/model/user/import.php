@@ -17,11 +17,11 @@ class ModelUserImport extends Model {
 
       LOGGER("running queryRemoteUsers() ...");
 
-      $attrs = array("cn", "mail", "mailAlternateAddress");
+      $attrs = array("cn", "mail", "mailAlternateAddress", "memberdn", "memberaddr");
       $mailAttr = 'mail';
       $mailAttrs = array("mail", "mailalternateaddress");
 
-      $memberAttrs = array("member");
+      $memberAttrs = array("memberdn");
 
       $ldap = new LDAP($host['ldap_host'], $host['ldap_binddn'], $host['ldap_bindpw']);
       if($ldap->is_bind_ok() == 0) {
@@ -266,7 +266,11 @@ class ModelUserImport extends Model {
                $query = $this->db->query("DELETE FROM " . TABLE_QUARANTINE_GROUP . " WHERE gid=" . $group['uid'] );
 
                foreach ($members as $member) {
-                  $__user = $this->model_user_user->getUserByDN($member);
+                  if(validemail($member)) {
+                     $__user = $this->model_user_user->getUserByEmail($member);
+                  } else {
+                     $__user = $this->model_user_user->getUserByDN($member);
+                  }
 
                   if(isset($group['uid']) && isset($__user['uid'])) {
                      $query = $this->db->query("INSERT INTO " . TABLE_QUARANTINE_GROUP . " (uid, gid) VALUES(" . (int)$__user['uid'] . "," . $group['uid'] . ")");

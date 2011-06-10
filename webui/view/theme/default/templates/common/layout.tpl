@@ -40,7 +40,7 @@
       <h3><?php print $title; ?></h3>
 
       <?php if(isset($_SESSION['username']) && !strstr($_SERVER['QUERY_STRING'], "login/logout") ){ ?>
-<p><?php print $text_you_are; ?>: <?php print $_SESSION['email']; ?></p>
+<p><?php print $text_you_are; ?>: <?php print $_SESSION['realname']; ?></p>
       <?php } ?>
 
       <div id="body">

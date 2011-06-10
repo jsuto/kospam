@@ -1,3 +1,8 @@
+2011.06.10, SJ
+
+Added distribution list support for openldap using memberdn and memberaddr
+attributes.
+
 2011.06.08, SJ
 
 Added support for AD distribution lists.

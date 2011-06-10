@@ -15,19 +15,19 @@ root's crontab:
 clapf's crontab:
 
 
-### purge aged history entries (you only need this if you use sqlite3 history database)
-#2 2 * * * sed "s/DAYS_TO_RETAIN/`SBINDIR/clapfconf -q days_to_retain_data|cut -f2 -d = `/" DATAROOTDIR/clapf/history-purge-sqlite3.sql | sqlite3 `SBINDIR/clapfconf -q historydb | cut -f2 -d '='`
-
 ### removed aged tokens
 ### select the proper line, then uncomment it
 #3 3 * * * mysql --defaults-file=DATAROOTDIR/clapf/.my.cnf < DATAROOTDIR/clapf/purge-mysql.sql
 #3 3 * * * sqlite3 LOCALSTATEDIR/lib/clapf/data/tokens.sdb < DATAROOTDIR/clapf/purge-sqlite3.sql
 
+### update the quarantine table
+*/5 * * * * /usr/bin/php LIBEXECDIR/clapf/qrunner.php /srv/www/webui.yourdomain.com
+
 ### purge of the stored messages from the queue directory
-1 2 * * * find LOCALSTATEDIR/lib/clapf/queue -type f  -atime +`SBINDIR/clapfconf -q days_to_retain_data|cut -f2 -d'='` -exec rm -f '{}' \;
+1 2 * * * find LOCALSTATEDIR/lib/clapf/queue -type f  -atime +`SBINDIR/clapfconf -q days_to_retain_quarantine_data|cut -f2 -d'='` -exec rm -f '{}' \;
 
 ### remove the aged spam images from cache directory
-1 2 * * * find /srv/www/webui.yourdomain.com/cache -type f  -atime +`SBINDIR/clapfconf -q days_to_retain_data|cut -f2 -d'='` -exec rm -f '{}' \;
+1 2 * * * find /srv/www/webui.yourdomain.com/cache -type f  -atime +`SBINDIR/clapfconf -q days_to_retain_quarantine_data|cut -f2 -d'='` -exec rm -f '{}' \;
 
 ### optional: count the number of quarantined messages
 */5 * * * * find LOCALSTATEDIR/lib/clapf/queue/ -name s\.\* | wc -l > LOCALSTATEDIR/lib/clapf/stat/quarantined.messages

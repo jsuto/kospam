@@ -35,7 +35,7 @@ $socket = $cfg{'mysqlsocket'};
 $host = $cfg{'mysqlhost'};
 $port = $cfg{'mysqlport'};
 $pidfile = $cfg{'historypid'} || '/var/run/clapf/clapf-maillog.pid';
-$days_to_retain_data = $cfg{'days_to_retain_data'} || 14;
+$days_to_retain_data = $cfg{'days_to_retain_history_data'} || 30;
 
 if($database =~ /\//){ $db = "sqlite3"; }
 else { $db = "mysql"; }
@@ -341,11 +341,11 @@ sub flush_results {
    $now = time();
 
    # determine if we have to create a new partition
-   if($db eq "mysql") {
-      $partition_name = strftime("p%Y%m%d", localtime);
+   $partition_name = strftime("p%Y%m%d", localtime);
 
-      if($partition_name ne $this_partition) {
+   if($partition_name ne $this_partition) {
 
+      if($db eq "mysql") {
          $ts = $now + 86400;
 
          syslog($priority, "creating partitions: $partition_name (less than $ts)");
@@ -353,21 +353,32 @@ sub flush_results {
          $dbh->do("ALTER TABLE clapf ADD PARTITION ( PARTITION $partition_name VALUES LESS THAN ($ts) )");
          $dbh->do("ALTER TABLE `connection` ADD PARTITION ( PARTITION $partition_name VALUES LESS THAN ($ts) )");
          $dbh->do("ALTER TABLE smtp ADD PARTITION ( PARTITION $partition_name VALUES LESS THAN ($ts) )");
-
-         $this_partition = $partition_name;
       }
 
-      $partition_to_drop = strftime("p%Y%m%d", localtime(time() - $days_to_retain_data*86400));
+      $this_partition = $partition_name;
+   }
 
-      if($last_dropped_partition ne $partition_to_drop) {
-         syslog($priority, "dropping partitions: $partition_to_drop");
-      
+   $partition_to_drop = strftime("p%Y%m%d", localtime(time() - $days_to_retain_data*86400));
+
+   if($last_dropped_partition ne $partition_to_drop) {
+      syslog($priority, "dropping partitions: $partition_to_drop");
+  
+      if($db eq "mysql") {
          $dbh->do("ALTER TABLE clapf DROP PARTITION $partition_to_drop");
          $dbh->do("ALTER TABLE `connection` DROP PARTITION $partition_to_drop");
          $dbh->do("ALTER TABLE smtp DROP PARTITION $partition_to_drop");
-   
-         $last_dropped_partition = $partition_to_drop;
       }
+
+      elsif ($db eq "sqlite3") {
+         $dbh->do("BEGIN");
+         $dbh->do("DELETE FROM clapf WHERE ts < strftime('%s','now')-$days_to_retain_data*86400");
+         $dbh->do("DELETE FROM `connection` WHERE ts < strftime('%s','now')-$days_to_retain_data*86400");
+         $dbh->do("DELETE FROM smtp WHERE ts < strftime('%s','now')-$days_to_retain_data*86400");
+         $dbh->do("COMMIT");
+         $dbh->do("VACUUM");
+      }
+   
+      $last_dropped_partition = $partition_to_drop;
    }
 
 
@@ -396,9 +407,6 @@ sub flush_results {
 
 
    foreach $queue_id (keys %smtp) {
-
-      #$e = "ts:" . $postfix{$queue_id}{'ts'} . ", id:$queue_id, client:" . $postfix{$queue_id}{'client'} . ", to:" . $postfix{$queue_id}{'to'} . ", orig_to:" . $postfix{$queue_id}{'orig_to'} . ", relay:" . $postfix{$queue_id}{'relay'} . ", delay:" . $postfix{$queue_id}{'delay'} . ", status:" . $postfix{$queue_id}{'status'} . ", clapf_id:" . $postfix{$queue_id}{'clapf_id'};
-
 
       if($smtp{$queue_id}{'to'}) {
          $sth_smtp->execute($smtp{$queue_id}{'ts'}, $queue_id, $smtp{$queue_id}{'to'}, $smtp{$queue_id}{'to_domain'}, $smtp{$queue_id}{'orig_to'}, $smtp{$queue_id}{'orig_to_domain'}, $smtp{$queue_id}{'relay'}, $smtp{$queue_id}{'delay'}, $smtp{$queue_id}{'status'}, $smtp{$queue_id}{'clapf_id'});

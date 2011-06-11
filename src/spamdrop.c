@@ -278,8 +278,9 @@ int main(int argc, char **argv, char **envp){
 
    memcpy(&my_cfg, &cfg, sizeof(struct __config));
 
-
+#ifdef HAVE_TRE
    data.n_regex = 0;
+#endif
    data.blackhole = NULL;
 
 

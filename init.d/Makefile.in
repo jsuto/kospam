@@ -33,9 +33,7 @@ all:
 
 	sed -e "s%_PREFIX_%$(prefix)%" -e "s%SYSCONFDIR%$(sysconfdir)%" -e "s%LOCALSTATEDIR%$(localstatedir)%" $(srcdir)/clapf-postgrey.debian.in > $(srcdir)/clapf-postgrey.debian
 
-	sed -e "s%SBINDIR%$(sbindir)%" \
-		-e "s%LIBEXECDIR%$(libexecdir)%" \
-		-e "s%SYSCONFDIR%$(sysconfdir)%" < $(srcdir)/rc.clapf-maillog.in > $(srcdir)/rc.clapf-maillog
+	sed -e "s%SBINDIR%$(sbindir)%" -e "s%LIBEXECDIR%$(libexecdir)%" -e "s%SYSCONFDIR%$(sysconfdir)%" < $(srcdir)/rc.clapf-maillog.in > $(srcdir)/rc.clapf-maillog
 
 
 install:

@@ -29,6 +29,9 @@ clapf's crontab:
 ### remove the aged spam images from cache directory
 1 2 * * * find /srv/www/webui.yourdomain.com/cache -type f  -atime +`SBINDIR/clapfconf -q days_to_retain_quarantine_data|cut -f2 -d'='` -exec rm -f '{}' \;
 
+### optional: show maillog.pl status
+*/5 * * * * /etc/init.d/clapf-maillog status > LOCALSTATEDIR/lib/clapf/stat/clapf-maillog.stat
+
 ### optional: count the number of quarantined messages
 */5 * * * * find LOCALSTATEDIR/lib/clapf/queue/ -name s\.\* | wc -l > LOCALSTATEDIR/lib/clapf/stat/quarantined.messages
 

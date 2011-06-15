@@ -111,6 +111,7 @@ $_['text_logged_out'] = "You are logged out";
 $_['text_login'] = "Login";
 $_['text_logout'] = "Logout";
 
+$_['text_maillog_status'] = "maillog collector status";
 $_['text_main_title'] = "clapf web UI";
 $_['text_mapped_domain'] = "Mapped domain";
 $_['text_memory_usage'] = "Memory usage";

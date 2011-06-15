@@ -24,12 +24,12 @@
       <td><?php print $h[3]; ?></td>
       <td class="<?php if($status == 'OK') { ?>HAM<?php } else { ?>SPAM<?php } ?>"><span onmouseover="Tip('<?php print preg_replace("/\'/", "\'", $h[1]); ?>, <?php print $h[2]; ?>', BALLOON, true, ABOVE,
 true)" onmouseout="UnTip()"><?php print $status; ?></span></td>
-      <!--td class="<?php if($status == 'OK') { ?>ham<?php } else { ?>spam<?php } ?>">&nbsp;</td-->
    </tr>
 <?php } ?>
 </table>
 </p>
 
+<?php if($maillog_status) { ?><p><strong><?php print $text_maillog_status; ?>:</strong> <span class="health-<?php if(preg_match("/is\ running/", $maillog_status)) { ?>ok<?php } else { ?>alert<?php } ?>"><?php print $maillog_status; ?></span><?php } ?>
 
 <?php if(ENABLE_LDAP_IMPORT_FEATURE == 1) { ?><p><strong><?php print $text_ad_sync_status; ?>:</strong></p> <p><span class="health-<?php if($totalusers >= LDAP_IMPORT_MINIMUM_NUMBER_OF_USERS_TO_HEALTH_OK && $total_emails_in_database >= LDAP_IMPORT_MINIMUM_NUMBER_OF_USERS_TO_HEALTH_OK) { ?>ok<?php } else { ?>alert<?php } ?>"><?php print $adsyncinfo; ?></span></p><?php } ?>
 

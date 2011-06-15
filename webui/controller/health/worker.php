@@ -51,6 +51,8 @@ class ControllerHealthWorker extends Controller {
 
       $this->data['number_of_quarantined_messages'] = file_get_contents(NUMBER_OF_QUARANTINED_MESSAGES);
 
+      $this->data['maillog_status'] = @file_get_contents(MAILLOG_STATUS);
+
       if(ENABLE_LDAP_IMPORT_FEATURE == 1) {
          $this->data['adsyncinfo'] = @file_get_contents(AD_SYNC_STAT);
 

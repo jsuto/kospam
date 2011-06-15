@@ -111,6 +111,7 @@ $_['text_logged_out'] = "Ön kijelentkezett";
 $_['text_login'] = "Bejelentkezés";
 $_['text_logout'] = "Kijelentkezés";
 
+$_['text_maillog_status'] = "maillog gyûjtõ státusz";
 $_['text_main_title'] = "clapf web UI";
 $_['text_mapped_domain'] = "Hozzárendelt domain";
 $_['text_memory_usage'] = "Memória használat";

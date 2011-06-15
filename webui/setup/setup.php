@@ -158,6 +158,7 @@ function write_stuff() {
    fputs($fp, "define('QSHAPE_DEFERRED', STAT_DIRECTORY . '/deferred');" . CRLF);
    fputs($fp, "define('QSHAPE_DEFERRED_SENDER', STAT_DIRECTORY . '/deferred-sender');" . CRLF);
    fputs($fp, "define('NUMBER_OF_QUARANTINED_MESSAGES', STAT_DIRECTORY . '/quarantined.messages');" . CRLF);
+   fputs($fp, "define('MAILLOG_STATUS', STAT_DIRECTORY . '/clapf-maillog.stat');" . CRLF);
    fputs($fp, "define('CPUSTAT', STAT_DIRECTORY . '/cpu.stat');" . CRLF);
    fputs($fp, "define('AD_SYNC_STAT', STAT_DIRECTORY . '/adsync.stat');" . CRLF);
 

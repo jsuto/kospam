@@ -12,6 +12,8 @@ use Sys::Syslog qw(:DEFAULT setlogsock);
 $program = "clapf-maillog";
 $priority = "mail|info";
 
+$daemonize = 1;
+
 $flush_interval = 10;
 $this_partition = "";
 $last_dropped_partition = "";
@@ -25,6 +27,11 @@ $db = "";
 
 &usage unless $config_file = $ARGV[0];
 
+foreach $argv (@ARGV) {
+   if($argv eq "-D") { $daemonize = 0; }
+}
+
+
 %cfg = &read_config($config_file);
 
 $maillog = $cfg{'maillog'};
@@ -36,6 +43,7 @@ $host = $cfg{'mysqlhost'};
 $port = $cfg{'mysqlport'};
 $pidfile = $cfg{'historypid'} || '/var/run/clapf/clapf-maillog.pid';
 $days_to_retain_data = $cfg{'days_to_retain_history_data'} || 30;
+
 
 if($database =~ /\//){ $db = "sqlite3"; }
 else { $db = "mysql"; }
@@ -53,7 +61,7 @@ if($db eq "mysql") {
 
 openlog($program, 'pid', 'mail');
 
-&daemonize;
+if($daemonize == 1) { &daemonize; }
 
 syslog($priority, "started");
 
@@ -126,6 +134,28 @@ while (defined($line = $file->read)) {
          $smtp{$queue_id}{'status'} = 'rejected ' . $2;
          $smtp{$queue_id}{'to'} = lc $4;
          (undef, $smtp{$queue_id}{'to_domain'}) = split(/\@/, $smtp{$queue_id}{'to'});
+
+
+         # fake a clapf entry
+
+         $clapf_id = "xxxxxxxx" . &randomstring(24);
+         $clapf_id = $clapf_id . " " . $smtp{$queue_id}{'to'};
+
+         $clapf{$clapf_id}{'ts'} = $ts;
+         $clapf{$clapf_id}{'from'} = $connection{$queue_id}{'from'};
+         $clapf{$clapf_id}{'fromdomain'} = $connection{$queue_id}{'from_domain'};
+         $clapf{$clapf_id}{'rcpt'} = $smtp{$queue_id}{'to'};
+         $clapf{$clapf_id}{'rcptdomain'} = $smtp{$queue_id}{'to_domain'};
+         $clapf{$clapf_id}{'spaminess'} = 1.0;
+         $clapf{$clapf_id}{'result'} = "SPAM";
+         $clapf{$clapf_id}{'size'} = 0;
+         $clapf{$clapf_id}{'relay'} = "127.0.0.1:10026";
+         $clapf{$clapf_id}{'delay'} = 0;
+         $clapf{$clapf_id}{'status'} = "";
+         $clapf{$clapf_id}{'subject'} = "N/A";
+         $clapf{$clapf_id}{'queue_id2'} = "";
+         $clapf{$clapf_id}{'virus'} = "";
+
       }
 
 

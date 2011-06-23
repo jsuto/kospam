@@ -1,3 +1,17 @@
+2011.06.22, SJ
+
+Modified the invocation of the mpstat command to let the result be unified
+using the LC_ALL environment variable.
+
+(credits: Gabri Mate)
+
+Fixed a bug during masstraining. PHP doesn't like any variable having a dot (.)
+character in its name, and it converts it to an underscore (_). If you have
+usernames having a dot character it will break the mass training process.
+The fix was to replace it by an asterisk (*).
+
+(credits: Gabri Mate)
+
 2011.06.17, SJ
 
 Modified the log collector script to fake a clapf entry if the sender was

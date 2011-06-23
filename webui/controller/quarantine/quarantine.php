@@ -28,7 +28,7 @@ class ControllerQuarantineQuarantine extends Controller {
       $this->data['page_len'] = getPageLength();
 
       $this->data['user'] = $this->data['from'] = $this->data['to'] = $this->data['subj'] = $this->data['date'] = "";
-      $this->data['hamspam'] = "SPAM";
+      $this->data['hamspam'] = "";
 
       if(isset($this->request->get['user'])) { $this->data['user'] = $this->request->get['user']; }
       if(isset($this->request->get['from'])) { $this->data['from'] = $this->request->get['from']; }
@@ -36,7 +36,6 @@ class ControllerQuarantineQuarantine extends Controller {
       if(isset($this->request->get['subj'])) { $this->data['subj'] = $this->request->get['subj']; }
       if(isset($this->request->get['hamspam'])) { $this->data['hamspam'] = $this->request->get['hamspam']; }
       if(isset($this->request->get['date'])) { $this->data['date'] = $this->request->get['date']; }
-
 
 
       $this->data['uid'] = 0;
@@ -85,7 +84,6 @@ class ControllerQuarantineQuarantine extends Controller {
       else {
          array_push($this->data['uids'], $this->model_user_user->getUidByName(Registry::get('username')));
       }
-
 
 
       /* sort and order */

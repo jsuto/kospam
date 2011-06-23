@@ -41,7 +41,7 @@ function fix_search(){
          "&from=" + document.forms.aaa0.from.value +
          "&to=" + document.forms.aaa0.to.value +
          "&hamspam=" + document.forms.aaa0.hamspam.value +
-         "&user=" + document.forms.aaa0.user.value +
+         //"&user=" + document.forms.aaa0.user.value +
          "&date=" + document.forms.aaa0.date.value;
 }
 

@@ -33,7 +33,7 @@ class ControllerLoginLogin extends Controller {
             if(isset($_POST['relocation']) && $_POST['relocation']) {
                header("Location: " . SITE_URL . "index.php?" . $_POST['relocation']);
             } else {
-               header("Location: " . SITE_URL . "index.php?route=quarantine/quarantine&user=" . $_SESSION['username'] . "&hamspam=SPAM");
+               header("Location: " . SITE_URL . "index.php?route=quarantine/quarantine&hamspam=SPAM");
             }
 
             exit;

@@ -36,7 +36,7 @@ clapf's crontab:
 */5 * * * * find LOCALSTATEDIR/lib/clapf/queue/ -name s\.\* | wc -l > LOCALSTATEDIR/lib/clapf/stat/quarantined.messages
 
 ### optional: show cpu usage
-*/5 * * * * mpstat | tail -1 | awk '{print $12}' > /var/lib/clapf/stat/cpu.stat
+*/5 * * * * LC_ALL=C mpstat | tail -1 | awk '{print $11}' > /var/lib/clapf/stat/cpu.stat
 
 ### optional: make regular pdf reports 
 1 0 * * * /usr/bin/php LIBEXECDIR/clapf/summary.php /srv/www/webui.yourdomain.com "clapf daily report" "Ham & spam messages" daily

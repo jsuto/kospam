@@ -56,7 +56,7 @@ class ControllerQuarantineMasstrain extends Controller {
          $a = preg_split("/\+/", $k);
          if(count($a) == 2) {
             $k = $a[0];
-            $username = $a[1];
+            $username = preg_replace("/\*/", ".", $a[1]);
 
             $uid = $this->model_user_user->getUidByName($username);
             $domain = $this->model_user_user->getDomainsByUid($uid);

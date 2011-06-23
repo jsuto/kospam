@@ -1,3 +1,9 @@
+2011.06.23, SJ
+
+Added a patch to mailgraph to support postscreen and clapf.
+
+(credits: Gabri Mate)
+
 2011.06.22, SJ
 
 Modified the invocation of the mpstat command to let the result be unified

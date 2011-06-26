@@ -1,6 +1,6 @@
 <?php
 	/* Libchart - PHP chart library
-	 * Copyright (C) 2005-2008 Jean-Marc Trémeaux (jm.tremeaux at gmail.com)
+	 * Copyright (C) 2005-2010 Jean-Marc Trémeaux (jm.tremeaux at gmail.com)
 	 * 
 	 * This program is free software: you can redistribute it and/or modify
 	 * it under the terms of the GNU General Public License as published by
@@ -66,7 +66,7 @@
 
 			// Aqua-like background
 			for ($i = $graphArea->y1; $i < $graphArea->y2; $i++) {
-				$color = $palette->aquaColor[($i + 3) % 4];
+				$color = $palette->backgroundColor[($i + 3) % 4];
 				$primitive->line($graphArea->x1, $i, $graphArea->x2, $i, $color);
 			}
 

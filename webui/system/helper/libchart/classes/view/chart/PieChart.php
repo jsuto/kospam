@@ -1,6 +1,6 @@
 <?php
 	/* Libchart - PHP chart library
-	 * Copyright (C) 2005-2008 Jean-Marc Trémeaux (jm.tremeaux at gmail.com)
+	 * Copyright (C) 2005-2010 Jean-Marc Trémeaux (jm.tremeaux at gmail.com)
 	 * 
 	 * This program is free software: you can redistribute it and/or modify
 	 * it under the terms of the GNU General Public License as published by
@@ -109,7 +109,7 @@
 
 			// Aqua-like background
 			for ($i = $graphArea->y1 + 2; $i < $graphArea->y2 - 1; $i++) {
-				$color = $palette->aquaColor[($i + 3) % 4];
+				$color = $palette->backgroundColor[($i + 3) % 4];
 				$primitive->line($graphArea->x1 + 2, $i, $graphArea->x2 - 2, $i, $color);
 			}
 		}
@@ -152,7 +152,7 @@
 			$img = $this->plot->getImg();
 
 			$i = 0;
-			$angle1 = 0;
+			$oldAngle = 0;
 			$percentTotal = 0;
 
 			foreach ($this->percent as $a) {
@@ -166,11 +166,14 @@
 				$color = $colorArray[$i % count($colorArray)];
 
 				$percentTotal += $percent;
-				$angle2 = $percentTotal * 360 / 100;
+				$newAngle = $percentTotal * 360 / 100;
 
-				imagefilledarc($img, $this->pieCenterX, $cy, $this->pieWidth, $this->pieHeight, $angle1, $angle2, $color->getColor($img), $mode);
+				// imagefilledarc doesn't like null values (#1)
+				if ($newAngle - $oldAngle >= 1) {
+					imagefilledarc($img, $this->pieCenterX, $cy, $this->pieWidth, $this->pieHeight, $oldAngle, $newAngle, $color->getColor($img), $mode);
+				}
 
-				$angle1 = $angle2;
+				$oldAngle = $newAngle;
 
 				$i++;
 			}
@@ -192,7 +195,7 @@
 			foreach ($this->percent as $a) {
 				list ($percent, $point) = $a;
 
-				// If value is null, don't print percentage
+				// If value is null, the arc isn't drawn, no need to display percent
 				if ($percent <= 0) {
 					continue;
 				}

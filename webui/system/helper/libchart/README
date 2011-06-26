@@ -12,6 +12,7 @@ Libchart is a free chart creation PHP library, that is easy to use.
 
     * Bar charts (horizontal or vertical).
     * Pie charts.
+    * Line charts.
     * Compatibility with PHP 5.
 
 --------------------------------------------------------------------------------

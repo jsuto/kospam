@@ -157,6 +157,23 @@ class ControllerHistoryWorker extends Controller {
       $query = $this->db->query("select * from $view $filter order by ts desc limit " . (int)$this->data['page'] * (int)$this->data['page_len'] . ", " . $this->data['page_len']);
       $this->data['tot_time'] += $query->exec_time;
 
+      if($view == "hist_in") {
+         $queue_ids = "";
+         foreach ($query->rows as $connection) {
+            if($queue_ids) { $queue_ids .= ","; }
+            $queue_ids .= "'" . $this->db->escape($connection['queue_id']) . "'";
+         }
+
+         $clapf = array();
+
+         $query_clapf = $this->db->query("select result, subject, queue_id2 from clapf where queue_id2 IN ($queue_ids)");
+         $this->data['tot_time'] += $query_clapf->exec_time;
+
+         foreach ($query_clapf->rows as $qclapf) {
+            $clapf[$qclapf['queue_id2']] = array('result' => $qclapf['result'], 'subject' => $qclapf['subject']);
+         }
+      }
+
 
       foreach ($query->rows as $connection) {
 
@@ -168,14 +185,9 @@ class ControllerHistoryWorker extends Controller {
             $delivery = $connection['status'];
          }
 
-         if($view == "hist_in") {
-            $query_clapf = $this->db->query("select result, subject from clapf where queue_id2='" . $this->db->escape($connection['queue_id']) . "'");
-            $this->data['tot_time'] += $query_clapf->exec_time;
-
-            if(isset($query_clapf->row['result'])) {
-               $connection['result'] = $query_clapf->row['result'];
-               $connection['subject'] = $query_clapf->row['subject'];
-            }
+         if($view == "hist_in" && isset($clapf[$connection['queue_id']])) {
+            $connection['result'] = $clapf[$connection['queue_id']]['result'];
+            $connection['subject'] = $clapf[$connection['queue_id']]['subject'];
          }
 
          $x = explode(" ", $delivery);

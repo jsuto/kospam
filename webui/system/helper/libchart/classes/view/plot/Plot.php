@@ -1,6 +1,6 @@
 <?php
 	/* Libchart - PHP chart library
-	 * Copyright (C) 2005-2008 Jean-Marc Trémeaux (jm.tremeaux at gmail.com)
+	 * Copyright (C) 2005-2010 Jean-Marc Trémeaux (jm.tremeaux at gmail.com)
 	 * 
 	 * This program is free software: you can redistribute it and/or modify
 	 * it under the terms of the GNU General Public License as published by
@@ -50,42 +50,70 @@
 	class Plot {
 		// Style properties
 		protected $title;
+		
+		/**
+		 * Location of the logo. Can be overriden to your personalized logo.
+		 */
 		protected $logoFileName;
 		
-		// Outer area, whose dimension is the same as the PNG returned
+		/**
+		 * Outer area, whose dimension is the same as the PNG returned.
+		 */
 		protected $outputArea;
 		
-		// Outer padding surrounding the whole image, everything outside is blank
+		/**
+		 * Outer padding surrounding the whole image, everything outside is blank.
+		 */
 		protected $outerPadding;
 		
-		// Coordinates of the area inside the outer padding
+		/**
+		 * Coordinates of the area inside the outer padding.
+		 */
 		protected $imageArea;
 		
-		// Fixed title height in pixels
+		/**
+		 * Fixed title height in pixels.
+		 */
 		protected $titleHeight;
 		
-		// Padding of the title area
+		/**
+		 * Padding of the title area.
+		 */
 		protected $titlePadding;
 		
-		// Coordinates of the title area
+		/**
+		 *  Coordinates of the title area.
+		 */
 		protected $titleArea;
 		
-		// True if the plot has a caption
+		/**
+		 * True if the plot has a caption.
+		 */
 		protected $hasCaption;
 		
-		// Ratio of graph/caption in width
+		/**
+		 * Ratio of graph/caption in width.
+		 */
 		protected $graphCaptionRatio;
 		
-		// Padding of the graph area
+		/**
+		 * Padding of the graph area.
+		 */
 		protected $graphPadding;
 		
-		// Coordinates of the graph area
+		/**
+		 * Coordinates of the graph area.
+		 */
 		protected $graphArea;
 		
-		// Padding of the caption area
+		/**
+		 * Padding of the caption area.
+		 */
 		protected $captionPadding;
 		
-		// Coordinates of the caption area
+		/**
+		 * Coordinates of the caption area.
+		 */
 		protected $captionArea;
 		
 		/**

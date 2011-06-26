@@ -1,7 +1,13 @@
 Libchart ChangeLog
 ==================
-(C) 2005-2008 Jean-Marc Trémeaux
+(C) 2005-2010 Jean-Marc Trémeaux
 
+
+VERSION 1.2.2: (2010-10-12)
+==========
+  BUGFIXES:
+	* Ability to change colors.
+	* Fix #1 : Pie chart filled with solid color when percentage < 1.
 
 VERSION 1.2.1: (2008-04-10)
 ==========

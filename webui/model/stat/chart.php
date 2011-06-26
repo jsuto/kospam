@@ -8,6 +8,12 @@ class ModelStatChart extends Model {
       $dates = array();
 
       $chart = new LineChart($size_x, $size_y);
+
+      $chart->getPlot()->getPalette()->setLineColor(array(
+         new Color(26, 192, 144),
+         new Color(208, 48, 128),
+      ));
+
       $line1 = new XYDataSet();
       $line2 = new XYDataSet();
 
@@ -81,17 +87,29 @@ class ModelStatChart extends Model {
 
 
    public function pieChartHamSpam($emails = '', $timespan, $title, $output) {
+      $ham = $spam = 0;
 
       $range = $this->getRangeInSeconds($timespan);
 
       $chart = new PieChart(SIZE_X, SIZE_Y);
-      $dataSet = new XYDataSet();
 
       $query = $this->db_history->query("SELECT COUNT(*) AS SPAM FROM clapf WHERE result='SPAM' $emails AND ts > $range");
-      if($query->num_rows > 0) { $dataSet->addPoint(new Point("SPAM (" . $query->row['SPAM'] . ")", $query->row['SPAM'])); }
+      if($query->num_rows > 0) { $spam = $query->row['SPAM']; }
 
       $query = $this->db_history->query("SELECT COUNT(*) AS HAM FROM clapf WHERE result='HAM' $emails AND ts > $range");
-      if($query->num_rows > 0) { $dataSet->addPoint(new Point("HAM (" . $query->row['HAM'] . ")", $query->row['HAM'])); }
+      if($query->num_rows > 0) { $ham = $query->row['HAM']; }
+
+      if($ham > $spam) {
+         $chart->getPlot()->getPalette()->setPieColor(array(new Color(26, 192, 144), new Color(208, 48, 128) ));
+      } else {
+         $chart->getPlot()->getPalette()->setPieColor(array(new Color(208, 48, 128), new Color(26, 192, 144) ));
+      }
+
+
+      $dataSet = new XYDataSet();
+
+      $dataSet->addPoint(new Point("HAM ($ham)", $ham));
+      $dataSet->addPoint(new Point("SPAM ($spam)", $spam));
 
       $chart->setDataSet($dataSet);
       $chart->setTitle($title);

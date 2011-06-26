@@ -1,6 +1,6 @@
 <?php
 	/* Libchart - PHP chart library
-	 * Copyright (C) 2005-2008 Jean-Marc Trémeaux (jm.tremeaux at gmail.com)
+	 * Copyright (C) 2005-2010 Jean-Marc Trémeaux (jm.tremeaux at gmail.com)
 	 * 
 	 * This program is free software: you can redistribute it and/or modify
 	 * it under the terms of the GNU General Public License as published by
@@ -24,10 +24,12 @@
 	 * Created on 25 july 2007
 	 */
 	class Palette {
+		// Plot attributes
 		public $red;
 		public $axisColor;
-		public $aquaColor;
+		public $backgroundColor;
 		
+		// Specific chart attributes
 		public $barColorSet;
 		public $lineColorSet;
 		public $pieColorSet;
@@ -38,22 +40,22 @@
 		public function Palette() {
 			$this->red = new Color(255, 0, 0);
 		
-			// Colors for the horizontal and vertical axis
-			$this->axisColor = array(
+			// Set the colors for the horizontal and vertical axis
+			$this->setAxisColor(array(
 					new Color(201, 201, 201),
 					new Color(158, 158, 158)
-			);
+			));
 
-			// Colors for the background
-			$this->aquaColor = array(
+			// Set the colors for the background
+			$this->setBackgroundColor(array(
 					new Color(242, 242, 242),
 					new Color(231, 231, 231),
 					new Color(239, 239, 239),
 					new Color(253, 253, 253)
-			);
+			));
 			
-			// Colors for the bars
-			$this->barColorSet = new ColorSet(array(
+			// Set the colors for the bars
+			$this->setBarColor(array(
 					new Color(42, 71, 181),
 					new Color(243, 198, 118),
 					new Color(128, 63, 35),
@@ -64,12 +66,12 @@
 					new Color(71, 112, 132),
 					new Color(167, 192, 199),
 					new Color(218, 233, 202)
-			), 0.75);
+			));
 
-			// Colors for the lines
-			$this->lineColorSet = new ColorSet(array(
-					new Color(26, 192, 144),
-					new Color(208, 48, 128),
+			// Set the colors for the lines
+			$this->setLineColor(array(
+					new Color(172, 172, 210),
+					new Color(2, 78, 0),
 					new Color(148, 170, 36),
 					new Color(233, 191, 49),
 					new Color(240, 127, 41),
@@ -84,35 +86,71 @@
 					new Color(104, 221, 71),
 					new Color(98, 174, 35),
 					new Color(93, 129, 1)
-			), 0.75);
+			));
 
-			// Colors for the pie
-			$this->pieColorSet = new ColorSet(array(
-				new Color(26, 192, 144),
-                                new Color(208, 48, 128),
-                                new Color(0,0,0),
-
-                                new Color(238, 173, 14),
-                                new Color(255, 255, 210),
-                                new Color(255, 0, 0),
-
-                                new Color(233, 191, 49),
-                                new Color(240, 127, 41),
-                                new Color(243, 63, 34),
-                                new Color(148, 170, 36),
-                                new Color(233, 191, 49),
-				new Color(190, 71, 47),
-				new Color(135, 81, 60),
-				new Color(128, 78, 162),
-				new Color(121, 75, 255),
-				new Color(142, 165, 250),
-				new Color(162, 254, 239),
-				new Color(137, 240, 166),
-				new Color(104, 221, 71),
-				new Color(98, 174, 35),
-				new Color(93, 129, 1),
-                                new Color(2, 78, 0),
-			), 0.7);
+			// Set the colors for the pie
+			$this->setPieColor(array(
+					new Color(2, 78, 0),
+					new Color(148, 170, 36),
+					new Color(233, 191, 49),
+					new Color(240, 127, 41),
+					new Color(243, 63, 34),
+					new Color(190, 71, 47),
+					new Color(135, 81, 60),
+					new Color(128, 78, 162),
+					new Color(121, 75, 255),
+					new Color(142, 165, 250),
+					new Color(162, 254, 239),
+					new Color(137, 240, 166),
+					new Color(104, 221, 71),
+					new Color(98, 174, 35),
+					new Color(93, 129, 1)
+			));
+		}
+		
+		/**
+		 * Set the colors for the axis.
+		 *
+		 * @param colors Array of Color
+		 */
+		public function setAxisColor($colors) {
+			$this->axisColor = $colors;
+		}
+		
+		/**
+		 * Set the colors for the background.
+		 *
+		 * @param colors Array of Color
+		 */
+		public function setBackgroundColor($colors) {
+			$this->backgroundColor = $colors;
+		}
+		
+		/**
+		 * Set the colors for the bar charts.
+		 *
+		 * @param colors Array of Color
+		 */
+		public function setBarColor($colors) {
+			$this->barColorSet = new ColorSet($colors, 0.75);
+		}
+		
+		/**
+		 * Set the colors for the line charts.
+		 *
+		 * @param colors Array of Color
+		 */
+		public function setLineColor($colors) {
+			$this->lineColorSet = new ColorSet($colors, 0.75);
+		}
+		
+		/**
+		 * Set the colors for the pie charts.
+		 *
+		 * @param colors Array of Color
+		 */
+		public function setPieColor($colors) {
+			$this->pieColorSet = new ColorSet($colors, 0.7);
 		}
 	}
 ?>

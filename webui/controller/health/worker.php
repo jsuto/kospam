@@ -49,8 +49,6 @@ class ControllerHealthWorker extends Controller {
       list($this->data['totalmem'], $this->data['meminfo'], $this->data['totalswap'], $this->data['swapinfo']) = $this->model_health_health->meminfo();
       $this->data['shortdiskinfo'] = $this->model_health_health->diskinfo();
 
-      $this->data['number_of_quarantined_messages'] = file_get_contents(NUMBER_OF_QUARANTINED_MESSAGES);
-
       $this->data['maillog_status'] = @file_get_contents(MAILLOG_STATUS);
 
       if(ENABLE_LDAP_IMPORT_FEATURE == 1) {
@@ -65,6 +63,8 @@ class ControllerHealthWorker extends Controller {
 
       $db = Registry::get('db');
       $db->select_db($db->database);
+
+      $this->data['number_of_quarantined_messages'] = $this->model_health_health->countSpamMessages();
 
       if($this->request->server['REQUEST_METHOD'] == 'POST' && isset($this->request->post['resetcounters']) && $this->request->post['resetcounters'] == 1) {
          if(isset($this->request->post['confirmed']) && $this->request->post['confirmed'] == 1 && Registry::get('admin_user') == 1) {

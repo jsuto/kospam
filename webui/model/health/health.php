@@ -131,6 +131,14 @@ class ModelHealthHealth extends Model {
    }
 
 
+   public function countSpamMessages() {
+      $query = $this->db->query("SELECT COUNT(*) AS num FROM ". TABLE_QUARANTINE . " WHERE is_spam='s'");
+
+      if(isset($query->row['num'])) { return $query->row['num']; }
+
+      return 0;
+   }
+
 }
 
 

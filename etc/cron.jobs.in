@@ -32,9 +32,6 @@ clapf's crontab:
 ### optional: show maillog.pl status
 */5 * * * * /etc/init.d/clapf-maillog status > LOCALSTATEDIR/lib/clapf/stat/clapf-maillog.stat
 
-### optional: count the number of quarantined messages
-*/5 * * * * find LOCALSTATEDIR/lib/clapf/queue/ -name s\.\* | wc -l > LOCALSTATEDIR/lib/clapf/stat/quarantined.messages
-
 ### optional: show cpu usage
 */5 * * * * LC_ALL=C mpstat | tail -1 | awk '{print $11}' > /var/lib/clapf/stat/cpu.stat
 

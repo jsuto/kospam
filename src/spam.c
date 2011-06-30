@@ -139,13 +139,15 @@ void saveMessageToQueue(struct session_data *sdata, float spaminess, struct __co
    p = &path[0];
    get_queue_path(sdata, &p, cfg);
 
-   if(spaminess >= cfg->spam_overall_limit)
+   if(sdata->rav == AVIR_VIRUS)
+      snprintf(qpath, SMALLBUFSIZE-1, "%s/v.%s", path, sdata->ttmpfile);
+   else if(spaminess >= cfg->spam_overall_limit)
       snprintf(qpath, SMALLBUFSIZE-1, "%s/s.%s", path, sdata->ttmpfile);
    else
       snprintf(qpath, SMALLBUFSIZE-1, "%s/h.%s", path, sdata->ttmpfile);
 
 #ifdef HAVE_STORE
-   if(cfg->store_metadata == 0 || (cfg->store_only_spam == 1 && spaminess < cfg->spam_overall_limit) ) goto TOUCH;
+   if(sdata->rav != AVIR_VIRUS && (cfg->store_metadata == 0 || (cfg->store_only_spam == 1 && spaminess < cfg->spam_overall_limit)) ) goto TOUCH;
 #endif
 
 

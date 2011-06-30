@@ -4,7 +4,7 @@ class ModelQuarantineMessage extends Model {
 
 
    public function checkId($id = '') {
-      if(strlen($id) > 10 && preg_match('/^([sh]\.[0-9a-f]+)$/', $id)){
+      if(strlen($id) > 10 && preg_match('/^([shv]\.[0-9a-f]+)$/', $id)){
          return 1;
       }
 
@@ -370,7 +370,7 @@ class ModelQuarantineMessage extends Model {
    }
 
 
-   private function decode_my_str($what = '') {
+   public function decode_my_str($what = '') {
       $result = "";
 
       $what = rtrim($what);

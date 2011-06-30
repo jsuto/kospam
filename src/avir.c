@@ -100,31 +100,10 @@ int do_av_check(struct session_data *sdata, char *rcpttoemail, char *fromemail, 
 #endif
 
    if(rav == AVIR_VIRUS){
-      if(strlen(cfg->quarantine_dir) > 3) moveMessageToQuarantine(sdata, cfg);
       if(strlen(cfg->localpostmaster) > 3) sendNotificationToPostmaster(sdata, rcpttoemail, fromemail, virusinfo, avengine, cfg);
    }
 
-
    return rav;
-}
-
-
-int moveMessageToQuarantine(struct session_data *sdata, struct __config *cfg){
-   char qfile[QUARANTINELEN];
-
-   snprintf(qfile, QUARANTINELEN-1, "%s/%s", cfg->quarantine_dir, sdata->ttmpfile);
-
-   if(link(sdata->ttmpfile, qfile) == 0){
-      if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: saved as %s", sdata->ttmpfile, qfile);
-      chmod(qfile, 0644);
-
-      return OK;
-   }
-   else {
-      syslog(LOG_PRIORITY, "%s: failed to move into quarantine: %s", sdata->ttmpfile, qfile);
-      return ERR;
-   }
-
 }
 
 

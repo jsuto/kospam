@@ -54,33 +54,40 @@ class ControllerQuarantineTrain extends Controller {
             $this->data['globaltrain'] = 1;
          }
 
-         /* assemble training message */
 
-         if($this->data['id'][0] == 's') {
-            $training_address = HAM_TRAIN_ADDRESS;
+         if($this->data['id'][0] == 'v') {
+            $x = 1;
          }
          else {
-            $training_address = SPAM_TRAIN_ADDRESS;
+
+            /* assemble training message */
+
+            if($this->data['id'][0] == 's') {
+               $training_address = HAM_TRAIN_ADDRESS;
+            } else {
+               $training_address = SPAM_TRAIN_ADDRESS;
+            }
+
+            $training_message  = "From: " . $fromaddr . "\r\nTo: " . $training_address . "\r\nSubject: training message\r\n\r\n\r\n";
+            $training_message .= "Received: " . preg_replace("/^[sh]\./", "", $this->data['id']) . "\r\n" . $message;
+
+            $x = $this->model_mail_mail->SendSmtpEmail(POSTFIX_LISTEN_ADDRESS, POSTFIX_LISTEN_PORT, SMTP_DOMAIN, $fromaddr, $training_address, $training_message);
          }
-
-         $training_message  = "From: " . $fromaddr . "\r\nTo: " . $training_address . "\r\nSubject: training message\r\n\r\n\r\n";
-         $training_message .= "Received: " . preg_replace("/^[sh]\./", "", $this->data['id']) . "\r\n" . $message;
-
-         $x = $this->model_mail_mail->SendSmtpEmail(POSTFIX_LISTEN_ADDRESS, POSTFIX_LISTEN_PORT, SMTP_DOMAIN, $fromaddr, $training_address, $training_message);
 
          if($x == 1){
 
             $Q = Registry::get('Q');
 
-            $this->model_quarantine_database->RemoveEntry($this->data['id']);
-            if(REMOVE_FROM_QUARANTINE_WILL_UNLINK_FROM_FILESYSTEM == 1) { unlink($my_q_dir . "/" . $this->data['id']); }
+            /* deliver only the the false positives and viruses */
 
-            /* deliver only the the false positives */
-
-            if($this->data['id'][0] == 's' && (int)@$this->request->get['nodeliver'] == 0) {
+            if( ($this->data['id'][0] == 's' || $this->data['id'][0] == 'v') && (int)@$this->request->get['nodeliver'] == 0) {
                header("Location: " . SITE_URL . "/index.php?route=quarantine/deliver&id=" . $this->data['id'] . "&page=" . (int)$this->data['page'] . "&from=" . $this->data['from'] . "&subj=" . $this->data['subj'] . "&hamspam=" . $this->data['hamspam'] . "&user=" . $this->data['username'] . "&globaltrain=" . $this->data['globaltrain']);
             }
             else {
+
+               $this->model_quarantine_database->RemoveEntry($this->data['id']);
+               if(REMOVE_FROM_QUARANTINE_WILL_UNLINK_FROM_FILESYSTEM == 1) { unlink($my_q_dir . "/" . $this->data['id']); }
+
                $this->data['x'] = $this->data['text_successfully_trained'];
             }
 

@@ -190,6 +190,10 @@
 		background: red;
 	}
 
+	td.virus {
+		background: black;
+	}
+
 	td.ham {
 		background: green;
 	}

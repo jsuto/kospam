@@ -7,6 +7,7 @@ class ControllerStatChart extends Controller {
    public function index(){
 
       $request = Registry::get('request');
+      $db = Registry::get('db');
       $db_history = Registry::get('db_history');
 
       $this->load->model('user/user');
@@ -19,6 +20,8 @@ class ControllerStatChart extends Controller {
 
       $timespan = @$this->request->get['timespan'];
 
+      $db->select_db($db->database);
+
       $emails = "";
 
       /* let the admin users see the whole statistics */
@@ -30,6 +33,8 @@ class ControllerStatChart extends Controller {
       else if(isset($this->request->get['uid']) && is_numeric($this->request->get['uid']) && $this->request->get['uid'] > 0){
          $emails = "AND rcpt IN ('" . preg_replace("/\n/", "','", $this->model_user_user->getEmailsByUid((int)$this->request->get['uid'])) . "')";
       }
+
+      $db_history->select_db($db_history->database);
 
       $aa = new ModelStatChart();
       $aa->pieChartHamSpam($emails, $timespan, $this->data['text_ham_and_spam_messages'], "");

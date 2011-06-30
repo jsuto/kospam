@@ -21,6 +21,8 @@ class ControllerStatGraph extends Controller {
 
       $timespan = @$this->request->get['timespan'];
 
+      $db->select_db($db->database);
+
       $emails = "";
 
       /* let the admin users see the whole statistics */
@@ -34,6 +36,7 @@ class ControllerStatGraph extends Controller {
       }
 
 
+      $db_history->select_db($db_history->database);
 
       $aa = new ModelStatChart();
 

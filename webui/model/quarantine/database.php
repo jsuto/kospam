@@ -109,6 +109,9 @@ class ModelQuarantineDatabase extends Model {
 
       if($ts > 0 && $ts < $oldest_ts) $oldest_ts = $ts;
 
+      $ts = $this->getOldestMessageTimestamp($dir, $files, '/^(v\.[0-9a-f]+)$/');
+      if($ts > 0 && $ts < $oldest_ts) $oldest_ts = $ts;
+
       if($oldest_ts > 0) {
          $query = $Q->query("delete from " . TABLE_QUARANTINE . " where uid=" . (int)$uid . " and ts < $oldest_ts");
       }
@@ -124,8 +127,10 @@ class ModelQuarantineDatabase extends Model {
       $new_hams = $this->get_new_files($files, $dir, $maxts, '/^(h\.[0-9a-f]+)$/', $uid);
       reset($files);
       $new_spams = $this->get_new_files($files, $dir, $maxts, '/^(s\.[0-9a-f]+)$/', $uid);
+      reset($files);
+      $new_viruses = $this->get_new_files($files, $dir, $maxts, '/^(v\.[0-9a-f]+)$/', $uid);
 
-      $new_files = array_merge($new_hams, $new_spams);
+      $new_files = array_merge($new_hams, $new_spams, $new_viruses);
 
       $query = $Q->query("BEGIN");
 
@@ -200,11 +205,15 @@ class ModelQuarantineDatabase extends Model {
       }
 
 
-
       if($hamspam == "HAM") { $where_cond .= " AND is_spam='h'"; }
-      else if($hamspam == "SPAM") { $where_cond .= " AND is_spam='s'"; }
-      else { $where_cond .= " AND (is_spam='s' or (is_spam='h' and size>0))"; }
-
+      else if($hamspam == "SPAM") {
+         if(Registry::get('admin_user') == 1) { $where_cond .= " AND (is_spam='s' OR is_spam='v')"; }
+         else { $where_cond .= " AND is_spam='s' "; }
+      }
+      else {
+         if(Registry::get('admin_user') == 1) { $where_cond .= " AND (is_spam='s' OR is_spam='v' OR (is_spam='h' and size>0))"; }
+         else { $where_cond .= " AND (is_spam='s' OR (is_spam='h' and size>0))"; }
+      }
 
       if($from) { $where_cond .= " AND `from` like '%" . $Q->escape($from) . "%'"; }
       if($subj) { $where_cond .= " AND subj like '%" . $Q->escape($subj) . "%'"; }

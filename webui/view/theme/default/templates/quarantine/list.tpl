@@ -96,7 +96,7 @@ $(document).ready(function() {
       <td<?php if(($message['i'] % 2) == 0){ ?> class="odd"<?php } ?>><a href="index.php?route=quarantine/message&amp;id=<?php print $message['id']; ?>&amp;user=<?php print $message['username']; ?>&amp;to=<?php print $to; ?>&amp;page=<?php print $page; ?>&amp;from=<?php print $from; ?>&amp;subj=<?php print $subj; ?>&hamspam=<?php print $hamspam; ?>"><?php if($message['subject'] != $message['shortsubject']) { ?><span onmouseover="Tip('<?php print preg_replace("/&/", "&amp;", $message['subject']); ?>', BALLOON, true, ABOVE, true)" onmouseout="UnTip()"><?php print $message['shortsubject']; ?></span><?php } else { print $message['subject']; } ?></a></td>
       <td align="right"><?php print $message['size']; ?></td>
       <td>&nbsp;</td>
-      <td class="<?php if($message['id'][0] == 's'){ ?>spam<?php } else { ?>ham<?php } ?>">&nbsp;</td>
+      <td class="<?php if($message['id'][0] == 's'){ ?>spam<?php } else if($message['id'][0] == 'v') { ?>virus<?php } else { ?>ham<?php } ?>">&nbsp;</td>
       <td<?php if(($message['i'] % 2) == 0){ ?> class="odd"<?php } ?>><input type="checkbox" name="<?php print $message['id'] . "+" . preg_replace("/\./", "*", $message['username']); ?>" onChange="script:toggle_row_highlight('tr_<?php print $message['id'] . "+" . $message['username']; ?>');" /></td>
    </tr>
 

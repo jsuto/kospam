@@ -65,7 +65,7 @@ class ControllerQuarantineMasstrain extends Controller {
             $fromaddr = $this->data['to'] = $this->model_user_user->getEmailAddress($username);
          }
 
-         if(preg_match("/^[sh][\._][a-f0-9]{28,36}$/", $k) && $v == "on"){
+         if(preg_match("/^[shv][\._][a-f0-9]{28,36}$/", $k) && $v == "on"){
 
             $k = preg_replace("/_/", ".", $k);
 
@@ -77,24 +77,30 @@ class ControllerQuarantineMasstrain extends Controller {
 
             $message = $this->model_quarantine_message->getMessageForDelivery($my_q_dir . "/" . $k);
 
-            /* assemble training message */
-
-            if($k[0] == 's') {
-               $training_address = HAM_TRAIN_ADDRESS;
+            if($k[0] == 'v') {
+               $x = 1;
             }
             else {
-               $training_address = SPAM_TRAIN_ADDRESS;
+
+               /* assemble training message */
+
+               if($k[0] == 's') {
+                  $training_address = HAM_TRAIN_ADDRESS;
+               }
+               else {
+                  $training_address = SPAM_TRAIN_ADDRESS;
+               }
+
+               $training_message  = "From: " . $fromaddr . "\r\nTo: " . $training_address . "\r\nSubject: training a message\r\n\r\n\r\n";
+               $training_message .= "Received: " . substr($k, 2, strlen($k)) . "\r\n" . $message;
+
+
+               $x = $this->model_mail_mail->SendSmtpEmail(POSTFIX_LISTEN_ADDRESS, POSTFIX_LISTEN_PORT, SMTP_DOMAIN, $fromaddr, $training_address, $training_message);
             }
-
-            $training_message  = "From: " . $fromaddr . "\r\nTo: " . $training_address . "\r\nSubject: training a message\r\n\r\n\r\n";
-            $training_message .= "Received: " . substr($k, 2, strlen($k)) . "\r\n" . $message;
-
-
-            $x = $this->model_mail_mail->SendSmtpEmail(POSTFIX_LISTEN_ADDRESS, POSTFIX_LISTEN_PORT, SMTP_DOMAIN, $fromaddr, $training_address, $training_message);
 
             if($x == 1) {
 
-               if($k[0] == 's' && (int)@$this->request->get['nodeliver'] == 0) {
+               if( ($k[0] == 's' || $k[0] == 'v') && (int)@$this->request->get['nodeliver'] == 0) {
                   $x = $this->model_mail_mail->SendSmtpEmail(LOCALHOST, POSTFIX_PORT_AFTER_CONTENT_FILTER, SMTP_DOMAIN, SMTP_FROMADDR, $this->data['to'], $message);
                }
 

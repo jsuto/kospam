@@ -43,6 +43,8 @@ int processMessage(struct session_data *sdata, struct _state *sstate, struct __d
       snprintf(tmpbuf, SMALLBUFSIZE-1, "%sVIRUS\r\n", cfg->clapf_header_field);
       strncat(sdata->spaminessbuf, tmpbuf, MAXBUFSIZE-1);
 
+      saveMessageToQueue(sdata, sdata->spaminess, my_cfg);
+
       if(my_cfg->deliver_infected_email == 1) return OK;
 
       if(my_cfg->silently_discard_infected_email == 1)

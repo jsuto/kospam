@@ -62,7 +62,7 @@ class ControllerQuarantineMassdeliver extends Controller {
          }
 
 
-         if(preg_match("/^[sh][\._][a-f0-9]{28,36}$/", $k) && $v == "on"){
+         if(preg_match("/^[shv][\._][a-f0-9]{28,36}$/", $k) && $v == "on"){
 
             $k = preg_replace("/_/", ".", $k);
 

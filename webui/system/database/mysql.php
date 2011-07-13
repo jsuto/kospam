@@ -35,13 +35,13 @@ class MySQL {
       $query->error = 0;
       $query->errmsg = "";
 
+      $time_start = microtime(true);
+
       $resource = mysql_query(str_replace('#__', $this->prefix, $sql), $this->link);
 
       if($resource){
          if(is_resource($resource)){
             $i = 0;
-
-            $time_start = microtime(true);
 
             $data = array();
 
@@ -67,7 +67,6 @@ class MySQL {
          }
          else {
             return $query;
-            //return TRUE;
          }
       }
       else {
@@ -77,9 +76,6 @@ class MySQL {
          $query->error = 1;
 
          return $query;
-
-         //header("Location: " . SITE_URL . "/index.php?route=common/error");
-         //exit;
       }
 
    }

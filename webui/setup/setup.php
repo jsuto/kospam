@@ -241,6 +241,8 @@ function write_stuff() {
 
 
    write_line($fp, "HISTORY_REFRESH", 60);
+   write_line($fp, "HISTORY_LATEST_TIME_RANGE", 7200);
+
    write_line($fp);
 
    write_line($fp, "FROM_LENGTH_TO_SHOW", 28);

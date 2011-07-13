@@ -40,9 +40,10 @@ class ControllerHistoryWorker extends Controller {
 
       /* assemble filter restrictions */
 
-      $CLAPF_FILTER = "";
 
       $FILTER = " ( (client != 'localhost[127.0.0.1]' and relay != '127.0.0.1[127.0.0.1]:10025') or client='localhost[127.0.0.1]' ) ";
+
+      $datefilter = $fromfilter = $tofilter = $subjfilter = "";
 
       $this->data['hamspam'] = "";
       $this->data['sender_domain'] = "";
@@ -53,48 +54,41 @@ class ControllerHistoryWorker extends Controller {
       $view = "hist_in";
 
 
-      /* subject */
-
-      if(isset($this->request->cookie['subject']) && $this->request->cookie['subject']) {
-         $this->data['subject'] = $this->request->cookie['subject'];
-         $FILTER = " `subject` LIKE '%" . $this->db->escape($this->request->cookie['subject']) . "%'";
-
-         $view = "hist_out";
-      }
-
-
-      /* ham or spam */
-
-      /*if(isset($this->request->cookie['hamspam']) && ($this->request->cookie['hamspam'] == "HAM" || $this->request->cookie['hamspam']  == "SPAM") ) {
-         $this->data['hamspam'] = $this->request->cookie['hamspam'];
-         $FILTER = " and result='" . $this->db->escape($this->request->cookie['hamspam']) . "'";
-      }*/
-
-
-
       /* dates */
 
       if(isset($this->request->cookie['date1']) && $this->request->cookie['date1']) {
          if(HISTORY_DRIVER == 'mysql') { $datesql = "UNIX_TIMESTAMP('" . $this->db->escape($this->request->cookie['date1']) . " 00:00:00') "; }
          else { $datesql = "strftime('%s', '" . $this->db->escape($this->request->cookie['date1']) . " 00:00:00') "; }
 
-         $FILTER ? $FILTER .= " and ts >= $datesql" : $FILTER .= "ts >= $datesql";
+         $datefilter ? $datefilter .= " and ts >= $datesql" : $datefilter .= "ts >= $datesql";
       }
 
       if(isset($this->request->cookie['date2']) && $this->request->cookie['date2']) {
          if(HISTORY_DRIVER == 'mysql') { $datesql = "UNIX_TIMESTAMP('" . $this->db->escape($this->request->cookie['date2']) . " 23:59:59') "; }
          else { $datesql = "strftime('%s', '" . $db->escape($cookie) . " 23:59:59') "; }
 
-         $FILTER ? $FILTER .= " and ts <= $datesql" : $FILTER .= "ts <= $datesql";
+         $datefilter ? $datefilter .= " and ts <= $datesql" : $datefilter .= "ts <= $datesql";
       }
+
+
+      /* subject */
+
+      if(isset($this->request->cookie['subject']) && $this->request->cookie['subject']) {
+         $this->data['subject'] = $this->request->cookie['subject'];
+         $subjfilter = " `subject` LIKE '%" . $this->db->escape($this->request->cookie['subject']) . "%'";
+
+         $FILTER = "";
+
+         $view = "hist_out";
+      }
+
 
 
       /* rcpt domain */
 
-      //if($cookie && (preg_match('/^[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,5})$/', $cookie) || validemail($cookie) == 1) ) {
       if(isset($this->request->cookie['rcpt_domain']) && preg_match('/^([a-z0-9-\.\+\_\@]+)/', $this->request->cookie['rcpt_domain'])) {
          $this->data['rcpt_domain'] = $this->request->cookie['rcpt_domain'];
-         $FILTER ? $FILTER .= " and ($view.`to` LIKE '%" . $this->db->escape($this->request->cookie['rcpt_domain']) . "%' or $view.`orig_to` LIKE '%" . $this->db->escape($this->request->cookie['rcpt_domain']) . "%')" : $FILTER .= " ($view.`to` LIKE '%" . $this->db->escape($this->request->cookie['rcpt_domain']) . "%' or $view.`orig_to` LIKE '%" . $this->db->escape($this->request->cookie['rcpt_domain']) . "%')";
+         $tofilter = " $view.`to` LIKE '" . $this->db->escape($this->request->cookie['rcpt_domain']) . "%' ";
       }
 
 
@@ -102,8 +96,20 @@ class ControllerHistoryWorker extends Controller {
 
       if(isset($this->request->cookie['sender_domain'])  && preg_match('/^([a-z0-9-\.\+\_\@]+)/', $this->request->cookie['sender_domain'])) {
          $this->data['sender_domain'] = $this->request->cookie['sender_domain'];
-         $FILTER ? $FILTER .= " and $view.`from` LIKE '%" . $this->db->escape($this->request->cookie['sender_domain']) . "%'" : $FILTER .= "$view.`from` LIKE '%" . $this->db->escape($this->request->cookie['sender_domain']) . "%'";
+         $fromfilter = "$view.`from` LIKE '" . $this->db->escape($this->request->cookie['sender_domain']) . "%'";
       }
+
+
+      if($fromfilter) { $FILTER ? $FILTER .= " AND $fromfilter" : $FILTER .= " $fromfilter"; }
+      if($tofilter) { $FILTER ? $FILTER .= " AND $tofilter" : $FILTER .= " $tofilter"; }
+      if($subjfilter) { $FILTER ? $FILTER .= " AND $subjfilter" : $FILTER .= " $subjfilter"; }
+
+
+      if($datefilter == '' && $fromfilter == '' && $tofilter == '' && $subjfilter == '') {
+         $datefilter = sprintf("ts > %d", time() - HISTORY_LATEST_TIME_RANGE);
+      }
+
+      if($datefilter) { $FILTER = " $datefilter AND $FILTER "; }
 
 
       /* assemble filter */

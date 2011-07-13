@@ -1,3 +1,7 @@
+2011.07.13, SJ
+
+Heavily changed the history database indexing for better performance.
+
 2011.07.01, SJ
 
 Minor quarantine fix: after removing an item, the webui will take you back

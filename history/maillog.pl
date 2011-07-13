@@ -85,7 +85,7 @@ if($db eq "mysql") { $dbh->{mysql_auto_reconnect} = 1; }
 $stmt = "INSERT INTO `connection` (ts, queue_id, client, `from`, `from_domain`, `size`) VALUES(?, ?, ?, ?, ?, ?)";
 $sth_connection = $dbh->prepare($stmt);
 
-$stmt = "INSERT INTO smtp (ts, queue_id, `to`, to_domain, orig_to, orig_to_domain, relay, delay, `status`, clapf_id) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+$stmt = "INSERT INTO smtp (ts, queue_id, `to`, to_domain, relay, delay, `status`, clapf_id) VALUES(?, ?, ?, ?, ?, ?, ?, ?)";
 $sth_smtp = $dbh->prepare($stmt);
 
 $stmt = "INSERT INTO clapf (ts, clapf_id, `from`, `fromdomain`, rcpt, rcptdomain, result, spaminess, `size`, relay, delay, queue_id2, subject, virus) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -200,15 +200,19 @@ while (defined($line = $file->read)) {
 
          $smtp{$queue_id}{'to'} = $to;
 
-         (undef, $smtp{$queue_id}{'to_domain'}) = split(/\@/, $smtp{$queue_id}{'to'});
 
          (undef, $x) = split(/orig_to=/, $line);
-         ($smtp{$queue_id}{'orig_to'}, undef) = split(/ /, $x);
+         if($x) {
+            ($smtp{$queue_id}{'orig_to'}, undef) = split(/ /, $x);
 
-         $smtp{$queue_id}{'orig_to'} =~ s/\<|\>|\,//g;
-         $smtp{$queue_id}{'orig_to'} = lc $smtp{$queue_id}{'orig_to'};
+            $smtp{$queue_id}{'orig_to'} =~ s/\<|\>|\,//g;
+            if($smtp{$queue_id}{'orig_to'}) {
+               $smtp{$queue_id}{'to'} = lc $smtp{$queue_id}{'orig_to'};
+            }
+         }
 
-         (undef, $smtp{$queue_id}{'orig_to_domain'}) = split(/\@/, $smtp{$queue_id}{'orig_to'});
+
+         (undef, $smtp{$queue_id}{'to_domain'}) = split(/\@/, $smtp{$queue_id}{'to'});
 
 
          (undef, $smtp{$queue_id}{'relay'}) = split(/relay=/, $line);
@@ -439,7 +443,7 @@ sub flush_results {
    foreach $queue_id (keys %smtp) {
 
       if($smtp{$queue_id}{'to'}) {
-         $sth_smtp->execute($smtp{$queue_id}{'ts'}, $queue_id, $smtp{$queue_id}{'to'}, $smtp{$queue_id}{'to_domain'}, $smtp{$queue_id}{'orig_to'}, $smtp{$queue_id}{'orig_to_domain'}, $smtp{$queue_id}{'relay'}, $smtp{$queue_id}{'delay'}, $smtp{$queue_id}{'status'}, $smtp{$queue_id}{'clapf_id'});
+         $sth_smtp->execute($smtp{$queue_id}{'ts'}, $queue_id, $smtp{$queue_id}{'to'}, $smtp{$queue_id}{'to_domain'}, $smtp{$queue_id}{'relay'}, $smtp{$queue_id}{'delay'}, $smtp{$queue_id}{'status'}, $smtp{$queue_id}{'clapf_id'});
       }
 
       delete $smtp{$queue_id};

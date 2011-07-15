@@ -1,3 +1,10 @@
+2011.07.15, SJ
+
+syslog the decoded subject line rather the raw encoded one.
+
+Enhanced the history: added back the ham/spam select feature, and
+you can specify even accented characters.
+
 2011.07.13, SJ
 
 Heavily changed the history database indexing for better performance.

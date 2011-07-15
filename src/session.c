@@ -161,6 +161,9 @@ void handleSession(int new_sd, struct __data *data, struct __config *cfg){
                gettimeofday(&tv2, &tz);
                sdata.__parsed = tvdiff(tv2, tv1);
 
+               /* syslog the proper, decoded subject line instead of the raw encoded one, 2011.07.15, SJ */
+               fixupEncodedHeaderLine(sdata.subject);
+
 
                if(sstate.has_base64 == 0 && cfg->always_scan_message == 0) sdata.need_scan = 0;
                else sdata.need_scan = 1;

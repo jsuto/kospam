@@ -263,7 +263,9 @@ class ModelUserImport extends Model {
             $members = explode("\n", $user['members']);
             if(count($members) > 0) {
 
-               $query = $this->db->query("DELETE FROM " . TABLE_QUARANTINE_GROUP . " WHERE gid=" . $group['uid'] );
+               if(isset($group['uid'])) {
+                  $query = $this->db->query("DELETE FROM " . TABLE_QUARANTINE_GROUP . " WHERE gid=" . $group['uid'] );
+               }
 
                foreach ($members as $member) {
                   if(validemail($member)) {

@@ -40,10 +40,9 @@ class ControllerHistoryWorker extends Controller {
 
       /* assemble filter restrictions */
 
+      $FILTER = "( (client != 'localhost[" . LOCALHOST . "]' and relay != '" . LOCALHOST . "[" . LOCALHOST . "]:" . CLAPF_PORT . "') or client='localhost[" . LOCALHOST . "]' ) ";
 
-      $FILTER = " ( (client != 'localhost[127.0.0.1]' and relay != '127.0.0.1[127.0.0.1]:10025') or client='localhost[127.0.0.1]' ) ";
-
-      $datefilter = $fromfilter = $tofilter = $subjfilter = "";
+      $datefilter = $fromfilter = $tofilter = $subjfilter = $hamspamfilter = "";
 
       $this->data['hamspam'] = "";
       $this->data['sender_domain'] = "";
@@ -75,13 +74,24 @@ class ControllerHistoryWorker extends Controller {
 
       if(isset($this->request->cookie['subject']) && $this->request->cookie['subject']) {
          $this->data['subject'] = $this->request->cookie['subject'];
-         $subjfilter = " `subject` LIKE '%" . $this->db->escape($this->request->cookie['subject']) . "%'";
+         $subjfilter = " `subject` LIKE '%" . $this->db->escape(urldecode($this->request->cookie['subject']))  . "%'";
 
          $FILTER = "";
 
          $view = "hist_out";
       }
 
+
+      /* ham/spam */
+
+      if(isset($this->request->cookie['hamspam']) && $this->request->cookie['hamspam']) {
+         $this->data['hamspam'] = $this->request->cookie['hamspam'];
+         $hamspamfilter = " result='" . $this->db->escape($this->request->cookie['hamspam']) . "'";
+
+         $FILTER = "";
+
+         $view = "hist_out";
+      }
 
 
       /* rcpt domain */
@@ -103,6 +113,7 @@ class ControllerHistoryWorker extends Controller {
       if($fromfilter) { $FILTER ? $FILTER .= " AND $fromfilter" : $FILTER .= " $fromfilter"; }
       if($tofilter) { $FILTER ? $FILTER .= " AND $tofilter" : $FILTER .= " $tofilter"; }
       if($subjfilter) { $FILTER ? $FILTER .= " AND $subjfilter" : $FILTER .= " $subjfilter"; }
+      if($hamspamfilter) { $FILTER ? $FILTER .= " AND $hamspamfilter" : $FILTER .= " $hamspamfilter"; }
 
 
       if($datefilter == '' && $fromfilter == '' && $tofilter == '' && $subjfilter == '') {

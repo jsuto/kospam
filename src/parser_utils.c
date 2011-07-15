@@ -189,8 +189,9 @@ int extractNameFromHeaderLine(char *s, char *name, char *resultbuf){
 
 
 void fixupEncodedHeaderLine(char *buf){
-   char *p, *q, u[SMALLBUFSIZE], puf[MAXBUFSIZE];
-   char *end;
+   char *p, *q, *r, *s, u[SMALLBUFSIZE], puf[MAXBUFSIZE];
+   char *start, *end;
+
 
    memset(puf, 0, MAXBUFSIZE);
 
@@ -198,41 +199,54 @@ void fixupEncodedHeaderLine(char *buf){
 
    do {
       q = split_str(q, " ", u, SMALLBUFSIZE-1);
-      end = (char *)NULL;
 
-      p = strcasestr(u, "?B?");
-      if(p){
-         end = strcasestr(p, "?=");
-         if(end) {
-            decodeBase64(p+3);
+      p = u;
+      do {
+         start = strstr(p, "=?");
+         if(start){
+            if(start != p){
+               *start = '\0';
+               strncat(puf, p, MAXBUFSIZE-1);
+               *start = '=';
+            }
+
+            end = strstr(start, "?=");
+            if(end){
+               *end = '\0';
+               p = end + 2;
+
+               s = NULL;
+
+               if((s = strcasestr(start+2, "?B?"))){
+                  *s = '\0';
+                  decodeBase64(s+3);
+               }
+               else if((s = strcasestr(start+2, "?Q?"))){
+                  *s = '\0';
+
+                  r = s + 3;
+                  for(; *r; r++){
+                     if(*r == '_') *r = ' ';
+                  }
+
+                  decodeQP(s+3);
+               }
+
+               if(s && strncasecmp(start, "=?utf-8", 5) == 0){
+                  decodeUTF8(s+3);
+               }
+
+               strncat(puf, s+3, MAXBUFSIZE-1);               
+            }
+            else
+               start = NULL;
          }
 
-      }
-      else if((p = strcasestr(u, "?Q?"))){
-         end = strcasestr(p, "?=");
-         if(end) {
-            decodeQP(p+3);
+         if(!start){
+            strncat(puf, p, MAXBUFSIZE-1);
          }
-      }
 
-      if(end){
-         char *start1 = strcasestr(u, "=?");
-         char *start2 = strcasestr(u, "=?utf-8?");
-         if(start1){
-            *start1 = '\0';
-            strncat(puf, u, MAXBUFSIZE-1);
-            if(start2)
-               decodeUTF8(p+3);
-            strncat(puf, p+3, MAXBUFSIZE-1);
-            strncat(puf, end+2, MAXBUFSIZE-1);
-         }
-         else {
-            strncat(puf, u, MAXBUFSIZE-1);
-         }
-      }
-      else {
-         strncat(puf, u, MAXBUFSIZE-1);
-      }
+      } while(start);
 
       strncat(puf, " ", MAXBUFSIZE-1);
 

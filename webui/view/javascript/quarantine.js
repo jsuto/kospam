@@ -112,7 +112,7 @@ function filterhistory(){
    setCookie("date2", x, 1);
 
    x = document.forms[0].subject.value;
-   setCookie("subject", x, 1);
+   setCookie("subject", encodeURI(x), 1);
 
 }
 

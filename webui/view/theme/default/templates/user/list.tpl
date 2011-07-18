@@ -28,12 +28,9 @@
 <table id="user-list-table" border="1">
    <tr align="center">
       <th>&nbsp;</th>
-      <th><?php print $text_user_id; ?> <a href="index.php?route=user/list&amp;sort=uid&amp;order=0"><img src="view/theme/<?php print THEME; ?>/images/arrowup.gif" border="0"></a> <a href="index.php?route=user/list&amp;sort=uid&amp;order=1"><img src="view/theme/<?php print THEME; ?>/images/arrowdown.gif" border="0"></a></th>
-      <th><?php print $text_username; ?> <a href="index.php?route=user/list&amp;sort=username&amp;order=0"><img src="view/theme/<?php print THEME; ?>/images/arrowup.gif" border="0"></a> <a href="index.php?route=user/list&amp;sort=username&amp;order=1"><img src="view/theme/<?php print THEME; ?>/images/arrowdown.gif" border="0"></a></th>
-      <th><?php print $text_realname; ?></th>
-      <th><?php print $text_email; ?></th>
-      <th><?php print $text_domain; ?> <a href="index.php?route=user/list&amp;sort=domain&amp;order=0"><img src="view/theme/<?php print THEME; ?>/images/arrowup.gif" border="0"></a> <a href="index.php?route=user/list&amp;sort=domain&amp;order=1"><img src="view/theme/<?php print THEME; ?>/images/arrowdown.gif" border="0"></a></th>
-      <th><?php print $text_policy_group; ?> <a href="index.php?route=user/list&amp;sort=policy&amp;order=0"><img src="view/theme/<?php print THEME; ?>/images/arrowup.gif" border="0"></a> <a href="index.php?route=user/list&amp;sort=policy&amp;order=1"><img src="view/theme/<?php print THEME; ?>/images/arrowdown.gif" border="0"></a></th>
+      <th><?php print $text_realname; ?> <a href="index.php?route=user/list&amp;sort=realname&amp;order=0"><img src="view/theme/<?php print THEME; ?>/images/arrowup.gif" border="0"></a> <a href="index.php?route=user/list&amp;sort=realname&amp;order=1"><img src="view/theme/<?php print THEME; ?>/images/arrowdown.gif" border="0"></a></th>
+      <th><?php print $text_email; ?> <a href="index.php?route=user/list&amp;sort=email&amp;order=0"><img src="view/theme/<?php print THEME; ?>/images/arrowup.gif" border="0"></a> <a href="index.php?route=user/list&amp;sort=email&amp;order=1"><img src="view/theme/<?php print THEME; ?>/images/arrowdown.gif" border="0"></a></th>
+      <th><?php print $text_role; ?> <a href="index.php?route=user/list&amp;sort=domain&amp;order=0"><img src="view/theme/<?php print THEME; ?>/images/arrowup.gif" border="0"></a> <a href="index.php?route=user/list&amp;sort=domain&amp;order=1"><img src="view/theme/<?php print THEME; ?>/images/arrowdown.gif" border="0"></a></th>
       <th>&nbsp;</th>
       <th>&nbsp;</th>
       <th>&nbsp;</th>
@@ -42,12 +39,14 @@
 <?php foreach($users as $user) { ?>
    <tr align="left">
       <td><input type="checkbox" name="aa_<?php print $user['uid']; ?>" /></td>
-      <td><?php print $user['uid']; ?></td>
-      <td><?php print $user['username']; ?></td>
       <td class="realname"><?php print $user['realname']; ?></td>
       <td><?php if($user['email'] != $user['shortemail']){ ?><span onmouseover="Tip('<?php print $user['email']; ?>', BALLOON, true, ABOVE, true)" onmouseout="UnTip()"><?php print $user['shortemail']; ?></span><?php } else { print $user['email']; } ?></td>
-      <td><?php print $user['domain']; ?></td>
-      <td><?php print $user['policy_group']; ?></td>
+      <td><?php
+         if($user['isadmin'] == 0){ print $text_user_regular; }
+         if($user['isadmin'] == 1){ print $text_user_masteradmin; }
+         if($user['isadmin'] == 2){ print $text_user_domainadmin; }
+         if($user['isadmin'] == 3){ print $text_user_read_only_admin; }
+      ?></td>
       <td><a href="index.php?route=user/edit&amp;uid=<?php print $user['uid']; ?>"><?php print $text_edit_or_view; ?></a></td>
       <td><a href="index.php?route=quarantine/quarantine&amp;user=<?php print $user['username']; ?>&amp;hamspam=SPAM"><?php print $text_quarantine; ?></a></td>
       <td><a href="index.php?route=stat/stat&amp;uid=<?php print $user['uid']; ?>"><?php print $text_statistics; ?></a></td>

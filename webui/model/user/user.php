@@ -170,7 +170,6 @@ class ModelUserUser extends Model {
       $emails = "";
 
       $query = $this->db->query("SELECT email FROM " . TABLE_EMAIL . " WHERE uid=" . (int)$uid);
-
       foreach ($query->rows as $q) {
          $emails .= $q['email'] . "\n";
       }
@@ -401,7 +400,7 @@ class ModelUserUser extends Model {
 
       if($page_len > 0) { $limit = " LIMIT " . (int)$from . ", " . (int)$page_len; }
 
-      $query = $this->db->query("SELECT " . TABLE_USER . ".uid, gid, username, realname, domain, policy_group, email FROM " . TABLE_USER . "," . TABLE_EMAIL . " $where_cond group by " . TABLE_USER . ".uid $_order $limit");
+      $query = $this->db->query("SELECT " . TABLE_USER . ".uid, gid, isadmin, username, realname, domain, policy_group, email FROM " . TABLE_USER . "," . TABLE_EMAIL . " $where_cond group by " . TABLE_USER . ".uid $_order $limit");
 
       foreach ($query->rows as $q) {
 
@@ -413,7 +412,8 @@ class ModelUserUser extends Model {
                           'realname'     => $q['realname'],
                           'domain'       => isset($q['domain']) ? $q['domain'] : "",
                           'policy_group' => $q['policy_group'],
-                          'email'        => $q['email']
+                          'email'        => $q['email'],
+                          'isadmin'      => $q['isadmin']
                          );
          }
 

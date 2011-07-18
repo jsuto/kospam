@@ -57,6 +57,16 @@
       </tr>
       <tr valign="top"><td><?php print $text_whitelist; ?>:</td><td><textarea name="whitelist" cols="<?php print CGI_INPUT_FIELD_WIDTH; ?>" rows="<?php print CGI_INPUT_FIELD_HEIGHT; ?>"><?php print $user['whitelist']; ?></textarea></td></tr>
       <tr valign="top"><td><?php print $text_blacklist; ?>:</td><td><textarea name="blacklist" cols="<?php print CGI_INPUT_FIELD_WIDTH; ?>" rows="<?php print CGI_INPUT_FIELD_HEIGHT; ?>"><?php print $user['blacklist']; ?></textarea></td></tr>
+
+      <tr valign="top">
+         <td><?php print $text_group_membership; ?>:</td>
+         <td>
+            <?php foreach ($user['group_membership'] as $_group_uid) { ?>
+               <?php $a = preg_split("/\s/", $this->model_user_user->getEmailsByUid($_group_uid)); print $a[0]; ?></br />
+            <?php } ?>
+         </td>
+      </tr>
+
       <tr><td>&nbsp;</td><td><input type="submit" value="<?php print $text_modify; ?>" /><input type="reset" value="<?php print $text_cancel; ?>" /></td></tr>
    </table>
 </form>

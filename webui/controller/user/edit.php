@@ -66,7 +66,6 @@ class ControllerUserEdit extends Controller {
 
                $this->model_user_user->setWhitelist($__username, $this->request->post['whitelist']);
                $this->model_user_user->setBlacklist($__username, $this->request->post['blacklist']);
-
             }
             else {
                $this->template = "common/error.tpl";
@@ -78,6 +77,7 @@ class ControllerUserEdit extends Controller {
 
             $this->data['user']['whitelist'] = $this->model_user_user->getWhitelist($this->data['user']['username']);
             $this->data['user']['blacklist'] = $this->model_user_user->getBlacklist($this->data['user']['username']);
+            $this->data['user']['group_membership'] = $this->model_user_user->get_additional_uids($this->data['uid']);
 
             $this->data['policies'] = $this->model_policy_policy->getPolicies();
             $this->data['emails'] = $this->model_user_user->getEmails($this->data['user']['username']);

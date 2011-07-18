@@ -210,7 +210,8 @@ class ControllerHistoryWorker extends Controller {
          $x = explode(" ", $delivery);
          $shortdelivery = array_shift($x);
 
-         isset($connection['subject']) ? $subject = $connection['subject'] : $subject = '-';
+         isset($connection['subject']) ? $subject = htmlspecialchars($connection['subject']) : $subject = '-';
+
          if(strlen($subject) > 2*FROM_LENGTH_TO_SHOW) { $shortsubject = substr($subject, 0, 2*FROM_LENGTH_TO_SHOW) . "..."; }
          else { $shortsubject = $subject; }
 

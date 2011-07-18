@@ -82,6 +82,7 @@ $_['text_home'] = "Kezdőlap";
 
 $_['text_global_training_happened'] = "Globális tanítás.";
 $_['text_group_id'] = "Csoport azonosító";
+$_['text_group_membership'] = "Csoport tagság";
 
 $_['text_import'] = "Import";
 $_['text_import_users'] = "Felhasználók importálása";
@@ -172,6 +173,7 @@ $_['text_remove_this_policy'] = "Házirend törlése";
 $_['text_remove_this_user'] = "Felhasználó törlése";
 $_['text_reset_counters'] = "Számlálók nullázása";
 $_['text_result'] = "Eredmény";
+$_['text_role'] = "Felhasználótípus";
 
 $_['text_search'] = "Keresés";
 $_['text_search_terms'] = "Keresési feltételek";

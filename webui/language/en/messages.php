@@ -75,6 +75,7 @@ $_['text_from'] = "From";
 
 $_['text_global_training_happened'] = "Global training.";
 $_['text_group_id'] = "Group id";
+$_['text_group_membership'] = "Group membership";
 
 $_['text_ham_and_spam_messages'] = "Ham & spam messages";
 $_['text_health'] = "Health";
@@ -172,6 +173,7 @@ $_['text_remove_this_policy'] = "Remove this policy";
 $_['text_remove_this_user'] = "Remove this user";
 $_['text_reset_counters'] = "Reset counters";
 $_['text_result'] = "Result";
+$_['text_role'] = "Role";
 
 $_['text_search'] = "Search";
 $_['text_search_terms'] = "Search terms";

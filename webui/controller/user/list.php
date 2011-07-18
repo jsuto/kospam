@@ -50,7 +50,7 @@ class ControllerUserList extends Controller {
       $this->data['order'] = (int)@$this->request->get['order'];
 
       if(@$this->request->get['sort'] == "uid") { $this->data['sort'] = "uid"; }
-      if(@$this->request->get['sort'] == "username") { $this->data['sort'] = "username"; }
+      if(@$this->request->get['sort'] == "realname") { $this->data['sort'] = "realname"; }
       if(@$this->request->get['sort'] == "email") { $this->data['sort'] = "email"; }
       if(@$this->request->get['sort'] == "domain") { $this->data['sort'] = "domain"; }
       if(@$this->request->get['sort'] == "policy") { $this->data['sort'] = "policy_group"; }
@@ -82,7 +82,8 @@ class ControllerUserList extends Controller {
                                           'email'        => $user['email'],
                                           'shortemail'   => short_email($user['email']),
                                           'domain'       => $user['domain'],
-                                          'policy_group' => $policy_group
+                                          'policy_group' => $policy_group,
+                                          'isadmin'       => $user['isadmin']
                                         );
          }
 

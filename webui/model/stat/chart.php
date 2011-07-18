@@ -119,7 +119,7 @@ class ModelStatChart extends Model {
 
 
 
-   public function horizontalChartTopDomains($what, $timespan, $title, $output) {
+   public function horizontalChartTopDomains($emails = '', $what, $timespan, $title, $output) {
       if($what != "HAM") { $what = "SPAM"; }
 
       $range = $this->getRangeInSeconds($timespan);
@@ -127,7 +127,7 @@ class ModelStatChart extends Model {
       $chart = new HorizontalBarChart(SIZE_X, SIZE_Y);
       $dataSet = new XYDataSet();
 
-      $query = $this->db_history->query("SELECT ts, fromdomain, COUNT(fromdomain) AS sum FROM clapf WHERE ts > $range AND result='" . $this->db_history->escape($what) . "' GROUP BY fromdomain ORDER BY sum DESC LIMIT 10");
+      $query = $this->db_history->query("SELECT ts, fromdomain, COUNT(fromdomain) AS sum FROM clapf WHERE ts > $range $emails AND result='" . $this->db_history->escape($what) . "' GROUP BY fromdomain ORDER BY sum DESC LIMIT 10");
 
       foreach($query->rows as $q) {
          $dataSet->addPoint(new Point($q['fromdomain'], $q['sum']));

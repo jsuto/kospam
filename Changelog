@@ -2,6 +2,8 @@
 
 Improved user listing in the webui.
 
+Fixed a bug in the fixupEncodedHeaderLine function.
+
 2011.07.15, SJ
 
 syslog the decoded subject line rather the raw encoded one.

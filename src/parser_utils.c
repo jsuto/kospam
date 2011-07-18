@@ -210,8 +210,11 @@ void fixupEncodedHeaderLine(char *buf){
                *start = '=';
             }
 
-            end = strstr(start, "?=");
-            if(end){
+            /* find the trailing '?=' sequence */
+
+            end = strrchr(p, '?'); r = strrchr(p, '=');
+
+            if(end && r && r == end+1){
                *end = '\0';
                p = end + 2;
 

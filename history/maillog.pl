@@ -1,5 +1,7 @@
 #!/usr/bin/perl
 
+use utf8;
+
 use File::Tail;
 use Date::Parse;
 use DBI;
@@ -269,6 +271,10 @@ while (defined($line = $file->read)) {
             $clapf{$clapf_id}{'relay'} = $6;
             $clapf{$clapf_id}{'delay'} = $7;
             $clapf{$clapf_id}{'subject'} = $10;
+
+            if($db eq "sqlite3") {
+               utf8::encode($clapf{$clapf_id}{'subject'});
+            }
 
             $status = $9;
 

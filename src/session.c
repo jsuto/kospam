@@ -161,6 +161,8 @@ void handleSession(int new_sd, struct __data *data, struct __config *cfg){
                gettimeofday(&tv2, &tz);
                sdata.__parsed = tvdiff(tv2, tv1);
 
+               if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: fixup subject line", sdata.ttmpfile);
+
                /* syslog the proper, decoded subject line instead of the raw encoded one, 2011.07.15, SJ */
                fixupEncodedHeaderLine(sdata.subject);
 

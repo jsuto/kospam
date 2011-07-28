@@ -90,9 +90,9 @@ class ModelQuarantineDatabase extends Model {
             $dir2 = dirname($dir1);
             $dir3 = dirname($dir2);
 
-            mkdir($dir3, 0770);
-            mkdir($dir2, 0770);
-            mkdir($dir1, 0770);
+            if(!file_exists($dir3)) { mkdir($dir3, 0770); }
+            if(!file_exists($dir2)) { mkdir($dir2, 0770); }
+            if(!file_exists($dir1)) { mkdir($dir1, 0770); }
             mkdir($v, 0770);
          }
       }
@@ -142,7 +142,7 @@ class ModelQuarantineDatabase extends Model {
          // create hard links to the additional user directories
          reset($group_q_dirs);
          while(list($k, $v) = each($group_q_dirs) ) {
-            link($dir . "/" . $file['is_spam'] . "." . $file['id'], "$v/" . $file['is_spam'] . "." . $file['id']);
+            if(!file_exists("$v/" . $file['is_spam'] . "." . $file['id'])) { link($dir . "/" . $file['is_spam'] . "." . $file['id'], "$v/" . $file['is_spam'] . "." . $file['id']); }
          }
 
          $count++;

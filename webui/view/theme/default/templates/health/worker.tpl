@@ -62,17 +62,15 @@ true)" onmouseout="UnTip()"><?php print $status; ?></span></td>
    </td>
    <td>
 
-<p><strong><?php print $text_queue_status; ?>: </strong></p>
+<h4><?php print $text_queue_status; ?>: </h4>
 
 <?php foreach ($queues as $queue) { ?>
 
-<p><table border="0">
+<p><table class="queue" border="0">
 
 <?php if(isset($queue['desc'])) { ?>
 
-    <td valign="top">
-       <strong><?php print $queue['desc']; ?></strong><br />
-      <table border="0">
+      <tr><td colspan="12"><strong><?php print $queue['desc']; ?></strong></td></tr>
 <?php 
    $i = 0;
    while(list($k, $v) = each($queue['lines'])) {
@@ -84,9 +82,6 @@ true)" onmouseout="UnTip()"><?php print $status; ?></span></td>
       if($i == count($queue['lines'])-1) { break; }
    }
 ?>
-</table>
- 
-    </td>
 
 <?php } ?>
 
@@ -94,6 +89,36 @@ true)" onmouseout="UnTip()"><?php print $status; ?></span></td>
 
 <?php } ?>
 
+
+<?php if(isset($queues_out)) { ?>
+
+<h4><?php print $text_queue_out_status; ?>: </h4>
+
+<?php foreach ($queues_out as $queue) { ?>
+
+<p><table class="queue" border="0">
+
+<?php if(isset($queue['desc'])) { ?>
+     <tr><td colspan="12"><strong><?php print $queue['desc']; ?></strong></td></tr>
+<?php
+   $i = 0;
+   while(list($k, $v) = each($queue['lines'])) {
+      $i++;
+      print "<tr class='queue'>";
+      $v = preg_replace("/^\*\<\/td\>/", "", $v);
+      if($i == 1) { print "<td>&nbsp;</td>"; }
+      print "$v</td></tr>\n";
+      if($i == count($queue['lines'])-1) { break; }
+   }
+?>
+
+<?php } ?>
+
+</table></p>
+
+<?php } ?>
+
+<?php } ?>
 
    </td>
 </tr>

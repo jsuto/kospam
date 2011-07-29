@@ -2,6 +2,8 @@
 
 Minor model/quarantine/database.php fix.
 
+Added the option to display the outgoing postfix queue status if there's any.
+
 2011.07.18, SJ
 
 Improved user listing in the webui.

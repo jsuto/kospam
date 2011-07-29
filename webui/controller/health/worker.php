@@ -41,6 +41,13 @@ class ControllerHealthWorker extends Controller {
       $this->data['queues'][] = format_qshape($lang->data['text_deferred_queue'], QSHAPE_DEFERRED);
       $this->data['queues'][] = format_qshape($lang->data['text_deferred_queue_sender'], QSHAPE_DEFERRED_SENDER);
 
+      if(file_exists(QSHAPE_ACTIVE_INCOMING_OUT)) {
+         $this->data['queues_out'][] = format_qshape($lang->data['text_active_incoming_queue'], QSHAPE_ACTIVE_INCOMING_OUT);
+         $this->data['queues_out'][] = format_qshape($lang->data['text_active_incoming_queue_sender'], QSHAPE_ACTIVE_INCOMING_SENDER_OUT);
+         $this->data['queues_out'][] = format_qshape($lang->data['text_deferred_queue'], QSHAPE_DEFERRED_OUT);
+         $this->data['queues_out'][] = format_qshape($lang->data['text_deferred_queue_sender'], QSHAPE_DEFERRED_SENDER_OUT);
+      }
+
       $this->data['processed_emails'] = $this->model_health_health->count_processed_emails();
 
       list ($this->data['uptime'], $this->data['cpuload']) = $this->model_health_health->uptime();

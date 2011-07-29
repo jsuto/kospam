@@ -159,6 +159,7 @@ $_['text_purged'] = "Eltávolítva";
 $_['text_quarantine'] = "Karantén";
 $_['text_quarantined_emails'] = "Karanténban lévő levelek";
 $_['text_queue_status'] = "Queue státusz";
+$_['text_queue_out_status'] = "Kimenő queue státusz";
 
 $_['text_realname'] = "Név";
 $_['text_recipient'] = "Címzett";

@@ -159,6 +159,7 @@ $_['text_purged'] = "Purged";
 $_['text_quarantine'] = "Quarantine";
 $_['text_quarantined_emails'] = "Quarantined emails";
 $_['text_queue_status'] = "Queue status";
+$_['text_queue_out_status'] = "Outgoing queue status";
 
 $_['text_realname'] = "Realname";
 $_['text_recipient'] = "Recipient";

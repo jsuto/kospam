@@ -174,6 +174,8 @@ class ControllerHistoryWorker extends Controller {
       $query = $this->db->query("select * from $view $filter order by ts desc limit " . (int)$this->data['page'] * (int)$this->data['page_len'] . ", " . $this->data['page_len']);
       $this->data['tot_time'] += $query->exec_time;
 
+      $sender = array();
+
       if($view == "hist_in") {
          $queue_ids = "";
          foreach ($query->rows as $connection) {
@@ -183,12 +185,35 @@ class ControllerHistoryWorker extends Controller {
 
          $clapf = array();
 
-         $query_clapf = $this->db->query("select result, subject, queue_id2 from clapf where queue_id2 IN ($queue_ids)");
+         $query_clapf = $this->db->query("select clapf_id, result, subject, queue_id2 from clapf where queue_id2 IN ($queue_ids)");
          $this->data['tot_time'] += $query_clapf->exec_time;
 
+         $queue_ids = "";
+
          foreach ($query_clapf->rows as $qclapf) {
-            $clapf[$qclapf['queue_id2']] = array('result' => $qclapf['result'], 'subject' => $qclapf['subject']);
+            $clapf[$qclapf['queue_id2']] = array('result' => $qclapf['result'], 'subject' => $qclapf['subject'], 'clapf_id' => $qclapf['clapf_id']);
+
+            if($queue_ids) { $queue_ids .= ","; }
+            $queue_ids .= "'" . $this->db->escape($qclapf['clapf_id']) . "'";
          }
+
+      }
+
+      else {
+         $queue_ids = "";
+
+         foreach ($query->rows as $connection) {
+            if($queue_ids) { $queue_ids .= ","; }
+            $queue_ids .= "'" . $this->db->escape($connection['clapf_id']) . "'";
+         }
+      }
+
+
+      $s = $this->db->query("select `client`, queue_id, clapf_id from `hist_in` where clapf_id IN ($queue_ids)");
+      $this->data['tot_time'] += $s->exec_time;
+
+      foreach ($s->rows as $s1) {
+         $sender[$s1['clapf_id']] = $s1['client'];
       }
 
 
@@ -202,9 +227,14 @@ class ControllerHistoryWorker extends Controller {
             $delivery = $connection['status'];
          }
 
+
          if($view == "hist_in" && isset($clapf[$connection['queue_id']])) {
             $connection['result'] = $clapf[$connection['queue_id']]['result'];
             $connection['subject'] = $clapf[$connection['queue_id']]['subject'];
+            $connection['client'] = $sender[$clapf[$connection['queue_id']]['clapf_id']];
+         }
+         else if($connection['clapf_id']) {
+            $connection['client'] = $sender[$connection['clapf_id']];
          }
 
          $x = explode(" ", $delivery);

@@ -36,7 +36,7 @@
 
 	h4 {
 		margin: 0;
-		padding: 10px 0 10px 0;
+		padding: 0px 0 0px 0;
 		font: bold 12px/1.5em Verdana, Georgia, Arial, Helvetica, sans-serif;
 		color: #000000;
 	}
@@ -64,7 +64,7 @@
 
 	#wrap {
 		margin: 0 auto; padding: 0;
-		width: 1180px;
+		width: 1280px;
 		background-color: white;
 		border: 1px solid #C1C0C0;
 		text-align: left;
@@ -137,11 +137,16 @@
 		margin: 0; padding: 0; margin-right: 20px;
 	}
 
+	p.queue {
+		margin: 0;
+	}
+
 	table {
 		margin-bottom: 15px;
 	}
 
 	table.queue {
+		margin-top: 0px;
 		margin-bottom: 0px;
 	}
 

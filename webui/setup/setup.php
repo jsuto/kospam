@@ -323,6 +323,10 @@ function write_stuff() {
 
    write_line($fp);
 
+   fputs($fp, '$partitions_to_monitor = array(\'/\', \'/home\', \'/var\', \'/tmp\');' . CRLF);
+
+   write_line($fp);
+
    fputs($fp, "?>\n");
 
    fclose($fp);

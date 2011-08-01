@@ -31,7 +31,7 @@ true)" onmouseout="UnTip()"><?php print $status; ?></span></td>
 
 <?php if($maillog_status) { ?><p><strong><?php print $text_maillog_status; ?>:</strong> <span class="health-<?php if(preg_match("/is\ running/", $maillog_status)) { ?>ok<?php } else { ?>alert<?php } ?>"><?php print $maillog_status; ?></span><?php } ?>
 
-<?php if(ENABLE_LDAP_IMPORT_FEATURE == 1) { ?><p><strong><?php print $text_ad_sync_status; ?>:</strong></p> <p><span class="health-<?php if($totalusers >= LDAP_IMPORT_MINIMUM_NUMBER_OF_USERS_TO_HEALTH_OK && $total_emails_in_database >= LDAP_IMPORT_MINIMUM_NUMBER_OF_USERS_TO_HEALTH_OK) { ?>ok<?php } else { ?>alert<?php } ?>"><?php print $adsyncinfo; ?></span></p><?php } ?>
+<?php if(ENABLE_LDAP_IMPORT_FEATURE == 1) { ?><p><strong><?php print $text_ad_sync_status; ?>:</strong> <span class="health-<?php if($totalusers >= LDAP_IMPORT_MINIMUM_NUMBER_OF_USERS_TO_HEALTH_OK && $total_emails_in_database >= LDAP_IMPORT_MINIMUM_NUMBER_OF_USERS_TO_HEALTH_OK) { ?>ok<?php } else { ?>alert<?php } ?>"><?php print $adsyncinfo; ?></span></p><?php } ?>
 
 <p><strong><?php print $text_cpu_usage; ?>:</strong> <span class="health-<?php if($cpuinfo < HEALTH_RATIO) { ?>ok<?php } else { ?>alert<?php } ?>"><?php print $cpuinfo; ?>%</span>, <strong><?php print $text_cpu_load; ?>:</strong> <span class="health-<?php if($cpuinfo < HEALTH_RATIO) { ?>ok<?php } else { ?>alert<?php } ?>"><?php print $cpuload; ?></span></p>
 
@@ -66,7 +66,7 @@ true)" onmouseout="UnTip()"><?php print $status; ?></span></td>
 
 <?php foreach ($queues as $queue) { ?>
 
-<p><table class="queue" border="0">
+<p class="queue"><table class="queue" border="0">
 
 <?php if(isset($queue['desc'])) { ?>
 
@@ -96,7 +96,7 @@ true)" onmouseout="UnTip()"><?php print $status; ?></span></td>
 
 <?php foreach ($queues_out as $queue) { ?>
 
-<p><table class="queue" border="0">
+<p class="queue"><table class="queue" border="0">
 
 <?php if(isset($queue['desc'])) { ?>
      <tr><td colspan="12"><strong><?php print $queue['desc']; ?></strong></td></tr>

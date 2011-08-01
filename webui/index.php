@@ -9,7 +9,6 @@ $stat = stat("config.php") or go_to_setup();
 if($stat[7] < 15){ go_to_setup(); }
 
 
-
 require_once("config.php");
 
 require(DIR_SYSTEM . "/startup.php");
@@ -65,6 +64,7 @@ Registry::set('counters', $counters);
 
 Registry::set('health_smtp_servers', $health_smtp_servers);
 Registry::set('postgrey_servers', $postgrey_servers);
+Registry::set('partitions_to_monitor', $partitions_to_monitor);
 
 
 if(Registry::get('username')) {

@@ -23,10 +23,11 @@ create table if not exists smtp (
 	`status` char(255) default null,
 	clapf_id char(32) default null
 ) ENGINE=InnoDB PARTITION BY RANGE (ts) ( PARTITION p0 VALUES LESS THAN (1) );
-create index smtp_idx on smtp(queue_id, clapf_id);
+create index smtp_idx on smtp(queue_id);
 create index smtp_idx2 on smtp(`relay`);
 create index smtp_idx3 on smtp(`to`);
 create index smtp_idx4 on smtp(ts);
+create index smtp_idx5 on smtp(`clapf_id`);
 
 
 drop table if exists clapf;
@@ -55,5 +56,5 @@ create view hist_in as select connection.`from`, connection.client, connection.`
 
 
 drop view if exists hist_out;
-create view hist_out as select smtp.ts, smtp.queue_id, smtp.`to`, clapf.`from`, clapf.`size`, clapf.subject, clapf.result, smtp.relay, smtp.`status` from smtp, clapf where smtp.queue_id = clapf.queue_id2;
+create view hist_out as select smtp.ts, smtp.queue_id, smtp.`to`, clapf.`clapf_id`, clapf.`from`, clapf.`size`, clapf.subject, clapf.result, smtp.relay, smtp.`status` from smtp, clapf where smtp.queue_id = clapf.queue_id2;
 

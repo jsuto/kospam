@@ -117,13 +117,17 @@ class ModelHealthHealth extends Model {
 
       $s = exec("df -h", $output);
 
+      $partitions = Registry::get('partitions_to_monitor');
+
       while(list($k, $v) = each($output)) {
          if($k > 0) {
             $p = preg_split("/\ {1,}/", $v);
-            $shortinfo[] = array(
-                             'partition' => $p[5],
-                             'utilization' => preg_replace("/\%/", "", $p[4])
-                           );
+            if(in_array($p[5], $partitions)) {
+               $shortinfo[] = array(
+                                    'partition' => $p[5],
+                                    'utilization' => preg_replace("/\%/", "", $p[4])
+                              );
+            }
          }
       }
 

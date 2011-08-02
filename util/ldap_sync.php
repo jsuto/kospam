@@ -73,4 +73,4 @@ foreach ($cfg as $ldap_params) {
 
 $total_emails_in_database = $import->model_user_import->count_email_addresses();
 
-print date(LOG_DATE_FORMAT); ?>: <?php print $text_total_users; ?>/<?php print $text_new_users; ?>/<?php print $text_deleted_users; ?>/<?php print $text_database_emails; ?> = <?php print $totalusers; ?>/<?php print $totalnewusers; ?>/<?php print $totaldeletedusers; ?>/<?php print $total_emails_in_database; ?>
+print date(LOG_DATE_FORMAT); ?>, <?php print $totalusers; ?>/<?php print $totalnewusers; ?>/<?php print $totaldeletedusers; ?>/<?php print $total_emails_in_database; ?>

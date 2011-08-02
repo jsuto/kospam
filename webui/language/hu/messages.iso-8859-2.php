@@ -28,7 +28,7 @@ $_['text_cpu_usage'] = "CPU használat";
 
 $_['text_daily_quarantine_report'] = "Napi karantén riport";
 $_['text_daily_report'] = "Napi jelentés";
-$_['text_database_emails'] = "email címek a clapf adatbázisban";
+$_['text_database_emails'] = "email cím a clapf adatbázisban";
 $_['text_date'] = "Dátum";
 $_['text_date_from'] = "Dátumtól";
 $_['text_date_to'] = "Dátumig";

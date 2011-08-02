@@ -57,8 +57,11 @@ class ControllerHealthWorker extends Controller {
       if(ENABLE_LDAP_IMPORT_FEATURE == 1) {
          $this->data['adsyncinfo'] = @file_get_contents(AD_SYNC_STAT);
 
+         $this->data['total_emails_in_database'] = 0;
+
          $a = preg_split("/ /", $this->data['adsyncinfo']);
          list ($this->data['totalusers'], $this->data['totalnewusers'], $this->data['totaldeletedusers'], $this->data['total_emails_in_database']) = preg_split("/\//", $a[count($a)-1]);
+         $this->data['adsyncinfo'] = $a[0] . " " . $a[1] . " " . $this->data['total_emails_in_database'];
       }
 
 

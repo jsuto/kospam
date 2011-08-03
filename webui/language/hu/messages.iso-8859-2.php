@@ -135,6 +135,7 @@ $_['text_no_such_policy'] = "Nincs ilyen házirend";
 $_['text_non_existent_queue_directory'] = "A megadott queue könyvtár nem létezik";
 $_['text_non_existing_user'] = "Nem létezõ felhasználó";
 $_['text_not_found'] = "Nincs találat";
+$_['text_not_running'] = "nem fut";
 $_['title_not_found'] = "Az oldal nem található";
 $_['text_number_of_messages_in_quarantine'] = "A keresési feltételnek megfelelõ üzenetek száma a karanténban";
 $_['text_number_of_spam_messages_in_quarantine'] = "A keresési feltételnek megfelelõ spam üzenetek száma a karanténban";
@@ -175,6 +176,7 @@ $_['text_remove_this_user'] = "Felhasználó törlése";
 $_['text_reset_counters'] = "Számlálók nullázása";
 $_['text_result'] = "Eredmény";
 $_['text_role'] = "Felhasználótípus";
+$_['text_running'] = "fut";
 
 $_['text_search'] = "Keresés";
 $_['text_search_terms'] = "Keresési feltételek";

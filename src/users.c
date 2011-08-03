@@ -169,6 +169,167 @@ int isKnownEmail(struct session_data *sdata, char *email, struct __config *cfg){
 #endif
 
 
+#ifdef HAVE_PSQL
+int getUserdataFromEmail(struct session_data *sdata, char *email, struct __config *cfg){
+   PGresult *res;
+   char *p, *q, buf[MAXBUFSIZE];
+   int rc=0;
+
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: query user data from %s", sdata->ttmpfile, email);
+
+   sdata->uid = 0;
+   sdata->gid = 0;
+   sdata->policy_group = 0;
+   memset(sdata->name, 0, SMALLBUFSIZE);
+   memset(sdata->domain, 0, SMALLBUFSIZE);
+
+   if(email == NULL) return 0;
+
+   /* skip the +... part from the email */
+
+   if((p = strchr(email, '+'))){
+      *p = '\0';
+      q = strchr(p+1, '@');
+
+      if(!q) return 0;
+
+      snprintf(buf, MAXBUFSIZE-1, "SELECT %s.uid, %s.gid, %s.username, %s.domain, %s.policy_group FROM %s,%s WHERE %s.uid=%s.uid AND %s.email='%s%s'",
+         SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_EMAIL_TABLE, email, q);
+
+      *p = '+';
+   } else {
+      snprintf(buf, MAXBUFSIZE-1, "SELECT %s.uid, %s.gid, %s.username, %s.domain, %s.policy_group FROM %s,%s WHERE %s.uid=%s.uid AND %s.email='%s'",
+            SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_EMAIL_TABLE, email);
+   }
+
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: user data stmt: %s", sdata->ttmpfile, buf);
+
+   if( PQstatus( sdata->psql ) == CONNECTION_BAD ) {
+      sdata->psql = PQconnectdb( sdata->conninfo );
+   }
+   if( PQstatus( sdata->psql ) != CONNECTION_BAD ) {
+      res = PQexec( sdata->psql, buf );
+      if( res && PQresultStatus( res ) == PGRES_TUPLES_OK ) {
+         const char *val = (char *)NULL;
+         val = ( const char * )PQgetvalue( res, 0, 0 );
+         sdata->uid = atol(val);
+         val = ( const char * )PQgetvalue( res, 0, 1 );
+         sdata->gid = atol(val);
+         val = ( const char * )PQgetvalue( res, 0, 2 );
+         if(val) snprintf(sdata->name, SMALLBUFSIZE-1, "%s", val);
+         val = ( const char * )PQgetvalue( res, 0, 3 );
+         if(val) snprintf(sdata->domain, SMALLBUFSIZE-1, "%s", val);
+         val = ( const char * )PQgetvalue( res, 0, 4 );
+         sdata->policy_group = atoi(val);
+         rc = 1;
+      }
+   }
+
+   if(rc == 1) return 0;
+
+   /* if no email was found, then try to lookup the domain */
+
+   p = strchr(email, '@');
+   if(!p) return 0;
+
+   snprintf(buf, MAXBUFSIZE-1, "SELECT %s.uid, %s.gid, %s.username, %s.domain, %s.policy_group FROM %s,%s WHERE %s.uid=%s.uid AND %s.email='%s'",
+      SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_EMAIL_TABLE, p);
+
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: user data stmt2: %s", sdata->ttmpfile, buf);
+
+   if( PQstatus( sdata->psql ) == CONNECTION_BAD ) {
+      sdata->psql = PQconnectdb( sdata->conninfo );
+   }
+   if( PQstatus( sdata->psql ) != CONNECTION_BAD ) {
+      res = PQexec( sdata->psql, buf );
+      if( res && PQresultStatus( res ) == PGRES_TUPLES_OK ) {
+         const char *val = (char *)NULL;
+         val = ( const char * )PQgetvalue( res, 0, 0 );
+         sdata->uid = atol(val);
+         val = ( const char * )PQgetvalue( res, 0, 1 );
+         sdata->gid = atol(val);
+         val = ( const char * )PQgetvalue( res, 0, 2 );
+         if(val) snprintf(sdata->name, SMALLBUFSIZE-1, "%s", val);
+         val = ( const char * )PQgetvalue( res, 0, 3 );
+         if(val) snprintf(sdata->domain, SMALLBUFSIZE-1, "%s", val);
+         val = ( const char * )PQgetvalue( res, 0, 4 );
+         sdata->policy_group = atoi(val);
+      }
+   }
+
+   return 0;
+}
+
+void getWBLData(struct session_data *sdata, struct __config *cfg){
+   PGresult *res;
+   int rows;
+   int i = 0;
+   char buf[SMALLBUFSIZE];
+   int n=0;
+
+   memset(sdata->whitelist, 0, MAXBUFSIZE);
+   memset(sdata->blacklist, 0, MAXBUFSIZE);
+
+   snprintf(buf, SMALLBUFSIZE-1, "SELECT whitelist, blacklist FROM %s,%s where (%s.uid=%ld or %s.uid=0) and %s.uid=%s.uid", SQL_WHITE_LIST, SQL_BLACK_LIST, SQL_WHITE_LIST, sdata->uid, SQL_WHITE_LIST, SQL_WHITE_LIST, SQL_BLACK_LIST);
+
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sql: %s", sdata->ttmpfile, buf);
+
+   if( PQstatus( sdata->psql ) == CONNECTION_BAD ) {
+      sdata->psql = PQconnectdb( sdata->conninfo );
+   }
+   if( PQstatus( sdata->psql ) != CONNECTION_BAD ) {
+      res = PQexec( sdata->psql, buf );
+      if( res && PQresultStatus( res ) == PGRES_TUPLES_OK ) {
+         rows = PQntuples( res );
+         for( i = 0; i < rows; i++) {
+            const char *val = (char *)NULL;
+            val = ( const char * )PQgetvalue( res, 0, 0 );
+            if(val){
+               if(n > 0) strncat(sdata->whitelist, "\n", MAXBUFSIZE-1);
+               strncat(sdata->whitelist, val, MAXBUFSIZE-1);
+            }
+            val = ( const char * )PQgetvalue( res, 0, 1 );
+            if(val){
+               if(n > 0) strncat(sdata->blacklist, "\n", MAXBUFSIZE-1);
+               strncat(sdata->blacklist, val, MAXBUFSIZE-1);
+            }
+            n++;
+         }
+      }
+   }
+}
+
+
+int isKnownEmail(struct session_data *sdata, char *email, struct __config *cfg){
+   PGresult *res;
+   char buf[SMALLBUFSIZE];
+   int rc=0;
+
+   if(email == NULL) return rc;
+
+   snprintf(buf, SMALLBUFSIZE-1, "SELECT COUNT(*) FROM %s WHERE email='%s'", SQL_EMAIL_TABLE, email);
+
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: is valid email sql: %s", sdata->ttmpfile, buf);
+
+   if( PQstatus( sdata->psql ) == CONNECTION_BAD ) {
+      sdata->psql = PQconnectdb( sdata->conninfo );
+   }
+   if( PQstatus( sdata->psql ) != CONNECTION_BAD ) {
+      res = PQexec( sdata->psql, buf );
+      if( res && PQresultStatus( res ) == PGRES_TUPLES_OK ) {
+         const char *val = (const char *)NULL;
+         val = ( const char * )PQgetvalue( res, 0, 0 );
+         if( atoi( val ) == 1 ) {
+            rc = 1;
+         }
+      }
+   }
+
+   return rc;
+}
+#endif
+
+
 #ifdef HAVE_SQLITE3
 int getUserdataFromEmail(struct session_data *sdata, char *email, struct __config *cfg){
    sqlite3_stmt *pStmt;

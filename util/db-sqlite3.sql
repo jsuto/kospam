@@ -12,10 +12,11 @@ INSERT INTO t_misc (nham, nspam, uid) VALUES(0, 0, 0);
 
 create table if not exists t_token (
 	token integer not null,
+	uid int unsigned default 0, 
 	nham int default 0,
 	nspam int default 0,
 	timestamp int default 0,
-	unique(token)
+	unique(token, uid)
 );
 
 create index t_token_idx on t_token(token);

@@ -28,10 +28,9 @@ AC_SUBST(spamdrop)
 AC_SUBST(spamdrop_install)
 AC_SUBST(preparesql)
 AC_SUBST(test)
-AC_SUBST(mysql_includes)
-AC_SUBST(mysql_libs)
+AC_SUBST(sql_includes)
+AC_SUBST(sql_libs)
 AC_SUBST(user_obj)
-AC_SUBST(ldap_libs)
 AC_SUBST(sql_obj)
 AC_SUBST(db_install)
 AC_SUBST(spamsum_libs)
@@ -74,7 +73,6 @@ defs=""
 objs=""
 user_obj=""
 sql_obj=""
-ldap_libs=""
 sqlite3_libs=""
 spamsum_libs=""
 sqlite3_batch=""
@@ -309,12 +307,30 @@ AC_ARG_WITH(store,
      if test "$have_mysql" = "yes"; then
             dnl AC_DEFINE(USE_MYSQL, 1, [MySQL database support enabled])
 
-            mysql_includes=`mysql_config --cflags`
-            mysql_libs=`mysql_config --libs_r`
+            sql_includes=`mysql_config --cflags`
+            sql_libs=`mysql_config --libs_r`
      else
         echo "MySQL support is not found"
         exit 1;
      fi
+   fi
+
+   if test "$withval" = "psql"; then
+      AC_CHECK_PROG(PSQL_CONFIG, pg_config, yes)
+
+      if test x$MYSQL_CONFIG = xyes; then
+        have_psql="yes"
+      fi
+
+      if test "$have_psql" = "yes"; then
+            dnl AC_DEFINE(USE_PSQL, 1, [PSQL database support enabled])
+
+            sql_includes="-I`pg_config --includedir`"
+            sql_libs="-L`pg_config --libdir`"
+      else
+         echo "PSQL support is not found"
+         exit 1;
+      fi
    fi
 
 ])
@@ -347,7 +363,7 @@ fi
 
 
 AC_ARG_WITH(tokendb,
-[  --with-tokendb[[=mysql|sqlite3]]  use either mysql or sqlite3 database holding tokens (default: none)],[
+[  --with-tokendb[[=mysql|psql|sqlite3]]  use either mysql or psql or sqlite3 database holding tokens (default: none)],[
   if test "$withval" != "no" -a "$withval" != "yes"; then
     TOKENDB=$withval
   fi
@@ -392,8 +408,8 @@ AC_ARG_WITH(tokendb,
      if test "$have_mysql" = "yes"; then
             dnl AC_DEFINE(USE_MYSQL, 1, [MySQL database support enabled])
 
-            mysql_includes=`mysql_config --cflags`
-            mysql_libs=`mysql_config --libs_r`
+            sql_includes=`mysql_config --cflags`
+            sql_libs=`mysql_config --libs_r`
             have_spamdrop="yes"
             parsembox="$parsembox"
             preparesql="prepare-sql aphash "
@@ -409,6 +425,32 @@ AC_ARG_WITH(tokendb,
   fi
 
 
+  if test "$withval" = "psql"; then
+
+    AC_CHECK_PROG(PSQL_CONFIG, pg_config, yes)
+
+     if test x$PSQL_CONFIG = xyes; then
+       have_psql="yes"
+     fi
+
+     if test "$have_psql" = "yes"; then
+            dnl AC_DEFINE(USE_PSQL, 1, [PSQL database support enabled])
+
+            sql_includes="-I`pg_config --includedir`"
+            sql_libs="-L`pg_config --libdir`"
+            have_spamdrop="yes"
+            parsembox="$parsembox"
+            preparesql="prepare-sql aphash "
+            spamdrop="spamdrop"
+            spamdrop_install="install-spamdrop"
+            db_install="install-psql-new"
+
+            test="test"
+     else
+        echo "PSQL support is not found"
+        exit 1;
+     fi
+  fi
 
   if test "$withval" = "mydb"; then
      have_spamdrop="yes"
@@ -563,6 +605,11 @@ fi
 if test "$TOKENDB" = "mysql"; then
    defs="$defs -DHAVE_MYSQL"
    sql_obj="mysql.o "
+fi
+
+if test "$TOKENDB" = "psql"; then
+   defs="$defs -DHAVE_PSQL"
+   sql_obj="psql.o "
 fi
 
 if test "$TOKENDB" = "mydb"; then
@@ -799,12 +846,15 @@ if test "$have_tre" = "yes"; then
 fi
 
 if test "$have_sqlite3" = "yes"; then
-   sqlite3_libs="-lsqlite3 -lpthread"
+   sql_libs="-lsqlite3 -lpthread"
 fi
 
+if test "$have_psql" = "yes"; then
+   sql_libs="-lpq"
+fi
 
 if test "$have_icc_guide" = "yes" && test "$have_mysql" = "yes"; then
-   mysql_libs="$mysql_libs -lguide"
+   sql_libs="$sql_libs -lguide"
 fi
 
 

@@ -75,6 +75,19 @@ int main(int argc, char **argv){
    }
 #endif
 
+#ifdef HAVE_PSQL
+   snprintf( sdata.conninfo, MAXBUFSIZE-1, "host='%s' port='%d' dbname='%s' user='%s' password='%s' connect_timeout='%d'",
+             cfg->psqlhost, cfg->psqlport, cfg->psqldb, cfg->psqluser, cfg->psqlpwd, cfg->psql_connect_timeout );
+
+   sdata.psql = PQconnectdb( sdata.conninfo );
+   if( PQstatus( sdata.psql ) == CONNECTION_OK ) {
+      spaminess = bayes_file( &sdata, &state, &cfg );
+      PQfinish( sdata.psql );
+   } else {
+      fprintf( stderr, "cannot connect to database\n" );
+   }
+#endif
+
 #ifdef HAVE_SQLITE3
    rc = sqlite3_open(cfg.sqlite3, &(sdata.db));
    if(rc){

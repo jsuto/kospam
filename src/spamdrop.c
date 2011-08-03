@@ -52,6 +52,18 @@ int openDatabase(struct session_data *sdata, struct __config *cfg){
    }
 #endif
 
+#ifdef HAVE_PSQL
+   snprintf( sdata->conninfo, MAXBUFSIZE-1, "host='%s' port='%d' dbname='%s' user='%s' password='%s' connect_timeout='%d'",
+             cfg->psqlhost, cfg->psqlport, cfg->psqldb, cfg->psqluser, cfg->psqlpwd, cfg->psql_connect_timeout );
+
+   sdata->psql = PQconnectdb( sdata->conninfo );
+   if( PQstatus( sdata->psql ) != CONNECTION_OK ) {
+      syslog( LOG_PRIORITY, "%s: %s", sdata->ttmpfile, ERR_PSQL_CONNECT );
+      PQfinish( sdata->psql );
+      return 0;
+   }
+#endif
+
 #ifdef HAVE_SQLITE3
    int rc;
 
@@ -82,6 +94,9 @@ void closeDatabase(struct session_data *sdata){
 
 #ifdef HAVE_MYSQL
    mysql_close(&(sdata->mysql));
+#endif
+#ifdef HAVE_PSQL
+   PQfinish( sdata->psql );
 #endif
 #ifdef HAVE_SQLITE3
    sqlite3_close(sdata->db);

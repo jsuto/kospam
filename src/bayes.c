@@ -152,8 +152,7 @@ float bayes_file(struct session_data *sdata, struct _state *state, struct __conf
    else
       p = sdata->ttmpfile;
 
-
-#ifndef HAVE_MYSQL
+#ifdef HAVE_MYDB
    cfg->group_type = GROUP_SHARED;
 #endif
 

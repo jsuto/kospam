@@ -42,6 +42,9 @@ void _clearhash(struct aaaa *xhash[MAX_HASH]){
    struct aaaa *p, *q;
    time_t cclock;
    unsigned long now;
+#ifdef HAVE_PSQL
+   printf("BEGIN;\n");
+#endif
 #ifdef HAVE_SQLITE3
    printf("BEGIN;\n");
 #endif
@@ -65,12 +68,6 @@ void _clearhash(struct aaaa *xhash[MAX_HASH]){
       while(q != NULL){
          p = q;
 
-      #ifdef HAVE_MYSQL
-         printf("INSERT INTO t_token (token, uid, nham, nspam, timestamp) VALUES(%llu, 0, %d, %d, %ld);\n", p->key, p->nham, p->nspam, now);
-      #endif
-      #ifdef HAVE_SQLITE3
-         printf("INSERT INTO t_token (token, nham, nspam, timestamp) VALUES(%llu, %d, %d, %ld);\n", p->key, p->nham, p->nspam, now);
-      #endif
       #ifdef HAVE_MYDB
          if(fd != -1 && p->nham + p->nspam > 2){
             e.key = p->key;
@@ -80,6 +77,8 @@ void _clearhash(struct aaaa *xhash[MAX_HASH]){
             write(fd, &e, N_SIZE);
             n++;
          }
+      #else
+         printf("INSERT INTO t_token (token, uid, nham, nspam, timestamp) VALUES(%llu, 0, %d, %d, %ld);\n", p->key, p->nham, p->nspam, now);
       #endif
 
          q = q->r;
@@ -89,6 +88,9 @@ void _clearhash(struct aaaa *xhash[MAX_HASH]){
       xhash[i] = NULL;
    }
 
+#ifdef HAVE_PSQL
+   printf("COMMIT;\n");
+#endif
 #ifdef HAVE_SQLITE3
    printf("COMMIT;\n");
 #endif

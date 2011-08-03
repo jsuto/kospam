@@ -22,6 +22,7 @@
 #define ERR_FORK_FAILED "ERR: cannot fork()"
 
 #define ERR_MYSQL_CONNECT "Cannot connect to mysql server"
+#define ERR_PSQL_CONNECT "Cannot connect to PSql server"
 #define ERR_SQLITE3_OPEN "Cannot open sqlite3 database"
 #define ERR_MYDB_OPEN "Cannot init mydb database"
 #define ERR_SQL_DATA "No valid data from sql table"

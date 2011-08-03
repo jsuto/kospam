@@ -126,7 +126,7 @@ void do_training(struct session_data *sdata, struct _state *state, char *email, 
 
 
 void saveMessageToQueue(struct session_data *sdata, float spaminess, struct __config *cfg){
-   int touch, ret;
+   int touch;
    char *p, path[SMALLBUFSIZE], qpath[SMALLBUFSIZE];
 
    if(strlen(sdata->name) <= 1) return;
@@ -152,6 +152,7 @@ void saveMessageToQueue(struct session_data *sdata, float spaminess, struct __co
 
 
 #ifdef STORE_FS
+   int ret;
    struct stat st;
 
    ret = link(sdata->ttmpfile, qpath);

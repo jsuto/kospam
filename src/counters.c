@@ -44,6 +44,30 @@ struct __counters loadCounters(struct session_data *sdata, struct __config *cfg)
    }
 
 #endif
+#ifdef HAVE_PSQL
+   PGresult *res;
+
+   if( PQstatus( sdata->psql ) == CONNECTION_BAD ) {
+      sdata->psql = PQconnectdb( sdata->conninfo );
+   }
+   if( PQstatus( sdata->psql ) != CONNECTION_BAD ) {
+      res = PQexec( sdata->psql, buf );
+      if( res && PQresultStatus( res ) == PGRES_TUPLES_OK ) {
+         counters.c_rcvd = strtoull(( const char * )PQgetvalue( res, 0, 0 ), NULL, 10);
+         counters.c_ham = strtoull(( const char * )PQgetvalue( res, 0, 1 ), NULL, 10);
+         counters.c_spam = strtoull(( const char * )PQgetvalue( res, 0, 2 ), NULL, 10);
+         counters.c_possible_spam = strtoull(( const char * )PQgetvalue( res, 0, 3 ), NULL, 10);
+         counters.c_unsure = strtoull(( const char * )PQgetvalue( res, 0, 4 ), NULL, 10);
+         counters.c_minefield = strtoull(( const char * )PQgetvalue( res, 0, 5 ), NULL, 10);
+         counters.c_virus = strtoull(( const char * )PQgetvalue( res, 0, 6 ), NULL, 10);
+         counters.c_fp = strtoull(( const char * )PQgetvalue( res, 0, 7 ), NULL, 10);
+         counters.c_fn = strtoull(( const char * )PQgetvalue( res, 0, 8 ), NULL, 10);
+         counters.c_zombie = strtoull(( const char * )PQgetvalue( res, 0, 9 ), NULL, 10);
+         counters.c_mynetwork = strtoull(( const char * )PQgetvalue( res, 0, 10 ), NULL, 10);
+      }
+   }
+
+#endif
 #ifdef HAVE_SQLITE3
    sqlite3_stmt *pStmt;
    const char **pzTail=NULL;
@@ -171,6 +195,16 @@ EXEC_SQL:
 
    #ifdef HAVE_MYSQL
       mysql_real_query(&(sdata->mysql), buf, strlen(buf));
+   #endif
+   #ifdef HAVE_PSQL
+   if( PQstatus( sdata->psql ) == CONNECTION_BAD ) {
+      sdata->psql = PQconnectdb( sdata->conninfo );
+   }
+   if( PQstatus( sdata->psql ) != CONNECTION_BAD ) {
+      PGresult *res;
+      res = PQexec( sdata->psql, buf );
+      PQclear( res );
+   }
    #endif
    #ifdef HAVE_SQLITE3
       sqlite3_exec(sdata->db, buf, NULL, NULL, &err);

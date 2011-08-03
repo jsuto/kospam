@@ -35,8 +35,16 @@ int main(int argc, char **argv){
                   if(p){
                      *p = '\0';
                #endif
+               #ifdef HAVE_PSQL
+                  p = strrchr(puf, ' ');
+                  if(p){
+                     *p = '\0';
+               #endif
                      len = strlen(puf);
                #ifdef HAVE_MYSQL
+                  }
+               #endif
+               #ifdef HAVE_PSQL
                   }
                #endif
                }

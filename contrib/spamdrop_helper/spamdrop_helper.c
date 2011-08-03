@@ -41,7 +41,10 @@
 
 sqlite3 *db;
 struct stat st;
-int rc = 0, old_umask ;
+int rc = 0, old_umask;
+uid_t cuid = ( uid_t ) -1;
+gid_t cgid = ( gid_t ) -1;
+struct passwd *xpwd;
 
 #define PA1 "%s/%s/%c"
 #define PA2 PA1"/%s"
@@ -191,7 +194,7 @@ int main( int argc, char **argv )
 {
   int i, nocopy = 0;
   time_t sec = 86400;           /* 1 day */
-  uid_t uid = (uid_t) -1;
+  uid_t uid = ( uid_t ) -1;
   char *configfile = CONFIG_FILE;
   char *create_sqlfile = ( char * ) NULL;
   char *purge_sqlfile = ( char * ) NULL;
@@ -239,7 +242,7 @@ int main( int argc, char **argv )
       case 'h':
       case '?':
         fprintf( stderr, "%s %s\n", argv[0], "[-c config] [-u username | -U uid] [-p sql_table_purge_file] [-s sql_table_create_file] [-t sec] [-x]" );
-        return 1;
+        return EX_TEMPFAIL;
         break;
 
       default:
@@ -254,14 +257,32 @@ int main( int argc, char **argv )
   ( void ) openlog( prg, LOG_PID, LOG_MAIL );
   /* read config file */
   cfg = read_config( configfile );
+  if( strlen( cfg.username ) > 1 ) {
+    xpwd = getpwnam( cfg.username );
+  }
+  if( ( getuid( ) == 0 || geteuid( ) == 0 ) && xpwd ) {
+    checkAndCreateClapfDirectories( &cfg, xpwd->pw_uid, xpwd->pw_gid );
+    cuid = xpwd->pw_uid;
+    cgid = xpwd->pw_gid;
+  }
+  if( drop_privileges( xpwd ) ) {
+    syslog( LOG_PRIORITY, "%s", ERR_SETUID );
+    return EX_TEMPFAIL;
+  }
 
   setlocale( LC_MESSAGES, cfg.locale );
   setlocale( LC_CTYPE, cfg.locale );
 
   memset( name, 0, sizeof( name ) );
   memset( path, 0, sizeof( path ) );
-  if( uid == (uid_t) -1 )
+  if( uid == ( uid_t ) -1 ) {
+    if( ( pwd = getpwnam( getenv( "YOURUSERNAME" ) ) ) != ( struct passwd * ) NULL ) {
+      uid = pwd->pw_uid;
+    }
+  }
+  if( uid == ( uid_t ) -1 ) {
     uid = getuid( );
+  }
   pwd = getpwuid( uid );
   snprintf( name, sizeof( name ) - 1, "%s", pwd->pw_name );
 
@@ -271,22 +292,26 @@ int main( int argc, char **argv )
   if( strlen( cfg.sqlite3 ) < 4 )
     snprintf( cfg.sqlite3, sizeof( cfg.sqlite3 ) - 1, PA3, cfg.chrootdir, USER_DATA_DIR, name[0], name, PER_USER_SQLITE3_DB_FILE );
 
-  old_umask = umask( 0 );
   snprintf( path, sizeof( path ) - 1, PA2, cfg.chrootdir, cfg.queuedir, name[0], name );
   if( stat( path, &st ) != 0 ) {
     snprintf( path, sizeof( path ) - 1, PA1, cfg.chrootdir, cfg.queuedir, name[0] );
-    mkdir( path, 0750 );
+    createdir( path, cuid, cgid, 0750 );
     snprintf( path, sizeof( path ) - 1, PA2, cfg.chrootdir, cfg.queuedir, name[0], name );
-    mkdir( path, 0750 );
+    createdir( path, cuid, cgid, 0750 );
+    if( cfg.verbosity >= _LOG_INFO )
+      syslog( LOG_PRIORITY, "Directory created, exit TEMP Error." );
+    return EX_TEMPFAIL;
   }
   snprintf( path, sizeof( path ) - 1, PA2, cfg.chrootdir, USER_DATA_DIR, name[0], name );
   if( stat( path, &st ) != 0 ) {
     snprintf( path, sizeof( path ) - 1, PA1, cfg.chrootdir, USER_DATA_DIR, name[0] );
-    mkdir( path, 0750 );
+    createdir( path, cuid, cgid, 0750 );
     snprintf( path, sizeof( path ) - 1, PA2, cfg.chrootdir, USER_DATA_DIR, name[0], name );
-    mkdir( path, 0750 );
+    createdir( path, cuid, cgid, 0750 );
+    if( cfg.verbosity >= _LOG_INFO )
+      syslog( LOG_PRIORITY, "Directory created, exit TEMP Error." );
+    return EX_TEMPFAIL;
   }
-  umask( old_umask );
 
   if( cfg.verbosity >= _LOG_INFO )
     syslog( LOG_PRIORITY, "DataBaseFile is '%s'", cfg.sqlite3 );

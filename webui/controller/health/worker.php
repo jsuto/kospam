@@ -52,7 +52,11 @@ class ControllerHealthWorker extends Controller {
       list($this->data['totalmem'], $this->data['meminfo'], $this->data['totalswap'], $this->data['swapinfo']) = $this->model_health_health->meminfo();
       $this->data['shortdiskinfo'] = $this->model_health_health->diskinfo();
 
-      $this->data['maillog_status'] = @file_get_contents(MAILLOG_STATUS);
+      if(file_exists(MAILLOG_PID_FILE)) {
+         $this->data['maillog_status'] = $lang->data['text_running'];
+      } else {
+         $this->data['maillog_status'] = $lang->data['text_not_running'];
+      }
 
       if(ENABLE_LDAP_IMPORT_FEATURE == 1) {
          $this->data['adsyncinfo'] = @file_get_contents(AD_SYNC_STAT);

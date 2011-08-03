@@ -8,6 +8,9 @@
 #ifdef HAVE_MYSQL
   #include <mysql.h>
 #endif
+#ifdef HAVE_PSQL
+  #include <libpq-fe.h>
+#endif
 #ifdef HAVE_SQLITE3
   #include <sqlite3.h>
 
@@ -167,6 +170,10 @@ struct session_data {
 #endif
 #ifdef HAVE_MYSQL
    MYSQL mysql;
+#endif
+#ifdef HAVE_PSQL
+   PGconn *psql;
+   char conninfo[SMALLBUFSIZE];
 #endif
 #ifdef HAVE_SQLITE3
    sqlite3 *db;

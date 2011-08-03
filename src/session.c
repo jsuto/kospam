@@ -63,6 +63,31 @@ void handleSession(int new_sd, struct __data *data, struct __config *cfg){
    else
       syslog(LOG_PRIORITY, "%s", ERR_MYSQL_CONNECT);
 #endif
+#ifdef HAVE_PSQL
+   snprintf( sdata.conninfo, MAXBUFSIZE-1, "host='%s' port='%d' dbname='%s' user='%s' password='%s' connect_timeout='%d'",
+             cfg->psqlhost, cfg->psqlport, cfg->psqldb, cfg->psqluser, cfg->psqlpwd, cfg->psql_connect_timeout );
+
+   sdata.psql = PQconnectdb( sdata.conninfo );
+   if( PQstatus( sdata.psql ) == CONNECTION_OK )
+      db_conn = 1;
+   else {
+      int cnt = 3;
+      while ( cnt-- > 0 && PQstatus( sdata.psql ) != CONNECTION_OK ) {
+         PQfinish( sdata.psql );
+         sdata.psql = PQconnectdb( sdata.conninfo );
+         if( PQstatus( sdata.psql ) != CONNECTION_OK ) {
+            syslog( LOG_PRIORITY, "%s (reconnect)", ERR_PSQL_CONNECT );
+            sleep( cfg->psql_connect_timeout );
+         }
+      }
+      if( PQstatus( sdata.psql ) != CONNECTION_OK ) {
+         syslog( LOG_PRIORITY, "%s", ERR_PSQL_CONNECT );
+         PQfinish( sdata.psql );
+      } else {
+         db_conn = 1;
+      }
+   }
+#endif
 #ifdef HAVE_MYDB
    init_mydb(cfg->mydbfile, &sdata);
 #endif
@@ -629,12 +654,18 @@ QUITTING:
 #ifdef HAVE_MYSQL
    updateCounters(&sdata, data, &counters, cfg);
 #endif
+#ifdef HAVE_PSQL
+   updateCounters(&sdata, data, &counters, cfg);
+#endif
 
 #ifdef HAVE_MYDB
    close_mydb(sdata.mhash);
 #endif
 #ifdef HAVE_MYSQL
    mysql_close(&(sdata.mysql));
+#endif
+#ifdef HAVE_PSQL
+   PQfinish( sdata.psql );
 #endif
 
 #ifdef HAVE_MEMCACHED

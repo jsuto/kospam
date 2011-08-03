@@ -60,6 +60,59 @@ int getPolicy(struct session_data *sdata, struct __config *cfg, struct __config 
 #endif
 
 
+#ifdef HAVE_PSQL
+int getPolicy(struct session_data *sdata, struct __config *cfg, struct __config *my_cfg){
+   PGresult *res;
+   char buf[SMALLBUFSIZE];
+
+#ifndef HAVE_LMTP
+   if(sdata->num_of_rcpt_to != 1) return 0;
+#endif
+
+   snprintf(buf, SMALLBUFSIZE-1, "SELECT deliver_infected_email, silently_discard_infected_email, use_antispam, spam_subject_prefix, enable_auto_white_list, max_message_size_to_filter, rbl_domain, surbl_domain, spam_overall_limit, spaminess_oblivion_limit, replace_junk_characters, invalid_junk_limit, invalid_junk_line, penalize_images, penalize_embed_images, penalize_octet_stream, training_mode, initial_1000_learning, store_metadata, store_only_spam, message_from_a_zombie FROM %s WHERE policy_group=%d", SQL_POLICY_TABLE, sdata->policy_group);
+
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: policy sql: %s", sdata->ttmpfile, buf);
+
+   if( PQstatus( sdata->psql ) == CONNECTION_BAD ) {
+      sdata->psql = PQconnectdb( sdata->conninfo );
+   }
+   if( PQstatus( sdata->psql ) != CONNECTION_BAD ) {
+      res = PQexec( sdata->psql, buf );
+      if( res && PQresultStatus( res ) == PGRES_TUPLES_OK ) {
+            const char *val = ( const char * )NULL;
+            my_cfg->deliver_infected_email = atoi(( const char * )PQgetvalue( res, 0, 0 ));
+            my_cfg->silently_discard_infected_email = atoi(( const char * )PQgetvalue( res, 0, 1 ));
+            my_cfg->use_antispam = atoi(( const char * )PQgetvalue( res, 0, 2 ));
+            val = ( const char * )PQgetvalue( res, 0, 3 );
+            if(val != ( const char * )NULL) snprintf(my_cfg->spam_subject_prefix, MAXVAL-1, "%s ", val);
+            my_cfg->enable_auto_white_list = atoi(( const char * )PQgetvalue( res, 0, 4 ));
+            my_cfg->max_message_size_to_filter = atoi(( const char * )PQgetvalue( res, 0, 5 ));
+            val = ( const char * )PQgetvalue( res, 0, 6 );
+            if(val != ( const char * )NULL) snprintf(my_cfg->rbl_domain, MAXVAL-1, "%s", val);
+            val = ( const char * )PQgetvalue( res, 0, 7 );
+            if(val != ( const char * )NULL) snprintf(my_cfg->surbl_domain, MAXVAL-1, "%s", val);
+            my_cfg->spam_overall_limit = atof(( const char * )PQgetvalue( res, 0, 8 ));
+            my_cfg->spaminess_oblivion_limit = atof(( const char * )PQgetvalue( res, 0, 9 ));
+            my_cfg->replace_junk_characters = atoi(( const char * )PQgetvalue( res, 0, 10 ));
+            my_cfg->invalid_junk_limit = atoi(( const char * )PQgetvalue( res, 0, 11 ));
+            my_cfg->invalid_junk_line = atoi(( const char * )PQgetvalue( res, 0, 12 ));
+            my_cfg->penalize_images = atoi(( const char * )PQgetvalue( res, 0, 13 ));
+            my_cfg->penalize_embed_images = atoi(( const char * )PQgetvalue( res, 0, 14 ));
+            my_cfg->penalize_octet_stream = atoi(( const char * )PQgetvalue( res, 0, 15 ));
+            my_cfg->training_mode = atoi(( const char * )PQgetvalue( res, 0, 16 ));
+            my_cfg->initial_1000_learning = atoi(( const char * )PQgetvalue( res, 0, 17 ));
+            my_cfg->store_metadata = atoi(( const char * )PQgetvalue( res, 0, 18 ));
+            my_cfg->store_only_spam = atoi(( const char * )PQgetvalue( res, 0, 19 ));
+            my_cfg->message_from_a_zombie = atoi(( const char * )PQgetvalue( res, 0, 20 ));
+      }
+   }
+
+   return 1;
+}
+
+#endif
+
+
 #ifdef HAVE_SQLITE3
 int getPolicy(struct session_data *sdata, struct __config *cfg, struct __config *my_cfg){
    char buf[SMALLBUFSIZE];

@@ -164,8 +164,7 @@ function write_stuff() {
    fputs($fp, "define('QSHAPE_DEFERRED_SENDER_OUT', QSHAPE_DEFERRED_SENDER . '-out');" . CRLF);
 
 
-   //fputs($fp, "define('NUMBER_OF_QUARANTINED_MESSAGES', STAT_DIRECTORY . '/quarantined.messages');" . CRLF);
-   fputs($fp, "define('MAILLOG_STATUS', STAT_DIRECTORY . '/clapf-maillog.stat');" . CRLF);
+   fputs($fp, "define('MAILLOG_PID_FILE', '/var/run/clapf/clapf-maillog.pid');" . CRLF);
    fputs($fp, "define('CPUSTAT', STAT_DIRECTORY . '/cpu.stat');" . CRLF);
    fputs($fp, "define('AD_SYNC_STAT', STAT_DIRECTORY . '/adsync.stat');" . CRLF);
 

@@ -16,10 +16,9 @@ localstatedir = @localstatedir@
 CC = @CC@
 CFLAGS = @CFLAGS@ @CPPFLAGS@
 DEFS = @defs@
-INCDIR = -I. -I../.. -I../../src @INCDIR@ @mysql_includes@
+INCDIR = -I. -I../.. -I../../src @INCDIR@ @sql_includes@
 LIBDIR = -L. @LIBDIR@ @LDFLAGS@ -L../../src
-LIBS = @LIBS@ @mysql_libs@
-LDAP_LIBS = @ldap_libs@
+LIBS = @LIBS@ @sql_libs@
 
 INSTALL = @INSTALL@
 

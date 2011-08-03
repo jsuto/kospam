@@ -135,6 +135,7 @@ $_['text_no_such_policy'] = "No such policy";
 $_['text_non_existent_queue_directory'] = "The queue directory you have specified does not exist";
 $_['text_non_existing_user'] = "Non existing user";
 $_['text_not_found'] = "Not found";
+$_['text_not_running'] = "not running";
 $_['title_not_found'] = "Page not found";
 $_['text_number_of_messages_in_quarantine'] = "Number of messages in the quarantine matching your search criteria";
 $_['text_number_of_spam_messages_in_quarantine'] = "Number of spam messages in the quarantine matching your search criteria";
@@ -175,6 +176,7 @@ $_['text_remove_this_user'] = "Remove this user";
 $_['text_reset_counters'] = "Reset counters";
 $_['text_result'] = "Result";
 $_['text_role'] = "Role";
+$_['text_running'] = "running";
 
 $_['text_search'] = "Search";
 $_['text_search_terms'] = "Search terms";

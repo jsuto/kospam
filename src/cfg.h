@@ -148,6 +148,15 @@ struct __config {
    char mysqldb[MAXVAL];
    int mysql_connect_timeout;
 
+   // PSql stuff
+
+   char psqlhost[MAXVAL];
+   int psqlport;
+   char psqluser[MAXVAL];
+   char psqlpwd[MAXVAL];
+   char psqldb[MAXVAL];
+   int psql_connect_timeout;
+
    // sqlite3 stuff
 
    char sqlite3[MAXVAL];

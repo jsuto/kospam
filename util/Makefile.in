@@ -16,10 +16,9 @@ localstatedir = @localstatedir@
 CC = @CC@
 CFLAGS = @CFLAGS@ @CPPFLAGS@
 DEFS = @defs@
-INCDIR = -I. -I../.. -I../../src @INCDIR@ @mysql_includes@
+INCDIR = -I. -I../.. -I../../src @INCDIR@ @sql_includes@
 LIBDIR = -L. @LIBDIR@ @LDFLAGS@ -L../../src
-LIBS = @LIBS@ @mysql_libs@
-LDAP_LIBS = @ldap_libs@
+LIBS = @LIBS@ @sql_libs@
 
 CLAPF_USER = @CLAPF_USER@
 CLAPF_GROUP = `@id_bin@ -gn $(CLAPF_USER)`
@@ -45,6 +44,10 @@ install: @db_install@
 
 install-mysql-new:
 	$(INSTALL) -m 0644 $(srcdir)/db-mysql.sql $(DESTDIR)$(datarootdir)/clapf/db.sql
+
+install-psql-new:
+	$(INSTALL) -m 0644 $(srcdir)/db-psql.sql $(DESTDIR)$(datarootdir)/clapf/db.sql
+
 
 install-sqlite3:
 	$(INSTALL) -m 0644 $(srcdir)/db-sqlite3.sql $(DESTDIR)$(datarootdir)/clapf/db.sql

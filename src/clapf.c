@@ -126,6 +126,7 @@ void initialiseConfiguration(){
 
    if(strlen(cfg.username) > 1){
       pwd = getpwnam(cfg.username);
+      if(!pwd) fatal(ERR_NON_EXISTENT_CLAPF_USER);
    }
 
 

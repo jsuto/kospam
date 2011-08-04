@@ -1,3 +1,8 @@
+2011.08.04, SJ
+
+The clapf daemon checks whether the 'username' variable is valid,
+and it will quit if it's not.
+
 2011.08.02, SJ
 
 Minor webui improvement.

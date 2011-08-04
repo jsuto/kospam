@@ -29,7 +29,7 @@ true)" onmouseout="UnTip()"><?php print $status; ?></span></td>
 </table>
 </p>
 
-<?php if($maillog_status) { ?><p><strong><?php print $text_maillog_status; ?>:</strong> <span class="health-<?php if($maillog_status == $text_running) { ?>ok<?php } else { ?>alert<?php } ?>"><?php print $maillog_status; ?></span><?php } ?>
+<?php if(MAILLOG_PID_FILE) { ?><p><strong><?php print $text_maillog_status; ?>:</strong> <span class="health-<?php if($maillog_status == $text_running) { ?>ok<?php } else { ?>alert<?php } ?>"><?php print $maillog_status; ?></span><?php } ?>
 
 <?php if(ENABLE_LDAP_IMPORT_FEATURE == 1) { ?><p><strong><?php print $text_ad_sync_status; ?>:</strong> <span class="health-<?php if($totalusers >= LDAP_IMPORT_MINIMUM_NUMBER_OF_USERS_TO_HEALTH_OK && $total_emails_in_database >= LDAP_IMPORT_MINIMUM_NUMBER_OF_USERS_TO_HEALTH_OK) { ?>ok<?php } else { ?>alert<?php } ?>"><?php print $adsyncinfo; ?> <?php print strtolower($text_email); ?></span></p><?php } ?>
 

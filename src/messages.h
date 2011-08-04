@@ -36,7 +36,7 @@
 #define ERR_NO_DB_DIR "ERR: no clamav database dir found"
 #define ERR_BUILD_TRIE "ERR: building trie"
 #define ERR_STATCHKDIR "ERR: halt because of cl_statchkdir()"
-
+#define ERR_NON_EXISTENT_CLAPF_USER "ERR: non existent user in clapf.conf, see the 'username' variable"
 
 #define MSG_BLACKHOLED "sender trapped in blackhole"
 #define MSG_ABSOLUTELY_SPAM "message is absolutely spam"

@@ -136,36 +136,6 @@ void getWBLData(struct session_data *sdata, struct __config *cfg){
    }
 
 }
-
-
-int isKnownEmail(struct session_data *sdata, char *email, struct __config *cfg){
-   MYSQL_RES *res;
-   MYSQL_ROW row;
-   char buf[SMALLBUFSIZE], _email[2*SMALLBUFSIZE+1];
-   int rc=0;
-
-   if(email == NULL) return rc;
-
-   mysql_real_escape_string(&(sdata->mysql), _email, email, strlen(email));
-
-   snprintf(buf, SMALLBUFSIZE-1, "SELECT COUNT(*) FROM %s WHERE email='%s'", SQL_EMAIL_TABLE, _email);
-
-   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: is valid email sql: %s", sdata->ttmpfile, buf);
-
-   if(mysql_real_query(&(sdata->mysql), buf, strlen(buf)) == 0){
-      res = mysql_store_result(&(sdata->mysql));
-      if(res != NULL){
-         row = mysql_fetch_row(res);
-         if(row && atoi(row[0]) == 1){
-            rc = 1;
-         }
-         mysql_free_result(res);
-      }
-   }
-
-   return rc;
-}
-
 #endif
 
 
@@ -297,35 +267,6 @@ void getWBLData(struct session_data *sdata, struct __config *cfg){
          }
       }
    }
-}
-
-
-int isKnownEmail(struct session_data *sdata, char *email, struct __config *cfg){
-   PGresult *res;
-   char buf[SMALLBUFSIZE];
-   int rc=0;
-
-   if(email == NULL) return rc;
-
-   snprintf(buf, SMALLBUFSIZE-1, "SELECT COUNT(*) FROM %s WHERE email='%s'", SQL_EMAIL_TABLE, email);
-
-   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: is valid email sql: %s", sdata->ttmpfile, buf);
-
-   if( PQstatus( sdata->psql ) == CONNECTION_BAD ) {
-      sdata->psql = PQconnectdb( sdata->conninfo );
-   }
-   if( PQstatus( sdata->psql ) != CONNECTION_BAD ) {
-      res = PQexec( sdata->psql, buf );
-      if( res && PQresultStatus( res ) == PGRES_TUPLES_OK ) {
-         const char *val = (const char *)NULL;
-         val = ( const char * )PQgetvalue( res, 0, 0 );
-         if( atoi( val ) == 1 ) {
-            rc = 1;
-         }
-      }
-   }
-
-   return rc;
 }
 #endif
 

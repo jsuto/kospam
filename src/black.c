@@ -88,7 +88,7 @@ void is_sender_on_minefield(struct session_data *sdata, char *ip, struct __confi
    sqlite3_stmt *pStmt;
    const char **pzTail=NULL;
 
-   snprintf(stmt, MAXBUFSIZE-1, "SELECT ts FROM %s WHERE ip='%s'", SQL_MINEFIELD_TABLE, ip);
+   snprintf(stmt, SMALLBUFSIZE-1, "SELECT ts FROM %s WHERE ip='%s'", SQL_MINEFIELD_TABLE, ip);
 
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: minefield query: %s", sdata->ttmpfile, stmt);
 

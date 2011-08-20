@@ -39,7 +39,8 @@ install: @db_install@
 	$(INSTALL) -m 0755 $(srcdir)/summary.php $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 $(srcdir)/quarantine-daily-report.php $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0644 $(srcdir)/purge-mysql.sql $(DESTDIR)$(datarootdir)/clapf
-	$(INSTALL) -m 0644 $(srcdir)/purge-sqlite3.sql $(DESTDIR)$(datarootdir)/clapf/purge-sqlite3.sql
+	$(INSTALL) -m 0644 $(srcdir)/purge-psql.sql $(DESTDIR)$(datarootdir)/clapf
+	$(INSTALL) -m 0644 $(srcdir)/purge-sqlite3.sql $(DESTDIR)$(datarootdir)/clapf
 	$(INSTALL) -m 0644 $(srcdir)/zombienets.regex $(DESTDIR)$(datarootdir)/clapf
 
 install-mysql-new:

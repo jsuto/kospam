@@ -186,11 +186,6 @@ int main(int argc, char **argv, char **envp){
 #ifdef HAVE_LANG_DETECT
    char *lang="unknown";
 #endif
-#ifdef HAVE_SPAMDROP_HELPER
-   struct stat st;
-   char envvar[SMALLBUFSIZE];
-   char *eeenv[] = { NULL, (char *) 0 };
-#endif
 #ifdef HAVE_SPAMSUM
    char *sum, spamsum_buf[SMALLBUFSIZE];
    unsigned int flags=0, spamsum_score=0;
@@ -437,32 +432,6 @@ int main(int argc, char **argv, char **envp){
    if(strlen(cfg.mydbfile) < 4)
       snprintf(cfg.mydbfile, MAXVAL-1, "%s/%s/%c/%s/%s", cfg.chrootdir, USER_DATA_DIR, sdata.name[0], sdata.name, MYDB_FILE);
 #endif
-
-#ifdef HAVE_SPAMDROP_HELPER
-   snprintf(buf, MAXBUFSIZE-1, "%s/%s/%c/%s", cfg.chrootdir, cfg.queuedir, sdata.name[0], sdata.name);
-
-   if(stat(buf, &st) != 0){
-      if(stat(SPAMDROP_HELPER_PROGRAM, &st) != 0){
-         syslog(LOG_PRIORITY, "%s: missing spamdrop helper script: %s, for user: %s", sdata.ttmpfile, SPAMDROP_HELPER_PROGRAM, sdata.name);
-         return EX_TEMPFAIL;
-      }
-
-      syslog(LOG_PRIORITY, "%s: running spamdrop helper script: %s, for user: %s", sdata.ttmpfile, SPAMDROP_HELPER_PROGRAM, sdata.name);
-
-      snprintf(envvar, SMALLBUFSIZE-1, "YOURUSERNAME=%s", sdata.name);
-      putenv(envvar);
-      eeenv[0] = &envvar[0];
-
-      execl(SPAMDROP_HELPER_PROGRAM, envvar, (char*)0);
-
-      if(stat(buf, &st) != 0){
-         syslog(LOG_PRIORITY, "%s: missing user directory: %s", sdata.ttmpfile, buf);
-         return EX_TEMPFAIL;
-      }
-   }
-#endif
-
-
 
    if(openDatabase(&sdata, &cfg) == 0){
       rc = print_message_stdout(&sdata, NULL, spaminess, &cfg);

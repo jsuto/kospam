@@ -239,10 +239,11 @@ void fixupEncodedHeaderLine(char *buf){
                   decodeUTF8(s+3);
                }
 
-               strncat(puf, s+3, MAXBUFSIZE-1);               
+               if(s) strncat(puf, s+3, MAXBUFSIZE-1);               
             }
-            else
+            else {
                start = NULL;
+            }
          }
 
          if(!start){

@@ -4,7 +4,7 @@
 ## load ham/spam hashed tokens from scratch
 ##
 
-if [ $# -ne 4 ]; then echo "usage: $0 <ham> <spam> <mysql|sqlite3> <config file>"; exit 1; fi
+if [ $# -ne 4 ]; then echo "usage: $0 <ham> <spam> <mysql|psql|sqlite3> <config file>"; exit 1; fi
 
 export PATH=$PATH:/usr/local/bin:/usr/local/sbin:/usr/local/mysql/bin:YOUR_BINDIR:.:`pwd`/perl:YOUR_LIBEXECDIR
 export LC_ALL=C
@@ -23,6 +23,19 @@ HASHTEMP=$TEMP.$$
 import_tokens(){
 
    TS1=`date +%s`
+
+
+   ### psql
+
+   if [ "$DBTYPE" = "psql" ]; then
+      echo "Num of ham messages: $NHAM"
+      echo "Num of spam messages: $NSPAM"
+      echo -n "Importing data . . . "
+
+      prepare-sql ham.tmp spam.tmp | PGPASSWORD=$PSQLPWD psql -U $PSQLUSER -h $PSQLHOST -p $PSQLPORT -d $PSQLDB
+      echo "UPDATE t_misc SET nham=$NHAM, nspam=$NSPAM WHERE uid=0;" | PGPASSWORD=$PSQLPWD psql -U $PSQLUSER -h $PSQLHOST -p $PSQLPORT -d $PSQLDB
+   fi
+
 
 
    ### sqlite3
@@ -50,10 +63,15 @@ import_tokens(){
 
       echo -n "Loaded tokens in .... "
 
-      echo "LOAD DATA LOCAL INFILE '$TEMP' INTO TABLE t_token FIELDS TERMINATED BY ' '" | mysql -u $MYSQLUSER -p$MYSQLPASSWORD $MYSQLDB
+      if [ -n "$MYSQLSOCKET" ]; then
+         MYSQLCMD="mysql --user=$MYSQLUSER --password=$MYSQLPASSWORD --socket=$MYSQLSOCKET"
+      else
+         MYSQLCMD="mysql --user=$MYSQLUSER --password=$MYSQLPASSWORD --host=$MYSQLHOST --port=MYSQLPORT"
+      fi
 
-      echo "UPDATE t_misc SET nham=$NHAM, nspam=$NSPAM WHERE uid=0" | mysql -u $MYSQLUSER -p$MYSQLPASSWORD $MYSQLDB
+      echo "LOAD DATA LOCAL INFILE '$TEMP' INTO TABLE t_token FIELDS TERMINATED BY ' '" | $MYSQLCMD $MYSQLDB
 
+      echo "UPDATE t_misc SET nham=$NHAM, nspam=$NSPAM WHERE uid=0" | $MYSQLCMD $MYSQLDB
    fi
 
 
@@ -130,6 +148,11 @@ MYSQLHOST=`grep ^mysqlhost= $CONFIG | cut -f2 -d '='`
 MYSQLPORT=`grep ^mysqlport= $CONFIG | cut -f2 -d '='`
 MYSQLSOCKET=`grep ^mysqlsocket= $CONFIG | cut -f2 -d '='`
 
+PSQLDB=`grep ^psqldb= $CONFIG | cut -f2 -d '='`
+PSQLUSER=`grep ^psqluser= $CONFIG | cut -f2 -d '='`
+PSQLPWD=`grep ^psqlpwd= $CONFIG | cut -f2 -d '='`
+PSQLHOST=`grep ^psqlhost= $CONFIG | cut -f2 -d '='`
+PSQLPORT=`grep ^psqlport= $CONFIG | cut -f2 -d '='`
 
 rm -f ham.tmp spam.tmp temp.* num_of_ham.tmp num_of_spam.tmp
 TS1=`date +%s`

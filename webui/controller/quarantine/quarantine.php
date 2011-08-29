@@ -35,7 +35,7 @@ class ControllerQuarantineQuarantine extends Controller {
       if(isset($this->request->get['to'])) { $this->data['to'] = $this->request->get['to']; }
       if(isset($this->request->get['subj'])) { $this->data['subj'] = $this->request->get['subj']; }
       if(isset($this->request->get['hamspam'])) { $this->data['hamspam'] = $this->request->get['hamspam']; }
-      if(isset($this->request->get['date'])) { $this->data['date'] = $this->request->get['date']; }
+      if(isset($this->request->get['date'])) { $this->data['date'] = preg_replace("/\./", "-", $this->request->get['date']); }
 
 
       $this->data['uid'] = 0;

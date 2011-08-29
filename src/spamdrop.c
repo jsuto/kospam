@@ -20,6 +20,7 @@
 extern char *optarg;
 extern int optind;
 
+struct passwd *xpwd = (struct passwd *)NULL;
 int deliver_message=0;
 
 
@@ -274,6 +275,19 @@ int main(int argc, char **argv, char **envp){
 
    cfg = read_config(configfile);
 
+   if( strlen( cfg.username ) ) {
+      xpwd = getpwnam( cfg.username );
+   } else {
+      xpwd = getpwuid( getuid() );
+   }
+   if( xpwd != (struct passwd *)NULL ) {
+      if( xpwd->pw_uid == getuid() || xpwd->pw_uid == geteuid() ) {
+         checkAndCreateClapfDirectories( &cfg, xpwd->pw_uid, xpwd->pw_gid );
+      }
+   } else {
+      fprintf( stderr, "Invalid username in config file: '%s'\n", cfg.username );
+      return 0;
+   }
 
    if(debug == 1){
       print_message = 0;
@@ -425,12 +439,22 @@ int main(int argc, char **argv, char **envp){
    /* fix database path if we need it */
 
 #ifdef HAVE_SQLITE3
-   if(strlen(cfg.sqlite3) < 4)
+   if(strlen(cfg.sqlite3) < 4){
       snprintf(cfg.sqlite3, MAXVAL-1, "%s/%s/%c/%s/%s", cfg.chrootdir, USER_DATA_DIR, sdata.name[0], sdata.name, PER_USER_SQLITE3_DB_FILE);
+      snprintf(buf, MAXBUFSIZE-1, "%s/%s/%c", cfg.chrootdir, USER_DATA_DIR, sdata.name[0]);
+      createdir(buf, xpwd->pw_uid, xpwd->pw_gid, 0755);
+      snprintf(buf, MAXBUFSIZE-1, "%s/%s/%c/%s", cfg.chrootdir, USER_DATA_DIR, sdata.name[0], sdata.name);
+      createdir(buf, xpwd->pw_uid, xpwd->pw_gid, 0755);
+   }
 #endif
 #ifdef HAVE_MYDB
-   if(strlen(cfg.mydbfile) < 4)
+   if(strlen(cfg.mydbfile) < 4){
       snprintf(cfg.mydbfile, MAXVAL-1, "%s/%s/%c/%s/%s", cfg.chrootdir, USER_DATA_DIR, sdata.name[0], sdata.name, MYDB_FILE);
+      snprintf(buf, MAXBUFSIZE-1, "%s/%s/%c", cfg.chrootdir, USER_DATA_DIR, sdata.name[0]);
+      createdir(buf, xpwd->pw_uid, xpwd->pw_gid, 0755);
+      snprintf(buf, MAXBUFSIZE-1, "%s/%s/%c/%s", cfg.chrootdir, USER_DATA_DIR, sdata.name[0], sdata.name );
+      createdir(buf, xpwd->pw_uid, xpwd->pw_gid, 0755);
+   }
 #endif
 
    if(openDatabase(&sdata, &cfg) == 0){

@@ -19,6 +19,8 @@ class ModelStatChart extends Model {
 
       $limit = $this->getDataPoints($timespan);
 
+      $range = $this->getRangeInSeconds($timespan);
+
       if(HISTORY_DRIVER == "sqlite"){
          if($timespan == "daily"){ $grouping = "GROUP BY strftime('%Y.%m.%d %H', datetime(ts, 'unixepoch'))"; }
          else { $grouping = "GROUP BY strftime('%Y.%m.%d', datetime(ts, 'unixepoch'))"; }
@@ -30,12 +32,12 @@ class ModelStatChart extends Model {
 
 
       if($timespan == "daily"){
-         $query = $this->db_history->query("select ts-(ts%3600) as ts, count(*) as num from clapf where result='HAM' $emails $grouping ORDER BY ts DESC limit $limit");
-         $query2 = $this->db_history->query("select ts-(ts%3600) as ts, count(*) as num from clapf where result='SPAM' $emails $grouping ORDER BY ts DESC limit $limit");
+         $query = $this->db_history->query("select ts-(ts%3600) as ts, count(*) as num from clapf where ts > $range AND result='HAM' $emails $grouping ORDER BY ts DESC limit $limit");
+         $query2 = $this->db_history->query("select ts-(ts%3600) as ts, count(*) as num from clapf where ts > $range AND result='SPAM' $emails $grouping ORDER BY ts DESC limit $limit");
          $date_format = "H:i";
       } else {
-         $query = $this->db_history->query("select ts-(ts%86400) as ts, count(*) as num from clapf where result='HAM' $emails $grouping ORDER BY ts DESC limit $limit");
-         $query2 = $this->db_history->query("select ts-(ts%86400) as ts, count(*) as num from clapf where result='SPAM' $emails $grouping ORDER BY ts DESC limit $limit");
+         $query = $this->db_history->query("select ts-(ts%86400) as ts, count(*) as num from clapf where ts > $range AND result='HAM' $emails $grouping ORDER BY ts DESC limit $limit");
+         $query2 = $this->db_history->query("select ts-(ts%86400) as ts, count(*) as num from clapf where ts > $range AND result='SPAM' $emails $grouping ORDER BY ts DESC limit $limit");
          $date_format = "m.d.";
       }
 

@@ -65,36 +65,41 @@ if(QUARANTINE_DRIVER == "sqlite") {
 
 foreach ($users as $user) {
 
-      list ($n, $total_size, $messages) = $qd->getMessages(array($user['uid']), 0, 0, '', '', '', 'SPAM', 'ts', 1);
+   /* check if this account is a list address, and if so, then skip it */
 
-      if($n > 0) {
+   $q = $db->query("SELECT COUNT(*) AS num FROM " . TABLE_QUARANTINE_GROUP . " WHERE gid=" . (int)$user['uid']);
+   if(isset($q->row['num']) && $q->row['num'] > 0) { continue; }
 
-         $total_notifications++;
+   list ($n, $total_size, $messages) = $qd->getMessages(array($user['uid']), 0, 0, '', '', '', 'SPAM', 'ts', 1);
 
-         $msg = "From: " . SMTP_FROMADDR . EOL;
-         $msg .= "To: " . $user['email'] . EOL;
-         $msg .= "Subject: =?UTF-8?Q?" . preg_replace("/\n/", "", my_qp_encode($text_daily_quarantine_report)) . "?=" . EOL;
-         $msg .= "MIME-Version: 1.0" . EOL;
-         $msg .= "Content-Type: text/html; charset=\"utf-8\"" . EOL;
-         $msg .= EOL . EOL;
+   if($n > 0) {
 
-         ob_start();
+      $total_notifications++;
 
-         include($webuidir . "/language/" . LANG . "/quarantine-daily-digest.tpl");
+      $msg = "From: " . SMTP_FROMADDR . EOL;
+      $msg .= "To: " . $user['email'] . EOL;
+      $msg .= "Subject: =?UTF-8?Q?" . preg_replace("/\n/", "", my_qp_encode($text_daily_quarantine_report)) . "?=" . EOL;
+      $msg .= "MIME-Version: 1.0" . EOL;
+      $msg .= "Content-Type: text/html; charset=\"utf-8\"" . EOL;
+      $msg .= EOL . EOL;
 
-         $msg .= ob_get_contents();
+      ob_start();
 
-         ob_end_clean();
+      include($webuidir . "/language/" . LANG . "/quarantine-daily-digest.tpl");
 
-         $x = $mail->SendSmtpEmail(LOCALHOST, POSTFIX_PORT_AFTER_CONTENT_FILTER, SMTP_DOMAIN, SMTP_FROMADDR, $user['email'], $msg);
+      $msg .= ob_get_contents();
 
-         if($x == 0) { $failed_notifications++; }
-      }
+      ob_end_clean();
+
+      $x = $mail->SendSmtpEmail(LOCALHOST, POSTFIX_PORT_AFTER_CONTENT_FILTER, SMTP_DOMAIN, SMTP_FROMADDR, $user['email'], $msg);
+
+      if($x == 0) { $failed_notifications++; }
+   }
 
 }
 
 
-if($verbose >= 1) { print "total/failed notifications: $total_notifications/$failed_notifications\n"; }
+print date(LOG_DATE_FORMAT) . ", $text_total/$text_failed: $total_notifications/$failed_notifications\n";
 
 
 /* release lock */

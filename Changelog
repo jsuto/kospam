@@ -1,3 +1,11 @@
+2011.08.30, SJ
+
+Added an entry about the daily quarantine report to the Monitor/health check
+webui page.
+
+Omit the daily quarantine report to the list addresses, ie. to those addresses
+that are in the t_quarantine_group table.
+
 2011.08.29, SJ
 
 Added a per user directory creating code snippet.

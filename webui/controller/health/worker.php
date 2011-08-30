@@ -49,6 +49,8 @@ class ControllerHealthWorker extends Controller {
       list ($this->data['uptime'], $this->data['cpuload']) = $this->model_health_health->uptime();
 
       $this->data['cpuinfo'] = 100 - (int)file_get_contents(CPUSTAT);
+      $this->data['quarantinereportinfo'] = @file_get_contents(DAILY_QUARANTINE_REPORT_STAT);
+
       list($this->data['totalmem'], $this->data['meminfo'], $this->data['totalswap'], $this->data['swapinfo']) = $this->model_health_health->meminfo();
       $this->data['shortdiskinfo'] = $this->model_health_health->diskinfo();
 

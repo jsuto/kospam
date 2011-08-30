@@ -167,6 +167,7 @@ function write_stuff() {
    fputs($fp, "define('MAILLOG_PID_FILE', '/var/run/clapf/clapf-maillog.pid');" . CRLF);
    fputs($fp, "define('CPUSTAT', STAT_DIRECTORY . '/cpu.stat');" . CRLF);
    fputs($fp, "define('AD_SYNC_STAT', STAT_DIRECTORY . '/adsync.stat');" . CRLF);
+   fputs($fp, "define('DAILY_QUARANTINE_REPORT_STAT', STAT_DIRECTORY . '/daily-quarantine-report.stat');" . CRLF);
 
 
 

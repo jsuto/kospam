@@ -41,7 +41,7 @@ clapf's crontab:
 1 0 1 * * /usr/bin/php LIBEXECDIR/clapf/summary.php /srv/www/webui.yourdomain.com "clapf monthly report" "Ham & spam messages" monthly
 
 ### optional: send daily quarantine report to users
-0 8 * * * /usr/bin/php LIBEXECDIR/clapf/quarantine-daily-report.php /srv/www/webui.yourdomain.com
+0 8 * * * /usr/bin/php LIBEXECDIR/clapf/quarantine-daily-report.php /srv/www/webui.yourdomain.com > LOCALSTATEDIR/lib/clapf/stat/daily-quarantine-report.stat
 
 ### optional: regular AD sync
 0 8 * * * /usr/bin/php LIBEXECDIR/clapf/ldap_sync.php /srv/www/webui.yourdomain.com > LOCALSTATEDIR/lib/clapf/stat/adsync.stat

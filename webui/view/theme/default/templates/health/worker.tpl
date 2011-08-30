@@ -33,6 +33,8 @@ true)" onmouseout="UnTip()"><?php print $status; ?></span></td>
 
 <?php if(ENABLE_LDAP_IMPORT_FEATURE == 1) { ?><p><strong><?php print $text_ad_sync_status; ?>:</strong> <span class="health-<?php if($totalusers >= LDAP_IMPORT_MINIMUM_NUMBER_OF_USERS_TO_HEALTH_OK && $total_emails_in_database >= LDAP_IMPORT_MINIMUM_NUMBER_OF_USERS_TO_HEALTH_OK) { ?>ok<?php } else { ?>alert<?php } ?>"><?php print $adsyncinfo; ?> <?php print strtolower($text_email); ?></span></p><?php } ?>
 
+<?php if(DAILY_QUARANTINE_REPORT_STAT) { ?><p><strong><?php print $text_daily_quarantine_report_status; ?>:</strong> <span class="health-<?php if(preg_match("/\/0$/", $quarantinereportinfo)) { ?>ok<?php } else { ?>alert<?php } ?>"><?php print $quarantinereportinfo; ?></span></p><?php } ?>
+
 <p><strong><?php print $text_cpu_usage; ?>:</strong> <span class="health-<?php if($cpuinfo < HEALTH_RATIO) { ?>ok<?php } else { ?>alert<?php } ?>"><?php print $cpuinfo; ?>%</span>, <strong><?php print $text_cpu_load; ?>:</strong> <span class="health-<?php if($cpuinfo < HEALTH_RATIO) { ?>ok<?php } else { ?>alert<?php } ?>"><?php print $cpuload; ?></span></p>
 
 <p><strong><?php print $text_memory_usage; ?>: </strong> <span class="health-<?php if($meminfo < HEALTH_RATIO) { ?>ok<?php } else { ?>alert<?php } ?>"><?php print $meminfo; ?>%</span> / <?php print $totalmem; ?> MB, <strong><?php print $text_swap_usage; ?></strong>: <span class="health-<?php if($swapinfo < HEALTH_RATIO) { ?>ok<?php } else { ?>alert<?php } ?>"><?php print $swapinfo; ?>%</span> / <?php print $totalswap; ?> MB</p>

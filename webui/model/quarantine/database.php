@@ -77,10 +77,15 @@ class ModelQuarantineDatabase extends Model {
 
    public function PopulateDatabase($dir = '', $uid = 0, $group_q_dirs = array() ) {
       $count = 0;
+      $list_address = 0;
 
       if($dir == "" || !file_exists($dir)) { return 0; }
 
       $Q = Registry::get('Q');
+
+      if(count($group_q_dirs) > 1) {
+         $list_address = 1;
+      }
 
       /* check if the additional queue directories exist */
 
@@ -143,6 +148,10 @@ class ModelQuarantineDatabase extends Model {
          reset($group_q_dirs);
          while(list($k, $v) = each($group_q_dirs) ) {
             if(!file_exists("$v/" . $file['is_spam'] . "." . $file['id'])) { link($dir . "/" . $file['is_spam'] . "." . $file['id'], "$v/" . $file['is_spam'] . "." . $file['id']); }
+         }
+
+         if($list_address == 1) {
+            rename($dir . "/" . $file['is_spam'] . "." . $file['id'], $dir . "/" . 'x' . "." . $file['id']);
          }
 
          $count++;

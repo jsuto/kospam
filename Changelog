@@ -1,3 +1,19 @@
+2011.09.02, SJ
+
+Fixed a bug causing AD imported entries to be removed from the clapf database.
+Let's say you have a user entry with dn='CN=jack,OU=noc,DC=aaa,DC=fu', and you
+query 'DC=aaa,DC=fu'.
+
+If you move this user to the sales department, ie. dn='CN=jack,OU=sales,DC=aaa,DC=fu'
+the ldap_sync.php utility script will remove Jack. However if you run the script again,
+it will reimport him.
+
+The workaround does the same.
+
+2011.09.01, SJ
+
+Fixed a bug showing virus emails in the quarantine notification emails.
+
 2011.08.30, SJ
 
 Added an entry about the daily quarantine report to the Monitor/health check

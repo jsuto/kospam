@@ -24,10 +24,10 @@ clapf's crontab:
 */5 * * * * /usr/bin/php LIBEXECDIR/clapf/qrunner.php /srv/www/webui.yourdomain.com
 
 ### purge of the stored messages from the queue directory
-1 2 * * * find LOCALSTATEDIR/lib/clapf/queue -type f  -atime +`SBINDIR/clapfconf -q days_to_retain_quarantine_data|cut -f2 -d'='` -exec rm -f '{}' \;
+1 2 * * * find LOCALSTATEDIR/lib/clapf/queue -type f  -ctime +`SBINDIR/clapfconf -q days_to_retain_quarantine_data|cut -f2 -d'='` -exec rm -f '{}' \;
 
 ### remove the aged spam images from cache directory
-1 2 * * * find /srv/www/webui.yourdomain.com/cache -type f  -atime +`SBINDIR/clapfconf -q days_to_retain_quarantine_data|cut -f2 -d'='` -exec rm -f '{}' \;
+1 2 * * * find /srv/www/webui.yourdomain.com/cache -type f  -ctime +`SBINDIR/clapfconf -q days_to_retain_quarantine_data|cut -f2 -d'='` -exec rm -f '{}' \;
 
 ### optional: show maillog.pl status
 */5 * * * * /etc/init.d/clapf-maillog status > LOCALSTATEDIR/lib/clapf/stat/clapf-maillog.stat

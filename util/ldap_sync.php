@@ -61,6 +61,7 @@ foreach ($cfg as $ldap_params) {
    $totalusers += count($users);
 
    list($newusers, $deletedusers) = $import->model_user_import->processUsers($users, $ldap_params);
+   list($a1, $a2) = $import->model_user_import->processUsers($users, $ldap_params);
 
    $totalnewusers += $newusers;
    $totaldeletedusers += $deletedusers;

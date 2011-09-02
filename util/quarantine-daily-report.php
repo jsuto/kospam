@@ -63,6 +63,8 @@ if(QUARANTINE_DRIVER == "sqlite") {
 }
 
 
+Registry::set('admin_user', 0);
+
 foreach ($users as $user) {
 
    /* check if this account is a list address, and if so, then skip it */

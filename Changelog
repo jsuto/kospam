@@ -1,3 +1,11 @@
+2011.10.02, SJ
+
+Fixed a typo in init.d/clapf-maillog.ubuntu.in
+
+2011.09.05, SJ
+
+Added qrunner.php to util/Makefile.in.
+
 2011.09.02, SJ
 
 Fixed a bug causing AD imported entries to be removed from the clapf database.

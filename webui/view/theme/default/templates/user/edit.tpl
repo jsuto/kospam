@@ -55,8 +55,11 @@
          </select>
        </td>
       </tr>
+
       <tr valign="top"><td><?php print $text_whitelist; ?>:</td><td><textarea name="whitelist" cols="<?php print CGI_INPUT_FIELD_WIDTH; ?>" rows="<?php print CGI_INPUT_FIELD_HEIGHT; ?>"><?php print $user['whitelist']; ?></textarea></td></tr>
+<?php if(ENABLE_BLACKLIST == 1) { ?>
       <tr valign="top"><td><?php print $text_blacklist; ?>:</td><td><textarea name="blacklist" cols="<?php print CGI_INPUT_FIELD_WIDTH; ?>" rows="<?php print CGI_INPUT_FIELD_HEIGHT; ?>"><?php print $user['blacklist']; ?></textarea></td></tr>
+<?php } ?>
 
       <tr valign="top">
          <td><?php print $text_group_membership; ?>:</td>

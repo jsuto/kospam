@@ -1,3 +1,8 @@
+2011.10.07, SJ
+
+Hide the blacklist feature in the user/edit page
+if it's disabled in config.php
+
 2011.10.02, SJ
 
 Fixed a typo in init.d/clapf-maillog.ubuntu.in

@@ -2085,7 +2085,7 @@ ac_config_headers="$ac_config_headers clapf-config.h"
 
 
 CONFIGURE_PARAMS_FILE=params.h
-rm -f $CONFIGURE_PARAMS_FILE; echo "#define CONFIGURE_PARAMS \"Build Date: "`date`"\nConfigure command: $@\"" > $CONFIGURE_PARAMS_FILE
+rm -f $CONFIGURE_PARAMS_FILE; echo "#define CONFIGURE_PARAMS \"Build Date: "`date`"\nConfigure command: ./configure $@\"" > $CONFIGURE_PARAMS_FILE
 
 ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'

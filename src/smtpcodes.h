@@ -29,7 +29,7 @@
 
 // SMTP responses
 
-#define SMTP_RESP_220_BANNER "220 ESMTP %s\r\n"
+#define SMTP_RESP_220_BANNER "220 %s ESMTP\r\n"
 #define SMTP_RESP_221_GOODBYE "221 %s Goodbye\r\n"
 #define SMTP_RESP_250_OK "250 Ok\r\n"
 //#define SMTP_RESP_250_EXTENSIONS "250-%s\r\n250-SIZE\r\n250-8BITMIME\r\n250 XFORWARD NAME ADDR PROTO HELO\r\n"

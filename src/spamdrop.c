@@ -177,6 +177,7 @@ int main(int argc, char **argv, char **envp){
    char *configfile=CONFIG_FILE, *from=NULL, *recipient=NULL;
    char *p, path[SMALLBUFSIZE];
    char *username=NULL;
+   char *locale=NULL;
    struct session_data sdata;
    struct timezone tz;
    struct timeval tv_start, tv_stop;
@@ -297,7 +298,7 @@ int main(int argc, char **argv, char **envp){
 
    if(quiet > 0) cfg.verbosity = 0;
 
-   setlocale(LC_MESSAGES, cfg.locale);
+   locale = setlocale(LC_MESSAGES, cfg.locale);
    setlocale(LC_CTYPE, cfg.locale);
 
    memcpy(&my_cfg, &cfg, sizeof(struct __config));
@@ -545,6 +546,8 @@ int main(int argc, char **argv, char **envp){
          printf("   part-%d: filename:%s, type:%s, len:%d\n", i, state.attachments[i].filename, state.attachments[i].type, state.attachments[i].size);
       }
       printf("\n");
+
+      printf("locale: %s\n", locale);
    }
 
    #ifdef HAVE_TRE

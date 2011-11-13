@@ -1,3 +1,9 @@
+2011.11.13, SJ
+
+Let spamdrop show locale settings in debug mode.
+
+The smtp daemon will print its hostname before the ESMTP string.
+
 2011.10.07, SJ
 
 Hide the blacklist feature in the user/edit page

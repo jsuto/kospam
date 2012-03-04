@@ -51,28 +51,28 @@ libclapf.a: $(OBJS) $(SQL_OBJS)
 	ln -sf libclapf.so.$(LIBCLAPF_VERSION) libclapf.so.$(CLAPF_VERSION)
 
 
-parsembox: parsembox.c cfg.o misc.o list.o hash.o parser.o parser_utils.o decoder.o boundary.o score.o chi.o
+parsembox: parsembox.c cfg.o misc.o list.o hash.o parser.o parser_utils.o decoder.o score.o chi.o tai.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
 
-clapfconf: clapfconf.c cfg.o misc.o
+clapfconf: clapfconf.c cfg.o misc.o tai.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LIBDIR)
 
 spamdrop: spamdrop.c libclapf.a
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ spamdrop.c -lclapf @spamsum_libs@ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
 
-splitmbox: splitmbox.c misc.o decoder.o list.o boundary.o parser.o parser_utils.o hash.o score.o chi.o
+splitmbox: splitmbox.c misc.o decoder.o list.o parser.o parser_utils.o hash.o score.o chi.o tai.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
 
-aphash: aphash.c misc.o
+aphash: aphash.c misc.o tai.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LIBDIR)
 
 prepare-sql: prepare-sql.c libclapf.a
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ prepare-sql.c -lclapf $(LIBS) $(LIBDIR)
 
-mydb_stat mydb_compress mydb_export: %.o mydb.o misc.o hash.o chi.o score.o cfg.o
+mydb_stat mydb_compress mydb_export: %.o mydb.o misc.o hash.o chi.o score.o cfg.o tai.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
 
-zombietest: zombietest.c misc.o
+zombietest: zombietest.c misc.o tai.o
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR) -ltre
 
 test:

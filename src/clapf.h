@@ -19,7 +19,6 @@
 #include <score.h>
 #include <templates.h>
 #include <hash.h>
-#include <boundary.h>
 #include <defs.h>
 #include <sig.h>
 #include <rbl.h>

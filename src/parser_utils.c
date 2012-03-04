@@ -91,7 +91,7 @@ void initState(struct _state *state){
 
 
 void freeState(struct _state *state){
-   freeList(state->urls);
+   free_list(state->urls);
    clearhash(state->token_hash, 0);
 }
 
@@ -148,7 +148,7 @@ int extract_boundary(char *p, struct _state *state){
       q = strrchr(p, '\n');
       if(q) *q = '\0';
 
-      append_boundary(&(state->boundaries), p);
+      append_list(&(state->boundaries), p);
 
       return 1;
    }
@@ -285,7 +285,7 @@ void fixupSoftBreakInQuotedPritableLine(char *buf, struct _state *state){
       if(p){
          memset(state->qpbuf, 0, MAX_TOKEN_LEN);
          if(strlen(p) < MAX_TOKEN_LEN-1){
-            snprintf(state->qpbuf, MAXBUFSIZE-1, "%s", p);
+            snprintf(state->qpbuf, MAX_TOKEN_LEN-1, "%s", p);
             *p = '\0';
          }
 
@@ -395,7 +395,7 @@ int appendHTMLTag(char *buf, char *htmlbuf, int pos, struct _state *state){
    if(pos == 0 && strncmp(htmlbuf, "style ", 6) == 0) state->style = 1;
    if(pos == 0 && strncmp(htmlbuf, "/style ", 7) == 0) state->style = 0;
 
-   //printf("appendHTML: pos:%d, +%s+\n", pos, htmlbuf);
+   //printf("appendHTML: pos:%d, +%s+, style: %d\n", pos, htmlbuf, state->style);
 
    if(state->style == 1) return 0;
 
@@ -421,40 +421,6 @@ int appendHTMLTag(char *buf, char *htmlbuf, int pos, struct _state *state){
    }
 
    return 0;
-}
-
-
-void fixupHTML(char *buf, struct _state *state, struct __config *cfg){
-   char *p, *q, puf[MAXBUFSIZE], s[SMALLBUFSIZE];
-
-   memset(puf, 0, MAXBUFSIZE);
-
-   p = buf;
-   do {
-      p = split_str(p, "<", s, SMALLBUFSIZE-1);
-      if(s[0] == '!' || isSkipHTMLTag(s) == 1){
-         state->skip_html = 1;
-      }
-
-      if(state->skip_html == 1){
-         q = strchr(s, '>');
-
-         if(q){
-            *q = '\0';
-            strncat(puf, q+1, MAXBUFSIZE-1);
-            state->skip_html = 0;
-         }
-
-         if(cfg->debug == 1) printf("DISCARDED HTML: `%s'", s);
-      }
-      else {
-         strncat(puf, "<", MAXBUFSIZE-1);
-         strncat(puf, s, MAXBUFSIZE-1);
-      }
-
-   } while(p);
-
-   strcpy(buf, puf);
 }
 
 

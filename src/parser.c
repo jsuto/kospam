@@ -69,7 +69,7 @@ struct _state parseMessage(struct session_data *sdata, struct __config *cfg){
 
    fclose(f);
 
-   free_boundary(state.boundaries);
+   free_list(state.boundaries);
 
    return state;
 }
@@ -248,7 +248,7 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
 
    /* skip the boundary itself */
 
-   boundary_line = is_boundary(state->boundaries, buf);
+   boundary_line = is_item_on_string(state->boundaries, buf);
 
    if(!strstr(buf, "boundary=") && !strstr(buf, "boundary =") && boundary_line == 1){
       state->content_type_is_set = 0;
@@ -307,11 +307,9 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
 
    if(state->is_header == 0 && state->textplain == 0 && state->texthtml == 0 && (state->message_state == MSG_BODY || state->message_state == MSG_CONTENT_DISPOSITION) && (state->octetstream == 0 || state->realbinary > 0) ) return 0;
 
- 
    /* base64 decode buffer */
 
    if(state->base64 == 1 && state->message_state == MSG_BODY) b64_len = decodeBase64(buf);
-
 
    /* fix encoded From:, To: and Subject: lines, 2008.11.24, SJ */
 
@@ -328,7 +326,6 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
    if(state->base64 == 1 && state->message_state == MSG_BODY) fixupBase64EncodedLine(buf, state);
 
    if(state->texthtml == 1 && state->message_state == MSG_BODY) markHTML(buf, state);
-
 
 
    if(state->message_state == MSG_BODY){
@@ -622,7 +619,7 @@ struct _state parseBuffer(struct session_data *sdata, struct __config *cfg){
    } while(r);
 
 
-   free_boundary(state.boundaries);
+   free_list(state.boundaries);
 
    return state;
 }

@@ -59,9 +59,9 @@ int main(int argc, char **argv){
                unlink(ifile);
             }
 
-            freeList(state.urls);
+            free_list(state.urls);
             clearhash(state.token_hash, 2);
-            free_boundary(state.boundaries);
+            free_list(state.boundaries);
          }
 
          initState(&state);
@@ -82,9 +82,9 @@ int main(int argc, char **argv){
          unlink(ifile);
       }
 
-      freeList(state.urls);
+      free_list(state.urls);
       clearhash(state.token_hash, 2);
-      free_boundary(state.boundaries);
+      free_list(state.boundaries);
    }
 
    fclose(F);

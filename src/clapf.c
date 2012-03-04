@@ -45,7 +45,7 @@ void clean_exit(){
    if(data.engine) cl_engine_free(data.engine);
 #endif
 
-   freeList(data.blackhole);
+   free_list(data.blackhole);
 
 #ifdef HAVE_TRE
    freeZombieList(&data);
@@ -153,7 +153,7 @@ void initialiseConfiguration(){
    setlocale(LC_MESSAGES, cfg.locale);
    setlocale(LC_CTYPE, cfg.locale);
 
-   freeList(data.blackhole);
+   free_list(data.blackhole);
    data.blackhole = NULL;
 
    p = cfg.blackhole_email_list;

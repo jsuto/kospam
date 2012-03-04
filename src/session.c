@@ -24,7 +24,7 @@ void handleSession(int new_sd, struct __data *data, struct __config *cfg){
    struct __config my_cfg;
    int db_conn=0;
    int rc;
-   struct url *a;
+   struct list *a;
    struct __counters counters;
 
    struct timezone tz;
@@ -267,12 +267,19 @@ void handleSession(int new_sd, struct __data *data, struct __config *cfg){
                   sdata.__inject = tvdiff(tv2, tv1);
 
                #else
-                  gettimeofday(&tv1, &tz);
+                  if(sdata.rav == AVIR_VIRUS && cfg->silently_discard_infected_email == 1){
+                     inj = OK;
+                     snprintf(resp, MAXBUFSIZE-1, "dropped");
+                  }
+                  else {
+                     gettimeofday(&tv1, &tz);
 
-                  inj = inject_mail(&sdata, i, cfg->postfix_addr, cfg->postfix_port, NULL, &resp[0], &my_cfg, NULL);
+                     inj = inject_mail(&sdata, i, cfg->postfix_addr, cfg->postfix_port, NULL, &resp[0], &my_cfg, NULL);
 
-                  gettimeofday(&tv2, &tz);
-                  sdata.__inject = tvdiff(tv2, tv1);
+                     gettimeofday(&tv2, &tz);
+                     sdata.__inject = tvdiff(tv2, tv1);
+                  }
+
                #endif
 
                   /* set the accept buffer */
@@ -510,7 +517,7 @@ AFTER_PERIOD:
                   a = data->blackhole;
 
                   while(a){
-                     if(strcmp(a->url_str, rctptoemail) == 0){
+                     if(strcmp(a->s, rctptoemail) == 0){
                         if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: we have %s on the blackhole", sdata.ttmpfile, rctptoemail);
                         sdata.blackhole = 1;
                         counters.c_minefield++;

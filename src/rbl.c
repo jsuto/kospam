@@ -17,7 +17,7 @@
 void checkLists(struct session_data *sdata, struct _state *state, int *found_on_rbl, int *surbl_match, struct __config *cfg){
    int i, j;
    char surbl_token[MAX_TOKEN_LEN];
-   struct url *url;
+   struct list *url;
    struct timezone tz;
    struct timeval tv1, tv2;
 
@@ -45,18 +45,18 @@ void checkLists(struct session_data *sdata, struct _state *state, int *found_on_
       url = state->urls;
 
       while(url){
-         if(countCharacterInBuffer(url->url_str+4, '.') > 0){
+         if(countCharacterInBuffer(url->s+4, '.') > 0){
             gettimeofday(&tv1, &tz);
-            i = isURLOnRBL(url->url_str+4, cfg->surbl_domain);
+            i = isURLOnRBL(url->s+4, cfg->surbl_domain);
             gettimeofday(&tv2, &tz);
 
-            if(cfg->debug == 1) printf("surbl check for %s (%d) took %ld ms\n", url->url_str+4, i, tvdiff(tv2, tv1)/1000);
+            if(cfg->debug == 1) printf("surbl check for %s (%d) took %ld ms\n", url->s+4, i, tvdiff(tv2, tv1)/1000);
             if(cfg->verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: surbl check took %ld ms", sdata->ttmpfile, tvdiff(tv2, tv1)/1000);
 
             *surbl_match += i;
 
             for(j=0; j<i; j++){
-               snprintf(surbl_token, MAX_TOKEN_LEN-1, "SURBL%d*%s", j, url->url_str+4);
+               snprintf(surbl_token, MAX_TOKEN_LEN-1, "SURBL%d*%s", j, url->s+4);
                addnode(state->token_hash, surbl_token, REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
             }
          }

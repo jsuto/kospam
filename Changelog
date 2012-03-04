@@ -1,3 +1,12 @@
+2012.03.04, SJ
+
+Released 0.4.7.2 as a bugfix and code clean up version.
+
+
+2011.11.16, SJ
+
+Code cleanup: removed boundary.c and updated list.c.
+
 2011.11.13, SJ
 
 Let spamdrop show locale settings in debug mode.

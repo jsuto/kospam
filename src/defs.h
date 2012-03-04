@@ -91,14 +91,9 @@ struct attachment {
    char filename[SMALLBUFSIZE];
 };
 
-struct url {
-   char url_str[URL_LEN];
-   struct url *r;
-};
-
-struct boundary {
-   char boundary_str[BOUNDARY_LEN];
-   struct boundary *r;
+struct list {
+   char s[SMALLBUFSIZE];
+   struct list *r;
 };
 
 struct _state {
@@ -136,11 +131,11 @@ struct _state {
    unsigned long n_subject_token;
    unsigned long n_body_token;
    unsigned long n_chain_token;
-   struct url *urls;
+   struct list *urls;
 
    int found_our_signo;
 
-   struct boundary *boundaries;
+   struct list *boundaries;
 
    int n_attachments;
    struct attachment attachments[MAX_ATTACHMENTS];
@@ -231,7 +226,7 @@ struct memcached_server {
 
 
 struct __data {
-   struct url *blackhole;
+   struct list *blackhole;
 
 #ifdef HAVE_LIBCLAMAV
    struct cl_engine *engine;

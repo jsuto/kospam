@@ -373,6 +373,13 @@ AC_ARG_WITH(tokendb,
   parsembox="parsembox"
   parsembox_install="install-parsembox"
 
+  if test "$withval" != "mysql" && test "$withval" != "psql" && test "$withval" != "sqlite3" ; then
+     echo "invalid value for --with-tokendb: " $withval " valid values are mysql, psql or sqlite3";
+     exit 1;
+  fi
+
+
+
   if test "$withval" = "sqlite3"; then
     AC_CHECK_HEADERS(sqlite3.h, have_sqlite3=yes, echo "sqlite3.h is not found")
 

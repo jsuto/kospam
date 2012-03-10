@@ -4275,6 +4275,13 @@ if test "${with_tokendb+set}" = set; then :
   parsembox="parsembox"
   parsembox_install="install-parsembox"
 
+  if test "$withval" != "mysql" && test "$withval" != "psql" && test "$withval" != "sqlite3" ; then
+     echo "invalid value for --with-tokendb: " $withval " valid values are mysql, psql or sqlite3";
+     exit 1;
+  fi
+
+
+
   if test "$withval" = "sqlite3"; then
     for ac_header in sqlite3.h
 do :

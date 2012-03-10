@@ -17,7 +17,7 @@ export PATH=$PATH:/usr/local/bin:/usr/local/sbin:/usr/local/mysql/bin
 DBTYPE=$1
 CONFIG=$2
 
-SQLSCRIPT=/usr/local/share/clapf/db.sql
+SQLSCRIPT=YOUR_SHAREDIR/db.sql
 
 SQLITEDB=`grep ^sqlite3= $CONFIG | cut -f2 -d '='`
 

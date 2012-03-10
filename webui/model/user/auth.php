@@ -38,6 +38,9 @@ class ModelUserAuth extends Model {
       $query = $this->db->query("SELECT remotehost, basedn FROM " . TABLE_REMOTE . " WHERE remotedomain='" . $this->db->escape($user['domain']) . "'");
       if($query->num_rows != 1) { return 0; }
 
+      $user['dn'] = preg_replace("/\&amp\;/", "&", $user['dn']);
+
+
       $ldap = new LDAP($query->row['remotehost'], $user['dn'], $password);
 
       if($ldap->is_bind_ok()) {

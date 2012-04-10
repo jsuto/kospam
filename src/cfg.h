@@ -116,6 +116,8 @@ struct __config {
    int penalize_embed_images;
    int penalize_octet_stream;
 
+   int max_number_of_recipients_in_ham;
+
    // training
 
    int training_mode;

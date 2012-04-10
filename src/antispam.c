@@ -61,6 +61,23 @@ int processMessage(struct session_data *sdata, struct _state *sstate, struct __d
    memset(whitelistbuf, 0, SMALLBUFSIZE);
 
 
+   /*
+    * sometimes spammers try to send their crap in very few smtp sessions
+    * including lots of recipients in a single smtp session.
+    * If the spammer included at least max_number_of_recipients_in_ham+1 recipients
+    * in the RCPT TO commands, mark his messages as spam
+    */
+
+   if(sdata->num_of_rcpt_to > cfg->max_number_of_recipients_in_ham){
+      snprintf(sdata->acceptbuf, SMALLBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata->ttmpfile, rcpttoemail);
+      sdata->spaminess = 0.99;
+      strncat(sdata->spaminessbuf, cfg->clapf_spam_header_field, MAXBUFSIZE-1);
+
+      syslog(LOG_PRIORITY, "%s: marking message as spam, reason: too many recipients (%d/%d)", sdata->ttmpfile, sdata->num_of_rcpt_to, cfg->max_number_of_recipients_in_ham);
+
+      return OK;
+   }
+
 
 #ifdef HAVE_TRE
    checkZombieSender(sdata, data, sstate, cfg);

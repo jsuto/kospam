@@ -1,3 +1,10 @@
+2012.04.10, SJ
+
+Mark the message as spam if it includes at least max_number_of_recipients_in_ham+1
+recipients in a single smtp session.
+
+
+
 2012.03.04, SJ
 
 Released 0.4.7.2 as a bugfix and code clean up version.

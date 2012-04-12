@@ -1,7 +1,8 @@
 2012.04.10, SJ
 
 Mark the message as spam if it includes at least max_number_of_recipients_in_ham+1
-recipients in a single smtp session.
+recipients in a single smtp session - unless the sender (=mail from address) is
+whitelisted.
 
 
 

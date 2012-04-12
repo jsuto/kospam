@@ -61,24 +61,6 @@ int processMessage(struct session_data *sdata, struct _state *sstate, struct __d
    memset(whitelistbuf, 0, SMALLBUFSIZE);
 
 
-   /*
-    * sometimes spammers try to send their crap in very few smtp sessions
-    * including lots of recipients in a single smtp session.
-    * If the spammer included at least max_number_of_recipients_in_ham+1 recipients
-    * in the RCPT TO commands, mark his messages as spam
-    */
-
-   if(sdata->num_of_rcpt_to > cfg->max_number_of_recipients_in_ham){
-      snprintf(sdata->acceptbuf, SMALLBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata->ttmpfile, rcpttoemail);
-      sdata->spaminess = 0.99;
-      strncat(sdata->spaminessbuf, cfg->clapf_spam_header_field, MAXBUFSIZE-1);
-
-      syslog(LOG_PRIORITY, "%s: marking message as spam, reason: too many recipients (%d/%d)", sdata->ttmpfile, sdata->num_of_rcpt_to, cfg->max_number_of_recipients_in_ham);
-
-      return OK;
-   }
-
-
 #ifdef HAVE_TRE
    checkZombieSender(sdata, data, sstate, cfg);
    if(sdata->tre == '+'){
@@ -171,6 +153,33 @@ int processMessage(struct session_data *sdata, struct _state *sstate, struct __d
    if(sdata->blackhole == 1) my_cfg->use_antispam = 1;
 
 
+
+#ifdef HAVE_WHITELIST
+   getUsersWBL(sdata, data, cfg);
+#endif
+
+#ifdef HAVE_WHITELIST
+   if(isEmailAddressOnList(sdata->whitelist, sdata->ttmpfile, fromemail, cfg) == 1){
+      syslog(LOG_PRIORITY, "%s: sender (%s) found on whitelist", sdata->ttmpfile, fromemail);
+      snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on whitelist\r\n", cfg->clapf_header_field);
+      goto END_OF_TRAINING;
+   }
+#endif
+
+   /*
+    * sometimes spammers try to send their crap in very few smtp sessions
+    * including lots of recipients in a single smtp session.
+    * If the spammer included at least max_number_of_recipients_in_ham+1 recipients
+    * in the RCPT TO commands, mark his messages as spam
+    */
+
+   if(sdata->num_of_rcpt_to > cfg->max_number_of_recipients_in_ham){
+      sdata->spaminess = 0.99;
+      if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: marking message for %s as spam, reason: too many recipients (%d/%d)", sdata->ttmpfile, rcpttoemail, sdata->num_of_rcpt_to, cfg->max_number_of_recipients_in_ham);
+      goto END_OF_TRAINING;
+   }
+
+
    /*
     * run statistical antispam check
     */
@@ -227,19 +236,6 @@ int processMessage(struct session_data *sdata, struct _state *sstate, struct __d
          else
             syslog(LOG_PRIORITY, "%s: looks like a bounce, but our signo is missing", sdata->ttmpfile);
       }
-
-
-   #ifdef HAVE_WHITELIST
-      getUsersWBL(sdata, data, cfg);
-   #endif
-
-   #ifdef HAVE_WHITELIST
-      if(isEmailAddressOnList(sdata->whitelist, sdata->ttmpfile, fromemail, cfg) == 1){
-         syslog(LOG_PRIORITY, "%s: sender (%s) found on whitelist", sdata->ttmpfile, fromemail);
-         snprintf(whitelistbuf, SMALLBUFSIZE-1, "%sFound on whitelist\r\n", cfg->clapf_header_field);
-         goto END_OF_TRAINING;
-      }
-   #endif
 
 
    #ifdef HAVE_BLACKLIST

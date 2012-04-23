@@ -54,6 +54,9 @@ struct _state parseMessage(struct session_data *sdata, struct __config *cfg){
                p = strchr(buf, ' ');
                if(p){
                   p++;
+
+                  while(*p == ' ') p++;
+
                   if(isValidClapfID(p)){
                      snprintf(sdata->clapf_id, SMALLBUFSIZE-1, "%s", p);
                      if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: found id in training request: *%s*", sdata->ttmpfile, p);

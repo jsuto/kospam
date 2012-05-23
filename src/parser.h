@@ -36,5 +36,6 @@ void fixURL(char *url);
 void fixFQDN(char *fqdn);
 void getTLDFromName(char *name);
 int isItemOnList(char *item, char *list, char *extralist);
+int is_list_on_string(char *s, char *list);
 
 #endif /* _PARSER_H */

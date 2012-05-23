@@ -151,6 +151,7 @@ struct session_data {
    unsigned long uid, gid;
    int fd, tot_len, num_of_rcpt_to, skip_id_check, need_signo_check, trapped_client, rav;
    int policy_group, blackhole;
+   int from_address_in_mydomain;
    int need_scan;
    int training_request;
    float spaminess;

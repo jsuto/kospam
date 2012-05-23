@@ -25,6 +25,7 @@ int processMessage(struct session_data *sdata, struct _state *sstate, struct __d
    strcpy(resp, "-");
 
 
+
 #ifdef HAVE_USERS
    getUserFromEmailAddress(sdata, data, rcpttoemail, cfg);
 #endif
@@ -152,6 +153,22 @@ int processMessage(struct session_data *sdata, struct _state *sstate, struct __d
 
    if(sdata->blackhole == 1) my_cfg->use_antispam = 1;
 
+
+   /*
+    * if the From: line contains any of our domain names listed in mydomains
+    * and we are absolutely sure that no valid email comes from outside with
+    * our domainname in the email header From: line, then we can condemn the
+    * message.
+    *
+    * 2012.05.23, SJ
+    */
+
+   if(sdata->from_address_in_mydomain == 1 && cfg->mydomains_from_outside_is_spam == 1){
+      sdata->spaminess = 0.99;
+      strncat(sdata->spaminessbuf, cfg->clapf_spam_header_field, MAXBUFSIZE-1);
+    
+      return OK;
+   }
 
 
 #ifdef HAVE_WHITELIST

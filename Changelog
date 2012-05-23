@@ -1,3 +1,23 @@
+2012.05.23, SJ
+
+Added a feature to mark incoming spoofed emails as spam.
+It can be used _ONLY_ if you should never get any incoming
+email with From: ....@yourdomainname.com. This might be the
+case if your users send the outgoing emails skipping clapf.
+
+To do so specify your domain list in mydomains, and set
+mydomains_from_outside_is_spam, eg.
+
+mydomains=example.com,aaa.fu,yourotherdomanname.com
+mydomains_from_outside_is_spam=1
+
+
+2012.04.23, SJ
+
+Added a fix if the Received: line having the clapf id has more than
+one space within.
+
+
 2012.04.10, SJ
 
 Mark the message as spam if it includes at least max_number_of_recipients_in_ham+1

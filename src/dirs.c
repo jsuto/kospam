@@ -56,8 +56,6 @@ void checkAndCreateClapfDirectories(struct __config *cfg, uid_t uid, gid_t gid){
       *p = '/';
    }
 
-   createdir(cfg->quarantine_dir, uid, gid, 0755);
-
 }
 
 

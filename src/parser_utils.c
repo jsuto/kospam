@@ -761,3 +761,21 @@ int isItemOnList(char *item, char *list, char *extralist){
 }
 
 
+int is_list_on_string(char *s, char *list){
+   char *p, w[SMALLBUFSIZE];
+
+   p = list;
+
+   do {
+      p = split(p, ',', w, SMALLBUFSIZE-1);
+
+      trimBuffer(w);
+
+      if(strcasestr(s, w)) return 1;
+
+   } while(p);
+
+   return 0;
+}
+
+

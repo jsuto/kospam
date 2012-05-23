@@ -727,6 +727,7 @@ void initSessionData(struct session_data *sdata){
    sdata->blackhole = 0;
    sdata->need_signo_check = 0;
    sdata->training_request = 0;
+   sdata->from_address_in_mydomain = 0;
 
 #ifdef HAVE_MAILBUF
    sdata->message_size = sdata->mailpos = sdata->discard_mailbuf = 0;

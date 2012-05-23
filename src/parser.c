@@ -57,6 +57,8 @@ struct _state parseMessage(struct session_data *sdata, struct __config *cfg){
 
                   while(*p == ' ') p++;
 
+                  if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: clapf id to check: *%s*", sdata->ttmpfile, p);
+
                   if(isValidClapfID(p)){
                      snprintf(sdata->clapf_id, SMALLBUFSIZE-1, "%s", p);
                      if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: found id in training request: *%s*", sdata->ttmpfile, p);
@@ -155,6 +157,8 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
          else p = buf + 5;
 
          snprintf(state->from, SMALLBUFSIZE-1, "FROM*%s", p);
+
+         if(is_list_on_string(p, cfg->mydomains) == 1) sdata->from_address_in_mydomain = 1;
       }
 
 

@@ -49,7 +49,6 @@ struct __config {
    char chrootdir[MAXVAL];
    char workdir[MAXVAL];
    char queuedir[MAXVAL];
-   char quarantine_dir[MAXVAL];
 
    char our_signo[MAXVAL];
 
@@ -184,6 +183,9 @@ struct __config {
 
    char skipped_received_ips[2*MAXVAL];
    char mynetwork[2*MAXVAL];
+
+   char mydomains[2*MAXVAL];
+   int mydomains_from_outside_is_spam;
 
    int days_to_retain_history_data;
    int days_to_retain_quarantine_data;

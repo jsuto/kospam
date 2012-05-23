@@ -11,7 +11,7 @@
 
 #define PROGNAME "clapf"
 
-#define VERSION "0.4.7.2"
+#define VERSION "0.4.7.3"
 
 #define PROGINFO VERSION ", Janos SUTO <sj@acts.hu>\n\n" CONFIGURE_PARAMS "\n\nSend bugs/issues to https://jira.acts.hu:8443/\n"
 

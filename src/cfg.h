@@ -46,6 +46,8 @@ struct __config {
    int max_connections;
    int backlog;
 
+   int timestamp_mode;
+
    char chrootdir[MAXVAL];
    char workdir[MAXVAL];
    char queuedir[MAXVAL];

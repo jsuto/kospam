@@ -166,7 +166,9 @@ int processMessage(struct session_data *sdata, struct _state *sstate, struct __d
    if(sdata->from_address_in_mydomain == 1 && cfg->mydomains_from_outside_is_spam == 1){
       sdata->spaminess = 0.99;
       strncat(sdata->spaminessbuf, cfg->clapf_spam_header_field, MAXBUFSIZE-1);
-    
+
+      if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: %s matches %s", sdata->ttmpfile, sstate->from, my_cfg->mydomains);
+
       return OK;
    }
 

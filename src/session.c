@@ -40,7 +40,7 @@ void handleSession(int new_sd, struct __data *data, struct __config *cfg){
 
    state = SMTP_STATE_INIT;
 
-   initSessionData(&sdata);
+   initSessionData(&sdata, cfg);
 
    sdata.Nham = 0;
    sdata.Nspam = 0;
@@ -618,7 +618,7 @@ AFTER_PERIOD:
             if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: removed", sdata.ttmpfile);
             unlink(sdata.ttmpfile);
 
-            initSessionData(&sdata);
+            initSessionData(&sdata, cfg);
 
             state = SMTP_STATE_HELO;
 
@@ -692,14 +692,14 @@ void killChild(){
 }
 
 
-void initSessionData(struct session_data *sdata){
+void initSessionData(struct session_data *sdata, struct __config *cfg){
    int i;
 
 
    sdata->fd = -1;
 
    memset(sdata->ttmpfile, 0, SMALLBUFSIZE);
-   createClapfID(&(sdata->ttmpfile[0]));
+   createClapfID(&(sdata->ttmpfile[0]), cfg->timestamp_mode);
    unlink(sdata->ttmpfile);
 
    memset(sdata->mailfrom, 0, SMALLBUFSIZE);

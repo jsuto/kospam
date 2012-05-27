@@ -236,11 +236,11 @@ int extractEmail(char *rawmail, char *email){
  * create a clapf ID
  */
 
-void createClapfID(char *id){
+void createClapfID(char *id, int mode){
    int i;
    unsigned char buf[RND_STR_LEN/2];
 
-   getRandomBytes(buf, RND_STR_LEN/2);
+   getRandomBytes(buf, RND_STR_LEN/2, mode);
 
    for(i=0; i < (RND_STR_LEN/2)-1; i++){
       sprintf(id, "%02x", buf[i]);
@@ -254,30 +254,42 @@ void createClapfID(char *id){
  * reading from pool
  */
 
-int getRandomBytes(unsigned char *buf, int len){
-   int fd, ret=0;
+int getRandomBytes(unsigned char *buf, int len, int mode){
+   int fd, ret=0, offset=4;
    unsigned char a, b;
+   struct taia now;
+   char nowpack[TAIA_PACK];
 
-   /* the first 4 bytes are the timestamp, 2007.12.13, SJ */
+   if(mode == 32){
+      time((time_t*)&buf[0]);
 
-   time((time_t*)&buf[0]);
+      a = buf[0];
+      b = buf[3];
 
-   a = buf[0];
-   b = buf[3];
+      buf[0] = b;
+      buf[3] = a;
 
-   buf[0] = b;
-   buf[3] = a;
+      a = buf[1];
+      b = buf[2];
 
-   a = buf[1];
-   b = buf[2];
+      buf[1] = b;
+      buf[2] = a;
+   }
+   else {
+      /* the first 12 bytes are the taia timestamp */
 
-   buf[1] = b;
-   buf[2] = a;
+      taia_now(&now);
+      taia_pack(nowpack, &now);
+
+      memcpy(buf, nowpack, 12);
+
+      offset = 12;
+   }
 
    fd = open(RANDOM_POOL, O_RDONLY);
    if(fd == -1) return ret;
 
-   if(readFromEntropyPool(fd, buf+4, len-4) != len-4){
+   if(readFromEntropyPool(fd, buf+offset, len-offset) != len-offset){
       syslog(LOG_PRIORITY, "%s: %s", ERR_CANNOT_READ_FROM_POOL, RANDOM_POOL);
    }
    
@@ -328,25 +340,6 @@ int recvtimeout(int s, char *buf, int len, int timeout){
     if (n == -1) return -1; // error
 
     return recv(s, buf, len, 0);
-}
-
-
-/*
- * create a random ID
- */
-
-int createRandomString(char *res){
-   int i;
-   unsigned char buf[RND_STR_LEN/2];
-
-   getRandomBytes(buf, RND_STR_LEN/2);
-
-   for(i=0; i < (RND_STR_LEN/2)-1; i++){
-      sprintf(res, "%02x", buf[i]);
-      res += 2;
-   }
-
-   return 1;
 }
 
 
@@ -443,32 +436,6 @@ void writeDeliveryInfo(struct session_data *sdata, char *dir){
    }
    else
       syslog(LOG_PRIORITY, "%s: failed writing delivery info to %s", sdata->ttmpfile, sdata->deliveryinfo);
-}
-
-
-/*
- * move message to quarantine
- */
-
-int move_message_to_quarantine(struct session_data *sdata, struct __config *cfg){
-   char qfile[QUARANTINELEN];
-
-   snprintf(qfile, QUARANTINELEN-1, "%s/%s", cfg->quarantine_dir, sdata->ttmpfile);
-
-   /* if we would use rename, we cannot unlink this file later, producing an
-      error message to syslog */
-
-   if(link(sdata->ttmpfile, qfile) == 0){
-      if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s saved as %s", sdata->ttmpfile, qfile);
-      chmod(qfile, 0644);
-
-      return OK;
-   }
-   else {
-      syslog(LOG_PRIORITY, "failed to put %s into quarantine: %s", sdata->ttmpfile, qfile);
-      return ERR;
-   }
-
 }
 
 

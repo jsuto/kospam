@@ -165,6 +165,7 @@ struct _parse_rule config_parse_rules[] =
    { "store_only_spam", "integer", (void*) int_parser, offsetof(struct __config, store_only_spam), "0", sizeof(int)},
    { "surbl_domain", "string", (void*) string_parser, offsetof(struct __config, surbl_domain), "", MAXVAL-1},
    { "surbl_condemns_the_message", "integer", (void*) int_parser, offsetof(struct __config, surbl_condemns_the_message), "0", sizeof(int)},
+   { "timestamp_mode", "integer", (void*) int_parser, offsetof(struct __config, timestamp_mode), "32", sizeof(int)},
    { "training_mode", "integer", (void*) int_parser, offsetof(struct __config, training_mode), "0", sizeof(int)},
    { "update_counters_to_memcached", "integer", (void*) int_parser, offsetof(struct __config, update_counters_to_memcached), "0", sizeof(int)},
    { "update_tokens", "integer", (void*) int_parser, offsetof(struct __config, update_tokens), "1", sizeof(int)},

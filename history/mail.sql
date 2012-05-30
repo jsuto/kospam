@@ -50,6 +50,7 @@ create table if not exists clapf (
 ) ENGINE=InnoDB PARTITION BY RANGE (ts) ( PARTITION p0 VALUES LESS THAN (1) );
 create index clapf_idx on clapf(`queue_id2`);
 create index clapf_idx2 on clapf(`from`);
+create index clapf_idx3 on clapf(`ts`);
 
 
 drop view if exists hist_in;

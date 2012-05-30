@@ -1,3 +1,9 @@
+2012.05.30, SJ
+
+Switched from ctime to mtime in webui/model/quarantine/database.php
+
+Added an extra index to clapfhistory.clapf table.
+
 2012.05.23, SJ
 
 Added a feature to mark incoming spoofed emails as spam.

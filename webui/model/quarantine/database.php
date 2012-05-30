@@ -45,12 +45,12 @@ class ModelQuarantineDatabase extends Model {
 
          $st = stat($dir . "/" . $v);
 
-         if($st['ctime'] >= $maxts){
+         if($st['mtime'] >= $maxts){
 
             $a = explode(".", $v);
             $ok = 1;
 
-            if($st['ctime'] == $maxts){
+            if($st['mtime'] == $maxts){
                $query = $Q->query("select count(*) as count from " . TABLE_QUARANTINE . " where uid=" . (int)$uid . " and id='" . $Q->escape($a[1]) . "'");
                if(isset($query->row['count']) && $query->row['count'] == 1){ $ok = 0; }
             }
@@ -60,7 +60,7 @@ class ModelQuarantineDatabase extends Model {
                $new_files[] = array(
                                     'id'      => $a[1],
                                     'is_spam' => $a[0],
-                                    'ts'      => $st['ctime'],
+                                    'ts'      => $st['mtime'],
                                     'size'    => $st['size']
                                    );
             }
@@ -169,7 +169,7 @@ class ModelQuarantineDatabase extends Model {
       while(list($k, $v) = each($files)){
          if(preg_match($expr, $v)) {
             $st = stat($dir . "/" . $v);
-            $ts = $st['ctime'];
+            $ts = $st['mtime'];
             break;
          }
       }

@@ -76,7 +76,7 @@ foreach ($users as $user) {
    $group_q_dirs = $u->get_quarantine_directories($user['uid']);
 
    if(file_exists($my_q_dir)) {
-      $total += $qd->PopulateDatabase($my_q_dir, $user['uid'], $group_q_dirs);
+      $total += $qd->PopulateDatabase($my_q_dir, $user['uid'], $group_q_dirs, $verbose);
    }
 }
 

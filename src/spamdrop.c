@@ -112,7 +112,7 @@ void closeDatabase(struct session_data *sdata){
 
 int print_message_stdout(struct session_data *sdata, char *clapf_info, float spaminess, struct __config *cfg){
    FILE *f, *ofile=stdout;
-   int put_subject_spam_prefix=0, sent_subject_spam_prefix=0, is_header=1;
+   int i=0, put_subject_spam_prefix=0, sent_subject_spam_prefix=0, is_header=1;
    char buf[MAXBUFSIZE];
 
 
@@ -134,6 +134,9 @@ int print_message_stdout(struct session_data *sdata, char *clapf_info, float spa
 
 
    while(fgets(buf, MAXBUFSIZE-1, f)){
+      i++;
+
+      if(i == 1 && strncmp(buf, "From ", 5) == 0) continue;
 
       /* tag the Subject line if we have to, 2007.08.21, SJ */
 
@@ -317,7 +320,7 @@ int main(int argc, char **argv, char **envp){
    if(!from) from = getenv("FROM");
 
 
-   initSessionData(&sdata);
+   initSessionData(&sdata, &cfg);
 
 #ifdef HAVE_MEMCACHED
    memcached_init(&(data.memc), cfg.memcached_servers, 11211);
@@ -427,7 +430,10 @@ int main(int argc, char **argv, char **envp){
 
    /* fix username and uid */
 
-   if(recipient == NULL && from == NULL) query_unix_account(&sdata, username != (char *)NULL ? username : getenv("LOGNAME"));
+   /* changed on 2012.03.30, SJ. It requires further investigation */
+
+   //if(recipient == NULL && from == NULL) query_unix_account(&sdata, username != (char *)NULL ? username : getenv("LOGNAME"));
+   if(recipient == NULL) query_unix_account(&sdata, username != (char *)NULL ? username : getenv("LOGNAME"));
 
    if(sdata.uid == -1){
       if(u > 0) sdata.uid = u;

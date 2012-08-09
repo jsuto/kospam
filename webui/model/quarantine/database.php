@@ -75,7 +75,7 @@ class ModelQuarantineDatabase extends Model {
    }
 
 
-   public function PopulateDatabase($dir = '', $uid = 0, $group_q_dirs = array() ) {
+   public function PopulateDatabase($dir = '', $uid = 0, $group_q_dirs = array(), $verbose = 0) {
       $count = 0;
       $list_address = 0;
 

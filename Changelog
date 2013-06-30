@@ -1,3 +1,9 @@
+2013.06.30, SJ
+
+Rewrite of the gui to use a better interface with Twitter's bootstrap.
+No new features, just a better look.
+
+
 2012.05.30, SJ
 
 Switched from ctime to mtime in webui/model/quarantine/database.php

@@ -1,25 +1,17 @@
 <?php
 
-function go_to_setup() {
-   Header("Location: setup/setup.php");
-   exit;
-}
-
-$stat = stat("config.php") or go_to_setup();
-if($stat[7] < 15){ go_to_setup(); }
-
-
 require_once("config.php");
 
 require(DIR_SYSTEM . "/startup.php");
 
+if(ENABLE_SYSLOG == 1) { openlog("clapf-webui", LOG_PID, LOG_MAIL); }
 
 $request = new Request();
 Registry::set("request", $request);
 
 
-session_start();
-
+$session = new Session();
+Registry::set("session", $session);
 
 Registry::set('document', new Document());
 
@@ -65,6 +57,7 @@ Registry::set('counters', $counters);
 Registry::set('health_smtp_servers', $health_smtp_servers);
 Registry::set('postgrey_servers', $postgrey_servers);
 Registry::set('partitions_to_monitor', $partitions_to_monitor);
+Registry::set('langs', $langs);
 
 
 if(Registry::get('username')) {
@@ -90,7 +83,7 @@ if(Registry::get('username')) {
       $action = new Router($request->get['route']);
    }
    else {
-      $action = new Router('common/home');
+      $action = new Router('quarantine/quarantine');
    }
 }
 else {

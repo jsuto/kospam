@@ -95,10 +95,10 @@ class ModelStatChart extends Model {
 
       $chart = new PieChart(SIZE_X, SIZE_Y);
 
-      $query = $this->db_history->query("SELECT COUNT(*) AS SPAM FROM clapf WHERE result='SPAM' $emails AND ts > $range");
+      $query = $this->db_history->query("SELECT COUNT(*) AS SPAM FROM clapf WHERE result='SPAM' $emails AND ts > ?", array($range));
       if($query->num_rows > 0) { $spam = $query->row['SPAM']; }
 
-      $query = $this->db_history->query("SELECT COUNT(*) AS HAM FROM clapf WHERE result='HAM' $emails AND ts > $range");
+      $query = $this->db_history->query("SELECT COUNT(*) AS HAM FROM clapf WHERE result='HAM' $emails AND ts > ?", array($range));
       if($query->num_rows > 0) { $ham = $query->row['HAM']; }
 
       if($ham > $spam) {
@@ -129,7 +129,7 @@ class ModelStatChart extends Model {
       $chart = new HorizontalBarChart(SIZE_X, SIZE_Y);
       $dataSet = new XYDataSet();
 
-      $query = $this->db_history->query("SELECT ts, fromdomain, COUNT(fromdomain) AS sum FROM clapf WHERE ts > $range $emails AND result='" . $this->db_history->escape($what) . "' GROUP BY fromdomain ORDER BY sum DESC LIMIT 10");
+      $query = $this->db_history->query("SELECT ts, fromdomain, COUNT(fromdomain) AS sum FROM clapf WHERE ts > ? $emails AND result=? GROUP BY fromdomain ORDER BY sum DESC LIMIT 10", array($range, $what));
 
       foreach($query->rows as $q) {
          $dataSet->addPoint(new Point($q['fromdomain'], $q['sum']));

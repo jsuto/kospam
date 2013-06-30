@@ -19,8 +19,8 @@ class DB {
    }
 
 
-   public function query($sql) {
-      return $this->driver->query($sql);
+   public function query($sql, $arr = array()) {
+      return $this->driver->query($sql, $arr);
    }
 
 

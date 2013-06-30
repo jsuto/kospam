@@ -14,7 +14,7 @@ class ModelPolicyPolicy extends Model {
          return array();
       }
 
-      $query = $this->db->query("SELECT * FROM " . TABLE_POLICY . " WHERE policy_group=" . (int)$policy_group);
+      $query = $this->db->query("SELECT * FROM " . TABLE_POLICY . " WHERE policy_group=?", array($policy_group));
 
       return $query->row;
    }
@@ -25,7 +25,7 @@ class ModelPolicyPolicy extends Model {
          return 0;
       }
 
-      $query = $this->db->query("DELETE FROM " . TABLE_POLICY . " WHERE policy_group=" . (int)$policy_group);
+      $query = $this->db->query("DELETE FROM " . TABLE_POLICY . " WHERE policy_group=?", array($policy_group));
 
       $rc = $this->db->countAffected();
 
@@ -42,18 +42,24 @@ class ModelPolicyPolicy extends Model {
       }
 
       $query = $this->db->query(
-         "UPDATE " . TABLE_POLICY . " SET name='" . $this->db->escape($policy['name']) . "', deliver_infected_email=" . (int)$policy['deliver_infected_email'] .
-         ", silently_discard_infected_email=" . (int)$policy['silently_discard_infected_email'] . ", use_antispam=" . (int)$policy['use_antispam'] .
-         ", spam_subject_prefix='" . $this->db->escape($policy['spam_subject_prefix']) . "', enable_auto_white_list=" . (int)$policy['enable_auto_white_list'] .
-         ", max_message_size_to_filter=" . (int)$policy['max_message_size_to_filter'] . ", rbl_domain='" . $this->db->escape($policy['rbl_domain']) .
-         "', surbl_domain='" . $this->db->escape($policy['surbl_domain']) . "', spam_overall_limit=" . (double)$policy['spam_overall_limit'] .
-         ", spaminess_oblivion_limit=" . (double)$policy['spaminess_oblivion_limit'] . ", replace_junk_characters=" . (int)$policy['replace_junk_characters'] .
-         ", invalid_junk_limit=" . (int)$policy['invalid_junk_limit'] . ", invalid_junk_line=" . (int)$policy['invalid_junk_line'] . ", penalize_images=" .
-         (int)$policy['penalize_images'] . ", penalize_embed_images=" . (int)$policy['penalize_embed_images'] . ", penalize_octet_stream=" .
-         (int)$policy['penalize_octet_stream'] . ", training_mode=" . (int)$policy['training_mode'] . ", initial_1000_learning=" .
-         (int)$policy['initial_1000_learning'] . ", store_metadata=" . (int)$policy['store_metadata'] . ", store_only_spam=" . (int)$policy['store_only_spam'] .
-         ", message_from_a_zombie=" . (int)$policy['message_from_a_zombie'] .
-         " WHERE policy_group=" . (int)$policy['policy_group']
+         "UPDATE " . TABLE_POLICY . " SET name=?, deliver_infected_email=?, " .
+                                          "silently_discard_infected_email=?, use_antispam=?, " .
+                                          "spam_subject_prefix=?, enable_auto_white_list=?, " .
+                                          "max_message_size_to_filter=?, rbl_domain=?, " .
+                                          "surbl_domain=?, spam_overall_limit=?, " .
+                                          "spaminess_oblivion_limit=?, replace_junk_characters=?, " .
+                                          "invalid_junk_limit=?, invalid_junk_line=?, penalize_images=?, " .
+                                          "penalize_embed_images=?, penalize_octet_stream=?, " .
+                                          "training_mode=?, initial_1000_learning=?, " .
+                                          "store_metadata=?, store_only_spam=?, " .
+                                          "message_from_a_zombie=?  WHERE policy_group=?",
+
+         array($policy['name'], $policy['deliver_infected_email'], $policy['silently_discard_infected_email'], $policy['use_antispam'],
+               $policy['spam_subject_prefix'], $policy['enable_auto_white_list'], $policy['max_message_size_to_filter'], $policy['rbl_domain'], $policy['surbl_domain'],
+               $policy['spam_overall_limit'], $policy['spaminess_oblivion_limit'], $policy['replace_junk_characters'], $policy['invalid_junk_limit'], $policy['invalid_junk_line'],
+               $policy['penalize_images'], $policy['penalize_embed_images'], $policy['penalize_octet_stream'], $policy['training_mode'], $policy['initial_1000_learning'],
+               $policy['store_metadata'], $policy['store_only_spam'], $policy['message_from_a_zombie'], $policy['policy_group'])
+
       );
 
       /* remove from memcached */
@@ -80,16 +86,13 @@ class ModelPolicyPolicy extends Model {
          "INSERT INTO " . TABLE_POLICY . " (policy_group, name, deliver_infected_email, silently_discard_infected_email, use_antispam, " .
          "spam_subject_prefix, enable_auto_white_list, max_message_size_to_filter, rbl_domain, surbl_domain, spam_overall_limit, spaminess_oblivion_limit, " .
          "replace_junk_characters, invalid_junk_limit, invalid_junk_line, penalize_images, penalize_embed_images, penalize_octet_stream, training_mode, " .
-         "initial_1000_learning, store_metadata, store_only_spam, message_from_a_zombie) VALUES (" .
+         "initial_1000_learning, store_metadata, store_only_spam, message_from_a_zombie) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
 
-         (int)$policy['policy_group'] . ",'" . $this->db->escape($policy['name']) . "'," . (int)$policy['deliver_infected_email'] . "," . (int)$policy['silently_discard_infected_email'] . "," .
-         (int)$policy['use_antispam'] . ",'" . $this->db->escape($policy['spam_subject_prefix']) . "'," . (int)$policy['enable_auto_white_list']  . "," .
-         (int)$policy['max_message_size_to_filter'] . ",'" . $this->db->escape($policy['rbl_domain']) . "','" . $this->db->escape($policy['surbl_domain']) . "'," .
-         (double)$policy['spam_overall_limit'] . "," . (double)$policy['spaminess_oblivion_limit'] . "," . (int)$policy['replace_junk_characters'] . "," . (int)$policy['invalid_junk_limit'] . "," .
-         (int)$policy['invalid_junk_line'] . "," . (int)$policy['penalize_images'] . "," . (int)$policy['penalize_embed_images'] . "," . (int)$policy['penalize_octet_stream'] . "," .
-         (int)$policy['training_mode'] . "," . (int)$policy['initial_1000_learning'] . "," . (int)$policy['store_metadata'] . "," . (int)$policy['store_only_spam'] .
-         ", " . (int)$policy['message_from_a_zombie'] .
-         ")"
+         array($policy['policy_group'], $policy['name'], $policy['deliver_infected_email'], $policy['silently_discard_infected_email'], $policy['use_antispam'], 
+               $policy['spam_subject_prefix'], $policy['enable_auto_white_list'], $policy['max_message_size_to_filter'], $policy['rbl_domain'], $policy['surbl_domain'],
+               $policy['spam_overall_limit'], $policy['spaminess_oblivion_limit'], $policy['replace_junk_characters'], $policy['invalid_junk_limit'], $policy['invalid_junk_line'],
+               $policy['penalize_images'], $policy['penalize_embed_images'], $policy['penalize_octet_stream'], $policy['training_mode'], $policy['initial_1000_learning'],
+               $policy['store_metadata'], $policy['store_only_spam'], $policy['message_from_a_zombie'])
       );
 
 

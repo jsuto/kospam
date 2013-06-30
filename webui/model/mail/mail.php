@@ -6,6 +6,9 @@ class ModelMailMail extends Model {
    public function SendSmtpEmail($smtphost, $smtpport, $yourdomain, $from, $to, $msg){
       $ok = 0;
 
+//die("send mail to: $smtphost, $smtpport, $yourdomain, $from, $to, $msg");
+
+
       if($to == "" || strlen($msg) < 30){ return $ok; }
 
       $r = fsockopen($smtphost, $smtpport);

@@ -243,6 +243,7 @@ class ModelUserImport extends Model {
       if(count($uids) > 0) {
          $uidlist = implode("','", $uids);
          $query = $this->db->query("SELECT uid, username FROM " . TABLE_USER . " WHERE domain='" . $this->db->escape($globals['domain']) . "' AND dn != '*' AND dn LIKE '%" . $globals['ldap_basedn'] . "' AND dn is NOT NULL AND uid NOT IN ('$uidlist')");
+print_r($query);
 
          foreach ($query->rows as $deleted) {
             $deleteduser++;
@@ -263,9 +264,7 @@ class ModelUserImport extends Model {
             $members = explode("\n", $user['members']);
             if(count($members) > 0) {
 
-               if(isset($group['uid'])) {
-                  $query = $this->db->query("DELETE FROM " . TABLE_QUARANTINE_GROUP . " WHERE gid=" . $group['uid'] );
-               }
+               $query = $this->db->query("DELETE FROM " . TABLE_QUARANTINE_GROUP . " WHERE gid=" . $group['uid'] );
 
                foreach ($members as $member) {
                   if(validemail($member)) {

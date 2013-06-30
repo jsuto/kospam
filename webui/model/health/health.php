@@ -65,7 +65,7 @@ class ModelHealthHealth extends Model {
       }
 
       $time = microtime(true) - $time_start;
-      return array($policy[0] . ":" . $policy[1], $ret, $this->format_time($time), $policy[2]);
+      return array($policy[0] . ":" . $policy[1], $ret, $this->format_time($time));
    }
 
 
@@ -122,7 +122,7 @@ class ModelHealthHealth extends Model {
       while(list($k, $v) = each($output)) {
          if($k > 0) {
             $p = preg_split("/\ {1,}/", $v);
-            if(isset($p[5]) && in_array($p[5], $partitions)) {
+            if(in_array($p[5], $partitions)) {
                $shortinfo[] = array(
                                     'partition' => $p[5],
                                     'utilization' => preg_replace("/\%/", "", $p[4])
@@ -132,6 +132,14 @@ class ModelHealthHealth extends Model {
       }
 
       return $shortinfo;
+   }
+
+
+   public function sysinfo() {
+      $hostname = exec("hostname -f");
+      $s = exec("uname -a");
+
+      return array($hostname, $s);
    }
 
 

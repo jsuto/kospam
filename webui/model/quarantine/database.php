@@ -10,7 +10,7 @@ class ModelQuarantineDatabase extends Model {
       if(QUARANTINE_DRIVER == "mysql") { $type = " Engine=InnoDB character set utf8 "; }
 
       $query = $Q->query("
-         create table if not exists " . TABLE_QUARANTINE . " (
+         CREATE TABLE IF NOT EXISTS " . TABLE_QUARANTINE . " (
             id char(32) not null,
             uid int unsigned not null,
             is_spam char(1) default null,
@@ -21,16 +21,16 @@ class ModelQuarantineDatabase extends Model {
             hidden integer(1)
          ) $type");
 
-      $query = $Q->query("create index " . TABLE_QUARANTINE . "_idx on " . TABLE_QUARANTINE . " (uid, is_spam, ts, hidden) ");
+      $query = $Q->query("CREATE INDEX " . TABLE_QUARANTINE . "_idx ON " . TABLE_QUARANTINE . " (uid, is_spam, ts, hidden) ");
 
       $query = $Q->query("
-         create table if not exists " . TABLE_SEARCH . " (
+         CREATE TABLE IF NOT EXISTS " . TABLE_SEARCH . " (
             uid int default 0,
             term char(128) not null,
             ts int default 0
          ) $type");
 
-      $query = $Q->query("create index " . TABLE_SEARCH . "_idx on " . TABLE_SEARCH . " (uid) ");
+      $query = $Q->query("CREATE INDEX " . TABLE_SEARCH . "_idx ON " . TABLE_SEARCH . " (uid) ");
 
       return 0;
    }
@@ -51,7 +51,7 @@ class ModelQuarantineDatabase extends Model {
             $ok = 1;
 
             if($st['mtime'] == $maxts){
-               $query = $Q->query("select count(*) as count from " . TABLE_QUARANTINE . " where uid=" . (int)$uid . " and id='" . $Q->escape($a[1]) . "'");
+               $query = $Q->query("SELECT COUNT(*) AS count FROM " . TABLE_QUARANTINE . " WHERE uid=? AND id=?", array($uid, $a[1]) );
                if(isset($query->row['count']) && $query->row['count'] == 1){ $ok = 0; }
             }
 
@@ -75,7 +75,7 @@ class ModelQuarantineDatabase extends Model {
    }
 
 
-   public function PopulateDatabase($dir = '', $uid = 0, $group_q_dirs = array(), $verbose = 0) {
+   public function PopulateDatabase($dir = '', $uid = 0, $group_q_dirs = array() ) {
       $count = 0;
       $list_address = 0;
 
@@ -118,13 +118,13 @@ class ModelQuarantineDatabase extends Model {
       if($ts > 0 && $ts < $oldest_ts) $oldest_ts = $ts;
 
       if($oldest_ts > 0) {
-         $query = $Q->query("delete from " . TABLE_QUARANTINE . " where uid=" . (int)$uid . " and ts < $oldest_ts");
+         $query = $Q->query("DELETE FROM " . TABLE_QUARANTINE . " WHERE uid=? AND ts < ?", array($uid, $oldest_ts));
       }
 
 
       /* determine what files are to be populated */
 
-      $query = $Q->query("select max(ts) as maxts from " . TABLE_QUARANTINE . " where uid=" . (int)$uid);
+      $query = $Q->query("SELECT MAX(ts) AS maxts FROM " . TABLE_QUARANTINE . " WHERE uid=?", array($uid));
       $maxts = (int)@$query->row['maxts'];
 
       $files = scandir($dir, 1);
@@ -142,7 +142,7 @@ class ModelQuarantineDatabase extends Model {
       foreach ($new_files as $file){
          list ($mailfrom, $subject) = $this->model_quarantine_message->scan_message($dir, $file['is_spam'] . "." . $file['id']);
 
-         $query = $Q->query("insert into " . TABLE_QUARANTINE . " (id, uid, ts, size, is_spam, hidden, `from`, subj) values('" . $file['id'] . "', $uid, " . $file['ts'] . ", " . $file['size'] . ", '" . $file['is_spam'] . "', 0, '" . $Q->escape($mailfrom) . "', '" . $Q->escape($subject) . "')");
+         $query = $Q->query("INSERT INTO " . TABLE_QUARANTINE . " (id, uid, ts, size, is_spam, hidden, `from`, subj) values(?,?,?,?,?,?,?,?)", array($file['id'], $uid, $file['ts'], $file['size'], $file['is_spam'], 0, $mailfrom, $subject));
 
          // create hard links to the additional user directories
          reset($group_q_dirs);
@@ -180,42 +180,48 @@ class ModelQuarantineDatabase extends Model {
    }
 
 
-   public function getMessages($uids = array(), $page = 0, $page_len = PAGE_LEN, $date = '', $from = '', $subj = '', $hamspam = '', $sort = 'ts', $order = 0) {
+   public function getMessages($uids = array(), $search = array()) {
       $n = $total_size = $i = 0;
       $messages = array();
       $limit = "";
       $uid_list = "";
+      $arr = array();
 
+//print_r($search);
 
       $Q = Registry::get('Q');
 
-
       $where_cond = "WHERE hidden=0";
 
-      if($date) {
-         if(QUARANTINE_DRIVER == 'mysql') { $datesql = "UNIX_TIMESTAMP('" . $Q->escape($date) . " 00:00:00') "; }
-         if(QUARANTINE_DRIVER == 'sqlite') { $datesql = "strftime('%s', '" . $Q->escape($date) . " 00:00:00') "; }
+      if($search['date']) {
+         if(QUARANTINE_DRIVER == 'mysql') { $datesql = "UNIX_TIMESTAMP(?)"; array_push($arr, $search['date'] . " 00:00:00"); }
+         if(QUARANTINE_DRIVER == 'sqlite') { $datesql = "strftime('%s', ?)"; array_push($arr, $search['date'] . " 00:00:00"); }
 
          $where_cond .= " AND ts >= $datesql";
 
-         if(QUARANTINE_DRIVER == 'mysql') { $datesql = "UNIX_TIMESTAMP('" . $Q->escape($date) . " 23:59:59') "; }
-         if(QUARANTINE_DRIVER == 'sqlite') { $datesql = "strftime('%s', '" . $Q->escape($date) . " 23:59:59') "; }
+         if(QUARANTINE_DRIVER == 'mysql') { $datesql = "UNIX_TIMESTAMP(?)"; array_push($arr, $search['date'] . " 23:59:59"); }
+         if(QUARANTINE_DRIVER == 'sqlite') { $datesql = "strftime('%s', ?)"; array_push($arr, $search['date'] . " 23:59:59"); }
 
          $where_cond .= " AND ts < $datesql";
       }
 
       if(count($uids) > 0) {
 
+         $q = "";
+
          while(list($k, $v) = each($uids)) {
-            $uid_list .= ",$v";
+            $q .= ",?";
+            array_push($arr, $v);
          }
 
-         $where_cond .=  " AND uid IN (" . preg_replace("/^\,/", "", $uid_list) . ")";
+         $q = preg_replace("/^\,/", "", $q);
+
+         $where_cond .=  " AND uid IN ($q) ";
       }
 
 
-      if($hamspam == "HAM") { $where_cond .= " AND is_spam='h'"; }
-      else if($hamspam == "SPAM") {
+      if($search['hamspam'] == "HAM") { $where_cond .= " AND is_spam='h'"; }
+      else if($search['hamspam'] == "SPAM") {
          if(Registry::get('admin_user') == 1) { $where_cond .= " AND (is_spam='s' OR is_spam='v')"; }
          else { $where_cond .= " AND is_spam='s' "; }
       }
@@ -224,28 +230,26 @@ class ModelQuarantineDatabase extends Model {
          else { $where_cond .= " AND (is_spam='s' OR (is_spam='h' and size>0))"; }
       }
 
-      if($from) { $where_cond .= " AND `from` like '%" . $Q->escape($from) . "%'"; }
-      if($subj) { $where_cond .= " AND subj like '%" . $Q->escape($subj) . "%'"; }
+      if($search['from']) { $where_cond .= " AND `from` like ?"; array_push($arr, '%' . $search['from'] . '%'); }
+      if($search['subject']) { $where_cond .= " AND subj like ?"; array_push($arr, '%' . $search['subject'] . '%'); }
 
       /* sort order */
 
-      if($order == 0) { $order = "ASC"; }
+      if($search['order'] == 0) { $order = "ASC"; }
       else { $order = "DESC"; }
-
 
       /* select total size */
 
-      $query = $Q->query("select count(size) as total_num, sum(size) as total_size from " . TABLE_QUARANTINE . " $where_cond");
-
+      $query = $Q->query("select count(size) as total_num, sum(size) as total_size from " . TABLE_QUARANTINE . " $where_cond", $arr);
 
       if(isset($query->row['total_size'])) { $total_size = $query->row['total_size']; }
       if(isset($query->row['total_num'])) { $n = $query->row['total_num']; }
 
-      if($page_len > 0) { $limit = " LIMIT " . $page_len*$page . "," . $page_len; }
+      if($search['page_len'] > 0) { $limit = " LIMIT " . $search['page_len']*$search['page'] . "," . $search['page_len']; }
 
-      $query = $Q->query("select * from " . TABLE_QUARANTINE . " $where_cond ORDER BY `$sort` $order $limit");
+      $query = $Q->query("select * from " . TABLE_QUARANTINE . " $where_cond ORDER BY `" . $search['sort'] . "` $order $limit", $arr);
 
-      $i = $page_len*$page;
+      $i = $search['page_len']*$search['page'];
 
       if(!isset($query->rows)) { return array(0,0,0); }
 
@@ -270,9 +274,9 @@ class ModelQuarantineDatabase extends Model {
                              'uid' => $message['uid'],
                              'username' => $username,
                              'from' => $message['from'],
-                             'shortfrom' => $this->MakeShortString($message['from'], MAX_CGI_FROM_SUBJ_LEN),
+                             'shortfrom' => $this->MakeShortString($message['from'], TEXT_SHORT_LENGTH),
                              'subject' => $message['subj'],
-                             'shortsubject' => $this->MakeShortString($message['subj'], MAX_CGI_FROM_SUBJ_LEN),
+                             'shortsubject' => $this->MakeShortString($message['subj'], TEXT_SHORT_LENGTH),
                              'size' => $this->model_quarantine_message->NiceSize($message['size']),
                              'date' => date("Y.m.d.", $message['ts'])
                             );
@@ -291,7 +295,7 @@ class ModelQuarantineDatabase extends Model {
 
       $a = explode(".", $id);
 
-      $query = $Q->query("update " . TABLE_QUARANTINE . " set hidden=1 where uid=" . (int)$uid . " AND id='" . $Q->escape($a[1]) . "'");
+      $query = $Q->query("UPDATE " . TABLE_QUARANTINE . " SET hidden=1 WHERE uid=? AND id=?", array($uid, $a[1]));
 
       if($query->error == 0 && $Q->countAffected() == 1) { return 1; }
 
@@ -304,33 +308,42 @@ class ModelQuarantineDatabase extends Model {
       $Q = Registry::get('Q');
 
       if((int)$uid > 0) {
-         $query = $Q->query("update " . TABLE_QUARANTINE . " set hidden=1 where uid=" . (int)$uid);
+         $query = $Q->query("UPDATE " . TABLE_QUARANTINE . " SET hidden=1 WHERE uid=?", array($uid));
       } else {
-         $query = $Q->query("update " . TABLE_QUARANTINE . " set hidden=1");
+         $query = $Q->query("UPDATE " . TABLE_QUARANTINE . " SET hidden=1");
       }
 
-      return 0;
+      return $Q->countAffected();
    }
 
 
-   public function getSearchTerms($uid = 0) {
+   public function get_search_terms($uid = 0) {
       $Q = Registry::get('Q');
 
-      $query = $Q->query("select * from " . TABLE_SEARCH . " where uid=" . (int)$uid . " order by ts desc");
+      $query = $Q->query("SELECT * FROM " . TABLE_SEARCH . " WHERE uid=? ORDER BY ts DESC", array($uid));
+
       if(isset($query->rows)) { return $query->rows; }
 
       return array();
    }
 
 
-   public function addSearchTerm($date = '', $from = '', $to = '', $subj = '', $hamspam = '', $uid = 0) {
-      $term = "date=$date&subj=$subj&from=$from&to=$to&hamspam=$hamspam";
+   public function addSearchTerm($search = array(), $uid = 0) {
+      //$term = "date=" . $search['date'] . "&subject=" . $search['subject'] . "&from=" . $search['from'] . "&to=" . $search['to'] . "&hamspam=" . $search['hamspam'];
+      $term = '';
+
+      while(list($k, $v) = each($search)) {
+         if($v == '' || !in_array($k, array('from','to','subject','date','hamspam')) ) { continue; }
+
+         if($term) { $term .= '&'; }
+         $term .= "$k=$v";
+      }
 
       $Q = Registry::get('Q');
 
-      $query = $Q->query("update " . TABLE_SEARCH . " set ts=" . time() . " where term='" . $Q->escape($term) . "' and uid=" . (int)$uid);
+      $query = $Q->query("UPDATE " . TABLE_SEARCH . " SET ts=? WHERE term=? AND uid=?", array(time(), $term, $uid));
       if($Q->countAffected() == 0) {
-         $query = $Q->query("insert into " . TABLE_SEARCH . " (uid, term, ts) values(" . (int)$uid . ", '" . $Q->escape($term) . "', " . time() . ")");
+         $query = $Q->query("INSERT INTO " . TABLE_SEARCH . " (uid, term, ts) values(?,?,?)", array($uid, $term, time()));
       }
    }
 

@@ -18,7 +18,7 @@ class ModelUserUser extends Model {
 
       $uid = $this->getUidByName($username);
 
-      $query = $this->db->query("SELECT whitelist FROM " . TABLE_WHITELIST . " WHERE uid=" . (int)$uid);
+      $query = $this->db->query("SELECT whitelist FROM " . TABLE_WHITELIST . " WHERE uid=?", array($uid));
 
       if(isset($query->row['whitelist'])){
          return $query->row['whitelist'];
@@ -32,7 +32,7 @@ class ModelUserUser extends Model {
 
       $uid = $this->getUidByName($username);
 
-      $query = $this->db->query("UPDATE " . TABLE_WHITELIST . " SET whitelist='" . $this->db->escape($whitelist) . "' WHERE uid=" . (int)$uid);
+      $query = $this->db->query("UPDATE " . TABLE_WHITELIST . " SET whitelist=? WHERE uid=?", array($whitelist, $uid));
 
       if(MEMCACHED_ENABLED) {
          $memcache = Registry::get('memcache');
@@ -66,7 +66,7 @@ class ModelUserUser extends Model {
 
       $uid = $this->getUidByName($username);
 
-      $query = $this->db->query("UPDATE " . TABLE_BLACKLIST . " SET blacklist='" . $this->db->escape($blacklist) . "' WHERE uid=" . (int)$uid);
+      $query = $this->db->query("UPDATE " . TABLE_BLACKLIST . " SET blacklist=? WHERE uid=?", array($blacklist, $uid));
 
       if(MEMCACHED_ENABLED) {
          $memcache = Registry::get('memcache');
@@ -84,7 +84,7 @@ class ModelUserUser extends Model {
    public function getUidByName($username = '') {
       if($username == ""){ return -1; }
 
-      $query = $this->db->query("SELECT uid FROM " . TABLE_USER . " WHERE username='" . $this->db->escape($username) . "'");
+      $query = $this->db->query("SELECT uid FROM " . TABLE_USER . " WHERE username=?", array($username));
 
       if(isset($query->row['uid'])){
          return $query->row['uid'];
@@ -96,7 +96,7 @@ class ModelUserUser extends Model {
 
    public function getUsernameByUid($uid = 0) {
 
-      $query = $this->db->query("SELECT username FROM " . TABLE_USER . " WHERE uid=" . (int)$uid);
+      $query = $this->db->query("SELECT username FROM " . TABLE_USER . " WHERE uid=?", array($uid));
 
       if(isset($query->row['username'])){
          return $query->row['username'];
@@ -107,7 +107,7 @@ class ModelUserUser extends Model {
 
 
    public function get_uid_by_email($email = '') {
-      $query = $this->db->query("SELECT uid FROM " . TABLE_EMAIL . " WHERE email='" . $this->db->escape($email) . "'");
+      $query = $this->db->query("SELECT uid FROM " . TABLE_EMAIL . " WHERE email=?", array($email));
 
       if(isset($query->row['uid'])){ return $query->row['uid']; }
 
@@ -116,7 +116,7 @@ class ModelUserUser extends Model {
 
 
    public function get_username_by_email($email = '') {
-      $query = $this->db->query("SELECT username FROM " . TABLE_USER . ", " . TABLE_EMAIL . " WHERE " . TABLE_USER . ".uid=" . TABLE_EMAIL . ".uid AND email='" . $this->db->escape($email) . "'");
+      $query = $this->db->query("SELECT username FROM " . TABLE_USER . ", " . TABLE_EMAIL . " WHERE " . TABLE_USER . ".uid=" . TABLE_EMAIL . ".uid AND email=?", array($email));
 
       if(isset($query->row['username'])){ return $query->row['username']; }
 
@@ -128,7 +128,7 @@ class ModelUserUser extends Model {
       $data = array();
 
       if($uid > 0) {
-         $query = $this->db->query("SELECT gid FROM " . TABLE_QUARANTINE_GROUP . " WHERE uid=" . (int)$uid);
+         $query = $this->db->query("SELECT gid FROM " . TABLE_QUARANTINE_GROUP . " WHERE uid=?", array($uid));
 
          if(isset($query->rows)) {
             foreach ($query->rows as $q) {
@@ -143,7 +143,7 @@ class ModelUserUser extends Model {
 
    public function getEmailAddress($username = '') {
 
-      $query = $this->db->query("SELECT " . TABLE_EMAIL . ".email AS email FROM " . TABLE_EMAIL . "," . TABLE_USER . " WHERE " . TABLE_EMAIL . ".uid=" . TABLE_USER . ".uid AND " . TABLE_USER . ".username='" . $this->db->escape($username) . "' LIMIT 1");
+      $query = $this->db->query("SELECT " . TABLE_EMAIL . ".email AS email FROM " . TABLE_EMAIL . "," . TABLE_USER . " WHERE " . TABLE_EMAIL . ".uid=" . TABLE_USER . ".uid AND " . TABLE_USER . ".username=? LIMIT 1", array($username));
 
       if(isset($query->row['email'])){
          return $query->row['email'];
@@ -156,7 +156,7 @@ class ModelUserUser extends Model {
    public function getEmails($username = '') {
       $emails = "";
 
-      $query = $this->db->query("SELECT " . TABLE_EMAIL . ".email AS email FROM " . TABLE_EMAIL . "," . TABLE_USER . " WHERE " . TABLE_EMAIL . ".uid=" . TABLE_USER . ".uid AND " . TABLE_USER . ".username='" . $this->db->escape($username) . "'");
+      $query = $this->db->query("SELECT " . TABLE_EMAIL . ".email AS email FROM " . TABLE_EMAIL . "," . TABLE_USER . " WHERE " . TABLE_EMAIL . ".uid=" . TABLE_USER . ".uid AND " . TABLE_USER . ".username=?", array($username));
 
       foreach ($query->rows as $q) {
          $emails .= $q['email'] . "\n";
@@ -169,7 +169,7 @@ class ModelUserUser extends Model {
    public function getEmailsByUid($uid = 0) {
       $emails = "";
 
-      $query = $this->db->query("SELECT email FROM " . TABLE_EMAIL . " WHERE uid=" . (int)$uid);
+      $query = $this->db->query("SELECT email FROM " . TABLE_EMAIL . " WHERE uid=?", array($uid));
       foreach ($query->rows as $q) {
          $emails .= $q['email'] . "\n";
       }
@@ -182,7 +182,7 @@ class ModelUserUser extends Model {
       $data = array();
 
       if(Registry::get('domain_admin') == 1) {
-         $query = $this->db->query("SELECT domain FROM " . TABLE_USER . " WHERE username='" . $this->db->escape($_SESSION['username']) . "'");
+         $query = $this->db->query("SELECT domain FROM " . TABLE_USER . " WHERE username=?", array($_SESSION['username']));
       }
       else {
          $query = $this->db->query("SELECT DISTINCT mapped AS domain FROM " . TABLE_DOMAIN);
@@ -199,7 +199,7 @@ class ModelUserUser extends Model {
    public function getDomainsByUid($uid = 0) {
       $data = array();
 
-      $query = $this->db->query("SELECT domain FROM " . TABLE_USER . " WHERE uid=" . (int)$uid);
+      $query = $this->db->query("SELECT domain FROM " . TABLE_USER . " WHERE uid=?", array($uid));
 
       foreach ($query->rows as $q) {
          array_push($data, $q['domain']);
@@ -212,7 +212,7 @@ class ModelUserUser extends Model {
    public function getUidsByDomain($domain = '') {
       $data = array();
 
-      $query = $this->db->query("SELECT uid FROM " . TABLE_USER . " WHERE domain='" . $this->db->escape($domain) . "'");
+      $query = $this->db->query("SELECT uid FROM " . TABLE_USER . " WHERE domain=?", array($domain));
 
       foreach ($query->rows as $q) {
          array_push($data, $q['uid']);
@@ -229,7 +229,7 @@ class ModelUserUser extends Model {
    public function get_quarantine_directories($uid = 0) {
       $data = array();
 
-      $query = $this->db->query("SELECT " . TABLE_USER . ".username, " . TABLE_USER . ".domain, " . TABLE_USER . ".uid FROM " . TABLE_USER . "," . TABLE_QUARANTINE_GROUP . " WHERE " . TABLE_QUARANTINE_GROUP . ".gid=" . (int)$uid . " AND " . TABLE_USER . ".uid=" . TABLE_QUARANTINE_GROUP . ".uid");
+      $query = $this->db->query("SELECT " . TABLE_USER . ".username, " . TABLE_USER . ".domain, " . TABLE_USER . ".uid FROM " . TABLE_USER . "," . TABLE_QUARANTINE_GROUP . " WHERE " . TABLE_QUARANTINE_GROUP . ".gid=? AND " . TABLE_USER . ".uid=" . TABLE_QUARANTINE_GROUP . ".uid", array($uid));
 
 
       if(isset($query->rows)) {
@@ -247,7 +247,7 @@ class ModelUserUser extends Model {
 
       if(Registry::get('domain_admin') == 1) {
          $my_domain = $this->getDomains();
-         $query = $this->db->query("SELECT domain FROM " . TABLE_DOMAIN . " WHERE mapped='" . $this->db->escape($my_domain[0]) . "'");
+         $query = $this->db->query("SELECT domain FROM " . TABLE_DOMAIN . " WHERE mapped=?", array($my_domain[0]));
       }
       else {
          $query = $this->db->query("SELECT domain FROM " . TABLE_DOMAIN);
@@ -266,12 +266,12 @@ class ModelUserUser extends Model {
 
       /* query my domain */
 
-      $query = $this->db->query("SELECT domain FROM " . TABLE_USER . " WHERE username='" . $this->db->escape($_SESSION['username']) . "'");
+      $query = $this->db->query("SELECT domain FROM " . TABLE_USER . " WHERE username=?", array($_SESSION['username']));
       if(!isset($query->row['domain'])) { return 0; }
 
       /* query user's domain */
 
-      $query2 = $this->db->query("SELECT domain FROM " . TABLE_USER . " WHERE username='" . $this->db->escape($username) . "'");
+      $query2 = $this->db->query("SELECT domain FROM " . TABLE_USER . " WHERE username=?", array($username));
       if(!isset($query2->row['domain'])) { return 0; }
 
       if($query->row['domain'] == $query2->row['domain']) { return 1; }
@@ -285,12 +285,12 @@ class ModelUserUser extends Model {
 
       /* query my domain */
 
-      $query = $this->db->query("SELECT domain FROM " . TABLE_USER . " WHERE username='" . $this->db->escape($_SESSION['username']) . "'");
+      $query = $this->db->query("SELECT domain FROM " . TABLE_USER . " WHERE username=?", array($_SESSION['username']));
       if(!isset($query->row['domain'])) { return 0; }
 
       /* query user's domain */
 
-      $query2 = $this->db->query("SELECT domain FROM " . TABLE_USER . " WHERE uid=" . (int)$uid);
+      $query2 = $this->db->query("SELECT domain FROM " . TABLE_USER . " WHERE uid=?", array($uid));
       if(!isset($query2->row['domain'])) { return 0; }
 
       if($query->row['domain'] == $query2->row['domain']) { return 1; }
@@ -307,13 +307,13 @@ class ModelUserUser extends Model {
       list($u, $d) = preg_split("/\@/", $email);
       if($d == "") { return 0; }
 
-      $query = $this->db->query("SELECT mapped FROM " . TABLE_DOMAIN . " WHERE domain='" . $this->db->escape($d) . "'");
+      $query = $this->db->query("SELECT mapped FROM " . TABLE_DOMAIN . " WHERE domain=?", array($d));
       if(!isset($query->row['mapped'])) { return 0; }
 
 
       /* query my domain */
 
-      $query2 = $this->db->query("SELECT domain FROM " . TABLE_USER . " WHERE username='" . $this->db->escape($_SESSION['username']) . "'");
+      $query2 = $this->db->query("SELECT domain FROM " . TABLE_USER . " WHERE username=?", array($_SESSION['username']));
       if(!isset($query2->row['domain'])) { return 0; }
 
       if($query2->row['domain'] == $query->row['mapped']) { return 1; }
@@ -325,7 +325,7 @@ class ModelUserUser extends Model {
    public function getUserByDN($dn = '') {
       if($dn == '') { return array(); }
 
-      $query = $this->db->query("SELECT * FROM " . TABLE_USER . " WHERE dn='" . $this->db->escape($dn) . "'");
+      $query = $this->db->query("SELECT * FROM " . TABLE_USER . " WHERE dn=?", array($dn));
 
       if($query->num_rows == 1) {
          return $query->row;
@@ -579,10 +579,10 @@ class ModelUserUser extends Model {
    public function deleteUser($uid) {
       if(!$this->checkUID($uid)){ return 0; }
 
-      $query = $this->db->query("DELETE FROM " . TABLE_EMAIL . " WHERE uid=" . (int)$uid);
-      $query = $this->db->query("DELETE FROM " . TABLE_USER . " WHERE uid=" . (int)$uid);
-      $query = $this->db->query("DELETE FROM " . TABLE_WHITELIST . " WHERE uid=" . (int)$uid);
-      $query = $this->db->query("DELETE FROM " . TABLE_BLACKLIST . " WHERE uid=" . (int)$uid);
+      $query = $this->db->query("DELETE FROM " . TABLE_EMAIL . " WHERE uid=?", array($uid));
+      $query = $this->db->query("DELETE FROM " . TABLE_USER . " WHERE uid=?", array($uid));
+      $query = $this->db->query("DELETE FROM " . TABLE_WHITELIST . " WHERE uid=?", array($uid));
+      $query = $this->db->query("DELETE FROM " . TABLE_BLACKLIST . " WHERE uid=?", array($uid));
 
       LOGGER("remove user: uid=$uid");
 

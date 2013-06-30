@@ -8,14 +8,7 @@ function LOGGER($event = '', $username = '') {
       else { $username = 'unknown'; }
    }
 
-   $log_entry = sprintf("[%s]: %s, %s, '%s'\n", date(LOG_DATE_FORMAT), $username, $_SERVER['REMOTE_ADDR'], $event);
-
-   if($fp = @fopen(LOG_FILE, 'a')) {
-      fwrite($fp, $log_entry);
-      fflush($fp);
-      fclose($fp);
-    }
-
+   syslog(LOG_INFO, sprintf("%s, %s, '%s'", date(LOG_DATE_FORMAT), $username, $_SERVER['REMOTE_ADDR'], $event));
 }
 
 function getAuthenticatedUsername() {
@@ -97,7 +90,7 @@ function validemail($email = '') {
 
    if($email == 'admin@local') { return 1; }
 
-   if(preg_match('/^[_a-zA-Z0-9-]+(\.[_a-zA-Z0-9-]+)*@[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*(\.[a-zA-Z]{2,5})$/', $email)) {
+   if(preg_match('/^[_a-zA-Z0-9-]+(\.[_a-zA-Z0-9-]+)*@[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*(\.[a-zA-Z]{2,4})$/', $email)) {
       return 1;
    }
 
@@ -220,7 +213,7 @@ function my_qp_encode($s){
             //if($i > 0 && ($i % 76) == 0) $part .= "=\r\n";
 
             $c = substr($v, $i, 1);
-            if(ord($c) >= 128){
+            if(ord($c) >= 128 || $c == '.'){
                $c = "=" . strtoupper(dechex(ord($c)));
             }
 
@@ -242,11 +235,18 @@ function format_qshape($desc = '', $filename = '') {
 
    $stat = stat($filename);
 
-   $s = preg_replace("/ {1,}/", "</td><td>", file_get_contents($filename));
+   //$s = preg_replace("/ {1,}/", '</div><div class="healthcell">', file_get_contents($filename));
+
+   $s = file_get_contents($filename);
 
    $a = explode("\n", $s);
 
    return array('desc' => $desc, 'date' => date(LOG_DATE_FORMAT, $stat['ctime']), 'lines' => $a);
+}
+
+
+function assemble_quarantine_link($arr = array(), $page = 0) {
+   return "index.php?route=quarantine/quarantine&amp;page=" . $page . "&amp;to=" . $arr['to'] . "&amp;from=" . $arr['from'] . "&amp;subj=" . $arr['subj'] . "&date=" . $arr['date'] . "&hamspam=" . $arr['hamspam'] . "&amp;sort=" . $arr['sort'] . "&amp;order=" . $arr['order'];
 }
 
 

@@ -50,7 +50,7 @@ class ModelQuarantineMessage extends Model {
    }
 
 
-   public function ShowMessage($dir = '', $id = '') {
+   public function show_message($dir = '', $id = '') {
       $header = "";
       $body_chunk = "";
       $is_header = 1;
@@ -61,34 +61,43 @@ class ModelQuarantineMessage extends Model {
       $text_html = 0;
       $charset = "";
       $qp = $base64 = 0;
-      $images = array();
-      $n_image = -1;
+      $has_text_plain = 0;
+      $rfc822 = 0;
+      $_1st_header = 1;
 
-      $message = "";
-      $from = $to = $subject = $date = "";
+      $from = $to = $subject = $date = $message = "";
 
       if($dir == "" || $id == "" || !$this->checkId($id) || !file_exists($dir . "/" . $id) || !is_readable($dir . "/" . $id) ){ return ""; }
 
       $fp = fopen($dir . "/" . $id, "r");
       if($fp){
          while(($l = fgets($fp, 4096))){
+
             if(($l[0] == "\r" && $l[1] == "\n" && $is_header == 1) || ($l[0] == "\n" && $is_header == 1) ){
-               $message = "<pre>" . $this->decode_my_str($from) . "\n" . $this->decode_my_str($to) . "\n" . $this->decode_my_str($subject) . "\n" . $this->decode_my_str($date) . "\n</pre>\n\n";
-               $is_header = 0;
+               $is_header = $_1st_header = 0;
+
+               if($rfc822 == 1) { $rfc822 = 0; $is_header = 1; }
+
             }
 
-            if(preg_match("/^Content-Type:/i", $l)) $state = "CONTENT_TYPE";
-            if(preg_match("/^Content-Transfer-Encoding:/i", $l)) $state = "CONTENT_TRANSFER_ENCODING";
+            if($is_header == 1 && preg_match("/^Content-Type:/i", $l)) $state = "CONTENT_TYPE";
+            if($is_header == 1 && preg_match("/^Content-Transfer-Encoding:/i", $l)) $state = "CONTENT_TRANSFER_ENCODING";
 
-            if($state == "CONTENT_TYPE"){
+            if($state == "CONTENT_TYPE") {
+
                $x = strstr($l, "boundary");
                if($x){
-                  $x = preg_replace("/\"/", "", $x);
+                  $a = explode(";", $x);
+                  $x = $a[0];
+
+                  $x = preg_replace("/boundary =/", "boundary=", $x);
+                  $x = preg_replace("/boundary= /", "boundary=", $x);
+
+                  $x = preg_replace("/\"\;{0,1}/", "", $x);
                   $x = preg_replace("/\'/", "", $x);
-                  //$x = preg_replace("/ /", "", $x);
 
                   $b = explode("boundary=", $x);
-                  array_push($boundary, rtrim($b[1]));
+                  array_push($boundary, rtrim($b[count($b)-1]));
                }
 
                if(preg_match("/charset/i", $l)){
@@ -103,46 +112,50 @@ class ModelQuarantineMessage extends Model {
                   }
                }
 
-               if(strstr($l, "text/plain")){ $text_plain = 1; }
+               if(strstr($l, "message/rfc822")) { $rfc822 = 1; }
+
+               if(strstr($l, "text/plain")){ $text_plain = 1; $has_text_plain = 1; }
                if(strstr($l, "text/html")){ $text_html = 1; $text_plain = 0; }
-
-               if(strstr($l, "image/jpeg") || strstr($l, "image/png") || strstr($l, "image/gif") ){
-                  array_push($images, "");
-                  $n_image++;
-               }
-
             }
 
             if($state == "CONTENT_TRANSFER_ENCODING"){
-               if(strstr($l, "quoted-printable")){ $qp = 1; }
-               if(strstr($l, "base64")){ $base64 = 1; }
+               if(preg_match("/quoted-printable/i", $l)){ $qp = 1; }
+               if(preg_match("/base64/i", $l)){ $base64 = 1; }
             }
 
 
             if($is_header == 1){
                if($l[0] != " " && $l[0] != "\t"){ $state = "UNDEF"; }
-               if(preg_match("/^From:/", $l)){ $state = "FROM"; }
-               if(preg_match("/^To:/", $l)){ $state = "TO"; }
-               if(preg_match("/^Date:/", $l)){ $state = "DATE"; }
-               if(preg_match("/^Subject:/", $l)){ $state = "SUBJECT"; }
+               if(preg_match("/^From:/i", $l)){ $state = "FROM"; }
+               if(preg_match("/^To:/i", $l) || preg_match("/^Cc:/i", $l)){ $state = "TO"; }
+               if(preg_match("/^Date:/i", $l)){ $state = "DATE"; }
+               if(preg_match("/^Subject:/i", $l)){ $state = "SUBJECT"; }
                if(preg_match("/^Content-Type:/", $l)){ $state = "CONTENT_TYPE"; }
+               if(preg_match("/^Content-Disposition:/", $l)){ $state = "CONTENT_DISPOSITION"; }
 
                $l = preg_replace("/</", "&lt;", $l);
                $l = preg_replace("/>/", "&gt;", $l);
 
-               if($state == "FROM"){ $from .= preg_replace("/\r|\n/", "", $l); }
-               if($state == "TO"){ $to .= preg_replace("/\r|\n/", "", $l); }
-               if($state == "SUBJECT"){ $subject .= preg_replace("/\r|\n/", "", $l); }
-               if($state == "DATE"){ $date .= preg_replace("/\r|\n/", "", $l); }
+               if($_1st_header == 1) {
+                  if($state == "FROM"){ $from .= preg_replace("/\r|\n/", "", $l); }
+                  if($state == "TO"){ $to .= preg_replace("/\r|\n/", "", $l); }
+                  if($state == "SUBJECT"){ $subject .= preg_replace("/\r|\n/", "", $l); }
+                  if($state == "DATE"){ $date .= preg_replace("/\r|\n/", "", $l); }
+               }
             }
             else {
 
                if($this->check_boundary($boundary, $l) == 1){
-                  $message .= $this->flush_body_chunk($body_chunk, $charset, $qp, $base64, $text_plain, $text_html);
+
+                  if($text_plain == 1 || $has_text_plain == 0) {
+                     $message .= $this->flush_body_chunk($body_chunk, $charset, $qp, $base64, $text_plain, $text_html);
+                  }
 
                   $text_plain = $text_html = $qp = $base64 = 0;
 
                   $charset = $body_chunk = "";
+
+                  $is_header = 1;
 
                   continue;
                }
@@ -157,45 +170,25 @@ class ModelQuarantineMessage extends Model {
 
                }
 
-               if($state == "BODY" && $base64 == 1 && !preg_match("/^[\r\n]/", $l) ) {
-                  if($n_image >= 0){ $images[$n_image] .= rtrim($l); }
-               }
-
             }
 
-
          }
-         fclose($fp);
       }
+ 
+     fclose($fp);
 
-      if($body_chunk){
+
+      if($body_chunk && ($text_plain == 1 || $has_text_plain == 0) ){
          $message .= $this->flush_body_chunk($body_chunk, $charset, $qp, $base64, $text_plain, $text_html);
       }
 
-      /* write images to the cache dir, if possible */
+      return array('from' => $this->decode_my_str($from),
+                   'to' => $this->decode_my_str($to),
+                   'subject' => $this->decode_my_str($subject),
+                   'date' => $this->decode_my_str($date),
+                   'message' => $message
+            );
 
-      if(file_exists(DIR_CACHE)) {
-         $n = 0;
-
-         foreach ($images as $image) {
-            $f = DIR_CACHE . "$id-$n";
-
-            if(!file_exists($f)) {
-               $fp = fopen($f, "w+");
-               if($fp){
-                  fputs($fp, base64_decode($image));
-                  fclose($fp);
-               }
-            }
-
-            $message .= "\n<p><img src=\"" . WEBUI_DIRECTORY . "/cache/$id-$n\" alt=\"spam image\" /></p>\n";
-
-            $n++;
-         }
-      }
-
-
-      return $message;
    }
 
 
@@ -207,11 +200,56 @@ class ModelQuarantineMessage extends Model {
          }
       }
 
-   return 0;
-}
+      return 0;
+   }
 
 
    private function flush_body_chunk($chunk, $charset, $qp, $base64, $text_plain, $text_html) {
+
+      if($qp == 1){
+         $chunk = $this->qp_decode($chunk);
+      }
+
+      if($base64 == 1){
+         $chunk = base64_decode($chunk);
+      }
+
+      if($charset && !preg_match("/utf-8/i", $charset)){
+         $s = @iconv($charset, 'utf-8', $chunk);
+         if($s) { $chunk = $s; $s = ''; }
+      }
+
+      if($text_plain == 1){
+         $chunk = preg_replace("/</", "&lt;", $chunk);
+         $chunk = preg_replace("/>/", "&gt;", $chunk);
+
+         $chunk = preg_replace("/\n/", "<br />\n", $chunk);
+         $chunk = "\n" . $this->print_nicely($chunk);
+      }
+
+      if($text_html == 1){
+         $chunk = preg_replace("/\<style([^\>]+)\>([\w\W]+)\<\/style\>/i", "", $chunk);
+
+         if(ENABLE_REMOTE_IMAGES == 0) {
+            $chunk = preg_replace("/style([\s]{0,}=[\s]{0,})\"([^\"]+)/", "style=\"xxxx", $chunk);
+            $chunk = preg_replace("/style([\s]{0,}=[\s]{0,})\'([^\']+)/", "style=\'xxxx", $chunk);
+         }
+
+         $chunk = preg_replace("/\<body ([\w\s\;\"\'\#\d\:\-\=]+)\>/i", "<body>", $chunk);
+
+         if(ENABLE_REMOTE_IMAGES == 0) { $chunk = preg_replace("/\<img([^\>]+)\>/i", "<img src=\"" . REMOTE_IMAGE_REPLACEMENT . "\" />", $chunk); }
+
+         /* prevent scripts in the HTML part */
+
+         $chunk = preg_replace("/document\.write/", "document.writeee", $chunk);
+         $chunk = preg_replace("/<\s{0,}script([\w\W]+)\/script\s{0,}\>/i", "<!-- disabled javascript here -->", $chunk);
+      }
+
+      return $chunk;
+   }
+
+
+   private function flush_body_chunk2($chunk, $charset, $qp, $base64, $text_plain, $text_html) {
 
       if($qp == 1){
          $chunk = $this->qp_decode($chunk);
@@ -401,6 +439,8 @@ class ModelQuarantineMessage extends Model {
          $what = preg_replace("/^\=\?/", "", $what);
          $what = preg_replace("/\?\=$/", "", $what);
 
+         $encoding = substr($what, 0, strpos($what, '?'));
+
          if(preg_match("/\?Q\?/i", $what)){
             $x = preg_replace("/^([\w\-]+)\?Q\?/i", "", $what);
 
@@ -415,9 +455,8 @@ class ModelQuarantineMessage extends Model {
             $s = preg_replace('/\0/', "*", $s);
          }
 
-
-         if(!preg_match("/utf-8/i", $what)){
-            $s = utf8_encode($s);
+         if(!preg_match("/utf-8/i", $encoding)){
+            $s = iconv($encoding, 'utf-8', $s);
          }
 
       }

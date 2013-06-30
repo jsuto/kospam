@@ -1,105 +1,91 @@
 <?php
 
+
 class MySQL {
    private $link;
-   private $prefix;
-
+   private $affected;
 
    public function __construct($hostname, $username, $password, $database, $prefix = NULL) {
-      if (!$this->link = mysql_connect($hostname, $username, $password)) {
-         exit('Error: Could not make a database connection using ' . $username . '@' . $hostname);
+
+      try {
+         $this->link = new PDO("mysql:host=$hostname;dbname=$database", $username, $password,
+                                  array(
+                                     PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8",
+                                     PDO::MYSQL_ATTR_INIT_COMMAND => "SET CHARACTER SET utf8"
+                                  )
+                              );
+
+      }
+      catch(PDOException $exception) {
+         exit('Error: ' . $exception->getMessage() . " on database: $database<br />");
       }
 
-
-      if(!$this->select_db($database)) {
-         exit('Error: Could not connect to database ' . $database);
-      }
-
-		
-      $this->prefix = $prefix;
-
-      mysql_query("SET NAMES 'utf8'", $this->link);
-      mysql_query("SET CHARACTER SET utf8", $this->link);
+      $this->affected = 0;
    }
 
 
-   public function select_db($database) {
-      return mysql_select_db($database, $this->link);
-   }
+   public function select_db($database) { }
 
 
-   public function query($sql) {
+   public function query($sql, $arr = array()) {
       $query = new stdClass();
 
+      $query->error = 1;
+      $query->errmsg = "Error";
       $query->query = $sql;
-      $query->error = 0;
-      $query->errmsg = "";
 
       $time_start = microtime(true);
 
-      $resource = mysql_query(str_replace('#__', $this->prefix, $sql), $this->link);
+      $i = 0;
+      $data = array();
 
-      if($resource){
-         if(is_resource($resource)){
-            $i = 0;
+      $s = $this->link->prepare($sql);
+      if(!$s) { return $query; }
 
-            $data = array();
+      $s->execute($arr);
 
-            while ($result = mysql_fetch_assoc($resource)) {
-               $data[$i] = $result;
+      $this->affected = $s->rowCount();
 
-               $i++;
-            }
+      $R = $s->fetchAll();
 
-            mysql_free_result($resource);
-
-            $query->row      = isset($data[0]) ? $data[0] : array();
-            $query->rows     = $data;
-            $query->num_rows = $i;
-
-            unset($data);
-
-            $time_end = microtime(true);
-
-            $query->exec_time = $time_end - $time_start;
-
-            return $query;	
-         }
-         else {
-            return $query;
-         }
-      }
-      else {
-         $_SESSION['error'] = 'Error: ' . mysql_error() . '<br />Error No: ' . mysql_errno() . '<br />' . $sql;
-
-         $query->errmsg = 'Error: ' . mysql_error() . '<br />Error No: ' . mysql_errno() . '<br />' . $sql;
-         $query->error = 1;
-
-         return $query;
+      while(list ($k, $v) = each($R)){
+         $data[$i] = $v;
+         $i++;
       }
 
-   }
+      $query->row      = isset($data[0]) ? $data[0] : array();
+      $query->rows     = $data;
+      $query->num_rows = $i;
 
+      $query->error = 0;
+      $query->errmsg = "";
 
-   public function escape($value) {
-      return mysql_real_escape_string($value, $this->link);
+      unset($data);
+
+      $time_end = microtime(true);
+
+      $query->exec_time = $time_end - $time_start;
+
+//print $sql . " " . $query->exec_time . "<p/>\n";
+
+      return $query;
    }
 
 
    public function countAffected() {
-      return mysql_affected_rows($this->link);
+      return $this->affected;
    }
 
 
    public function getLastId() {
-      return mysql_insert_id($this->link);
-   }	
-
-
-   public function __destruct() {
-      mysql_close($this->link);
+      return $this->link->lastInsertId();
    }
 
+
+   public function escape($s) { return $s; }
+
+
+   public function __destruct() { }
 
 }
 

@@ -12,7 +12,7 @@ class ModelDomainDomain extends Model {
    public function deleteDomain($domain = '') {
       if($domain == "") { return 0; }
 
-      $query = $this->db->query("DELETE FROM " . TABLE_DOMAIN . " WHERE domain='" . $this->db->escape($domain) . "'");
+      $query = $this->db->query("DELETE FROM " . TABLE_DOMAIN . " WHERE domain=?", array($domain));
 
       $rc = $this->db->countAffected();
 
@@ -28,8 +28,7 @@ class ModelDomainDomain extends Model {
       $domains = explode("\n", $domain);
 
       foreach ($domains as $domain) {
-         $domain = rtrim($domain);
-         $query = $this->db->query("INSERT INTO " . TABLE_DOMAIN . " (domain, mapped) VALUES ('" . $this->db->escape($domain) . "', '" . $this->db->escape($mapped) . "')");
+         $query = $this->db->query("INSERT INTO " . TABLE_DOMAIN . " (domain, mapped) VALUES (?,?)", array(rtrim($domain), $mapped));
 
          $rc = $this->db->countAffected();
 

@@ -1,20 +1,31 @@
-<h4><?php print $text_existing_policies; ?>*</h4>
+<h4><?php print $text_existing_policies; ?></h4>
 
-<form action="index.php?route=policy/view" method="get" onsubmit="fix_form(); return false;">
-   <select name="policy_group">
-<?php foreach ($policies as $policy) { ?>
-      <option value="<?php print $policy['policy_group']; ?>"><?php print $policy['name']; ?></option>
+<div class="listarea bottom">
+
+<?php if(isset($policies)){ ?>
+
+   <div id="ss1">
+      <div class="domainrow">
+         <div class="domaincell"><?php print $text_policy; ?></div>
+         <div class="domaincell">&nbsp;</div>
+      </div>
+
+<?php foreach($policies as $policy) { ?>
+      <div class="domainrow">
+         <div class="domaincell"><a href="index.php?route=policy/view&policy_group=<?php print $policy['policy_group']; ?>"><?php print $policy['name']; ?></a></div>
+         <div class="domaincell"><a href="index.php?route=policy/remove&amp;confirmed=1&amp;policy_group=<?php print $policy['policy_group']; ?>" onclick="if(confirm('<?php print $text_remove_policy; ?>: ' + '\'<?php print $policy['name']; ?>\'')) return true; return false;"><?php print $text_remove_this_policy; ?></a></div>
+      </div>
 <?php } ?>
-   </select>
 
-   <input type="submit" value="<?php print $text_edit_or_view; ?>" />
-</form>
+   </div>
 
-<p>&nbsp; </p>
+<?php } else { ?>
+<?php print $text_not_found; ?>
+<?php } ?>
+
+</div>
+
+
 
 <p><a href="index.php?route=policy/add"><?php print $text_add_policy; ?></a></p>
-
-<p>&nbsp; </p>
-
-<p>*: <?php print $text_warning_about_default_policy; ?></p>
 

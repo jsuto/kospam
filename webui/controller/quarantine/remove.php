@@ -8,7 +8,7 @@ class ControllerQuarantineRemove extends Controller {
 
       $this->id = "content";
       $this->template = "quarantine/remove.tpl";
-      $this->layout = "common/layout";
+      $this->layout = "common/layout-empty";
 
 
       $request = Registry::get('request');
@@ -22,14 +22,7 @@ class ControllerQuarantineRemove extends Controller {
       $this->document->title = $this->data['text_quarantine'];
 
 
-      $this->data['id'] = @$this->request->get['id'];
-      $this->data['from'] = @$this->request->get['from'];
-      $this->data['to'] = @$this->request->get['to'];
-      $this->data['subj'] = @$this->request->get['subj'];
-      $this->data['hamspam'] = @$this->request->get['hamspam'];
-      $this->data['date'] = @$this->request->get['date'];
-      $this->data['page'] = @$this->request->get['page'];
-
+      if(isset($this->request->get['id'])) { $this->data['id'] = $this->request->get['id']; }
 
       $this->data['username'] = Registry::get('username');
 
@@ -59,15 +52,17 @@ class ControllerQuarantineRemove extends Controller {
 
       /* purge selected messages */
 
-      if($this->request->server['REQUEST_METHOD'] == 'POST' && isset($this->request->post['topurge'])){
+      if(isset($this->request->post['ids']) && isset($this->request->post['topurge'])){
          $n = 0;
 
-         while(list($k, $v) = each($_POST)){
-            $k = preg_replace("/_/", ".", $k);
+         $ids = preg_split("/ /", $this->request->post['ids']);
 
-            $a = preg_split("/\+/", $k);
+         while(list($k, $v) = each($ids)){
+
+            $a = preg_split("/\+/", $v);
             if(count($a) == 2) {
                $k = $a[0];
+
                $username = preg_replace("/\*/", ".", $a[1]);
 
                $uid = $this->model_user_user->getUidByName($username);
@@ -80,9 +75,10 @@ class ControllerQuarantineRemove extends Controller {
                }
 
             }
+
          }
 
-         $this->data['x'] = $this->data['text_purged'] . " " . $n;
+         $this->data['message'] = $this->data['text_purged'] . " " . $n;
          
       }
 
@@ -92,29 +88,33 @@ class ControllerQuarantineRemove extends Controller {
       if(isset($this->request->get['purgeallfromqueue'])){
          $n = 0;
 
-         $files = scandir($my_q_dir, 1);
+         if(REMOVE_FROM_QUARANTINE_WILL_UNLINK_FROM_FILESYSTEM == 1) {
 
-         foreach ($files as $file){
-            if($this->model_quarantine_message->checkId($file) && file_exists($my_q_dir . "/$file") && $this->model_quarantine_database->RemoveEntry($file, $uid) ){
-               if(REMOVE_FROM_QUARANTINE_WILL_UNLINK_FROM_FILESYSTEM == 1) { unlink($my_q_dir . "/$file"); }
-               $n++;
+            $files = scandir($my_q_dir, 1);
+
+            foreach ($files as $file){
+               if($this->model_quarantine_message->checkId($file) && file_exists($my_q_dir . "/$file") && $this->model_quarantine_database->RemoveEntry($file, $uid) ){
+                  unlink($my_q_dir . "/$file");
+               }
             }
          }
 
-         $this->model_quarantine_database->RemoveAllEntries($uid);
+         $n = $this->model_quarantine_database->RemoveAllEntries($uid);
 
-         $this->data['x'] = $this->data['text_purged'] . " " . $n;
+         $this->data['message'] = $this->data['text_purged'] . " " . $n;
  
       }
 
 
-      if($this->request->server['REQUEST_METHOD'] == 'GET') {
+      /* purge one message */
+
+      if(isset($this->request->get['id'])) {
          if($this->model_quarantine_message->checkId($this->data['id']) && file_exists($my_q_dir . "/" . $this->data['id']) ){
             $this->model_quarantine_database->RemoveEntry($this->data['id'], $uid);
             if(REMOVE_FROM_QUARANTINE_WILL_UNLINK_FROM_FILESYSTEM == 1) { unlink($my_q_dir . "/" . $this->data['id']); }
-            $this->data['x'] = $this->data['text_successfully_removed'];
+            $this->data['message'] = $this->data['text_successfully_removed'];
          } else {
-            $this->data['x'] = $this->data['text_failed_to_remove'];
+            $this->data['message'] = $this->data['text_failed_to_remove'];
          }
       }
 

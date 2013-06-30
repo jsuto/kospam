@@ -26,6 +26,9 @@ class ControllerUserList extends Controller {
 
       $this->data['total_users'] = 0;
 
+      $this->request->get['sort'] = "username";
+      $this->data['order'] = 0;
+
       $users = array();
 
 
@@ -45,15 +48,24 @@ class ControllerUserList extends Controller {
       }
 
 
-      $this->data['sort'] = 'username';
+      if(isset($this->request->get['order'])) { $this->data['order'] = $this->request->get['order']; }
 
-      $this->data['order'] = (int)@$this->request->get['order'];
+      if(isset($this->request->get['sort'])) {
+         switch($this->request->get['sort']) {
+            case 'uid': $this->data['sort'] = "uid"; break;
+            case 'realname': $this->data['sort'] = "realname"; break;
+            case 'username': $this->data['sort'] = "username"; break;
+            case 'email': $this->data['sort'] = "email"; break;
+            case 'domain': $this->data['sort'] = "domain"; break;
+            case 'policy': $this->data['sort'] = "policy"; break;
+         };
+      }
 
-      if(@$this->request->get['sort'] == "uid") { $this->data['sort'] = "uid"; }
+/* == "uid") { $this->data['sort'] = "uid"; }
       if(@$this->request->get['sort'] == "realname") { $this->data['sort'] = "realname"; }
       if(@$this->request->get['sort'] == "email") { $this->data['sort'] = "email"; }
       if(@$this->request->get['sort'] == "domain") { $this->data['sort'] = "domain"; }
-      if(@$this->request->get['sort'] == "policy") { $this->data['sort'] = "policy_group"; }
+      if(@$this->request->get['sort'] == "policy") { $this->data['sort'] = "policy_group"; }*/
 
 
       /* check if we are admin */

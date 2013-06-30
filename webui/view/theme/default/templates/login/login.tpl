@@ -1,16 +1,15 @@
 
 <?php if(!isset($_SESSION['username'])){ ?>
-<form name="login" action="index.php?route=login/login" method="post">
-   <input type="hidden" name="relocation" value="<?php if(isset($_GET['route']) && !preg_match("/^login/", $_GET['route']) ) { print $_SERVER['QUERY_STRING']; } ?>" />
 
-   <table border="0">
-      <tr><td><?php print $text_email; ?>:</td><td><input type="text" name="username" /></td></tr>
-      <tr><td><?php print $text_password; ?>:</td><td><input type="password" name="password" /></td></tr>
-      <tr><td>&nbsp;</td><td><input type="submit" value="<?php print $text_submit; ?>" /> <input type="reset" value="<?php print $text_cancel; ?>" /></td></tr>
-   </table>
+<form class="form-signin" action="index.php?route=login/login" method="post">
+   <input type="hidden" name="relocation" value="<?php if(isset($_GET['route']) && !preg_match("/^login/", $_GET['route']) ) { print $_SERVER['QUERY_STRING']; } ?>" />
+   <input type="text" name="username" class="input-block-level" placeholder="<?php print $text_email; ?>">
+   <input type="password" name="password" class="input-block-level" placeholder="<?php print $text_password; ?>">
+   <button class="btn btn-large btn-primary" type="submit"><?php print $text_submit; ?></button>
 </form>
 
-<?php if(isset($x)){ ?><p class="loginfailed"><?php print $x; ?></p><?php } ?>
+
+<?php if(isset($x)){ ?><p class="text-error text-center"><?php print $x; ?></p><?php } ?>
 
 <?php } ?>
 

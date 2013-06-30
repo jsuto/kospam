@@ -10,6 +10,7 @@ class ControllerHistoryWorker extends Controller {
       $this->layout = "common/layout-empty";
 
       $request = Registry::get('request');
+      $session = Registry::get('session');
       $language = Registry::get('language');
 
       $this->document->title = $language->get('text_history');
@@ -34,9 +35,9 @@ class ControllerHistoryWorker extends Controller {
          $this->data['search'] = $this->request->get['search'];
       }
 
-
       $this->db = Registry::get('db_history');
 
+//print date(time()); print_r($this->request->post); print "<p/>\n";
 
       /* assemble filter restrictions */
 
@@ -55,16 +56,16 @@ class ControllerHistoryWorker extends Controller {
 
       /* dates */
 
-      if(isset($this->request->cookie['date1']) && $this->request->cookie['date1']) {
-         if(HISTORY_DRIVER == 'mysql') { $datesql = "UNIX_TIMESTAMP('" . $this->db->escape($this->request->cookie['date1']) . " 00:00:00') "; }
-         else { $datesql = "strftime('%s', '" . $this->db->escape($this->request->cookie['date1']) . " 00:00:00') "; }
+      if(isset($this->request->post['date1']) && $this->request->post['date1']) {
+         if(HISTORY_DRIVER == 'mysql') { $datesql = "UNIX_TIMESTAMP('" . $this->db->escape($this->request->post['date1']) . " 00:00:00') "; }
+         else { $datesql = "strftime('%s', '" . $this->db->escape($this->request->post['date1']) . " 00:00:00') "; }
 
          $datefilter ? $datefilter .= " and ts >= $datesql" : $datefilter .= "ts >= $datesql";
       }
 
-      if(isset($this->request->cookie['date2']) && $this->request->cookie['date2']) {
-         if(HISTORY_DRIVER == 'mysql') { $datesql = "UNIX_TIMESTAMP('" . $this->db->escape($this->request->cookie['date2']) . " 23:59:59') "; }
-         else { $datesql = "strftime('%s', '" . $db->escape($cookie) . " 23:59:59') "; }
+      if(isset($this->request->post['date2']) && $this->request->post['date2']) {
+         if(HISTORY_DRIVER == 'mysql') { $datesql = "UNIX_TIMESTAMP('" . $this->db->escape($this->request->post['date2']) . " 23:59:59') "; }
+         else { $datesql = "strftime('%s', '" . $this->db->escape($this->request->post['date2']) . " 23:59:59') "; }
 
          $datefilter ? $datefilter .= " and ts <= $datesql" : $datefilter .= "ts <= $datesql";
       }
@@ -72,9 +73,9 @@ class ControllerHistoryWorker extends Controller {
 
       /* subject */
 
-      if(isset($this->request->cookie['subject']) && $this->request->cookie['subject']) {
-         $this->data['subject'] = $this->request->cookie['subject'];
-         $subjfilter = " `subject` LIKE '%" . $this->db->escape(urldecode($this->request->cookie['subject']))  . "%'";
+      if(isset($this->request->post['subject']) && $this->request->post['subject']) {
+         $this->data['subject'] = $this->request->post['subject'];
+         $subjfilter = " `subject` LIKE '%" . $this->db->escape(urldecode($this->request->post['subject']))  . "%'";
 
          $FILTER = "";
 
@@ -84,9 +85,9 @@ class ControllerHistoryWorker extends Controller {
 
       /* ham/spam */
 
-      if(isset($this->request->cookie['hamspam']) && $this->request->cookie['hamspam']) {
-         $this->data['hamspam'] = $this->request->cookie['hamspam'];
-         $hamspamfilter = " result='" . $this->db->escape($this->request->cookie['hamspam']) . "'";
+      if(isset($this->request->post['hamspam']) && $this->request->post['hamspam']) {
+         $this->data['hamspam'] = $this->request->post['hamspam'];
+         $hamspamfilter = " result='" . $this->db->escape($this->request->post['hamspam']) . "'";
 
          $FILTER = "";
 
@@ -96,17 +97,17 @@ class ControllerHistoryWorker extends Controller {
 
       /* rcpt domain */
 
-      if(isset($this->request->cookie['rcpt_domain']) && preg_match('/^([a-z0-9-\.\+\_\@]+)/', $this->request->cookie['rcpt_domain'])) {
-         $this->data['rcpt_domain'] = $this->request->cookie['rcpt_domain'];
-         $tofilter = " $view.`to` LIKE '" . $this->db->escape($this->request->cookie['rcpt_domain']) . "%' ";
+      if(isset($this->request->post['rcpt_domain']) && preg_match('/^([a-z0-9-\.\+\_\@]+)/', $this->request->post['rcpt_domain'])) {
+         $this->data['rcpt_domain'] = $this->request->post['rcpt_domain'];
+         $tofilter = " $view.`to` LIKE '" . $this->db->escape($this->request->post['rcpt_domain']) . "%' ";
       }
 
 
       /* sender domain */
 
-      if(isset($this->request->cookie['sender_domain'])  && preg_match('/^([a-z0-9-\.\+\_\@]+)/', $this->request->cookie['sender_domain'])) {
-         $this->data['sender_domain'] = $this->request->cookie['sender_domain'];
-         $fromfilter = "$view.`from` LIKE '" . $this->db->escape($this->request->cookie['sender_domain']) . "%'";
+      if(isset($this->request->post['sender_domain'])  && preg_match('/^([a-z0-9-\.\+\_\@]+)/', $this->request->post['sender_domain'])) {
+         $this->data['sender_domain'] = $this->request->post['sender_domain'];
+         $fromfilter = "$view.`from` LIKE '" . $this->db->escape($this->request->post['sender_domain']) . "%'";
       }
 
 
@@ -131,8 +132,8 @@ class ControllerHistoryWorker extends Controller {
 
       /* get page */
 
-      if(isset($this->request->get['page']) && is_numeric($this->request->get['page']) && $this->request->get['page'] > 0) {
-         $this->data['page'] = $this->request->get['page'];
+      if(isset($this->request->post['page']) && is_numeric($this->request->post['page']) && $this->request->post['page'] > 0) {
+         $this->data['page'] = $this->request->post['page'];
       }
 
 
@@ -143,12 +144,17 @@ class ControllerHistoryWorker extends Controller {
       if(Registry::get('admin_user') == 1 || Registry::get('readonly_admin') == 1) {
 
          $this->get_history($view, $FILTER);
-
+//print $FILTER . "<p/>";
 
          $this->data['total_pages'] = floor($this->data['total'] / $this->data['page_len']);
 
          $this->data['prev_page'] = $this->data['page'] - 1;
          $this->data['next_page'] = $this->data['page'] + 1;
+
+         $this->data['hits_from'] = $this->data['page'] * $this->data['page_len'] + 1;
+         $this->data['hits_to'] = ($this->data['page']+1) * $this->data['page_len'];
+
+         if($this->data['hits_to'] > $this->data['total']) { $this->data['hits_to'] = $this->data['total']; }
 
 
          $this->render();
@@ -164,14 +170,36 @@ class ControllerHistoryWorker extends Controller {
    private function get_history($view = '', $filter = '') {
       $i=0;
       $last_update = 0;
+      $have_to_count = 1;
 
+      $q_count = "select count(*) as total from $view $filter";
 
-      $query = $this->db->query("select count(*) as total from $view $filter");
+      $s = $this->session->get("q_count");
+      if($s == $q_count) {
+         $s = $this->session->get("q_lasttime");
+         if($s && $s + 300 > time()) {
+            $this->data['total'] = $this->session->get("q_total");;
+            $have_to_count = 0;
+         }
+         else {
+            $this->session->set("q_count", "");
+         }
+      }
 
-      $this->data['total'] = $query->row['total'];
-      $this->data['tot_time'] += $query->exec_time;
+      if($have_to_count == 1) {
+         $query = $this->db->query($q_count);
+
+         $this->data['total'] = $query->row['total'];
+         $this->data['tot_time'] += $query->exec_time;
+
+         $this->session->set("q_total", $this->data['total']);
+         $this->session->set("q_lasttime", time());
+         $this->session->set("q_count", $q_count);
+      }
+
 
       $query = $this->db->query("select * from $view $filter order by ts desc limit " . (int)$this->data['page'] * (int)$this->data['page_len'] . ", " . $this->data['page_len']);
+
       $this->data['tot_time'] += $query->exec_time;
 
       $sender = array();
@@ -242,7 +270,7 @@ class ControllerHistoryWorker extends Controller {
 
          isset($connection['subject']) ? $subject = htmlspecialchars($connection['subject']) : $subject = '-';
 
-         if(strlen($subject) > 2*FROM_LENGTH_TO_SHOW) { $shortsubject = substr($subject, 0, 2*FROM_LENGTH_TO_SHOW) . "..."; }
+         if(strlen($subject) > TEXT_SHORT_LENGTH) { $shortsubject = substr($subject, 0, TEXT_SHORT_LENGTH) . "..."; }
          else { $shortsubject = $subject; }
 
          $this->data['entries'][] = array(
@@ -251,9 +279,9 @@ class ControllerHistoryWorker extends Controller {
                                                  'queue_id'       => $connection['queue_id'],
                                                  'size'           => $this->model_quarantine_message->NiceSize($connection['size']),
                                                  'from'           => $connection['from'],
-                                                 'shortfrom'      => strlen($connection['from']) > FROM_LENGTH_TO_SHOW ? substr($connection['from'], 0, FROM_LENGTH_TO_SHOW) . "..." : $connection['from'],
+                                                 'shortfrom'      => strlen($connection['from']) > TEXT_SHORT_LENGTH ? substr($connection['from'], 0, TEXT_SHORT_LENGTH) . "..." : $connection['from'],
                                                  'to'             => $connection['to'],
-                                                 'shortto'        => strlen($connection['to']) > FROM_LENGTH_TO_SHOW ? substr($connection['to'], 0, FROM_LENGTH_TO_SHOW) . "..." : $connection['to'],
+                                                 'shortto'        => strlen($connection['to']) > TEXT_SHORT_LENGTH ? substr($connection['to'], 0, TEXT_SHORT_LENGTH) . "..." : $connection['to'],
                                                  'result'         => isset($connection['result']) ? $connection['result'] : 'N/A',
                                                  'subject'        => $subject,
                                                  'shortsubject'   => $shortsubject,
@@ -262,13 +290,13 @@ class ControllerHistoryWorker extends Controller {
                                           );
 
 
-         if($i == 0 && isset($connection['ts'])) { $last_update = $connection['ts']; }
+         //if($i == 0 && isset($connection['ts'])) { $last_update = $connection['ts']; }
 
          $i++;
 
       }
 
-      setcookie("lastupdate", $last_update, time()+3600);
+      //setcookie("lastupdate", $last_update, time()+3600);
 
    }
 

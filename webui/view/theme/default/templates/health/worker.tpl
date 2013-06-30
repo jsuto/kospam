@@ -1,128 +1,158 @@
-<table border="0" cellpadding="10">
-<tr valign="top">
-   <td>
+   <div id="search">
 
-<p><?php print $text_refresh_period; ?>: <?php print HEALTH_REFRESH; ?> sec</p>
+      <div id="health1">
 
-<p><strong><?php print $text_uptime; ?>: </strong><?php print $uptime; ?></strong></p>
+         <div class="row">
+            <div class="cellhealthleft"><?php print $text_refresh_period; ?>:</div>
+            <div class="cellhealthright"><?php print HEALTH_REFRESH; ?> sec</div>
+         </div>
 
-<p><strong><?php print $text_processed_emails_in; ?>:</strong> <?php print $processed_emails[0]; ?>/<?php print $processed_emails[1]; ?>/<?php print $processed_emails[2]; ?></p>
+         <div class="row">
+            <div class="cellhealthleft"><?php print $text_server_name; ?>:</div>
+            <div class="cellhealthright"><?php print $sysinfo[0]; ?></div>
+         </div>
 
-<p><strong><?php print $text_quarantined_emails; ?>: </strong><?php print $number_of_quarantined_messages; ?></p>
+         <div class="row">
+            <div class="cellhealthleft"><?php print $text_server_operating_system; ?>:</div>
+            <div class="cellhealthright"><?php print $sysinfo[1]; ?></div>
+         </div>
 
+         <div class="row">
+            <div class="cellhealthleft"><?php print $text_uptime; ?>:</div>
+            <div class="cellhealthright"><?php print $uptime; ?></div>
+         </div>
 
-<p><strong><?php print $text_smtp_status; ?>: </strong></p>
+         <div class="row">
+            <div class="cellhealthleft"><?php print $text_processed_emails_in; ?>:</div>
+            <div class="cellhealthright"><?php print $processed_emails[0]; ?> / <?php print $processed_emails[1]; ?> / <?php print $processed_emails[2]; ?></div>
+         </div>
 
-<p>
-<table border="1">
-<?php foreach($health as $h) {
-   $status = 'ERROR';
-   if(preg_match("/^220/", $h[1]) || preg_match("/^action=DUNNO/", $h[1])) { $status = 'OK'; }
+         <div class="row">
+            <div class="cellhealthleft"><?php print $text_quarantined_emails; ?>:</div>
+            <div class="cellhealthright"><?php print $number_of_quarantined_messages; ?></div>
+         </div>
 
-?>
-   <tr>
-      <td><?php print $h[3]; ?></td>
-      <td class="<?php if($status == 'OK') { ?>HAM<?php } else { ?>SPAM<?php } ?>"><span onmouseover="Tip('<?php print preg_replace("/\'/", "\'", $h[1]); ?>, <?php print $h[2]; ?>', BALLOON, true, ABOVE,
-true)" onmouseout="UnTip()"><?php print $status; ?></span></td>
-   </tr>
-<?php } ?>
-</table>
-</p>
+         <div class="row">
+            <div class="cellhealthleft"><?php print $text_smtp_status; ?>:</div>
+            <div class="cellhealthright">
+               <?php foreach($health as $h) {
+                        if(preg_match("/^220/", $h[1])) {
+                           $status = 'OK'; $class = 'text-success';
+                        } else {
+                           $status = 'ERROR'; $class = 'text-error';
+                        }
+               ?>
+                        <div class="bold <?php print $class; ?>"><span><?php print $h[3]; ?>: <?php print $status; ?></span></div>
+               <?php } ?>
+            </div>
+         </div>
 
-<?php if(MAILLOG_PID_FILE) { ?><p><strong><?php print $text_maillog_status; ?>:</strong> <span class="health-<?php if($maillog_status == $text_running) { ?>ok<?php } else { ?>alert<?php } ?>"><?php print $maillog_status; ?></span><?php } ?>
+      <?php if(MAILLOG_PID_FILE) { ?>
+         <div class="row">
+            <div class="cellhealthleft"><?php print $text_maillog_status; ?>:</div>
+            <div class="cellhealthright"><span class=" bold <?php if($maillog_status == $text_running) { ?>text-success<?php } else { ?>text-error<?php } ?>"><?php print $maillog_status; ?></span></div>
+         </div>
+      <?php } ?>
 
-<?php if(ENABLE_LDAP_IMPORT_FEATURE == 1) { ?><p><strong><?php print $text_ad_sync_status; ?>:</strong> <span class="health-<?php if($totalusers >= LDAP_IMPORT_MINIMUM_NUMBER_OF_USERS_TO_HEALTH_OK && $total_emails_in_database >= LDAP_IMPORT_MINIMUM_NUMBER_OF_USERS_TO_HEALTH_OK) { ?>ok<?php } else { ?>alert<?php } ?>"><?php print $adsyncinfo; ?> <?php print strtolower($text_email); ?></span></p><?php } ?>
-
-<?php if(file_exists(DAILY_QUARANTINE_REPORT_STAT)) { ?><p><strong><?php print $text_daily_quarantine_report_status; ?>:</strong> <span class="health-<?php if(preg_match("/\/0$/", $quarantinereportinfo) && !preg_match("/ 0\//", $quarantinereportinfo) ) { ?>ok<?php } else { ?>alert<?php } ?>"><?php print $quarantinereportinfo; ?></span></p><?php } ?>
-
-<p><strong><?php print $text_cpu_usage; ?>:</strong> <span class="health-<?php if($cpuinfo < HEALTH_RATIO) { ?>ok<?php } else { ?>alert<?php } ?>"><?php print $cpuinfo; ?>%</span>, <strong><?php print $text_cpu_load; ?>:</strong> <span class="health-<?php if($cpuinfo < HEALTH_RATIO) { ?>ok<?php } else { ?>alert<?php } ?>"><?php print $cpuload; ?></span></p>
-
-<p><strong><?php print $text_memory_usage; ?>: </strong> <span class="health-<?php if($meminfo < HEALTH_RATIO) { ?>ok<?php } else { ?>alert<?php } ?>"><?php print $meminfo; ?>%</span> / <?php print $totalmem; ?> MB, <strong><?php print $text_swap_usage; ?></strong>: <span class="health-<?php if($swapinfo < HEALTH_RATIO) { ?>ok<?php } else { ?>alert<?php } ?>"><?php print $swapinfo; ?>%</span> / <?php print $totalswap; ?> MB</p>
-
-<p><strong><?php print $text_disk_usage; ?>: </strong> <?php foreach($shortdiskinfo as $partition) { ?><span class="health-<?php if($partition['utilization'] < HEALTH_RATIO) { ?>ok<?php } else { ?>alert<?php } ?>"><?php print $partition['partition']; ?> <?php print $partition['utilization']; ?>%</span> <?php } ?></p>
-
-<p><strong><?php print $text_counters; ?>:</strong></p>
-
-<p>
-<table border="1">
-<?php while(list($k, $v) = each($counters)) { ?>
-   <tr><td><?php $a = preg_replace("/^_c\:/", "", $k); if(isset($$a)) { print $$a; } else { print $k; } ?></td><td><?php print $v; ?></td></tr>
-<?php } ?>
-   <?php if($counters[$prefix . 'rcvd'] > 0) { ?><tr><td>spam / <?php print $text_total_ratio; ?></td><td><?php print sprintf("%.2f", 100*$counters[$prefix . 'spam'] / $counters[$prefix . 'rcvd']); ?> %</td></tr><?php } ?>
-   <?php if($counters[$prefix . 'rcvd'] > 0) { ?><tr><td>virus / <?php print $text_total_ratio; ?></td><td><?php print sprintf("%.2f", 100*$counters[$prefix . 'virus'] / $counters[$prefix . 'rcvd']); ?> %</td></tr><?php } ?>
-
-</table>
-</p>
-
-<?php if(Registry::get('admin_user') == 1) { ?>
-<form action="index.php?route=health/worker" method="post">
-   <input type="hidden" name="resetcounters" value="1" />
-   <input type="submit" name="submit" value="<?php print $text_reset_counters; ?>" />
-</form>
-<?php } ?>
-
-   </td>
-   <td>
-
-<h4><?php print $text_queue_status; ?>: </h4>
-
-<?php foreach ($queues as $queue) { ?>
-
-<p class="queue"><table class="queue" border="0">
-
-<?php if(isset($queue['desc'])) { ?>
-
-      <tr><td colspan="12"><strong><?php print $queue['desc']; ?></strong></td></tr>
-<?php 
-   $i = 0;
-   while(list($k, $v) = each($queue['lines'])) {
-      $i++;
-      print "<tr class='queue'>";
-      $v = preg_replace("/^\*\<\/td\>/", "", $v); 
-      if($i == 1) { print "<td>&nbsp;</td>"; }
-      print "$v</td></tr>\n"; 
-      if($i == count($queue['lines'])-1) { break; }
-   }
-?>
-
-<?php } ?>
-
-</table></p>
-
-<?php } ?>
+      <?php if(ENABLE_LDAP_IMPORT_FEATURE == 1) { ?>
+         <div class="row">
+            <div class="cellhealthleft"><?php print $text_ad_sync_status; ?>:</div>
+            <div class="cellhealthright"><span class="<?php if($totalusers >= LDAP_IMPORT_MINIMUM_NUMBER_OF_USERS_TO_HEALTH_OK && $total_emails_in_database >= LDAP_IMPORT_MINIMUM_NUMBER_OF_USERS_TO_HEALTH_OK) { ?>text-success<?php } else { ?>text-error<?php } ?>"><?php print $adsyncinfo; ?> <?php print strtolower($text_email); ?></span></div>
+         </div>
+      <?php } ?>
 
 
-<?php if(isset($queues_out)) { ?>
+      <?php if(DAILY_QUARANTINE_REPORT_STAT) { ?>
+         <div class="row">
+            <div class="cellhealthleft"><?php print $text_daily_quarantine_report_status; ?>:</div>
+            <div class="cellhealthright"><span class="bold <?php if(preg_match("/\/0$/", $quarantinereportinfo)) { ?>text-success<?php } else { ?>text-error<?php } ?>"><?php print $quarantinereportinfo; ?></span></div>
+         </div>
+      <?php } ?>
 
-<h4><?php print $text_queue_out_status; ?>: </h4>
+         <div class="row">
+            <div class="cellhealthleft"><?php print $text_cpu_usage; ?>:</div>
+            <div class="cellhealthright"><?php print $cpuload; ?></div>
+         </div>
 
-<?php foreach ($queues_out as $queue) { ?>
+         <div class="row">
+            <div class="cellhealthleft"><?php print $text_memory_usage; ?>:</div>
+            <div class="cellhealthright"><span class="bold <?php if($meminfo < HEALTH_RATIO) { ?>text-success<?php } else { ?>text-error<?php } ?>"><?php print $meminfo; ?>%</span> / <?php print $totalmem; ?> MB</div>
+         </div>
 
-<p class="queue"><table class="queue" border="0">
+         <div class="row">
+            <div class="cellhealthleft"><?php print $text_swap_usage; ?>:</div>
+            <div class="cellhealthright"><span class="bold <?php if($swapinfo < HEALTH_RATIO) { ?>text-success<?php } else { ?>text-error<?php } ?>"><?php print $swapinfo; ?>%</span> / <?php print $totalswap; ?> MB</div>
+         </div>
 
-<?php if(isset($queue['desc'])) { ?>
-     <tr><td colspan="12"><strong><?php print $queue['desc']; ?></strong></td></tr>
-<?php
-   $i = 0;
-   while(list($k, $v) = each($queue['lines'])) {
-      $i++;
-      print "<tr class='queue'>";
-      $v = preg_replace("/^\*\<\/td\>/", "", $v);
-      if($i == 1) { print "<td>&nbsp;</td>"; }
-      print "$v</td></tr>\n";
-      if($i == count($queue['lines'])-1) { break; }
-   }
-?>
+         <div class="row">
+            <div class="cellhealthleft"><?php print $text_disk_usage; ?>:</div>
+            <div class="cellhealthright"><?php foreach($shortdiskinfo as $partition) { ?><span class="bold <?php if($partition['utilization'] < HEALTH_RATIO) { ?>text-success<?php } else { ?>text-error<?php } ?>"><?php print $partition['partition']; ?> <?php print $partition['utilization']; ?>%</span> <?php } ?></div>
+         </div>
 
-<?php } ?>
+         <div class="row">
+            <div class="cellhealthleft"><?php print $text_counters; ?>:</div>
+            <div class="cellhealthright">
+            <?php while(list($k, $v) = each($counters)) { ?>
+               <div class="row">
+                  <div class="domaincell"><?php $a = preg_replace("/^_c\:/", "", $k); if(isset($$a)) { print $$a; } else { print $a; } ?></div>
+                  <div class="domaincell"><?php print $v; ?></div>
+               </div>
+            <?php } ?>
 
-</table></p>
+               <?php if($counters[$prefix . 'rcvd'] > 0) { ?><div class="row"><div class="domaincell">spam / <?php print $text_total_ratio; ?></div><div class="domaincell"><?php print sprintf("%.2f", 100*$counters[$prefix . 'spam'] / $counters[$prefix . 'rcvd']); ?> %</div></div><?php } ?>
+               <?php if($counters[$prefix . 'rcvd'] > 0) { ?><div class="row"><div class="domaincell">virus / <?php print $text_total_ratio; ?></div><div class="domaincell"><?php print sprintf("%.2f", 100*$counters[$prefix . 'virus'] / $counters[$prefix . 'rcvd']); ?> %</div></div><?php } ?>
 
-<?php } ?>
+            <?php if(Registry::get('admin_user') == 1) { ?>
+               <form action="index.php?route=health/worker" method="post">
+                  <input type="hidden" name="resetcounters" value="1" />
+                  <input type="submit" name="submit" value="<?php print $text_reset_counters; ?>" />
+               </form>
+            <?php } ?>
 
-<?php } ?>
+            </div>
+         </div>
 
-   </td>
-</tr>
-</table>
+
+
+
+      </div>
+
+
+      <div id="health2">
+         <h4><?php print $text_queue_status; ?>: </h4>
+
+         <?php foreach ($queues as $queue) { ?>
+
+         <div class="row">
+            <div class="cellhealthleft"><?php print $queue['desc']; ?></div>
+            <div class="cellhealthright">
+               <?php
+
+                  $i = 0;
+                  while(list($k, $v) = each($queue['lines'])) {
+                     $i++;
+
+                     $v = preg_replace("/^\s {1,}/", "", $v);
+                     $v = preg_replace("/\ {1,}/", "</div><div class=\"healthcell\">", $v);
+               ?>
+                  <div class="row">
+                     <?php if($i == 1) { ?><div class="healthcell">&nbsp;</div><?php } ?><div class="healthcell"><?php print $v; ?></div>
+                  </div>
+
+               <?php
+                     if($i == count($queue['lines'])-1) { break; }
+
+                  }
+                  
+               ?>
+
+            </div>
+         </div>
+
+         <?php } ?>
+
+
+      </div>
+
+   </div>
 

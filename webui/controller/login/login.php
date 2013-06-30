@@ -18,7 +18,7 @@ class ControllerLoginLogin extends Controller {
       $this->load->model('user/auth');
       $this->load->model('user/prefs');
 
-      $this->document->title = $this->data['text_login'];
+      //$this->document->title = $this->data['text_login'];
 
       if($this->request->server['REQUEST_METHOD'] == 'POST' && $this->validate() == true) {
 
@@ -33,7 +33,7 @@ class ControllerLoginLogin extends Controller {
             if(isset($_POST['relocation']) && $_POST['relocation']) {
                header("Location: " . SITE_URL . "index.php?" . $_POST['relocation']);
             } else {
-               header("Location: " . SITE_URL . "index.php?route=quarantine/quarantine&hamspam=SPAM");
+               header("Location: " . SITE_URL . "index.php?route=quarantine/quarantine");
             }
 
             exit;

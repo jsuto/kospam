@@ -21,24 +21,23 @@ class ControllerPolicyRemove extends Controller {
 
       $this->data['username'] = Registry::get('username');
 
-      $this->data['policy_group'] = (int)@$this->request->get['policy_group'];
-      $this->data['confirmed'] = (int)@$this->request->get['confirmed'];
-
       /* check if we are admin */
 
       if(Registry::get('admin_user') == 1) {
 
-         if($this->data['confirmed'] == 1) {
-            if($this->model_policy_policy->removePolicy($this->data['policy_group']) == 1) {
+         if(isset($this->request->get['policy_group']) && isset($this->request->get['confirmed']) && $this->request->get['confirmed'] == 1) {
+
+            if($this->model_policy_policy->removePolicy($this->request->get['policy_group']) == 1) {
                $this->data['x'] = $this->data['text_successfully_removed'];
+               header("Location: index.php?route=policy/policy");
+               exit;
             }
             else {
                $this->data['x'] = $this->data['text_failed_to_remove'];
             }
          }
          else {
-            $query = $this->model_policy_policy->getPolicy($this->data['policy_group']);
-            $this->data['policy_name'] = $query['name'];
+            $this->data['x'] = $this->data['text_error'];
          }
       }
       else {

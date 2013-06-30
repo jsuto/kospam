@@ -16,7 +16,7 @@ class ControllerPolicyAdd extends Controller {
 
       $this->load->model('policy/policy');
 
-      $this->document->title = $this->data['text_policy'];
+      $this->document->title = $this->data['text_add_policy'];
 
 
       $this->data['username'] = Registry::get('username');

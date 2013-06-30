@@ -1,10 +1,15 @@
 
 <p>
-   <a href="index.php?route=quarantine/remove&amp;id=<?php print $id; ?>&amp;user=<?php print $username; ?>&amp;page=<?php print $page; ?>&amp;from=<?php print $from; ?>&amp;to=<?php print $to; ?>&amp;subj=<?php print $subj; ?>&date=<?php print $date; ?>&hamspam=<?php print $hamspam; ?>"><?php print $text_remove; ?></a>
-   <?php if($id[0] == 's' || $id[0] == 'v'){ ?><a href="index.php?route=quarantine/deliver&amp;id=<?php print $id; ?>&amp;user=<?php print $username; ?>&amp;page=<?php print $page; ?>&amp;from=<?php print $from; ?>&amp;to=<?php print $to; ?>&amp;subj=<?php print $subj; ?>&date=<?php print $date; ?>&hamspam=<?php print $hamspam; ?>"><?php print $text_deliver; ?></a><?php } ?>
-   <?php if($id[0] == 's') { ?><a href="index.php?route=quarantine/train&amp;id=<?php print $id; ?>&amp;user=<?php print $username; ?>&amp;page=<?php print $page; ?>&amp;from=<?php print $from; ?>&amp;to=<?php print $to; ?>&amp;subj=<?php print $subj; ?>&date=<?php print $date; ?>&hamspam=<?php print $hamspam; ?>"><?php print $text_train_and_deliver_as_ham; ?></a><?php } ?>
+   <button onclick="Clapf.remove_message('<?php print $username; ?>', '<?php print $id; ?>');" class="btn btn-danger"><?php print $text_remove; ?></button>
+   <?php if($id[0] == 's' || $id[0] == 'v'){ ?><button onclick="Clapf.deliver_message('<?php print $username; ?>', '<?php print $id; ?>');" class="btn btn-primary"><?php if(TRAIN_DELIVERED_SPAM == 1) { print $text_train_and_deliver_as_ham; } else { print $text_deliver; } ?></button><?php } ?>
 </p>
 
 
-<?php print $message; ?>
+
+<strong><?php if($message['subject'] == "" || $message['subject'] == "Subject:") { print "&lt;" . $text_no_subject . "&gt;"; } else { print $message['subject']; } ?></strong><br />
+<strong><?php print $message['from']; ?></strong><br />
+<strong><?php print $message['to']; ?></strong><br />
+<strong><?php print $message['date']; ?></strong><br />
+
+<?php print $message['message']; ?><br />
 

@@ -17,7 +17,7 @@ class ControllerPolicyView extends Controller {
 
       $this->load->model('policy/policy');
 
-      $this->document->title = $this->data['text_policy'];
+      $this->document->title = $this->data['text_edit_policy'];
 
 
       $this->data['username'] = Registry::get('username');

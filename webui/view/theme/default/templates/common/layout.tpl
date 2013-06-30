@@ -5,59 +5,43 @@
    <title>clapf web UI | <?php print $title; ?></title>
    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
    <meta http-equiv="Content-Language" content="en" />
-   <meta name="keywords" content="clapf, webui, web ui, spam, anti-spam, email, e-mail, mail, unsolicited commercial bulk email, blacklist, software, filtering, service, Bayes, Bayesian" />
-   <meta name="description" content="clapf, webui, web ui, spam, anti-spam, antispam" />
+   <meta name="keywords" content="clapf, webui, web ui, gui, spam, anti-spam, filtering, service" />
+   <meta name="description" content="clapf, webui, web ui, gui, spam, anti-spam, filtering, service" />
    <meta name="rating" content="general" />
    <meta name="robots" content="all" />
 
-   <link rel="stylesheet" type="text/css" href="view/theme/default/stylesheet/style.css" />
-   <link rel="stylesheet" type="text/css" href="view/theme/default/stylesheet/dropdown.css" />
-   <link rel="stylesheet" type="text/css" href="view/theme/default/stylesheet/jquery.ui.all.css" />
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-   <script type="text/javascript" src="view/javascript/quarantine.js"></script>
-   <script type="text/javascript" src="view/javascript/jquery-1.4.2.min.js"></script>
-   <script type="text/javascript" src="view/javascript/jquery-ui-1.8.13.custom.min.js"></script>
-   <script type="text/javascript" src="view/javascript/jquery-ui-i18n.js"></script>
-   <script type="text/javascript" src="view/javascript/jquery.dropdownPlain.js"></script>
+   <link href="bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen">
+   <link href="bootstrap/css/bootstrap-responsive.min.css" rel="stylesheet" media="screen">
+
+   <link rel="stylesheet" type="text/css" href="css/jquery-ui-custom.min.css" />
+   <link rel="stylesheet" type="text/css" href="view/theme/<?php print THEME; ?>/stylesheet/style-<?php print THEME; ?>.css" />
+
+   <script type="text/javascript" src="view/javascript/jquery.min.js"></script>
+   <script type="text/javascript" src="view/javascript/jquery-ui-custom.min.js"></script>
+   <script type="text/javascript" src="view/javascript/bootstrap.min.js"></script>
+   <script type="text/javascript" src="view/javascript/clapf.js"></script>
 
 </head>
 
-<body>
+<body class="mybody">
 
-   <script type="text/javascript" src="view/javascript/wz_tooltip.js"></script>
-   <script type="text/javascript" src="view/javascript/tip_balloon.js"></script>
+<div id="clapf1" class="container">
 
-<div id="wrap">
+<div id="menu">
+   <?php print $menu; ?>
+</div>
 
-  <div id="menu">
 
-    <?php print $menu; ?>
+<div id="mainscreen" class="up">
 
-  </div> <!-- menu -->
-
-  <div id="content">
-
-      <h3><?php print $title; ?></h3>
-
-      <?php if(isset($_SESSION['username']) && !strstr($_SERVER['QUERY_STRING'], "login/logout") ){ ?>
-<p><?php print $text_you_are; ?>: <?php print $_SESSION['realname']; ?></p>
-      <?php } ?>
-
-      <div id="body">
+<?php if($title) { ?><h3 class="title"><?php print $title; ?></h3><?php } ?>
 
 <?php print $content; ?>
 
-      </div> <!-- body -->
+</div> <!-- clapf1 -->
 
-   </div> <!-- content -->
-
-
-   <div id="footer">
-<?php print $footer; ?>
-   </div>
-
-
-</div> <!-- wrap -->
 
 </body>
 </html>

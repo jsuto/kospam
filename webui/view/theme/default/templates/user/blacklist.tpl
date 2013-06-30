@@ -5,10 +5,8 @@
 
 <form name="settings" action="index.php?route=user/blacklist" method="post">
    <input type="hidden" name="modify" value="1" />
-   <table border="0">
-      <tr valign="top"><td><textarea name="blacklist" cols="30" rows="10"><?php print $blacklist; ?></textarea></td></tr>
-      <tr valign="top"><td><input type="submit" value="<?php print $text_submit; ?>" /> <input type="reset" value="<?php print $text_cancel; ?>" /></td></tr>
-   </table>
+   <div class="row"><div class="healthcell"><textarea name="blacklist" class="span6 bw"><?php print $blacklist; ?></textarea></div></div>
+   <div class="row"><div class="healthcell"><input type="submit" class="btn btn-primary" value="<?php print $text_submit; ?>" /> <input type="reset" class="btn" value="<?php print $text_cancel; ?>" /></div></div>
 </form>
 
 <?php } ?>

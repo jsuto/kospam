@@ -7,7 +7,7 @@ class ControllerQuarantineMessage extends Controller {
 
       $this->id = "content";
       $this->template = "quarantine/message.tpl";
-      $this->layout = "common/layout";
+      $this->layout = "common/layout-empty";
 
 
       $request = Registry::get('request');
@@ -19,18 +19,21 @@ class ControllerQuarantineMessage extends Controller {
 
       $this->document->title = $this->data['text_quarantine'];
 
-      $this->data['id'] = @$this->request->get['id'];
-      $this->data['raw'] = (int)@$this->request->get['raw'];
-      $this->data['from'] = @$this->request->get['from'];
-      $this->data['to'] = @$this->request->get['to'];
-      $this->data['subj'] = @$this->request->get['subj'];
-      $this->data['hamspam'] = @$this->request->get['hamspam'];
-      $this->data['date'] = @$this->request->get['date'];
-      $this->data['page'] = @$this->request->get['page'];
+      $this->data['id'] = '';
+      $this->data['raw'] = 0;
 
-      
+
+      if(isset($this->request->get['id'])) { $this->data['id'] = $this->request->get['id']; }
+      if(isset($this->request->get['raw'])) { $this->data['raw'] = $this->request->get['raw']; }
+
 
       $this->data['username'] = Registry::get('username');
+
+
+/*
+TODO: need username if you are admin!!!!!!!!
+*/
+
 
       /* fix username if we are admin */
 
@@ -47,7 +50,7 @@ class ControllerQuarantineMessage extends Controller {
       if($this->data['raw'] == 1){
          $this->data['message'] = $this->model_quarantine_message->ShowRawMessage($my_q_dir, $this->data['id']);
       } else {
-         $this->data['message'] = $this->model_quarantine_message->ShowMessage($my_q_dir, $this->data['id']);
+         $this->data['message'] = $this->model_quarantine_message->show_message($my_q_dir, $this->data['id']);
       }
 
 

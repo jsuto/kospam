@@ -27,7 +27,7 @@ CREATE TABLE "user" (
   uid bigint NOT NULL PRIMARY KEY,
   username varchar(32) NOT NULL UNIQUE,
   realname varchar(32) DEFAULT NULL,
-  password varchar(48) DEFAULT NULL,
+  password varchar(128) DEFAULT NULL,
   domain varchar(64) DEFAULT NULL,
   dn varchar(64) DEFAULT '*',
   policy_group int4 DEFAULT 0,
@@ -124,8 +124,8 @@ CREATE TABLE t_minefield (
 CREATE TABLE t_remote (
   remotedomain varchar(64) NOT NULL PRIMARY KEY,
   remotehost varchar(64) NOT NULL,
-  basedn varchar(64) NOT NULL,
-  binddn varchar(64) NOT NULL,
+  basedn varchar(255) NOT NULL,
+  binddn varchar(255) NOT NULL,
   sitedescription varchar(64) DEFAULT NULL
 );
 

@@ -26,7 +26,7 @@ create table if not exists user (
 	gid int unsigned not null,
         username char(64) not null,
 	realname char(64) default null,
-	password char(48) default null,
+	password char(128) default null,
 	domain char(64) default null,
 	dn char(255) default '*',
 	policy_group integer(4) default 0,
@@ -122,8 +122,8 @@ create index t_quarantine_group_idx on t_quarantine_group (uid, gid);
 create table if not exists t_remote (
 	remotedomain char(64) not null unique,
 	remotehost char(64) not null,
-	basedn char(64) not null,
-	binddn char(64) not null,
+	basedn char(255) not null,
+	binddn char(255) not null,
 	sitedescription char(64) default null
 );
 

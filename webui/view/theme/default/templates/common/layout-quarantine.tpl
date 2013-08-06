@@ -38,9 +38,9 @@
 
 
 <div id="expertsearch">
-
+  <form class="well form-search sleek">
    <input type="hidden" name="user" value="<?php print $username; ?>" />
-   <input type="text" name="search" id="search" class="input-medium search-query span8" placeholder="Enter search terms" />
+   <input type="text" name="search" id="search" class="input-medium span8" placeholder="Enter search terms" />
 
    <a id="advsearch_caret" href="#" onclick="$('#searchpopup1').show();"><b class="caret"></b></a>
 
@@ -50,6 +50,7 @@
    <!--button id="button_expert" class="btn " onclick="$('#searchpopup1').show(); return false;">Advanced search &nbsp;<span class="caret"></span></button-->
    <button class="btn " onclick="Clapf.saved_search_terms('<?php print $text_saved; ?>'); return false;"><?php print $text_save; ?></button>
    <button class="btn btn-inverse" onclick="Clapf.load_saved_search_terms(); return false;"><?php print $text_load; ?></button>
+  </form>
 
    <?php print $popup; ?>
 

@@ -195,7 +195,7 @@ int main(int argc, char **argv){
 
         case 'v' :
         case 'V' :
-                   printf("%s %s, build %d, Janos SUTO <sj@acts.hu>\n\n%s\n\n\n\nSend bugs/issues to https://jira.acts.hu:8443/\n", PROGNAME, VERSION, get_build(), CONFIGURE_PARAMS);
+                   printf("%s %s, build %d, Janos SUTO <sj@acts.hu>\n\n%s\n\n\n\nSend bugs/issues to https://bitbucket.org/jsuto/clapf/issues/\n", PROGNAME, VERSION, get_build(), CONFIGURE_PARAMS);
                    return 0;
 
         case 'h' :

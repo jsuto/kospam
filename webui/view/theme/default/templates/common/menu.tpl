@@ -1,6 +1,6 @@
 <?php if(Registry::get('username')) { ?>
 
-      <div class="navbar">
+      <div class="navbar navbar-inverse">
 
          <div class="navbar-inner">
 
@@ -59,7 +59,7 @@
             <ul class="nav pull-right">
                <li class="divider-vertical"></li>
                <li class="dropdown">
-                  <a href="#" class="dropdown-toggle" data-toggle="dropdown"><?php print $_SESSION['realname']; ?> <i class="icon-user"></i> <b class="caret"></b></a>
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown"><?php print $_SESSION['realname']; ?> <i class="icon-user icon-white"></i> <b class="caret"></b></a>
                   <ul class="dropdown-menu">
                      <li><a href="index.php?route=user/settings"><?php print $text_settings; ?></a></li>
                      <li class="divider"></li>

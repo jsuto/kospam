@@ -57,6 +57,7 @@ $_['text_email_aliases'] = "Email álcímek";
 $_['text_email_in_unknown_domain'] = "Az email cím ismeretlen domainben van";
 $_['text_empty_quarantine_directory_structure'] = "Üres karantén könyvtár";
 $_['text_empty_search_criteria'] = "'Üres feltétel'";
+$_['text_enter_search_terms'] = "Keresési feltételek";
 $_['text_error'] = "Hiba";
 $_['text_exact_domain_name_or_email_address'] = "pontos domainnév vagy email cím";
 $_['text_exclude'] = "Kihagy";

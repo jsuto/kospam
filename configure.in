@@ -502,8 +502,9 @@ dnl SpamAssassin's spamd support
           [  --enable-spamc-emul     enable spamc emulation to use spamd of SpamAssassin], want_spamc_emul=$enableval, want_spamc_emul="no")
 
     if test "$want_spamc_emul" = "yes"; then
-       defs="$defs -DSPAMC_EMUL -DHAVE_ANTISPAM"
-       objs="$objs spamc.o buffer.o antispam.o "
+       defs="$defs -DSPAMC_EMUL"
+       have_antispam="yes"
+       objs="$objs spamc.o "
     fi
 
 

@@ -51,7 +51,7 @@
          <tr id="tr_<?php print $message['id'] . "+" . $message['username']; ?>">
             <td<?php if(($message['i'] % 2) == 0){ ?> class="odd"<?php } ?>><a href="#" onclick="Clapf.view_message_by_pos('<?php print $i; ?>'); return false;"><?php print $message['i']; ?>.</a></td>
             <td<?php if(($message['i'] % 2) == 0){ ?> class="odd"<?php } ?>><?php print $message['date']; ?></td>
-            <td align="center"<?php if(($message['i'] % 2) == 0){ ?> class="odd"<?php } ?>><a href="index.php?route=quarantine/quarantine&user=<?php print $message['username']; ?><?php if(SPAM_ONLY_QUARANTINE == 1) { ?>&hamspam=SPAM<?php } ?>"><?php print $message['username']; ?></a></td>
+            <td align="center"<?php if(($message['i'] % 2) == 0){ ?> class="odd"<?php } ?>><a href="#" onclick="Clapf.change_quarantine_user('<?php print $message['username']; ?>', '<?php if(SPAM_ONLY_QUARANTINE == 1) { ?>SPAM<?php } ?>'); "><?php print $message['username']; ?></a></td>
             <td<?php if(($message['i'] % 2) == 0){ ?> class="odd"<?php } ?>><?php if($message['from'] != $message['shortfrom']) { ?><span title="<?php print $message['from']; ?>"><?php print $message['shortfrom']; ?></span><?php } else { print $message['from']; } ?></td>
             <td<?php if(($message['i'] % 2) == 0){ ?> class="odd"<?php } ?>><a href="#" onclick="Clapf.view_message_by_pos('<?php print $i; ?>'); return false;" <?php if($message['subject'] != $message['shortsubject']) { ?>title="<?php print $message['subject']; ?>"<?php } ?>><?php if($message['subject'] != $message['shortsubject']) { print $message['shortsubject']; } else { print $message['subject']; } ?></a></td>
             <td align="right"><?php print $message['size']; ?></td>

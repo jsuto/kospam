@@ -40,8 +40,8 @@
             <div class="logincell"><?php print $text_admin_user_trains_global_database; ?>:</div>
             <div class="tcell">
                <select name="global_train">
-                  <option value="0"<?php if(isset($_SESSION['train_global']) && $_SESSION['train_global'] == 0) { ?>selected="selected""<?php } ?>><?php print $text_off; ?></option>
-                  <option value="1"<?php if(isset($_SESSION['train_global']) && $_SESSION['train_global'] == 1) { ?>selected="selected""<?php } ?>><?php print $text_on; ?></option>
+                  <option value="0"<?php if(isset($_SESSION['train_global']) && $_SESSION['train_global'] == 0) { ?> selected="selected"<?php } ?>><?php print $text_off; ?></option>
+                  <option value="1"<?php if(isset($_SESSION['train_global']) && $_SESSION['train_global'] == 1) { ?> selected="selected"<?php } ?>><?php print $text_on; ?></option>
                </select>
             </div>
          </div>

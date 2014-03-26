@@ -58,7 +58,7 @@ class ControllerQuarantineHelper extends Controller {
       if(SPAM_ONLY_QUARANTINE == 1) { $this->a['hamspam'] = "SPAM"; }
 
       if($this->a['to']) {
-         $this->data['user'] = $this->model_user_user->get_username_by_email($this->a['to']);
+         $this->data['user'] = $this->a['user'] = $this->model_user_user->get_username_by_email($this->a['to']);
 
          if($this->a['user'] == "") {
             $this->template = "common/error.tpl";
@@ -170,6 +170,7 @@ class ControllerQuarantineHelper extends Controller {
       $b = explode(" ", $s);
 
       while(list($k, $v) = each($b)) {
+
          if($v == '') { continue; }
 
          if($v == 'HAM' || $v == 'SPAM') { $this->a['hamspam'] = $v; continue; }
@@ -183,7 +184,7 @@ class ControllerQuarantineHelper extends Controller {
                $this->a['date'] = $v; continue;
             }
 
-            if(strchr($v, '@')) { $this->a['from'] = $v; continue; }
+            if(Registry::get('admin_user') == 0 && Registry::get('domain_admin') == 0 && strchr($v, '@')) { $this->a['from'] = $v; continue; }
          }
 
          if($token == 'from') { $this->a['from'] = $v; }

@@ -40,7 +40,7 @@
 <div id="expertsearch">
   <form class="well form-search sleek">
    <input type="hidden" name="user" value="<?php print $username; ?>" />
-   <input type="text" name="search" id="search" class="input-medium span8" placeholder="Enter search terms" />
+   <input type="text" name="search" id="search" class="input-medium span8" placeholder="<?php print $text_enter_search_terms; ?>" />
 
    <a id="advsearch_caret" href="#" onclick="$('#searchpopup1').show();"><b class="caret"></b></a>
 
@@ -111,8 +111,6 @@ $(document).ready(function(){
    $("#button_search").click();
 });
 </script>
-
-
 
 </body>
 </html>

@@ -194,6 +194,17 @@ var Clapf =
    },
 
 
+   change_quarantine_user: function(user, hamspam) {
+      var s = 'to: ' + user;
+
+      if(hamspam) { s += ', hamspam: ' + hamspam; }
+
+      $('#search').val(s);
+
+      Clapf.expert(); 
+   },
+
+
    spinner: function(cmd) {
       Clapf.log("[spinner]", cmd);
 
@@ -291,7 +302,7 @@ var Clapf =
 
    complex: function()
    {
-      Clapf.log("[expert]");
+      Clapf.log("[complex]");
 
       Clapf.search = 'Complex';
 

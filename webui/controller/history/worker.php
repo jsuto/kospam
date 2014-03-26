@@ -118,7 +118,9 @@ class ControllerHistoryWorker extends Controller {
 
 
       if($datefilter == '' && $fromfilter == '' && $tofilter == '' && $subjfilter == '') {
-         $datefilter = sprintf("ts > %d", time() - HISTORY_LATEST_TIME_RANGE);
+         $ts = time() - HISTORY_LATEST_TIME_RANGE;
+         $ts -= $ts % 600;
+         $datefilter = "ts > $ts";
       }
 
       if($datefilter) { $FILTER = " $datefilter AND $FILTER "; }
@@ -177,7 +179,7 @@ class ControllerHistoryWorker extends Controller {
       $s = $this->session->get("q_count");
       if($s == $q_count) {
          $s = $this->session->get("q_lasttime");
-         if($s && $s + 300 > time()) {
+         if($s && $s + 600 > time()) {
             $this->data['total'] = $this->session->get("q_total");;
             $have_to_count = 0;
          }
@@ -268,7 +270,12 @@ class ControllerHistoryWorker extends Controller {
          $x = explode(" ", $delivery);
          $shortdelivery = array_shift($x);
 
-         isset($connection['subject']) ? $subject = htmlspecialchars($connection['subject']) : $subject = '-';
+         if(isset($connection['subject'])) {
+            $subject = htmlspecialchars($connection['subject']);
+         } else {
+            $subject = $this->model_quarantine_message->decode_my_str($connection['subject2']);
+         }
+
 
          if(strlen($subject) > TEXT_SHORT_LENGTH) { $shortsubject = substr($subject, 0, TEXT_SHORT_LENGTH) . "..."; }
          else { $shortsubject = $subject; }

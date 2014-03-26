@@ -41,6 +41,13 @@ $qd = new ModelQuarantineDatabase();
 $mail = new ModelMailMail();
 
 
+$ldap = new LDAP(LDAP_HOST, LDAP_BIND_DN, LDAP_BIND_PW);
+if($ldap->is_bind_ok() == 0) {
+   LOGGER(LDAP_BIND_DN . ": failed bind to " . LDAP_HOST);
+   exit;
+}
+
+
 /* get a lock, to prevent a paralel running */
 
 $fp = fopen(LOCK_FILE, "r");
@@ -66,6 +73,24 @@ if(QUARANTINE_DRIVER == "sqlite") {
 Registry::set('admin_user', 0);
 
 foreach ($users as $user) {
+
+  if(strlen($user["dn"]) < 5 || !strstr($user["dn"], "OU") ) { continue; }
+
+   $basedn = strstr($user['dn'], "OU");
+
+   $query = $ldap->query($basedn, "mail=" . $user['email'], array("objectclass") );
+   if(!isset($query->row["objectclass"])) { continue; }
+
+   $send_report = 0;
+
+   for($i=0; $i<$query->row["objectclass"]["count"]; $i++) {
+      if($query->row["objectclass"][$i] == "user") { $send_report = 1; }
+   }
+
+   if($send_report == 0) {
+      continue;
+   }
+
 
    /* check if this account is a list address, and if so, then skip it */
 

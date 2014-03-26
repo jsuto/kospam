@@ -68,6 +68,12 @@ $config['DN_MAX_LEN'] = 255;
 $config['USE_EMAIL_AS_USERNAME'] = 1;
 $config['LDAP_IMPORT_MINIMUM_NUMBER_OF_USERS_TO_HEALTH_OK'] = 100;
 
+$config['LDAP_HOST'] = '192.168.1.100';
+$config['LDAP_BASE_DN'] = 'DC=example,DC=com';
+$config['LDAP_BIND_DN'] = 'CN=Clapf User,OU=Users,DC=example,DC=com';
+$config['LDAP_BIND_PW'] = '*********';
+
+
 $config['QUEUE_DIR_SPLITTING'] = 0;
 
 $config['ENABLE_BLACKLIST'] = 1;

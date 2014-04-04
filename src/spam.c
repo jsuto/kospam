@@ -152,10 +152,9 @@ void saveMessageToQueue(struct session_data *sdata, float spaminess, struct __co
 
 
 #ifdef STORE_FS
-   int ret;
    struct stat st;
 
-   ret = link(sdata->ttmpfile, qpath);
+   link(sdata->ttmpfile, qpath);
 
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: saving to queue: %s", sdata->ttmpfile, qpath);
 

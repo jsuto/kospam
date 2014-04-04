@@ -207,14 +207,14 @@ struct node *findnode(struct node *xhash[], char *s){
  */
 
 int updatenode(struct node *xhash[], unsigned long long key, float nham, float nspam, float spaminess, float deviation){
-   struct node *p, *q;
+   struct node *q;
 
    q = xhash[hash(key)];
 
    if(q == NULL) return 0;
 
    while(q != NULL){
-      p = q;
+
       if(q->key == key){
          q->nham += nham;
          q->nspam += nspam;

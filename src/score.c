@@ -26,7 +26,7 @@ float getTokenSpamicity(float NHAM, float NSPAM, unsigned int nham, unsigned int
 
 double getSpamProbabilityChi2(struct node *xhash[], struct __config *cfg){
    int i, n_tokens=0;
-   struct node *p, *q;
+   struct node *q;
    double H, S, I, ln2, ln_q, ln_p;
    FLOAT P = {1.0, 0}, Q = {1.0, 0};
    int e;
@@ -63,7 +63,6 @@ double getSpamProbabilityChi2(struct node *xhash[], struct __config *cfg){
             if(cfg->debug == 1) printf("%s (%llu) %.4f %.0f/%.0f %ld\n", q->str, q->key, q->spaminess, q->nham, q->nspam, q->num);
          }
 
-         p = q;
          q = q->r;
 
       }

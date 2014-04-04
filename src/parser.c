@@ -82,7 +82,7 @@ struct _state parseMessage(struct session_data *sdata, struct __config *cfg){
 
 int parseLine(char *buf, struct _state *state, struct session_data *sdata, struct __config *cfg){
    char *p, *q, puf[MAXBUFSIZE], muf[MAXBUFSIZE], u[SMALLBUFSIZE], token[MAX_TOKEN_LEN], phrase[MAX_TOKEN_LEN], triplet[3*MAX_TOKEN_LEN];
-   int x, b64_len, boundary_line=0, rcvd_line=0;
+   int x, boundary_line=0, rcvd_line=0;
 
    memset(token, 0, MAX_TOKEN_LEN);
 
@@ -316,7 +316,7 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
 
    /* base64 decode buffer */
 
-   if(state->base64 == 1 && state->message_state == MSG_BODY) b64_len = decodeBase64(buf);
+   if(state->base64 == 1 && state->message_state == MSG_BODY) decodeBase64(buf);
 
    /* fix encoded From:, To: and Subject: lines, 2008.11.24, SJ */
 

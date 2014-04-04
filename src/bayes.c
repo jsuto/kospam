@@ -226,7 +226,7 @@ int trainMessage(struct session_data *sdata, struct _state *state, int rounds, i
 #ifdef HAVE_MYDB
    int rc;
 #endif
-   int i=0, n=0, rc, tm=train_mode;
+   int i=0, n=0, tm=train_mode;
    float spaminess = DEFAULT_SPAMICITY;
 
    if(counthash(state->token_hash) <= 0) return 0;
@@ -261,13 +261,13 @@ int trainMessage(struct session_data *sdata, struct _state *state, int rounds, i
    #ifdef HAVE_MYDB
       my_walk_hash(cfg->mydbfile, sdata->mhash, is_spam, state->token_hash, tm);
    #else
-      rc = updateTokenCounters(sdata, is_spam, state->token_hash, T_TOE);
+      updateTokenCounters(sdata, is_spam, state->token_hash, T_TOE);
       updateMiscTable(sdata, is_spam, T_TOE);
 
       /* fix counters if it was a TUM training */
 
       if(tm == T_TUM){
-         rc = updateTokenCounters(sdata, is_spam, state->token_hash, T_TUM);
+         updateTokenCounters(sdata, is_spam, state->token_hash, T_TUM);
          updateMiscTable(sdata, is_spam, T_TUM);
       }
    #endif

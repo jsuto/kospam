@@ -201,7 +201,6 @@ int inject_mail(struct session_data *sdata, int msg, char *smtpaddr, int smtppor
    int fd;
    int num_of_reads=0;
    int put_subject_spam_prefix=0, put_subject_possible_spam_prefix=0;
-   char *recipient=NULL;
 
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: trying to inject back", sdata->ttmpfile);
 
@@ -285,7 +284,6 @@ int inject_mail(struct session_data *sdata, int msg, char *smtpaddr, int smtppor
 #else
       i = msg;
 #endif
-      recipient = sdata->rcptto[i];
 
       if(!has_pipelining){ if(smtp_chat(psd, sdata->rcptto[i], 1, "250", &puf[0], sdata->ttmpfile, cfg->verbosity)) return ERR_INJECT; }
       else {

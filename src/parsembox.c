@@ -20,7 +20,7 @@ int main(int argc, char **argv){
    struct _state state;
    struct session_data sdata;
    struct __config cfg;
-   int is_match, tot_msgs = 0;
+   int tot_msgs = 0;
    char *configfile=CONFIG_FILE, buf[MAXBUFSIZE], ifile[SMALLBUFSIZE];
    FILE *F;
 
@@ -40,7 +40,6 @@ int main(int argc, char **argv){
    initState(&state);
 
    while(fgets(buf, MAXBUFSIZE-1, F)){
-      is_match = 0;
 
       /*
        * a message starts in an mbox file like this:

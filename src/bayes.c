@@ -243,19 +243,6 @@ int trainMessage(struct session_data *sdata, struct _state *state, int rounds, i
 
       resetcounters(state->token_hash);
 
-   #ifdef HAVE_MYDB
-      rc = init_mydb(cfg->mydbfile, sdata);
-      if(rc == 1) spaminess = bayes_file(sdata, state, cfg);
-      close_mydb(sdata->mhash);
-   #else
-      spaminess = bayes_file(sdata, state, cfg);
-   #endif
-
-      if(cfg->verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: training %d, round: %d spaminess was: %0.4f", sdata->ttmpfile, is_spam, n, spaminess);
-
-      if(is_spam == 1 && spaminess > 0.99) break;
-      if(is_spam == 0 && spaminess < 0.1) break;
-
       /* then update the counters */
 
    #ifdef HAVE_MYDB
@@ -271,6 +258,22 @@ int trainMessage(struct session_data *sdata, struct _state *state, int rounds, i
          updateMiscTable(sdata, is_spam, T_TUM);
       }
    #endif
+
+   #ifdef HAVE_MYDB
+      rc = init_mydb(cfg->mydbfile, sdata);
+      if(rc == 1) spaminess = bayes_file(sdata, state, cfg);
+      close_mydb(sdata->mhash);
+   #else
+      spaminess = bayes_file(sdata, state, cfg);
+   #endif
+
+      if(cfg->verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: training %d, round: %d spaminess was: %0.4f", sdata->ttmpfile, is_spam, n, spaminess);
+
+
+      if(is_spam == 1 && spaminess > 0.99) break;
+      if(is_spam == 0 && spaminess < 0.1) break;
+
+
 
       n++;
 

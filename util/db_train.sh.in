@@ -69,7 +69,7 @@ import_tokens(){
          MYSQLCMD="mysql --user=$MYSQLUSER --password=$MYSQLPASSWORD --host=$MYSQLHOST --port=MYSQLPORT"
       fi
 
-      echo "LOAD DATA LOCAL INFILE '$TEMP' INTO TABLE t_token FIELDS TERMINATED BY ' '" | $MYSQLCMD $MYSQLDB
+      echo "LOAD DATA LOCAL INFILE '$TEMP' INTO TABLE t_token FIELDS TERMINATED BY ' '" | $MYSQLCMD --local-infile=1 $MYSQLDB
 
       echo "UPDATE t_misc SET nham=$NHAM, nspam=$NSPAM WHERE uid=0" | $MYSQLCMD $MYSQLDB
    fi

@@ -12,7 +12,7 @@
 # Description:       clapf mail log collector
 ### END INIT INFO
 
-NAME="clapf-maillog"
+NAME="maillog.pl"
 PREFIX="_PREFIX_"
 DESC="clapf mail log collector service"
 PID_FILE=`${PREFIX}/sbin/clapfconf -q historypid | cut -f2 -d=`
@@ -38,7 +38,7 @@ case "$1" in
 			log_failure_msg "${NAME} is already running."
 			exit 1;
 		 else 
-			if start-stop-daemon --start --quiet --pidfile ${PID_FILE} -c ${CLAPF_UID}:${CLAPF_GID} --exec ${PREFIX}/libexec/clapf/clapf-maillog.pl ${CONFIG};
+			if start-stop-daemon --start --quiet --pidfile ${PID_FILE} -c ${CLAPF_UID}:${CLAPF_GID} --exec ${PREFIX}/libexec/clapf/maillog.pl ${CONFIG};
 			 then
 				log_end_msg 0
 			 else

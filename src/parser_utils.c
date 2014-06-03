@@ -47,6 +47,7 @@ void initState(struct _state *state){
    state->n_body_token = 0;
    state->n_chain_token = 0;
    state->n_subject_token = 0;
+   state->n_count_token = 0;
 
    state->content_type_is_set = 0;
 

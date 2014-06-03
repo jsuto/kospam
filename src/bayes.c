@@ -74,7 +74,7 @@ int qry_spaminess(struct session_data *sdata, struct _state *state, char type, s
 
 double evaluateTokens(struct session_data *sdata, struct _state *state, struct __config *cfg){
    float spaminess=DEFAULT_SPAMICITY;
-   int has_embed_image=0, found_on_rbl=0, surbl_match=0;
+   int has_embed_image=0, found_on_rbl=0, surbl_match=0, n_tokens=0;
 
 
    if(cfg->penalize_embed_images == 1 && findnode(state->token_hash, "src+cid")){
@@ -89,7 +89,9 @@ double evaluateTokens(struct session_data *sdata, struct _state *state, struct _
 
    add_penalties(sdata, state, cfg);
 
-   spaminess = getSpamProbabilityChi2(state->token_hash, cfg);
+   spaminess = getSpamProbabilityChi2(state->token_hash, &n_tokens, cfg);
+
+   state->n_count_token = n_tokens;
 
    if(sdata->training_request == 1) return spaminess;
 
@@ -101,7 +103,7 @@ double evaluateTokens(struct session_data *sdata, struct _state *state, struct _
    /* query the single tokens, then use the 'mix' for calculation */
 
    qry_spaminess(sdata, state, 0, cfg);
-   spaminess = getSpamProbabilityChi2(state->token_hash, cfg);
+   spaminess = getSpamProbabilityChi2(state->token_hash, &n_tokens, cfg);
    if(cfg->debug == 1) printf("mix: %.4f\n", spaminess);
    if(spaminess >= cfg->spam_overall_limit || spaminess <= cfg->max_ham_spamicity) goto END_OF_EVALUATION;
 
@@ -112,7 +114,7 @@ double evaluateTokens(struct session_data *sdata, struct _state *state, struct _
    checkLists(sdata, state, &found_on_rbl, &surbl_match, cfg);
 #endif
 
-   spaminess = getSpamProbabilityChi2(state->token_hash, cfg);
+   spaminess = getSpamProbabilityChi2(state->token_hash, &n_tokens, cfg);
    if(cfg->debug == 1) printf("mix after blacklists: %.4f\n", spaminess);
 
 
@@ -243,6 +245,24 @@ int trainMessage(struct session_data *sdata, struct _state *state, int rounds, i
 
       resetcounters(state->token_hash);
 
+   #ifdef HAVE_MYDB
+      rc = init_mydb(cfg->mydbfile, sdata);
+      if(rc == 1) spaminess = bayes_file(sdata, state, cfg);
+      close_mydb(sdata->mhash);
+   #else
+      spaminess = bayes_file(sdata, state, cfg);
+   #endif
+
+      if(cfg->verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: training %d, round: %d spaminess was: %0.4f", sdata->ttmpfile, is_spam, n, spaminess);
+
+      /*
+       * don't skip the training if the message has <20 counting (=deviating) token
+       */
+
+      if(state->n_count_token > 20 && is_spam == 1 && spaminess > 0.99) break;
+      if(state->n_count_token > 20 && is_spam == 0 && spaminess < 0.1) break;
+
+
       /* then update the counters */
 
    #ifdef HAVE_MYDB
@@ -258,22 +278,6 @@ int trainMessage(struct session_data *sdata, struct _state *state, int rounds, i
          updateMiscTable(sdata, is_spam, T_TUM);
       }
    #endif
-
-   #ifdef HAVE_MYDB
-      rc = init_mydb(cfg->mydbfile, sdata);
-      if(rc == 1) spaminess = bayes_file(sdata, state, cfg);
-      close_mydb(sdata->mhash);
-   #else
-      spaminess = bayes_file(sdata, state, cfg);
-   #endif
-
-      if(cfg->verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: training %d, round: %d spaminess was: %0.4f", sdata->ttmpfile, is_spam, n, spaminess);
-
-
-      if(is_spam == 1 && spaminess > 0.99) break;
-      if(is_spam == 0 && spaminess < 0.1) break;
-
-
 
       n++;
 

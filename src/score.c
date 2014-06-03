@@ -24,12 +24,13 @@ float getTokenSpamicity(float NHAM, float NSPAM, unsigned int nham, unsigned int
 }
 
 
-double getSpamProbabilityChi2(struct node *xhash[], struct __config *cfg){
+double getSpamProbabilityChi2(struct node *xhash[], int *count_tokens, struct __config *cfg){
    int i, n_tokens=0;
    struct node *q;
    double H, S, I, ln2, ln_q, ln_p;
    FLOAT P = {1.0, 0}, Q = {1.0, 0};
    int e;
+
 
    /*
     * code copied from the bogofilter project
@@ -67,6 +68,8 @@ double getSpamProbabilityChi2(struct node *xhash[], struct __config *cfg){
 
       }
    }
+
+   *count_tokens = n_tokens;
 
    ln2 = log(2.0);
    ln_q = (log(Q.mant) + Q.exp * ln2) * cfg->esf_h;

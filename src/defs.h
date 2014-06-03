@@ -131,6 +131,7 @@ struct _state {
    unsigned long n_subject_token;
    unsigned long n_body_token;
    unsigned long n_chain_token;
+   unsigned long n_count_token;
    struct list *urls;
 
    int found_our_signo;

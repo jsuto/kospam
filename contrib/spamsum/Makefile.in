@@ -33,7 +33,7 @@ all: libspamsum.a ssum
 libspamsum.a: $(OBJS)
 	ar cr libspamsum.a $(OBJS)
 	ranlib libspamsum.a
-	$(CC) -shared -Wl,-soname,libspamsum.so.$(SPAMSUM_VERSION) -o libspamsum.so.$(LIBSPAMSUM_VERSION) $(OBJS) $(MYSQL_OBJS) $(LIBS) $(LDAP_LIBS) @LDFLAGS@
+	$(CC) -shared -o libspamsum.so.$(SPAMSUM_VERSION) -o libspamsum.so.$(LIBSPAMSUM_VERSION) $(OBJS) $(MYSQL_OBJS) $(LIBS) $(LDAP_LIBS) @LDFLAGS@
 	(PATH="\$PATH:/sbin" ldconfig -n .)
 	ln -sf libspamsum.so.$(SPAMSUM_VERSION) libspamsum.so
 

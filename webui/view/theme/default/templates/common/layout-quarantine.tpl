@@ -47,7 +47,6 @@
    <button id="button_search" class="btn btn-danger" onclick="Clapf.expert(this); return false;"><?php print $text_submit; ?></button>
    <button class="btn" onclick="Clapf.cancel(); return false;"><?php print $text_cancel; ?></button>
 
-   <!--button id="button_expert" class="btn " onclick="$('#searchpopup1').show(); return false;">Advanced search &nbsp;<span class="caret"></span></button-->
    <button class="btn " onclick="Clapf.saved_search_terms('<?php print $text_saved; ?>'); return false;"><?php print $text_save; ?></button>
    <button class="btn btn-inverse" onclick="Clapf.load_saved_search_terms(); return false;"><?php print $text_load; ?></button>
   </form>

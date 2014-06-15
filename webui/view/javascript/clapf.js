@@ -20,6 +20,8 @@ var Clapf =
 
    Messages: [],
 
+   Search_strings: [],
+
    log: function()
    {
       if(window.console)
@@ -144,10 +146,17 @@ var Clapf =
    toggle_row_highlight: function(id) {
       var elem = document.getElementById(id);
 
-      if(elem.className == "info")
+      var chbox = id.replace("tr_", ""); 
+      var chboxid = document.getElementById(chbox);
+
+      if(elem.className == "info") {
          elem.className = "";
-      else
+         chboxid.checked = 0;
+      }
+      else {
          elem.className = "info";
+         chboxid.checked = 1;
+      }
    },
 
 
@@ -195,6 +204,8 @@ var Clapf =
 
 
    change_quarantine_user: function(user, hamspam) {
+      Clapf.log("[change_quarantine_user]");
+
       var s = 'to: ' + user;
 
       if(hamspam) { s += ', hamspam: ' + hamspam; }
@@ -291,9 +302,28 @@ var Clapf =
       Clapf.Shared.page = 0;
       Clapf.Shared.type = 'quarantine';
 
+      var s = $.trim($('input#search').val());
+
       Clapf.Searches.Expert = {
-                                 search : $.trim($('input#search').val()),
+                                 search : s,
                                  searchtype : 'expert'
+      }
+
+      if(s) {
+         var found = 0;
+
+         for(i=0; i<Clapf.Search_strings.length; i++) {
+            if(Clapf.Search_strings[i] == s) {
+               found = 1;
+               break;
+            }
+         }
+
+         if(found == 0) {
+            Clapf.Search_strings[Clapf.Search_strings.length] = s;
+            Clapf.log("[ss]", Clapf.Search_strings.length, s);
+         }
+
       }
 
       Clapf.load_search_results();
@@ -364,6 +394,15 @@ var Clapf =
         $('input#xhamspam').val('');
 
         Clapf.Searches.Complex = {};
+
+        if(Clapf.Search_strings.length > 1) {
+           var s = Clapf.Search_strings[Clapf.Search_strings.length - 2];
+           Clapf.log("[ss prev]", Clapf.Search_strings[Clapf.Search_strings.length - 2]);
+           $('input#search').val(s);
+           Clapf.expert();
+           Clapf.Search_strings.length--;
+        }
+
    },
 
 
@@ -500,6 +539,14 @@ var Clapf =
    },
 
 
+   run_expert_query: function()
+   {
+      Clapf.log("[run_expert_query]");
+
+      $("#button_search").click();
+   },
+
+
    /*
     * add shortcuts on the search page
     */
@@ -509,11 +556,29 @@ var Clapf =
       Clapf.log("[add_shortcuts]");
 
       $(document).keypress(function(e){
-         if(e.which == 13){
-            $("#button_search").click();
+
+         if(e.which == 13) {
+            Clapf.run_expert_query();
+         }
+
+         if(e.which == 0) {
+            $("#search").val('');
+            $("#search").focus();
          }
 
       });
+
+   },
+
+
+   stop_propagation: function(event) {
+      Clapf.log("[stop_propagation]");
+      try {
+         event.stopPropagation();
+      }
+      catch ( e ) {
+         Clapf.log("[stop_propagation]", e );
+      }
    },
 
 

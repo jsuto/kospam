@@ -158,7 +158,7 @@ $_['text_policy_group'] = "Házirend azonosító";
 $_['text_policy_name'] = "Házirend neve";
 $_['text_previous'] = "Előző";
 $_['text_processed_emails_in'] = "Feldolgozott levelek 24 óra/1 hét/30 nap";
-$_['text_purge_all_messages_from_quarantine'] = "Összes saját üzenet törlése a karanténból";
+$_['text_purge_all_messages_from_quarantine'] = "Összes törlése";
 $_['text_purge_selected_messages'] = "Kiválasztott üzenetek eltávolítása";
 $_['text_purged'] = "Eltávolítva";
 

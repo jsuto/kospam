@@ -158,7 +158,7 @@ $_['text_policy_group'] = "Policy group";
 $_['text_policy_name'] = "Policy name";
 $_['text_previous'] = "Previous";
 $_['text_processed_emails_in'] = "Processed emails in 24 hours/1 week/30 days";
-$_['text_purge_all_messages_from_quarantine'] = "Purge all your own messages from quarantine";
+$_['text_purge_all_messages_from_quarantine'] = "Purge all";
 $_['text_purge_selected_messages'] = "Purge selected messages";
 $_['text_purged'] = "Purged";
 

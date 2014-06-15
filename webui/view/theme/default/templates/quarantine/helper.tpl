@@ -48,16 +48,18 @@
 
 <?php $i=0; foreach ($messages as $message) { ?>
 
-         <tr id="tr_<?php print $message['id'] . "+" . $message['username']; ?>">
-            <td<?php if(($message['i'] % 2) == 0){ ?> class="odd"<?php } ?>><a href="#" onclick="Clapf.view_message_by_pos('<?php print $i; ?>'); return false;"><?php print $message['i']; ?>.</a></td>
+         <tr id="tr_<?php print $message['id'] . "+" . $message['username']; ?>" onclick="Clapf.toggle_row_highlight('tr_<?php print $message['id'] . "+" . $message['username']; ?>'); Clapf.view_message_by_pos('<?php print $i; ?>'); return false;">
+            <td<?php if(($message['i'] % 2) == 0){ ?> class="odd"<?php } ?>><?php print $message['i']; ?>.</td>
             <td<?php if(($message['i'] % 2) == 0){ ?> class="odd"<?php } ?>><?php print $message['date']; ?></td>
-            <td align="center"<?php if(($message['i'] % 2) == 0){ ?> class="odd"<?php } ?>><a href="#" onclick="Clapf.change_quarantine_user('<?php print $message['username']; ?>', '<?php if(SPAM_ONLY_QUARANTINE == 1) { ?>SPAM<?php } ?>'); "><?php print $message['username']; ?></a></td>
+            <td onclick="Clapf.stop_propagation(event);" align="center"<?php if(($message['i'] % 2) == 0){ ?> class="odd"<?php } ?>><a href="#" onclick="Clapf.change_quarantine_user('<?php print $message['username']; ?>', '<?php if(SPAM_ONLY_QUARANTINE == 1) { ?>SPAM<?php } ?>'); "><?php print $message['username']; ?></a></td>
             <td<?php if(($message['i'] % 2) == 0){ ?> class="odd"<?php } ?>><?php if($message['from'] != $message['shortfrom']) { ?><span title="<?php print $message['from']; ?>"><?php print $message['shortfrom']; ?></span><?php } else { print $message['from']; } ?></td>
-            <td<?php if(($message['i'] % 2) == 0){ ?> class="odd"<?php } ?>><a href="#" onclick="Clapf.view_message_by_pos('<?php print $i; ?>'); return false;" <?php if($message['subject'] != $message['shortsubject']) { ?>title="<?php print $message['subject']; ?>"<?php } ?>><?php if($message['subject'] != $message['shortsubject']) { print $message['shortsubject']; } else { print $message['subject']; } ?></a></td>
+            <td<?php if(($message['i'] % 2) == 0){ ?> class="odd"<?php } ?>><?php if($message['subject'] != $message['shortsubject']) { print $message['shortsubject']; } else { print $message['subject']; } ?></td>
+
+
             <td align="right"><?php print $message['size']; ?></td>
             <td>&nbsp;</td>
             <td class="<?php if($message['id'][0] == 's'){ ?>error<?php } else if($message['id'][0] == 'v') { ?>virus<?php } else { ?>success<?php } ?>">&nbsp;</td>
-            <td<?php if(($message['i'] % 2) == 0){ ?> class="odd"<?php } ?>><input type="checkbox" id="<?php print $message['id'] . "+" . $message['username']; ?>" name="<?php print $message['id'] . "+" . preg_replace("/\./", "*", $message['username']); ?>" onChange="script:Clapf.toggle_row_highlight('tr_<?php print $message['id'] . "+" . $message['username']; ?>');" /></td>
+            <td onclick="Clapf.stop_propagation(event);" <?php if(($message['i'] % 2) == 0){ ?> class="odd"<?php } ?>><input type="checkbox" id="<?php print $message['id'] . "+" . $message['username']; ?>" name="<?php print $message['id'] . "+" . preg_replace("/\./", "*", $message['username']); ?>" onChange="script:Clapf.toggle_row_highlight('tr_<?php print $message['id'] . "+" . $message['username']; ?>');" /></td>
          </tr>
 
 <?php $i++; } ?>

@@ -762,7 +762,7 @@ int main(int argc, char **argv, char **envp){
       printf("spaminess: %.4f in %ld [ms]\n", spaminess, tvdiff(tv_stop, tv_start)/1000);
       printf("%ld %ld\n", state.c_shit, state.l_shit);
       printf("state.ip/host: %s/%s\n", state.ip, state.hostname);
-      printf("number of tokens: %ld/%ld/%ld/%ld\n", state.n_token, state.n_chain_token, state.n_body_token, state.n_count_token);
+      printf("number of tokens: %ld/%ld/%ld/%ld\n", state.n_token, state.n_chain_token, state.n_body_token, state.n_deviating_token);
    }
 
 

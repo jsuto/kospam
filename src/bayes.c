@@ -91,7 +91,7 @@ double evaluateTokens(struct session_data *sdata, struct _state *state, struct _
 
    spaminess = getSpamProbabilityChi2(state->token_hash, &n_tokens, cfg);
 
-   state->n_count_token = n_tokens;
+   state->n_deviating_token = n_tokens;
 
    if(sdata->training_request == 1) return spaminess;
 
@@ -256,11 +256,11 @@ int trainMessage(struct session_data *sdata, struct _state *state, int rounds, i
       if(cfg->verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: training %d, round: %d spaminess was: %0.4f", sdata->ttmpfile, is_spam, n, spaminess);
 
       /*
-       * don't skip the training if the message has <20 counting (=deviating) token
+       * don't skip the training if the message has <20 deviating token
        */
 
-      if(state->n_count_token > 20 && is_spam == 1 && spaminess > 0.99) break;
-      if(state->n_count_token > 20 && is_spam == 0 && spaminess < 0.1) break;
+      if(state->n_deviating_token > 20 && is_spam == 1 && spaminess > 0.99) break;
+      if(state->n_deviating_token > 20 && is_spam == 0 && spaminess < 0.1) break;
 
 
       /* then update the counters */

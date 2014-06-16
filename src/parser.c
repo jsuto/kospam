@@ -267,7 +267,6 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
       state->has_to_dump = 0;
 
       state->base64 = 0; state->textplain = 0; state->texthtml = state->octetstream = 0;
-      state->skip_html = 0;
       state->utf8 = 0;
       state->qp = 0;
 
@@ -476,12 +475,10 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
       /* deal with HTML tokens */
 
       if(strncmp(puf, "HTML*", 5) == 0){
-         if(isSkipHTMLTag(puf) == 0){
-            snprintf(muf, MAXBUFSIZE-1, "%s", puf+5);
-            q = strchr(muf, '=');
-            if(q) *q = '+';
-            addnode(state->token_hash, muf, DEFAULT_SPAMICITY, 0);
-         }
+         snprintf(muf, MAXBUFSIZE-1, "%s", puf+5);
+         q = strchr(muf, '=');
+         if(q) *q = '+';
+         addnode(state->token_hash, muf, DEFAULT_SPAMICITY, 0);
          continue;
       }
 

@@ -129,7 +129,7 @@ struct node *makenewnode(struct node *xhash[], char *s, double spaminess, double
    h->num = 1;
    h->r = NULL;
 
-   if(strchr(s, '*') || strchr(s, '+')) h->type = 1;
+   if(strchr(s, '*') || strchr(s, '+') || strchr(s, ':') || strchr(s, '%')) h->type = 1;
    else h->type = 0;
 
    return h;

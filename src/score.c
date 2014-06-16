@@ -63,6 +63,7 @@ double getSpamProbabilityChi2(struct node *xhash[], int *deviating_tokens, struc
 
             if(cfg->debug == 1) printf("%s (%llu) %.4f %.0f/%.0f %ld\n", q->str, q->key, q->spaminess, q->nham, q->nspam, q->num);
          }
+         //else if(cfg->debug == 1) printf("%s (%llu) %.4f %.0f/%.0f %ld\n", q->str, q->key, q->spaminess, q->nham, q->nspam, q->num);
 
          q = q->r;
 

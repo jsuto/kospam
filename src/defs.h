@@ -109,7 +109,6 @@ struct _state {
    int qp;
    int htmltag;
    int style;
-   int skip_html;
    int ipcnt;
    int has_to_dump;
    int fd;

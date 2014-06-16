@@ -16,7 +16,6 @@
 #include <clapf.h>
 #include "trans.h"
 #include "ijc.h"
-#include "html.h"
 
 
 void initState(struct _state *state){
@@ -40,8 +39,6 @@ void initState(struct _state *state){
 
    state->htmltag = 0;
    state->style = 0;
-
-   state->skip_html = 0;
 
    state->n_token = 0;
    state->n_body_token = 0;
@@ -337,20 +334,11 @@ void markHTML(char *buf, struct _state *state){
          memset(html, 0, SMALLBUFSIZE); j=0;
 
          pos = 0;
-
-         //printf("start html:%c\n", *s);
       }
 
       if(state->htmltag == 1){
     
-         if(j == 0 && *s == '!'){
-            state->skip_html = 1;
-            //printf("skiphtml=1\n");
-         }
-
-         if(state->skip_html == 0){ 
             if(*s != '>' && *s != '<' && *s != '"'){
-               //printf("j=%d/%c", j, *s);
                html[j] = tolower(*s);
                if(j < SMALLBUFSIZE-10) j++;
             }
@@ -360,7 +348,6 @@ void markHTML(char *buf, struct _state *state){
                memset(html, 0, SMALLBUFSIZE); j=0;
                pos++;
             }
-         }
       }
       else {
          if(state->style == 0){
@@ -371,10 +358,7 @@ void markHTML(char *buf, struct _state *state){
 
       if(*s == '>'){
          state->htmltag = 0;
-         state->skip_html = 0;
 
-         //printf("skiphtml=0\n");
-         //printf("end html:%c\n", *s);
          strncat(html, " ", SMALLBUFSIZE-1);
          k += appendHTMLTag(puf, html, pos, state);
          memset(html, 0, SMALLBUFSIZE); j=0;
@@ -382,7 +366,6 @@ void markHTML(char *buf, struct _state *state){
 
    }
 
-   //printf("append last in line:%s\n", puf);
    k += appendHTMLTag(puf, html, pos, state);
 
    strcpy(buf, puf);
@@ -390,47 +373,26 @@ void markHTML(char *buf, struct _state *state){
 
 
 int appendHTMLTag(char *buf, char *htmlbuf, int pos, struct _state *state){
-   char *p, html[SMALLBUFSIZE];
-   int len;
+   char *p;
+   int len=0;
 
-   if(pos == 0 && strncmp(htmlbuf, "style ", 6) == 0) state->style = 1;
-   if(pos == 0 && strncmp(htmlbuf, "/style ", 7) == 0) state->style = 0;
+   // skip empty or white character html buffers
+   if(strlen(htmlbuf) == 0 || htmlbuf[0] == ' ' || htmlbuf[0] == '\t') return 0;
 
-   //printf("appendHTML: pos:%d, +%s+, style: %d\n", pos, htmlbuf, state->style);
+   if(state->htmltag == 1){
 
-   if(state->style == 1) return 0;
+      // skip all html tokens, except cid:.... and http://...
 
-   snprintf(html, SMALLBUFSIZE-1, "HTML*%s", htmlbuf);
-   len = strlen(html);
-
-   if(isSkipHTMLTag(html) == 1) return 0;
-
-   if(len > 8 && strchr(html, '=')){
-      p = strstr(html, "cid:");
+      p = strstr(htmlbuf, "http://");
+      if(!p) p = strstr(htmlbuf, "https://");
+      if(!p) p = strstr(htmlbuf, "cid:");
       if(p){
-         *(p+3) = '\0';
-         strncat(html, " ", SMALLBUFSIZE-1);
+         len = strlen(p);
+         strncat(buf, p, MAXBUFSIZE-2);
+         return len;
       }
 
-      strncat(buf, html, MAXBUFSIZE-1);
-      return len;
-   }
-
-   if(strstr(html, "http") ){
-      strncat(buf, html+5, MAXBUFSIZE-1);
-      return len-5;
-   }
-
-   return 0;
-}
-
-
-int isSkipHTMLTag(char *s){
-   int i=0;
-
-   for(i=0; i<NUM_OF_SKIP_TAGS; i++){
-      //printf("matching *%s* on *%s*\n", s+5, skip_html_tags[i].entity);
-      if(strncmp(s+5, skip_html_tags[i].entity, skip_html_tags[i].length) == 0) return 1;
+      return 0;
    }
 
    return 0;
@@ -457,6 +419,7 @@ void translateLine(unsigned char *p, struct _state *state){
 
       if(state->message_state != MSG_BODY && (*p == '.' || *p == '-') ){ continue; }
 
+      if(strncasecmp((char *)p, "cid:", 4) == 0){ p += 4; url = 1; continue; }
       if(strncasecmp((char *)p, "http://", 7) == 0){ p += 7; url = 1; continue; }
       if(strncasecmp((char *)p, "https://", 8) == 0){ p += 8; url = 1; continue; }
 
@@ -623,6 +586,7 @@ void fixURL(char *url){
    if((strncasecmp(url, "http://", 7) == 0 || strncasecmp(url, "https://", 8) == 0) ){
       p = url;
 
+      if(strncasecmp(p, "cid:", 4) == 0) p += 4;
       if(strncasecmp(p, "http://", 7) == 0) p += 7;
       if(strncasecmp(p, "https://", 8) == 0) p += 8;
 

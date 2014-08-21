@@ -1,3 +1,6 @@
 
-Read http://clapf.acts.hu/upgrade.php and follow instructions.
+Read http://clapf.org/upgrade.php and follow instructions.
+
+
+alter table t_quarantine add FULLTEXT (subj);
 

@@ -43,8 +43,7 @@ class ModelQuarantineMessage extends Model {
          fclose($fp);
       }
 
-      $message = preg_replace("/</", "&lt;", $message);
-      $message = preg_replace("/>/", "&gt;", $message);
+      $message = htmlentities($message);
 
       return "<pre>\n" . $this->print_nicely($message) . "</pre>\n";
    }
@@ -353,11 +352,11 @@ class ModelQuarantineMessage extends Model {
    public function scan_message($dir, $f) {
       $language = Registry::get('language');
 
-      $from = $subj = "";
+      $from = $subject = "";
       $is_header=1;
       $state = "UNDEF";
 
-      if(!is_readable($dir . "/" . $f)) { return array ($from, $subj); }
+      if(!is_readable($dir . "/" . $f)) { return array ($from, $subject); }
 
       $fp = fopen($dir . "/" . $f, "r");
       if($fp){
@@ -378,33 +377,26 @@ class ModelQuarantineMessage extends Model {
 
             if($state == "SUBJECT"){
                $l = preg_replace("/^\s{1,}/", "", $l);
-               $subj .= $this->decode_my_str($l);
+               $subject .= $l;
             }
             if($state == "FROM"){
                $l = preg_replace("/^\s{1,}/", "", $l);
-               $from .= $this->decode_my_str($l);
+               $from .= $l;
             }
          }
 
          fclose($fp);
-
-         $from = preg_replace("/^From\:\s{0,}/", "", $from);
-         if($from == "") { $from = $language->get('text_no_sender'); }
-
-         $subj = preg_replace("/^Subject\:\s{0,}/", "", $subj);
-         if($subj == "") { $subj = $language->get('text_no_subject'); }
       }
 
-      $from = preg_replace("/</", "&lt;", $from);
-      $from = preg_replace("/>/", "&gt;", $from);
+      $from = preg_replace("/^From\:\s{0,}/", "", $from);
+      if($from) { $from = htmlspecialchars($this->decode_my_str($from)); }
+      else { $from = $language->get('text_no_sender'); }
 
-      $subj = preg_replace("/</", "&lt;", $subj);
-      $subj = preg_replace("/>/", "&gt;", $subj);
+      $subject = preg_replace("/^Subject\:\s{0,}/", "", $subject);
+      if($subject) { $subject = htmlspecialchars($this->decode_my_str($subject)); }
+      else { $subject = $language->get('text_no_subject'); }
 
-      $from = preg_replace("/'/", '"', $from);
-      $subj = preg_replace("/'/", '"', $subj);
-
-      return array ($from, $subj);
+      return array ($from, $subject);
    }
 
 
@@ -413,16 +405,23 @@ class ModelQuarantineMessage extends Model {
 
       $what = rtrim($what);
 
+      $what = preg_replace("/\s/", " ", $what);
       $a = preg_split("/\s/", $what);
 
       while(list($k, $v) = each($a)){
-         $x = preg_match("/\?\=$/", $v);
+         $result .= ' ';
 
-         if( ($x == 0 && $k > 0) || ($x == 1 && $k == 1) ){
-            $result .= " ";
+         $str1 = preg_split("/\?\=/", $v);
+
+         while(list($k2, $v2) = each($str1)) {
+
+            if(substr($v2, 0, 2) == "=?") {
+               $result .= $this->fix_encoded_string($v2 . "?=");
+            } else {
+               $result .= $v2;
+            }
          }
 
-         $result .= $this->fix_encoded_string($v);
       }
 
       return $result;
@@ -456,7 +455,8 @@ class ModelQuarantineMessage extends Model {
          }
 
          if(!preg_match("/utf-8/i", $encoding)){
-            $s = iconv($encoding, 'utf-8', $s);
+            $s2 = iconv($encoding, 'utf-8', $s);
+            if($s2) { $s = $s2; }
          }
 
       }

@@ -7,21 +7,32 @@ class ModelQuarantineDatabase extends Model {
 
       $Q = Registry::get('Q');
 
-      if(QUARANTINE_DRIVER == "mysql") { $type = " Engine=InnoDB character set utf8 "; }
+      if(QUARANTINE_DRIVER == "mysql") { $type = QUARANTINE_ENGINE_TYPE; }
 
+      $query = $Q->query("SHOW TABLES LIKE '" . TABLE_QUARANTINE . "'");
+      if($query->num_rows > 0) { return 0; }
+ 
       $query = $Q->query("
          CREATE TABLE IF NOT EXISTS " . TABLE_QUARANTINE . " (
             id char(32) not null,
             uid int unsigned not null,
             is_spam char(1) default null,
-            `from` char(64) default null,
-            subj char(64) default null,
+            sender char(64) default null,
+            subject char(64) default null,
             size int default 0,
             ts int default 0,
             hidden integer(1)
          ) $type");
 
-      $query = $Q->query("CREATE INDEX " . TABLE_QUARANTINE . "_idx ON " . TABLE_QUARANTINE . " (uid, is_spam, ts, hidden) ");
+      $query = $Q->query("CREATE INDEX " . TABLE_QUARANTINE . "_idx1 ON " . TABLE_QUARANTINE . " (uid) ");
+      $query = $Q->query("CREATE INDEX " . TABLE_QUARANTINE . "_idx2 ON " . TABLE_QUARANTINE . " (is_spam) ");
+      $query = $Q->query("CREATE INDEX " . TABLE_QUARANTINE . "_idx3 ON " . TABLE_QUARANTINE . " (ts) ");
+      $query = $Q->query("CREATE INDEX " . TABLE_QUARANTINE . "_idx4 ON " . TABLE_QUARANTINE . " (hidden) ");
+
+      if(QUARANTINE_DRIVER == "mysql") {
+         $query = $Q->query("ALTER TABLE " . TABLE_QUARANTINE . " ADD FULLTEXT (subject) ");
+      }
+
 
       $query = $Q->query("
          CREATE TABLE IF NOT EXISTS " . TABLE_SEARCH . " (
@@ -142,7 +153,7 @@ class ModelQuarantineDatabase extends Model {
       foreach ($new_files as $file){
          list ($mailfrom, $subject) = $this->model_quarantine_message->scan_message($dir, $file['is_spam'] . "." . $file['id']);
 
-         $query = $Q->query("INSERT INTO " . TABLE_QUARANTINE . " (id, uid, ts, size, is_spam, hidden, `from`, subj) values(?,?,?,?,?,?,?,?)", array($file['id'], $uid, $file['ts'], $file['size'], $file['is_spam'], 0, $mailfrom, $subject));
+         $query = $Q->query("INSERT INTO " . TABLE_QUARANTINE . " (id, uid, ts, size, is_spam, hidden, sender, subject) values(?,?,?,?,?,?,?,?)", array($file['id'], $uid, $file['ts'], $file['size'], $file['is_spam'], 0, $mailfrom, $subject));
 
          // create hard links to the additional user directories
          reset($group_q_dirs);
@@ -187,8 +198,6 @@ class ModelQuarantineDatabase extends Model {
       $uid_list = "";
       $arr = array();
 
-//print_r($search);
-
       $Q = Registry::get('Q');
 
       $where_cond = "WHERE hidden=0";
@@ -230,8 +239,15 @@ class ModelQuarantineDatabase extends Model {
          else { $where_cond .= " AND (is_spam='s' OR (is_spam='h' and size>0))"; }
       }
 
-      if($search['from']) { $where_cond .= " AND `from` like ?"; array_push($arr, '%' . $search['from'] . '%'); }
-      if($search['subject']) { $where_cond .= " AND subj like ?"; array_push($arr, '%' . $search['subject'] . '%'); }
+      if($search['from']) { $where_cond .= " AND sender like ?"; array_push($arr, '%' . $search['from'] . '%'); }
+
+      if($search['subject']) {
+         if(ENABLE_MYSQL_MATCH_SEARCH == 1) {
+            $where_cond .= " AND MATCH(subject) AGAINST(? IN BOOLEAN MODE)"; array_push($arr, $search['subject'] . '*');
+         } else {
+            $where_cond .= " AND subject like ?"; array_push($arr, '%' . $search['subject'] . '%');
+         }
+      }
 
       /* sort order */
 
@@ -240,14 +256,16 @@ class ModelQuarantineDatabase extends Model {
 
       /* select total size */
 
-      $query = $Q->query("select count(size) as total_num, sum(size) as total_size from " . TABLE_QUARANTINE . " $where_cond", $arr);
+      $query = $Q->query("SELECT COUNT(size) AS total_num, SUM(size) AS total_size FROM " . TABLE_QUARANTINE . " $where_cond", $arr);
+
+      syslog(LOG_INFO, "quarantine query: " . $query->query . ", hits: " . $query->row['total_num']);
 
       if(isset($query->row['total_size'])) { $total_size = $query->row['total_size']; }
       if(isset($query->row['total_num'])) { $n = $query->row['total_num']; }
 
       if($search['page_len'] > 0) { $limit = " LIMIT " . $search['page_len']*$search['page'] . "," . $search['page_len']; }
 
-      $query = $Q->query("select * from " . TABLE_QUARANTINE . " $where_cond ORDER BY `" . $search['sort'] . "` $order $limit", $arr);
+      $query = $Q->query("SELECT * FROM " . TABLE_QUARANTINE . " $where_cond ORDER BY `" . $search['sort'] . "` $order $limit", $arr);
 
       $i = $search['page_len']*$search['page'];
 
@@ -258,7 +276,7 @@ class ModelQuarantineDatabase extends Model {
 
          $i++;
 
-         $message['subj'] = preg_replace('/"/', "&quot;", $message['subj']);
+         $message['subject'] = htmlentities($message['subject']);
 
          if(!isset($users[$message['uid']])) {
             $username = $this->model_user_user->getUsernameByUid($message['uid']);
@@ -268,15 +286,16 @@ class ModelQuarantineDatabase extends Model {
             $username = $users[$message['uid']];
          }
 
+
          $messages[] = array(
                              'i' => $i,
                              'id' => $message['is_spam'] . '.' . $message['id'],
                              'uid' => $message['uid'],
                              'username' => $username,
-                             'from' => $message['from'],
-                             'shortfrom' => $this->MakeShortString($message['from'], TEXT_SHORT_LENGTH),
-                             'subject' => $message['subj'],
-                             'shortsubject' => $this->MakeShortString($message['subj'], TEXT_SHORT_LENGTH),
+                             'from' => $message['sender'],
+                             'shortfrom' => $this->MakeShortString($message['sender'], TEXT_SHORT_LENGTH),
+                             'subject' => $message['subject'],
+                             'shortsubject' => $this->MakeShortString($message['subject'], TEXT_SHORT_LENGTH),
                              'size' => $this->model_quarantine_message->NiceSize($message['size']),
                              'date' => date("Y.m.d.", $message['ts'])
                             );
@@ -329,7 +348,6 @@ class ModelQuarantineDatabase extends Model {
 
 
    public function addSearchTerm($search = array(), $uid = 0) {
-      //$term = "date=" . $search['date'] . "&subject=" . $search['subject'] . "&from=" . $search['from'] . "&to=" . $search['to'] . "&hamspam=" . $search['hamspam'];
       $term = '';
 
       while(list($k, $v) = each($search)) {

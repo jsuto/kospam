@@ -78,7 +78,8 @@ foreach ($users as $user) {
 
    $basedn = strstr($user['dn'], "OU");
 
-   $query = $ldap->query($basedn, "mail=" . $user['email'], array("objectclass") );
+   $query = $ldap->query($user['dn'], "(|(mail=" . $user['email'] . ")(proxyaddresses=smtp:" . $user['email'] . "))", array("objectclass", "mail", "proxyaddresses") );
+
    if(!isset($query->row["objectclass"])) { continue; }
 
    $send_report = 0;

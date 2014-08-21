@@ -96,8 +96,14 @@ $config['PASSWORD_CHANGE_ENABLED'] = 1;
 
 $config['SPAM_ONLY_QUARANTINE'] = 1;
 
-$config['MEMCACHED_ENABLED'] = 1;
+$config['MEMCACHED_ENABLED'] = 0;
 
+// whether to enable MATCH() queries
+$config['ENABLE_MYSQL_MATCH_SEARCH'] = 0;
+
+// for sqlite3, leave it empty
+// for mysql if you have >= 5.6 you may use InnoDB as well
+$config['QUARANTINE_ENGINE_TYPE'] = ' Engine=MyISAM character set utf8 ';
 
 
 require_once 'config-site.php';

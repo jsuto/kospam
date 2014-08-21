@@ -12,6 +12,7 @@ create index connection_idx on connection(`queue_id`);
 create index connection_idx2 on connection(`client`);
 create index connection_idx3 on connection(`from`);
 create index connection_idx4 on connection(`ts`);
+create index connection_idx5 on connection(from_domain);
 
 drop table if exists smtp;
 create table if not exists smtp (
@@ -27,8 +28,9 @@ create table if not exists smtp (
 create index smtp_idx on smtp(`queue_id`);
 create index smtp_idx2 on smtp(`relay`);
 create index smtp_idx3 on smtp(`to`);
-create index smtp_idx4 on smtp(`ts`);
-create index smtp_idx5 on smtp(`clapf_id`);
+create index smtp_idx4 on smtp(`to_domain`);
+create index smtp_idx5 on smtp(`ts`);
+create index smtp_idx6 on smtp(`clapf_id`);
 
 
 drop table if exists clapf;
@@ -54,7 +56,7 @@ create index clapf_idx3 on clapf(`ts`);
 
 
 drop view if exists hist_in;
-create view hist_in as select connection.`from`, connection.client, connection.`size`, smtp.ts, smtp.queue_id, smtp.`to`, smtp.delay, smtp.clapf_id, smtp.relay, smtp.`status` from connection, smtp where smtp.queue_id = connection.queue_id;
+create view hist_in as select connection.`from`, connection.from_domain, connection.client, connection.`size`, smtp.ts, smtp.queue_id, smtp.`to`, smtp.`to_domain`, smtp.delay, smtp.clapf_id, smtp.relay, smtp.`status` from connection, smtp where smtp.queue_id = connection.queue_id;
 
 
 drop view if exists hist_out;

@@ -92,12 +92,14 @@
          <div class="row">
             <div class="cellhealthleft"><?php print $text_counters; ?>:</div>
             <div class="cellhealthright">
-            <?php while(list($k, $v) = each($counters)) { ?>
+            <?php while(list($k, $v) = each($counters)) {
+               if(!is_numeric($k)) { ?>
+
                <div class="row">
                   <div class="domaincell"><?php $a = preg_replace("/^_c\:/", "", $k); if(isset($$a)) { print $$a; } else { print $a; } ?></div>
                   <div class="domaincell"><?php print $v; ?></div>
                </div>
-            <?php } ?>
+            <?php } } ?>
 
                <?php if($counters[$prefix . 'rcvd'] > 0) { ?><div class="row"><div class="domaincell">spam / <?php print $text_total_ratio; ?></div><div class="domaincell"><?php print sprintf("%.2f", 100*$counters[$prefix . 'spam'] / $counters[$prefix . 'rcvd']); ?> %</div></div><?php } ?>
                <?php if($counters[$prefix . 'rcvd'] > 0) { ?><div class="row"><div class="domaincell">virus / <?php print $text_total_ratio; ?></div><div class="domaincell"><?php print sprintf("%.2f", 100*$counters[$prefix . 'virus'] / $counters[$prefix . 'rcvd']); ?> %</div></div><?php } ?>

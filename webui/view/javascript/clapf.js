@@ -599,6 +599,16 @@ var Clapf =
       Clapf.log("[fix_form]", a);
 
       document.location.href = a;
+   },
+
+
+   update_search_window: function()
+   {
+      var s = $.trim($('input#search').val());
+
+      if(s.length > 3) {
+         Clapf.expert();
+      }
    }
 
 

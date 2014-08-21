@@ -1,7 +1,7 @@
 <?php if($page == 0){ ?>
 
 
-<form class="form-inline" style="padding-bottom: 20px;" onsubmit="Clapf.filter_history(); return false;">
+<form class="form-inline" style="padding-bottom: 20px;" onsubmit="return false;">
 
 <?php print $text_date; ?>: <input type="text" name="date1" id="date1" class="input-small" value="<?php print $date1; ?>" placeholder="YYYY-MM-DD" /> - <input type="text" name="date2" id="date2" class="input-small" value="<?php print $date2; ?>" placeholder="YYYY-MM-DD" />
 

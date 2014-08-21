@@ -30,6 +30,8 @@ class MySQL {
    public function query($sql, $arr = array()) {
       $query = new stdClass();
 
+      //syslog(LOG_INFO, "sql query: $sql, array=" . implode("*", $arr));
+
       $query->error = 1;
       $query->errmsg = "Error";
       $query->query = $sql;
@@ -65,8 +67,6 @@ class MySQL {
       $time_end = microtime(true);
 
       $query->exec_time = $time_end - $time_start;
-
-//print $sql . " " . $query->exec_time . "<p/>\n";
 
       return $query;
    }

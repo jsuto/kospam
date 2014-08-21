@@ -13,7 +13,7 @@
 
 #define VERSION "0.5.1-rc1"
 
-#define BUILD 1272
+#define BUILD 1273
 
 #define HOSTID "av-engine.localhost"
 

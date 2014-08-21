@@ -40,7 +40,7 @@
 <div id="expertsearch">
   <form class="well form-search sleek">
    <input type="hidden" name="user" value="<?php print $username; ?>" />
-   <input type="text" name="search" id="search" class="input-medium span8" placeholder="<?php print $text_enter_search_terms; ?>" />
+   <input type="text" name="search" id="search" class="input-medium span8" placeholder="<?php print $text_enter_search_terms; ?>" oninput="Clapf.update_search_window();" />
 
    <a id="advsearch_caret" href="#" onclick="$('#searchpopup1').show();"><b class="caret"></b></a>
 

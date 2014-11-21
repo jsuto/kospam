@@ -289,29 +289,9 @@ int parseLine(char *buf, struct _state *state, struct session_data *sdata, struc
    }
 
 
-   /*
-    * sometimes spammers screw up their junk messages, and
-    * use "application/octet-stream" type for textual parts.
-    * Now clapf checks whether the attachment is really
-    * binary. If it has no non-printable characters in a
-    * base64 encoded line, then let's tokenize it.
-    *
-    * Note: in this case we cannot expect fully compliant 
-    * message part. However this case should be very rare
-    * since legitim messages use proper mime types.
-    *
-    * 2010.10.23, SJ
-    */
+   // skip if it's not a header line, nor textual info
+   if(state->is_header == 0 && state->textplain == 0 && state->texthtml == 0) return 0;
 
-   if(state->message_state == MSG_BODY && state->realbinary == 0 && state->octetstream == 1){
-      snprintf(puf, MAXBUFSIZE-1, "%s", buf);
-      if(state->base64 == 1) decodeBase64(puf);
-      if(state->qp == 1) decodeQP(puf);
-      state->realbinary += countNonPrintableCharacters(puf);
-   }
-
-
-   if(state->is_header == 0 && state->textplain == 0 && state->texthtml == 0 && (state->message_state == MSG_BODY || state->message_state == MSG_CONTENT_DISPOSITION) && (state->octetstream == 0 || state->realbinary > 0) ) return 0;
 
    /* base64 decode buffer */
 

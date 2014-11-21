@@ -77,6 +77,8 @@ double evaluateTokens(struct session_data *sdata, struct _state *state, struct _
    int has_embed_image=0, found_on_rbl=0, surbl_match=0, n_tokens=0;
 
 
+   if(cfg->debug == 1) printf("num of tokens: %ld\n", state->n_token);
+
    if(cfg->penalize_embed_images == 1 && findnode(state->token_hash, "src+cid")){
       addnode(state->token_hash, "EMBED*", REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
       has_embed_image = 1;

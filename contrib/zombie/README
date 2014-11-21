@@ -12,6 +12,7 @@ postgrey_create_graph.sh: create image from RRD file
 postgrey_log.pl: push hourly postgrey data to history database
 postgrey_push_to_rrd.pl: push hourly postgrey data to RRD file
 postgrey_whitelist_*: postgrey whitelists
+postgrey_blacklist_*: postgrey blacklists
 zombie.hosts.1: list of some zombie hosts
 zombie.hosts.2: list of some zombie hosts
 

@@ -100,6 +100,34 @@ sub read_clients_whitelists($)
     $self->{postgrey}{whitelist_cidr}    = \@whitelist_cidr;
 }
 
+sub read_clients_blacklists($)
+{
+    my ($self) = @_;
+
+    my @blacklist_clients = ();
+
+    for my $f (@{$self->{postgrey}{blacklist_clients_files}}) {
+        
+        if(open(CLIENTS, $f)) {
+            while(<CLIENTS>) {
+                s/#.*$//; s/^\s+//; s/\s+$//; next if $_ eq '';
+                if(/^\/(\S+)\/$/) {
+                    # regular expression
+                    push @blacklist_clients, qr{$1}i;
+                }
+            }
+        }
+        else {
+            # do not warn about .local file: maybe the user just doesn't have one
+            warn "can't open $f: $!\n" unless $f =~ /\.local$/;
+        }
+        close(CLIENTS);
+    }
+
+    $self->{postgrey}{blacklist_clients} = \@blacklist_clients;
+}
+
+
 sub read_recipients_whitelists($)
 {
     my ($self) = @_;
@@ -371,6 +399,15 @@ sub smtpd_access_policy($$)
     if(defined $attr->{policy_test_time}) { $now = $attr->{policy_test_time} }
 
 
+    # blacklists
+    for my $w (@{$self->{postgrey}{blacklist_clients}}) {
+        if($attr->{client_name} =~ $w) {
+            $self->mylog_action($attr, 'block', 'client blacklist');
+            return 'REJECT';
+        }
+    }
+
+
     for my $z (@{$self->{postgrey}{zombie_regexps}}) {
        if($attr->{client_name} =~ $z) {
           $zombie = 1;
@@ -387,7 +424,6 @@ sub smtpd_access_policy($$)
        $self->mylog(1, "would GREYLIST " . $attr->{client_name});
        return 'DUNNO';
     }
-
 
     # whitelists
     for my $w (@{$self->{postgrey}{whitelist_clients}}) {
@@ -654,6 +690,9 @@ sub main()
             whitelist_clients_files    => $opt{'whitelist-clients'} ||
                 [ "$CONFIG_DIR/postgrey_whitelist_clients" ,
                   "$CONFIG_DIR/postgrey_whitelist_clients.local" ],
+            blacklist_clients_files    => $opt{'blacklist-clients'} ||
+                [ "$CONFIG_DIR/postgrey_blacklist_clients" ,
+                  "$CONFIG_DIR/postgrey_blacklist_clients.local" ],
             whitelist_recipients_files => $opt{'whitelist-recipients'} ||
                 [ "$CONFIG_DIR/postgrey_whitelist_recipients" ],
             zombie_regexp_file => "$CONFIG_DIR/zombie.regexp",
@@ -673,6 +712,9 @@ sub main()
     $server->read_recipients_whitelists();
     $server->read_reverse_hostname_regexps();
 
+    # read blacklist
+    $server->read_clients_blacklists();
+
     # --privacy requires Digest::SHA1
     if($opt{'privacy'}) {
         require Digest::SHA1;
@@ -691,8 +733,9 @@ sub main()
 # reload whitelists on HUP
 sub sig_hup {
     my $self = shift;
-    $self->mylog(1, "HUP received: reloading whitelists...");
+    $self->mylog(1, "HUP received: reloading lists...");
     $self->read_clients_whitelists();
+    $self->read_clients_blacklists();
     $self->read_recipients_whitelists();
     $self->read_reverse_hostname_regexps();
 }
@@ -859,6 +902,7 @@ B<postgrey> [I<options>...]
      --exim              don't reuse a socket for more than one query (exim compatible)
      --whitelist-clients=FILE     default: /etc/postfix/postgrey_whitelist_clients
      --whitelist-recipients=FILE  default: /etc/postfix/postgrey_whitelist_recipients
+     --blacklist-clients=FILE     default: /etc/postfix/postgrey_blacklist_clients
      --auto-whitelist-clients=N   whitelist host after first successful delivery
                                   N is the minimal count of mails before a client is 
                                   whitelisted (turned on by default with value 5)
@@ -985,6 +1029,20 @@ CIDR-syle network. Example: 192.168.1.0/24
 anything that matches C<regexp> (the full address is matched).
 
 =back
+
+=head2 Blacklists
+
+Blacklists allow you to specify client hostname patterns, for
+which rejecting should be done. Per default postgrey will read the
+following files:
+
+ /etc/postfix/postgrey_blacklist_clients
+
+The format of postgrey_blacklist_clients is the same as for
+postgrey_whitelist_clients.
+
+You can specify alternative paths with the --blacklist-x options.
+
 
 =head2 Auto-whitelisting clients
 

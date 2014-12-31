@@ -3475,7 +3475,7 @@ fi
 echo "\"Configure command: ./configure $PARAMS\"" >> $CONFIGURE_PARAMS_FILE
 
 
-SUBDIRS="src "
+SUBDIRS="src etc init.d util"
 
 
 

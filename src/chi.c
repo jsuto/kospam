@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <clapf.h>
 
 #ifdef HAVE_GSL
 
@@ -33,8 +34,8 @@ double fAdjustedProp, fAdjustedChi, fM;
 
 double factorial(int x);
 void makeAdjustments(double fChi, int iDF, double fESF);
-double chi2pFewTokens(double fChi, double iChiDF, double fESF);
-double chi2pManyTokens(double fChi, int iDF, double fESF);
+double chi2p_few_tokens(double fChi, double iChiDF, double fESF);
+double chi2p_many_tokens(double fChi, int iDF, double fESF);
 
 
 /*
@@ -56,7 +57,7 @@ double factorial(int x){
  * inverse chi square function with a small degrees of freedom (< 25-30) value
  */
 
-double chi2pFewTokens(double fChi, double iChiDF, double fESF){
+double chi2p_few_tokens(double fChi, double iChiDF, double fESF){
    int i;
    double fAdjustedProduct, iActualSize, fEffectiveSize, fSum;
 
@@ -104,7 +105,7 @@ void makeAdjustments(double fChi, int iDF, double fESF){
  * inverse chi square function for greater degrees of freedom values
  */
 
-double chi2pManyTokens(double fChi, int iDF, double fESF){
+double chi2p_many_tokens(double fChi, int iDF, double fESF){
    int i;
    double fSum, fTerm;
 
@@ -136,9 +137,9 @@ double chi2pManyTokens(double fChi, int iDF, double fESF){
 
 double chi2inv(double x, double df, double esf){
    if(df * esf > 25)
-      return chi2pManyTokens(x, df, esf);
+      return chi2p_many_tokens(x, df, esf);
    else
-      return chi2pFewTokens(x, df, esf);
+      return chi2p_few_tokens(x, df, esf);
 }
 
 /*
@@ -169,4 +170,70 @@ double chi2inv_old(double x, int df, double esf){
 }
 
 #endif
+
+
+double get_spam_probability(struct node *xhash[], int *deviating_tokens, struct __config *cfg){
+   int i, n_tokens=0;
+   struct node *q;
+   double H, S, I, ln2, ln_q, ln_p;
+   FLOAT P = {1.0, 0}, Q = {1.0, 0};
+   int e;
+
+   /*
+    * code copied from the bogofilter project
+    */
+
+   for(i=0; i<MAXHASH; i++){
+      q = xhash[i];
+      while(q != NULL){
+
+         if(DEVIATION(q->spaminess) >= cfg->exclusion_radius){
+
+            /*
+             * spaminess:     P = (1-p1) * (1-p2) * .... * (1-pn)
+             * non-spaminess: Q = p1 * p2 * .... *pn
+             */
+
+            n_tokens++;
+
+            Q.mant *= q->spaminess;
+            if(Q.mant < 1.0e-200) {
+               Q.mant = frexp(Q.mant, &e);
+               Q.exp += e;
+            }
+
+            P.mant *= 1 - q->spaminess;
+            if(P.mant < 1.0e-200) {
+               P.mant = frexp(P.mant, &e);
+               P.exp += e;
+            }
+
+            if(cfg->debug == 1) printf("%s (%llu) %.4f %.0f/%.0f\n", (char *)q->str, q->key, q->spaminess, q->nham, q->nspam);
+         }
+
+         q = q->r;
+
+      }
+   }
+
+   *deviating_tokens = n_tokens;
+
+   ln2 = log(2.0);
+   ln_q = (log(Q.mant) + Q.exp * ln2) * cfg->esf_h;
+   ln_p = (log(P.mant) + P.exp * ln2) * cfg->esf_s;
+
+#ifdef HAVE_GSL
+   H = gsl_chi2inv(-2.0 * ln_q, 2.0 * (float)n_tokens * cfg->esf_h);
+   S = gsl_chi2inv(-2.0 * ln_p, 2.0 * (float)n_tokens * cfg->esf_s);
+#else
+   H = chi2inv(-2.0 * ln_q, 2.0 * (float)n_tokens, cfg->esf_h);
+   S = chi2inv(-2.0 * ln_p, 2.0 * (float)n_tokens, cfg->esf_s);
+#endif
+   if(cfg->debug == 1) printf("spam=%f, ham=%f, esf_h: %f, esf_s: %f\n", H, S, cfg->esf_h, cfg->esf_s);
+
+   I = (1 + H - S) / 2.0;
+
+   return I;
+}
+
 

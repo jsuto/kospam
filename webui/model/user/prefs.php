@@ -2,44 +2,93 @@
 
 class ModelUserPrefs extends Model {
 
-   public function getUserPrefs($db_session, $username = '') {
+   public function get_user_preferences($username = '') {
       if($username == "") { return 0; }
 
-      $query = $db_session->query("select * from prefs where username='" . $db_session->escape($username) . "'");
+      $session = Registry::get('session');
 
-      if(isset($query->row['pagelen'])) { $_SESSION['pagelen'] = $query->row['pagelen']; } else { $_SESSION['pagelen'] = PAGE_LEN; }
-      if(isset($query->row['lang'])) { $_SESSION['lang'] = $query->row['lang']; } else { $_SESSION['lang'] = LANG; }
-      if(isset($query->row['train_global'])) { $_SESSION['train_global'] = $query->row['train_global']; } else { $_SESSION['train_global'] = 0; }
+      $query = $this->db->query("SELECT * FROM " . TABLE_USER_SETTINGS . " WHERE username=?", array($username));
+
+      if(isset($query->row['pagelen'])) { $session->set("pagelen", $query->row['pagelen']); } else { $session->set("pagelen", PAGE_LEN); }
+      if(isset($query->row['theme'])) { $session->set("theme", $query->row['theme']); } else { $session->set("theme", THEME); }
+      if(isset($query->row['lang'])) { $session->set("lang", $query->row['lang']); } else { $session->set("lang", DEFAULT_LANG); }
 
       return 1;
    }
 
 
-   public function setUserPrefs($db_session, $username = '', $prefs = array() ) {
+   public function set_user_preferences($username = '', $prefs = array() ) {
 
-      if(!isset($prefs['pagelen']) || !is_numeric($prefs['pagelen']) || $prefs['pagelen'] < 10 || $prefs['pagelen'] > 100
-         || !isset($prefs['lang']) || strlen($prefs['lang']) != 2 || !file_exists(DIR_LANGUAGE . $prefs['lang']) ) { return 1; }
+      if(!isset($prefs['pagelen']) || !is_numeric($prefs['pagelen']) || $prefs['pagelen'] < 10 || $prefs['pagelen'] > 1000
+         || !isset($prefs['theme']) || !preg_match("/^([a-zA-Z0-9\-\_]+)$/", $prefs['theme']) || !file_exists(DIR_THEME . $prefs['theme']) ) { return 1; }
 
-      if(Registry::get('admin_user') == 0) { $prefs['global_train'] = 0; }
+      $session = Registry::get('session');
 
-      $query = $db_session->query("select count(*) as num from prefs where username='" . $db_session->escape($username) . "'");
+      $query = $this->db->query("SELECT COUNT(*) AS num FROM " . TABLE_USER_SETTINGS . " WHERE username=?", array($username));
 
       if((int)@$query->row['num'] == 1) {
-         $query = $db_session->query("update prefs set lang='" . $db_session->escape($prefs['lang']) . "', pagelen=" . (int)@$prefs['pagelen'] . ", train_global=" . (int)@$prefs['global_train'] . " where username='" . $db_session->escape($username) . "'");
+         $query = $this->db->query("UPDATE " . TABLE_USER_SETTINGS . " SET pagelen=?, theme=?, lang=? WHERE username=?", array((int)@$prefs['pagelen'], $prefs['theme'], $prefs['lang'], $username));
       }
       else {
-         $query = $db_session->query("insert into prefs (username, pagelen, lang, train_global) values('" . $db_session->escape($username) . "', " . (int)@$prefs['pagelen'] . ", '" . $db_session->escape($prefs['lang']) . "', " . (int)@$prefs['global_train'] . ")");
+         $query = $this->db->query("INSERT INTO " . TABLE_USER_SETTINGS . " (username, pagelen, theme, lang) VALUES(?,?,?,?)", array($username, (int)@$prefs['pagelen'], $prefs['theme'], $prefs['lang']));
       }
 
 
-      $_SESSION['pagelen'] = $prefs['pagelen'];
-      $_SESSION['lang'] = $prefs['lang'];
-      $_SESSION['train_global'] = (int)@$prefs['global_train'];
+      $session->set("pagelen", $prefs['pagelen']);
+      $session->set("theme", $prefs['theme']);
+      $session->set("lang", $prefs['lang']);
 
       LOGGER("set user preference", $username);
 
       return 1;
    }
+
+
+
+   public function get_ga_settings($username = '') {
+      $data = array('ga_enabled' => 0, 'ga_secret' => '');
+
+      if($username == ""){ return $data; }
+
+      $GA = new PHPGangsta_GoogleAuthenticator();
+
+      $query = $this->db->query("SELECT ga_enabled, ga_secret FROM " . TABLE_USER_SETTINGS . " WHERE username=?", array($username));
+
+      if(isset($query->row['ga_enabled'])) {
+         $data['ga_enabled'] = $query->row['ga_enabled'];
+         $data['ga_secret'] = $query->row['ga_secret'];
+
+         if($data['ga_secret'] == '') {
+            $data['ga_secret'] = $GA->createSecret();
+            $this->update_ga_secret($username, $data['ga_secret']);
+         }
+      }
+      else {
+         $query = $this->db->query("INSERT INTO " . TABLE_USER_SETTINGS . " (username, ga_enabled, ga_secret) VALUES(?,0,?)", array($username, $GA->createSecret()));
+      }
+
+
+      return $data;
+   }
+
+
+   public function update_ga_secret($username = '', $ga_secret = '') {
+      if($username == "" || $ga_secret == "") { return 0; }
+
+      $query = $this->db->query("UPDATE " . TABLE_USER_SETTINGS . " SET ga_secret=? WHERE username=?", array($ga_secret, $username));
+
+      return 1;
+   }
+
+
+   public function toggle_ga($username = '', $ga_enabled = '') {
+      if($username == "" || $ga_enabled < 0 || $ga_enabled > 1) { return 0; }
+
+      $query = $this->db->query("UPDATE " . TABLE_USER_SETTINGS . " SET ga_enabled=? WHERE username=?", array($ga_enabled, $username));
+
+      return 1;
+   }
+
 
 }
 

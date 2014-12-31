@@ -22,8 +22,8 @@ int main(int argc, char **argv){
    if(!F)
       __fatal("open");
 
-   while(fgets(buf, MAXBUFSIZE-1, F)){
-      trimBuffer(buf);
+   while(fgets(buf, sizeof(buf)-1, F)){
+      trim_buffer(buf);
 
       if(buf[0] == 'F' && buf[1] == 'r' && buf[2] == 'o' && buf[3] == 'm' && buf[4] == ' '){
          tot_msgs++;

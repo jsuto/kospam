@@ -5,30 +5,21 @@
 #ifndef _DEFS_H
    #define _DEFS_H
 
-#ifdef HAVE_MYSQL
+#ifdef NEED_MYSQL
   #include <mysql.h>
-#endif
-#ifdef HAVE_PSQL
-  #include <libpq-fe.h>
-#endif
-#ifdef HAVE_SQLITE3
-  #include <sqlite3.h>
-
-   /* for older versions of sqlite3 do not have the sqlite3_prepare_v2() function, 2009.12.30, SJ */
-
-  #if SQLITE_VERSION_NUMBER < 3006000
-    #define sqlite3_prepare_v2 sqlite3_prepare
-  #endif
-
-#endif
-#ifdef HAVE_LIBCLAMAV
-   #include <clamav.h>
+  #include <mysqld_error.h>
 #endif
 #ifdef HAVE_TRE
    #include <tre/tre.h>
    #include <tre/regex.h>
 #endif
+#ifdef HAVE_LIBWRAP
+   #include <tcpd.h>
+#endif
 
+#include <openssl/sha.h>
+#include <openssl/ssl.h>
+#include "tai.h"
 #include "config.h"
 
 #define MSG_UNDEF -1
@@ -36,153 +27,221 @@
 #define MSG_RECEIVED 1
 #define MSG_FROM 2
 #define MSG_TO 3
-#define MSG_SUBJECT 4
-#define MSG_CONTENT_TYPE 5
-#define MSG_CONTENT_TRANSFER_ENCODING 6
-#define MSG_CONTENT_DISPOSITION 7
-
-
-#define MYDB_HEADER_SIZE 8
-#define N_SIZE 16
-#define SEGMENT_SIZE 768
-#define MAX_MYDB_HASH 74713
-#define MAX_TOKENS_TO_UPDATE_IN_1_ROUND 65535
+#define MSG_CC 4
+#define MSG_SUBJECT 5
+#define MSG_CONTENT_TYPE 6
+#define MSG_CONTENT_TRANSFER_ENCODING 7
+#define MSG_CONTENT_DISPOSITION 8
+#define MSG_MESSAGE_ID 9
+#define MSG_REFERENCES 10
+#define MSG_RECIPIENT 11
 
 #define MAXHASH 8171
 
+#define NUM_OF_REGEXES 30
+
 #define BASE64_RATIO 1.33333333
 
-struct node {
-   char str[MAX_TOKEN_LEN];
-   unsigned long long key;
-   double spaminess;
-   double deviation;
-   float nham;
-   float nspam;
-   unsigned long num;
-   char type;
-   struct node *r;
+#define DIGEST_LENGTH SHA256_DIGEST_LENGTH
+
+#define REAL_HAM_TOKEN_PROBABILITY  0.0001
+#define REAL_SPAM_TOKEN_PROBABILITY 0.9999
+
+#define MAX_ITERATIVE_TRAIN_LOOPS 5
+
+#define UNDEF 0
+#define READY 1
+#define BUSY 2
+
+#define MAX_SQL_VARS 20
+
+#define TYPE_UNDEF 0
+#define TYPE_SHORT 1
+#define TYPE_LONG 2
+#define TYPE_LONGLONG 3
+#define TYPE_STRING 4
+
+#define MAXCHILDREN 64
+
+#define DEFAULT_SPAMICITY 0.5
+#define MAX_KEY_VAL 18446744073709551615ULL
+
+#define JUNK_REPLACEMENT_CHAR 'X'
+
+#define NUMBER_OF_GOOD_FROM 10
+
+#define GROUP_SHARED 0
+#define GROUP_MERGED 1
+
+#define T_TOE 0
+#define T_TUM 1
+
+typedef void signal_func (int);
+
+
+struct child {
+   pid_t pid;
+   int messages;
+   int status;
 };
 
-struct mydb {
-   unsigned long long key;
-   unsigned short int nham;
-   unsigned short int nspam;
-   unsigned long ts;
-};
-
-struct mydb_node {
-   unsigned long long key;
-   unsigned short int nham;
-   unsigned short int nspam;
-   unsigned long ts;
-   unsigned int pos;
-   struct mydb_node *r;
-};
-
-struct x_token {
-   unsigned long long token;
-   float spaminess;
-};
 
 struct attachment {
    int size;
-   char type[SMALLBUFSIZE];
-   char filename[SMALLBUFSIZE];
+   char type[TINYBUFSIZE];
+   char shorttype[TINYBUFSIZE];
+   char aname[TINYBUFSIZE];
+   char filename[TINYBUFSIZE];
+   char internalname[TINYBUFSIZE];
+   char digest[2*DIGEST_LENGTH+1];
+   char dumped;
 };
 
-struct list {
-   char s[SMALLBUFSIZE];
-   struct list *r;
-};
 
-struct _state {
-   int message_state;
-   int is_header;
-   int textplain;
-   int texthtml;
-   int octetstream;
-   int message_rfc822;
-   int base64;
-   int has_base64;
-   int utf8;
-   int qp;
-   int htmltag;
-   int style;
-   int ipcnt;
-   int has_to_dump;
-   int fd;
-   int num_of_msword;
-   int num_of_images;
-   int realbinary;
-   int content_type_is_set;
-   int train_mode;
-   unsigned long c_shit;
-   unsigned long l_shit;
-   unsigned long line_num;
-   char ip[SMALLBUFSIZE];
-   char hostname[SMALLBUFSIZE];
-   char miscbuf[MAX_TOKEN_LEN];
-   char qpbuf[MAX_TOKEN_LEN];
-   char attachedfile[RND_STR_LEN+SMALLBUFSIZE];
-   char from[SMALLBUFSIZE];
-   unsigned long n_token;
-   unsigned long n_subject_token;
-   unsigned long n_body_token;
-   unsigned long n_chain_token;
-   unsigned long n_deviating_token;
-   struct list *urls;
-
-   int found_our_signo;
-
-   struct list *boundaries;
-
-   int n_attachments;
-   struct attachment attachments[MAX_ATTACHMENTS];
-
-   struct node *token_hash[MAXHASH];
-};
-
-struct session_data {
-   char ttmpfile[SMALLBUFSIZE], deliveryinfo[SMALLBUFSIZE], clapf_id[SMALLBUFSIZE], xforward[SMALLBUFSIZE], tre, statistically_whitelisted, mynetwork;
-   char mailfrom[SMALLBUFSIZE], rcptto[MAX_RCPT_TO][SMALLBUFSIZE], rcpt_minefield[MAX_RCPT_TO], client_addr[SMALLBUFSIZE], name[SMALLBUFSIZE], domain[SMALLBUFSIZE];
-   char spaminessbuf[MAXBUFSIZE], acceptbuf[SMALLBUFSIZE], subject[SMALLBUFSIZE];
-   char whitelist[MAXBUFSIZE], blacklist[MAXBUFSIZE];
-   unsigned long uid, gid;
-   int fd, tot_len, num_of_rcpt_to, skip_id_check, need_signo_check, trapped_client, rav;
-   int policy_group, blackhole;
-   int from_address_in_mydomain;
-   int need_scan;
-   int training_request;
-   float spaminess;
-   float Nham, Nspam;
-   float __acquire, __parsed, __av, __user, __policy, __training, __minefield, __as, __update, __store, __inject;
-#ifdef HAVE_MAILBUF
-   char mailbuf[MAILBUFSIZE], discard_mailbuf;
-   int message_size, mailpos;
-#endif
-#ifdef HAVE_ESET
-   char eset[SMALLBUFSIZE];
-#endif
-#ifdef HAVE_MYSQL
-   MYSQL mysql;
-#endif
-#ifdef HAVE_PSQL
-   PGconn *psql;
-   char conninfo[SMALLBUFSIZE];
-#endif
-#ifdef HAVE_SQLITE3
-   sqlite3 *db;
-#endif
-#ifdef HAVE_MYDB
-   struct mydb_node *mhash[MAX_MYDB_HASH];
-#endif
-};
+typedef struct {
+   double mant;
+   int exp;
+} FLOAT;
 
 
 struct te {
    unsigned int nham;
    unsigned int nspam;
+};
+
+
+struct node {
+   void *str;
+   uint64 key;
+   double spaminess;
+   double deviation;
+   float nham;
+   float nspam;
+   char type;
+   struct node *r;
+};
+
+
+struct rule {
+#ifdef HAVE_TRE
+   regex_t from;
+   regex_t to;
+   regex_t subject;
+   regex_t attachment_name;
+   regex_t attachment_type;
+#endif
+   int spam;
+   int size;
+   char _size[4];
+   int attachment_size;
+   char _attachment_size[4];
+
+   char *domain;
+   int domainlen;
+
+   int days;
+
+   char emptyfrom, emptyto, emptysubject, emptyaname, emptyatype;
+
+   char *rulestr;
+   char compiled;
+
+   struct rule *r;
+};
+
+
+struct __state {
+   int line_num;
+   int message_state;
+   int is_header;
+   int is_1st_header;
+   int textplain;
+   int texthtml;
+   int message_rfc822;
+   int base64;
+   int utf8;
+   int qp;
+   int htmltag;
+   int style;
+   int skip_html;
+   int has_to_dump;
+   int attachment;
+   int fd;
+   int b64fd;
+   int pushed_pointer;
+   int abufpos;
+   int c_shit;
+   int l_shit;
+   char attachedfile[RND_STR_LEN+SMALLBUFSIZE];
+   char message_id[SMALLBUFSIZE];
+   char miscbuf[MAX_TOKEN_LEN];
+   char qpbuf[MAX_TOKEN_LEN];
+   int n_token;
+   int n_subject_token;
+   int n_deviating_token;
+
+   char filename[TINYBUFSIZE];
+   char type[TINYBUFSIZE];
+   char charset[TINYBUFSIZE];
+
+   char attachment_name_buf[SMALLBUFSIZE];
+   int anamepos;
+
+   struct node *boundaries[MAXHASH];
+
+   int n_attachments;
+   struct attachment attachments[MAX_ATTACHMENTS];
+
+   char from[SMALLBUFSIZE];
+
+   char b_from[SMALLBUFSIZE], b_from_domain[SMALLBUFSIZE], b_subject[MAXBUFSIZE], b_body[BIGBUFSIZE];
+
+   struct node *token_hash[MAXHASH];
+   struct node *url[MAXHASH];
+
+   int found_our_signo;
+   int train_mode;
+
+   int bodylen;
+};
+
+
+struct session_data {
+   char filename[SMALLBUFSIZE];
+   char ttmpfile[SMALLBUFSIZE];
+   char mailfrom[SMALLBUFSIZE], rcptto[MAX_RCPT_TO][SMALLBUFSIZE];
+   char clapf_id[SMALLBUFSIZE];
+   char fromemail[SMALLBUFSIZE];
+   char acceptbuf[SMALLBUFSIZE];
+   char attachments[SMALLBUFSIZE];
+   char ip[SMALLBUFSIZE];
+   char hostname[SMALLBUFSIZE];
+   char whitelist[MAXBUFSIZE], blacklist[MAXBUFSIZE];
+   char name[MAXBUFSIZE], domain[MAXBUFSIZE];
+   char spaminessbuf[MAXBUFSIZE];
+   char tre;
+   unsigned int status;
+   int trapped_client;
+   int from_address_in_mydomain;
+   int tls;
+   int ipcnt;
+   int fd, hdr_len, tot_len, stored_len, num_of_rcpt_to, rav;
+   int statistically_whitelisted;
+   int need_scan, need_signo_check;
+   int policy_group, blackhole;
+   int training_request;
+   int mynetwork;
+   unsigned int uid, gid;
+   float __acquire, __parsed, __av, __user, __policy, __training, __update, __store, __inject, __as, __minefield;
+   float spaminess;
+   float nham, nspam;
+   char bodydigest[2*DIGEST_LENGTH+1];
+   char digest[2*DIGEST_LENGTH+1];
+   time_t now, sent;
+   unsigned int sql_errno;
+#ifdef NEED_MYSQL
+   MYSQL mysql;
+#endif
 };
 
 
@@ -218,7 +277,7 @@ struct memcached_server {
 
    struct sockaddr_in addr;
 
-   char server_ip[16];
+   char server_ip[IPLEN];
    int server_port;
 
    char initialised;
@@ -227,36 +286,53 @@ struct memcached_server {
 
 
 struct __data {
-   struct list *blackhole;
-
-#ifdef HAVE_LIBCLAMAV
-   struct cl_engine *engine;
-#endif
-
+   int quiet;
 #ifdef HAVE_TRE
-   regex_t pregs[NUM_OF_REGEXES];
    int n_regex;
+   regex_t pregs[NUM_OF_REGEXES];
 #endif
+   char starttls[TINYBUFSIZE];
+   struct node *mydomains[MAXHASH];
+
+#ifdef NEED_MYSQL
+   MYSQL_STMT *stmt_generic;
+   MYSQL_STMT *stmt_insert_into_blackhole;
+   MYSQL_STMT *stmt_insert_into_history;
+   MYSQL_STMT *stmt_get_user_data;
+   MYSQL_STMT *stmt_get_policy;
+   MYSQL_STMT *stmt_get_training_signature;
+#endif
+
+   char *sql[MAX_SQL_VARS];
+   int type[MAX_SQL_VARS];
+   int len[MAX_SQL_VARS];
+   unsigned long length[MAX_SQL_VARS];
+   my_bool is_null[MAX_SQL_VARS];
+   my_bool error[MAX_SQL_VARS];
+   int pos;
 
 #ifdef HAVE_MEMCACHED
    struct memcached_server memc;
 #endif
 
+   SSL_CTX *ctx;
+   SSL *ssl;
 };
 
 
 struct __counters {
-   unsigned long long c_rcvd;
-   unsigned long long c_ham;
-   unsigned long long c_spam;
-   unsigned long long c_possible_spam;
-   unsigned long long c_unsure;
-   unsigned long long c_minefield;
-   unsigned long long c_virus;
-   unsigned long long c_zombie;
-   unsigned long long c_fp;
-   unsigned long long c_fn;
-   unsigned long long c_mynetwork;
+   uint64 c_rcvd;
+   uint64 c_ham;
+   uint64 c_spam;
+   uint64 c_possible_spam;
+   uint64 c_unsure;
+   uint64 c_minefield;
+   uint64 c_virus;
+   uint64 c_zombie;
+   uint64 c_fp;
+   uint64 c_fn;
+   uint64 c_mynetwork;
+   uint64 c_size;
 };
 
 #endif /* _DEFS_H */

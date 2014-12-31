@@ -17,16 +17,16 @@ CC = @CC@
 CFLAGS = @CFLAGS@ @CPPFLAGS@
 DEFS = @defs@
 INCDIR = -I. @INCDIR@ @sql_includes@
-LIBDIR = -L. -L$(srcdir)/contrib/spamsum @LIBDIR@ @LDFLAGS@
+LIBDIR = -L. @LIBDIR@ @LDFLAGS@
 LIBS = @LIBS@ @sql_libs@
-CLAPF_USER = @CLAPF_USER@
-CLAPF_GROUP = `@id_bin@ -gn $(CLAPF_USER)`
+RUNNING_USER = @RUNNING_USER@
+RUNNING_GROUP = `@id_bin@ -gn $(RUNNING_USER)`
 
 SUBDIRS = @SUBDIRS@
 
 RECURSIVE_TARGETS = all-recursive install-recursive clean-recursive distclean-recursive
 
-MAKE = `which make`
+MAKE = `which @MAKE@`
 
 INSTALL = @INSTALL@
 
@@ -66,12 +66,17 @@ $(RECURSIVE_TARGETS):
 
 installdirs: mkinstalldirs
 	$(srcdir)/mkinstalldirs \
-		$(DESTDIR)$(bindir) $(DESTDIR)$(sbindir) $(DESTDIR)$(libdir) $(DESTDIR)$(libexecdir)/clapf $(DESTDIR)$(sysconfdir) \
-		$(DESTDIR)$(datarootdir)/clapf $(DESTDIR)$(includedir)/clapf $(DESTDIR)$(localstatedir)/lib/clapf/data \
-		$(DESTDIR)$(localstatedir)/spool
+		$(DESTDIR)$(bindir) $(DESTDIR)$(sbindir) $(DESTDIR)$(libdir) $(DESTDIR)$(libexecdir)/clapf $(DESTDIR)$(datarootdir)/clapf $(DESTDIR)$(sysconfdir) \
+		$(DESTDIR)$(localstatedir)/clapf/queue \
+		$(DESTDIR)$(localstatedir)/clapf/sphinx \
+		$(DESTDIR)$(localstatedir)/clapf/stat \
+		$(DESTDIR)$(localstatedir)/clapf/tmp
 
-	$(INSTALL) -d -m 0755 -o $(CLAPF_USER) -g $(CLAPF_GROUP) $(DESTDIR)$(localstatedir)/run/clapf
-	$(INSTALL) -d -m 0755 -o $(CLAPF_USER) -g $(CLAPF_GROUP) $(DESTDIR)$(localstatedir)/lib/clapf/stat
+	$(INSTALL) -d -m 0755 -o $(RUNNING_USER) -g $(RUNNING_GROUP) $(DESTDIR)$(localstatedir)/run/clapf
+	$(INSTALL) -d -m 0710 -o $(RUNNING_USER) -g $(RUNNING_GROUP) $(DESTDIR)$(localstatedir)/clapf/queue
+	$(INSTALL) -d -m 0750 -o $(RUNNING_USER) -g $(RUNNING_GROUP) $(DESTDIR)$(localstatedir)/clapf/sphinx
+	$(INSTALL) -d -m 0755 -o $(RUNNING_USER) -g $(RUNNING_GROUP) $(DESTDIR)$(localstatedir)/clapf/stat
+	$(INSTALL) -d -m 0711 -o $(RUNNING_USER) -g $(RUNNING_GROUP) $(DESTDIR)$(localstatedir)/clapf/tmp
 
 
 install-am:
@@ -79,12 +84,11 @@ install-am:
 
 uninstall:
 	rm -f \
-		$(DESTDIR)$(bindir)/parsembox $(DESTDIR)$(bindir)/splitmbox $(DESTDIR)$(bindir)/blackhole $(DESTDIR)$(bindir)/spamdrop \
-		$(DESTDIR)$(bindir)/aphash $(DESTDIR)$(sbindir)/clapf $(DESTDIR)$(sbindir)/clapfconf $(DESTDIR)$(libdir)/libclapf.* \
+		$(DESTDIR)$(sbindir)/clapf $(DESTDIR)$(sbindir)/clapfconf $(DESTDIR)$(libdir)/libclapf.* \
 		$(DESTDIR)$(sysconfdir)/clapf.conf
 
 	rm -rf $(DESTDIR)$(libexecdir)/clapf $(DESTDIR)$(includedir)/clapf $(DESTDIR)$(datarootdir)/clapf
-	@echo "I left the $(DESTDIR)$(localstatedir)/lib/clapf directory, remove it for yourself"
+	@echo "I left the $(DESTDIR)$(localstatedir)/clapf directory, remove it for yourself"
 
 
 all-am: Makefile
@@ -98,7 +102,11 @@ clean-generic:
 distclean: distclean-recursive
 	rm -f $(am__CONFIG_DISTCLEAN_FILES)
 	rm -f Makefile
-	rm -f ham.tmp spam.tmp num_of_spam.tmp num_of_ham.tmp tokens.mydb temp.*
 
 distclean-am: clean-am
+
+postinstall:
+	@sh util/postinstall.sh $(RUNNING_USER) $(RUNNING_GROUP) $(sysconfdir) $(localstatedir) $(libexecdir)
+
+
 

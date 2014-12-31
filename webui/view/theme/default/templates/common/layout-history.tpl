@@ -1,51 +1,115 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="hu" lang="hu">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="<?php print DEFAULT_LANG; ?>" lang="<?php print DEFAULT_LANG; ?>">
 
 <head>
-   <title>clapf web UI | <?php print $title; ?></title>
+   <title><?php print $title; ?></title>
    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-   <meta http-equiv="Content-Language" content="en" />
-   <meta name="keywords" content="clapf, webui, web ui, gui, spam, anti-spam, filtering, service" />
-   <meta name="description" content="clapf, webui, web ui, gui, spam, anti-spam, filtering, service" />
+   <meta http-equiv="Content-Language" content="<?php print DEFAULT_LANG; ?>" />
+   <?php if(SITE_KEYWORDS) { ?><meta name="keywords" content="<?php print SITE_KEYWORDS; ?>" /><?php } ?>
+   <?php if(SITE_DESCRIPTION) { ?><meta name="description" content="<?php print SITE_DESCRIPTION; ?>" /><?php } ?>
+   <?php if(PROVIDED_BY) { ?><meta name="author" content="<?php print PROVIDED_BY; ?>" /><?php } ?>
    <meta name="rating" content="general" />
    <meta name="robots" content="all" />
+   <meta http-equiv="x-ua-compatible" content="IE=edge">
 
-   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="/view/theme/default/assets/css/metro-bootstrap.css" rel="stylesheet">
 
-   <link href="bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen">
-   <link href="bootstrap/css/bootstrap-responsive.min.css" rel="stylesheet" media="screen">
-
-   <link rel="stylesheet" type="text/css" href="css/jquery-ui-custom.min.css" />
-   <link rel="stylesheet" type="text/css" href="view/theme/<?php print THEME; ?>/stylesheet/style-<?php print THEME; ?>.css" />
-
-   <script type="text/javascript" src="view/javascript/jquery.min.js"></script>
-   <script type="text/javascript" src="view/javascript/jquery-ui-custom.min.js"></script>
-   <script type="text/javascript" src="view/javascript/bootstrap.min.js"></script>
-   <script type="text/javascript" src="view/javascript/rc-splitter.js"></script>
-   <script type="text/javascript" src="view/javascript/clapf.js"></script>
-
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!-- original location: http://html5shim.googlecode.com/svn/trunk/html5.js -->
+    <!--[if lt IE 9]>
+      <script src="/view/theme/default/assets/js/html5.js"></script>
+      <style>body{padding-top:70px;}</style>
+    <![endif]-->
+	
+    <!-- Fav and touch icons -->
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/view/theme/default/assets/ico/apple-touch-icon-144-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/view/theme/default/assets/ico/apple-touch-icon-114-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/view/theme/default/assets/ico/apple-touch-icon-72-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" href="/view/theme/default/assets/ico/apple-touch-icon-57-precomposed.png">
+    <?php if(BRANDING_FAVICON) { ?><link rel="shortcut icon" href="<?php print BRANDING_FAVICON; ?>" /><?php } ?>
+    
+    <script type="text/javascript" src="/view/javascript/jquery.min.js"></script>
+    <script type="text/javascript" src="/view/javascript/jquery-ui-custom.min.js"></script>
+    <script type="text/javascript" src="/view/javascript/rc-splitter.js"></script>
+    <script type="text/javascript" src="/view/theme/default/assets/js/bootstrap.js"></script>
+    <script type="text/javascript" src="/view/javascript/piler.js"></script>
 </head>
 
-<body class="mybody"<?php if(isset($this->request->get['route']) && $this->request->get['route'] == 'history/history') { ?> onload="Clapf.load_history(); setInterval('Clapf.load_history()', Clapf.history_refresh * 1000);"<?php } ?>>
+<body onload="Piler.add_shortcuts();">
 
-<div id="clapf1" class="container">
-
-   <div id="menu">
-      <?php print $menu; ?>
-   </div>
-
-   <div id="mainscreen" class="up">
-
-      <?php if($title) { ?><h3 class="title"><?php print $title; ?></h3><?php } ?>
-
-      <?php print $content; ?>
-
-   </div> <!-- main -->
-
-   <div id="footer"><?php print $footer; ?></div>
-
-
+<div id="deleteconfirm-modal" class="modal hide fade">
+  <div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" role="dialog" aria-hidden="true"><i class="icon-remove"></i></button>
+    <h3><?php print $text_forward_selected_emails_to; ?></h3>
+  </div>
+  <div class="modal-body">
+    <input type="text" id="restore_address" name="restore_address" />
+  </div>
+  <div class="modal-footer">
+    <a href="#" class="btn" data-dismiss="modal" aria-hidden="true"><?php print $text_close; ?></a>
+    <a href="#" onclick="var addr =  $('#restore_address').val(); if(addr) { Piler.bulk_restore_messages('<?php print $text_restored; ?>', addr); }" class="btn btn-primary" data-dismiss="modal" aria-hidden="true">OK</a>
+  </div>
 </div>
+
+<?php if(!(OUTLOOK == 1 && SHOW_MENU_FOR_OUTLOOK == 0)) { ?>
+    <div id="menu">
+        <?php print $menu; ?>
+    </div>
+<?php } ?>
+
+    <div id="messagebox1" class="alert alert-info lead"></div>
+
+    <div id="piler1" class="container-fluid">
+
+    <div id="searchcontainer">
+         <input type="hidden" name="searchtype" id="searchtype" value="expert" />
+         <input type="hidden" name="history" id="history" value="1" />
+         <input type="hidden" name="sort" id="sort" value="date" />
+         <input type="hidden" name="order" id="order" value="0" />
+         <input type="hidden" name="ref" id="ref" value="" />
+         <input type="hidden" name="prefix" id="prefix" value="" />
+
+         <div class="control-group">
+            <div class="controls row-fluid">
+                <div id="input-span" class="span6">
+                    <label for="_search"><?php print $text_search; ?></label>
+                <input type="text" id="_search" name="_search" placeholder="<?php print $text_enter_search_terms; ?>" />
+                </div>
+                <div class="span6 input-append btn-group">
+                    <button id="button_search" class="btn btn-large btn-danger" onclick="Piler.historyexpert(this); return false;"><i class="icon-search icon-large"></i>&nbsp;<?php print $text_search; ?></button>
+                    <button id="button_expert" class="btn btn-large btn-inverse disabled" onclick="$('#searchpopup1').show();"><?php print $text_advanced_search; ?> &nbsp;<span class="caret"></span></button>
+                    <button id="button_options" class="btn btn-large btn-inverse dropdown-toggle disabled" data-toggle="dropdown"><?php print $text_options; ?> &nbsp;<span class="caret"></span></button>
+                    <ul class="dropdown-menu">
+                        <li><a href="#" onclick="Piler.saved_search_terms('<?php print $text_saved; ?>');"><?php print $text_save; ?></a></li>
+                        <li><a href="#" onclick="Piler.load_saved_search_terms();"><?php print $text_load; ?></a></li>
+                    </ul>
+                </div>
+              </div>
+            </div>
+         </div>
+    </div>
+
+    <div id="mainscreen">
+        <div id="mailleftcontainer">
+        </div>
+        <div id="mailrightcontainer<?php if(ENABLE_FOLDER_RESTRICTIONS == 0) { ?>nofolder<?php } ?>">
+
+            <div id="mailrightcontent">
+              <div id="mailcontframe">
+                <div id="sspinner" class="alert alert-info lead"><i class="icon-spinner icon-spin icon-2x pull-left"></i><?php print $text_working; ?></div>
+                <div id="messagelistcontainer" class="boxlistcontent" style="top:0"> 
+                
+                <?php print $content; ?>
+
+                </div>
+              </div>
+
+          </div>
+
+        </div>
+    </div>
+
+<?php if(TRACKING_CODE) { print TRACKING_CODE; } ?>
 
 </body>
 </html>

@@ -17,111 +17,63 @@ CC = @CC@
 CFLAGS = @CFLAGS@ @CPPFLAGS@
 DEFS = @defs@
 INCDIR = -I. -I.. @INCDIR@ @sql_includes@
-LIBDIR = -L. -L../contrib/spamsum @LIBDIR@ @LDFLAGS@
+LIBDIR = -L. @LIBDIR@ @LDFLAGS@
 LIBS = @LIBS@ @sql_libs@
-##CLAMAV_EXTRA_LIBS = -lclamunrar_iface -lclamunrar
 OBJS = @OBJS@
-USER_OBJ = @user_obj@
 SQL_OBJS = @sql_obj@
-CLAPF_USER = @CLAPF_USER@
-CLAPF_GROUP = `@id_bin@ -gn $(CLAPF_USER)`
+RUNNING_USER = @RUNNING_USER@
+RUNNING_GROUP = `@id_bin@ -gn $(RUNNING_USER)`
 
-CLAPF_VERSION=0
-CLAPF_REVISION=1
-CLAPF_RELEASE=1
-LIBCLAPF_VERSION=$(CLAPF_VERSION).$(CLAPF_REVISION).$(CLAPF_RELEASE)
+PILER_VERSION=0
+PILER_REVISION=1
+PILER_RELEASE=1
+LIBCLAPF_VERSION=$(PILER_VERSION).$(PILER_REVISION).$(PILER_RELEASE)
 
 MAKE = `which make`
 
 INSTALL = @INSTALL@
 
-all: libclapf.a clapf clapfconf splitmbox @parsembox@ @spamdrop@ @preparesql@
-install: install-clapf install-includes install-splitmbox @parsembox_install@ @spamdrop_install@
+all: libclapf.a clapf clapfconf spamdrop splitmbox
+install: install-clapf
 
 
 clapf: clapf.c libclapf.a
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ clapf.c -lclapf $(LIBS) $(LDAP_LIBS) $(LIBDIR) @LDFLAGS@ @libclamav_extra_libs@
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $< -lclapf $(LIBS) $(LIBDIR) @LDFLAGS@ @libclamav_extra_libs@
 
 libclapf.a: $(OBJS) $(SQL_OBJS)
 	ar cr libclapf.a $(OBJS) $(SQL_OBJS)
 	ranlib libclapf.a
-	$(CC) -shared -o libclapf.so.$(LIBCLAPF_VERSION) $(OBJS) $(SQL_OBJS) $(LIBS) $(LDAP_LIBS) @LDFLAGS@
+	$(CC) -shared -o libclapf.so.$(LIBCLAPF_VERSION) $(OBJS) $(SQL_OBJS)
 	ln -sf libclapf.so.$(LIBCLAPF_VERSION) libclapf.so
-	ln -sf libclapf.so.$(LIBCLAPF_VERSION) libclapf.so.$(CLAPF_VERSION)
+	ln -sf libclapf.so.$(LIBCLAPF_VERSION) libclapf.so.$(PILER_VERSION)
 
 
-parsembox: parsembox.c cfg.o misc.o list.o hash.o parser.o parser_utils.o decoder.o score.o chi.o tai.o
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
-
-clapfconf: clapfconf.c cfg.o misc.o tai.o
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LIBDIR)
+clapfconf: clapfconf.c libclapf.a
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $< -lclapf $(LIBS) $(LIBDIR)
 
 spamdrop: spamdrop.c libclapf.a
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ spamdrop.c -lclapf @spamsum_libs@ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $< -lclapf $(LIBS) $(LIBDIR) @LDFLAGS@
 
-splitmbox: splitmbox.c misc.o decoder.o list.o parser.o parser_utils.o hash.o score.o chi.o tai.o
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
-
-aphash: aphash.c misc.o tai.o
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LIBDIR)
-
-prepare-sql: prepare-sql.c libclapf.a
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ prepare-sql.c -lclapf $(LIBS) $(LIBDIR)
-
-mydb_stat mydb_compress mydb_export: %.o mydb.o misc.o hash.o chi.o score.o cfg.o tai.o
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR)
-
-zombietest: zombietest.c misc.o tai.o
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $^ $(LIBS) $(LDAP_LIBS) $(LIBDIR) -ltre
-
-test:
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o spamtest $(srcdir)/test.c -lclapf $(LIBS) $(LDAP_LIBS) @spamsum_libs@ $(LIBDIR) @LDFLAGS@
+splitmbox: splitmbox.c libclapf.a
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $< -lclapf $(LIBS) $(LIBDIR) @LDFLAGS@
 
 %.o: $(srcdir)/%.c
 	$(CC) $(CFLAGS) -fPIC $(INCDIR) $(DEFS) -c $< -o $@
 
 
-install-includes:
-	$(INSTALL) -d $(DESTDIR)$(includedir)
-	$(INSTALL) -d $(DESTDIR)$(includedir)/clapf
-	$(INSTALL) -m 0644 *.h $(DESTDIR)$(includedir)/clapf
-	$(INSTALL) -m 0644 ../clapf-config.h $(DESTDIR)$(includedir)/clapf
-
 install-clapf:
-	$(INSTALL) -d $(DESTDIR)$(bindir)
-	$(INSTALL) -d $(DESTDIR)$(sbindir)
-	$(INSTALL) -d $(DESTDIR)$(libdir)
 	$(INSTALL) -m 0644 libclapf.a $(DESTDIR)$(libdir)
 	$(INSTALL) -m 0755 libclapf.so.$(LIBCLAPF_VERSION) $(DESTDIR)$(libdir)
 	(cd $(DESTDIR)$(libdir) && ln -sf libclapf.so.$(LIBCLAPF_VERSION) libclapf.so)
-	(cd $(DESTDIR)$(libdir) && ln -sf libclapf.so.$(LIBCLAPF_VERSION) libclapf.so.$(CLAPF_VERSION))
-
-	$(INSTALL) -d $(DESTDIR)$(libexecdir)/clapf
-
-	$(INSTALL) -d $(DESTDIR)$(datarootdir)/clapf
+	(cd $(DESTDIR)$(libdir) && ln -sf libclapf.so.$(LIBCLAPF_VERSION) libclapf.so.$(PILER_VERSION))
 
 	$(INSTALL) -m 0755 clapf $(DESTDIR)$(sbindir)
 	$(INSTALL) -m 0755 clapfconf $(DESTDIR)$(sbindir)
-
-install-spamdrop: spamdrop
 	$(INSTALL) -m 0755 spamdrop $(DESTDIR)$(bindir)
-	chown $(CLAPF_USER):$(CLAPF_GROUP) $(DESTDIR)$(bindir)/spamdrop
-	chmod +s $(DESTDIR)$(bindir)/spamdrop
-	$(INSTALL) -m 0755 aphash $(DESTDIR)$(bindir)
-	(cd $(DESTDIR)$(bindir); ln -sf spamdrop blackhole)
-
-install-splitmbox: splitmbox
 	$(INSTALL) -m 0755 splitmbox $(DESTDIR)$(bindir)
 
-install-parsembox:
-	$(INSTALL) -m 0755 parsembox $(DESTDIR)$(bindir)
-	$(INSTALL) -d $(DESTDIR)$(libexecdir)/clapf
-	$(INSTALL) -m 0755 $(srcdir)/prepare-sql $(DESTDIR)$(libexecdir)/clapf
-
 clean:
-	rm -f *.o *.a libclapf.so* clapf clapfconf parsembox splitmbox spamdrop \
-		spamtest aphash prepare-sql mydb_stat mydb_compress mydb_export \
-		zombietest
+	rm -f *.o *.a libclapf.so* clapf clapfconf spamdrop splitmbox
 
 distclean: clean
 	rm -f Makefile

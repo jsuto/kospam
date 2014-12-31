@@ -3,214 +3,278 @@
  */
 
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
-#include <sys/time.h>
+#include <string.h>
 #include <sys/types.h>
-#include <sys/stat.h>
+#include <sys/socket.h>
+#include <sys/un.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #include <fcntl.h>
-#include <time.h>
 #include <unistd.h>
+#include <math.h>
+#include <time.h>
+#include <ctype.h>
 #include <clapf.h>
 
 
-/*
- * create path from numeric uid or username
- */
+float calc_token_spamicity(float NHAM, float NSPAM, unsigned int nham, unsigned int nspam, float rob_s, float rob_x){
+   float spamicity=DEFAULT_SPAMICITY;
+   int n;
 
-void get_queue_path(struct session_data *sdata, char **path, struct __config *cfg){
-   struct stat st;
+   n = nham + nspam;
+   if(n <= 0) return DEFAULT_SPAMICITY;
 
-   memset(*path, 0, SMALLBUFSIZE);
+   spamicity = nspam * NHAM / (nspam * NHAM + nham * NSPAM);
+   spamicity = (rob_s * rob_x + n * spamicity) / (rob_s + n);
 
-#ifdef HAVE_UID_SPLITTING
-   unsigned int h, i, plus1, plus1b;
+   if(spamicity < REAL_HAM_TOKEN_PROBABILITY) spamicity = REAL_HAM_TOKEN_PROBABILITY;
+   if(spamicity > REAL_SPAM_TOKEN_PROBABILITY) spamicity = REAL_SPAM_TOKEN_PROBABILITY;
 
-   if(sdata->uid <= 0) return;
-
-   h = sdata->uid;
-
-   i = h % 10000;
-   if(i > 0) plus1 = 1;
-   else plus1 = 0;
-
-   i = h % 100;
-   if(i > 0) plus1b = 1;
-   else plus1b = 0;
-
-   snprintf(*path, SMALLBUFSIZE-1, "%s/%d/%d/%ld", cfg->queuedir, 10000 * ((h / 10000) + plus1), 100 * ((h / 100) + plus1b), sdata->uid);
-
-   /* create target directory if it doesn't exist */
-
-   if(stat(*path, &st) != 0){
-      snprintf(*path, SMALLBUFSIZE-1, "%s/%d", cfg->queuedir, 10000 * ((h / 10000) + plus1));
-      mkdir(*path, 0755);
-
-      snprintf(*path, SMALLBUFSIZE-1, "%s/%d/%d", cfg->queuedir, 10000 * ((h / 10000) + plus1), 100 * ((h / 100) + plus1b));
-      mkdir(*path, 0755);
-
-      snprintf(*path, SMALLBUFSIZE-1, "%s/%d/%d/%ld", cfg->queuedir, 10000 * ((h / 10000) + plus1), 100 * ((h / 100) + plus1b), sdata->uid);
-      mkdir(*path, 0755);
-
-      chmod(*path, S_IRUSR|S_IWUSR|S_IXUSR|S_IRGRP|S_IWGRP|S_IXGRP);
-   }
-#else
-   snprintf(*path, SMALLBUFSIZE-1, "%s/%s/%c/%s", cfg->queuedir, sdata->domain, sdata->name[0], sdata->name);
-
-   /* create target directory if it doesn't exist */
-
-   if(stat(*path, &st) != 0){
-      snprintf(*path, SMALLBUFSIZE-1, "%s/%s", cfg->queuedir, sdata->domain);
-      mkdir(*path, 0755);
-
-      snprintf(*path, SMALLBUFSIZE-1, "%s/%s/%c", cfg->queuedir, sdata->domain, sdata->name[0]);
-      mkdir(*path, 0755);
-
-      snprintf(*path, SMALLBUFSIZE-1, "%s/%s/%c/%s", cfg->queuedir, sdata->domain, sdata->name[0], sdata->name);
-      mkdir(*path, 0755);
-
-      chmod(*path, S_IRUSR|S_IWUSR|S_IXUSR|S_IRGRP|S_IWGRP|S_IXGRP);
-   }
-
-#endif
+   return spamicity;
 }
 
 
 /*
- * train this message
+ * calculate token probabilities
  */
 
-void do_training(struct session_data *sdata, struct _state *state, char *email, char *acceptbuf, struct __config *cfg){
-#ifndef HAVE_MYDB
-   int i, is_spam = 0;
-   char *p, path[SMALLBUFSIZE], qpath[SMALLBUFSIZE], gpath[SMALLBUFSIZE];
-   struct stat st;
+void calcnode(struct node *xhash[], float nham, float nspam, struct __config *cfg){
+   int i;
+   struct node *q;
 
+   for(i=0;i<MAXHASH;i++){
+      q = xhash[i];
+      while(q != NULL){
 
-   snprintf(acceptbuf, SMALLBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata->ttmpfile, email);
-   if(strcasestr(sdata->rcptto[0], "+spam@") || strncmp(email, "spam@", 5) == 0) is_spam = 1;
-
-   p = &path[0];
-   get_queue_path(sdata, &p, cfg);
-
-
-   if(is_spam == 1){
-      snprintf(qpath, SMALLBUFSIZE-1, "%s/h.%s", path, sdata->clapf_id);
-   } else {
-      snprintf(qpath, SMALLBUFSIZE-1, "%s/s.%s", path, sdata->clapf_id);
-   }
-
-   if(stat(qpath, &st) == 0 && S_ISREG(st.st_mode) == 1){
-
-      /* check if this is an admin training from the webui to the global database, 2010.02.16, SJ */
-
-      if(cfg->group_type == 1){
-         snprintf(gpath, SMALLBUFSIZE-1, "%s/g.%s", path, sdata->clapf_id);
-         if(stat(gpath, &st) == 0){
-            syslog(LOG_PRIORITY, "%s: global training %s", sdata->ttmpfile, gpath);
-            sdata->gid = 0;
-            unlink(gpath);
+         if(q->nham >= 0 && q->nspam >= 0 && (q->nham + q->nspam) > 0){
+            q->spaminess = calc_token_spamicity(nham, nspam, q->nham, q->nspam, cfg->rob_s, cfg->rob_x);
+            q->deviation = DEVIATION(q->spaminess);
          }
+
+         q = q->r;
       }
-
-      i = trainMessage(sdata, state, MAX_ITERATIVE_TRAIN_LOOPS, is_spam, state->train_mode, cfg);
-      syslog(LOG_PRIORITY, "%s: training %s in %d rounds", sdata->ttmpfile, qpath, i);
    }
-   else {
-      syslog(LOG_PRIORITY, "%s: invalid signature: %s", sdata->ttmpfile, qpath);
-   }
-
-#endif
-
 }
 
 
-void saveMessageToQueue(struct session_data *sdata, float spaminess, struct __config *cfg){
-   int touch;
-   char *p, path[SMALLBUFSIZE], qpath[SMALLBUFSIZE];
+/*
+ * query the spaminess values at once
+ */
 
-   if(strlen(sdata->name) <= 1) return;
+int qry_spaminess(struct session_data *sdata, struct __state *state, char type, struct __config *cfg){
+   int i, n=0;
+   char s[SMALLBUFSIZE];
+   struct node *q;
+   buffer *query;
 
-#ifndef HAVE_STORE
-   if(cfg->store_metadata == 0) return;
-   if(cfg->store_only_spam == 1 && spaminess < cfg->spam_overall_limit) return;
-#endif
+   query = buffer_create(NULL);
+   if(!query) return 0;
 
-   p = &path[0];
-   get_queue_path(sdata, &p, cfg);
+   snprintf(s, sizeof(s)-1, "SELECT token, nham, nspam FROM %s WHERE token in(%llu", SQL_TOKEN_TABLE, APHash(state->from));
+   buffer_cat(query, s);
 
-   if(sdata->rav == AVIR_VIRUS)
-      snprintf(qpath, SMALLBUFSIZE-1, "%s/v.%s", path, sdata->ttmpfile);
-   else if(spaminess >= cfg->spam_overall_limit)
-      snprintf(qpath, SMALLBUFSIZE-1, "%s/s.%s", path, sdata->ttmpfile);
+
+   for(i=0; i<MAXHASH; i++){
+      q = state->token_hash[i];
+      while(q != NULL){
+
+         if( (type == 1 && q->type == 1) || (type == 0 && q->type == 0) ){
+            n++;
+            snprintf(s, sizeof(s)-1, ",%llu", APHash(q->str));
+
+            buffer_cat(query, s);
+         }
+
+         q = q->r;
+      }
+   }
+
+   if(sdata->gid > 0){
+      snprintf(s, sizeof(s)-1, ") AND (uid=0 OR uid=%d)", sdata->gid);
+      buffer_cat(query, s);
+   }
    else
-      snprintf(qpath, SMALLBUFSIZE-1, "%s/h.%s", path, sdata->ttmpfile);
+      buffer_cat(query, ") AND uid=0");
 
-#ifdef HAVE_STORE
-   if(sdata->rav != AVIR_VIRUS && (cfg->store_metadata == 0 || (cfg->store_only_spam == 1 && spaminess < cfg->spam_overall_limit)) ) goto TOUCH;
-#endif
+   update_hash(sdata, query->data, state->token_hash);
+
+   buffer_destroy(query);
+
+   calcnode(state->token_hash, sdata->nham, sdata->nspam, cfg);
+
+   return 1;
+}
 
 
-#ifdef STORE_FS
-   struct stat st;
+/*
+ * update token timestamps
+ */
 
-   link(sdata->ttmpfile, qpath);
+int update_token_timestamps(struct session_data *sdata, struct node *xhash[]){
+   int i, n=0;
+   char s[SMALLBUFSIZE];
+   struct node *q;
+   buffer *query;
 
-   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: saving to queue: %s", sdata->ttmpfile, qpath);
+   query = buffer_create(NULL);
+   if(!query) return n;
 
-   if(stat(qpath, &st) == 0){
-      if(S_ISREG(st.st_mode) == 1) chmod(qpath, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+   snprintf(s, sizeof(s)-1, "UPDATE %s SET timestamp=%ld WHERE token in (", SQL_TOKEN_TABLE, sdata->now);
+
+   buffer_cat(query, s);
+
+   for(i=0; i<MAXHASH; i++){
+      q = xhash[i];
+      while(q != NULL){
+         if(q->spaminess != DEFAULT_SPAMICITY){
+            if(n) snprintf(s, sizeof(s)-1, ",%llu", q->key);
+            else snprintf(s, sizeof(s)-1, "%llu", q->key);
+            buffer_cat(query, s);
+            n++;
+         }
+
+         q = q->r;
+      }
    }
 
-   return;
-#endif
 
-#ifdef STORE_NFS
-   char buf[MAXBUFSIZE];
-   int n, fd, fd2;
-   struct stat st;
+   if(sdata->gid > 0)
+      snprintf(s, sizeof(s)-1, ") AND (uid=0 OR uid=%d)", sdata->gid);
+   else
+      snprintf(s, sizeof(s)-1, ") AND uid=0");
 
-   /* copy here */
+   buffer_cat(query, s);
 
-   fd = open(sdata->ttmpfile, O_RDONLY);
-   if(fd == -1){
-      syslog(LOG_PRIORITY, "%s: cannot open to store", sdata->ttmpfile);
-      return;
+   if(mysql_real_query(&(sdata->mysql), query->data, strlen(query->data)) != 0){
+      n = -1;
    }
 
-   fd2 = open(qpath, O_CREAT|O_EXCL|O_RDWR|O_TRUNC, S_IRUSR|S_IWUSR);
-   if(fd2 == -1){
-      close(fd);
-      syslog(LOG_PRIORITY, "%s: cannot open for save: %s", sdata->ttmpfile, qpath);
-      return;
-   }
+   buffer_destroy(query);
 
-   /* copy tmpfile to NFS */
-
-   while((n = read(fd, buf, MAXBUFSIZE)) > 0){
-      write(fd2, buf, n);
-   }
-
-   close(fd);
-   close(fd2);
-
-   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: saving to queue: %s", sdata->ttmpfile, qpath);
-
-   if(stat(qpath, &st) == 0){
-      if(S_ISREG(st.st_mode) == 1) chmod(qpath, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
-   }
-
-   return;
-#endif
-
-#ifdef HAVE_STORE
-TOUCH:
-#endif
-
-   /* emulating 'touch' */
-
-   touch = open(qpath, O_CREAT|O_EXCL, S_IRUSR|S_IWUSR);
-   if(touch != -1) close(touch);
+   return n;
 
 }
+
+
+double evaluate_tokens(struct session_data *sdata, struct __state *state, struct __config *cfg){
+   int n_tokens=0;
+   float spaminess=DEFAULT_SPAMICITY;
+   //int has_embed_image=0;
+
+   if(cfg->debug == 1) printf("num of tokens: %d\n", state->n_token);
+
+   if(cfg->penalize_embed_images == 1 && findnode(state->token_hash, "src+cid")){
+      addnode(state->token_hash, "EMBED*", REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
+      //has_embed_image = 1;
+   }
+
+
+   /* calculate spaminess based on the token pairs and other special tokens */
+
+   qry_spaminess(sdata, state, 1, cfg);
+
+   add_penalties(sdata, state, cfg);
+
+   spaminess = get_spam_probability(state->token_hash, &n_tokens, cfg);
+
+   state->n_deviating_token = n_tokens;
+
+   if(sdata->training_request == 1) return spaminess;
+
+
+   if(cfg->debug == 1) printf("phrase: %.4f\n", spaminess);
+
+   if(spaminess >= cfg->spam_overall_limit || spaminess <= cfg->max_ham_spamicity) goto END_OF_EVALUATION;
+
+   /* query the single tokens, then use the 'mix' for calculation */
+
+   qry_spaminess(sdata, state, 0, cfg);
+   spaminess = get_spam_probability(state->token_hash, &n_tokens, cfg);
+   if(cfg->debug == 1) printf("mix: %.4f\n", spaminess);
+   if(spaminess >= cfg->spam_overall_limit || spaminess <= cfg->max_ham_spamicity) goto END_OF_EVALUATION;
+
+
+   /* if we are still unsure, consult blacklists */
+
+   check_rbl_lists(sdata, state, cfg->surbl_domain, cfg);
+
+   spaminess = get_spam_probability(state->token_hash, &n_tokens, cfg);
+   if(cfg->debug == 1) printf("mix after blacklists: %.4f\n", spaminess);
+
+
+
+END_OF_EVALUATION:
+
+
+   /* if the message is unsure, try to determine if it's a spam, 2008.01.09, SJ */
+   /*
+   *if(spaminess > cfg->max_ham_spamicity && spaminess < cfg->spam_overall_limit)
+   *   spaminess = applyPostSpaminessFixes(spaminess, found_on_rbl, surbl_match, has_embed_image, state->c_shit, state->l_shit, cfg);
+   */
+
+
+   /* fix spaminess value if we have to */
+
+   if(spaminess < 0) spaminess = REAL_HAM_TOKEN_PROBABILITY;
+   if(spaminess > 1) spaminess = REAL_SPAM_TOKEN_PROBABILITY;
+
+   return spaminess;
+}
+
+
+float run_statistical_check(struct session_data *sdata, struct __state *state, struct __config *cfg){
+   char buf[MAXBUFSIZE];
+   float ham_from=0, spam_from=0;
+   float spaminess = DEFAULT_SPAMICITY;
+   struct te te;
+
+   /* query message counters */
+
+   if(cfg->group_type == GROUP_SHARED)
+      snprintf(buf, sizeof(buf)-1, "SELECT nham, nspam FROM %s WHERE uid=0", SQL_MISC_TABLE);
+   else
+      snprintf(buf, sizeof(buf)-1, "SELECT nham, nspam FROM %s WHERE uid=0 OR uid=%d", SQL_MISC_TABLE, sdata->gid);
+
+   te = get_ham_spam_counters(sdata, buf);
+   sdata->nham = te.nham;
+   sdata->nspam = te.nspam;
+
+   if(sdata->nham + sdata->nspam == 0){
+      if(cfg->verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: %s", sdata->ttmpfile, ERR_SQL_DATA);
+      return DEFAULT_SPAMICITY;
+   }
+
+   if(cfg->debug == 1) printf("nham: %.0f, nspam: %.0f\n", sdata->nham, sdata->nspam);
+
+
+   /* check if sender is autowhitelisted */
+
+   if(sdata->training_request == 0){
+
+      snprintf(buf, sizeof(buf)-1, "SELECT nham, nspam FROM %s WHERE token=%llu AND (uid=0 OR uid=%d)", SQL_TOKEN_TABLE, APHash(state->from), sdata->gid);
+
+      te = get_ham_spam_counters(sdata, buf);
+      ham_from = te.nham;
+      spam_from = te.nspam;
+
+      if(cfg->debug == 1) printf("from: %.0f, %.0f\n", ham_from, spam_from);
+
+      if(ham_from >= NUMBER_OF_GOOD_FROM && spam_from == 0){
+         if(cfg->verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: sender is statistically whitelisted", sdata->ttmpfile);
+
+         /* query the spaminess of the token pairs in order to have their timestamp updated */
+         qry_spaminess(sdata, state, 1, cfg);
+
+         sdata->statistically_whitelisted = 1;
+
+         return REAL_HAM_TOKEN_PROBABILITY;
+      }
+   }
+
+   spaminess = evaluate_tokens(sdata, state, cfg);
+
+   return spaminess;
+}
+
 

@@ -12,28 +12,49 @@ class ControllerUserSettings extends Controller {
 
 
       $request = Registry::get('request');
+      $session = Registry::get('session');
+
       $db = Registry::get('db');
 
       $this->load->model('user/auth');
       $this->load->model('user/prefs');
+      $this->load->model('user/user');
+      $this->load->model('group/group');
 
+      require(DIR_BASE . 'system/helper/PHPGangsta_GoogleAuthenticator.php');
 
-      $this->document->title = $this->data['text_home'];
+      $this->data['ga'] = $this->model_user_prefs->get_ga_settings($session->get('username'));
 
+      $this->document->title = $this->data['text_settings'];
+  
+      $d = $r = '';
+      $auditemails = $auditgroups = '';
 
-      if(isset($this->request->post['pagelen']) && isset($this->request->post['lang']) ) {
-         $db_session = new DB("sqlite", "", "", "", SESSION_DATABASE, "");
+      $auditemails = implode(", ", $session->get("emails"));
+ 
+      $auditgroups = preg_replace("/\n/", ", ", $this->model_group_group->get_groups_by_email($session->get("emails")));
 
-         $this->model_user_prefs->setUserPrefs($db_session, Registry::get('username'), $this->request->post);
+      if($auditemails) { $this->data['emails'] = $auditemails; } else { $this->data['emails'] = $this->data['text_none_found']; }
+      if($auditgroups) { $this->data['groups'] = $auditgroups; } else { $this->data['groups'] = $this->data['text_none_found']; }
 
-         Header("Location: index.php?route=user/settings");
+      if(isset($this->request->post['pagelen']) && isset($this->request->post['theme'])) {
+         $this->model_user_prefs->set_user_preferences(Registry::get('username'), $this->request->post);
+
+         AUDIT(ACTION_CHANGE_USER_SETTINGS, '', '', '', 'pagelen:' . $this->request->post['pagelen'] . ', theme:' . $this->request->post['theme'] . ', lang:' . $this->request->post['lang']);
+
+         if(isAdminUser() == 1) {
+            header("Location: " . SITE_URL . "index.php?route=health/health");
+            return;
+         }
+
+         header("Location: " . SITE_URL . "search.php");
          return;
       }
 
 
       if($this->request->server['REQUEST_METHOD'] == 'POST' && PASSWORD_CHANGE_ENABLED == 1 && $this->validate() == true) {
 
-         if($this->model_user_auth->changePassword(Registry::get('username'), $this->request->post['password']) == 1) {
+         if($this->model_user_auth->change_password(Registry::get('username'), $this->request->post['password']) == 1) {
             $this->data['x'] = $this->data['text_password_changed'];
          }
          else {
@@ -42,7 +63,9 @@ class ControllerUserSettings extends Controller {
       }
 
 
-      $this->data['page_len'] = getPageLength();
+      $this->data['page_len'] = get_page_length();
+      $this->data['theme'] = $session->get("theme");
+      $this->data['lang'] = $session->get("lang");
 
       $this->render();
    }

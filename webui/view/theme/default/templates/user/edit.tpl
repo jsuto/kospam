@@ -1,90 +1,129 @@
+<div id="deleteconfirm-modal" class="modal hide fade">
+  <div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" role="dialog" aria-hidden="true"><i class="icon-remove"></i></button>
+    <h3><?php print $text_confirm; ?> <?php print $text_delete; ?></h3>
+  </div>
+  <div class="modal-body">
+    <p><?php print $text_user_delete_confirm_message; ?> <span id="name">ERROR</span>?</p>
+  </div>
+  <div class="modal-footer">
+    <a href="#" class="btn" data-dismiss="modal" aria-hidden="true"><?php print $text_close; ?></a>
+    <a href="index.php?route=user/remove&amp;uid=-1&amp;name=Error&amp;confirmed=0" class="btn btn-primary" id="id"><?php print $text_delete; ?></a>
+  </div>
+</div>
 
+<?php if(isset($errorstring)){ ?><div class="alert alert-danger"><?php print $text_error; ?>: <?php print $errorstring; ?></div><?php } ?>
 
-<?php if(isset($user)) {
+<?php if(isset($x)){ ?>
 
-   $userbasedn = preg_replace("/cn=([\w]+),/", "", $user['dn']); ?>
+<div class="alert alert-success"><?php print $x; ?>.</div>
+<p><a href="index.php?route=user/list"><i class="icon-circle-arrow-left"></i>&nbsp;<?php print $text_back; ?></a></p>
 
-<form action="index.php?route=user/edit" name="adduser" method="post" class="form-inline" autocomplete="off">
-   <input type="hidden" name="uid" value="<?php print $uid; ?>" />
+<?php } elseif(isset($user)) { ?>
 
-   <table class="table table-bordered table-striped table-hover">
-      <tr>
-         <td><?php print $text_email_addresses; ?>:</td>
-         <td><textarea name="email" class="span4"><?php print $emails; ?></textarea></td>
-      </tr>
+<p><a href="index.php?route=user/list"><i class="icon-circle-arrow-left"></i>&nbsp;<?php print $text_back; ?></a> | <a href="index.php?route=user/remove&amp;id=<?php print $user['uid']; ?>&amp;user=<?php print $user['username']; ?>" class="confirm-delete" data-id="<?php print $user['uid']; ?>" data-name="<?php print $user['realname']; ?>"><i class="icon-remove-sign"></i>&nbsp;<?php print $text_remove_this_user; ?></a></p>
 
-      <tr><td><?php print $text_username; ?>:</td><td><input type="text" name="username" value="<?php print $user['username']; ?>" class="span4" /></td></tr>
+    <form action="index.php?route=user/edit" name="edituser" method="post" autocomplete="off" class="form-horizontal">
+     <div class="control-group<?php if(isset($errors['email'])){ print " error"; } ?>">
+        <input type="hidden" name="uid" value="<?php print $uid; ?>" />
+        <label class="control-label" for="email"><?php print $text_email_addresses; ?>:</label>
+            <div class="controls">
+              <textarea name="email"><?php print $emails; ?></textarea>
+              <?php if ( isset($errors['email']) ) { ?><span class="help-inline"><?php print $errors['email']; ?></span><?php } ?>
+            </div>
+        </div>
+        
+        <div class="control-group<?php if(isset($errors['username'])){ print " error"; } ?>">
+            <label class="control-label" for="username"><?php print $text_username; ?>:</label>
+            <div class="controls">
+              <input type="text" name="username" value="<?php print $user['username']; ?>" class="text" />
+              <?php if ( isset($errors['username']) ) { ?><span class="help-inline"><?php print $errors['username']; ?></span><?php } ?>
+            </div>
+        </div>
+        
+         <div class="control-group<?php if(isset($errors['realname'])){ print " error"; } ?>">
+            <label class="control-label" for="realname"><?php print $text_realname; ?>:</label>
+            <div class="controls">
+              <input type="text" name="realname" value="<?php print $user['realname']; ?>" class="text" />
+              <?php if ( isset($errors['realname']) ) { ?><span class="help-inline"><?php print $errors['realname']; ?></span><?php } ?>
+            </div>
+        </div>	
+        
+        <div class="control-group<?php if(isset($errors['domain'])){ print " error"; } ?>">
+            <label class="control-label" for="domain"><?php print $text_domain; ?>:</label>
+            <div class="controls">
+              <select name="domain">
+                   <?php asort($domains); foreach ($domains as $domain) { ?>
+                      <option value="<?php print $domain; ?>"<?php if($domain == $user['domain']){ ?> selected="selected"<?php } ?>><?php print $domain; ?></option>
+                   <?php } ?>
+              </select>
+            </div>
+        </div>	
 
-      <tr><td><?php print $text_realname; ?>:</td><td><input type="text" name="realname" value="<?php print $user['realname']; ?>" class="span4" /></td></tr>
+        <div class="control-group<?php if(isset($errors['policy_group'])){ print " error"; } ?>">
+            <label class="control-label" for="policy_group"><?php print $text_policy; ?>:</label>
+            <div class="controls">
+              <select name="policy_group">
+                      <option value="0""<?php if(0 == $user['policy_group']){ ?> selected="selected"<?php } ?>>default</option>
+                   <?php asort($policies); foreach ($policies as $policy) { ?>
+                      <option value="<?php print $policy['id']; ?>"<?php if($policy['id'] == $user['policy_group']){ ?> selected="selected"<?php } ?>><?php print $policy['name']; ?></option>
+                   <?php } ?>
+              </select>
+            </div>
+        </div>
 
-      <tr>
-       <td><?php print $text_domain; ?>:</td>
-       <td>
-         <select name="domain" class="span4">
-<?php asort($domains); foreach ($domains as $domain) { ?>
-            <option value="<?php print $domain; ?>"<?php if($domain == $user['domain']){ ?> selected="selected"<?php } ?>><?php print $domain; ?></option>
+    <?php if(ENABLE_LDAP_IMPORT_FEATURE == 1) { ?>
+         <div class="control-group<?php if(isset($errors['dn'])){ print " error"; } ?>">
+            <label class="control-label" for="dn">LDAP DN:</label>
+            <div class="controls">
+              <input type="text" name="dn" value="<?php print $user['dn']; ?>" class="text" /><br /> (<?php print $text_dn_asterisk_means_skip_sync; ?>)
+            </div>
+        </div>
+    <?php } ?>
+
+        <div class="control-group<?php if(isset($errors['password'])){ print " error"; } ?>">
+            <label class="control-label" for="password"><?php print $text_password; ?>:</label>
+            <div class="controls">
+              <input type="password" name="password" value="" class="text" />
+            </div>
+        </div>	
+
+        <div class="control-group<?php if(isset($errors['password2'])){ print " error"; } ?>">
+            <label class="control-label" for="password2"><?php print $text_password_again; ?>:</label>
+            <div class="controls">
+              <input type="password" name="password2" value="" class="text" />
+            </div>
+        </div>	
+        
+        <div class="control-group">
+             <label class="control-label" for="uiddisplay"><?php print $text_user_id; ?>:</label>
+             <div class="controls">
+                <input type="text" name="uiddisplay" value="<?php print $uid; ?>" class="text" disabled />
+             </div>
+        </div>
+
+        <div class="control-group<?php if(isset($errors['gid'])){ print " error"; } ?>">
+            <label class="control-label" for="gid">GID:</label>
+            <div class="controls">
+              <input type="text" name="gid" id="gid" value="<?php print $user['gid']; ?>" class="text" />
+              <?php if ( isset($errors['gid']) ) { ?><span class="help-inline"><?php print $errors['gid']; ?></span><?php } ?>
+            </div>
+        </div>
+        
+        <div class="control-group">
+            <label class="control-label" for="isadmin"><?php print $text_admin_user; ?>:</label>
+            <div class="controls">
+              <select name="isadmin">
+                   <option value="0"<?php if(isset($user['isadmin']) && $user['isadmin'] == 0){ ?> selected="selected"<?php } ?>><?php print $text_user_regular; ?></option>
+                   <?php if(Registry::get('admin_user') == 1) { ?><option value="1"<?php if(isset($user['isadmin']) && $user['isadmin'] == 1){ ?> selected="selected"<?php } ?>><?php print $text_user_masteradmin; ?></option><?php } ?>
+              </select>
+            </div>
+        </div>	
+        
+        <div class="form-actions">
+            <input type="submit" value="<?php print $text_modify; ?>" class="btn btn-primary" /> <a href="index.php?route=user/list" class="btn"><?php print $text_cancel; ?></a>
+        </div>
+
+    </form>
+
 <?php } ?>
-         </select>
-       </td>
-      </tr>
-
-<?php if(ENABLE_LDAP_IMPORT_FEATURE == 1) { ?>
-      <tr><td>LDAP DN:</td><td><input type="text" name="dn" value="<?php print $user['dn']; ?>" class="span4" /></td><td><?php print $text_dn_asterisk_means_skip_sync; ?></td></tr>
-<?php } ?>
-
-      <tr><td><?php print $text_password; ?>:</td><td><input type="password" name="password" value="" class="span4" /></td></tr>
-      <tr><td><?php print $text_password_again; ?>:</td><td><input type="password" name="password2" value="" class="span4" /></td></tr>
-      <tr><td><?php print $text_user_id; ?>:</td><td><?php print $uid; ?></td></tr>
-      <tr><td><?php print $text_group_id; ?>:</td><td><input type="text" name="gid" value="<?php print $user['gid']; ?>" class="span4" /></td></tr>
-      <tr>
-       <td><?php print $text_policy_group; ?>:</td>
-       <td>
-         <select name="policy_group" class="span4">
-            <option value="0"<?php if($user['policy_group'] == 0){ ?> selected="selected"<?php } ?>><?php print DEFAULT_POLICY; ?></option>
-<?php foreach ($policies as $policy) { ?>
-            <option value="<?php print $policy['policy_group']; ?>"<?php if($user['policy_group'] == $policy['policy_group']){ ?> selected="selected"<?php } ?>><?php print $policy['name']; ?></option>
-<?php } ?>
-         </select>
-       </td>
-      </tr>
-
-      <tr>
-       <td><?php print $text_admin_user; ?>:</td>
-       <td>
-         <select name="isadmin" class="span4">
-            <option value="0"<?php if($user['isadmin'] == 0){ ?> selected="selected"<?php } ?>><?php print $text_user_regular; ?></option>
-            <?php if(Registry::get('admin_user') == 1) { ?><option value="1"<?php if($user['isadmin'] == 1){ ?> selected="selected"<?php } ?>><?php print $text_user_masteradmin; ?></option><?php } ?>
-            <option value="2"<?php if($user['isadmin'] == 2){ ?> selected="selected"<?php } ?>><?php print $text_user_domainadmin; ?></option>
-            <option value="3"<?php if($user['isadmin'] == 3){ ?> selected="selected"<?php } ?>><?php print $text_user_read_only_admin; ?></option>
-         </select>
-       </td>
-      </tr>
-
-      <tr><td><?php print $text_whitelist; ?>:</td><td><textarea name="whitelist" class="span4"><?php print $user['whitelist']; ?></textarea></td></tr>
-      <tr><td><?php print $text_blacklist; ?>:</td><td><textarea name="blacklist" class="span4"><?php print $user['blacklist']; ?></textarea></td></tr>
-
-      <tr>
-         <td><?php print $text_group_membership; ?>:</td>
-         <td>
-            <?php foreach ($user['group_membership'] as $_group_uid) { ?>
-               <?php $a = preg_split("/\s/", $this->model_user_user->getEmailsByUid($_group_uid)); print $a[0]; ?></br />
-            <?php } ?>
-         </td>
-      </tr>
-
-      <tr><td>&nbsp;</td><td><input type="submit" value="<?php print $text_modify; ?>" class="btn btn-primary" /><input type="reset" value="<?php print $text_cancel; ?>" class="btn btn-ok" /></td></tr>
-
-   </table>
-
-</form>
-
-<p>&nbsp;</p>
-<p><a href="index.php?route=user/remove&amp;confirmed=1&amp;uid=<?php print $user['uid']; ?>&amp;user=<?php print $user['username']; ?>" onclick="if(confirm('<?php print $text_remove_this_user; ?>: ' + '\'<?php print $user['username']; ?>\'')) return true; return false;"><?php print $text_remove_this_user; ?>: <?php print $user['username']; ?></a></p>
-<p>&nbsp;</p>
-
-<p>
-<?php } else if(isset($x)){ print $x; ?>. 
-<?php } ?>
-
-<a href="index.php?route=user/list"><?php print $text_back; ?></a>
-</p>

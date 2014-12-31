@@ -13,52 +13,6 @@
 #include <clapf.h>
 
 
-void createdir(char *path, uid_t uid, gid_t gid, mode_t mode);
-
-
-void checkAndCreateClapfDirectories(struct __config *cfg, uid_t uid, gid_t gid){
-   char *p;
-
-   p = strrchr(cfg->queuedir, '/');
-   if(p){
-      *p = '\0';
-      createdir(cfg->queuedir, uid, gid, 0755);
-      *p = '/';
-   }
-   createdir(cfg->queuedir, uid, gid, 0755);
-
-   p = strrchr(cfg->workdir, '/');
-   if(p){
-      *p = '\0';
-      createdir(cfg->workdir, uid, gid, 0755);
-      *p = '/';
-   }
-   createdir(cfg->workdir, uid, gid, 0711);
-
-   p = strrchr(cfg->historydb, '/');
-   if(p){
-      *p = '\0';
-      createdir(cfg->historydb, uid, gid, 0755);
-      *p = '/';
-   }
-
-   p = strrchr(cfg->sqlite3, '/');
-   if(p){
-      *p = '\0';
-      createdir(cfg->sqlite3, uid, gid, 0755);
-      *p = '/';
-   }
-
-   p = strrchr(cfg->pidfile, '/');
-   if(p){
-      *p = '\0';
-      createdir(cfg->pidfile, uid, gid, 0755);
-      *p = '/';
-   }
-
-}
-
-
 void createdir(char *path, uid_t uid, gid_t gid, mode_t mode){
    struct stat st;
 
@@ -76,4 +30,32 @@ void createdir(char *path, uid_t uid, gid_t gid, mode_t mode){
    }
 }
 
+
+void check_and_create_directories(struct __config *cfg, uid_t uid, gid_t gid){
+   char *p;
+
+   p = strrchr(cfg->workdir, '/');
+   if(p){
+      *p = '\0';
+      createdir(cfg->workdir, uid, gid, 0755);
+      *p = '/';
+   }
+   createdir(cfg->workdir, uid, gid, 0711);
+
+   p = strrchr(cfg->queuedir, '/');
+   if(p){
+      *p = '\0';
+      createdir(cfg->queuedir, uid, gid, 0755);
+      *p = '/';
+   }
+   createdir(cfg->queuedir, uid, gid, 0700);
+
+   p = strrchr(cfg->pidfile, '/');
+   if(p){
+      *p = '\0';
+      createdir(cfg->pidfile, uid, gid, 0755);
+      *p = '/';
+   }
+
+}
 

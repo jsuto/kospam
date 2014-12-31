@@ -23,22 +23,16 @@ LIBS = @LIBS@ @sql_libs@
 INSTALL = @INSTALL@
 
 all:
-	sed -e "s%_PREFIX_%$(prefix)%" -e "s%SYSCONFDIR%$(sysconfdir)%" $(srcdir)/clapf.ubuntu.in > $(srcdir)/clapf.ubuntu
-	sed -e "s%_PREFIX_%$(prefix)%" -e "s%SYSCONFDIR%$(sysconfdir)%" $(srcdir)/clapf.redhat.in > $(srcdir)/clapf.redhat
 	sed -e "s%SBINDIR%$(sbindir)%" -e "s%SYSCONFDIR%$(sysconfdir)%" $(srcdir)/rc.clapf.in > $(srcdir)/rc.clapf
-	sed -e "s%_PREFIX_%$(prefix)%" -e "s%SYSCONFDIR%$(sysconfdir)%" $(srcdir)/clapf-maillog.debian.in > $(srcdir)/clapf-maillog.debian
-	sed -e "s%_PREFIX_%$(prefix)%" -e "s%SYSCONFDIR%$(sysconfdir)%" $(srcdir)/clapf-maillog.ubuntu.in > $(srcdir)/clapf-maillog.ubuntu
-	sed -e "s%_PREFIX_%$(prefix)%" -e "s%SYSCONFDIR%$(sysconfdir)%" $(srcdir)/clapf-maillog.redhat.in > $(srcdir)/clapf-maillog.redhat
-
-	sed -e "s%_PREFIX_%$(prefix)%" -e "s%SYSCONFDIR%$(sysconfdir)%" -e "s%LOCALSTATEDIR%$(localstatedir)%" $(srcdir)/clapf-postgrey.debian.in > $(srcdir)/clapf-postgrey.debian
-
-	sed -e "s%SBINDIR%$(sbindir)%" -e "s%LIBEXECDIR%$(libexecdir)%" -e "s%SYSCONFDIR%$(sysconfdir)%" < $(srcdir)/rc.clapf-maillog.in > $(srcdir)/rc.clapf-maillog
+	sed -e "s%BINDIR%$(bindir)%" -e "s%SYSCONFDIR%$(sysconfdir)%" $(srcdir)/rc.searchd.in > $(srcdir)/rc.searchd
 
 
 install:
+	$(INSTALL) -m 0755 $(srcdir)/rc.clapf $(DESTDIR)/etc/init.d/rc.clapf
+	$(INSTALL) -m 0755 $(srcdir)/rc.searchd $(DESTDIR)/etc/init.d/rc.searchd
 
 clean:
-	rm -f clapf.ubuntu clapf.redhat rc.clapf clapf-maillog.debian clapf-maillog.ubuntu clapf-maillog.redhat rc.clapf-maillog
+	rm -f rc.clapf rc.searchd
 
 distclean: clean
 	rm -f Makefile

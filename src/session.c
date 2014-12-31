@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
@@ -12,38 +13,48 @@
 #include <unistd.h>
 #include <signal.h>
 #include <syslog.h>
+#include <time.h>
+#include <openssl/ssl.h>
+#include <openssl/err.h>
 #include <clapf.h>
 
 
-void handleSession(int new_sd, struct __data *data, struct __config *cfg){
-   int i, ret, pos, n, inj=ERR_REJECT, state, prevlen=0;
-   char *p, *q, buf[MAXBUFSIZE], puf[MAXBUFSIZE], resp[MAXBUFSIZE], prevbuf[MAXBUFSIZE], last2buf[2*MAXBUFSIZE+1];
-   char rctptoemail[SMALLBUFSIZE], fromemail[SMALLBUFSIZE], virusinfo[SMALLBUFSIZE], reason[SMALLBUFSIZE];
+int handle_smtp_session(int new_sd, struct __data *data, struct __config *cfg){
+   int i, k, ret, pos, n, inj=ERR, smtp_state, prevlen=0;
+   char *p, *q, buf[MAXBUFSIZE], puf[MAXBUFSIZE], resp[MAXBUFSIZE], inject_resp[MAXBUFSIZE], prevbuf[MAXBUFSIZE], last2buf[2*MAXBUFSIZE+1];
+   char virusinfo[SMALLBUFSIZE], delay[SMALLBUFSIZE], tmpbuf[SMALLBUFSIZE];
    struct session_data sdata;
-   struct _state sstate;
+   struct __state state;
    struct __config my_cfg;
+   struct __counters counters;
    int db_conn=0;
    int rc;
-   struct list *a;
-   struct __counters counters;
-
    struct timezone tz;
    struct timeval tv1, tv2;
-
-#ifdef HAVE_LIBCLAMAV
-   /* http://www.clamav.net/doc/latest/html/node53.html */
-   srand(getpid());
+#ifdef HAVE_STARTTLS
+   int starttls = 0;
+   char ssl_error[SMALLBUFSIZE];
 #endif
 
-   alarm(cfg->session_timeout);
-   sig_catch(SIGALRM, killChild);
 
-   state = SMTP_STATE_INIT;
+#ifdef HAVE_LIBWRAP
+   struct request_info req;
 
-   initSessionData(&sdata, cfg);
+   request_init(&req, RQ_DAEMON, PROGNAME, RQ_FILE, new_sd, 0);
+   fromhost(&req);
+   if(!hosts_access(&req)){
+      send(new_sd, SMTP_RESP_550_ERR_YOU_ARE_BANNED_BY_LOCAL_POLICY, strlen(SMTP_RESP_550_ERR_YOU_ARE_BANNED_BY_LOCAL_POLICY), 0);
+      syslog(LOG_PRIORITY, "denied connection from %s by tcp_wrappers", eval_client(&req));
+      return 0;
+   }
+#endif
 
-   sdata.Nham = 0;
-   sdata.Nspam = 0;
+   srand(getpid());
+
+   smtp_state = SMTP_STATE_INIT;
+
+   init_session_data(&sdata, cfg);
+   sdata.tls = 0;
 
    bzero(&counters, sizeof(counters));
 
@@ -52,66 +63,38 @@ void handleSession(int new_sd, struct __data *data, struct __config *cfg){
 
    db_conn = 0;
 
-#ifdef HAVE_MYSQL
-   rc = 1;
-   mysql_init(&(sdata.mysql));
-   mysql_options(&(sdata.mysql), MYSQL_OPT_CONNECT_TIMEOUT, (const char*)&cfg->mysql_connect_timeout);
-   mysql_options(&(sdata.mysql), MYSQL_OPT_RECONNECT, (const char*)&rc);
-
-   if(mysql_real_connect(&(sdata.mysql), cfg->mysqlhost, cfg->mysqluser, cfg->mysqlpwd, cfg->mysqldb, cfg->mysqlport, cfg->mysqlsocket, 0))
+#ifdef NEED_MYSQL
+   if(open_database(&sdata, cfg) == OK){
       db_conn = 1;
+   }
    else
       syslog(LOG_PRIORITY, "%s", ERR_MYSQL_CONNECT);
 #endif
-#ifdef HAVE_PSQL
-   snprintf( sdata.conninfo, MAXBUFSIZE-1, "host='%s' port='%d' dbname='%s' user='%s' password='%s' connect_timeout='%d'",
-             cfg->psqlhost, cfg->psqlport, cfg->psqldb, cfg->psqluser, cfg->psqlpwd, cfg->psql_connect_timeout );
 
-   sdata.psql = PQconnectdb( sdata.conninfo );
-   if( PQstatus( sdata.psql ) == CONNECTION_OK )
-      db_conn = 1;
-   else {
-      int cnt = 3;
-      while ( cnt-- > 0 && PQstatus( sdata.psql ) != CONNECTION_OK ) {
-         PQfinish( sdata.psql );
-         sdata.psql = PQconnectdb( sdata.conninfo );
-         if( PQstatus( sdata.psql ) != CONNECTION_OK ) {
-            syslog( LOG_PRIORITY, "%s (reconnect)", ERR_PSQL_CONNECT );
-            sleep( cfg->psql_connect_timeout );
-         }
-      }
-      if( PQstatus( sdata.psql ) != CONNECTION_OK ) {
-         syslog( LOG_PRIORITY, "%s", ERR_PSQL_CONNECT );
-         PQfinish( sdata.psql );
-      } else {
-         db_conn = 1;
-      }
+   if(db_conn == 0){
+      snprintf(buf, MAXBUFSIZE-1, SMTP_RESP_421_ERR_TMP, cfg->hostid);
+      send(new_sd, buf, strlen(buf), 0);
+      return 0;
    }
-#endif
-#ifdef HAVE_MYDB
-   init_mydb(cfg->mydbfile, &sdata);
-#endif
-
-   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: fork()", sdata.ttmpfile);
 
 
    gettimeofday(&tv1, &tz);
 
-#ifdef HAVE_LMTP
-   snprintf(buf, MAXBUFSIZE-1, LMTP_RESP_220_BANNER, cfg->hostid);
-#else
-   snprintf(buf, MAXBUFSIZE-1, SMTP_RESP_220_BANNER, cfg->hostid);
-#endif
+   if(cfg->server_mode == SMTP_MODE)
+      snprintf(buf, MAXBUFSIZE-1, SMTP_RESP_220_BANNER, cfg->hostid);
+   else
+      snprintf(buf, MAXBUFSIZE-1, LMTP_RESP_220_BANNER, cfg->hostid);
+
 
    send(new_sd, buf, strlen(buf), 0);
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent: %s", sdata.ttmpfile, buf);
 
-   while((n = recvtimeout(new_sd, puf, MAXBUFSIZE, TIMEOUT)) > 0){
+   while((n = recvtimeoutssl(new_sd, puf, MAXBUFSIZE, TIMEOUT, sdata.tls, data->ssl)) > 0){
          pos = 0;
 
          /* accept mail data */
 
-         if(state == SMTP_STATE_DATA){
+         if(smtp_state == SMTP_STATE_DATA){
 
             /* join the last 2 buffer */
 
@@ -119,32 +102,27 @@ void handleSession(int new_sd, struct __data *data, struct __config *cfg){
             memcpy(last2buf, prevbuf, MAXBUFSIZE);
             memcpy(last2buf+prevlen, puf, MAXBUFSIZE);
 
-            pos = searchStringInBuffer(last2buf, 2*MAXBUFSIZE+1, SMTP_CMD_PERIOD, 5);
+
+            pos = search_string_in_buffer(last2buf, 2*MAXBUFSIZE+1, SMTP_CMD_PERIOD, 5);
             if(pos > 0){
 
 	       /* fix position */
-	       pos = pos - prevlen + strlen(SMTP_CMD_PERIOD);
+               pos = pos - prevlen;
 
-               if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: period: *%s*", sdata.ttmpfile, puf+pos);
+               if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: period found", sdata.ttmpfile);
 
 
                /* write data only to (and including) the trailing period (.) */
                ret = write(sdata.fd, puf, pos);
                sdata.tot_len += ret;
 
-            #ifdef HAVE_MAILBUF
-               if(sdata.message_size > 0 && sdata.message_size < MAILBUFSIZE-10){
-                  if(sdata.mailpos + pos < MAILBUFSIZE-10){
-                     memcpy(sdata.mailbuf + sdata.mailpos, puf, pos);
-                     sdata.mailpos += pos;
-                  }
-                  else sdata.discard_mailbuf = 1;
-               }
-            #endif
+               /* fix position! */
+               pos += strlen(SMTP_CMD_PERIOD);
 
                if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: got: (.)", sdata.ttmpfile);
 
-               state = SMTP_STATE_PERIOD;
+
+               smtp_state = SMTP_STATE_PERIOD;
 
                /* make sure we had a successful read */
 
@@ -157,15 +135,11 @@ void handleSession(int new_sd, struct __data *data, struct __config *cfg){
                if(rc){
                   syslog(LOG_PRIORITY, "failed writing data: %s", sdata.ttmpfile);
 
-               #ifdef HAVE_LMTP
-                  for(i=0; i<sdata.num_of_rcpt_to; i++){
-               #endif
+                  if(cfg->server_mode == SMTP_MODE) k = 1; else k = sdata.num_of_rcpt_to;
 
-                     send(new_sd, SMTP_RESP_421_ERR_WRITE_FAILED, strlen(SMTP_RESP_421_ERR_WRITE_FAILED), 0);
-
-               #ifdef HAVE_LMTP
-                  }
-               #endif
+                  for(i=0; i<k; i++){
+                     write1(new_sd, SMTP_RESP_421_ERR_WRITE_FAILED, strlen(SMTP_RESP_421_ERR_WRITE_FAILED), sdata.tls, data->ssl);
+                  } 
 
                   memset(puf, 0, MAXBUFSIZE);
                   goto AFTER_PERIOD;
@@ -173,77 +147,58 @@ void handleSession(int new_sd, struct __data *data, struct __config *cfg){
 
 
                gettimeofday(&tv1, &tz);
-
-               if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: parsing message", sdata.ttmpfile);
-
-            #ifdef HAVE_MAILBUF
-               if(sdata.mailpos > 0 && sdata.discard_mailbuf == 0)
-                  sstate = parseBuffer(&sdata, cfg);
-               else
-            #endif
-                  sstate = parseMessage(&sdata, cfg);
-
+               state = parse_message(&sdata, 1, data, cfg);
+               post_parse(&sdata, &state, cfg);
                gettimeofday(&tv2, &tz);
                sdata.__parsed = tvdiff(tv2, tv1);
 
-               if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: fixup subject line", sdata.ttmpfile);
+               for(i=1; i<=state.n_attachments; i++){
+                  syslog(LOG_PRIORITY, "%s: name=*%s*, type=%s, size=%d, digest=%s", sdata.ttmpfile, state.attachments[i].filename, state.attachments[i].type, state.attachments[i].size, state.attachments[i].digest);
+               }
 
-               /* syslog the proper, decoded subject line instead of the raw encoded one, 2011.07.15, SJ */
-               fixupEncodedHeaderLine(sdata.subject);
+               if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: parsed message", sdata.ttmpfile);
 
+               if(state.n_attachments > 0 || cfg->always_scan_message == 1) sdata.need_scan = 1;
+               else sdata.need_scan = 0;
 
-               if(sstate.has_base64 == 0 && cfg->always_scan_message == 0) sdata.need_scan = 0;
-               else sdata.need_scan = 1;
-
-
-               if(isItemOnList(sdata.client_addr, cfg->mynetwork, NULL) == 1){
+               if(is_item_on_list(sdata.ip, cfg->mynetwork, "") == 1){
+                  syslog(LOG_PRIORITY, "%s: client ip (%s) on mynetwork", sdata.ttmpfile, sdata.ip);
                   sdata.mynetwork = 1;
                }
 
 
-               if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sender IP: %s", sdata.ttmpfile, sstate.ip);
-
             #ifdef HAVE_ANTIVIRUS
-               gettimeofday(&tv1, &tz);
-               sdata.rav = do_av_check(&sdata, rctptoemail, fromemail, &virusinfo[0], data, cfg);
-               gettimeofday(&tv2, &tz);
-               sdata.__av = tvdiff(tv2, tv1);
-            #endif
-
-
-
-            #ifdef HAVE_SQLITE3
-               db_conn = 0;
-               rc = sqlite3_open(cfg->sqlite3, &(sdata.db));
-               if(rc)
-                  syslog(LOG_PRIORITY, "%s: %s", sdata.ttmpfile, ERR_SQLITE3_OPEN);
-               else {
-                  db_conn = 1;
-                  rc = sqlite3_exec(sdata.db, cfg->sqlite3_pragma, 0, 0, NULL);
-                  if(rc != SQLITE_OK) syslog(LOG_PRIORITY, "%s: could not set pragma", sdata.ttmpfile);
+               if(cfg->use_antivirus == 1){
+                  gettimeofday(&tv1, &tz);
+                  sdata.rav = do_av_check(&sdata, &virusinfo[0], data, cfg);
+                  gettimeofday(&tv2, &tz);
+                  sdata.__av = tvdiff(tv2, tv1);
                }
             #endif
 
 
-            #ifdef HAVE_LMTP
+               snprintf(sdata.acceptbuf, SMALLBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata.ttmpfile, sdata.rcptto[i]);
+
+               if(cfg->server_mode == SMTP_MODE) k = 1; else k = sdata.num_of_rcpt_to;
+
                for(i=0; i<sdata.num_of_rcpt_to; i++){
-            #else
-               i = 0;
-            #endif
                   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: round %d in injection", sdata.ttmpfile, i);
 
-                  extractEmail(sdata.rcptto[i], rctptoemail);
+                  inj = ERR;
+                  snprintf(inject_resp, sizeof(inject_resp)-1, "undef");
+
 
                   /* copy default config from clapf.conf, to enable policy support */
                   memcpy(&my_cfg, cfg, sizeof(struct __config));
 
-               #ifdef HAVE_ANTISPAM
+
                   if(db_conn == 1){
-                     if(processMessage(&sdata, &sstate, data, rctptoemail, fromemail, cfg, &my_cfg) == DISCARD){
-                        /* if we have to discard the message */
-                        snprintf(resp, MAXBUFSIZE-1, "dropped");
+
+                     if(check_spam(&sdata, &state, data, sdata.fromemail, sdata.rcptto[i], cfg, &my_cfg) == DISCARD){
+                        snprintf(inject_resp, sizeof(inject_resp)-1, "discarded");
                         goto SEND_RESULT;
                      }
+
                   }
 
 
@@ -251,107 +206,86 @@ void handleSession(int new_sd, struct __data *data, struct __config *cfg){
 
                   gettimeofday(&tv1, &tz);
 
-                  if(sdata.spaminess >= my_cfg.spam_overall_limit){
-
-                    /* shall we redirect the message into oblivion? 2007.02.07, SJ */
-                    if(sdata.spaminess >= my_cfg.spaminess_oblivion_limit)
-                       inj = ERR_DROP_SPAM;
-                    else
-                       inj = inject_mail(&sdata, i, cfg->spam_smtp_addr, cfg->spam_smtp_port, sdata.spaminessbuf, &resp[0], &my_cfg, NULL);
+                  if( (sdata.rav == AVIR_VIRUS && cfg->silently_discard_infected_email == 1) || sdata.spaminess >= my_cfg.spaminess_oblivion_limit ){
+                     inj = OK;
+                     snprintf(inject_resp, sizeof(inject_resp)-1, "discarded");
+                  }
+                  else if(sdata.spaminess >= my_cfg.spam_overall_limit){
+                     strncat(sdata.spaminessbuf, cfg->clapf_spam_header_field, MAXBUFSIZE-1);
+                     inj = inject_mail(&sdata, i, sdata.spaminessbuf, &inject_resp[0], &my_cfg);
                   }
                   else {
-                     inj = inject_mail(&sdata, i, cfg->postfix_addr, cfg->postfix_port, sdata.spaminessbuf, &resp[0], &my_cfg, NULL);
+                     inj = inject_mail(&sdata, i, sdata.spaminessbuf, &inject_resp[0], &my_cfg);
                   }
 
                   gettimeofday(&tv2, &tz);
                   sdata.__inject = tvdiff(tv2, tv1);
 
-               #else
-                  if(sdata.rav == AVIR_VIRUS && cfg->silently_discard_infected_email == 1){
-                     inj = OK;
-                     snprintf(resp, MAXBUFSIZE-1, "dropped");
-                  }
-                  else {
-                     gettimeofday(&tv1, &tz);
 
-                     inj = inject_mail(&sdata, i, cfg->postfix_addr, cfg->postfix_port, NULL, &resp[0], &my_cfg, NULL);
 
-                     gettimeofday(&tv2, &tz);
-                     sdata.__inject = tvdiff(tv2, tv1);
-                  }
+                  /* set the accept buffer to send back to postfix */
 
-               #endif
+                  switch(inj) {
 
-                  /* set the accept buffer */
+                     case OK:
+                                 snprintf(sdata.acceptbuf, SMALLBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata.ttmpfile, sdata.rcptto[i]);
+                                 break;
 
-                  if(inj == OK || inj == ERR_DROP_SPAM){
-                     snprintf(sdata.acceptbuf, SMALLBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata.ttmpfile, rctptoemail);
-                  }
-                  else if(inj == ERR_REJECT){
-                     snprintf(sdata.acceptbuf, SMALLBUFSIZE-1, "550 %s <%s>\r\n", sdata.ttmpfile, rctptoemail);
-                  }
-                  else {
-                     snprintf(sdata.acceptbuf, SMALLBUFSIZE-1, "451 %s <%s>\r\n", sdata.ttmpfile, rctptoemail);
+                     case ERR_REJECT:
+                                 snprintf(sdata.acceptbuf, SMALLBUFSIZE-1, "550 %s <%s>\r\n", sdata.ttmpfile, sdata.rcptto[i]);
+                                 break;
+
+                     default:
+                                 snprintf(sdata.acceptbuf, SMALLBUFSIZE-1, "451 %s <%s>\r\n", sdata.ttmpfile, sdata.rcptto[i]);
+                                 break;
                   }
 
-            #ifdef HAVE_ANTISPAM
+
                SEND_RESULT:
-            #endif
-                  send(new_sd, sdata.acceptbuf, strlen(sdata.acceptbuf), 0);
+
+                  write1(new_sd, sdata.acceptbuf, strlen(sdata.acceptbuf), sdata.tls, data->ssl);
+
+                  if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent: %s", sdata.ttmpfile, sdata.acceptbuf);
 
                   counters.c_rcvd++;
 
-                  if(inj == ERR_DROP_SPAM) syslog(LOG_PRIORITY, "%s: dropped spam", sdata.ttmpfile);
-                  else if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent: %s", sdata.ttmpfile, sdata.acceptbuf);
-
-
-
-                  /* syslog at the end */
-
-                  snprintf(reason, SMALLBUFSIZE-1, "delay=%.2f, delays=%.2f/%.2f/%.2f/%.2f/%.2f/%.2f/%.2f/%.2f/%.2f/%.2f/%.2f", 
+                  snprintf(delay, SMALLBUFSIZE-1, "delay=%.2f, delays=%.2f/%.2f/%.2f/%.2f/%.2f/%.2f/%.2f/%.2f/%.2f/%.2f/%.2f", 
                                (sdata.__acquire+sdata.__parsed+sdata.__av+sdata.__user+sdata.__policy+sdata.__minefield+sdata.__as+sdata.__training+sdata.__update+sdata.__store+sdata.__inject)/1000000.0,
                                    sdata.__acquire/1000000.0, sdata.__parsed/1000000.0, sdata.__av/1000000.0, sdata.__user/1000000.0, sdata.__policy/1000000.0, sdata.__minefield/1000000.0,
                                        sdata.__as/1000000.0, sdata.__training/1000000.0, sdata.__update/1000000.0, sdata.__store/1000000.0, sdata.__inject/1000000.0);
 
                   if(sdata.spaminess >= my_cfg.spam_overall_limit){
-                     if(sdata.rcpt_minefield[i] == 0) counters.c_spam++;
-                     syslog(LOG_PRIORITY, "%s: from=<%s>, to=<%s>, spaminess=%.4f, result=SPAM, size=%d, relay=%s:%d, %s, status=%s, subject=%s", sdata.ttmpfile, fromemail, rctptoemail, sdata.spaminess, sdata.tot_len, my_cfg.spam_smtp_addr, my_cfg.spam_smtp_port, reason, resp, sdata.subject);
-                  } else if(sdata.rav == AVIR_VIRUS) {
+                     sdata.status = S_SPAM;
+                     counters.c_spam++;
+                     snprintf(tmpbuf, sizeof(tmpbuf)-1, "SPAM");
+                  }
+                  else if(sdata.rav == AVIR_VIRUS){
                      counters.c_virus++;
-                     syslog(LOG_PRIORITY, "%s: from=<%s>, to=<%s>, spaminess=%.4f, result=VIRUS (%s), size=%d, relay=%s:%d, %s, status=%s, subject=%s", sdata.ttmpfile, fromemail, rctptoemail, sdata.spaminess, virusinfo, sdata.tot_len, my_cfg.spam_smtp_addr, my_cfg.spam_smtp_port, reason, resp, sdata.subject);
+                     sdata.status = S_VIRUS;
+                     snprintf(tmpbuf, sizeof(tmpbuf)-1, "VIRUS (%s)", virusinfo);
                   } else {
+                     sdata.status = S_HAM;
                      counters.c_ham++;
+                     snprintf(tmpbuf, sizeof(tmpbuf)-1, "HAM");
+
                      if(sdata.spaminess < my_cfg.spam_overall_limit && sdata.spaminess > my_cfg.possible_spam_limit) counters.c_possible_spam++;
                      else if(sdata.spaminess < my_cfg.possible_spam_limit && sdata.spaminess > my_cfg.max_ham_spamicity) counters.c_unsure++;
-
-                     syslog(LOG_PRIORITY, "%s: from=<%s>, to=<%s>, spaminess=%.4f, result=HAM, size=%d, relay=%s:%d, %s, status=%s, subject=%s", sdata.ttmpfile, fromemail, rctptoemail, sdata.spaminess, sdata.tot_len, my_cfg.spam_smtp_addr, my_cfg.spam_smtp_port, reason, resp, sdata.subject);
                   }
 
-                  if(sdata.mynetwork == 1) counters.c_mynetwork++;
+                  syslog(LOG_PRIORITY, "%s: from=%s, to=%s, result=%s/%.4f, size=%d, attachments=%d, relay=%s:%d, %s, status=%s", sdata.ttmpfile, sdata.fromemail, sdata.rcptto[i], tmpbuf, sdata.spaminess, sdata.tot_len, state.n_attachments, my_cfg.smtp_addr, my_cfg.smtp_port, delay, inject_resp);
 
-
-            #ifdef HAVE_LMTP
                } /* for */
-            #endif
 
-               if(sdata.tre == '+') counters.c_zombie++;
+
+               if(sdata.training_request == 0){
+                  if(!write_history(&sdata, &state, data, inject_resp, &my_cfg)) syslog(LOG_PRIORITY, "%s: could not insert to history", sdata.ttmpfile);
+               }
 
                unlink(sdata.ttmpfile);
-               freeState(&sstate);
 
+               clearhash(state.token_hash);
+               clearhash(state.url);
 
-            #ifdef HAVE_SQLITE3
-               updateCounters(&sdata, data, &counters, cfg);
-            #endif
-
-
-            #ifdef HAVE_SQLITE3
-               db_conn = 0;
-               sqlite3_close(sdata.db);
-               rc = SQLITE_ERROR;
-            #endif
-
-               alarm(cfg->session_timeout);
 
                /* if we have nothing after the trailing (.), we can read
                   the next command from the network */
@@ -378,16 +312,6 @@ void handleSession(int new_sd, struct __data *data, struct __config *cfg){
                ret = write(sdata.fd, puf, n);
                sdata.tot_len += ret;
 
-            #ifdef HAVE_MAILBUF
-               if(sdata.message_size > 0 && sdata.message_size < MAILBUFSIZE-10){
-                  if(sdata.mailpos + n < MAILBUFSIZE-10){
-                     memcpy(sdata.mailbuf + sdata.mailpos, puf, n);
-                     sdata.mailpos += n;
-                  }
-                  else sdata.discard_mailbuf = 1;
-               }
-            #endif
-
                memcpy(prevbuf, puf, n);
                prevlen = n;
 
@@ -409,9 +333,11 @@ AFTER_PERIOD:
 
 
          if(strncasecmp(buf, SMTP_CMD_EHLO, strlen(SMTP_CMD_EHLO)) == 0 || strncasecmp(buf, LMTP_CMD_LHLO, strlen(LMTP_CMD_LHLO)) == 0){
-            if(state == SMTP_STATE_INIT) state = SMTP_STATE_HELO;
+            if(smtp_state == SMTP_STATE_INIT) smtp_state = SMTP_STATE_HELO;
 
-            snprintf(buf, MAXBUFSIZE-1, SMTP_RESP_250_EXTENSIONS, cfg->hostid);
+            if(sdata.tls == 0) snprintf(buf, MAXBUFSIZE-1, SMTP_RESP_250_EXTENSIONS, cfg->hostid, data->starttls);
+            else snprintf(buf, MAXBUFSIZE-1, SMTP_RESP_250_EXTENSIONS, cfg->hostid, "");
+
             strncat(resp, buf, MAXBUFSIZE-1);
 
             continue;
@@ -421,7 +347,7 @@ AFTER_PERIOD:
 
 
          if(strncasecmp(buf, SMTP_CMD_HELO, strlen(SMTP_CMD_HELO)) == 0){
-            if(state == SMTP_STATE_INIT) state = SMTP_STATE_HELO;
+            if(smtp_state == SMTP_STATE_INIT) smtp_state = SMTP_STATE_HELO;
 
             strncat(resp, SMTP_RESP_250_OK, MAXBUFSIZE-1);
 
@@ -436,21 +362,30 @@ AFTER_PERIOD:
              * XFORWARD PROTO=SMTP HELO=rhwfsvji..
              */
 
-            if(strlen(sdata.xforward) + strlen(buf) < SMALLBUFSIZE-2){
-               strncat(sdata.xforward, buf, SMALLBUFSIZE-3);
-               strncat(sdata.xforward, "\r\n", SMALLBUFSIZE-1);
-            }
-
-            trimBuffer(buf);
+            trim_buffer(buf);
 
             q = strstr(buf, "ADDR=");
             if(q){
-               snprintf(sdata.client_addr, SMALLBUFSIZE-1, "%s", q+5);
-               q = strchr(sdata.client_addr, ' ');
+               snprintf(sdata.ip, SMALLBUFSIZE-1, "%s", q+5);
+               q = strchr(sdata.ip, ' ');
                if(q) *q = '\0';
 
-               if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: smtp client address: *%s*", sdata.ttmpfile, sdata.client_addr);
+               sdata.ipcnt = 2; // to prevent the parser to overwrite ip/hostname
+
+               if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: smtp client xforward address: *%s*", sdata.ttmpfile, sdata.ip);
             }
+
+            q = strstr(buf, "NAME=");
+            if(q){
+               snprintf(sdata.hostname, SMALLBUFSIZE-1, "%s", q+5);
+               q = strchr(sdata.hostname, ' ');
+               if(q) *q = '\0';
+
+               sdata.ipcnt = 2; // to prevent the parser to overwrite ip/hostname
+
+               if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: smtp client xforward hostname: *%s*", sdata.ttmpfile, sdata.hostname);
+            }
+
 
             strncat(resp, SMTP_RESP_250_OK, MAXBUFSIZE-1);
 
@@ -458,33 +393,54 @@ AFTER_PERIOD:
          }
 
 
+      #ifdef HAVE_STARTTLS
+         if(cfg->tls_enable > 0 && strncasecmp(buf, SMTP_CMD_STARTTLS, strlen(SMTP_CMD_STARTTLS)) == 0 && strlen(data->starttls) > 4 && sdata.tls == 0){
+            if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: starttls request from client", sdata.ttmpfile);
+
+            if(data->ctx){
+               data->ssl = SSL_new(data->ctx);
+               if(data->ssl){
+
+                  SSL_set_options(data->ssl, SSL_OP_NO_SSLv2|SSL_OP_NO_SSLv3);
+
+                  if(SSL_set_fd(data->ssl, new_sd) == 1){
+                     strncat(resp, SMTP_RESP_220_READY_TO_START_TLS, MAXBUFSIZE-1);
+                     starttls = 1;
+                     smtp_state = SMTP_STATE_INIT;
+
+                     continue;
+                  } syslog(LOG_PRIORITY, "%s: SSL_set_fd() failed", sdata.ttmpfile);
+               } syslog(LOG_PRIORITY, "%s: SSL_new() failed", sdata.ttmpfile);
+            } syslog(LOG_PRIORITY, "%s: SSL ctx is null!", sdata.ttmpfile);
+
+
+            strncat(resp, SMTP_RESP_454_ERR_TLS_TEMP_ERROR, MAXBUFSIZE-1);
+            continue;
+         }
+      #endif
+
+
          if(strncasecmp(buf, SMTP_CMD_MAIL_FROM, strlen(SMTP_CMD_MAIL_FROM)) == 0){
 
-            if(state != SMTP_STATE_HELO){
+            if(smtp_state != SMTP_STATE_HELO && smtp_state != SMTP_STATE_PERIOD){
                strncat(resp, SMTP_RESP_503_ERR, MAXBUFSIZE-1);
-            } 
+            }
             else {
-               state = SMTP_STATE_MAIL_FROM;
 
-               /* get the SIZE argumentum from the MAIL FROM command */
+               if(smtp_state == SMTP_STATE_PERIOD){
+                  if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: initiated new transaction", sdata.ttmpfile);
 
-            #ifdef HAVE_MAILBUF
-               q = strstr(buf, " SIZE=");
-               if(q){
-                  *q = '\0';
-                  i = strcspn(q+6, " \r\n");
-                  if(i > 0){
-                     *(q+6+i) = '\0';
-                     sdata.message_size = atoi(q+6);
-                  }
+                  unlink(sdata.ttmpfile);
+
+                  init_session_data(&sdata, cfg);
                }
-            #endif
+
+               smtp_state = SMTP_STATE_MAIL_FROM;
 
                snprintf(sdata.mailfrom, SMALLBUFSIZE-1, "%s\r\n", buf);
 
-
-               memset(fromemail, 0, SMALLBUFSIZE);
-               extractEmail(sdata.mailfrom, fromemail);
+               memset(sdata.fromemail, 0, SMALLBUFSIZE);
+               extractEmail(sdata.mailfrom, sdata.fromemail);
 
                strncat(resp, SMTP_RESP_250_OK, strlen(SMTP_RESP_250_OK));
 
@@ -497,61 +453,43 @@ AFTER_PERIOD:
 
          if(strncasecmp(buf, SMTP_CMD_RCPT_TO, strlen(SMTP_CMD_RCPT_TO)) == 0){
 
-            if(state == SMTP_STATE_MAIL_FROM || state == SMTP_STATE_RCPT_TO){
+            if(smtp_state == SMTP_STATE_MAIL_FROM || smtp_state == SMTP_STATE_RCPT_TO){
                if(strlen(buf) > SMALLBUFSIZE/2){
                   strncat(resp, SMTP_RESP_550_ERR_TOO_LONG_RCPT_TO, MAXBUFSIZE-1);
                   continue;
                }
 
                if(sdata.num_of_rcpt_to < MAX_RCPT_TO-1){
-                  snprintf(sdata.rcptto[sdata.num_of_rcpt_to], SMALLBUFSIZE-1, "%s\r\n", buf);
+                  extractEmail(buf, sdata.rcptto[sdata.num_of_rcpt_to]);
                }
 
-               state = SMTP_STATE_RCPT_TO;
+               smtp_state = SMTP_STATE_RCPT_TO;
 
-               /* check against blackhole addresses */
+               if(cfg->blackhole_email_list[0]){
+                   if(is_item_on_list(sdata.rcptto[sdata.num_of_rcpt_to], cfg->blackhole_email_list, "") == 1){
+                      sdata.blackhole = 1;
+                      counters.c_minefield++;
 
-               extractEmail(buf, rctptoemail);
+                      if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: we trapped %s on the blackhole", sdata.ttmpfile, sdata.rcptto[sdata.num_of_rcpt_to]);
 
-               if(data->blackhole){
-                  a = data->blackhole;
-
-                  while(a){
-                     if(strcmp(a->s, rctptoemail) == 0){
-                        if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: we have %s on the blackhole", sdata.ttmpfile, rctptoemail);
-                        sdata.blackhole = 1;
-                        counters.c_minefield++;
-
-                        sdata.rcpt_minefield[sdata.num_of_rcpt_to] = 1;
-
-                     #ifdef HAVE_BLACKHOLE
-                        gettimeofday(&tv1, &tz);
-                        store_minefield_ip(&sdata, cfg);
-                        gettimeofday(&tv2, &tz);
-                        sdata.__minefield = tvdiff(tv2, tv1);
-                     #endif
-
-                        break;
-                     }
-                     a = a->r;
-                  }
+                      gettimeofday(&tv1, &tz);
+                      store_minefield_ip(&sdata, data, sdata.ip, cfg);
+                      gettimeofday(&tv2, &tz);
+                      sdata.__minefield = tvdiff(tv2, tv1);
+                   }
                }
 
-
-               if(sdata.num_of_rcpt_to < MAX_RCPT_TO-1) sdata.num_of_rcpt_to++;
-
-               /* is it a training request? */
-
-               if(sdata.num_of_rcpt_to == 1 && (strcasestr(sdata.rcptto[0], "+ham@") || strncmp(rctptoemail, "ham@", 4) == 0 ) ){
+               if(sdata.num_of_rcpt_to == 0 && (strcasestr(sdata.rcptto[0], "+ham@") || strncmp(sdata.rcptto[sdata.num_of_rcpt_to], "ham@", 4) == 0 ) ){
                   sdata.training_request = 1;
                   counters.c_fp++;
                }
-
-               if(sdata.num_of_rcpt_to == 1 && (strcasestr(sdata.rcptto[0], "+spam@") || strncmp(rctptoemail, "spam@", 5) == 0) ){
+     
+               if(sdata.num_of_rcpt_to == 0 && (strcasestr(sdata.rcptto[0], "+spam@") || strncmp(sdata.rcptto[sdata.num_of_rcpt_to], "spam@", 5) == 0) ){
                   sdata.training_request = 1;
                   counters.c_fn++;
                }
 
+               if(sdata.num_of_rcpt_to < MAX_RCPT_TO-1) sdata.num_of_rcpt_to++;
 
                strncat(resp, SMTP_RESP_250_OK, MAXBUFSIZE-1);
             }
@@ -567,20 +505,20 @@ AFTER_PERIOD:
 
             memset(last2buf, 0, 2*MAXBUFSIZE+1);
             memset(prevbuf, 0, MAXBUFSIZE);
-            inj = ERR_REJECT;
+            inj = ERR;
             prevlen = 0;
 
-            if(state != SMTP_STATE_RCPT_TO){
+            if(smtp_state != SMTP_STATE_RCPT_TO){
                strncat(resp, SMTP_RESP_503_ERR, MAXBUFSIZE-1);
             }
             else {
-               sdata.fd = open(sdata.ttmpfile, O_CREAT|O_RDWR, S_IRUSR|S_IWUSR);
+               sdata.fd = open(sdata.filename, O_CREAT|O_RDWR, S_IRUSR|S_IWUSR|S_IRGRP);
                if(sdata.fd == -1){
                   syslog(LOG_PRIORITY, "%s: %s", ERR_OPEN_TMP_FILE, sdata.ttmpfile);
                   strncat(resp, SMTP_RESP_451_ERR, MAXBUFSIZE-1);
                }
                else {
-                  state = SMTP_STATE_DATA;
+                  smtp_state = SMTP_STATE_DATA;
                   strncat(resp, SMTP_RESP_354_DATA_OK, MAXBUFSIZE-1);
                }
 
@@ -592,16 +530,15 @@ AFTER_PERIOD:
 
          if(strncasecmp(buf, SMTP_CMD_QUIT, strlen(SMTP_CMD_QUIT)) == 0){
 
-            state = SMTP_STATE_FINISHED;
+            smtp_state = SMTP_STATE_FINISHED;
 
             snprintf(buf, MAXBUFSIZE-1, SMTP_RESP_221_GOODBYE, cfg->hostid);
-            send(new_sd, buf, strlen(buf), 0);
-            if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent: %s", sdata.ttmpfile, buf);
+            strncat(resp, buf, MAXBUFSIZE-1);
 
             unlink(sdata.ttmpfile);
             if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: removed", sdata.ttmpfile);
 
-            goto QUITTING;
+            continue;
          }
 
 
@@ -618,16 +555,16 @@ AFTER_PERIOD:
             if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: removed", sdata.ttmpfile);
             unlink(sdata.ttmpfile);
 
-            initSessionData(&sdata, cfg);
+            init_session_data(&sdata, cfg);
 
-            state = SMTP_STATE_HELO;
+            smtp_state = SMTP_STATE_HELO;
 
             continue;
          }
 
          /* by default send 502 command not implemented message */
 
-         syslog(LOG_PRIORITY, "%s: invalid command: %s", sdata.ttmpfile, buf);
+         syslog(LOG_PRIORITY, "%s: invalid command: *%s*", sdata.ttmpfile, buf);
          strncat(resp, SMTP_RESP_502_ERR, MAXBUFSIZE-1);
       }
 
@@ -635,9 +572,35 @@ AFTER_PERIOD:
       /* now we can send our buffered response */
 
       if(strlen(resp) > 0){
-         send(new_sd, resp, strlen(resp), 0);
+         write1(new_sd, resp, strlen(resp), sdata.tls, data->ssl);
+
          if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent: %s", sdata.ttmpfile, resp);
          memset(resp, 0, MAXBUFSIZE);
+
+      #ifdef HAVE_STARTTLS
+         if(starttls == 1 && sdata.tls == 0){
+
+            if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: waiting for ssl handshake", sdata.ttmpfile);
+
+            rc = SSL_accept(data->ssl);
+
+            if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: SSL_accept() finished", sdata.ttmpfile);
+
+            if(rc == 1){
+               sdata.tls = 1;
+            }
+            else {
+               ERR_error_string_n(ERR_get_error(), ssl_error, SMALLBUFSIZE);
+               syslog(LOG_PRIORITY, "%s: SSL_accept() failed, rc=%d, errorcode: %d, error text: %s\n", sdata.ttmpfile, rc, SSL_get_error(data->ssl, rc), ssl_error);
+            }
+         }
+      #endif
+
+
+      }
+
+      if(smtp_state == SMTP_STATE_FINISHED){
+         goto QUITTING;
       }
 
    } /* while */
@@ -647,10 +610,19 @@ AFTER_PERIOD:
     * ie. we have timed out than send back 421 error message
     */
 
-   if(state < SMTP_STATE_QUIT && inj != OK){
+   if(smtp_state < SMTP_STATE_QUIT && inj == ERR){
       snprintf(buf, MAXBUFSIZE-1, SMTP_RESP_421_ERR, cfg->hostid);
-      send(new_sd, buf, strlen(buf), 0);
+      write1(new_sd, buf, strlen(buf), sdata.tls, data->ssl);
+
       if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent: %s", sdata.ttmpfile, buf);
+
+      if(sdata.fd != -1){
+
+         syslog(LOG_PRIORITY, "%s: removing stale files: %s", sdata.ttmpfile, sdata.ttmpfile);
+
+         close(sdata.fd);
+         unlink(sdata.ttmpfile);
+      }
 
       goto QUITTING;
    }
@@ -658,95 +630,22 @@ AFTER_PERIOD:
 
 QUITTING:
 
-#ifdef HAVE_MYSQL
-   updateCounters(&sdata, data, &counters, cfg);
-#endif
-#ifdef HAVE_PSQL
-   updateCounters(&sdata, data, &counters, cfg);
+   update_counters(&sdata, data, &counters, cfg);
+
+#ifdef NEED_MYSQL
+   close_database(&sdata);
 #endif
 
-#ifdef HAVE_MYDB
-   close_mydb(sdata.mhash);
+#ifdef HAVE_STARTTLS
+   if(sdata.tls == 1){
+      SSL_shutdown(data->ssl);
+      SSL_free(data->ssl);
+   }
 #endif
-#ifdef HAVE_MYSQL
-   mysql_close(&(sdata.mysql));
-#endif
-#ifdef HAVE_PSQL
-   PQfinish( sdata.psql );
-#endif
-
-#ifdef HAVE_MEMCACHED
-   memcached_shutdown(&(data->memc));
-#endif
-
-   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "child has finished");
 
    if(cfg->verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "processed %llu messages", counters.c_rcvd);
 
+   return (int)counters.c_rcvd;
 }
 
-
-void killChild(){
-   syslog(LOG_PRIORITY, "child is killed by force");
-   exit(0);
-}
-
-
-void initSessionData(struct session_data *sdata, struct __config *cfg){
-   int i;
-
-
-   sdata->fd = -1;
-
-   memset(sdata->ttmpfile, 0, SMALLBUFSIZE);
-   createClapfID(&(sdata->ttmpfile[0]), cfg->timestamp_mode);
-   unlink(sdata->ttmpfile);
-
-   memset(sdata->mailfrom, 0, SMALLBUFSIZE);
-   memset(sdata->name, 0, SMALLBUFSIZE);
-   snprintf(sdata->client_addr, SMALLBUFSIZE-1, "null");
-   memset(sdata->xforward, 0, SMALLBUFSIZE);
-
-   memset(sdata->whitelist, 0, MAXBUFSIZE);
-   memset(sdata->blacklist, 0, MAXBUFSIZE);
-
-   memset(sdata->clapf_id, 0, SMALLBUFSIZE);
-
-   memset(sdata->subject, 0, SMALLBUFSIZE);
-
-#ifdef HAVE_ESET
-   memset(sdata->eset, 0, SMALLBUFSIZE);
-#endif
-
-   sdata->uid = 0;
-   sdata->gid = 0;
-   sdata->tot_len = 0;
-   sdata->skip_id_check = 0;
-   sdata->num_of_rcpt_to = 0;
-   sdata->trapped_client = 0;
-   sdata->blackhole = 0;
-   sdata->need_signo_check = 0;
-   sdata->training_request = 0;
-   sdata->from_address_in_mydomain = 0;
-
-#ifdef HAVE_MAILBUF
-   sdata->message_size = sdata->mailpos = sdata->discard_mailbuf = 0;
-   memset(sdata->mailbuf, 0, MAILBUFSIZE);
-#endif
-
-   sdata->tre = '-';
-   sdata->statistically_whitelisted = 0;
-   sdata->mynetwork = 0;
-
-   sdata->rav = AVIR_OK;
-
-   sdata->__parsed = sdata->__av = sdata->__user = sdata->__policy = sdata->__as = sdata->__minefield = 0;
-   sdata->__training = sdata->__update = sdata->__store = sdata->__inject = sdata->__acquire = 0;
-
-   sdata->spaminess = DEFAULT_SPAMICITY;
-
-   for(i=0; i<MAX_RCPT_TO; i++) memset(sdata->rcptto[i], 0, SMALLBUFSIZE);
-
-   memset(sdata->rcpt_minefield, 0, MAX_RCPT_TO);
-}
 

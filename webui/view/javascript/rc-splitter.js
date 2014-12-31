@@ -472,6 +472,3 @@ function rcube_splitter(attrib)
   };
 
 } // end class rcube_splitter
-
-var split = new rcube_webmail();
-

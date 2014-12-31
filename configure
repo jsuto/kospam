@@ -621,30 +621,19 @@ ac_includes_default="\
 
 ac_subst_vars='LTLIBOBJS
 LIBOBJS
-DATAROOTDIR
-LOCALSTATEDIR
+LIBEXECDIR
+DATADIR
 CFGDIR
-PSQL_CONFIG
 MYSQL_CONFIG
+iv
 id_bin
-sqlite3_batch
 libclamav_extra_libs
-spamsum_install
-spamsum
-spamsum_libs
-db_install
 sql_obj
-user_obj
 sql_libs
 sql_includes
-test
-preparesql
-spamdrop_install
-spamdrop
-parsembox_install
-parsembox
+MAKE
 SUBDIRS
-CLAPF_USER
+RUNNING_USER
 OBJS
 LIBDIR
 INCDIR
@@ -705,30 +694,12 @@ ac_subst_files=''
 ac_user_opts='
 enable_option_checking
 enable_static_build
-enable_libclamav
 enable_clamd
-enable_avast
-enable_avast_home
-enable_kav
-enable_drweb
-enable_eset
-enable_whitelist
-enable_blacklist
-enable_case
-enable_rbl
-enable_all_received
-enable_blackhole
-with_store
-enable_policy
 enable_memcached
-with_tokendb
-enable_lmtp
-enable_language_detection
-enable_spamsum
-enable_spamc_emul
+enable_starttls
+enable_tcpwrappers
+with_database
 with_clapf_user
-enable_uid_splitting
-enable_spamdrop_helper
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1347,33 +1318,15 @@ Optional Features:
   --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
   --enable-static-build   build statically linked executables (default: dynamically linked)
-  --enable-libclamav      build libclamav antivirus support
   --enable-clamd          build clamd antivirus support
-  --enable-avast          build avast! antivirus support
-  --enable-avast-home     build avast! home personal edition antivirus support
-  --enable-kav            build Kaspersky antivirus support
-  --enable-drweb          build Dr.Web antivirus support
-  --enable-eset           build ESET antivirus support
-  --enable-whitelist      use whitelist
-  --enable-blacklist      use blacklist (this is _NOT_ RBL)
-  --enable-case           use case sensitive tokens
-  --enable-rbl            use the (SU)RBL database
-  --enable-all-received   check all the IP-addresses from "Received: from ..." lines against blacklists
-  --enable-blackhole      build the blackhole feature
-  --enable-policy         enable the policy feature
   --enable-memcached      build memcached support
-  --enable-lmtp           use LMTP local delivery (default: SMTP)
-  --enable-language-detection use the language detection feature (experimental)
-  --enable-spamsum        enable spamsum support (experimental)
-  --enable-spamc-emul     enable spamc emulation to use spamd of SpamAssassin
-  --enable-uid-splitting  enable splitting quarantine direcory path by numeric uid
-  --enable-spamdrop-helper use external spamdrop helper program
+  --enable-starttls       build starttls support
+  --enable-tcpwrappers    build tcpwrappers support
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
-  --with-store[=fs|nfs]         use either the local filesystem or NFS to keep emails (default: none)
-  --with-tokendb[=mysql|psql|sqlite3]  use either mysql or psql or sqlite3 database holding tokens (default: none)
+  --with-database[=mysql]  select the used database, currently mysql only (default: none)
   --with-clapf-user=username      what user the clapf daemon shall be run as
 
 Some influential environment variables:
@@ -2103,7 +2056,8 @@ ac_config_headers="$ac_config_headers clapf-config.h"
 
 
 CONFIGURE_PARAMS_FILE=params.h
-rm -f $CONFIGURE_PARAMS_FILE; echo "#define CONFIGURE_PARAMS \"Build Date: "`date`"\nConfigure command: ./configure $@\"" > $CONFIGURE_PARAMS_FILE
+
+PARAMS=$@
 
 ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
@@ -3475,59 +3429,53 @@ done
 
 
 
-
-
-
-
-
-
-
-
-
-
 have_libclamav="no"
 have_libtool="no"
 have_clamd="no"
-have_avast="no"
-have_avast_home="no"
-have_kav="no"
-have_drweb="no"
-have_eset="no"
 
 have_antivirus="no"
-have_antispam="no"
-have_blackhole="no"
-have_spamdrop="no"
 have_mysql="no"
-have_icc_guide="no"
-have_sqlite3="no"
-have_rbl="no"
-have_all_received="no"
+have_psql="no"
+have_tre="no"
+have_zip="no"
+have_zlib="no"
+have_starttls="no"
+have_tcpwrappers="no"
 have_gsl="no"
-have_store="no"
-have_whitelist="no"
-have_blacklist="no"
-have_case="no"
-have_policy="no"
 
+timeout_binary=""
 
 have_static_build="no"
 
-antispam_libs=""
+antispam_libs="-lz -lm -ldl -lcrypto -lssl"
 defs=""
 objs=""
 user_obj=""
 sql_obj=""
-sqlite3_libs=""
-spamsum_libs=""
-sqlite3_batch=""
 os=`uname -s`
 
 id_bin="id"
 
-SUBDIRS="src etc util perl init.d templates history contrib/stat"
+MAKE="make"
 
-want_language_detection="no"
+if test "$os" = "SunOS"; then MAKE="gmake"; fi
+
+rm -f $CONFIGURE_PARAMS_FILE
+
+LDD_VERSION=`ldd --version | head -1`
+GCC_VERSION=''
+
+if test -f `which gcc`; then gcc -v 2> aa; GCC_VERSION=`tail -1 aa`; rm -f aa; fi
+
+if test "$os" = "SunOS"; then
+   echo "#define CONFIGURE_PARAMS \"Build Date: "`date`'\\n" \\' > $CONFIGURE_PARAMS_FILE
+else
+   echo "#define CONFIGURE_PARAMS \"Build Date: "`date`"\\nldd version: $LDD_VERSION\\ngcc version: $GCC_VERSION\n"\" \\ > $CONFIGURE_PARAMS_FILE
+fi
+echo "\"Configure command: ./configure $PARAMS\"" >> $CONFIGURE_PARAMS_FILE
+
+
+SUBDIRS="src "
 
 
 
@@ -3539,193 +3487,6 @@ else
 fi
 
 
-
-
-# Check whether --enable-libclamav was given.
-if test "${enable_libclamav+set}" = set; then :
-  enableval=$enable_libclamav; want_clamav=$enableval
-else
-  want_clamav="no"
-fi
-
-
-   if test "$want_clamav" = "yes"; then
-
-	for ac_header in clamav.h
-do :
-  ac_fn_c_check_header_mongrel "$LINENO" "clamav.h" "ac_cv_header_clamav_h" "$ac_includes_default"
-if test "x$ac_cv_header_clamav_h" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_CLAMAV_H 1
-_ACEOF
- have_libclamav=yes
-else
-  have_libclamav=no
-fi
-
-done
-
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for main in -lclamav" >&5
-$as_echo_n "checking for main in -lclamav... " >&6; }
-if ${ac_cv_lib_clamav_main+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lclamav  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-
-int
-main ()
-{
-return main ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_clamav_main=yes
-else
-  ac_cv_lib_clamav_main=no
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_clamav_main" >&5
-$as_echo "$ac_cv_lib_clamav_main" >&6; }
-if test "x$ac_cv_lib_clamav_main" = xyes; then :
-  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for cl_scanfile in -lclamav" >&5
-$as_echo_n "checking for cl_scanfile in -lclamav... " >&6; }
-if ${ac_cv_lib_clamav_cl_scanfile+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lclamav  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-/* Override any GCC internal prototype to avoid an error.
-   Use char because int might match the return type of a GCC
-   builtin and then its argument prototype would still apply.  */
-#ifdef __cplusplus
-extern "C"
-#endif
-char cl_scanfile ();
-int
-main ()
-{
-return cl_scanfile ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_clamav_cl_scanfile=yes
-else
-  ac_cv_lib_clamav_cl_scanfile=no
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_clamav_cl_scanfile" >&5
-$as_echo "$ac_cv_lib_clamav_cl_scanfile" >&6; }
-if test "x$ac_cv_lib_clamav_cl_scanfile" = xyes; then :
-  have_libclamav=yes
-else
-  have_libclamav=no
-fi
-
-fi
-ac_cv_lib_clamav=ac_cv_lib_clamav_main
-
-
-	if test "$have_libclamav" = "no"; then
-   	   echo "clamav not found";
-   	   exit 1;
-	fi
-
-        { $as_echo "$as_me:${as_lineno-$LINENO}: checking for main in -lltdl" >&5
-$as_echo_n "checking for main in -lltdl... " >&6; }
-if ${ac_cv_lib_ltdl_main+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lltdl  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-
-int
-main ()
-{
-return main ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_ltdl_main=yes
-else
-  ac_cv_lib_ltdl_main=no
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_ltdl_main" >&5
-$as_echo "$ac_cv_lib_ltdl_main" >&6; }
-if test "x$ac_cv_lib_ltdl_main" = xyes; then :
-  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for lt_dlopen in -lltdl" >&5
-$as_echo_n "checking for lt_dlopen in -lltdl... " >&6; }
-if ${ac_cv_lib_ltdl_lt_dlopen+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lltdl  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-/* Override any GCC internal prototype to avoid an error.
-   Use char because int might match the return type of a GCC
-   builtin and then its argument prototype would still apply.  */
-#ifdef __cplusplus
-extern "C"
-#endif
-char lt_dlopen ();
-int
-main ()
-{
-return lt_dlopen ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_ltdl_lt_dlopen=yes
-else
-  ac_cv_lib_ltdl_lt_dlopen=no
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_ltdl_lt_dlopen" >&5
-$as_echo "$ac_cv_lib_ltdl_lt_dlopen" >&6; }
-if test "x$ac_cv_lib_ltdl_lt_dlopen" = xyes; then :
-  have_libtool=yes
-else
-  have_libtool=no
-fi
-
-fi
-ac_cv_lib_ltdl=ac_cv_lib_ltdl_main
-
-
-        have_antivirus="yes"
-   fi
 
 
 
@@ -3742,133 +3503,139 @@ fi
    fi
 
 
-
-# Check whether --enable-avast was given.
-if test "${enable_avast+set}" = set; then :
-  enableval=$enable_avast; want_avast=$enableval
+# Check whether --enable-memcached was given.
+if test "${enable_memcached+set}" = set; then :
+  enableval=$enable_memcached; want_memcached=$enableval
 else
-  want_avast="no"
+  want_memcached="no"
 fi
 
 
-    if test "$want_avast" = "yes"; then
-       have_avast="yes"
-       have_antivirus="yes"
-    fi
 
-
-
-
-# Check whether --enable-avast-home was given.
-if test "${enable_avast_home+set}" = set; then :
-  enableval=$enable_avast_home; want_avast_home=$enableval
+# Check whether --enable-starttls was given.
+if test "${enable_starttls+set}" = set; then :
+  enableval=$enable_starttls; have_starttls=$enableval
 else
-  want_avast_home="no"
+  have_starttls="no"
 fi
 
 
-    if test "$want_avast_home" = "yes"; then
-       have_avast_home="yes"
-       have_antivirus="yes"
-    fi
 
-
-
-
-# Check whether --enable-kav was given.
-if test "${enable_kav+set}" = set; then :
-  enableval=$enable_kav; want_kav=$enableval
+# Check whether --enable-tcpwrappers was given.
+if test "${enable_tcpwrappers+set}" = set; then :
+  enableval=$enable_tcpwrappers; want_tcpwrappers=$enableval
 else
-  want_kav="no"
+  want_tcpwrappers="no"
 fi
 
 
-    if test "$want_kav" = "yes"; then
-       have_kav="yes"
-       have_antivirus="yes"
-    fi
 
-
-
-
-# Check whether --enable-drweb was given.
-if test "${enable_drweb+set}" = set; then :
-  enableval=$enable_drweb; want_drweb=$enableval
+if test "$want_tcpwrappers" = "yes"; then
+   for ac_header in tcpd.h
+do :
+  ac_fn_c_check_header_mongrel "$LINENO" "tcpd.h" "ac_cv_header_tcpd_h" "$ac_includes_default"
+if test "x$ac_cv_header_tcpd_h" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_TCPD_H 1
+_ACEOF
+ have_tcpwrappers=yes
 else
-  want_drweb="no"
+  have_tcpwrappers=no
 fi
 
+done
 
-    if test "$want_drweb" = "yes"; then
-       have_drweb="yes"
-       have_antivirus="yes"
-    fi
-
-
-
-# Check whether --enable-eset was given.
-if test "${enable_eset+set}" = set; then :
-  enableval=$enable_eset; want_eset=$enableval
+   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for hosts_access in -lwrap" >&5
+$as_echo_n "checking for hosts_access in -lwrap... " >&6; }
+if ${ac_cv_lib_wrap_hosts_access+:} false; then :
+  $as_echo_n "(cached) " >&6
 else
-  want_eset="no"
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lwrap  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char hosts_access ();
+int
+main ()
+{
+return hosts_access ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_wrap_hosts_access=yes
+else
+  ac_cv_lib_wrap_hosts_access=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_wrap_hosts_access" >&5
+$as_echo "$ac_cv_lib_wrap_hosts_access" >&6; }
+if test "x$ac_cv_lib_wrap_hosts_access" = xyes; then :
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for hosts_access in -lwrap" >&5
+$as_echo_n "checking for hosts_access in -lwrap... " >&6; }
+if ${ac_cv_lib_wrap_hosts_access+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lwrap  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char hosts_access ();
+int
+main ()
+{
+return hosts_access ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_wrap_hosts_access=yes
+else
+  ac_cv_lib_wrap_hosts_access=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_wrap_hosts_access" >&5
+$as_echo "$ac_cv_lib_wrap_hosts_access" >&6; }
+if test "x$ac_cv_lib_wrap_hosts_access" = xyes; then :
+  have_tcpwrappers=yes
+else
+  echo "libwrap is not found"; have_tcpwrappers=no
 fi
 
-
-    if test "$want_eset" = "yes"; then
-       have_eset="yes"
-       have_antivirus="yes"
-    fi
-
-
-
-
-# Check whether --enable-whitelist was given.
-if test "${enable_whitelist+set}" = set; then :
-  enableval=$enable_whitelist; want_whitelist=$enableval
-else
-  want_whitelist="no"
 fi
+ac_cv_lib_wrap=ac_cv_lib_wrap_main
 
-
-   if test "$want_whitelist" = "yes"; then
-      have_whitelist="yes"
+   if test "$have_tcpwrappers" = "no"; then
+      echo "can't find either tcpd.h or libwrap";
+      exit 1;
    fi
-
-
-
-# Check whether --enable-blacklist was given.
-if test "${enable_blacklist+set}" = set; then :
-  enableval=$enable_blacklist; want_blacklist=$enableval
-else
-  want_blacklist="no"
 fi
 
 
-   if test "$want_blacklist" = "yes"; then
-      have_blacklist="yes"
-   fi
 
-
-
-
-# Check whether --enable-case was given.
-if test "${enable_case+set}" = set; then :
-  enableval=$enable_case; want_case=$enableval
-else
-  want_case="no"
-fi
-
-
-   if test "$want_case" = "yes"; then
-      have_case="yes"
-   fi
-
-
-
-
-
-
-    for ac_header in math.h
+for ac_header in math.h
 do :
   ac_fn_c_check_header_mongrel "$LINENO" "math.h" "ac_cv_header_math_h" "$ac_includes_default"
 if test "x$ac_cv_header_math_h" = xyes; then :
@@ -3882,9 +3649,9 @@ fi
 
 done
 
-    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for main in -lm" >&5
-$as_echo_n "checking for main in -lm... " >&6; }
-if ${ac_cv_lib_m_main+:} false; then :
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for fabs in -lm" >&5
+$as_echo_n "checking for fabs in -lm... " >&6; }
+if ${ac_cv_lib_m_fabs+:} false; then :
   $as_echo_n "(cached) " >&6
 else
   ac_check_lib_save_LIBS=$LIBS
@@ -3892,27 +3659,33 @@ LIBS="-lm ""; exit $LIBS"
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
-
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char fabs ();
 int
 main ()
 {
-return main ();
+return fabs ();
   ;
   return 0;
 }
 _ACEOF
 if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_m_main=yes
+  ac_cv_lib_m_fabs=yes
 else
-  ac_cv_lib_m_main=no
+  ac_cv_lib_m_fabs=no
 fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
 LIBS=$ac_check_lib_save_LIBS
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_m_main" >&5
-$as_echo "$ac_cv_lib_m_main" >&6; }
-if test "x$ac_cv_lib_m_main" = xyes; then :
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_m_fabs" >&5
+$as_echo "$ac_cv_lib_m_fabs" >&6; }
+if test "x$ac_cv_lib_m_fabs" = xyes; then :
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for fabs in -lm" >&5
 $as_echo_n "checking for fabs in -lm... " >&6; }
 if ${ac_cv_lib_m_fabs+:} false; then :
@@ -3964,15 +3737,228 @@ fi
 ac_cv_lib_m=ac_cv_lib_m_main
 
 
+for ac_header in openssl/sha.h
+do :
+  ac_fn_c_check_header_mongrel "$LINENO" "openssl/sha.h" "ac_cv_header_openssl_sha_h" "$ac_includes_default"
+if test "x$ac_cv_header_openssl_sha_h" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_OPENSSL_SHA_H 1
+_ACEOF
+ have_crypto=yes
+else
+  have_crypto=no
+fi
 
-    antispam_libs="$antispam_libs -lm -ldl"
+done
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for SHA256_Init in -lcrypto" >&5
+$as_echo_n "checking for SHA256_Init in -lcrypto... " >&6; }
+if ${ac_cv_lib_crypto_SHA256_Init+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lcrypto  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char SHA256_Init ();
+int
+main ()
+{
+return SHA256_Init ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_crypto_SHA256_Init=yes
+else
+  ac_cv_lib_crypto_SHA256_Init=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_crypto_SHA256_Init" >&5
+$as_echo "$ac_cv_lib_crypto_SHA256_Init" >&6; }
+if test "x$ac_cv_lib_crypto_SHA256_Init" = xyes; then :
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for SHA256_Init in -lcrypto" >&5
+$as_echo_n "checking for SHA256_Init in -lcrypto... " >&6; }
+if ${ac_cv_lib_crypto_SHA256_Init+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lcrypto  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char SHA256_Init ();
+int
+main ()
+{
+return SHA256_Init ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_crypto_SHA256_Init=yes
+else
+  ac_cv_lib_crypto_SHA256_Init=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_crypto_SHA256_Init" >&5
+$as_echo "$ac_cv_lib_crypto_SHA256_Init" >&6; }
+if test "x$ac_cv_lib_crypto_SHA256_Init" = xyes; then :
+  have_crypto=yes
+else
+  echo "libcrypto is not found"; have_crypto=no
+fi
+
+fi
+ac_cv_lib_crypto=ac_cv_lib_crypto_main
+
+for ac_header in openssl/ssl.h
+do :
+  ac_fn_c_check_header_mongrel "$LINENO" "openssl/ssl.h" "ac_cv_header_openssl_ssl_h" "$ac_includes_default"
+if test "x$ac_cv_header_openssl_ssl_h" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_OPENSSL_SSL_H 1
+_ACEOF
+ have_ssl=yes
+else
+  have_ssl=no
+fi
+
+done
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for SSL_write in -lssl" >&5
+$as_echo_n "checking for SSL_write in -lssl... " >&6; }
+if ${ac_cv_lib_ssl_SSL_write+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lssl  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char SSL_write ();
+int
+main ()
+{
+return SSL_write ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_ssl_SSL_write=yes
+else
+  ac_cv_lib_ssl_SSL_write=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_ssl_SSL_write" >&5
+$as_echo "$ac_cv_lib_ssl_SSL_write" >&6; }
+if test "x$ac_cv_lib_ssl_SSL_write" = xyes; then :
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for SSL_write in -lssl" >&5
+$as_echo_n "checking for SSL_write in -lssl... " >&6; }
+if ${ac_cv_lib_ssl_SSL_write+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lssl  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char SSL_write ();
+int
+main ()
+{
+return SSL_write ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_ssl_SSL_write=yes
+else
+  ac_cv_lib_ssl_SSL_write=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_ssl_SSL_write" >&5
+$as_echo "$ac_cv_lib_ssl_SSL_write" >&6; }
+if test "x$ac_cv_lib_ssl_SSL_write" = xyes; then :
+  have_ssl=yes
+else
+  echo "libssl is not found"; have_ssl=no
+fi
+
+fi
+ac_cv_lib_ssl=ac_cv_lib_ssl_main
+
+if test "$have_crypto" = "no" || test "$have_ssl" = "no"; then
+   echo "please install openssl developer package"
+   exit 1
+fi
 
 
 
+for ac_header in gsl/gsl_cdf.h
+do :
+  ac_fn_c_check_header_mongrel "$LINENO" "gsl/gsl_cdf.h" "ac_cv_header_gsl_gsl_cdf_h" "$ac_includes_default"
+if test "x$ac_cv_header_gsl_gsl_cdf_h" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_GSL_GSL_CDF_H 1
+_ACEOF
+ have_gsl=yes
+else
+  echo "gsl_cdf.h is not found"
+fi
+
+done
+
+
+if test "$have_gsl" = "yes"; then
+   defs="$defs -DHAVE_GSL"
+   gsl_libs="-lgslcblas -lgsl"
+fi
 
 
 
-    for ac_header in tre/tre.h
+for ac_header in tre/tre.h
 do :
   ac_fn_c_check_header_mongrel "$LINENO" "tre/tre.h" "ac_cv_header_tre_tre_h" "$ac_includes_default"
 if test "x$ac_cv_header_tre_tre_h" = xyes; then :
@@ -3986,7 +3972,7 @@ fi
 
 done
 
-    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for main in -ltre" >&5
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for main in -ltre" >&5
 $as_echo_n "checking for main in -ltre... " >&6; }
 if ${ac_cv_lib_tre_main+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -4062,266 +4048,35 @@ fi
 fi
 ac_cv_lib_tre=ac_cv_lib_tre_main
 
-
-
-
-    # Check whether --enable-rbl was given.
-if test "${enable_rbl+set}" = set; then :
-  enableval=$enable_rbl; want_rbl=$enableval
-else
-  want_rbl="no"
+if test "$have_tre" = "no"; then
+   echo "please install the tre development packages"
+   exit 1;
 fi
 
 
-    if test "$want_rbl" = "yes"; then
-       have_rbl="yes"
-    fi
 
 
-
-    # Check whether --enable-all-received was given.
-if test "${enable_all_received+set}" = set; then :
-  enableval=$enable_all_received; want_all_received=$enableval
-else
-  want_all_received="no"
-fi
-
-
-    if test "$want_all_received" = "yes"; then
-       have_all_received="yes"
-    fi
-
-
-
-    for ac_header in gsl/gsl_cdf.h
+for ac_header in zip.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "gsl/gsl_cdf.h" "ac_cv_header_gsl_gsl_cdf_h" "$ac_includes_default"
-if test "x$ac_cv_header_gsl_gsl_cdf_h" = xyes; then :
+  ac_fn_c_check_header_mongrel "$LINENO" "zip.h" "ac_cv_header_zip_h" "$ac_includes_default"
+if test "x$ac_cv_header_zip_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
-#define HAVE_GSL_GSL_CDF_H 1
+#define HAVE_ZIP_H 1
 _ACEOF
- have_gsl=yes
+ have_zip=yes
 else
-  echo "gsl_cdf.h is not found"
+  echo "zip.h is not found"
 fi
 
 done
 
-
-    if test "$have_gsl" = "yes"; then
-       defs="$defs -DHAVE_GSL"
-       gsl_libs="-lgslcblas -lgsl"
-    fi
-
-
-
-    # Check whether --enable-blackhole was given.
-if test "${enable_blackhole+set}" = set; then :
-  enableval=$enable_blackhole; want_blackhole=$enableval
-else
-  want_blackhole="no"
-fi
-
-
-    if test "$want_blackhole" = "yes"; then
-       have_blackhole="yes"
-       echo "So you've selected the blackhole feature ... good"
-    fi
-
-
-
-
-
-# Check whether --with-store was given.
-if test "${with_store+set}" = set; then :
-  withval=$with_store;
-  if test "$withval" != "no" -a "$withval" != "yes"; then
-    STORE=$withval
-  fi
-
-  if test "$withval" = "mysql"; then
-     # Extract the first word of "mysql_config", so it can be a program name with args.
-set dummy mysql_config; ac_word=$2
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
-$as_echo_n "checking for $ac_word... " >&6; }
-if ${ac_cv_prog_MYSQL_CONFIG+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  if test -n "$MYSQL_CONFIG"; then
-  ac_cv_prog_MYSQL_CONFIG="$MYSQL_CONFIG" # Let the user override the test.
-else
-as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
-    for ac_exec_ext in '' $ac_executable_extensions; do
-  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
-    ac_cv_prog_MYSQL_CONFIG="yes"
-    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-  done
-IFS=$as_save_IFS
-
-fi
-fi
-MYSQL_CONFIG=$ac_cv_prog_MYSQL_CONFIG
-if test -n "$MYSQL_CONFIG"; then
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $MYSQL_CONFIG" >&5
-$as_echo "$MYSQL_CONFIG" >&6; }
-else
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-fi
-
-
-
-     if test x$MYSQL_CONFIG = xyes; then
-       have_mysql="yes"
-     fi
-
-     if test "$have_mysql" = "yes"; then
-
-            sql_includes=`mysql_config --cflags`
-            sql_libs=`mysql_config --libs_r`
-     else
-        echo "MySQL support is not found"
-        exit 1;
-     fi
-   fi
-
-   if test "$withval" = "psql"; then
-      # Extract the first word of "pg_config", so it can be a program name with args.
-set dummy pg_config; ac_word=$2
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
-$as_echo_n "checking for $ac_word... " >&6; }
-if ${ac_cv_prog_PSQL_CONFIG+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  if test -n "$PSQL_CONFIG"; then
-  ac_cv_prog_PSQL_CONFIG="$PSQL_CONFIG" # Let the user override the test.
-else
-as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
-    for ac_exec_ext in '' $ac_executable_extensions; do
-  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
-    ac_cv_prog_PSQL_CONFIG="yes"
-    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-  done
-IFS=$as_save_IFS
-
-fi
-fi
-PSQL_CONFIG=$ac_cv_prog_PSQL_CONFIG
-if test -n "$PSQL_CONFIG"; then
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $PSQL_CONFIG" >&5
-$as_echo "$PSQL_CONFIG" >&6; }
-else
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-fi
-
-
-
-      if test x$MYSQL_CONFIG = xyes; then
-        have_psql="yes"
-      fi
-
-      if test "$have_psql" = "yes"; then
-
-            sql_includes="-I`pg_config --includedir`"
-            sql_libs="-L`pg_config --libdir`"
-      else
-         echo "PSQL support is not found"
-         exit 1;
-      fi
-   fi
-
-
-fi
-
-
-
-
-
-# Check whether --enable-policy was given.
-if test "${enable_policy+set}" = set; then :
-  enableval=$enable_policy; want_policy=$enableval
-else
-  want_policy="no"
-fi
-
-
-if test "$want_policy" = "yes"; then
-    have_policy="yes"
-fi
-
-
-
-
-    # Check whether --enable-memcached was given.
-if test "${enable_memcached+set}" = set; then :
-  enableval=$enable_memcached; want_memcached=$enableval
-else
-  want_memcached="no"
-fi
-
-
-
-
-
-
-
-# Check whether --with-tokendb was given.
-if test "${with_tokendb+set}" = set; then :
-  withval=$with_tokendb;
-  if test "$withval" != "no" -a "$withval" != "yes"; then
-    TOKENDB=$withval
-  fi
-
-  have_antispam="yes"
-
-  parsembox="parsembox"
-  parsembox_install="install-parsembox"
-
-  if test "$withval" != "mysql" && test "$withval" != "psql" && test "$withval" != "sqlite3" ; then
-     echo "invalid value for --with-tokendb: " $withval " valid values are mysql, psql or sqlite3";
-     exit 1;
-  fi
-
-
-
-  if test "$withval" = "sqlite3"; then
-    for ac_header in sqlite3.h
-do :
-  ac_fn_c_check_header_mongrel "$LINENO" "sqlite3.h" "ac_cv_header_sqlite3_h" "$ac_includes_default"
-if test "x$ac_cv_header_sqlite3_h" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_SQLITE3_H 1
-_ACEOF
- have_sqlite3=yes
-else
-  echo "sqlite3.h is not found"
-fi
-
-done
-
-
-    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for main in -lsqlite3" >&5
-$as_echo_n "checking for main in -lsqlite3... " >&6; }
-if ${ac_cv_lib_sqlite3_main+:} false; then :
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for main in -lzip" >&5
+$as_echo_n "checking for main in -lzip... " >&6; }
+if ${ac_cv_lib_zip_main+:} false; then :
   $as_echo_n "(cached) " >&6
 else
   ac_check_lib_save_LIBS=$LIBS
-LIBS="-lsqlite3  $LIBS"
+LIBS="-lzip  $LIBS"
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -4335,24 +4090,24 @@ return main ();
 }
 _ACEOF
 if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_sqlite3_main=yes
+  ac_cv_lib_zip_main=yes
 else
-  ac_cv_lib_sqlite3_main=no
+  ac_cv_lib_zip_main=no
 fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
 LIBS=$ac_check_lib_save_LIBS
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_sqlite3_main" >&5
-$as_echo "$ac_cv_lib_sqlite3_main" >&6; }
-if test "x$ac_cv_lib_sqlite3_main" = xyes; then :
-  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for sqlite3_open in -lsqlite3" >&5
-$as_echo_n "checking for sqlite3_open in -lsqlite3... " >&6; }
-if ${ac_cv_lib_sqlite3_sqlite3_open+:} false; then :
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_zip_main" >&5
+$as_echo "$ac_cv_lib_zip_main" >&6; }
+if test "x$ac_cv_lib_zip_main" = xyes; then :
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for zip_open in -lzip" >&5
+$as_echo_n "checking for zip_open in -lzip... " >&6; }
+if ${ac_cv_lib_zip_zip_open+:} false; then :
   $as_echo_n "(cached) " >&6
 else
   ac_check_lib_save_LIBS=$LIBS
-LIBS="-lsqlite3  $LIBS"
+LIBS="-lzip  $LIBS"
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -4362,57 +4117,145 @@ cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 #ifdef __cplusplus
 extern "C"
 #endif
-char sqlite3_open ();
+char zip_open ();
 int
 main ()
 {
-return sqlite3_open ();
+return zip_open ();
   ;
   return 0;
 }
 _ACEOF
 if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_sqlite3_sqlite3_open=yes
+  ac_cv_lib_zip_zip_open=yes
 else
-  ac_cv_lib_sqlite3_sqlite3_open=no
+  ac_cv_lib_zip_zip_open=no
 fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
 LIBS=$ac_check_lib_save_LIBS
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_sqlite3_sqlite3_open" >&5
-$as_echo "$ac_cv_lib_sqlite3_sqlite3_open" >&6; }
-if test "x$ac_cv_lib_sqlite3_sqlite3_open" = xyes; then :
-  have_sqlite3=yes
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_zip_zip_open" >&5
+$as_echo "$ac_cv_lib_zip_zip_open" >&6; }
+if test "x$ac_cv_lib_zip_zip_open" = xyes; then :
+  have_zip=yes
 else
-  have_sqlite3=no
+  echo "libzip.so is not found"; have_zip=no
 fi
 
 fi
-ac_cv_lib_sqlite3=ac_cv_lib_sqlite3_main
+ac_cv_lib_zip=ac_cv_lib_zip_main
 
 
-      if test "$have_sqlite3" = "no"; then
-           echo "sqlite3 not found";
-           exit 1;
-      fi
 
-    have_spamdrop="yes"
-    parsembox="$parsembox"
-    preparesql="prepare-sql aphash "
-    spamdrop="spamdrop"
-    spamdrop_install="install-spamdrop"
+for ac_header in zlib.h
+do :
+  ac_fn_c_check_header_mongrel "$LINENO" "zlib.h" "ac_cv_header_zlib_h" "$ac_includes_default"
+if test "x$ac_cv_header_zlib_h" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_ZLIB_H 1
+_ACEOF
+ have_zlib=yes
+else
+  echo "zlib.h is not found"
+fi
 
-    if test `sqlite3 -help 2>&1| grep -c -- -batch` -gt 0; then sqlite3_batch="-batch"; fi
+done
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for main in -lz" >&5
+$as_echo_n "checking for main in -lz... " >&6; }
+if ${ac_cv_lib_z_main+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lz  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
 
 
-    test="test"
-  fi
+int
+main ()
+{
+return main ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_z_main=yes
+else
+  ac_cv_lib_z_main=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_z_main" >&5
+$as_echo "$ac_cv_lib_z_main" >&6; }
+if test "x$ac_cv_lib_z_main" = xyes; then :
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for compress in -lz" >&5
+$as_echo_n "checking for compress in -lz... " >&6; }
+if ${ac_cv_lib_z_compress+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lz  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char compress ();
+int
+main ()
+{
+return compress ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_z_compress=yes
+else
+  ac_cv_lib_z_compress=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_z_compress" >&5
+$as_echo "$ac_cv_lib_z_compress" >&6; }
+if test "x$ac_cv_lib_z_compress" = xyes; then :
+  have_zlib=yes
+else
+  echo "libz.so is not found"; have_zlib=no
+fi
+
+fi
+ac_cv_lib_z=ac_cv_lib_z_main
+
+if test "$have_zlib" = "no"; then
+   echo "please install the zlib development packages"
+   exit 1;
+fi
 
 
-  if test "$withval" = "mysql"; then
 
-     # Extract the first word of "mysql_config", so it can be a program name with args.
+# Check whether --with-database was given.
+if test "${with_database+set}" = set; then :
+  withval=$with_database;
+   if test "$withval" != "no" -a "$withval" != "yes"; then
+      DATABASE=$withval
+   fi
+
+
+   if test "$withval" = "mysql"; then
+
+      # Extract the first word of "mysql_config", so it can be a program name with args.
 set dummy mysql_config; ac_word=$2
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
 $as_echo_n "checking for $ac_word... " >&6; }
@@ -4450,184 +4293,126 @@ fi
 
 
 
-     if test x$MYSQL_CONFIG = xyes; then
-       have_mysql="yes"
-     fi
+      if test x$MYSQL_CONFIG = xyes; then
+         have_mysql="yes"
+      fi
 
-     if test "$have_mysql" = "yes"; then
+      if test "$have_mysql" = "yes"; then
 
-            sql_includes=`mysql_config --cflags`
-            sql_libs=`mysql_config --libs_r`
-            have_spamdrop="yes"
-            parsembox="$parsembox"
-            preparesql="prepare-sql aphash "
-	    spamdrop="spamdrop"
-	    spamdrop_install="install-spamdrop"
-            db_install="install-mysql-new"
+         sql_includes=`mysql_config --cflags`
+         sql_libs=`mysql_config --libs_r`
+         sql_obj="mysql.o"
 
-            test="test"
-     else
-        echo "MySQL support is not found"
-        exit 1;
-     fi
-  fi
-
-
-  if test "$withval" = "psql"; then
-
-    # Extract the first word of "pg_config", so it can be a program name with args.
-set dummy pg_config; ac_word=$2
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
-$as_echo_n "checking for $ac_word... " >&6; }
-if ${ac_cv_prog_PSQL_CONFIG+:} false; then :
+         { $as_echo "$as_me:${as_lineno-$LINENO}: checking for main in -lguide" >&5
+$as_echo_n "checking for main in -lguide... " >&6; }
+if ${ac_cv_lib_guide_main+:} false; then :
   $as_echo_n "(cached) " >&6
 else
-  if test -n "$PSQL_CONFIG"; then
-  ac_cv_prog_PSQL_CONFIG="$PSQL_CONFIG" # Let the user override the test.
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lguide  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+
+int
+main ()
+{
+return main ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_guide_main=yes
 else
-as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
-    for ac_exec_ext in '' $ac_executable_extensions; do
-  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
-    ac_cv_prog_PSQL_CONFIG="yes"
-    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-  done
-IFS=$as_save_IFS
-
+  ac_cv_lib_guide_main=no
 fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
 fi
-PSQL_CONFIG=$ac_cv_prog_PSQL_CONFIG
-if test -n "$PSQL_CONFIG"; then
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $PSQL_CONFIG" >&5
-$as_echo "$PSQL_CONFIG" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_guide_main" >&5
+$as_echo "$ac_cv_lib_guide_main" >&6; }
+if test "x$ac_cv_lib_guide_main" = xyes; then :
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for _intel_fast_memset in -lguide" >&5
+$as_echo_n "checking for _intel_fast_memset in -lguide... " >&6; }
+if ${ac_cv_lib_guide__intel_fast_memset+:} false; then :
+  $as_echo_n "(cached) " >&6
 else
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-fi
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lguide  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
 
-
-
-     if test x$PSQL_CONFIG = xyes; then
-       have_psql="yes"
-     fi
-
-     if test "$have_psql" = "yes"; then
-
-            sql_includes="-I`pg_config --includedir`"
-            sql_libs="-L`pg_config --libdir`"
-            have_spamdrop="yes"
-            parsembox="$parsembox"
-            preparesql="prepare-sql aphash "
-            spamdrop="spamdrop"
-            spamdrop_install="install-spamdrop"
-            db_install="install-psql-new"
-
-            test="test"
-     else
-        echo "PSQL support is not found"
-        exit 1;
-     fi
-  fi
-
-  if test "$withval" = "mydb"; then
-     have_spamdrop="yes"
-     parsembox="$parsembox"
-     spamdrop="spamdrop mydb_stat mydb_compress"
-     preparesql="prepare-sql aphash"
-     spamdrop_install="install-spamdrop"
-     test="test"
-  fi
-
-
-  parsembox="$parsembox "
-
-
-
-fi
-
-
-
-    # Check whether --enable-lmtp was given.
-if test "${enable_lmtp+set}" = set; then :
-  enableval=$enable_lmtp; want_lmtp=$enableval
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char _intel_fast_memset ();
+int
+main ()
+{
+return _intel_fast_memset ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_guide__intel_fast_memset=yes
 else
-  want_lmtp="no"
+  ac_cv_lib_guide__intel_fast_memset=no
 fi
-
-
-    # Check whether --enable-language-detection was given.
-if test "${enable_language_detection+set}" = set; then :
-  enableval=$enable_language_detection; want_language_detection=$enableval
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_guide__intel_fast_memset" >&5
+$as_echo "$ac_cv_lib_guide__intel_fast_memset" >&6; }
+if test "x$ac_cv_lib_guide__intel_fast_memset" = xyes; then :
+  have_icc_guide=yes
 else
-  want_language_detection="no"
+  have_icc_guide=no
+fi
+
+fi
+ac_cv_lib_guide=ac_cv_lib_guide_main
+
+      else
+         echo "MySQL support is not found"
+         exit 1;
+      fi
+   fi
+
+
+
 fi
 
 
 
 
-    # Check whether --enable-spamsum was given.
-if test "${enable_spamsum+set}" = set; then :
-  enableval=$enable_spamsum; want_spamsum=$enableval
-else
-  want_spamsum="no"
+if test z`which timeout 2>/dev/null` != "z"; then
+   timeout_binary=`which timeout`
+
+cat >>confdefs.h <<_ACEOF
+#define TIMEOUT_BINARY "$timeout_binary"
+_ACEOF
+
 fi
-
-
-    if test "$want_spamsum" = "yes"; then
-       spamsum="spamsum"
-       defs="$defs -DHAVE_SPAMSUM"
-       spamsum_libs="-lspamsum"
-    fi
-
-
-
-    # Check whether --enable-spamc-emul was given.
-if test "${enable_spamc_emul+set}" = set; then :
-  enableval=$enable_spamc_emul; want_spamc_emul=$enableval
-else
-  want_spamc_emul="no"
-fi
-
-
-    if test "$want_spamc_emul" = "yes"; then
-       defs="$defs -DSPAMC_EMUL"
-       have_antispam="yes"
-       objs="$objs spamc.o "
-    fi
-
 
 
 
 
 # Check whether --with-clapf-user was given.
 if test "${with_clapf_user+set}" = set; then :
-  withval=$with_clapf_user;  CLAPF_USER=$withval
+  withval=$with_clapf_user;  RUNNING_USER=$withval
 else
-   CLAPF_USER=clapf
+   RUNNING_USER=clapf
 
 fi
 
 
-
-
-
-# Check whether --enable-uid-splitting was given.
-if test "${enable_uid_splitting+set}" = set; then :
-  enableval=$enable_uid_splitting; want_uid_splitting=$enableval
-else
-  want_uid_splitting="no"
-fi
-
-
-if test "$want_uid_splitting" = "yes"; then
-   defs="$defs -DHAVE_UID_SPLITTING"
-fi
 
 
 
@@ -4669,41 +4454,37 @@ else
     data_dir="$localstatedir"
 fi
 
-LOCALSTATEDIR=$data_dir
+DATADIR=$data_dir
 
 
 cat >>confdefs.h <<_ACEOF
-#define LOCALSTATEDIR "$data_dir"
-_ACEOF
-
-
-DATAROOTDIR=$datarootdir
-
-
-cat >>confdefs.h <<_ACEOF
-#define DATAROOTDIR "$datarootdir"
+#define DATADIR "$data_dir"
 _ACEOF
 
 
 
 
-    # Check whether --enable-spamdrop-helper was given.
-if test "${enable_spamdrop_helper+set}" = set; then :
-  enableval=$enable_spamdrop_helper; want_spamdrop_helper=$enableval
+libexec_dir=`echo $libexecdir | grep prefix`
+
+if test -n "$libexec_dir"; then
+    if test "$prefix" = "NONE"
+    then
+        libexec_dir="$ac_default_prefix/libexec"
+    else
+        libexec_dir="$prefix/libexec"
+    fi
 else
-  want_spamdrop_helper="no"
+    libexec_dir="$libexecdir"
 fi
 
-
-    if test "$want_spamdrop_helper" = "yes"; then
-        defs="$defs -DHAVE_SPAMDROP_HELPER"
-    fi
-
+LIBEXECDIR=$libexec_dir
 
 
 cat >>confdefs.h <<_ACEOF
-#define SPAMDROP_HELPER_PROGRAM "$my_prefix/libexec/clapf/spamdrop_helper"
+#define LIBEXECDIR "$libexec_dir"
 _ACEOF
+
+
 
 
 cat >>confdefs.h <<_ACEOF
@@ -4717,140 +4498,19 @@ _ACEOF
 
 
 
-
-
-if test "x$TOKENDB" = "x" && test "$have_antispam" = "yes"; then echo "please specify the token database with --with-tokendb"; exit 1; fi
-
-
-if test "$TOKENDB" = "cdb"; then
-   for ac_header in cdb.h
-do :
-  ac_fn_c_check_header_mongrel "$LINENO" "cdb.h" "ac_cv_header_cdb_h" "$ac_includes_default"
-if test "x$ac_cv_header_cdb_h" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_CDB_H 1
-_ACEOF
-
-fi
-
-done
-
-   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for main in -lcdb" >&5
-$as_echo_n "checking for main in -lcdb... " >&6; }
-if ${ac_cv_lib_cdb_main+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lcdb  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-
-int
-main ()
-{
-return main ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_cdb_main=yes
-else
-  ac_cv_lib_cdb_main=no
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_cdb_main" >&5
-$as_echo "$ac_cv_lib_cdb_main" >&6; }
-if test "x$ac_cv_lib_cdb_main" = xyes; then :
-  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for cdb_find in -lcdb" >&5
-$as_echo_n "checking for cdb_find in -lcdb... " >&6; }
-if ${ac_cv_lib_cdb_cdb_find+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lcdb  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-/* Override any GCC internal prototype to avoid an error.
-   Use char because int might match the return type of a GCC
-   builtin and then its argument prototype would still apply.  */
-#ifdef __cplusplus
-extern "C"
-#endif
-char cdb_find ();
-int
-main ()
-{
-return cdb_find ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_cdb_cdb_find=yes
-else
-  ac_cv_lib_cdb_cdb_find=no
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_cdb_cdb_find" >&5
-$as_echo "$ac_cv_lib_cdb_cdb_find" >&6; }
-if test "x$ac_cv_lib_cdb_cdb_find" = xyes; then :
-  have_cdb=yes
-else
-  echo "you need the cdb package"; exit
-fi
-
-fi
-ac_cv_lib_cdb=ac_cv_lib_cdb_main
-
-   defs="$defs -DHAVE_CDB"
-   objs="$objs cdb.o"
-   antispam_libs="$antispam_libs -lcdb"
-fi
-
-if test "$TOKENDB" = "sqlite3"; then
-   defs="$defs -DHAVE_SQLITE3"
-   sql_obj="sqlite3.o "
-fi
-
-if test "$TOKENDB" = "mysql"; then
-   defs="$defs -DHAVE_MYSQL"
-   sql_obj="mysql.o "
-fi
-
-if test "$TOKENDB" = "psql"; then
-   defs="$defs -DHAVE_PSQL"
-   sql_obj="psql.o "
-fi
-
-if test "$TOKENDB" = "mydb"; then
-   defs="$defs -DHAVE_MYDB"
-   sql_obj="mydb.o"
-fi
-
-if test "x$QCACHE" != "x"; then
-   if test "$have_antispam" = "no"; then
-      echo "please specify the --with-tokendb option"
-      exit 1
-   fi
-fi
-
-if test "$have_antivirus" = "no" && test "$have_antispam" = "no"; then
-   echo "you have not specified either antivirus or antispam support"
+if test "$have_mysql" = "no"; then
+   echo
+   echo "please specify the used database with --with-database=..."
+   echo
    exit 1
 fi
 
 
+
 if test "$os" = "FreeBSD"; then
    defs="$defs -DFREEBSD"
+   antispam_libs="-lz -lm -lcrypto -lssl"
+   MAKE="gmake"
 fi
 
 if test "$os" = "Linux"; then
@@ -4876,182 +4536,15 @@ _ACEOF
 fi
 
 
-if test "$have_libclamav" = "yes" || test "$have_clamd" = "yes" || test "$have_avast" = "yes" || test "$have_avast_home" = "yes" || test "$have_kav" = "yes"  || test "$have_drweb" = "yes" || test "$have_eset" = "yes" ; then
+if test "$have_clamd" = "yes" ; then
    defs="$defs -DHAVE_ANTIVIRUS"
    objs="$objs avir.o"
 fi
 
-
-if test "$have_avg" = "yes" ; then
-   objs="$objs mime.o"
-fi
-
 echo; echo
 
-if test "$have_libclamav" = "yes"; then
-   echo "libclamav support: yes"
-
-   libtool=""
-   if test "$have_libtool" = "yes"; then libtool="-lltdl" ;fi
-
-   libclamav="-lclamav $libtool `clamav-config --libs` "
-   defs="$defs -DHAVE_LIBCLAMAV"
-   libclamav_extra_libs='$(CLAMAV_EXTRA_LIBS)'
-fi
-
-if test "$have_clamd" = "yes"; then
-   echo "clamd support: yes"
-   objs="$objs clamd.o"
-   defs="$defs -DHAVE_CLAMD"
-fi
-
-if test "$have_avast" = "yes"; then
-   echo "avast! support: yes"
-   objs="$objs avast.o"
-   defs="$defs -DHAVE_AVAST"
-fi
-
-if test "$have_avast_home" = "yes"; then
-   echo "avast! home personal edition support: yes"
-   objs="$objs avast.o"
-   defs="$defs -DHAVE_AVAST_HOME"
-fi
-
-if test "$have_kav" = "yes"; then
-   echo "kav support: yes"
-   objs="$objs kav.o"
-   defs="$defs -DHAVE_KAV"
-fi
-
-if test "$have_drweb" = "yes"; then
-   echo "Dr.Web support: yes"
-   objs="$objs drweb.o"
-   defs="$defs -DHAVE_DRWEB"
-fi
-
-if test "$have_eset" = "yes"; then
-   echo "ESET support: yes"
-   defs="$defs -DHAVE_ESET"
-fi
-
-
-if test "$have_antispam" = "yes"; then
-   echo "antispam support: yes"
-   defs="$defs -DHAVE_ANTISPAM"
-   objs="$objs bayes.o buffer.o spam.o antispam.o"
-fi
-
-
-if test "$have_gsl" = "yes"; then
-   echo "chi square implementation: GNU GSL"
-else
-   echo "chi square implementation: internal"
-fi
-
-if test "$have_blackhole" = "yes"; then
-   echo "blackhole feature: yes"
-   defs="$defs -DHAVE_BLACKHOLE"
-   objs="$objs black.o"
-else
-   echo "blackhole feature: no"
-fi
-
-if test "$have_rbl" = "yes"; then
-   echo "(SU)RBL support: yes"
-   defs="$defs -DHAVE_RBL"
-   if test "$have_all_received" = "yes"; then
-      defs="$defs -DHAVE_PROCESS_ALL_RECEIVED_LINES"
-   fi
-   objs="$objs rbl.o"
-else
-   echo "(SU)RBL support: no"
-fi
-
-echo "token database backend: $TOKENDB"
-
-
-if test "$TOKENDB" = "mysql"; then
-   db_install="install-mysql-new"
-fi
-
-if test "$TOKENDB" = "sqlite3"; then
-   db_install="install-sqlite3"
-fi
-
-if test "$STORE" = "mysql"; then
-   echo "message store: mysql"
-   defs="$defs -DHAVE_STORE -DSTORE_MYSQL"
-fi
-
-if test "$STORE" = "fs"; then
-   echo "message store: fs"
-   defs="$defs -DHAVE_STORE -DSTORE_FS"
-fi
-
-if test "$STORE" = "nfs"; then
-   echo "message store: nfs"
-   defs="$defs -DHAVE_STORE -DSTORE_NFS"
-fi
-
-if test "$want_spamsum" = "yes"; then
-   echo "spamsum: yes"
-   spamsum_install="install-spamsum"
-   SUBDIRS="contrib/spamsum $SUBDIRS"
-else
-   echo "spamsum: no"
-fi
-
-if test "$have_whitelist" = "yes"; then
-   echo "whitelist: yes"
-   defs="$defs -DHAVE_WHITELIST"
-else
-   echo "whitelist: no"
-fi
-
-if test "$have_blacklist" = "yes"; then
-   echo "blacklist: yes"
-   defs="$defs -DHAVE_BLACKLIST"
-else
-   echo "blacklist: no"
-fi
-
-if test "$have_case" = "yes"; then
-   defs="$defs -DHAVE_CASE"
-   echo "tokens are case sensitive: yes"
-else
-   echo "tokens are case sensitive: no"
-fi
-
-if test "$want_lmtp" = "yes"; then
-   echo "local delivery: LMTP"
-   defs="$defs -DHAVE_LMTP"
-else
-   echo "local delivery: SMTP"
-fi
-
-if test "$want_memcached" = "yes"; then
-   echo "memcached support: yes"
-   objs="$objs memc.o memcached.o"
-   defs="$defs -DHAVE_MEMCACHED"
-fi
-
-if test "$have_policy" = "yes"; then
-   defs="$defs -DHAVE_POLICY"
-   echo "policy support: yes"
-   objs="$objs policy.o"
-else
-   echo "policy support: no"
-fi
-
-if test "$want_language_detection" = "yes"; then
-   echo "language detection: enabled"
-   defs="$defs -DHAVE_LANG_DETECT"
-   objs="$objs lang.o"
-else
-   echo "language detection: no"
-fi
-
-echo "clapf user: $CLAPF_USER"
+echo "run as user: $RUNNING_USER"
+echo "clapf data directory: $data_dir/clapf"
 
 if test "$have_static_build" = "yes"; then
    echo "link mode: static"
@@ -5060,19 +4553,70 @@ else
    echo "link mode: dynamic"
 fi
 
+echo
+
+if test "$have_mysql" = "yes"; then
+   echo "database: mysql"
+fi
+
 if test "$have_tre" = "yes"; then
    echo "tre library: yes"
    defs="$defs -DHAVE_TRE"
-   objs="$objs zombie.o"
    antispam_libs="$antispam_libs -ltre"
 fi
 
-if test "$have_sqlite3" = "yes"; then
-   sql_libs="-lsqlite3 -lpthread"
+if test "$have_zip" = "yes"; then
+   echo "zip library: yes"
+
+cat >>confdefs.h <<_ACEOF
+#define HAVE_ZIP 1
+_ACEOF
+
+   antispam_libs="$antispam_libs -lzip"
 fi
 
-if test "$have_psql" = "yes"; then
-   sql_libs="-lpq"
+if test "$have_starttls" = "yes"; then
+   echo "starttls support: yes"
+
+cat >>confdefs.h <<_ACEOF
+#define HAVE_STARTTLS 1
+_ACEOF
+
+fi
+
+if test "$have_tcpwrappers" = "yes"; then
+   echo "tcpwrappers support: yes"
+
+cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBWRAP 1
+_ACEOF
+
+
+   if test "$os" = "FreeBSD"; then
+      antispam_libs="$antispam_libs -lwrap"
+   else
+      antispam_libs="$antispam_libs -lwrap -lnsl"
+   fi
+else
+   echo "tcpwrappers support: no"
+fi
+
+echo
+
+if test "$have_clamd" = "yes"; then
+   echo "clamd support: yes"
+   objs="$objs clamd.o"
+   defs="$defs -DHAVE_CLAMD"
+fi
+
+if test "$want_memcached" = "yes"; then
+   echo "memcached support: yes"
+   objs="$objs memc.o"
+   defs="$defs -DHAVE_MEMCACHED"
+fi
+
+if test "$have_mysql" = "yes"; then
+   defs="$defs -DNEED_MYSQL"
 fi
 
 if test "$have_icc_guide" = "yes" && test "$have_mysql" = "yes"; then
@@ -5080,28 +4624,16 @@ if test "$have_icc_guide" = "yes" && test "$have_mysql" = "yes"; then
 fi
 
 
-id -u $CLAPF_USER 2>/dev/null 1>/dev/null
-if test $? -eq 1; then echo "the user \"$CLAPF_USER\" does not exists, please create it, first with adduser..."; exit 1; fi
-
-if test "$have_libclamav" = "no" && test "$have_clamd" = "no" && test "$have_avast" = "no" && test "$have_avast_home" = "no" && test "$have_kav" = "no" && test "$have_drweb" = "no" && test "$have_eset" = "no" ; then
-   echo; echo
-   echo "You have not selected any antivirus support."
-   echo "clapf will not protect you from hostile code coming in e-mail"
-fi
+id -u $RUNNING_USER 2>/dev/null 1>/dev/null
+if test $? -eq 1; then echo "the user \"$RUNNING_USER\" does not exists, please create it, first with adduser..."; exit 1; fi
 
 echo; echo
 
-VERSION_STRING=`grep '#define VERSION' src/config.h | cut -f2 -d '"'`
-
-cat webui/view/theme/default/templates/common/footer.tpl | sed "s/VERSION_STRING/$VERSION_STRING/" > aaaa.11
-mv aaaa.11 webui/view/theme/default/templates/common/footer.tpl
-
-defs="$defs -DHAVE_USERS"
 CFLAGS="$static -O2 -Wall -g"
-LIBS="$libclamav $antispam_libs $gsl_libs $sqlite3_libs $sunos_libs"
-OBJS="dirs.o misc.o counters.o cfg.o smtp.o sig.o decoder.o list.o parser.o parser_utils.o session.o templates.o hash.o score.o chi.o users.o tai.o $objs"
+LIBS="$antispam_libs $sunos_libs "
+OBJS="dirs.o misc.o counters.o cfg.o sig.o decoder.o hash.o tokenizer.o parser.o parser_utils.o session.o tai.o digest.o chi.o antispam.o spam.o buffer.o zombie.o train.o users.o policy.o black.o smtp.o quarantine.o rbl.o $objs"
 
-ac_config_files="$ac_config_files Makefile contrib/spamsum/Makefile contrib/spamdrop_helper/Makefile contrib/stat/Makefile.helper etc/Makefile history/Makefile init.d/Makefile perl/Makefile src/Makefile templates/Makefile util/Makefile"
+ac_config_files="$ac_config_files Makefile src/Makefile etc/Makefile init.d/Makefile util/Makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -5795,15 +5327,9 @@ do
   case $ac_config_target in
     "clapf-config.h") CONFIG_HEADERS="$CONFIG_HEADERS clapf-config.h" ;;
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
-    "contrib/spamsum/Makefile") CONFIG_FILES="$CONFIG_FILES contrib/spamsum/Makefile" ;;
-    "contrib/spamdrop_helper/Makefile") CONFIG_FILES="$CONFIG_FILES contrib/spamdrop_helper/Makefile" ;;
-    "contrib/stat/Makefile.helper") CONFIG_FILES="$CONFIG_FILES contrib/stat/Makefile.helper" ;;
-    "etc/Makefile") CONFIG_FILES="$CONFIG_FILES etc/Makefile" ;;
-    "history/Makefile") CONFIG_FILES="$CONFIG_FILES history/Makefile" ;;
-    "init.d/Makefile") CONFIG_FILES="$CONFIG_FILES init.d/Makefile" ;;
-    "perl/Makefile") CONFIG_FILES="$CONFIG_FILES perl/Makefile" ;;
     "src/Makefile") CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
-    "templates/Makefile") CONFIG_FILES="$CONFIG_FILES templates/Makefile" ;;
+    "etc/Makefile") CONFIG_FILES="$CONFIG_FILES etc/Makefile" ;;
+    "init.d/Makefile") CONFIG_FILES="$CONFIG_FILES init.d/Makefile" ;;
     "util/Makefile") CONFIG_FILES="$CONFIG_FILES util/Makefile" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
@@ -6426,3 +5952,5 @@ $as_echo "$as_me: WARNING: unrecognized options: $ac_unrecognized_opts" >&2;}
 fi
 
 
+
+echo

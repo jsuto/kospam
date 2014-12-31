@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <iconv.h>
 #include "decoder.h"
 #include "htmlentities.h"
 #include "config.h"
@@ -80,98 +81,79 @@ void sanitiseBase64(char *s){
 }
 
 
-int decodeBase64(char *p){
-   int i, j, n[4], k1, k2, len=0;
-   char s[5], s2[3], puf[MAXBUFSIZE];
+inline void pack_4_into_3(char *s, char *s2){
+   int j, n[4], k1, k2;
 
-   if(strlen(p) < 4 || strlen(p) > MAXBUFSIZE/2)
-      return 0;
+   memset(s2, 0, 3);
 
-   for(i=0; i<strlen(p); i++){
-      memcpy(s, p+i, 4);
-      s[4] = '\0';
+   if(strlen(s) != 4) return;
 
-      i += 3;
-
-      if(strlen(s) == 4){
-         memset(s2, 0, 3);
-
-         for(j=0; j<4; j++){
-            k1 = s[j];
-            n[j] = b64[k1];
-         }
-
-         k1 = n[0]; k1 = k1 << 2;
-         k2 = n[1]; k2 = k2 >> 4;
-
-         s2[0] = k1 | k2;
-
-         k1 = (n[1] & 0x0F) << 4;
-         k2 = n[2]; k2 = k2 >> 2;
-
-         s2[1] = k1 | k2;
-
-         k1 = n[2] << 6;
-         k2 = n[3] >> 0;
-
-
-         s2[2] = k1 | k2;
-
-         // this is binary safe
-         memcpy(puf+len, s2, 3);
-
-         len += 3;
-      }
-
+   for(j=0; j<4; j++){
+      k1 = s[j];
+      n[j] = b64[k1];
    }
 
-   *(puf+len) = '\0';
+   k1 = n[0]; k1 = k1 << 2;
+   k2 = n[1]; k2 = k2 >> 4;
+
+   s2[0] = k1 | k2;
+
+   k1 = (n[1] & 0x0F) << 4;
+   k2 = n[2]; k2 = k2 >> 2;
+
+   s2[1] = k1 | k2;
+
+   k1 = n[2] << 6;
+   k2 = n[3] >> 0;
+
+
+  s2[2] = k1 | k2;
+}
+
+
+int decodeBase64(char *p){
+   int len=0;
+   unsigned char puf[MAXBUFSIZE];
+
+   memset(puf, 0, sizeof(puf));
+
+   len = decode_base64_to_buffer(p, strlen(p), &puf[0], sizeof(puf)-1);
 
    snprintf(p, MAXBUFSIZE-1, "%s", puf);
 
    return len;
-
 }
 
 
-void decodeUTF8(char *p){
-   int i, k=0, a, b;
-   unsigned char c, c1, c2;
+int decode_base64_to_buffer(char *p, int plen, unsigned char *b, int blen){
+   int i, len=0, decodedlen;
+   char s[5], s2[3];
 
-   if(p == NULL) return;
+   if(plen < 4 || plen > blen)
+      return 0;
 
-   for(i=0; i<strlen(p); i++){
-      c = p[i];
+   for(i=0; i<plen; i+=4){
+      memcpy(s, p+i, 4);
+      s[4] = '\0';
+      decodedlen = 3;
 
-      if(p[i] == '=' && isxdigit(p[i+1]) && isxdigit(p[i+2]) &&
-           p[i+3] == '=' && isxdigit(p[i+4]) && isxdigit(p[i+5])){
+      /* safety check against abnormally long lines */
 
-         a = p[i+1];
-         b = p[i+2];
-         c1 = 16 * hex_table[a] + hex_table[b];
+      if(len + decodedlen > blen-1) break;
 
-         a = p[i+4];
-         b = p[i+5];
-         c2 = 16 * hex_table[a] + hex_table[b];
+      if(strlen(s) == 4){
+         pack_4_into_3(s, s2);
+         if(s[3] == '=') decodedlen = 2;
+         if(s[2] == '=') decodedlen = 1;
 
+         memcpy(b+len, s2, decodedlen);
 
-         if(c1 >= 192 && c1 <= 223){
-            c = 64 * (c1 - 192) + c2 - 128;
-            i += 5;
-         }
-         
+         len += decodedlen;
       }
 
-      if(c >= 192 && c <= 223){
-         c =  64 * (c - 192) + p[i+1] - 128;
-         i++;
-      }
-
-      p[k] = c;
-      k++;
    }
 
-   p[k] = '\0';
+   return len;
 }
 
 
@@ -201,44 +183,66 @@ void decodeQP(char *p){
 }
 
 
-void decodeHTML(char *s){
-   char *p;
-   int i, c, k=0, unknown='q';
+void decodeHTML(char *p, int utf8){
+   unsigned char buf[MAXBUFSIZE], __u[8];
+   char *s, *q;
+   int count=0, len, c;
    struct mi key, *res;
 
-   if(s == NULL) return;
+   if(p == NULL || strlen(p) == 0) return;
 
-   for(i=0; i<strlen(s); i++){
-      c = s[i];
+   s = p;
 
-      if(*(s+i) == '&'){
-         p = strchr(s+i, ';');
-         if(p){
-            *p = '\0';
+   memset(buf, 0, sizeof(buf));
 
-            if(*(s+i+1) == '#'){
-               c = atoi(s+i+2);
-               if(c == 0) c = unknown;
+   for(; *s; s++){
+      if(*s == '&'){
+         q = strchr(s, ';');
+         if(q){
+            *q = '\0';
+
+            if(*(s+1) == '#'){
+               c = atoi(s+2);
+               if(c == 0) c = 'q';
+
+               buf[count] = (unsigned char)c;
+               count++;
             }
             else {
-               key.entity = s+i;
+               key.entity = s;
                res = bsearch(&key, htmlentities, NUM_OF_HTML_ENTITIES, sizeof(struct mi), compmi);
 
-               if(res && res->val <= 255) c = res->val;
-               else c = unknown;
+               if(res && res->val <= 255){
+
+                  if(utf8 == 1){
+                     utf8_encode_char(res->val, &__u[0], sizeof(__u), &len);
+                     memcpy(&buf[count], &__u[0], len);
+                     count += len;
+                  }
+                  else {
+                     buf[count] = res->val;
+                     count++;
+                  }
+               }
+               else {
+                  buf[count] = 'q';
+                  count++;
+               }
             }
 
-            i += strlen(s+i);
-            *p = ';';
-
+            s = q;
          }
-      }
 
-      s[k] = c;
-      k++;
+      }
+      else {
+         buf[count] = *s;
+         count++;
+      }
    }
 
-   s[k] = '\0';
+   buf[count] = '\0'; count++;
+
+   memcpy(p, buf, count);
 }
 
 
@@ -278,5 +282,67 @@ void decodeURL(char *p){
    }
 
    p[k] = '\0';
+}
+
+
+inline void utf8_encode_char(unsigned char c, unsigned char *buf, int buflen, int *len){
+   int count=0;
+
+   memset(buf, 0, buflen);
+
+      /*
+       * Code point          1st byte    2nd byte    3rd byte    4th byte
+       * ----------          --------    --------    --------    --------
+       * U+0000..U+007F      00..7F
+       * U+0080..U+07FF      C2..DF      80..BF
+       * U+0800..U+0FFF      E0          A0..BF      80..BF
+       */
+
+      if(c <= 0x7F){
+         *(buf+count) = c;
+         count++;
+      }
+
+      else if(c <= 0x7FF){
+         *(buf+count) = ( 0xC0 | (c >> 6) );
+         count++;
+         *(buf+count) = ( 0x80 | (c & 0x3F) );
+         count++;
+      }
+
+
+      else if (c <= 0xFFFF){
+         *(buf+count) = ( 0xE0 | (c >> 12) );
+         count++;
+         *(buf+count) = ( 0x80 | ((c >> 6) & 0x3F) );
+         count++;
+         *(buf+count) = ( 0x80 | (c & 0x3F) );
+         count++;
+      }
+
+   *len = count;
+}
+
+
+int utf8_encode(char *inbuf, int inbuflen, char *outbuf, int outbuflen, char *encoding){
+   iconv_t cd;
+   size_t size, inbytesleft, outbytesleft;
+
+   memset(outbuf, 0, outbuflen);
+
+   cd = iconv_open("utf-8", encoding);
+
+   if(cd != (iconv_t)-1){
+      inbytesleft = inbuflen;
+      outbytesleft = outbuflen-1;
+
+      size = iconv(cd, &inbuf, &inbytesleft, &outbuf, &outbytesleft);
+
+      iconv_close(cd);
+
+      if(size >= 0) return OK;
+   }
+
+   return ERR;
 }
 

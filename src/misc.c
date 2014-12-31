@@ -18,11 +18,8 @@
 #include <syslog.h>
 #include <unistd.h>
 #include <ctype.h>
-#include "misc.h"
-#include "smtpcodes.h"
-#include "messages.h"
-#include "config.h"
-#include "tai.h"
+#include <openssl/ssl.h>
+#include <clapf.h>
 
 
 int get_build(){
@@ -51,7 +48,7 @@ long tvdiff(struct timeval a, struct timeval b){
  * search something in a buffer
  */
 
-int searchStringInBuffer(char *s, int len1, char *what, int len2){
+int search_string_in_buffer(char *s, int len1, char *what, int len2){
    int i, k, r;
 
    for(i=0; i<len1; i++){
@@ -74,7 +71,7 @@ int searchStringInBuffer(char *s, int len1, char *what, int len2){
  * count a character in buffer
  */
 
-int countCharacterInBuffer(char *p, char c){
+int count_character_in_buffer(char *p, char c){
    int i=0;
 
    for(; *p; p++){
@@ -86,7 +83,7 @@ int countCharacterInBuffer(char *p, char c){
 }
 
 
-void replaceCharacterInBuffer(char *p, char from, char to){
+void replace_character_in_buffer(char *p, char from, char to){
    int i, k=0;
 
    for(i=0; i<strlen(p); i++){
@@ -111,33 +108,27 @@ void replaceCharacterInBuffer(char *p, char from, char to){
  * split a string by a character as delimiter
  */
 
-char *split(char *row, int ch, char *s, int size){
-   char *r;
-   int len;
+char *split(char *str, int ch, char *buf, int buflen, int *result){
+   char *p;
 
-   if(row == NULL)
-      return NULL;
+   *result = 0;
 
-   r = strchr(row, ch);
-   if(r == NULL){
-      len = strlen(row);
-      if(len > size)
-         len = size;
-   }
-   else {
-      len = strlen(row) - strlen(r);
-      if(len > size)
-         len = size;
+   if(str == NULL || buf == NULL || buflen < 2) return NULL;
 
-      r++;
+   p = strchr(str, ch);
+   if(p){
+      *p = '\0';
    }
 
-   if(s != NULL){
-      strncpy(s, row, len);
-      s[len] = '\0';
+   snprintf(buf, buflen, "%s", str);
+
+   if(p){
+      *p = ch;
+      *result = 1;
+      p++;
    }
 
-   return r;
+   return p;
 }
 
 
@@ -178,46 +169,63 @@ char *split_str(char *row, char *what, char *s, int size){
 
 
 /*
- * APHash function
- * http://www.partow.net/programming/hashfunctions/#APHashFunction
- */
-
-unsigned long long APHash(char *p){
-   unsigned long long hash = 0;
-   int i=0;
-
-   for(; *p; p++){
-      hash ^= ((i & 1) == 0) ? (  (hash <<  7) ^ (*p) ^ (hash >> 3)) :
-                               (~((hash << 11) ^ (*p) ^ (hash >> 5)));
-      i++;
-   }
-
-   return hash % MAX_KEY_VAL;
-}
-
-
-/*
  * trim trailing CR-LF
  */
 
-void trimBuffer(char *s){
+int trim_buffer(char *s){
+   int n=0;
    char *p;
 
    p = strrchr(s, '\n');
-   if(p) *p = '\0';
+   if(p){
+      *p = '\0';
+      n++;
+   }
 
    p = strrchr(s, '\r');
-   if(p) *p = '\0';
+   if(p){
+      *p = '\0';
+      n++;
+   }
 
+   return n;
 }
 
 
-/*
- * extract email
- */
+int extract_verp_address(char *email){
+   char *p, *p1, *p2;
+   char puf[SMALLBUFSIZE];
+
+   // a VERP address is like archive+user=domain.com@myarchive.local
+
+   if(!email) return 0;
+
+   if(strlen(email) < 5) return 0;
+
+   p1 = strchr(email, '+');
+   if(p1){
+      p2 = strchr(p1, '@');
+      if(p2 && p2 > p1 + 2){
+         if(strchr(p1+1, '=')){
+            memset(puf, 0, sizeof(puf));
+
+            memcpy(&puf[0], p1+1, p2-p1-1);
+            p = strchr(puf, '=');
+            if(p) *p = '@';
+            strcpy(email, puf);
+         }
+      }
+
+   }
+
+   return 0;
+}
+
 
 int extractEmail(char *rawmail, char *email){
    char *p;
+
+   memset(email, 0, SMALLBUFSIZE);
 
    p = strchr(rawmail, '<');
    if(p){
@@ -225,6 +233,7 @@ int extractEmail(char *rawmail, char *email){
       p = strchr(email, '>');
       if(p){
          *p = '\0';
+         extract_verp_address(email);
          return 1;
       }
    }
@@ -233,21 +242,48 @@ int extractEmail(char *rawmail, char *email){
 }
 
 
-/*
- * create a clapf ID
- */
+void make_random_string(char *buf, int buflen){
+   int i, len;
+   static char alphanum[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
-void createClapfID(char *id, int mode){
+   len = strlen(alphanum);
+
+   for(i=0; i<buflen; i++){
+      *(buf+i) = alphanum[rand() % len];
+   }
+
+}
+
+
+void create_id(char *id, unsigned char server_id){
    int i;
    unsigned char buf[RND_STR_LEN/2];
 
-   getRandomBytes(buf, RND_STR_LEN/2, mode);
+   memset(id, 0, SMALLBUFSIZE);
 
-   for(i=0; i < (RND_STR_LEN/2)-1; i++){
+   get_random_bytes(buf, sizeof(buf), server_id);
+
+   for(i=0; i < sizeof(buf); i++){
       sprintf(id, "%02x", buf[i]);
       id += 2;
    }
+}
 
+
+int is_valid_clapf_id(char *p){
+
+   if(strlen(p) != 36)
+      return 0;
+
+   for(; *p; p++){
+      /* 0-9: 0x30-0x39, a-f: 0x61-0x66 */
+
+      if(! ((*p >= 0x30 && *p <= 0x39) || (*p >= 0x61 && *p <= 0x66) || *p == 0x0d) ){
+         return 0;
+      }
+   }
+
+   return 1;
 }
 
 
@@ -255,45 +291,27 @@ void createClapfID(char *id, int mode){
  * reading from pool
  */
 
-int getRandomBytes(unsigned char *buf, int len, int mode){
-   int fd, ret=0, offset=4;
-   unsigned char a, b;
+int get_random_bytes(unsigned char *buf, int len, unsigned char server_id){
+   int fd, ret=0;
    struct taia now;
    char nowpack[TAIA_PACK];
 
-   if(mode == 32){
-      time((time_t*)&buf[0]);
+   /* the first 12 bytes are the taia timestamp */
 
-      a = buf[0];
-      b = buf[3];
+   taia_now(&now);
+   taia_pack(nowpack, &now);
 
-      buf[0] = b;
-      buf[3] = a;
-
-      a = buf[1];
-      b = buf[2];
-
-      buf[1] = b;
-      buf[2] = a;
-   }
-   else {
-      /* the first 12 bytes are the taia timestamp */
-
-      taia_now(&now);
-      taia_pack(nowpack, &now);
-
-      memcpy(buf, nowpack, 12);
-
-      offset = 12;
-   }
+   memcpy(buf, nowpack, 12);
 
    fd = open(RANDOM_POOL, O_RDONLY);
    if(fd == -1) return ret;
 
-   if(readFromEntropyPool(fd, buf+offset, len-offset) != len-offset){
+   *(buf + 12) = server_id;
+
+   if(readFromEntropyPool(fd, buf+12+1, len-12-1) != len-12-1){
       syslog(LOG_PRIORITY, "%s: %s", ERR_CANNOT_READ_FROM_POOL, RANDOM_POOL);
    }
-   
+
    close(fd);
    return ret;
 }
@@ -328,7 +346,7 @@ int recvtimeout(int s, char *buf, int len, int timeout){
     int n;
     struct timeval tv;
 
-    memset(buf, 0, MAXBUFSIZE);
+    memset(buf, 0, len);
 
     FD_ZERO(&fds);
     FD_SET(s, &fds);
@@ -344,150 +362,83 @@ int recvtimeout(int s, char *buf, int len, int timeout){
 }
 
 
-/*
- * check if it's a valid ID
- */
+int write1(int sd, void *buf, int buflen, int use_ssl, SSL *ssl){
+   int n;
 
-int isValidClapfID(char *p){
-
-   if(strlen(p) != 30 && strlen(p) != 31)
-      return 0;
-
-   for(; *p; p++){
-      /* 0-9: 0x30-0x39, a-f: 0x61-0x66 */
-
-      if(! ((*p >= 0x30 && *p <= 0x39) || (*p >= 0x61 && *p <= 0x66) || *p == 0x0d) ){
-         //printf("%c*\n", *p);
-         return 0;
-      }
-   }
-
-   return 1;
-}
-
-
-/*
- * extract messageid from forwarded messages
- */
-
-int extract_id_from_message(char *messagefile, char *clapf_header_field, char *ID){
-   int i=0, fd, len, train_mode=T_TOE;
-   char *p, *q, *r, buf[8*MAXBUFSIZE], puf[SMALLBUFSIZE];
-
-   memset(ID, 0, RND_STR_LEN+1);
-
-   fd = open(messagefile, O_RDONLY);
-   if(fd == -1) return -1;
-
-   while((len = read(fd, buf, 8*MAXBUFSIZE)) > 0){
-      /* data should be here in the first read */
-
-      p = buf;
-      do {
-         p = split(p, '\n', puf, SMALLBUFSIZE-1);
-
-         /* check for the clapf id in the Received: lines only, 2009.10.05, SJ */
-
-         q = strstr(puf, "Received: ");
-         if(q){
-            trimBuffer(puf);
-            r = strchr(puf, ' ');
-            if(r){
-               r++;
-               if(isValidClapfID(r)){
-                  i++;
-                  if(i <= 1){
-                     snprintf(ID, RND_STR_LEN, "%s", r);
-                  }
-               }
-            }
-         }
-
-         if(strlen(ID) > 2 && strncmp(puf, clapf_header_field, strlen(clapf_header_field)) == 0){
-            if(strncmp(puf + strlen(clapf_header_field), "TUM", 3) == 0)
-               train_mode = T_TUM;
-         }
-      } while(p);
-
-   }
-
-   close(fd);
-
-   return train_mode;
-}
-
-
-/*
- * write delivery info to file
- */
-
-void writeDeliveryInfo(struct session_data *sdata, char *dir){
-   int i;
-   FILE *f;
-
-   snprintf(sdata->deliveryinfo, SMALLBUFSIZE-1, "%s/%s.d", dir, sdata->ttmpfile);
-
-   f = fopen(sdata->deliveryinfo, "w+");
-   if(f){
-      fprintf(f, "%s", sdata->mailfrom);
-         for(i=0; i<sdata->num_of_rcpt_to; i++)
-            fprintf(f, "%s", sdata->rcptto[i]);
-
-      fclose(f);
-   }
+   if(use_ssl == 1)
+      n = SSL_write(ssl, buf, buflen);
    else
-      syslog(LOG_PRIORITY, "%s: failed writing delivery info to %s", sdata->ttmpfile, sdata->deliveryinfo);
+      n = send(sd, buf, buflen, 0);
+
+   return n;
 }
 
 
-/*
- * is it a valid dotted IPv4 address
- */
+int ssl_want_retry(SSL *ssl, int ret, int timeout){
+   int i;
+   fd_set fds;
+   struct timeval tv;
+   int sock;
 
-int isDottedIPv4Address(char *s){
-   struct in_addr addr;
+   // something went wrong.  I'll retry, die quietly, or complain
+   i = SSL_get_error(ssl, ret);
+   if(i == SSL_ERROR_NONE)
+      return 1;
+ 
+   tv.tv_sec = timeout/1000;
+   tv.tv_usec = 0;
+   FD_ZERO(&fds);
+ 
+   switch(i){
+      case SSL_ERROR_WANT_READ: // pause until the socket is readable
+          sock = SSL_get_rfd(ssl);
+          FD_SET(sock, &fds);
+          i = select(sock+1, &fds, 0, 0, &tv);
+          break;
+ 
+      case SSL_ERROR_WANT_WRITE: // pause until the socket is writeable
+         sock = SSL_get_wfd(ssl);
+         FD_SET(sock, &fds);
+         i = select(sock+1, 0, &fds, 0, &tv);
+         break;
+ 
+      case SSL_ERROR_ZERO_RETURN: // the sock closed, just return quietly
+         i = 0;
+         break;
+ 
+      default: // ERROR - unexpected error code
+         i = -1;
+         break;
+   };
 
-   if(inet_aton(s, &addr) == 0) return 0;
-
-   return 1;
+   return i;
 }
 
 
-/*
- * whitelist check
- */
+int ssl_read_timeout(SSL *ssl, void *buf, int len, int timeout){
+   int i;
 
-int isEmailAddressOnList(char *list, char *tmpfile, char *email, struct __config *cfg){
-   char *p, *q, w[SMALLBUFSIZE];
+   while(1){
+      i = SSL_read(ssl, (char*)buf, len);
+      if(i > 0) break;
+      i = ssl_want_retry(ssl, i, timeout);
+      if(i <= 0) break;
+   }
 
-   if(email == NULL) return 0;
+   return i;
+}
 
-   p = list;
 
-   if(cfg->verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: list: %s", tmpfile, list);
+int recvtimeoutssl(int s, char *buf, int len, int timeout, int use_ssl, SSL *ssl){
 
-   do {
-      p = split(p, '\n', w, SMALLBUFSIZE-1);
+    memset(buf, 0, len);
 
-      trimBuffer(w);
-
-      if(strlen(w) > 2){
-
-         if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: matching '%s' on '%s'", tmpfile, w, email);
-
-         if(w[strlen(w)-1] == '$'){
-            q = email + strlen(email) - strlen(w) + 1;
-            if(strncasecmp(q, w, strlen(w)-1) == 0)
-               return 1;
-         }
-         else if(strcasestr(email, w))
-            return 1;
-
-      }
-
-   } while(p);
-
-   return 0;
+    if(use_ssl == 1){
+       return ssl_read_timeout(ssl, buf, len-1, timeout);
+    }
+    else {
+       return recvtimeout(s, buf, len-1, timeout);
+    }
 }
 
 
@@ -518,6 +469,194 @@ int drop_privileges(struct passwd *pwd){
    }
 
    return 0;
+}
+
+
+void init_session_data(struct session_data *sdata, struct __config *cfg){
+   int i;
+
+
+   sdata->fd = -1;
+
+   create_id(&(sdata->ttmpfile[0]), cfg->server_id);
+   unlink(sdata->ttmpfile);
+
+   snprintf(sdata->filename, SMALLBUFSIZE-1, "%s", sdata->ttmpfile);
+
+   memset(sdata->mailfrom, 0, SMALLBUFSIZE);
+
+   memset(sdata->attachments, 0, SMALLBUFSIZE);
+
+   memset(sdata->fromemail, 0, SMALLBUFSIZE);
+
+   sdata->ipcnt = 0;
+   memset(sdata->ip, 0, SMALLBUFSIZE);
+   memset(sdata->hostname, 0, SMALLBUFSIZE);
+
+   memset(sdata->whitelist, 0, MAXBUFSIZE);
+   memset(sdata->blacklist, 0, MAXBUFSIZE);
+
+   sdata->tot_len = 0;
+   sdata->num_of_rcpt_to = 0;
+
+   sdata->tre = '-';
+
+   sdata->rav = AVIR_OK;
+
+   sdata->__acquire = sdata->__parsed = sdata->__av = sdata->__user = sdata->__policy = sdata->__as = sdata->__minefield = 0;
+   sdata->__training = sdata->__update = sdata->__store = sdata->__inject = 0;
+
+   for(i=0; i<MAX_RCPT_TO; i++) memset(sdata->rcptto[i], 0, SMALLBUFSIZE);
+
+   time(&(sdata->now));
+   sdata->sent = sdata->now;
+
+   sdata->sql_errno = 0;
+
+   sdata->blackhole = 0;
+   sdata->trapped_client = 0;
+
+   sdata->spaminess = DEFAULT_SPAMICITY;
+   sdata->need_signo_check = 0;
+
+   sdata->uid = sdata->gid = 0;
+   sdata->statistically_whitelisted = 0;
+   sdata->training_request = 0;
+   sdata->mynetwork = 0;
+
+   sdata->uid = sdata->gid = 0;
+   sdata->status = S_HAM;
+
+   //sdata->skip_id_check = 0;
+   sdata->from_address_in_mydomain = 0;
+   memset(sdata->name, 0, SMALLBUFSIZE);
+   memset(sdata->domain, 0, SMALLBUFSIZE);
+   memset(sdata->clapf_id, 0, SMALLBUFSIZE);
+   //memset(sdata->subject, 0, SMALLBUFSIZE);
+   //memset(sdata->rcpt_minefield, 0, MAX_RCPT_TO);
+}
+
+
+int read_from_stdin(struct session_data *sdata){
+   int fd, rc=ERR, n;
+   char buf[MAXBUFSIZE];
+
+   fd = open(sdata->ttmpfile, O_CREAT|O_EXCL|O_RDWR|O_TRUNC, S_IRUSR|S_IWUSR);
+   if(fd == -1){
+      syslog(LOG_PRIORITY, "%s: cannot open ttmpfile", sdata->ttmpfile);
+      return rc;
+   }
+
+   while((n = read(0, buf, sizeof(buf))) > 0){
+      sdata->tot_len += write(fd, buf, n);
+   }
+
+   if(fsync(fd)){
+      syslog(LOG_PRIORITY, "%s: fsync() error", sdata->ttmpfile);
+   }
+   else rc = OK;
+
+   close(fd);
+
+   return rc;
+}
+
+
+void strtolower(char *s){
+   for(; *s; s++){
+      if(*s >= 65 && *s <= 90) *s = tolower(*s);
+   }
+}
+
+
+void *get_in_addr(struct sockaddr *sa){
+   if(sa->sa_family == AF_INET) return &(((struct sockaddr_in*)sa)->sin_addr);
+   return &(((struct sockaddr_in6*)sa)->sin6_addr);
+}
+
+
+int can_i_write_current_directory(){
+   int fd;
+   char filename[SMALLBUFSIZE];
+
+   snprintf(filename, sizeof(filename)-1, "__piler_%d", getpid());
+
+   fd = open(filename, O_CREAT|O_RDWR, S_IRUSR|S_IWUSR|S_IRGRP);
+   if(fd == -1){
+      return 0;
+   }
+
+   close(fd);
+   unlink(filename);
+
+   return 1;
+}
+
+
+int is_item_on_list(char *item, char *list, char *extralist){
+   int result;
+   char *p, *q, w[SMALLBUFSIZE], my_list[SMALLBUFSIZE];
+
+   if(!item) return 0;
+
+   snprintf(my_list, sizeof(my_list)-1, "%s,%s", extralist, list);
+
+   p = my_list;
+
+   do {
+      p = split(p, ',', w, sizeof(w)-1, &result);
+
+      trim_buffer(w);
+
+      if(strlen(w) > 2){
+
+         if(w[strlen(w)-1] == '$'){
+            q = item + strlen(item) - strlen(w) + 1;
+            if(strncasecmp(q, w, strlen(w)-1) == 0){
+               return 1;
+            }
+         }
+         else if(strcasestr(item, w)){
+            return 1;
+         }
+
+      }
+
+   } while(p);
+
+   return 0;
+}
+
+
+int is_list_on_string(char *s, char *list){
+   int a;
+   char *p, w[SMALLBUFSIZE];
+
+   p = list;
+
+   do {
+      p = split(p, ',', w, sizeof(w)-1, &a);
+
+      trim_buffer(w);
+
+      if(strcasestr(s, w)) return 1;
+
+   } while(p);
+
+   return 0;
+}
+
+
+/*
+ * is it a valid dotted IPv4 address
+ */
+
+int is_dotted_ipv4_address(char *s){
+   struct in_addr addr;
+
+   if(inet_aton(s, &addr) == 0) return 0;
+
+   return 1;
 }
 
 

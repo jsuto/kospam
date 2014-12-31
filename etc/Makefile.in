@@ -19,29 +19,22 @@ DEFS = @defs@
 INCDIR = -I. -I../.. -I../../src @INCDIR@ @sql_includes@
 LIBDIR = -L. @LIBDIR@ @LDFLAGS@ -L../../src
 LIBS = @LIBS@ @sql_libs@
-CLAPF_USER = @CLAPF_USER@
-CLAPF_GROUP = `@id_bin@ -gn $(CLAPF_USER)`
+RUNNING_USER = @RUNNING_USER@
+RUNNING_GROUP = `@id_bin@ -gn $(RUNNING_USER)`
 
 INSTALL = @INSTALL@
 
 all:
 	sed -e 's%pidfile=.*%pidfile=$(localstatedir)/run/clapf/clapf.pid%g' \
-	-e 's%sqlite3=.*%sqlite3=$(localstatedir)/lib/clapf/data/tokens.sdb%g' \
-	-e 's%workdir=.*%workdir=$(localstatedir)/spool/clapf/tmp%g' \
-	-e 's%queuedir=.*%queuedir=$(localstatedir)/lib/clapf/queue%g' \
-	-e 's%mydbfile=.*%mydbfile=$(localstatedir)/lib/clapf/tokens.mydb%g' < $(srcdir)/example.conf > $(srcdir)/clapf.conf
-
-	sed -e 's%LOCALSTATEDIR%$(localstatedir)%g' \
-	-e 's%LIBEXECDIR%$(libexecdir)%g' \
-	-e 's%SYSCONFDIR%$(sysconfdir)%g' \
-	-e 's%SBINDIR%$(sbindir)%g' \
-	-e 's%DATAROOTDIR%$(datarootdir)%g' < $(srcdir)/cron.jobs.in > $(srcdir)/cron.jobs
+	-e 's%pemfile=%pemfile=$(sysconfdir)/clapf.pem%g' \
+	-e 's%workdir=.*%workdir=$(localstatedir)/clapf/tmp%g' < $(srcdir)/example.conf | grep -v ^\; | grep '=' | sort > $(srcdir)/clapf.conf
 
 install:
-	if [ ! -f "$(DESTDIR)$(sysconfdir)/clapf.conf" ]; then $(INSTALL) -m 0640 $(srcdir)/clapf.conf $(DESTDIR)$(sysconfdir)/clapf.conf; chgrp $(CLAPF_GROUP) $(DESTDIR)$(sysconfdir)/clapf.conf; fi
+	if [ ! -f "$(DESTDIR)$(sysconfdir)/clapf.conf" ]; then $(INSTALL) -m 0640 -g $(RUNNING_GROUP) $(srcdir)/clapf.conf $(DESTDIR)$(sysconfdir)/clapf.conf; fi
+	$(INSTALL) -m 0644 -g $(RUNNING_GROUP) $(srcdir)/sphinx.conf.in $(DESTDIR)$(sysconfdir)/sphinx.conf.dist
 
 clean:
-	rm -f clapf.conf cron.jobs
+	rm -f clapf.conf
 
 distclean: clean
 	rm -f Makefile

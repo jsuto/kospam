@@ -10,6 +10,7 @@
 #include <sys/stat.h>
 #include <sys/socket.h>
 #include <sys/un.h>
+#include <netdb.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <fcntl.h>
@@ -25,8 +26,6 @@ int clamd_scan(char *tmpfile, char *engine, char *avinfo, struct __config *cfg){
    memset(avinfo, 0, SMALLBUFSIZE);
 
    chmod(tmpfile, 0644);
-
-   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: trying to pass to CLAMD", tmpfile);
 
    strcpy(server.sun_path, cfg->clamd_socket);
    server.sun_family = AF_UNIX;
@@ -45,8 +44,7 @@ int clamd_scan(char *tmpfile, char *engine, char *avinfo, struct __config *cfg){
    /* issue the SCAN command with full path to the temporary directory */
 
    
-   memset(scan_cmd, 0, SMALLBUFSIZE);
-   snprintf(scan_cmd, SMALLBUFSIZE-1, "SCAN %s%s/%s\r\n", cfg->chrootdir, cfg->workdir, tmpfile);
+   snprintf(scan_cmd, sizeof(scan_cmd)-1, "SCAN %s/%s\r\n", cfg->workdir, tmpfile);
 
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: CLAMD CMD: %s", tmpfile, scan_cmd);
 
@@ -54,7 +52,7 @@ int clamd_scan(char *tmpfile, char *engine, char *avinfo, struct __config *cfg){
 
    /* read CLAMD's answers */
 
-   n = recvtimeout(s, buf, MAXBUFSIZE, TIMEOUT);
+   n = recvtimeout(s, buf, sizeof(buf), TIMEOUT);
 
    close(s);
 
@@ -79,10 +77,10 @@ int clamd_scan(char *tmpfile, char *engine, char *avinfo, struct __config *cfg){
 
 
 int clamd_net_scan(char *tmpfile, char *engine, char *avinfo, struct __config *cfg){
-   int n, psd;
+   int n, psd, rc, ret=AV_OK;
    char *p, *q, buf[MAXBUFSIZE], scan_cmd[SMALLBUFSIZE];
-   struct in_addr addr;
-   struct sockaddr_in clamd_addr;
+   char port_string[6];
+   struct addrinfo hints, *res;
 
    memset(avinfo, 0, SMALLBUFSIZE);
 
@@ -90,30 +88,37 @@ int clamd_net_scan(char *tmpfile, char *engine, char *avinfo, struct __config *c
 
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: trying to pass to clamd", tmpfile);
 
-   if((psd = socket(AF_INET, SOCK_STREAM, 0)) == -1){
+   snprintf(port_string, sizeof(port_string)-1, "%d", cfg->clamd_port);
+
+   memset(&hints, 0, sizeof(hints));
+   hints.ai_family = AF_UNSPEC;
+   hints.ai_socktype = SOCK_STREAM;
+
+   if((rc = getaddrinfo(cfg->clamd_addr, port_string, &hints, &res)) != 0){
+      syslog(LOG_PRIORITY, "%s: getaddrinfo for '%s': %s\n", tmpfile, cfg->clamd_addr, gai_strerror(rc));
+      return AV_ERROR;
+   }
+
+   if((psd = socket(res->ai_family, res->ai_socktype, res->ai_protocol)) == -1){
       syslog(LOG_PRIORITY, "%s: ERR: create socket", tmpfile);
-      return AV_ERROR;
+      ret = AV_ERROR;
+      goto ENDE_CLAMD;
    }
 
-   clamd_addr.sin_family = AF_INET;
-   clamd_addr.sin_port = htons(cfg->clamd_port);
-   inet_aton(cfg->clamd_addr, &addr);
-   clamd_addr.sin_addr.s_addr = addr.s_addr;
-   bzero(&(clamd_addr.sin_zero), 8);
-
-   if(connect(psd, (struct sockaddr *)&clamd_addr, sizeof(struct sockaddr)) == -1){
+   if(connect(psd, res->ai_addr, res->ai_addrlen) == -1){
       syslog(LOG_PRIORITY, "%s: CLAMD ERR: connect to %s %d", tmpfile, cfg->clamd_addr, cfg->clamd_port);
-      return AV_ERROR;
+      ret = AV_ERROR;
+      goto ENDE_CLAMD;
    }
 
-   memset(scan_cmd, 0, SMALLBUFSIZE);
-   snprintf(scan_cmd, SMALLBUFSIZE-1, "SCAN %s%s/%s\r\n", cfg->chrootdir, cfg->workdir, tmpfile);
+
+   snprintf(scan_cmd, sizeof(scan_cmd)-1, "SCAN %s/%s\r\n", cfg->workdir, tmpfile);
 
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: CLAMD CMD: %s", tmpfile, scan_cmd);
 
    send(psd, scan_cmd, strlen(scan_cmd), 0);
 
-   n = recvtimeout(psd, buf, MAXBUFSIZE, TIMEOUT);
+   n = recvtimeout(psd, buf, sizeof(buf), TIMEOUT);
    close(psd);
 
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: CLAMD DEBUG: %d %s", tmpfile, n, buf);
@@ -129,9 +134,13 @@ int clamd_net_scan(char *tmpfile, char *engine, char *avinfo, struct __config *c
          }
       }
 
-      return AV_VIRUS;
+      ret = AV_VIRUS;
    }
 
-   return AV_OK;
+
+ENDE_CLAMD:
+   freeaddrinfo(res);
+
+   return ret;
 }
 

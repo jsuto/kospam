@@ -7,8 +7,9 @@ class ControllerHealthHealth extends Controller {
 
       $this->id = "content";
       $this->template = "health/health.tpl";
-      $this->layout = "common/layout-health";
+      $this->layout = "common/layout";
 
+      $this->load->model('health/health');
 
       $request = Registry::get('request');
       $language = Registry::get('language');
@@ -22,7 +23,6 @@ class ControllerHealthHealth extends Controller {
          $this->template = "common/error.tpl";
          $this->data['errorstring'] = $this->data['text_you_are_not_admin'];
       }
-
 
       $this->render();
    }

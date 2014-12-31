@@ -87,7 +87,7 @@
 				$py += $textHeight;
 			}
 
-			imagettftext($img, $fontSize, $angle, $px, $py, $color->getColor($img), $fontFileName, utf8_decode($text));
+			imagettftext($img, $fontSize, $angle, $px, $py, $color->getColor($img), $fontFileName, $text);
 		}
 		
 		/**

@@ -24,11 +24,6 @@ class DB {
    }
 
 
-   public function escape($value) {
-      return $this->driver->escape($value);
-   }
-
-
    public function countAffected() {
       return $this->driver->countAffected();
    }

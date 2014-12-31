@@ -6,76 +6,74 @@
  #define _CLAPF_H
 
 #include <misc.h>
-#include <list.h>
 #include <parser.h>
-#include <bayes.h>
-#include <messages.h>
+#include <errmsg.h>
 #include <smtpcodes.h>
-#include <session.h>
-#include <buffer.h>
 #include <decoder.h>
-#include <users.h>
-#include <policy.h>
-#include <score.h>
-#include <templates.h>
+#include <buffer.h>
 #include <hash.h>
 #include <defs.h>
+#include <tai.h>
 #include <sig.h>
-#include <rbl.h>
 #include <av.h>
+#include <sql.h>
 #include <chi.h>
-#include <score.h>
+#include <users.h>
 #include <config.h>
 #include <unistd.h>
+#include <math.h>
 
 #ifdef HAVE_MEMCACHED
    #include "memc.h"
 #endif
 
-struct te getHamSpamCounters(struct session_data *sdata, char *stmt);
-int update_hash(struct session_data *sdata, char *qry, struct node *xhash[]);
+#define DEVIATION(n) fabs((n)-0.5f)
 
-int introduceTokens(struct session_data *sdata, struct node *xhash[]);
-int updateTokenCounters(struct session_data *sdata, int ham_or_spam, struct node *xhash[], int train_mode);
-int updateMiscTable(struct session_data *sdata, int ham_or_spam, int train_mode);
-int updateTokenTimestamps(struct session_data *sdata, struct node *xhash[]);
+int do_av_check(struct session_data *sdata, char *virusinfo, struct __data *data, struct __config *cfg);
 
-int do_av_check(struct session_data *sdata, char *rcpttoemail, char *fromemail, char *virusinfo, struct __data *data, struct __config *cfg);
+void digest_file(char *filename, char *digest);
 
-void get_queue_path(struct session_data *sdata, char **path, struct __config *cfg);
-void do_training(struct session_data *sdata, struct _state *state, char *email, char *acceptbuf, struct __config *cfg);
-void saveMessageToQueue(struct session_data *sdata, float spaminess, struct __config *cfg);
-void getWBLData(struct session_data *sdata, struct __config *cfg);
+int handle_smtp_session(int new_sd, struct __data *data, struct __config *cfg);
+int handle_pilerget_request(int new_sd, struct __data *data, struct __config *cfg);
 
-int spamc_emul(char *tmpfile, int size, struct __config *cfg);
-
-char *check_lang(struct node *xhash[]);
-
-int store_minefield_ip(struct session_data *sdata, struct __config *cfg);
-void is_sender_on_minefield(struct session_data *sdata, char *ip, struct __config *cfg);
-
-int processMessage(struct session_data *sdata, struct _state *sstate, struct __data *data, char *rcpttoemail, char *fromemail, struct __config *cfg, struct __config *my_cfg);
+void remove_stripped_attachments(struct __state *state);
+int process_message(struct session_data *sdata, struct __state *state, struct __data *data, struct __config *cfg);
 
 struct __config read_config(char *configfile);
 
-void checkAndCreateClapfDirectories(struct __config *cfg, uid_t uid, gid_t gid);
+void check_and_create_directories(struct __config *cfg, uid_t uid, gid_t gid);
 
-int getUserdataFromMemcached(struct session_data *sdata, struct __data *data, char *email, struct __config *cfg);
-int putUserdataToMemcached(struct session_data *sdata, struct __data *data, char *email, struct __config *cfg);
-int getPolicyFromMemcached(struct session_data *sdata, struct __data *data, struct __config *cfg, struct __config *my_cfg);
-int putPolicyToMemcached(struct session_data *sdata, struct __data *data, struct __config *cfg);
-int getWBLFromMemcached(struct session_data *sdata, struct __data *data, struct __config *cfg);
-int putWBLToMemcached(struct session_data *sdata, struct __data *data, struct __config *cfg);
+void update_counters(struct session_data *sdata, struct __data *data, struct __counters *counters, struct __config *cfg);
+int update_token_timestamps(struct session_data *sdata, struct node *xhash[]);
 
-void getUserFromEmailAddress(struct session_data *sdata, struct __data *data, char *email, struct __config *cfg);
-void getPolicySettings(struct session_data *sdata, struct __data *data, struct __config *cfg, struct __config *my_cfg);
-void getUsersWBL(struct session_data *sdata, struct __data *data, struct __config *cfg);
-void checkZombieSender(struct session_data *sdata, struct __data *data, struct _state *state, struct __config *cfg);
+int get_policy(struct session_data *sdata, struct __data *data, struct __config *cfg, struct __config *my_cfg);
 
-void updateCounters(struct session_data *sdata, struct __data *data, struct __counters *counters, struct __config *cfg);
+int import_message(char *filename, struct session_data *sdata, struct __data *data, struct __config *cfg);
+int get_folder_id(struct session_data *sdata, struct __data *data, char *foldername, int parent_id);
+int add_new_folder(struct session_data *sdata, struct __data *data, char *foldername, int parent_id);
 
-void initialiseZombieList(struct __data *data, struct __config *cfg);
-void freeZombieList(struct __data *data);
+int check_spam(struct session_data *sdata, struct __state *state, struct __data *data, char *fromemail, char *rcpttoemail, struct __config *cfg, struct __config *my_cfg);
+float run_statistical_check(struct session_data *sdata, struct __state *state, struct __config *cfg);
+void add_penalties(struct session_data *sdata, struct __state *state, struct __config *cfg);
+
+int train_message(struct session_data *sdata, struct __state *state, struct __data *data, int rounds, int is_spam, int train_mode, struct __config *cfg);
+void do_training(struct session_data *sdata, struct __state *state, struct __data *data, char *email, struct __config *cfg);
+
+int generate_tokens_from_string(struct __state *state, char *s, char *label);
+void tokenize(char *buf, struct __state *state, struct session_data *sdata, struct __data *data, struct __config *cfg);
+
+void zombie_init(struct __data *data, struct __config *cfg);
+void check_zombie_sender(struct session_data *sdata, struct __data *data, struct __state *state, struct __config *cfg);
+void zombie_free(struct __data *data);
+
+void store_minefield_ip(struct session_data *sdata, struct __data *data, char *ip, struct __config *cfg);
+void is_sender_on_minefield(struct session_data *sdata, struct __data *data, char *ip, struct __config *cfg);
+
+int inject_mail(struct session_data *sdata, int msg, char *spaminessbuf, char *buf, struct __config *cfg);
+
+int write_history(struct session_data *sdata, struct __state *state, struct __data *data, char *status, struct __config *cfg);
+
+void check_rbl_lists(struct session_data *sdata, struct __state *state, char *domainlist, struct __config *cfg);
 
 #endif /* _CLAPF_H */
 

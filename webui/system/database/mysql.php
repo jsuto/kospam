@@ -30,8 +30,6 @@ class MySQL {
    public function query($sql, $arr = array()) {
       $query = new stdClass();
 
-      //syslog(LOG_INFO, "sql query: $sql, array=" . implode("*", $arr));
-
       $query->error = 1;
       $query->errmsg = "Error";
       $query->query = $sql;
@@ -44,7 +42,10 @@ class MySQL {
       $s = $this->link->prepare($sql);
       if(!$s) { return $query; }
 
-      $s->execute($arr);
+      try {
+         $s->execute($arr);
+      }
+      catch(PDOException $exception) { }
 
       $this->affected = $s->rowCount();
 
@@ -80,9 +81,6 @@ class MySQL {
    public function getLastId() {
       return $this->link->lastInsertId();
    }
-
-
-   public function escape($s) { return $s; }
 
 
    public function __destruct() { }

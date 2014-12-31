@@ -26,39 +26,13 @@ CLAPF_GROUP = `@id_bin@ -gn $(CLAPF_USER)`
 INSTALL = @INSTALL@
 
 all:
-	cat $(srcdir)/db_init.sh.in | sed -e "s%YOUR_SHAREDIR%$(datarootdir)/clapf%g" > $(srcdir)/db_init.sh
-	cat $(srcdir)/db_train.sh.in | sed -e "s%YOUR_LIBEXECDIR%$(libexecdir)/clapf%g" -e "s%YOUR_BINDIR%$(bindir)%g" -e "s%YOUR_SHAREDIR%$(datarootdir)/clapf%g" > $(srcdir)/db_train.sh
-	cat $(srcdir)/check_clapf.sh.in | sed -e "s%YOUR_PATH%$(sbindir)%g" -e "s%YOUR_QUEUE%`grep '^queuedir=' ../etc/clapf.conf | cut -f2 -d '='`%g" -e "s%USER%$(CLAPF_USER)%g" > $(srcdir)/check_clapf.sh
-	if test `echo $(DEFS) | grep -c USERS_IN_MYSQL ` -eq 1; then cat $(srcdir)/clapf_admin-sql.sh.in | sed -e "s%SQLBINPROG%`which mysql` --defaults-file=$(datarootdir)/clapf/.my.cnf%g" > $(srcdir)/clapf_admin.sh; else cat $(srcdir)/clapf_admin-sql.sh.in| sed -e "s%SQLBINPROG%`which sqlite3` $(localstatedir)/lib/clapf/data/tokens.sdb%g" > $(srcdir)/clapf_admin.sh; fi
 
-install: @db_install@
-	$(INSTALL) -m 0755 $(srcdir)/db_init.sh $(DESTDIR)$(libexecdir)/clapf
-	$(INSTALL) -m 0755 $(srcdir)/db_train.sh $(DESTDIR)$(libexecdir)/clapf
-	$(INSTALL) -m 0755 $(srcdir)/clapf_admin.sh $(DESTDIR)$(libexecdir)/clapf
-	$(INSTALL) -m 0755 $(srcdir)/check_clapf.sh $(DESTDIR)$(libexecdir)/clapf
-	$(INSTALL) -m 0755 $(srcdir)/ldap_sync.php $(DESTDIR)$(libexecdir)/clapf
-	$(INSTALL) -m 0755 $(srcdir)/qrunner.php $(DESTDIR)$(libexecdir)/clapf
-	$(INSTALL) -m 0755 $(srcdir)/summary.php $(DESTDIR)$(libexecdir)/clapf
-	$(INSTALL) -m 0755 $(srcdir)/quarantine-daily-report.php $(DESTDIR)$(libexecdir)/clapf
-	$(INSTALL) -m 0644 $(srcdir)/purge-mysql.sql $(DESTDIR)$(datarootdir)/clapf
-	$(INSTALL) -m 0644 $(srcdir)/purge-psql.sql $(DESTDIR)$(datarootdir)/clapf
-	$(INSTALL) -m 0644 $(srcdir)/purge-sqlite3.sql $(DESTDIR)$(datarootdir)/clapf
+install:
+	#$(INSTALL) -m 0755 $(srcdir)/quarantine-daily-report.php $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0644 $(srcdir)/zombienets.regex $(DESTDIR)$(datarootdir)/clapf
 
-install-mysql-new:
-	$(INSTALL) -m 0644 $(srcdir)/db-mysql.sql $(DESTDIR)$(datarootdir)/clapf/db.sql
-
-install-psql-new:
-	$(INSTALL) -m 0644 $(srcdir)/db-psql.sql $(DESTDIR)$(datarootdir)/clapf/db.sql
-
-
-install-sqlite3:
-	$(INSTALL) -m 0644 $(srcdir)/db-sqlite3.sql $(DESTDIR)$(datarootdir)/clapf/db.sql
-	if [ ! -f "$(DESTDIR)/$(localstatedir)/lib/clapf/data/tokens.sdb" ]; then sqlite3 @sqlite3_batch@ $(DESTDIR)/$(localstatedir)/lib/clapf/data/tokens.sdb <$(srcdir)/db-sqlite3.sql; \
-		chown -R $(CLAPF_USER):$(CLAPF_GROUP) $(DESTDIR)$(localstatedir)/lib/clapf/data; fi
-
 clean:
-	rm -f db_train.sh check_clapf.sh clapf_admin-ldap.sh clapf_admin-sql.sh clapf_admin.sh
+	echo
 
 distclean: clean
 	rm -f Makefile

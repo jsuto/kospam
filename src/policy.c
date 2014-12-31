@@ -9,153 +9,71 @@
 #include <clapf.h>
 
 
-#ifdef HAVE_MYSQL
-int getPolicy(struct session_data *sdata, struct __config *cfg, struct __config *my_cfg){
-   MYSQL_RES *res;
-   MYSQL_ROW row;
-   char buf[SMALLBUFSIZE];
+int get_policy(struct session_data *sdata, struct __data *data, struct __config *cfg, struct __config *my_cfg){
+   int rc=0;
+   float f;
+   char f1[MAXVAL], f2[MAXVAL];
 
-#ifndef HAVE_LMTP
-   if(sdata->num_of_rcpt_to != 1) return 0;
-#endif
+   /*
+    * in case of smtp mode don't query unless we have a single recipient
+    */
 
-   snprintf(buf, SMALLBUFSIZE-1, "SELECT deliver_infected_email, silently_discard_infected_email, use_antispam, spam_subject_prefix, enable_auto_white_list, max_message_size_to_filter, rbl_domain, surbl_domain, spam_overall_limit, spaminess_oblivion_limit, replace_junk_characters, invalid_junk_limit, invalid_junk_line, penalize_images, penalize_embed_images, penalize_octet_stream, training_mode, initial_1000_learning, store_metadata, store_only_spam, message_from_a_zombie FROM %s WHERE policy_group=%d", SQL_POLICY_TABLE, sdata->policy_group);
+   if(cfg->server_mode == SMTP_MODE && sdata->num_of_rcpt_to != 1) return rc;
 
-   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: policy sql: %s", sdata->ttmpfile, buf);
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: policy sql (%d): %s", sdata->ttmpfile, sdata->policy_group, SQL_PREPARED_STMT_QUERY_POLICY);
 
-   if(mysql_real_query(&(sdata->mysql), buf, strlen(buf)) == 0){
-      res = mysql_store_result(&(sdata->mysql));
-      if(res != NULL){
-         row = mysql_fetch_row(res);
-         if(row){
-            my_cfg->deliver_infected_email = atoi(row[0]);
-            my_cfg->silently_discard_infected_email = atoi(row[1]);
-            my_cfg->use_antispam = atoi(row[2]);
-            if(row[3] != NULL) snprintf(my_cfg->spam_subject_prefix, MAXVAL-1, "%s ", row[3]);
-            my_cfg->enable_auto_white_list = atoi(row[4]);
-            my_cfg->max_message_size_to_filter = atoi(row[5]);
-            if(row[6] != NULL) snprintf(my_cfg->rbl_domain, MAXVAL-1, "%s", row[6]);
-            if(row[7] != NULL) snprintf(my_cfg->surbl_domain, MAXVAL-1, "%s", row[7]);
-            my_cfg->spam_overall_limit = atof(row[8]);
-            my_cfg->spaminess_oblivion_limit = atof(row[9]);
-            my_cfg->replace_junk_characters = atoi(row[10]);
-            my_cfg->invalid_junk_limit = atoi(row[11]);
-            my_cfg->invalid_junk_line = atoi(row[12]);
-            my_cfg->penalize_images = atoi(row[13]);
-            my_cfg->penalize_embed_images = atoi(row[14]);
-            my_cfg->penalize_octet_stream = atoi(row[15]);
-            my_cfg->training_mode = atoi(row[16]);
-            my_cfg->initial_1000_learning = atoi(row[17]);
-            my_cfg->store_metadata = atoi(row[18]);
-            my_cfg->store_only_spam = atoi(row[19]);
-            my_cfg->message_from_a_zombie = atoi(row[20]);
-         }
-         mysql_free_result(res);
-      }
+
+   if(prepare_sql_statement(sdata, &(data->stmt_get_policy), SQL_PREPARED_STMT_QUERY_POLICY) == ERR) return rc;
+
+   p_bind_init(data);
+
+   data->sql[data->pos] = (char *)&(sdata->policy_group); data->type[data->pos] = TYPE_LONG; data->pos++;
+
+   if(p_exec_query(sdata, data->stmt_get_policy, data) == ERR) goto ENDE;
+
+   p_bind_init(data);
+
+   data->sql[data->pos] = (char *)&(my_cfg->deliver_infected_email); data->type[data->pos] = TYPE_LONG; data->len[data->pos] = sizeof(int); data->pos++;
+   data->sql[data->pos] = (char *)&(my_cfg->silently_discard_infected_email); data->type[data->pos] = TYPE_LONG; data->len[data->pos] = sizeof(int); data->pos++;
+   data->sql[data->pos] = (char *)&(my_cfg->use_antispam); data->type[data->pos] = TYPE_LONG; data->len[data->pos] = sizeof(int); data->pos++;
+   data->sql[data->pos] = my_cfg->spam_subject_prefix; data->type[data->pos] = TYPE_STRING; data->len[data->pos] = MAXVAL-1; data->pos++;
+   data->sql[data->pos] = (char *)&(my_cfg->max_message_size_to_filter); data->type[data->pos] = TYPE_LONG; data->len[data->pos] = sizeof(int); data->pos++;
+   data->sql[data->pos] = my_cfg->surbl_domain; data->type[data->pos] = TYPE_STRING; data->len[data->pos] = MAXVAL-1; data->pos++;
+   data->sql[data->pos] = &f1[0]; data->type[data->pos] = TYPE_STRING; data->len[data->pos] = MAXVAL-1; data->pos++;
+   data->sql[data->pos] = &f2[0]; data->type[data->pos] = TYPE_STRING; data->len[data->pos] = MAXVAL-1; data->pos++;
+   data->sql[data->pos] = (char *)&(my_cfg->replace_junk_characters); data->type[data->pos] = TYPE_LONG; data->len[data->pos] = sizeof(int); data->pos++;
+   data->sql[data->pos] = (char *)&(my_cfg->penalize_images); data->type[data->pos] = TYPE_LONG; data->len[data->pos] = sizeof(int); data->pos++;
+   data->sql[data->pos] = (char *)&(my_cfg->penalize_embed_images); data->type[data->pos] = TYPE_LONG; data->len[data->pos] = sizeof(int); data->pos++;
+   data->sql[data->pos] = (char *)&(my_cfg->penalize_octet_stream); data->type[data->pos] = TYPE_LONG; data->len[data->pos] = sizeof(int); data->pos++;
+   data->sql[data->pos] = (char *)&(my_cfg->training_mode); data->type[data->pos] = TYPE_LONG; data->len[data->pos] = sizeof(int); data->pos++;
+   data->sql[data->pos] = (char *)&(my_cfg->store_emails); data->type[data->pos] = TYPE_LONG; data->len[data->pos] = sizeof(int); data->pos++;
+   data->sql[data->pos] = (char *)&(my_cfg->store_only_spam); data->type[data->pos] = TYPE_LONG; data->len[data->pos] = sizeof(int); data->pos++;
+   data->sql[data->pos] = (char *)&(my_cfg->message_from_a_zombie); data->type[data->pos] = TYPE_LONG; data->len[data->pos] = sizeof(int); data->pos++;
+   data->sql[data->pos] = my_cfg->smtp_addr; data->type[data->pos] = TYPE_STRING; data->len[data->pos] = MAXVAL-1; data->pos++;
+   data->sql[data->pos] = (char *)&(my_cfg->smtp_port); data->type[data->pos] = TYPE_LONG; data->len[data->pos] = sizeof(int); data->pos++;
+
+
+   p_store_results(sdata, data->stmt_get_policy, data);
+
+   if(p_fetch_results(data->stmt_get_policy) == OK){
+      f = atof(f1); if(f > 0.1) my_cfg->spam_overall_limit = f;
+      f = atof(f2); if(f > 0.1) my_cfg->spaminess_oblivion_limit = f;
+
+      if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: policy settings: %d/%d/%d/%s/%d/%s/%.4f/%.4f/%d/%d/%d/%d/%d/%d/%d/%d/%s/%d",
+                                              sdata->ttmpfile, my_cfg->deliver_infected_email, my_cfg->silently_discard_infected_email, my_cfg->use_antispam,
+                                              my_cfg->spam_subject_prefix, my_cfg->max_message_size_to_filter, my_cfg->surbl_domain, my_cfg->spam_overall_limit,
+                                              my_cfg->spaminess_oblivion_limit, my_cfg->replace_junk_characters, my_cfg->penalize_images, my_cfg->penalize_embed_images,
+                                              my_cfg->penalize_octet_stream, my_cfg->training_mode, my_cfg->store_emails, my_cfg->store_only_spam, my_cfg->message_from_a_zombie,
+                                              my_cfg->smtp_addr, my_cfg->smtp_port);
    }
 
-   return 1;
+   p_free_results(data->stmt_get_policy);
+
+
+ENDE:
+   close_prepared_statement(data->stmt_get_policy);
+
+   return rc;
 }
 
-#endif
-
-
-#ifdef HAVE_PSQL
-int getPolicy(struct session_data *sdata, struct __config *cfg, struct __config *my_cfg){
-   PGresult *res;
-   char buf[SMALLBUFSIZE];
-
-#ifndef HAVE_LMTP
-   if(sdata->num_of_rcpt_to != 1) return 0;
-#endif
-
-   snprintf(buf, SMALLBUFSIZE-1, "SELECT deliver_infected_email, silently_discard_infected_email, use_antispam, spam_subject_prefix, enable_auto_white_list, max_message_size_to_filter, rbl_domain, surbl_domain, spam_overall_limit, spaminess_oblivion_limit, replace_junk_characters, invalid_junk_limit, invalid_junk_line, penalize_images, penalize_embed_images, penalize_octet_stream, training_mode, initial_1000_learning, store_metadata, store_only_spam, message_from_a_zombie FROM %s WHERE policy_group=%d", SQL_POLICY_TABLE, sdata->policy_group);
-
-   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: policy sql: %s", sdata->ttmpfile, buf);
-
-   if( PQstatus( sdata->psql ) == CONNECTION_BAD ) {
-      sdata->psql = PQconnectdb( sdata->conninfo );
-   }
-   if( PQstatus( sdata->psql ) != CONNECTION_BAD ) {
-      res = PQexec( sdata->psql, buf );
-      if( res && PQresultStatus( res ) == PGRES_TUPLES_OK ) {
-            const char *val = ( const char * )NULL;
-            my_cfg->deliver_infected_email = atoi(( const char * )PQgetvalue( res, 0, 0 ));
-            my_cfg->silently_discard_infected_email = atoi(( const char * )PQgetvalue( res, 0, 1 ));
-            my_cfg->use_antispam = atoi(( const char * )PQgetvalue( res, 0, 2 ));
-            val = ( const char * )PQgetvalue( res, 0, 3 );
-            if(val != ( const char * )NULL) snprintf(my_cfg->spam_subject_prefix, MAXVAL-1, "%s ", val);
-            my_cfg->enable_auto_white_list = atoi(( const char * )PQgetvalue( res, 0, 4 ));
-            my_cfg->max_message_size_to_filter = atoi(( const char * )PQgetvalue( res, 0, 5 ));
-            val = ( const char * )PQgetvalue( res, 0, 6 );
-            if(val != ( const char * )NULL) snprintf(my_cfg->rbl_domain, MAXVAL-1, "%s", val);
-            val = ( const char * )PQgetvalue( res, 0, 7 );
-            if(val != ( const char * )NULL) snprintf(my_cfg->surbl_domain, MAXVAL-1, "%s", val);
-            my_cfg->spam_overall_limit = atof(( const char * )PQgetvalue( res, 0, 8 ));
-            my_cfg->spaminess_oblivion_limit = atof(( const char * )PQgetvalue( res, 0, 9 ));
-            my_cfg->replace_junk_characters = atoi(( const char * )PQgetvalue( res, 0, 10 ));
-            my_cfg->invalid_junk_limit = atoi(( const char * )PQgetvalue( res, 0, 11 ));
-            my_cfg->invalid_junk_line = atoi(( const char * )PQgetvalue( res, 0, 12 ));
-            my_cfg->penalize_images = atoi(( const char * )PQgetvalue( res, 0, 13 ));
-            my_cfg->penalize_embed_images = atoi(( const char * )PQgetvalue( res, 0, 14 ));
-            my_cfg->penalize_octet_stream = atoi(( const char * )PQgetvalue( res, 0, 15 ));
-            my_cfg->training_mode = atoi(( const char * )PQgetvalue( res, 0, 16 ));
-            my_cfg->initial_1000_learning = atoi(( const char * )PQgetvalue( res, 0, 17 ));
-            my_cfg->store_metadata = atoi(( const char * )PQgetvalue( res, 0, 18 ));
-            my_cfg->store_only_spam = atoi(( const char * )PQgetvalue( res, 0, 19 ));
-            my_cfg->message_from_a_zombie = atoi(( const char * )PQgetvalue( res, 0, 20 ));
-      }
-   }
-
-   return 1;
-}
-
-#endif
-
-
-#ifdef HAVE_SQLITE3
-int getPolicy(struct session_data *sdata, struct __config *cfg, struct __config *my_cfg){
-   char buf[SMALLBUFSIZE];
-   sqlite3_stmt *pStmt;
-   const char **pzTail=NULL;
-
-#ifndef HAVE_LMTP
-   if(sdata->num_of_rcpt_to != 1) return 0;
-#endif
-
-   snprintf(buf, SMALLBUFSIZE-1, "SELECT deliver_infected_email, silently_discard_infected_email, use_antispam, spam_subject_prefix, enable_auto_white_list, max_message_size_to_filter, rbl_domain, surbl_domain, spam_overall_limit, spaminess_oblivion_limit, replace_junk_characters, invalid_junk_limit, invalid_junk_line, penalize_images, penalize_embed_images, penalize_octet_stream, training_mode, initial_1000_learning, store_metadata, store_only_spam, message_from_a_zombie FROM %s WHERE policy_group=%d", SQL_POLICY_TABLE, sdata->policy_group);
-
-   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: policy sql: %s", sdata->ttmpfile, buf);
-
-   if(sqlite3_prepare_v2(sdata->db, buf, -1, &pStmt, pzTail) == SQLITE_OK){
-      if(sqlite3_step(pStmt) == SQLITE_ROW){
-         my_cfg->deliver_infected_email = sqlite3_column_int(pStmt, 0);
-         my_cfg->silently_discard_infected_email = sqlite3_column_int(pStmt, 1);
-         my_cfg->use_antispam = sqlite3_column_int(pStmt, 2);
-         if(sqlite3_column_blob(pStmt, 3)) snprintf(my_cfg->spam_subject_prefix, MAXVAL-1, "%s ", (char *)sqlite3_column_blob(pStmt, 3));
-         my_cfg->enable_auto_white_list = sqlite3_column_int(pStmt, 4);
-         my_cfg->max_message_size_to_filter = sqlite3_column_int(pStmt, 5);
-         if(sqlite3_column_blob(pStmt, 6)) snprintf(my_cfg->rbl_domain, MAXVAL-1, "%s ", (char *)sqlite3_column_blob(pStmt, 6));
-         if(sqlite3_column_blob(pStmt, 7)) snprintf(my_cfg->surbl_domain, MAXVAL-1, "%s ", (char *)sqlite3_column_blob(pStmt, 7));
-         my_cfg->spam_overall_limit = sqlite3_column_double(pStmt, 8);
-         my_cfg->spaminess_oblivion_limit = sqlite3_column_double(pStmt, 9);
-         my_cfg->replace_junk_characters = sqlite3_column_int(pStmt, 10);
-         my_cfg->invalid_junk_limit = sqlite3_column_int(pStmt, 11); 
-         my_cfg->invalid_junk_line = sqlite3_column_int(pStmt, 12);
-         my_cfg->penalize_images = sqlite3_column_int(pStmt, 13);
-         my_cfg->penalize_embed_images = sqlite3_column_int(pStmt, 14);
-         my_cfg->penalize_octet_stream = sqlite3_column_int(pStmt, 15);
-         my_cfg->training_mode = sqlite3_column_int(pStmt, 16);
-         my_cfg->initial_1000_learning = sqlite3_column_int(pStmt, 17);
-         my_cfg->store_metadata = sqlite3_column_int(pStmt, 18);
-         my_cfg->store_only_spam = sqlite3_column_int(pStmt, 19);
-         my_cfg->message_from_a_zombie = sqlite3_column_int(pStmt, 20);
-      }
-   }
-   sqlite3_finalize(pStmt);
-
-   return 1;
-}
-
-#endif
 

@@ -1,0 +1,26 @@
+#!/bin/bash
+
+export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin
+MAINTMPFILE=/var/run/clapf/main.indexer.tmp
+INDEXER=indexer
+PRIORITY=mail.error
+TOUCHFILE=/var/clapf/stat/indexer
+
+if [ -f $MAINTMPFILE ]; then echo "INDEXER ERROR: main indexing is already running. It started at "`cat $MAINTMPFILE` | logger -p $PRIORITY ; exit 1; fi
+
+date > $MAINTMPFILE
+
+touch $TOUCHFILE
+
+function finish {
+   rm -f $MAINTMPFILE
+}
+
+trap finish EXIT
+
+echo "INDEXER INFO: indexing main started" | logger -p $PRIORITY
+
+$INDEXER --quiet --all --rotate
+
+echo "INDEXER INFO: indexing main finished" | logger -p $PRIORITY
+

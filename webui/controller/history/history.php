@@ -9,39 +9,51 @@ class ControllerHistoryHistory extends Controller {
       $this->template = "history/history.tpl";
       $this->layout = "common/layout-history";
 
-
       $request = Registry::get('request');
-      $language = Registry::get('language');
+      $db = Registry::get('db');
 
-      $this->document->title = $language->get('text_history');
+      $this->load->model('search/search');
 
+      $this->document->title = $this->data['text_history'];
 
-      /* check if we are admin */
+      $this->data['searchtype'] = 'expert';
 
-      if(Registry::get('admin_user') == 1 || Registry::get('readonly_admin') == 1) {
-         $this->data['hamspam'] = @$this->request->cookie['hamspam'];
-         $this->data['sender_domain'] = @$this->request->cookie['sender_domain'];
-         $this->data['rcpt_domain'] = @$this->request->cookie['rcpt_domain'];
-         $this->data['date1'] = @$this->request->cookie['date1'];
-         $this->data['date2'] = @$this->request->cookie['date2'];
-         $this->data['subject'] = urldecode(@$this->request->cookie['subject']);
+      if(isset($this->request->post['searchterm'])) {
+         $this->fixup_post_request();
 
-         if(isset($this->request->get['page']) && is_numeric($this->request->get['page']) && $this->request->get['page'] > 0) {
-            $this->data['page'] = $this->request->get['page'];
-         }
-         else {
-            $this->data['page'] = 0;
-         }
-
+         $a = preg_replace("/\&loaded=1$/", "", $this->request->post['searchterm']);
+         $this->model_search_search->update_search_term($a);
       }
-      else {
-         $this->template = "common/error.tpl";
-         $this->data['errorstring'] = $this->data['text_you_are_not_admin'];
-      }
-
 
       $this->render();
    }
+
+
+   private function fixup_post_request() {
+      $i = 0;
+      $a = array();
+
+      $this->data['blocks'] = array();
+
+      $this->data['searchterm'] = $this->request->post['searchterm'];
+
+      parse_str($this->request->post['searchterm'], $a);
+
+      if(isset($a['from'])) { $this->data['from'] = $a['from']; }
+      if(isset($a['to'])) { $this->data['to'] = $a['to']; }
+      if(isset($a['subject'])) { $this->data['subject'] = $a['subject']; }
+
+      if(isset($a['search'])) { $this->data['_search'] = $a['search']; }
+
+      if(isset($a['sort'])) { $this->data['sort'] = $a['sort']; }
+      if(isset($a['order'])) { $this->data['order'] = $a['order']; }
+
+      if(isset($a['date1'])) { $this->data['date1'] = $a['date1']; }
+      if(isset($a['date2'])) { $this->data['date2'] = $a['date2']; }
+
+      if(isset($a['direction'])) { $this->data['direction'] = $a['direction']; }
+   }
+
 
 }
 

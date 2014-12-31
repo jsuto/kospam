@@ -1,118 +1,78 @@
 <?php
 
+
 class ModelPolicyPolicy extends Model {
 
-   public function getPolicies() {
-      $query = $this->db->query("SELECT policy_group, name FROM " . TABLE_POLICY);
-
-      return $query->rows;
-   }
-
-
-   public function getPolicy($policy_group = 0) {
-      if(!is_numeric($policy_group) || $policy_group <= 0) {
-         return array();
+   public function get_policies($s = '') {
+      if($s) {
+         $query = $this->db->query("SELECT * FROM " . TABLE_POLICY . " WHERE `from` LIKE ? OR `to` LIKE ? OR subject LIKE ? ORDER BY domain, id", array('%' . $s . '%', '%' . $s . '%', '%' . $s . '%'));
+      } else {
+         $query = $this->db->query("SELECT * FROM " . TABLE_POLICY . " ORDER BY id");
       }
 
-      $query = $this->db->query("SELECT * FROM " . TABLE_POLICY . " WHERE policy_group=?", array($policy_group));
+      if(isset($query->rows)) { return $query->rows; }
 
-      return $query->row;
+      return array();
    }
 
 
-   public function removePolicy($policy_group = 0) {
-      if(!is_numeric($policy_group) || $policy_group <= 0) {
-         return 0;
-      }
+   public function get_policy($id = 0) {
+      $query = $this->db->query("SELECT * FROM " . TABLE_POLICY . " WHERE id=?", array($id));
 
-      $query = $this->db->query("DELETE FROM " . TABLE_POLICY . " WHERE policy_group=?", array($policy_group));
+      if(isset($query->row)) { return $query->row; }
 
-      $rc = $this->db->countAffected();
-
-      LOGGER("remove policy: id=$policy_group (rc=$rc)");
-
-      return $rc;
+      return array();
    }
 
 
-   public function updatePolicy($policy) {
+   public function add($data = array()) {
+      $query = $this->db->query("INSERT INTO " . TABLE_POLICY . " (`name`,`deliver_infected_email`,`silently_discard_infected_email`,`use_antispam`,`spam_subject_prefix`,`max_message_size_to_filter`,`surbl_domain`,`spam_overall_limit`,`spaminess_oblivion_limit`,`replace_junk_characters`, `penalize_images`, `penalize_embed_images`, `penalize_octet_stream`, `training_mode`, `store_emails`, `store_only_spam`, `message_from_a_zombie`, `smtp_addr`, `smtp_port`) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", array($data['name'], $data['deliver_infected_email'], $data['silently_discard_infected_email'], $data['use_antispam'], $data['spam_subject_prefix'], $data['max_message_size_to_filter'], $data['surbl_domain'], $data['spam_overall_limit'], $data['spaminess_oblivion_limit'], $data['replace_junk_characters'], $data['penalize_images'], $data['penalize_embed_images'], $data['penalize_octet_stream'], $data['training_mode'], $data['store_emails'], $data['store_only_spam'], $data['message_from_a_zombie'], $data['smtp_addr'], $data['smtp_port']));
 
-      if(count($policy) < 5 || $policy['policy_group'] <= 0 || !is_numeric($policy['policy_group'])){
+      return $this->db->countAffected();
+   }
+
+
+   public function update($data = array()) {
+
+      if(count($data) < 5 || $data['id'] <= 0 || !is_numeric($data['id'])){
          return 0;
       }
 
       $query = $this->db->query(
-         "UPDATE " . TABLE_POLICY . " SET name=?, deliver_infected_email=?, " .
-                                          "silently_discard_infected_email=?, use_antispam=?, " .
-                                          "spam_subject_prefix=?, enable_auto_white_list=?, " .
-                                          "max_message_size_to_filter=?, rbl_domain=?, " .
-                                          "surbl_domain=?, spam_overall_limit=?, " .
-                                          "spaminess_oblivion_limit=?, replace_junk_characters=?, " .
-                                          "invalid_junk_limit=?, invalid_junk_line=?, penalize_images=?, " .
-                                          "penalize_embed_images=?, penalize_octet_stream=?, " .
-                                          "training_mode=?, initial_1000_learning=?, " .
-                                          "store_metadata=?, store_only_spam=?, " .
-                                          "message_from_a_zombie=?  WHERE policy_group=?",
-
-         array($policy['name'], $policy['deliver_infected_email'], $policy['silently_discard_infected_email'], $policy['use_antispam'],
-               $policy['spam_subject_prefix'], $policy['enable_auto_white_list'], $policy['max_message_size_to_filter'], $policy['rbl_domain'], $policy['surbl_domain'],
-               $policy['spam_overall_limit'], $policy['spaminess_oblivion_limit'], $policy['replace_junk_characters'], $policy['invalid_junk_limit'], $policy['invalid_junk_line'],
-               $policy['penalize_images'], $policy['penalize_embed_images'], $policy['penalize_octet_stream'], $policy['training_mode'], $policy['initial_1000_learning'],
-               $policy['store_metadata'], $policy['store_only_spam'], $policy['message_from_a_zombie'], $policy['policy_group'])
-
-      );
-
-      /* remove from memcached */
-
-      if(MEMCACHED_ENABLED) {
-         $memcache = Registry::get('memcache');
-         $memcache->delete("_c:" . $policy['policy_group']);
-      }
+         "UPDATE " . TABLE_POLICY . " SET `name`=?,`deliver_infected_email`=?,`silently_discard_infected_email`=?,`use_antispam`=?,`spam_subject_prefix`=?,`max_message_size_to_filter`=?,`surbl_domain`=?,`spam_overall_limit`=?,`spaminess_oblivion_limit`=?,`replace_junk_characters`=?, `penalize_images`=?, `penalize_embed_images`=?, `penalize_octet_stream`=?, `training_mode`=?, `store_emails`=?, `store_only_spam`=?, `message_from_a_zombie`=?, `smtp_addr`=?, `smtp_port`=? WHERE id=?", array($data['name'], $data['deliver_infected_email'], $data['silently_discard_infected_email'], $data['use_antispam'], $data['spam_subject_prefix'], $data['max_message_size_to_filter'], $data['surbl_domain'], $data['spam_overall_limit'], $data['spaminess_oblivion_limit'], $data['replace_junk_characters'], $data['penalize_images'], $data['penalize_embed_images'], $data['penalize_octet_stream'], $data['training_mode'], $data['store_emails'], $data['store_only_spam'], $data['message_from_a_zombie'], $data['smtp_addr'], $data['smtp_port'], $data['id']));
 
       $rc = $this->db->countAffected();
 
-      LOGGER("update policy: " . $policy['name'] . " (id=" . (int)$policy['policy_group'] . ") (rc=$rc)");
+      LOGGER("update policy: " . $data['name'] . " (id=" . (int)$data['id'] . ") (rc=$rc)");
 
       return $rc;
    }
 
-
-   public function addPolicy($policy) {
-      if(count($policy) < 5 || $policy['policy_group'] <= 0 || !is_numeric($policy['policy_group'])){
-         return 0;
-      }
-
-      $query = $this->db->query(
-         "INSERT INTO " . TABLE_POLICY . " (policy_group, name, deliver_infected_email, silently_discard_infected_email, use_antispam, " .
-         "spam_subject_prefix, enable_auto_white_list, max_message_size_to_filter, rbl_domain, surbl_domain, spam_overall_limit, spaminess_oblivion_limit, " .
-         "replace_junk_characters, invalid_junk_limit, invalid_junk_line, penalize_images, penalize_embed_images, penalize_octet_stream, training_mode, " .
-         "initial_1000_learning, store_metadata, store_only_spam, message_from_a_zombie) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-
-         array($policy['policy_group'], $policy['name'], $policy['deliver_infected_email'], $policy['silently_discard_infected_email'], $policy['use_antispam'], 
-               $policy['spam_subject_prefix'], $policy['enable_auto_white_list'], $policy['max_message_size_to_filter'], $policy['rbl_domain'], $policy['surbl_domain'],
-               $policy['spam_overall_limit'], $policy['spaminess_oblivion_limit'], $policy['replace_junk_characters'], $policy['invalid_junk_limit'], $policy['invalid_junk_line'],
-               $policy['penalize_images'], $policy['penalize_embed_images'], $policy['penalize_octet_stream'], $policy['training_mode'], $policy['initial_1000_learning'],
-               $policy['store_metadata'], $policy['store_only_spam'], $policy['message_from_a_zombie'])
-      );
-
-
-      $rc = $this->db->countAffected();
-
-      LOGGER("add policy: " . $policy['name'] . " (rc=$rc)");
-
-      return $rc;
+   public function remove($id = 0) {
+      $query = $this->db->query("DELETE FROM " .  TABLE_POLICY . " WHERE id=?", array($id));
+      return $this->db->countAffected();
    }
 
 
-   public function getNewPolicyGroupId() {
+   public function fix_post_data() {
 
-      $query = $this->db->query("SELECT MAX(policy_group) AS last_id FROM " . TABLE_POLICY);
+      foreach(array(
+                     'deliver_infected_email',
+                     'silently_discard_infected_email',
+                     'use_antispam',
+                     'replace_junk_characters',
+                     'penalize_images',
+                     'penalize_embed_images',
+                     'penalize_octet_stream',
+                     'store_emails',
+                     'store_only_spam'
+               )
+               as $a) {
 
-      if(isset($query->row['last_id']) && $query->row['last_id'] > 0) {
-         return (int)$query->row['last_id'] + 1;
+         if(!isset($this->request->post[$a])) { $this->request->post[$a] = 0; }
+         else { $this->request->post[$a] = 1; }
       }
 
-      return 1;
    }
 
 

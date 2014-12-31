@@ -2,52 +2,42 @@
 
 class ModelStatChart extends Model {
 
-   public function lineChartHamSpam($emails, $timespan, $title, $size_x, $size_y, $output){
+   public function lineChartHamSpam($timespan, $title, $size_x, $size_y, $output){
       $ydata = array();
       $ydata2 = array();
       $dates = array();
 
+      $session = Registry::get('session');
+
       $chart = new LineChart($size_x, $size_y);
 
       $chart->getPlot()->getPalette()->setLineColor(array(
-         new Color(26, 192, 144),
+         //new Color(26, 192, 144),
          new Color(208, 48, 128),
       ));
 
       $line1 = new XYDataSet();
-      $line2 = new XYDataSet();
 
       $limit = $this->getDataPoints($timespan);
 
       $range = $this->getRangeInSeconds($timespan);
 
-      if(HISTORY_DRIVER == "sqlite"){
-         if($timespan == "daily"){ $grouping = "GROUP BY strftime('%Y.%m.%d %H', datetime(ts, 'unixepoch'))"; }
-         else { $grouping = "GROUP BY strftime('%Y.%m.%d', datetime(ts, 'unixepoch'))"; }
-      }
-      else {
-         if($timespan == "daily"){ $grouping = "GROUP BY FROM_UNIXTIME(ts, '%Y.%m.%d. %H')"; }
-         else { $grouping = "GROUP BY FROM_UNIXTIME(ts, '%Y.%m.%d.')"; }
-      }
+      if($timespan == "daily"){ $grouping = "GROUP BY FROM_UNIXTIME(ts, '%Y.%m.%d. %H')"; }
+      else { $grouping = "GROUP BY FROM_UNIXTIME(ts, '%Y.%m.%d.')"; }
 
 
       if($timespan == "daily"){
-         $query = $this->db_history->query("select ts-(ts%3600) as ts, count(*) as num from clapf where ts > $range AND result='HAM' $emails $grouping ORDER BY ts DESC limit $limit");
-         $query2 = $this->db_history->query("select ts-(ts%3600) as ts, count(*) as num from clapf where ts > $range AND result='SPAM' $emails $grouping ORDER BY ts DESC limit $limit");
+         $delta = 3600;
          $date_format = "H:i";
       } else {
-         $query = $this->db_history->query("select ts-(ts%86400) as ts, count(*) as num from clapf where ts > $range AND result='HAM' $emails $grouping ORDER BY ts DESC limit $limit");
-         $query2 = $this->db_history->query("select ts-(ts%86400) as ts, count(*) as num from clapf where ts > $range AND result='SPAM' $emails $grouping ORDER BY ts DESC limit $limit");
+         $delta = 86400;
          $date_format = "m.d.";
       }
 
+      $query = $this->db->query("select ts-(ts%$delta) as ts, count(*) as num from " . TABLE_HISTORY . " where ts > $range $grouping ORDER BY ts DESC limit $limit");
+
       foreach ($query->rows as $q) {
          array_push($ydata, $q['num']);
-         array_push($dates, date($date_format, $q['ts']));
-      }
-
-      foreach ($query2->rows as $q) {
-         array_push($ydata2, $q['num']);
          array_push($dates, date($date_format, $q['ts']));
       }
 
@@ -63,21 +53,16 @@ class ModelStatChart extends Model {
 
 
       $ydata = array_reverse($ydata);
-      $ydata2 = array_reverse($ydata2);
       $dates = array_reverse($dates);
 
       for($i=0; $i<count($ydata); $i++){
-         $ham = $ydata[$i];
-         if(isset($ydata2[$i])) { $spam = $ydata2[$i]; } else { $spam = 0; }
          $ts = $dates[$i];
-         $line1->addPoint(new Point("$ts", $ham));
-         $line2->addPoint(new Point("$ts", $spam));
+         $line1->addPoint(new Point("$ts", $ydata[$i]));
       }
 
 
       $dataSet = new XYSeriesDataSet();
-      $dataSet->addSerie("HAM", $line1);
-      $dataSet->addSerie("SPAM", $line2);
+      $dataSet->addSerie("RCVD", $line1);
 
       $chart->setDataSet($dataSet);
 
@@ -95,10 +80,10 @@ class ModelStatChart extends Model {
 
       $chart = new PieChart(SIZE_X, SIZE_Y);
 
-      $query = $this->db_history->query("SELECT COUNT(*) AS SPAM FROM clapf WHERE result='SPAM' $emails AND ts > ?", array($range));
+      $query = $this->db->query("SELECT COUNT(*) AS SPAM FROM " . TABLE_HISTORY . " WHERE $emails AND ts > $range");
       if($query->num_rows > 0) { $spam = $query->row['SPAM']; }
 
-      $query = $this->db_history->query("SELECT COUNT(*) AS HAM FROM clapf WHERE result='HAM' $emails AND ts > ?", array($range));
+      $query = $this->db->query("SELECT COUNT(*) AS HAM FROM " . TABLE_HISTORY . " WHERE $emails AND ts > $range");
       if($query->num_rows > 0) { $ham = $query->row['HAM']; }
 
       if($ham > $spam) {
@@ -112,28 +97,6 @@ class ModelStatChart extends Model {
 
       $dataSet->addPoint(new Point("HAM ($ham)", $ham));
       $dataSet->addPoint(new Point("SPAM ($spam)", $spam));
-
-      $chart->setDataSet($dataSet);
-      $chart->setTitle($title);
-
-      $this->sendOutput($chart, $output);
-   }
-
-
-
-   public function horizontalChartTopDomains($emails = '', $what, $timespan, $title, $output) {
-      if($what != "HAM") { $what = "SPAM"; }
-
-      $range = $this->getRangeInSeconds($timespan);
-
-      $chart = new HorizontalBarChart(SIZE_X, SIZE_Y);
-      $dataSet = new XYDataSet();
-
-      $query = $this->db_history->query("SELECT ts, fromdomain, COUNT(fromdomain) AS sum FROM clapf WHERE ts > ? $emails AND result=? GROUP BY fromdomain ORDER BY sum DESC LIMIT 10", array($range, $what));
-
-      foreach($query->rows as $q) {
-         $dataSet->addPoint(new Point($q['fromdomain'], $q['sum']));
-      }
 
       $chart->setDataSet($dataSet);
       $chart->setTitle($title);

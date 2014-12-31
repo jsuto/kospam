@@ -3,16 +3,23 @@
  */
 
 #define CONFDIR "/usr/local/etc"
-#define LOCALSTATEDIR "/usr/local/var"
-
-#define SPAMDROP_HELPER_PROGRAM "/usr/local/libexec/clapf/spamdrop_helper"
-
-#define VIRUS_TEMPLATE DATAROOTDIR "/clapf/template.virus"
-
-#define ZOMBIE_NET_REGEX DATAROOTDIR "/clapf/zombienets.regex"
-
-#define PIDFILE LOCALSTATEDIR "/run/clapf/clapf.pid"
-#define HISTORY_PIDFILE LOCALSTATEDIR "/run/clapf/clapf-maillog.pid"
+#define DATADIR "/usr/local/var"
 
 #define HAVE_DAEMON 1
+
+#undef TIMEOUT_BINARY
+
+#undef HAVE_PDFTOTEXT
+#undef HAVE_CATDOC
+#undef HAVE_CATPPT
+#undef HAVE_XLS2CSV
+#undef HAVE_PPTHTML
+#undef HAVE_UNRTF
+#undef HAVE_TNEF
+#undef HAVE_ZIP
+
+#undef HAVE_STARTTLS
+#undef HAVE_LIBWRAP
+
+#define ZOMBIE_NET_REGEX DATAROOTDIR "/clapf/zombienets.regex"
 

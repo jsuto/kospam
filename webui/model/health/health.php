@@ -4,7 +4,7 @@ class ModelHealthHealth extends Model {
 
    public function format_time($time = 0) {
       if($time >= 1) {
-         return $time . " sec";
+         return sprintf("%.2f", $time) . " sec";
       }
       else {
          return sprintf("%.2f", 1000*$time) . " ms";
@@ -34,58 +34,40 @@ class ModelHealthHealth extends Model {
    }
 
 
-   public function check_postgrey($policy = array(), $error = '') {
-      $ret = $error;
-      $time = 0;
-
-      if($policy[0] && $policy[1] && is_numeric($policy[1]) &&  $policy[1] > 0 && $policy[1] < 65536) {
-         $time_start = microtime(true);
-
-         $s = @fsockopen($policy[0], $policy[1]);
-
-         if($s) {
-            $req  = "request=smtpd_access_policy" . EOL;
-            $req .= "protocol_state=RCPT" . EOL;
-            $req .= "protocol_name=SMTP" . EOL;
-            $req .= "client_address=192.168.100.100" . EOL;
-            $req .= "client_name=spamgw.yourdomain.com" . EOL;
-            $req .= "reverse_client_name=spamgw.yourdomain.com" . EOL;
-            $req .= "helo_name=spamgw.yourdomain.com" . EOL;
-            $req .= "sender=testaccount@spamgw.yourdomain.com" . EOL;
-            $req .= "recipient=testaccount@spamgw.yourdomain.com" . EOL;
-            $req .= "recipient_count=0" . EOL;
-            $req .= "instance=1eb5.4dcd83ab.2ccae.4" . EOL;
-            $req .= EOL;
-
-            fputs($s, $req);
-
-            $ret = trim(fgets($s, 4096));
-            fclose($s);
-         }
-      }
-
-      $time = microtime(true) - $time_start;
-      return array($policy[0] . ":" . $policy[1], $ret, $this->format_time($time));
-   }
-
-
    public function count_processed_emails() {
       $today = $last_7_days = $last_30_days = 0;
+      $a = array();
       $now = time();
 
+      $ts = $now - 3600;
+      $query = $this->db->query("select count(*) as count, sum(size) as size from " . TABLE_HISTORY . " where ts > $ts");
+      if(isset($query->row['count'])) {
+         $a['last_60_mins_count'] = $query->row['count'];
+         $a['last_60_mins_size'] = $query->row['size'];
+      }
+
       $ts = $now - 86400;
-      $query = $this->db_history->query("select count(*) as count from clapf where ts > $ts");
-      if(isset($query->row['count'])) { $today = $query->row['count']; }
+      $query = $this->db->query("select count(*) as count, sum(size) as size from " . TABLE_HISTORY . " where ts > $ts");
+      if(isset($query->row['count'])) {
+         $a['today_count'] = $query->row['count'];
+         $a['today_size'] = $query->row['size'];
+      }
 
       $ts = $now - 604800;
-      $query = $this->db_history->query("select count(*) as count from clapf where ts > $ts");
-      if(isset($query->row['count'])) { $last_7_days = $query->row['count']; }
+      $query = $this->db->query("select count(*) as count, sum(size) as size from " . TABLE_HISTORY . " where ts > $ts");
+      if(isset($query->row['count'])) {
+         $a['last_7_days_count'] = $query->row['count'];
+         $a['last_7_days_size'] = $query->row['size'];
+      }
 
       $ts = $now - 2592000;
-      $query = $this->db_history->query("select count(*) as count from clapf where ts > $ts");
-      if(isset($query->row['count'])) { $last_30_days = $query->row['count']; }
+      $query = $this->db->query("select count(*) as count, sum(size) as size from " . TABLE_HISTORY . " where ts > $ts");
+      if(isset($query->row['count'])) {
+         $a['last_30_days_count'] = $query->row['count'];
+         $a['last_30_days_size'] = $query->row['size'];
+      }
 
-      return array($today, $last_7_days, $last_30_days);
+      return $a;
    }
 
 
@@ -105,26 +87,32 @@ class ModelHealthHealth extends Model {
          if(isset($a[0]) && $a[0]) { $_m[$a[0]] = $a[1]; }
       }
 
-      $mem_percentage = sprintf("%.2f", 100*($_m['MemTotal:'] - $_m['MemFree:'] - $_m['Cached:']) / $_m['MemTotal:']);
-      $swap_percentage = sprintf("%.2f", 100*($_m['SwapTotal:'] - $_m['SwapFree:']) / $_m['SwapTotal:']);
+      $mem_percentage = isset($_m['MemTotal:']) && $_m['MemTotal:'] > 0 ? sprintf("%.2f", 100*($_m['MemTotal:'] - $_m['MemFree:'] - $_m['Cached:']) / $_m['MemTotal:']) : "0";
+      $swap_percentage = isset($_m['SwapTotal:']) && $_m['SwapTotal:'] > 0 ? sprintf("%.2f", 100*($_m['SwapTotal:'] - $_m['SwapFree:']) / $_m['SwapTotal:']) : "0";
 
-      return array(sprintf("%.0f", $_m['MemTotal:'] / 1000), $mem_percentage, sprintf("%.0f", $_m['SwapTotal:'] / 1000), $swap_percentage);
+      return array(sprintf("%.0f", @$_m['MemTotal:'] / 1000), $mem_percentage, sprintf("%.0f", @$_m['SwapTotal:'] / 1000), $swap_percentage);
    }
 
 
    public function diskinfo() {
       $shortinfo = array();
+      $a = array();
 
-      $s = exec("df -h", $output);
+      $s = exec("df", $output);
 
       $partitions = Registry::get('partitions_to_monitor');
 
       while(list($k, $v) = each($output)) {
          if($k > 0) {
             $p = preg_split("/\ {1,}/", $v);
-            if(in_array($p[5], $partitions)) {
+            if(isset($p[5]) && in_array($p[5], $partitions) && !isset($a[$p[5]])) {
+               $a[$p[5]] = 1;
+
                $shortinfo[] = array(
                                     'partition' => $p[5],
+                                    'freespace' => $p[3],
+                                    'total' => $p[1],
+                                    'used' => $p[2],
                                     'utilization' => preg_replace("/\%/", "", $p[4])
                               );
             }
@@ -143,13 +131,109 @@ class ModelHealthHealth extends Model {
    }
 
 
-   public function countSpamMessages() {
-      $query = $this->db->query("SELECT COUNT(*) AS num FROM ". TABLE_QUARANTINE . " WHERE is_spam='s'");
+   public function get_options() {
+      $data = array();
 
-      if(isset($query->row['num'])) { return $query->row['num']; }
+      $query = $this->db->query("SELECT * FROM `" . TABLE_OPTION . "`");
+      if(isset($query->rows)) {
+         foreach ($query->rows as $q) {
+            $data[$q['key']] = $q['value'];
+         }
+      }
 
-      return 0;
+      return $data;
    }
+
+
+   public function toggle_option($option = '') {
+      $value = 0;
+
+      $query = $this->db->query("SELECT `value` FROM `" . TABLE_OPTION . "` WHERE `key`=?", array($option));
+
+      if(isset($query->row['value'])) {
+         if($query->row['value'] == 0) { $value = 1; }
+         else { $value = 0; }
+
+         $query = $this->db->query("UPDATE `" . TABLE_OPTION . "` SET `value`=? WHERE `key`=?", array($value, $option));
+
+      }
+
+   }
+
+
+   public function get_database_size() {
+      $data = array();
+
+      $query = $this->db->query("SELECT table_schema AS `name`, 
+								SUM( data_length + index_length ) AS `size` 
+								FROM information_schema.TABLES
+								WHERE table_schema = '".DB_DATABASE."'
+								GROUP BY table_schema;");
+      if(isset($query->rows)) {
+         $data = array_pop($query->rows);
+      } else {
+         $data['size'] = 0;
+      }
+
+      return $data['size'];
+   }
+
+
+   public function get_oldest_record_ts() {
+      $data = array();
+
+      $query = $this->db->query("SELECT `ts` AS `oldest_record_ts` FROM " . TABLE_HISTORY . " ORDER BY `id` ASC LIMIT 1");
+
+      if(isset($query->rows)) {
+         $data = array_pop($query->rows);
+      } else {
+         $data['oldest_record_ts'] = 0;
+      }
+
+      return $data['oldest_record_ts'];
+   }
+
+
+   public function get_sphinx_size($directory = DIR_SPHINX) {
+      $dirSize=0;
+
+      if(!$dh=opendir($directory)) {
+         return false;
+      }
+
+      while($file = readdir($dh)) {
+         if($file == "." || $file == "..") {
+            continue;
+         }
+
+         if(is_file($directory."/".$file)) {
+            $dirSize += filesize($directory."/".$file);
+         }
+         if(is_dir($directory."/".$file)) {
+            $dirSize += $this->get_sphinx_size($directory."/".$file);
+         }
+      }
+
+      closedir($dh);
+      return $dirSize;
+   }
+
+
+   public function indexer_stat() {
+      $data = array('', '');
+
+      if(file_exists(INDEXER_BEACON)) {
+
+         $st = stat(INDEXER_BEACON);
+         $t1 = date(DATE_TEMPLATE . " H:i", $st['mtime']);
+         $t2 = date(DATE_TEMPLATE . " H:i", $st['mtime']+30*60);
+
+         $data = array($t1, $t2);
+      }
+
+      return $data;
+   }
+
 
 }
 

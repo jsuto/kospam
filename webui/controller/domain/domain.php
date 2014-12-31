@@ -14,16 +14,27 @@ class ControllerDomainDomain extends Controller {
       $request = Registry::get('request');
       $db = Registry::get('db');
 
+      $ldap_id = 0;
+
+
       $this->load->model('domain/domain');
+      if(ENABLE_SAAS == 1) {
+         $this->load->model('saas/ldap');
+         $this->data['ldap'] = $this->model_saas_ldap->search();
+         if ( isset($this->request->post['ldap_id']) ) {
+            $ldap_id = $this->request->post['ldap_id'];
+         } else {
+            $ldap_id = 0;
+         }
+      }
 
       $this->document->title = $this->data['text_domain'];
 
 
       $this->data['username'] = Registry::get('username');
 
-
       $this->data['page'] = 0;
-      $this->data['page_len'] = getPageLength();
+      $this->data['page_len'] = get_page_length();
 
       $this->data['total'] = 0;
 
@@ -31,12 +42,11 @@ class ControllerDomainDomain extends Controller {
 
       /* get search term if there's any */
 
-      if($this->request->server['REQUEST_METHOD'] == 'POST'){
-         $this->data['search'] = @$this->request->post['search'];
-      }
-      else {
-         $this->data['search'] = @$this->request->get['search'];
-      }
+      $this->data['search'] = '';
+
+      if(isset($this->request->post['search'])) { $this->data['search'] = $this->request->post['search']; }
+      else if(isset($this->request->get['search'])) { $this->data['search'] = $this->request->get['search']; }
+
 
 
       /* get page */
@@ -53,23 +63,21 @@ class ControllerDomainDomain extends Controller {
 
          if($this->request->server['REQUEST_METHOD'] == 'POST') {
             if($this->validate() == true) {
-
-               if($this->model_domain_domain->addDomain($this->request->post['domain'], $this->request->post['mapped']) == 1) {
+               if($this->model_domain_domain->addDomain($this->request->post['domain'], $this->request->post['mapped'], $ldap_id) == 1) {
                   $this->data['x'] = $this->data['text_successfully_added'];
                } else {
-                  $this->template = "common/error.tpl";
                   $this->data['errorstring'] = $this->data['text_failed_to_add'];
                }
             }
             else {
-               $this->template = "common/error.tpl";
-               $this->data['errorstring'] = array_pop($this->error);
-            } 
+               $this->data['errorstring'] = $this->data['text_error_message'];
+               $this->data['errors'] = $this->error;
+               $this->data['post'] = $this->request->post;
+            }
          }
 
-         /* get list of current policies */
-
-         $this->data['domains'] = $this->model_domain_domain->getDomains();
+         /* get list of domains */
+         $this->data['domains'] = $this->model_domain_domain->getDomains($this->data['search']);
 
       }
       else {
@@ -91,20 +99,24 @@ class ControllerDomainDomain extends Controller {
    private function validate() {
 
       if(!isset($this->request->post['domain']) || strlen($this->request->post['domain']) < 3) {
-         $this->error['email'] = $this->data['text_invalid_data'];
+         $this->data['text_field_length'] = str_replace("?",3,$this->data['text_field_length']);
+         $this->error['domain'] = $this->data['text_field_length'];
       }
       else {
          $domains = explode("\n", $this->request->post['domain']);
          foreach ($domains as $domain) {
             $domain = rtrim($domain);
-            if(!preg_match('/^[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,5})$/', $domain) ) {
-               $this->error['email'] = $this->data['text_invalid_data'] . ": $domain";
+            if(!preg_match('/^[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*(\.[A-Za-z]{2,10})$/', $domain) ) {
+               $this->error['domain'] = $this->data['text_field_domain'];
             }
          }
       }
 
-      if(!isset($this->request->post['mapped']) || strlen($this->request->post['mapped']) < 3 || !preg_match('/^[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,5})$/', $this->request->post['mapped']) ) {
-         $this->error['domain'] = $this->data['text_invalid_data'] . ": " . $this->request->post['mapped'];
+      if(!isset($this->request->post['mapped']) || strlen($this->request->post['mapped']) < 3) {
+         $this->data['text_field_length'] = str_replace("?",3,$this->data['text_field_length']);
+         $this->error['mapped'] = $this->data['text_field_length'];
+      } elseif( !preg_match('/^[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*(\.[A-Za-z]{2,10})$/', $this->request->post['mapped']) ) {
+         $this->error['mapped'] = $this->data['text_field_domain'];
       }
 
       if (!$this->error) {

@@ -4,7 +4,7 @@ Features:
 
 - statistical (inverse chi-square) antispam modul
 - supports several antivirus products, including ClamAV
-- IP-address / URI blacklists
+- URI blacklist
 - email black-, and whitelists
 - zombie detection
 - web user interface (ui) written in PHP for easy administration
@@ -13,7 +13,7 @@ Features:
 - virtual users
 - policies
 - memcached support
-- trap email addresses
+- trap email addresses (blackhole)
 
 clapf can be used as an after queue content filter with Postfix
 (including as an appliance) and Exim or via the maildrop local

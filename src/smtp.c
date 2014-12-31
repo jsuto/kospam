@@ -17,25 +17,25 @@
 
 
 int send_headers(int sd, char *bigbuf, int n, char *spaminessbuf, int put_subject_spam_prefix, int put_subject_possible_spam_prefix, struct session_data *sdata, struct __config *cfg){
-   int i=0, x, N, is_header=1, remove_hdr=0, remove_folded_hdr=0, hdr_field_name_len, sent_subject_spam_prefix=0, has_subject=0;
+   int i=0, result, x, N, is_header=1, remove_hdr=0, remove_folded_hdr=0, hdr_field_name_len, sent_subject_spam_prefix=0, has_subject=0;
    char *p, *q, *hdr_ptr, buf[MAXBUFSIZE], headerbuf[MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE];
 
    /* any reasonable message really should be longer than 20 bytes */
    if(n < 20) return 0;
 
-   memset(headerbuf, 0, MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE);
+   memset(headerbuf, 0, sizeof(headerbuf));
 
    /* 
     * prepend the clapf id to the mail header. This obsoletes
     * the Outlook hack, and required for store-less training.
     */
 
-   snprintf(headerbuf, MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE-1, "Received: %s\r\n", sdata->ttmpfile);
+   snprintf(headerbuf, sizeof(headerbuf)-1, "Received: %s\r\n", sdata->ttmpfile);
 
 
    /* first find the end of the mail header */
 
-   x = searchStringInBuffer(bigbuf, n, "\r\n.\r\n", 5);
+   x = search_string_in_buffer(bigbuf, n, "\r\n.\r\n", 5);
    if(x > 0) N = x;
    else N = n;
 
@@ -52,12 +52,11 @@ int send_headers(int sd, char *bigbuf, int n, char *spaminessbuf, int put_subjec
    p = bigbuf;
    q = p + i;
 
-   //syslog(LOG_PRIORITY, "hdr: %d, i: %d, x: %d, n: %d", is_header, i, x, n);
 
    /* parse header lines */
 
    do {
-      p = split(p, '\n', buf, MAXBUFSIZE-1);
+      p = split(p, '\n', buf, sizeof(buf)-1, &result);
 
       if(buf[0] == ' ' || buf[0] == '\t'){
          remove_hdr = remove_folded_hdr; /* LWSP Folded header */
@@ -92,7 +91,7 @@ int send_headers(int sd, char *bigbuf, int n, char *spaminessbuf, int put_subjec
          hdr_ptr = strstr(buf, "Received: ");
          if(hdr_ptr){
             hdr_ptr += 10;
-            if(isValidClapfID(hdr_ptr)){
+            if(is_valid_clapf_id(hdr_ptr)){
                continue;
             }
          }
@@ -104,25 +103,25 @@ int send_headers(int sd, char *bigbuf, int n, char *spaminessbuf, int put_subjec
             has_subject = 1;
 
             if(put_subject_spam_prefix == 1 && !strstr(buf, cfg->spam_subject_prefix) ){
-               strncat(headerbuf, "Subject:", MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE-1);
-               strncat(headerbuf, cfg->spam_subject_prefix, MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE-1);
-               strncat(headerbuf, buf+8, MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE-1);
+               strncat(headerbuf, "Subject:", sizeof(headerbuf)-1);
+               strncat(headerbuf, cfg->spam_subject_prefix, sizeof(headerbuf)-1);
+               strncat(headerbuf, buf+8, sizeof(headerbuf)-1);
                sent_subject_spam_prefix = 1;
             }
             else if(put_subject_possible_spam_prefix == 1 && !strstr(buf, cfg->possible_spam_subject_prefix) ){
-               strncat(headerbuf, "Subject:", MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE-1);
-               strncat(headerbuf, cfg->possible_spam_subject_prefix, MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE-1);
-               strncat(headerbuf, buf+8, MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE-1);
+               strncat(headerbuf, "Subject:", sizeof(headerbuf)-1);
+               strncat(headerbuf, cfg->possible_spam_subject_prefix, sizeof(headerbuf)-1);
+               strncat(headerbuf, buf+8, sizeof(headerbuf)-1);
                sent_subject_spam_prefix = 1;
             }
-            else strncat(headerbuf, buf, MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE-1);
+            else strncat(headerbuf, buf, sizeof(headerbuf)-1);
 	 }
 
          /* or just append the header line */
 
-         else strncat(headerbuf, buf, MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE-1);
+         else strncat(headerbuf, buf, sizeof(headerbuf)-1);
 
-         strncat(headerbuf, "\n", MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE-1);
+         strncat(headerbuf, "\n", sizeof(headerbuf)-1);
       }
       else remove_hdr = 0;
 
@@ -131,19 +130,19 @@ int send_headers(int sd, char *bigbuf, int n, char *spaminessbuf, int put_subjec
 
    if(has_subject == 0){
       if((put_subject_spam_prefix == 1 || put_subject_possible_spam_prefix == 1) && sent_subject_spam_prefix == 0){
-         strncat(headerbuf, "Subject: ", MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE-1);
-         strncat(headerbuf, cfg->spam_subject_prefix, MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE-1);
-         strncat(headerbuf, "\r\n", MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE-1);
+         strncat(headerbuf, "Subject: ", sizeof(headerbuf)-1);
+         strncat(headerbuf, cfg->spam_subject_prefix, sizeof(headerbuf)-1);
+         strncat(headerbuf, "\r\n", sizeof(headerbuf)-1);
       }
-      else strncat(headerbuf, "Subject:\r\n", MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE-1);
+      else strncat(headerbuf, "Subject:\r\n", sizeof(headerbuf)-1);
 
    }
 
    /* append the spaminessbuf to the end of the header */
-   if(spaminessbuf) strncat(headerbuf, spaminessbuf, MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE-1);
+   if(spaminessbuf) strncat(headerbuf, spaminessbuf, sizeof(headerbuf)-1);
 
    if(is_header == 1){
-      strncat(headerbuf, "\r\n\r\n.\r\n", MAX_MAIL_HEADER_SIZE+SMALLBUFSIZE);
+      strncat(headerbuf, "\r\n\r\n.\r\n", sizeof(headerbuf)-1);
       i = n;
    }
 
@@ -168,7 +167,7 @@ READ:
    n = 0;
    p = buf;
 
-   while((p = split_str(p, "\r\n", puf, SMALLBUFSIZE-1))){
+   while((p = split_str(p, "\r\n", puf, sizeof(puf)-1))){
       n++;
       if(strncmp(puf, "250", 3) && strncmp(puf, expect, 3)) ok = 0;
    }
@@ -193,9 +192,10 @@ READ:
  * inject mail back to postfix
  */
 
-int inject_mail(struct session_data *sdata, int msg, char *smtpaddr, int smtpport, char *spaminessbuf, char *buf, struct __config *cfg, char *notify){
-   int i, n, psd, has_pipelining=0, ncmd=0;
+int inject_mail(struct session_data *sdata, int msg, char *spaminessbuf, char *buf, struct __config *cfg){
+   int i, k, n, psd, has_pipelining=0, ncmd=0;
    char puf[MAXBUFSIZE], bigbuf[MAX_MAIL_HEADER_SIZE], oursigno[SMALLBUFSIZE];
+   char tmpbuf[SMALLBUFSIZE];
    struct in_addr addr;
    struct sockaddr_in postfix_addr;
    int fd;
@@ -205,13 +205,13 @@ int inject_mail(struct session_data *sdata, int msg, char *smtpaddr, int smtppor
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: trying to inject back", sdata->ttmpfile);
 
 
-   memset(oursigno, 0, SMALLBUFSIZE);
+   memset(oursigno, 0, sizeof(oursigno));
    if(strlen(cfg->our_signo) > 3)
-      snprintf(oursigno, SMALLBUFSIZE-1, "%s\r\n", cfg->our_signo);
+      snprintf(oursigno, sizeof(oursigno)-1, "%s\r\n", cfg->our_signo);
 
 
-   if(cfg->postfix_addr == NULL || smtpport == 0){
-      syslog(LOG_PRIORITY, "%s: ERR: invalid smtp address or port", sdata->ttmpfile);
+   if(cfg->smtp_addr == NULL || cfg->smtp_port <= 0){
+      syslog(LOG_PRIORITY, "%s: ERR: invalid smtp address (%s) or port (%d)", sdata->ttmpfile, cfg->smtp_addr, cfg->smtp_port);
       return ERR_INJECT;
    }
 
@@ -221,13 +221,13 @@ int inject_mail(struct session_data *sdata, int msg, char *smtpaddr, int smtppor
    }
 
    postfix_addr.sin_family = AF_INET;
-   postfix_addr.sin_port = htons(smtpport);
-   inet_aton(smtpaddr, &addr);
+   postfix_addr.sin_port = htons(cfg->smtp_port);
+   inet_aton(cfg->smtp_addr, &addr);
    postfix_addr.sin_addr.s_addr = addr.s_addr;
    bzero(&(postfix_addr.sin_zero), 8);
 
    if(connect(psd, (struct sockaddr *)&postfix_addr, sizeof(struct sockaddr)) == -1){
-      syslog(LOG_PRIORITY, "%s: ERR: connect to %s %d", sdata->ttmpfile, smtpaddr, smtpport);
+      syslog(LOG_PRIORITY, "%s: ERR: connect to %s %d", sdata->ttmpfile, cfg->smtp_addr, cfg->smtp_port);
       return ERR_INJECT;
    }
 
@@ -256,16 +256,6 @@ int inject_mail(struct session_data *sdata, int msg, char *smtpaddr, int smtppor
    memset(buf, 0, MAXBUFSIZE);
 
 
-   /* we could pass XFORWARD info, but let's not do so for now, 2011.04.02, SJ */
-
-   /*int n_xforward = countCharacterInBuffer(sdata->xforward, '\n');
-
-   if(n_xforward > 0 && has_pipelining == 1){
-      snprintf(buf,  MAXBUFSIZE-1, "%s", sdata->xforward);
-      ncmd += n_xforward;
-   }*/
-
-
    /*
     * assemble a pipelined command combo (MAIL
     * FROM, RCPT TO and DATA) if appropriate
@@ -279,28 +269,25 @@ int inject_mail(struct session_data *sdata, int msg, char *smtpaddr, int smtppor
 
    /* RCPT TO */
 
-#ifndef HAVE_LMTP
-   for(i=0; i<sdata->num_of_rcpt_to; i++){
-#else
-      i = msg;
-#endif
+   if(cfg->server_mode == SMTP_MODE){ i = 0; k = sdata->num_of_rcpt_to; } else { i = msg; k = msg+1; }
+
+   for(; i<k; i++){
 
       if(!has_pipelining){ if(smtp_chat(psd, sdata->rcptto[i], 1, "250", &puf[0], sdata->ttmpfile, cfg->verbosity)) return ERR_INJECT; }
       else {
+         snprintf(tmpbuf, sizeof(tmpbuf)-1, "RCPT TO: <%s>\r\n", sdata->rcptto[i]);
+
          if(strlen(buf) > MAXBUFSIZE/2){
             if(smtp_chat(psd, buf, ncmd, "250", &puf[0], sdata->ttmpfile, cfg->verbosity)) return ERR_INJECT;
-            memset(buf, 0, MAXBUFSIZE);
-            strncat(buf, sdata->rcptto[i], MAXBUFSIZE-1);
+            snprintf(buf, MAXBUFSIZE-1, "%s", tmpbuf);
             ncmd = 0;
          }
          else {
-            strncat(buf, sdata->rcptto[i], MAXBUFSIZE-1);
+            strncat(buf, tmpbuf, MAXBUFSIZE-1);
             ncmd++;
          }
       }
-#ifndef HAVE_LMTP
    }
-#endif
 
 
    /* DATA */
@@ -316,16 +303,8 @@ int inject_mail(struct session_data *sdata, int msg, char *smtpaddr, int smtppor
 
    /* send data */
 
-   if(notify == NULL){
       /* read and send stored mail */
 
-   #ifdef HAVE_MAILBUF
-      if(sdata->mailpos > 0 && sdata->discard_mailbuf == 0){
-         i = send_headers(psd, sdata->mailbuf, sdata->mailpos, spaminessbuf, put_subject_spam_prefix, put_subject_possible_spam_prefix, sdata, cfg);
-         send(psd, &(sdata->mailbuf[i]), sdata->mailpos-i, 0);
-      }
-      else {
-   #endif
          fd = open(sdata->ttmpfile, O_RDONLY);
          if(fd == -1)
             return ERR_INJECT;
@@ -345,7 +324,7 @@ int inject_mail(struct session_data *sdata, int msg, char *smtpaddr, int smtppor
           * lines.
           */
 
-         while((n = read(fd, bigbuf, MAX_MAIL_HEADER_SIZE)) > 0){
+         while((n = read(fd, bigbuf, sizeof(bigbuf))) > 0){
             num_of_reads++;
 
             /* the first read should contain all the header lines */
@@ -365,15 +344,8 @@ int inject_mail(struct session_data *sdata, int msg, char *smtpaddr, int smtppor
          }
 
          close(fd);
-   #ifdef HAVE_MAILBUF
-      }
-   #endif
-   }
-   else {
-      /* or send notification about the virus found */
-      if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sending notification, %s", sdata->ttmpfile, sdata->rcptto[0]);
-      send(psd, notify, strlen(notify), 0);
-   }
+
+         send(psd, "\r\n.\r\n", 5, 0);
 
 
    n = recvtimeout(psd, buf, MAXBUFSIZE, TIMEOUT);

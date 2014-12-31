@@ -47,7 +47,7 @@ class Controller {
             $this->data[$controller->id] = $controller->output;
          }
          else {
-            exit('Error: Could not load controller ' . $child . '!');
+            exit("Error: Could not load controller ($file)" . $child . '!');
          }
 
       }
@@ -76,7 +76,7 @@ class Controller {
 
            }
            else {
-              exit('Error: Could not load controller ' . $this->layout . '!');
+              exit("Error: Could not load layout ($file) " . $this->layout . '!');
            }
 
            print $this->output;
@@ -86,8 +86,16 @@ class Controller {
 
 
    protected function fetch(){
-      $file = DIR_TEMPLATE . $this->template;
-  
+      $session = Registry::get('session');
+
+      if($session->get("theme") && preg_match("/^([a-zA-Z0-9\-\_]+)$/", $session->get("theme")) && file_exists(DIR_THEME . $session->get("theme")) ) {
+         $file = DIR_THEME . $session->get("theme") . '/templates/' . $this->template;
+      } else {
+         $file = DIR_THEME . THEME . '/templates/' . $this->template;
+      }
+
+      if(MOBILE_DEVICE == 1) { $file = DIR_THEME . 'mobile' . '/templates/' . $this->template; }
+
       if(file_exists($file)){
 
          extract($this->data);

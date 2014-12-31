@@ -26,45 +26,42 @@ class ControllerPolicyAdd extends Controller {
       if(Registry::get('admin_user') == 1) {
 
          if($this->request->server['REQUEST_METHOD'] == 'POST') {
+            $ret = 0;
+
             if($this->validate() == true){
-               if($this->model_policy_policy->addPolicy($this->request->post) == 1) {
+               $ret = $this->model_policy_policy->add($this->request->post);
+
+               if($ret == 1){
                   $this->data['x'] = $this->data['text_successfully_added'];
                } else {
-                  $this->template = "common/error.tpl";
-                  $this->data['errorstring'] = $this->data['text_failed_to_add'];
+                  $this->data['errorstring'] = $this->data['text_failed_to_add'] . ": " . $ret;
                }
             }
             else {
-               $this->template = "common/error.tpl";
-               $this->data['errorstring'] = array_pop($this->error);
+               $this->data['errorstring'] = $this->data['text_error_message'];
+               $this->data['errors'] = $this->error;
             }
+
+            if($ret == 0) {
+               $this->data['post'] = $this->request->post;
+            }
+
          }
          else {
-            $this->data['policy'] = array(
-                                     'policy_group'                    => $this->model_policy_policy->getNewPolicyGroupId(),
-                                     'name'                            => "",
-                                     'deliver_infected_email'          => 0,
-                                     'silently_discard_infected_email' => 1,
-                                     'use_antispam'                    => 1,
-                                     'spam_subject_prefix'             => "",
-                                     'enable_auto_white_list'          => 1,
-                                     'max_message_size_to_filter'      => 65535,
-                                     'rbl_domain'                      => "",
-                                     'surbl_domain'                    => "",
+            $this->data['post'] = array(
+                                     'silently_discard_infected_email' => 'a',
+                                     'use_antispam'                    => 'a',
+                                     'max_message_size_to_filter'      => 128000,
                                      'spam_overall_limit'              => 0.92,
                                      'spaminess_oblivion_limit'        => 1.01,
-                                     'replace_junk_characters'         => 1,
-                                     'invalid_junk_limit'              => 5,
-                                     'invalid_junk_line'               => 1,
-                                     'penalize_images'                 => 0,
-                                     'penalize_embed_images'           => 0,
-                                     'penalize_octet_stream'           => 0,
+                                     'store_emails'                    => 'a',
+                                     'store_only_spam'                 => 'a',
                                      'training_mode'                   => 0,
-                                     'initial_1000_learning'           => 0,
-                                     'store_metadata'                  => 1,
-                                     'store_only_spam'                 => 0,
-                                     'message_from_a_zombie'           => 0
-                                    );
+                                     'message_from_a_zombie'           => 0,
+                                     'smtp_addr'                       => SMARTHOST,
+                                     'smtp_port'                       => SMARTHOST_PORT
+                                  );
+
          }
       }
       else {
@@ -79,9 +76,7 @@ class ControllerPolicyAdd extends Controller {
 
    private function validate() {
 
-      if((int)@$this->request->post['policy_group'] <= 0){
-         $this->error['aaa'] = $this->data['text_invalid_policy_group'];
-      }
+      $this->model_policy_policy->fix_post_data();
 
       if(strlen(@$this->request->post['name']) < 2 || !preg_match("/^([\a-zA-ZµÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝßàáâãäåæçèéêëìíîïðñòóôõöøùúûüýÿ0-9\-\_\ ]+)$/i", iconv("utf-8", "iso-8859-2", $this->request->post['name']) )) {
          $this->error['aaa'] = $this->data['text_invalid_policy_name'];
@@ -96,10 +91,6 @@ class ControllerPolicyAdd extends Controller {
       }
 
       if(isBinary(@$this->request->post['use_antispam']) == 0) {
-         $this->error['aaa'] = $this->data['text_invalid_policy_setting'];
-      }
-
-      if(isBinary(@$this->request->post['enable_auto_white_list']) == 0) {
          $this->error['aaa'] = $this->data['text_invalid_policy_setting'];
       }
 
@@ -123,11 +114,11 @@ class ControllerPolicyAdd extends Controller {
          $this->error['aaa'] = $this->data['text_invalid_policy_setting'];
       }
 
-      if(isBinary(@$this->request->post['initial_1000_learning']) == 0) {
+      if(isBinary(@$this->request->post['store_emails']) == 0) {
          $this->error['aaa'] = $this->data['text_invalid_policy_setting'];
       }
 
-      if(isBinary(@$this->request->post['store_metadata']) == 0) {
+      if(isBinary(@$this->request->post['store_only_spam']) == 0) {
          $this->error['aaa'] = $this->data['text_invalid_policy_setting'];
       }
 

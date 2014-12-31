@@ -3,7 +3,8 @@ AC_CONFIG_SRCDIR([src/clapf.c])
 AC_CONFIG_HEADER(clapf-config.h)
 
 CONFIGURE_PARAMS_FILE=params.h
-rm -f $CONFIGURE_PARAMS_FILE; echo "#define CONFIGURE_PARAMS \"Build Date: "`date`"\nConfigure command: ./configure $@\"" > $CONFIGURE_PARAMS_FILE
+
+PARAMS=$@
 
 dnl Checks for programs.
 AC_PROG_CC
@@ -20,69 +21,63 @@ AC_SUBST(defs)
 AC_SUBST(INCDIR)
 AC_SUBST(LIBDIR)
 AC_SUBST(OBJS)
-AC_SUBST(CLAPF_USER)
+AC_SUBST(RUNNING_USER)
 AC_SUBST(SUBDIRS)
-AC_SUBST(parsembox)
-AC_SUBST(parsembox_install)
-AC_SUBST(spamdrop)
-AC_SUBST(spamdrop_install)
-AC_SUBST(preparesql)
-AC_SUBST(test)
+AC_SUBST(MAKE)
 AC_SUBST(sql_includes)
 AC_SUBST(sql_libs)
-AC_SUBST(user_obj)
 AC_SUBST(sql_obj)
-AC_SUBST(db_install)
-AC_SUBST(spamsum_libs)
-AC_SUBST(spamsum)
-AC_SUBST(spamsum_install)
 AC_SUBST(libclamav_extra_libs)
-AC_SUBST(sqlite3_batch)
 AC_SUBST(id_bin)
+AC_SUBST(iv)
 
 have_libclamav="no"
 have_libtool="no"
 have_clamd="no"
-have_avast="no"
-have_avast_home="no"
-have_kav="no"
-have_drweb="no"
-have_eset="no"
 
 have_antivirus="no"
-have_antispam="no"
-have_blackhole="no"
-have_spamdrop="no"
 have_mysql="no"
-have_icc_guide="no"
-have_sqlite3="no"
-have_rbl="no"
-have_all_received="no"
+have_psql="no"
+have_tre="no"
+have_zip="no"
+have_zlib="no"
+have_starttls="no"
+have_tcpwrappers="no"
 have_gsl="no"
-have_store="no"
-have_whitelist="no"
-have_blacklist="no"
-have_case="no"
-have_policy="no"
 
+timeout_binary=""
 
 have_static_build="no"
 
-antispam_libs=""
+antispam_libs="-lz -lm -ldl -lcrypto -lssl"
 defs=""
 objs=""
 user_obj=""
 sql_obj=""
-sqlite3_libs=""
-spamsum_libs=""
-sqlite3_batch=""
 os=`uname -s`
 
 id_bin="id"
 
-SUBDIRS="src etc util perl init.d templates history contrib/stat"
+MAKE="make"
 
-want_language_detection="no"
+if test "$os" = "SunOS"; then MAKE="gmake"; fi
+
+rm -f $CONFIGURE_PARAMS_FILE
+
+LDD_VERSION=`ldd --version | head -1`
+GCC_VERSION=''
+
+if test -f `which gcc`; then gcc -v 2> aa; GCC_VERSION=`tail -1 aa`; rm -f aa; fi
+
+if test "$os" = "SunOS"; then
+   echo "#define CONFIGURE_PARAMS \"Build Date: "`date`'\\n" \\' > $CONFIGURE_PARAMS_FILE
+else
+   echo "#define CONFIGURE_PARAMS \"Build Date: "`date`"\\nldd version: $LDD_VERSION\\ngcc version: $GCC_VERSION\n"\" \\ > $CONFIGURE_PARAMS_FILE
+fi
+echo "\"Configure command: ./configure $PARAMS\"" >> $CONFIGURE_PARAMS_FILE
+
+
+SUBDIRS="src "
 
 
 dnl static build
@@ -90,28 +85,6 @@ dnl static build
 AC_ARG_ENABLE(static-build,
           [  --enable-static-build   build statically linked executables (default: dynamically linked)], have_static_build=$enableval, have_static_build="no")
 
-
-dnl clamav
-
-AC_ARG_ENABLE(libclamav,
-	[  --enable-libclamav      build libclamav antivirus support], want_clamav=$enableval, want_clamav="no")
-
-   if test "$want_clamav" = "yes"; then
-
-	AC_CHECK_HEADERS(clamav.h, have_libclamav=yes, have_libclamav=no)
-	AC_CHECK_LIB([clamav],[main],[AC_CHECK_LIB(clamav, cl_scanfile, have_libclamav=yes, have_libclamav=no)],[],[])ac_cv_lib_clamav=ac_cv_lib_clamav_main
-
-
-	if test "$have_libclamav" = "no"; then
-   	   echo "clamav not found";
-   	   exit 1;
-	fi
-
-        AC_CHECK_LIB([ltdl],[main],[AC_CHECK_LIB(ltdl, lt_dlopen, have_libtool=yes, have_libtool=no)],[],[])ac_cv_lib_ltdl=ac_cv_lib_ltdl_main
-
-
-        have_antivirus="yes"
-   fi
 
 dnl clamd
 
@@ -124,409 +97,136 @@ AC_ARG_ENABLE(clamd,
    fi
 
 
-dnl avast!
-
-AC_ARG_ENABLE(avast,
-         [  --enable-avast          build avast! antivirus support], want_avast=$enableval, want_avast="no")
-
-    if test "$want_avast" = "yes"; then
-       have_avast="yes"
-       have_antivirus="yes"
-    fi
+AC_ARG_ENABLE(memcached,
+        [  --enable-memcached      build memcached support], want_memcached=$enableval, want_memcached="no")
 
 
-
-dnl avast! home personal edition
-
-AC_ARG_ENABLE(avast-home,
-         [  --enable-avast-home     build avast! home personal edition antivirus support], want_avast_home=$enableval, want_avast_home="no")
-
-    if test "$want_avast_home" = "yes"; then
-       have_avast_home="yes"
-       have_antivirus="yes"
-    fi
+AC_ARG_ENABLE(starttls,
+	[  --enable-starttls       build starttls support], have_starttls=$enableval, have_starttls="no")
 
 
-
-dnl KAV
-
-AC_ARG_ENABLE(kav,
-         [  --enable-kav            build Kaspersky antivirus support], want_kav=$enableval, want_kav="no")
-
-    if test "$want_kav" = "yes"; then
-       have_kav="yes"
-       have_antivirus="yes"
-    fi
+AC_ARG_ENABLE(tcpwrappers,
+	[  --enable-tcpwrappers    build tcpwrappers support], want_tcpwrappers=$enableval, want_tcpwrappers="no")
 
 
+if test "$want_tcpwrappers" = "yes"; then
+   AC_CHECK_HEADERS(tcpd.h, have_tcpwrappers=yes, have_tcpwrappers=no)
+   AC_CHECK_LIB([wrap],[hosts_access],[AC_CHECK_LIB(wrap, hosts_access, have_tcpwrappers=yes, echo "libwrap is not found"; have_tcpwrappers=no)],[],[])ac_cv_lib_wrap=ac_cv_lib_wrap_main
 
-dnl Dr.Web
-
-AC_ARG_ENABLE(drweb,
-         [  --enable-drweb          build Dr.Web antivirus support], want_drweb=$enableval, want_drweb="no")
-
-    if test "$want_drweb" = "yes"; then
-       have_drweb="yes"
-       have_antivirus="yes"
-    fi
-
-
-dnl ESET
-
-AC_ARG_ENABLE(eset,
-         [  --enable-eset           build ESET antivirus support], want_eset=$enableval, want_eset="no")
-
-    if test "$want_eset" = "yes"; then
-       have_eset="yes"
-       have_antivirus="yes"
-    fi
-
-
-
-dnl use whitelist
-
-AC_ARG_ENABLE(whitelist,
-	[  --enable-whitelist      use whitelist], want_whitelist=$enableval, want_whitelist="no")
-
-   if test "$want_whitelist" = "yes"; then
-      have_whitelist="yes"
+   if test "$have_tcpwrappers" = "no"; then
+      echo "can't find either tcpd.h or libwrap";
+      exit 1;
    fi
+fi
 
 
-dnl use blacklist
+dnl math library
 
-AC_ARG_ENABLE(blacklist,
-        [  --enable-blacklist      use blacklist (this is _NOT_ RBL)], want_blacklist=$enableval, want_blacklist="no")
+AC_CHECK_HEADERS(math.h, have_math=yes, have_math=no)
+AC_CHECK_LIB([m],[fabs],[AC_CHECK_LIB(m, fabs)],[have_math=yes],[""; exit])ac_cv_lib_m=ac_cv_lib_m_main
 
-   if test "$want_blacklist" = "yes"; then
-      have_blacklist="yes"
-   fi
+dnl openssl library
 
+AC_CHECK_HEADERS(openssl/sha.h, have_crypto=yes, have_crypto=no)
+AC_CHECK_LIB([crypto],[SHA256_Init],[AC_CHECK_LIB(crypto, SHA256_Init, have_crypto=yes, echo "libcrypto is not found"; have_crypto=no)],[],[])ac_cv_lib_crypto=ac_cv_lib_crypto_main
 
+AC_CHECK_HEADERS(openssl/ssl.h, have_ssl=yes, have_ssl=no)
+AC_CHECK_LIB([ssl],[SSL_write],[AC_CHECK_LIB(ssl, SSL_write, have_ssl=yes, echo "libssl is not found"; have_ssl=no)],[],[])ac_cv_lib_ssl=ac_cv_lib_ssl_main
 
-dnl use case sensitive tokens
-
-AC_ARG_ENABLE(case,
-        [  --enable-case           use case sensitive tokens], want_case=$enableval, want_case="no")
-
-   if test "$want_case" = "yes"; then
-      have_case="yes"
-   fi
+if test "$have_crypto" = "no" || test "$have_ssl" = "no"; then
+   echo "please install openssl developer package"
+   exit 1
+fi
 
 
-dnl antispam feature
+dnl gsl support
 
-dnl AC_ARG_ENABLE(antispam,
-dnl       [  --disable-antispam      do not build antispam support], want_antispam=$enableval, want_antispam="yes")
+AC_CHECK_HEADERS(gsl/gsl_cdf.h, have_gsl=yes, echo "gsl_cdf.h is not found")
 
-dnl  if test "$want_antispam" = "yes"; then
-
-    dnl math library
-
-    AC_CHECK_HEADERS(math.h, have_math=yes, have_math=no)
-    AC_CHECK_LIB([m],[main],[AC_CHECK_LIB(m, fabs)],[have_math=yes],[""; exit])ac_cv_lib_m=ac_cv_lib_m_main
+if test "$have_gsl" = "yes"; then
+   defs="$defs -DHAVE_GSL"
+   gsl_libs="-lgslcblas -lgsl"
+fi
 
 
-    dnl have_antispam="yes"
+dnl TRE library
 
-    antispam_libs="$antispam_libs -lm -ldl"
+AC_CHECK_HEADERS(tre/tre.h, have_tre=yes, echo "tre.h is not found")
+AC_CHECK_LIB([tre],[main],[AC_CHECK_LIB(tre, regcomp, have_tre=yes, echo "libtre.so is not found"; have_tre=no)],[],[])ac_cv_lib_tre=ac_cv_lib_tre_main
 
-    dnl mysql database
-
-    dnl AC_CHECK_PROG(MYSQL_CONFIG, mysql_config, yes)
-
-    dnl if test x$MYSQL_CONFIG = xyes; then
-    dnl   have_mysql="yes"
-    dnl fi
-
-
-    dnl TRE library
-
-    AC_CHECK_HEADERS(tre/tre.h, have_tre=yes, echo "tre.h is not found")
-    AC_CHECK_LIB([tre],[main],[AC_CHECK_LIB(tre, regcomp, have_tre=yes, echo "libtre.so is not found"; have_tre=no)],[],[])ac_cv_lib_tre=ac_cv_lib_tre_main
-
-
-
-    dnl (su)rbl support
-
-    AC_ARG_ENABLE(rbl,
-          [  --enable-rbl            use the (SU)RBL database], want_rbl=$enableval, want_rbl="no")
-
-    if test "$want_rbl" = "yes"; then
-       have_rbl="yes"
-    fi
-
-
-    dnl whether to check all "Received: from" lines having IP-addresses
-
-    AC_ARG_ENABLE(all-received,
-          [  --enable-all-received   check all the IP-addresses from "Received: from ..." lines against blacklists], want_all_received=$enableval, want_all_received="no")
-
-    if test "$want_all_received" = "yes"; then
-       have_all_received="yes"
-    fi
-
-
-    dnl gsl support
-
-    AC_CHECK_HEADERS(gsl/gsl_cdf.h, have_gsl=yes, echo "gsl_cdf.h is not found")
-
-    if test "$have_gsl" = "yes"; then
-       defs="$defs -DHAVE_GSL"
-       gsl_libs="-lgslcblas -lgsl"
-    fi
-
-
-    dnl the blackhole feature
-
-    AC_ARG_ENABLE(blackhole,
-          [  --enable-blackhole      build the blackhole feature], want_blackhole=$enableval, want_blackhole="no")
-
-    if test "$want_blackhole" = "yes"; then
-       have_blackhole="yes"
-       echo "So you've selected the blackhole feature ... good"
-    fi
-
-
-
-dnl message store
-
-AC_ARG_WITH(store,
-[  --with-store[[=fs|nfs]]         use either the local filesystem or NFS to keep emails (default: none)],[
-  if test "$withval" != "no" -a "$withval" != "yes"; then
-    STORE=$withval
-  fi
-
-  if test "$withval" = "mysql"; then
-     AC_CHECK_PROG(MYSQL_CONFIG, mysql_config, yes)
-
-     if test x$MYSQL_CONFIG = xyes; then
-       have_mysql="yes"
-     fi
-
-     if test "$have_mysql" = "yes"; then
-            dnl AC_DEFINE(USE_MYSQL, 1, [MySQL database support enabled])
-
-            sql_includes=`mysql_config --cflags`
-            sql_libs=`mysql_config --libs_r`
-     else
-        echo "MySQL support is not found"
-        exit 1;
-     fi
-   fi
-
-   if test "$withval" = "psql"; then
-      AC_CHECK_PROG(PSQL_CONFIG, pg_config, yes)
-
-      if test x$MYSQL_CONFIG = xyes; then
-        have_psql="yes"
-      fi
-
-      if test "$have_psql" = "yes"; then
-            dnl AC_DEFINE(USE_PSQL, 1, [PSQL database support enabled])
-
-            sql_includes="-I`pg_config --includedir`"
-            sql_libs="-L`pg_config --libdir`"
-      else
-         echo "PSQL support is not found"
-         exit 1;
-      fi
-   fi
-
-])
-
-
-
-dnl the blackhole feature
-
-AC_ARG_ENABLE(policy,
-      [  --enable-policy         enable the policy feature], want_policy=$enableval, want_policy="no")
-
-if test "$want_policy" = "yes"; then
-    have_policy="yes"
+if test "$have_tre" = "no"; then
+   echo "please install the tre development packages"
+   exit 1;
 fi
 
 
 
-    dnl memcached support
+dnl libzip
 
-    AC_ARG_ENABLE(memcached,
-          [  --enable-memcached      build memcached support], want_memcached=$enableval, want_memcached="no")
-
-    dnl if test "$want_memcached" = "yes"; then
-    dnl    AC_CHECK_HEADERS(libmemcached/memcached.h, have_memcached=yes, echo "libmemcached/memcached.h is not found"; exit 1)
-
-    dnl   defs="$defs -DHAVE_MEMCACHED"
-    dnl   antispam_libs="$antispam_libs -lmemcached"
-    dnl fi
+AC_CHECK_HEADERS(zip.h, have_zip=yes, echo "zip.h is not found")
+AC_CHECK_LIB([zip],[main],[AC_CHECK_LIB(zip, zip_open, have_zip=yes, echo "libzip.so is not found"; have_zip=no)],[],[])ac_cv_lib_zip=ac_cv_lib_zip_main
 
 
+dnl zlib
 
-AC_ARG_WITH(tokendb,
-[  --with-tokendb[[=mysql|psql|sqlite3]]  use either mysql or psql or sqlite3 database holding tokens (default: none)],[
-  if test "$withval" != "no" -a "$withval" != "yes"; then
-    TOKENDB=$withval
-  fi
+AC_CHECK_HEADERS(zlib.h, have_zlib=yes, echo "zlib.h is not found")
+AC_CHECK_LIB([z],[main],[AC_CHECK_LIB(z, compress, have_zlib=yes, echo "libz.so is not found"; have_zlib=no)],[],[])ac_cv_lib_z=ac_cv_lib_z_main
 
-  have_antispam="yes"
-
-  parsembox="parsembox"
-  parsembox_install="install-parsembox"
-
-  if test "$withval" != "mysql" && test "$withval" != "psql" && test "$withval" != "sqlite3" ; then
-     echo "invalid value for --with-tokendb: " $withval " valid values are mysql, psql or sqlite3";
-     exit 1;
-  fi
+if test "$have_zlib" = "no"; then
+   echo "please install the zlib development packages"
+   exit 1;
+fi
 
 
+AC_ARG_WITH(database,
+[  --with-database[[=mysql]]  select the used database, currently mysql only (default: none)],[
+   if test "$withval" != "no" -a "$withval" != "yes"; then
+      DATABASE=$withval
+   fi
 
-  if test "$withval" = "sqlite3"; then
-    AC_CHECK_HEADERS(sqlite3.h, have_sqlite3=yes, echo "sqlite3.h is not found")
 
-    AC_CHECK_LIB([sqlite3],[main],[AC_CHECK_LIB(sqlite3, sqlite3_open, have_sqlite3=yes, have_sqlite3=no)],[],[])ac_cv_lib_sqlite3=ac_cv_lib_sqlite3_main
+   if test "$withval" = "mysql"; then
 
+      AC_CHECK_PROG(MYSQL_CONFIG, mysql_config, yes)
 
-      if test "$have_sqlite3" = "no"; then
-           echo "sqlite3 not found";
-           exit 1;
+      if test x$MYSQL_CONFIG = xyes; then
+         have_mysql="yes"
       fi
 
-    have_spamdrop="yes"
-    parsembox="$parsembox"
-    preparesql="prepare-sql aphash "
-    spamdrop="spamdrop"
-    spamdrop_install="install-spamdrop"
+      if test "$have_mysql" = "yes"; then
 
-    if test `sqlite3 -help 2>&1| grep -c -- -batch` -gt 0; then sqlite3_batch="-batch"; fi
+         sql_includes=`mysql_config --cflags`
+         sql_libs=`mysql_config --libs_r`
+         sql_obj="mysql.o"
 
+         AC_CHECK_LIB([guide],[main],[AC_CHECK_LIB(guide, _intel_fast_memset, have_icc_guide=yes, have_icc_guide=no)],[],[])ac_cv_lib_guide=ac_cv_lib_guide_main
 
-    test="test"
-  fi
-
-
-  if test "$withval" = "mysql"; then
-
-     AC_CHECK_PROG(MYSQL_CONFIG, mysql_config, yes)
-
-     if test x$MYSQL_CONFIG = xyes; then
-       have_mysql="yes"
-     fi
-
-     if test "$have_mysql" = "yes"; then
-            dnl AC_DEFINE(USE_MYSQL, 1, [MySQL database support enabled])
-
-            sql_includes=`mysql_config --cflags`
-            sql_libs=`mysql_config --libs_r`
-            have_spamdrop="yes"
-            parsembox="$parsembox"
-            preparesql="prepare-sql aphash "
-	    spamdrop="spamdrop"
-	    spamdrop_install="install-spamdrop"
-            db_install="install-mysql-new"
-
-            test="test"
-     else
-        echo "MySQL support is not found"
-        exit 1;
-     fi
-  fi
-
-
-  if test "$withval" = "psql"; then
-
-    AC_CHECK_PROG(PSQL_CONFIG, pg_config, yes)
-
-     if test x$PSQL_CONFIG = xyes; then
-       have_psql="yes"
-     fi
-
-     if test "$have_psql" = "yes"; then
-            dnl AC_DEFINE(USE_PSQL, 1, [PSQL database support enabled])
-
-            sql_includes="-I`pg_config --includedir`"
-            sql_libs="-L`pg_config --libdir`"
-            have_spamdrop="yes"
-            parsembox="$parsembox"
-            preparesql="prepare-sql aphash "
-            spamdrop="spamdrop"
-            spamdrop_install="install-spamdrop"
-            db_install="install-psql-new"
-
-            test="test"
-     else
-        echo "PSQL support is not found"
-        exit 1;
-     fi
-  fi
-
-  if test "$withval" = "mydb"; then
-     have_spamdrop="yes"
-     parsembox="$parsembox"
-     spamdrop="spamdrop mydb_stat mydb_compress"
-     preparesql="prepare-sql aphash"
-     spamdrop_install="install-spamdrop"
-     test="test"
-  fi
-
-
-  parsembox="$parsembox "
+      else
+         echo "MySQL support is not found"
+         exit 1;
+      fi
+   fi
 
 
 ])
 
 
-dnl lmtp support
-    AC_ARG_ENABLE(lmtp,
-          [  --enable-lmtp           use LMTP local delivery (default: SMTP)], want_lmtp=$enableval, want_lmtp="no")
+dnl timeout binary
 
-dnl language detection
-    AC_ARG_ENABLE(language-detection,
-          [  --enable-language-detection use the language detection feature (experimental)], want_language_detection=$enableval, want_language_detection="no")
-
-
-dnl enable spamsum support
-
-    AC_ARG_ENABLE(spamsum,
-          [  --enable-spamsum        enable spamsum support (experimental)], want_spamsum=$enableval, want_spamsum="no")
-
-    if test "$want_spamsum" = "yes"; then
-       spamsum="spamsum"
-       defs="$defs -DHAVE_SPAMSUM"
-       spamsum_libs="-lspamsum"
-    fi
-
-
-dnl SpamAssassin's spamd support
-
-    AC_ARG_ENABLE(spamc-emul,
-          [  --enable-spamc-emul     enable spamc emulation to use spamd of SpamAssassin], want_spamc_emul=$enableval, want_spamc_emul="no")
-
-    if test "$want_spamc_emul" = "yes"; then
-       defs="$defs -DSPAMC_EMUL"
-       have_antispam="yes"
-       objs="$objs spamc.o "
-    fi
-
+if test z`which timeout 2>/dev/null` != "z"; then
+   timeout_binary=`which timeout`
+   AC_DEFINE_UNQUOTED(TIMEOUT_BINARY, "$timeout_binary", [timeout binary])
+fi
 
 
 dnl user running clapf
 
 AC_ARG_WITH(clapf-user,
     [  --with-clapf-user=username      what user the clapf daemon shall be run as],
-    [ CLAPF_USER=$withval ],
-    [ CLAPF_USER=clapf ]
+    [ RUNNING_USER=$withval ],
+    [ RUNNING_USER=clapf ]
     )
 
-
-
-dnl uid splitting
-
-AC_ARG_ENABLE(uid-splitting,
-   [  --enable-uid-splitting  enable splitting quarantine direcory path by numeric uid], want_uid_splitting=$enableval, want_uid_splitting="no")
-
-if test "$want_uid_splitting" = "yes"; then
-   defs="$defs -DHAVE_UID_SPLITTING"
-fi
 
 
 dnl configure config directory
@@ -566,81 +266,49 @@ else
     data_dir="$localstatedir"
 fi
 
-LOCALSTATEDIR=$data_dir
-AC_SUBST(LOCALSTATEDIR)
-AC_DEFINE_UNQUOTED(LOCALSTATEDIR,"$data_dir",[where to look for the data files])
-
-DATAROOTDIR=$datarootdir
-AC_SUBST(DATAROOTDIR)
-AC_DEFINE_UNQUOTED(DATAROOTDIR,"$datarootdir",[where to look for the read-only data directory])
+DATADIR=$data_dir
+AC_SUBST(DATADIR)
+AC_DEFINE_UNQUOTED(DATADIR,"$data_dir",[where to look for the data files])
 
 
-dnl spamdrop helper program
+dnl configure libexec directory
 
-    AC_ARG_ENABLE(spamdrop-helper,
-          [  --enable-spamdrop-helper use external spamdrop helper program], want_spamdrop_helper=$enableval, want_spamdrop_helper="no")
+libexec_dir=`echo $libexecdir | grep prefix`
 
-    if test "$want_spamdrop_helper" = "yes"; then
-        defs="$defs -DHAVE_SPAMDROP_HELPER"
+if test -n "$libexec_dir"; then
+    if test "$prefix" = "NONE"
+    then
+        libexec_dir="$ac_default_prefix/libexec"
+    else
+        libexec_dir="$prefix/libexec"
     fi
+else
+    libexec_dir="$libexecdir"
+fi
+
+LIBEXECDIR=$libexec_dir
+AC_SUBST(LIBEXECDIR)
+AC_DEFINE_UNQUOTED(LIBEXECDIR,"$libexec_dir",[where to look for the piler helpers])
 
 
-AC_DEFINE_UNQUOTED(SPAMDROP_HELPER_PROGRAM,"$my_prefix/libexec/clapf/spamdrop_helper",[where to look for the spamdrop helper file])
 AC_DEFINE_UNQUOTED(VIRUS_TEMPLATE, "$my_prefix/share/clapf/template.virus", [where the virus template is])
 AC_DEFINE_UNQUOTED(ZOMBIE_NET_REGEX, "$my_prefix/share/clapf/zombienets.regex", [where the virus template is])
 
 
-
-
-if test "x$TOKENDB" = "x" && test "$have_antispam" = "yes"; then echo "please specify the token database with --with-tokendb"; exit 1; fi
-
-dnl tinycdb
-
-if test "$TOKENDB" = "cdb"; then
-   AC_CHECK_HEADERS(cdb.h)
-   AC_CHECK_LIB([cdb],[main],[AC_CHECK_LIB(cdb, cdb_find, have_cdb=yes, echo "you need the cdb package"; exit)],[],[])ac_cv_lib_cdb=ac_cv_lib_cdb_main
-
-   defs="$defs -DHAVE_CDB"
-   objs="$objs cdb.o"
-   antispam_libs="$antispam_libs -lcdb"
-fi
-
-if test "$TOKENDB" = "sqlite3"; then
-   defs="$defs -DHAVE_SQLITE3"
-   sql_obj="sqlite3.o "
-fi
-
-if test "$TOKENDB" = "mysql"; then
-   defs="$defs -DHAVE_MYSQL"
-   sql_obj="mysql.o "
-fi
-
-if test "$TOKENDB" = "psql"; then
-   defs="$defs -DHAVE_PSQL"
-   sql_obj="psql.o "
-fi
-
-if test "$TOKENDB" = "mydb"; then
-   defs="$defs -DHAVE_MYDB"
-   sql_obj="mydb.o"
-fi
-
-if test "x$QCACHE" != "x"; then
-   if test "$have_antispam" = "no"; then
-      echo "please specify the --with-tokendb option"
-      exit 1
-   fi
-fi
-
-if test "$have_antivirus" = "no" && test "$have_antispam" = "no"; then
-   echo "you have not specified either antivirus or antispam support"
+if test "$have_mysql" = "no"; then
+   echo
+   echo "please specify the used database with --with-database=..."
+   echo
    exit 1
 fi
+
 
 dnl let us know if we are building on FreeBSD
 
 if test "$os" = "FreeBSD"; then
    defs="$defs -DFREEBSD"
+   antispam_libs="-lz -lm -lcrypto -lssl"
+   MAKE="gmake"
 fi
 
 if test "$os" = "Linux"; then
@@ -661,183 +329,15 @@ fi
 
 dnl whether we have antivirus support
 
-if test "$have_libclamav" = "yes" || test "$have_clamd" = "yes" || test "$have_avast" = "yes" || test "$have_avast_home" = "yes" || test "$have_kav" = "yes"  || test "$have_drweb" = "yes" || test "$have_eset" = "yes" ; then
+if test "$have_clamd" = "yes" ; then
    defs="$defs -DHAVE_ANTIVIRUS"
    objs="$objs avir.o"
 fi
 
-dnl if we need our mime code
-
-if test "$have_avg" = "yes" ; then
-   objs="$objs mime.o"
-fi
-
 echo; echo
 
-if test "$have_libclamav" = "yes"; then
-   echo "libclamav support: yes"
-
-   libtool=""
-   if test "$have_libtool" = "yes"; then libtool="-lltdl" ;fi
-
-   libclamav="-lclamav $libtool `clamav-config --libs` "
-   defs="$defs -DHAVE_LIBCLAMAV"
-   libclamav_extra_libs='$(CLAMAV_EXTRA_LIBS)'
-fi
-
-if test "$have_clamd" = "yes"; then
-   echo "clamd support: yes"
-   objs="$objs clamd.o"
-   defs="$defs -DHAVE_CLAMD"
-fi
-
-if test "$have_avast" = "yes"; then
-   echo "avast! support: yes"
-   objs="$objs avast.o"
-   defs="$defs -DHAVE_AVAST"
-fi
-
-if test "$have_avast_home" = "yes"; then
-   echo "avast! home personal edition support: yes"
-   objs="$objs avast.o"
-   defs="$defs -DHAVE_AVAST_HOME"
-fi
-
-if test "$have_kav" = "yes"; then
-   echo "kav support: yes"
-   objs="$objs kav.o"
-   defs="$defs -DHAVE_KAV"
-fi
-
-if test "$have_drweb" = "yes"; then
-   echo "Dr.Web support: yes"
-   objs="$objs drweb.o"
-   defs="$defs -DHAVE_DRWEB"
-fi
-
-if test "$have_eset" = "yes"; then
-   echo "ESET support: yes"
-   defs="$defs -DHAVE_ESET"
-fi
-
-
-if test "$have_antispam" = "yes"; then
-   echo "antispam support: yes"
-   defs="$defs -DHAVE_ANTISPAM"
-   objs="$objs bayes.o buffer.o spam.o antispam.o"
-fi
-
-
-if test "$have_gsl" = "yes"; then
-   echo "chi square implementation: GNU GSL"
-else
-   echo "chi square implementation: internal"
-fi
-
-if test "$have_blackhole" = "yes"; then
-   echo "blackhole feature: yes"
-   defs="$defs -DHAVE_BLACKHOLE"
-   objs="$objs black.o"
-else
-   echo "blackhole feature: no"
-fi
-
-if test "$have_rbl" = "yes"; then
-   echo "(SU)RBL support: yes"
-   defs="$defs -DHAVE_RBL"
-   if test "$have_all_received" = "yes"; then
-      defs="$defs -DHAVE_PROCESS_ALL_RECEIVED_LINES"
-   fi
-   objs="$objs rbl.o"
-else
-   echo "(SU)RBL support: no"
-fi
-
-echo "token database backend: $TOKENDB"
-
-
-if test "$TOKENDB" = "mysql"; then
-   db_install="install-mysql-new"
-fi
-
-if test "$TOKENDB" = "sqlite3"; then
-   db_install="install-sqlite3"
-fi
-
-if test "$STORE" = "mysql"; then
-   echo "message store: mysql"
-   defs="$defs -DHAVE_STORE -DSTORE_MYSQL"
-fi
-
-if test "$STORE" = "fs"; then
-   echo "message store: fs"
-   defs="$defs -DHAVE_STORE -DSTORE_FS"
-fi
-
-if test "$STORE" = "nfs"; then
-   echo "message store: nfs"
-   defs="$defs -DHAVE_STORE -DSTORE_NFS"
-fi
-
-if test "$want_spamsum" = "yes"; then
-   echo "spamsum: yes"
-   spamsum_install="install-spamsum"
-   SUBDIRS="contrib/spamsum $SUBDIRS"
-else
-   echo "spamsum: no"
-fi
-
-if test "$have_whitelist" = "yes"; then
-   echo "whitelist: yes"
-   defs="$defs -DHAVE_WHITELIST"
-else
-   echo "whitelist: no"
-fi
-
-if test "$have_blacklist" = "yes"; then
-   echo "blacklist: yes"
-   defs="$defs -DHAVE_BLACKLIST"
-else
-   echo "blacklist: no"
-fi
-
-if test "$have_case" = "yes"; then
-   defs="$defs -DHAVE_CASE"
-   echo "tokens are case sensitive: yes"
-else
-   echo "tokens are case sensitive: no"
-fi
-
-if test "$want_lmtp" = "yes"; then
-   echo "local delivery: LMTP"
-   defs="$defs -DHAVE_LMTP"
-else
-   echo "local delivery: SMTP"
-fi
-
-if test "$want_memcached" = "yes"; then
-   echo "memcached support: yes"
-   objs="$objs memc.o memcached.o"
-   defs="$defs -DHAVE_MEMCACHED"
-fi
-
-if test "$have_policy" = "yes"; then
-   defs="$defs -DHAVE_POLICY"
-   echo "policy support: yes"
-   objs="$objs policy.o"
-else
-   echo "policy support: no"
-fi
-
-if test "$want_language_detection" = "yes"; then
-   echo "language detection: enabled"
-   defs="$defs -DHAVE_LANG_DETECT"
-   objs="$objs lang.o"
-else
-   echo "language detection: no"
-fi
-
-echo "clapf user: $CLAPF_USER"
+echo "run as user: $RUNNING_USER"
+echo "clapf data directory: $data_dir/clapf"
 
 if test "$have_static_build" = "yes"; then
    echo "link mode: static"
@@ -846,19 +346,58 @@ else
    echo "link mode: dynamic"
 fi
 
+echo
+
+if test "$have_mysql" = "yes"; then
+   echo "database: mysql"
+fi
+
 if test "$have_tre" = "yes"; then
    echo "tre library: yes"
    defs="$defs -DHAVE_TRE"
-   objs="$objs zombie.o"
    antispam_libs="$antispam_libs -ltre"
 fi
 
-if test "$have_sqlite3" = "yes"; then
-   sql_libs="-lsqlite3 -lpthread"
+if test "$have_zip" = "yes"; then
+   echo "zip library: yes"
+   AC_DEFINE_UNQUOTED(HAVE_ZIP, 1, [libzip support])
+   antispam_libs="$antispam_libs -lzip"
 fi
 
-if test "$have_psql" = "yes"; then
-   sql_libs="-lpq"
+if test "$have_starttls" = "yes"; then
+   echo "starttls support: yes"
+   AC_DEFINE_UNQUOTED(HAVE_STARTTLS, 1, [starttls support])
+fi
+
+if test "$have_tcpwrappers" = "yes"; then
+   echo "tcpwrappers support: yes"
+   AC_DEFINE_UNQUOTED(HAVE_LIBWRAP, 1, [tcpwrappers support])
+
+   if test "$os" = "FreeBSD"; then
+      antispam_libs="$antispam_libs -lwrap"
+   else
+      antispam_libs="$antispam_libs -lwrap -lnsl"
+   fi
+else
+   echo "tcpwrappers support: no"
+fi
+
+echo
+
+if test "$have_clamd" = "yes"; then
+   echo "clamd support: yes"
+   objs="$objs clamd.o"
+   defs="$defs -DHAVE_CLAMD"
+fi
+
+if test "$want_memcached" = "yes"; then
+   echo "memcached support: yes"
+   objs="$objs memc.o"
+   defs="$defs -DHAVE_MEMCACHED"
+fi
+
+if test "$have_mysql" = "yes"; then
+   defs="$defs -DNEED_MYSQL"
 fi
 
 if test "$have_icc_guide" = "yes" && test "$have_mysql" = "yes"; then
@@ -866,27 +405,17 @@ if test "$have_icc_guide" = "yes" && test "$have_mysql" = "yes"; then
 fi
 
 
-id -u $CLAPF_USER 2>/dev/null 1>/dev/null
-if test $? -eq 1; then echo "the user \"$CLAPF_USER\" does not exists, please create it, first with adduser..."; exit 1; fi
-
-if test "$have_libclamav" = "no" && test "$have_clamd" = "no" && test "$have_avast" = "no" && test "$have_avast_home" = "no" && test "$have_kav" = "no" && test "$have_drweb" = "no" && test "$have_eset" = "no" ; then
-   echo; echo
-   echo "You have not selected any antivirus support."
-   echo "clapf will not protect you from hostile code coming in e-mail"
-fi
+id -u $RUNNING_USER 2>/dev/null 1>/dev/null
+if test $? -eq 1; then echo "the user \"$RUNNING_USER\" does not exists, please create it, first with adduser..."; exit 1; fi
 
 echo; echo
 
-VERSION_STRING=`grep '#define VERSION' src/config.h | cut -f2 -d '"'`
-
-cat webui/view/theme/default/templates/common/footer.tpl | sed "s/VERSION_STRING/$VERSION_STRING/" > aaaa.11
-mv aaaa.11 webui/view/theme/default/templates/common/footer.tpl
-
-defs="$defs -DHAVE_USERS"
 CFLAGS="$static -O2 -Wall -g"
-LIBS="$libclamav $antispam_libs $gsl_libs $sqlite3_libs $sunos_libs"
-OBJS="dirs.o misc.o counters.o cfg.o smtp.o sig.o decoder.o list.o parser.o parser_utils.o session.o templates.o hash.o score.o chi.o users.o tai.o $objs"
+LIBS="$antispam_libs $sunos_libs "
+OBJS="dirs.o misc.o counters.o cfg.o sig.o decoder.o hash.o tokenizer.o parser.o parser_utils.o session.o tai.o digest.o chi.o antispam.o spam.o buffer.o zombie.o train.o users.o policy.o black.o smtp.o quarantine.o rbl.o $objs"
 
-AC_CONFIG_FILES([Makefile contrib/spamsum/Makefile contrib/spamdrop_helper/Makefile contrib/stat/Makefile.helper etc/Makefile history/Makefile init.d/Makefile perl/Makefile src/Makefile templates/Makefile util/Makefile])
+AC_CONFIG_FILES([Makefile src/Makefile etc/Makefile init.d/Makefile util/Makefile])
 AC_OUTPUT
 
+
+echo

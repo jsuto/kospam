@@ -11,135 +11,50 @@ struct __config {
    char username[MAXVAL];
 
    char hostid[MAXVAL];
+   int hostid_len;
+
+   int server_id;
+   int server_mode;
+
    char pidfile[MAXVAL];
 
    char listen_addr[MAXVAL];
    int listen_port;
-   int listen_ssl_port;
 
-   char postfix_addr[MAXVAL];
-   int postfix_port;
-
-   char delivery_agent[MAXVAL];
-
-   char avg_addr[MAXVAL];
-   int avg_port;
-
-   char avast_addr[MAXVAL];
-   int avast_port;
-
-   char avast_home_cmd_line[MAXVAL];
-
-   char kav_socket[MAXVAL];
-
-   char drweb_socket[MAXVAL];
+   char smtp_addr[MAXVAL];
+   int smtp_port;
 
    char clamd_addr[MAXVAL];
    int clamd_port;
    char clamd_socket[MAXVAL];
+   int always_scan_message;
+
+   int tls_enable;
+   char pemfile[MAXVAL];
+   char cipher_list[MAXVAL];
+
+   char mynetwork[MAXVAL];
 
    char memcached_servers[MAXVAL];
    int memcached_ttl;
-   int update_counters_to_memcached;
-   unsigned long memcached_to_db_interval;
 
-   int max_connections;
+   int number_of_worker_processes;
+   int max_requests_per_child;
+
    int backlog;
 
-   int timestamp_mode;
-
-   char chrootdir[MAXVAL];
    char workdir[MAXVAL];
    char queuedir[MAXVAL];
 
-   char our_signo[MAXVAL];
-
    int verbosity;
-   int debug;
    char locale[MAXVAL];
 
-   int session_timeout;
-
-   char localpostmaster[MAXVAL];
-   int silently_discard_infected_email;
-   int deliver_infected_email;
-
-   char blackhole_email_list[MAXVAL];
-
-   int message_from_a_zombie;
-
-   int use_antispam;
+   int helper_timeout;
 
    char spam_subject_prefix[MAXVAL];
    char possible_spam_subject_prefix[MAXVAL];
 
-   int enable_auto_white_list;
-
-   float rob_s;
-   float rob_x;
-   float esf_h;
-   float esf_s;
-
-   float exclusion_radius;
-
-   unsigned long max_message_size_to_filter;
-   int max_number_of_tokens_to_filter;
-
-   char rbl_domain[MAXVAL];
-   char surbl_domain[MAXVAL];
-
-   int rbl_condemns_the_message;
-   int surbl_condemns_the_message;
-
-   char clapf_header_field[MAXVAL];
-   char clapf_spam_header_field[MAXVAL];
-   char clapf_possible_spam_header_field[MAXVAL];
-
-   int update_tokens;
-
-   float max_ham_spamicity;
-
-   float spam_overall_limit;
-   float spaminess_oblivion_limit;
-   float possible_spam_limit;
-
-   float spaminess_of_strange_language_stuff;
-   float spaminess_of_blackholed_mail;
-   float spaminess_of_caught_by_rbl;
-   float spaminess_of_caught_by_surbl;
-   float spaminess_of_embed_image;
-
-   int replace_junk_characters;
-   int invalid_junk_limit;
-   int invalid_junk_line;
-
-   int penalize_images;
-   int penalize_embed_images;
-   int penalize_octet_stream;
-
-   int max_number_of_recipients_in_ham;
-
-   // training
-
-   int training_mode;
-   int group_type;
-   int initial_1000_learning;
-
-   int store_metadata;
-   int store_only_spam;
-
-   int always_scan_message;
-
-   // clamav stuff
-
-   int use_libclamav_block_max_feature;
-   int clamav_maxfile;
-   long int clamav_max_archived_file_size;
-   int clamav_max_recursion_level;
-   int clamav_max_compress_ratio;
-   int clamav_archive_mem_limit;
-   int clamav_block_encrypted_archives;
-   int clamav_use_phishing_db;
+   int default_retention_days;
 
    // mysql stuff
 
@@ -151,47 +66,78 @@ struct __config {
    char mysqldb[MAXVAL];
    int mysql_connect_timeout;
 
-   // PSql stuff
+   int update_tokens;
+   int update_counters_to_memcached;
+   int memcached_to_db_interval;
 
-   char psqlhost[MAXVAL];
-   int psqlport;
-   char psqluser[MAXVAL];
-   char psqlpwd[MAXVAL];
-   char psqldb[MAXVAL];
-   int psql_connect_timeout;
+   int min_word_len;
 
-   // sqlite3 stuff
+   int enable_cjk;
 
-   char sqlite3[MAXVAL];
-   char sqlite3_pragma[MAXVAL];
+   // training
 
-   char mydbfile[MAXVAL];
+   int training_mode;
+   int group_type;
+   int initial_1000_learning;
 
-   char spam_smtp_addr[MAXVAL];
-   int spam_smtp_port;
+   int store_emails;
+   int store_only_spam;
 
-   // spamsum
-   char sig_db[MAXVAL];
+   int invalid_junk_limit;
+   int invalid_junk_line;
 
-   char spamd_addr[MAXVAL];
-   int spamd_port;
-   char spamc_user[MAXVAL];
+   int penalize_images;
+   int penalize_embed_images;
+   int penalize_octet_stream;
 
+   int max_number_of_recipients_in_ham;
 
-   // history
+   float max_ham_spamicity;
+
+   float spam_overall_limit;
+   float spaminess_oblivion_limit;
+   float possible_spam_limit;
+
+   char clapf_header_field[MAXVAL];
+   char clapf_spam_header_field[MAXVAL];
+   char clapf_possible_spam_header_field[MAXVAL];
+
+   int max_message_size_to_filter;
+   int max_number_of_tokens_to_filter;
+
+   char rbl_domain[MAXVAL];
+   char surbl_domain[MAXVAL];
+
+   float rob_s;
+   float rob_x;
+   float esf_h;
+   float esf_s;
+
+   float exclusion_radius;
+
+   int silently_discard_infected_email;
+   int deliver_infected_email;
+
+   int surbl_condemns_the_message;
+
+   char blackhole_email_list[MAXVAL];
+
+   int replace_junk_characters;
+
+   int message_from_a_zombie;
+
+   int use_antispam;
+   int use_antivirus;
+
+   char our_signo[MAXVAL];
+   char skipped_received_ips[MAXVAL];
+
    char maillog[MAXVAL];
-   char historydb[MAXVAL];
-   char historypid[MAXVAL];
-
-   char skipped_received_ips[2*MAXVAL];
-   char mynetwork[2*MAXVAL];
 
    char mydomains[2*MAXVAL];
    int mydomains_from_outside_is_spam;
 
-   int days_to_retain_history_data;
-   int days_to_retain_quarantine_data;
-
+   int debug;
 };
 
 

@@ -13,14 +13,11 @@
 #include <clapf.h>
 
 
-#ifdef HAVE_MYSQL
-int getUserdataFromEmail(struct session_data *sdata, char *email, struct __config *cfg){
-   MYSQL_RES *res;
-   MYSQL_ROW row;
-   char *p, *q, buf[MAXBUFSIZE], _email[2*SMALLBUFSIZE+1];
+int get_user_data_from_email(struct session_data *sdata, struct __data *data, char *email, struct __config *cfg){
    int rc=0;
+   char *p, *q, tmpbuf[SMALLBUFSIZE];
 
-   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: query user data from %s", sdata->ttmpfile, email);
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: query user data for %s", sdata->ttmpfile, email);
 
    sdata->uid = 0;
    sdata->gid = 0;
@@ -28,132 +25,7 @@ int getUserdataFromEmail(struct session_data *sdata, char *email, struct __confi
    memset(sdata->name, 0, SMALLBUFSIZE);
    memset(sdata->domain, 0, SMALLBUFSIZE);
 
-   if(email == NULL) return 0;
-
-
-   mysql_real_escape_string(&(sdata->mysql), _email, email, strlen(email));
-
-
-   /* skip the +... part from the email */
-
-   if((p = strchr(_email, '+'))){
-      *p = '\0';
-      q = strchr(p+1, '@');
-
-      if(!q) return 0;
-
-      snprintf(buf, MAXBUFSIZE-1, "SELECT %s.uid, %s.gid, %s.username, %s.domain, %s.policy_group FROM %s,%s WHERE %s.uid=%s.uid AND %s.email='%s%s'",
-         SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_EMAIL_TABLE, _email, q);
-
-      *p = '+';
-   }
-   else {
-      snprintf(buf, MAXBUFSIZE-1, "SELECT %s.uid, %s.gid, %s.username, %s.domain, %s.policy_group FROM %s,%s WHERE %s.uid=%s.uid AND %s.email='%s'",
-            SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_EMAIL_TABLE, _email);
-   }
-
-
-   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: user data stmt: %s", sdata->ttmpfile, buf);
-
-
-   if(mysql_real_query(&(sdata->mysql), buf, strlen(buf)) == 0){
-      res = mysql_store_result(&(sdata->mysql));
-      if(res != NULL && mysql_num_fields(res) == 5){
-         row = mysql_fetch_row(res);
-         if(row){
-            sdata->uid = atol(row[0]);
-            sdata->gid = atoi(row[1]);
-            if(row[2]) snprintf(sdata->name, SMALLBUFSIZE-1, "%s", (char *)row[2]);
-            if(row[3]) snprintf(sdata->domain, SMALLBUFSIZE-1, "%s", (char *)row[3]);
-            sdata->policy_group = atoi(row[4]);
-            rc = 1;
-         }               
-         mysql_free_result(res);
-      }
-   }
-
-   if(rc == 1) return 0;
-
-
-   /* if no email was found, then try to lookup the domain */
-
-   p = strchr(_email, '@');
-   if(!p) return 0;
-
-   snprintf(buf, MAXBUFSIZE-1, "SELECT %s.uid, %s.gid, %s.username, %s.domain, %s.policy_group FROM %s,%s WHERE %s.uid=%s.uid AND %s.email='%s'",
-      SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_EMAIL_TABLE, p);
-
-   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: user data stmt2: %s", sdata->ttmpfile, buf);
-
-   if(mysql_real_query(&(sdata->mysql), buf, strlen(buf)) == 0){
-      res = mysql_store_result(&(sdata->mysql));
-      if(res != NULL && mysql_num_fields(res) == 5){
-         row = mysql_fetch_row(res);
-         if(row){
-            sdata->uid = atol(row[0]);
-            sdata->gid = atoi(row[1]);
-            if(row[2]) snprintf(sdata->name, SMALLBUFSIZE-1, "%s", (char *)row[2]);
-            if(row[3]) snprintf(sdata->domain, SMALLBUFSIZE-1, "%s", (char *)row[3]);
-            sdata->policy_group = atoi(row[4]);
-         }
-         mysql_free_result(res);
-      }
-   }
-
-   return 0;
-}
-
-
-void getWBLData(struct session_data *sdata, struct __config *cfg){
-   MYSQL_RES *res;
-   MYSQL_ROW row;
-   char buf[SMALLBUFSIZE];
-
-   memset(sdata->whitelist, 0, MAXBUFSIZE);
-   memset(sdata->blacklist, 0, MAXBUFSIZE);
-
-   snprintf(buf, SMALLBUFSIZE-1, "SELECT whitelist, blacklist FROM %s,%s where (%s.uid=%ld or %s.uid=0) and %s.uid=%s.uid", SQL_WHITE_LIST, SQL_BLACK_LIST, SQL_WHITE_LIST, sdata->uid, SQL_WHITE_LIST, SQL_WHITE_LIST, SQL_BLACK_LIST);
-
-   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sql: %s", sdata->ttmpfile, buf);
-
-   if(mysql_real_query(&(sdata->mysql), buf, strlen(buf)) == 0){
-      res = mysql_store_result(&(sdata->mysql));
-      if(res != NULL){
-         while((row = mysql_fetch_row(res))){
-
-            if(row[0]){
-               if(strlen(sdata->whitelist) > 0) strncat(sdata->whitelist, "\n", MAXBUFSIZE-1);
-               strncat(sdata->whitelist, (char *)row[0], MAXBUFSIZE-1);
-            }
-
-            if(row[1]){
-               if(strlen(sdata->blacklist) > 0) strncat(sdata->blacklist, "\n", MAXBUFSIZE-1);
-               strncat(sdata->blacklist, (char *)row[1], MAXBUFSIZE-1);
-            }
-         }
-         mysql_free_result(res);
-      }
-   }
-
-}
-#endif
-
-
-#ifdef HAVE_PSQL
-int getUserdataFromEmail(struct session_data *sdata, char *email, struct __config *cfg){
-   PGresult *res;
-   char *p, *q, buf[MAXBUFSIZE];
-   int rc=0;
-
-   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: query user data from %s", sdata->ttmpfile, email);
-
-   sdata->uid = 0;
-   sdata->gid = 0;
-   sdata->policy_group = 0;
-   memset(sdata->name, 0, SMALLBUFSIZE);
-   memset(sdata->domain, 0, SMALLBUFSIZE);
-
-   if(email == NULL) return 0;
+   if(email == NULL) return rc;
 
    /* skip the +... part from the email */
 
@@ -163,219 +35,87 @@ int getUserdataFromEmail(struct session_data *sdata, char *email, struct __confi
 
       if(!q) return 0;
 
-      snprintf(buf, MAXBUFSIZE-1, "SELECT %s.uid, %s.gid, %s.username, %s.domain, %s.policy_group FROM %s,%s WHERE %s.uid=%s.uid AND %s.email='%s%s'",
-         SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_EMAIL_TABLE, email, q);
-
+      snprintf(tmpbuf, sizeof(tmpbuf)-1, "%s%s", email, q);
       *p = '+';
-   } else {
-      snprintf(buf, MAXBUFSIZE-1, "SELECT %s.uid, %s.gid, %s.username, %s.domain, %s.policy_group FROM %s,%s WHERE %s.uid=%s.uid AND %s.email='%s'",
-            SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_EMAIL_TABLE, email);
+   }
+   else snprintf(tmpbuf, sizeof(tmpbuf)-1, "%s", email);
+
+
+   if(prepare_sql_statement(sdata, &(data->stmt_get_user_data), SQL_PREPARED_STMT_QUERY_USER_DATA) == ERR) return rc;
+
+   p_bind_init(data);
+
+   data->sql[data->pos] = &tmpbuf[0]; data->type[data->pos] = TYPE_STRING; data->pos++;
+
+   if(p_exec_query(sdata, data->stmt_get_user_data, data) == ERR) goto ENDE;
+
+   p_bind_init(data);
+
+   data->sql[data->pos] = (char *)&(sdata->uid); data->type[data->pos] = TYPE_LONG; data->pos++;
+   data->sql[data->pos] = (char *)&(sdata->gid); data->type[data->pos] = TYPE_LONG; data->pos++;
+   data->sql[data->pos] = &(sdata->name[0]); data->type[data->pos] = TYPE_STRING; data->len[data->pos] = SMALLBUFSIZE-1; data->pos++;
+   data->sql[data->pos] = &(sdata->domain[0]); data->type[data->pos] = TYPE_STRING; data->len[data->pos] = SMALLBUFSIZE-1; data->pos++;
+   data->sql[data->pos] = (char *)&(sdata->policy_group); data->type[data->pos] = TYPE_LONG; data->pos++;
+
+   p_store_results(sdata, data->stmt_get_user_data, data);
+
+   if(p_fetch_results(data->stmt_get_user_data) == OK){
+      rc = 1;
+
+      /* query white/black list data */
+      get_wbl_data(sdata, data, cfg);
    }
 
-   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: user data stmt: %s", sdata->ttmpfile, buf);
+   p_free_results(data->stmt_get_user_data);
 
-   if( PQstatus( sdata->psql ) == CONNECTION_BAD ) {
-      sdata->psql = PQconnectdb( sdata->conninfo );
-   }
-   if( PQstatus( sdata->psql ) != CONNECTION_BAD ) {
-      res = PQexec( sdata->psql, buf );
-      if( res && PQresultStatus( res ) == PGRES_TUPLES_OK ) {
-         const char *val = (char *)NULL;
-         val = ( const char * )PQgetvalue( res, 0, 0 );
-         sdata->uid = atol(val);
-         val = ( const char * )PQgetvalue( res, 0, 1 );
-         sdata->gid = atol(val);
-         val = ( const char * )PQgetvalue( res, 0, 2 );
-         if(val) snprintf(sdata->name, SMALLBUFSIZE-1, "%s", val);
-         val = ( const char * )PQgetvalue( res, 0, 3 );
-         if(val) snprintf(sdata->domain, SMALLBUFSIZE-1, "%s", val);
-         val = ( const char * )PQgetvalue( res, 0, 4 );
-         sdata->policy_group = atoi(val);
-         rc = 1;
-      }
-   }
+ENDE:
+   close_prepared_statement(data->stmt_get_user_data);
 
-   if(rc == 1) return 0;
-
-   /* if no email was found, then try to lookup the domain */
-
-   p = strchr(email, '@');
-   if(!p) return 0;
-
-   snprintf(buf, MAXBUFSIZE-1, "SELECT %s.uid, %s.gid, %s.username, %s.domain, %s.policy_group FROM %s,%s WHERE %s.uid=%s.uid AND %s.email='%s'",
-      SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_EMAIL_TABLE, p);
-
-   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: user data stmt2: %s", sdata->ttmpfile, buf);
-
-   if( PQstatus( sdata->psql ) == CONNECTION_BAD ) {
-      sdata->psql = PQconnectdb( sdata->conninfo );
-   }
-   if( PQstatus( sdata->psql ) != CONNECTION_BAD ) {
-      res = PQexec( sdata->psql, buf );
-      if( res && PQresultStatus( res ) == PGRES_TUPLES_OK ) {
-         const char *val = (char *)NULL;
-         val = ( const char * )PQgetvalue( res, 0, 0 );
-         sdata->uid = atol(val);
-         val = ( const char * )PQgetvalue( res, 0, 1 );
-         sdata->gid = atol(val);
-         val = ( const char * )PQgetvalue( res, 0, 2 );
-         if(val) snprintf(sdata->name, SMALLBUFSIZE-1, "%s", val);
-         val = ( const char * )PQgetvalue( res, 0, 3 );
-         if(val) snprintf(sdata->domain, SMALLBUFSIZE-1, "%s", val);
-         val = ( const char * )PQgetvalue( res, 0, 4 );
-         sdata->policy_group = atoi(val);
-      }
-   }
-
-   return 0;
+   return rc;
 }
 
-void getWBLData(struct session_data *sdata, struct __config *cfg){
-   PGresult *res;
-   int rows;
-   int i = 0;
-   char buf[SMALLBUFSIZE];
-   int n=0;
+
+void get_wbl_data(struct session_data *sdata, struct __data *data, struct __config *cfg){
+   char wh[MAXBUFSIZE], bl[MAXBUFSIZE];
 
    memset(sdata->whitelist, 0, MAXBUFSIZE);
    memset(sdata->blacklist, 0, MAXBUFSIZE);
 
-   snprintf(buf, SMALLBUFSIZE-1, "SELECT whitelist, blacklist FROM %s,%s where (%s.uid=%ld or %s.uid=0) and %s.uid=%s.uid", SQL_WHITE_LIST, SQL_BLACK_LIST, SQL_WHITE_LIST, sdata->uid, SQL_WHITE_LIST, SQL_WHITE_LIST, SQL_BLACK_LIST);
+   if(prepare_sql_statement(sdata, &(data->stmt_generic), SQL_PREPARED_STMT_QUERY_WHITE_BLACK_LIST) == ERR) return;
 
-   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sql: %s", sdata->ttmpfile, buf);
+   p_bind_init(data);
 
-   if( PQstatus( sdata->psql ) == CONNECTION_BAD ) {
-      sdata->psql = PQconnectdb( sdata->conninfo );
-   }
-   if( PQstatus( sdata->psql ) != CONNECTION_BAD ) {
-      res = PQexec( sdata->psql, buf );
-      if( res && PQresultStatus( res ) == PGRES_TUPLES_OK ) {
-         rows = PQntuples( res );
-         for( i = 0; i < rows; i++) {
-            const char *val = (char *)NULL;
-            val = ( const char * )PQgetvalue( res, 0, 0 );
-            if(val){
-               if(n > 0) strncat(sdata->whitelist, "\n", MAXBUFSIZE-1);
-               strncat(sdata->whitelist, val, MAXBUFSIZE-1);
-            }
-            val = ( const char * )PQgetvalue( res, 0, 1 );
-            if(val){
-               if(n > 0) strncat(sdata->blacklist, "\n", MAXBUFSIZE-1);
-               strncat(sdata->blacklist, val, MAXBUFSIZE-1);
-            }
-            n++;
-         }
-      }
-   }
-}
-#endif
+   data->sql[data->pos] = (char *)&(sdata->uid); data->type[data->pos] = TYPE_LONG; data->pos++;
 
+   if(p_exec_query(sdata, data->stmt_generic, data) == ERR) goto ENDE;
 
-#ifdef HAVE_SQLITE3
-int getUserdataFromEmail(struct session_data *sdata, char *email, struct __config *cfg){
-   sqlite3_stmt *pStmt;
-   const char **pzTail=NULL;
-   char *p, *q, buf[MAXBUFSIZE];
-   int rc=0;
+   p_bind_init(data);
 
-   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: query user data from %s", sdata->ttmpfile, email);
+   data->sql[data->pos] = &wh[0]; data->type[data->pos] = TYPE_STRING; data->len[data->pos] = sizeof(wh)-1; data->pos++;
+   data->sql[data->pos] = &bl[0]; data->type[data->pos] = TYPE_STRING; data->len[data->pos] = sizeof(bl)-1; data->pos++;
 
-   sdata->uid = 0;
-   sdata->gid = 0;
-   sdata->policy_group = 0;
-   memset(sdata->name, 0, SMALLBUFSIZE);
-   memset(sdata->domain, 0, SMALLBUFSIZE);
+   p_store_results(sdata, data->stmt_generic, data);
 
-   if(email == NULL) return 0;
-
-   /* skip the +... part from the email */
-
-   if((p = strchr(email, '+'))){
-      *p = '\0';
-      q = strchr(p+1, '@');
-
-      if(!q) return 0;
-
-      snprintf(buf, MAXBUFSIZE-1, "SELECT %s.uid, %s.gid, %s.username, %s.domain, %s.policy_group FROM %s,%s WHERE %s.uid=%s.uid AND %s.email='%s%s'",
-         SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_EMAIL_TABLE, email, q);
-
-      *p = '+';
-   }
-   else {
-      snprintf(buf, MAXBUFSIZE-1, "SELECT %s.uid, %s.gid, %s.username, %s.domain, %s.policy_group FROM %s,%s WHERE %s.uid=%s.uid AND %s.email='%s'",
-            SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_EMAIL_TABLE, email);
-   }
-
-   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: user data stmt: %s", sdata->ttmpfile, buf);
-
-   if(sqlite3_prepare_v2(sdata->db, buf, -1, &pStmt, pzTail) == SQLITE_OK){
-      if(sqlite3_step(pStmt) == SQLITE_ROW){
-         sdata->uid = sqlite3_column_int(pStmt, 0);
-         sdata->gid = sqlite3_column_int(pStmt, 1);
-         if(sqlite3_column_blob(pStmt, 2)) strncpy(sdata->name, (char *)sqlite3_column_blob(pStmt, 2), SMALLBUFSIZE-1);
-         if(sqlite3_column_blob(pStmt, 3)) strncpy(sdata->domain, (char *)sqlite3_column_blob(pStmt, 3), SMALLBUFSIZE-1);
-         sdata->policy_group = sqlite3_column_int(pStmt, 4);
-
-         rc = 1;
-      }
-   }
-   sqlite3_finalize(pStmt);
-
-   if(rc == 1) return 0;
-
-
-   /* if no email was found, then try to lookup the domain */
-
-   p = strchr(email, '@');
-   if(!p) return 0;
-
-   snprintf(buf, MAXBUFSIZE-1, "SELECT %s.uid, %s.gid, %s.username, %s.domain FROM %s,%s WHERE %s.uid=%s.uid AND %s.email='%s'",
-      SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_USER_TABLE, SQL_EMAIL_TABLE, SQL_EMAIL_TABLE, p);
-
-   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: user data stmt: %s", sdata->ttmpfile, buf);
-
-   if(sqlite3_prepare_v2(sdata->db, buf, -1, &pStmt, pzTail) == SQLITE_OK){
-      if(sqlite3_step(pStmt) == SQLITE_ROW){
-         sdata->uid = sqlite3_column_int(pStmt, 0);
-         sdata->gid = sqlite3_column_int(pStmt, 1);
-         if(sqlite3_column_blob(pStmt, 2)) strncpy(sdata->name, (char *)sqlite3_column_blob(pStmt, 2), SMALLBUFSIZE-1);
-         if(sqlite3_column_blob(pStmt, 3)) strncpy(sdata->domain, (char *)sqlite3_column_blob(pStmt, 3), SMALLBUFSIZE-1);
-         sdata->policy_group = sqlite3_column_int(pStmt, 4);
-      }
-   }
-   sqlite3_finalize(pStmt);
-
-
-   return 0;
-}
-
-
-void getWBLData(struct session_data *sdata, struct __config *cfg){
-   sqlite3_stmt *pStmt;
-   const char **pzTail=NULL;
-   char buf[SMALLBUFSIZE];
-
-   memset(sdata->whitelist, 0, MAXBUFSIZE);
-   memset(sdata->blacklist, 0, MAXBUFSIZE);
-
-   snprintf(buf, SMALLBUFSIZE-1, "SELECT whitelist, blacklist FROM %s,%s where (%s.uid=%ld or %s.uid=0) and %s.uid=%s.uid", SQL_WHITE_LIST, SQL_BLACK_LIST, SQL_WHITE_LIST, sdata->uid, SQL_WHITE_LIST, SQL_WHITE_LIST, SQL_BLACK_LIST);
-
-   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sql: %s", sdata->ttmpfile, buf);
-
-   if(sqlite3_prepare_v2(sdata->db, buf, -1, &pStmt, pzTail) != SQLITE_OK) return;
-
-   while(sqlite3_step(pStmt) == SQLITE_ROW){
+   while(p_fetch_results(data->stmt_generic) == OK){
 
       if(strlen(sdata->whitelist) > 0) strncat(sdata->whitelist, "\n", MAXBUFSIZE-1);
-      if(sqlite3_column_blob(pStmt, 0)) strncat(sdata->whitelist, (char *)sqlite3_column_blob(pStmt, 0), MAXBUFSIZE-1);
+      strncat(sdata->whitelist, wh, MAXBUFSIZE-1);
 
       if(strlen(sdata->blacklist) > 0) strncat(sdata->blacklist, "\n", MAXBUFSIZE-1);
-      if(sqlite3_column_blob(pStmt, 1)) strncat(sdata->blacklist, (char *)sqlite3_column_blob(pStmt, 1), MAXBUFSIZE-1);
+      strncat(sdata->blacklist, bl, MAXBUFSIZE-1);
    }
 
-   sqlite3_finalize(pStmt);
+   replace_character_in_buffer(sdata->whitelist, '\r', ',');
+   replace_character_in_buffer(sdata->whitelist, '\n', ',');
+
+   replace_character_in_buffer(sdata->blacklist, '\r', ',');
+   replace_character_in_buffer(sdata->blacklist, '\n', ',');
+
+   p_free_results(data->stmt_generic);
+
+ENDE:
+   close_prepared_statement(data->stmt_generic);
 }
 
-#endif
 
 

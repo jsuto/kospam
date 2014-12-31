@@ -11,7 +11,7 @@
 #include <clapf.h>
 
 
-void initialiseZombieList(struct __data *data, struct __config *cfg){
+void zombie_init(struct __data *data, struct __config *cfg){
    int i;
    char buf[SMALLBUFSIZE];
    FILE *f;
@@ -24,13 +24,15 @@ void initialiseZombieList(struct __data *data, struct __config *cfg){
 
    data->n_regex = 0;
 
+   i=0;
    f = fopen(ZOMBIE_NET_REGEX, "r");
    if(f){
-      while(fgets(buf, SMALLBUFSIZE, f)){
+      while(fgets(buf, sizeof(buf)-1, f)){
          if(buf[0] != ';' && buf[0] != '#' && buf[0] != '\r' && buf[0] != '\n'){
-            trimBuffer(buf);
+            trim_buffer(buf);
             if(regcomp(&(data->pregs[data->n_regex]), buf, REG_ICASE | REG_EXTENDED) == 0){
-               if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "compiled: %s", buf);
+               i++;
+               if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "[%d] compiled: %s", i, buf);
                data->n_regex++;
             }
             else
@@ -46,7 +48,23 @@ void initialiseZombieList(struct __data *data, struct __config *cfg){
 }
 
 
-void freeZombieList(struct __data *data){
+void check_zombie_sender(struct session_data *sdata, struct __data *data, struct __state *state, struct __config *cfg){
+   int i=0;
+   size_t nmatch=0;
+
+   while(i < data->n_regex && sdata->tre != '+'){
+      if(regexec(&(data->pregs[i]), sdata->hostname, nmatch, NULL, 0) == 0){
+         sdata->tre = '+';
+      }
+
+      i++;
+   }
+
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: zombie check: %c [%d] %s", sdata->ttmpfile, sdata->tre, i, sdata->hostname);
+}
+
+
+void zombie_free(struct __data *data){
    int i;
 
    for(i=0; i<data->n_regex; i++){

@@ -9,23 +9,16 @@
 #include <clapf.h>
 
 
-/*
- * reset hash
- */
-
 void inithash(struct node *xhash[]){
    int i;
 
-   for(i=0;i<MAXHASH;i++)
+   for(i=0;i<MAXHASH;i++){
       xhash[i] = NULL;
+   }
 }
 
 
-/*
- * release everything in the hash and calculate the ratio of unique tokens
- */
-
-void clearhash(struct node *xhash[], int print){
+void clearhash(struct node *xhash[]){
    int i;
    struct node *p, *q;
 
@@ -34,12 +27,13 @@ void clearhash(struct node *xhash[], int print){
       while(q != NULL){
          p = q;
 
-         if(print == 1) printf("%s (%llu) = %.4f\n", p->str, p->key, p->spaminess);
-         if(print == 2) printf("%s\n", p->str);
-
          q = q->r;
-         if(p)
+         if(p){
+            if(p->str){
+               free(p->str);
+            }
             free(p);
+         }
       }
       xhash[i] = NULL;
    }
@@ -62,90 +56,61 @@ void resetcounters(struct node *xhash[]){
 
 void printhash(struct node *xhash[]){
    int i;
-   struct node *p, *q;
-
-   for(i=0;i<MAXHASH;i++){
-      q = xhash[i];
-      while(q != NULL){
-         p = q;
-
-         printf("%s (%llu) = %.4f\n", p->str, p->key, p->spaminess);
-
-         q = q->r;
-      }
-   }
-
-   printf("\n\n");
-}
-
-
-/*
- * count nodes in hash
- */
-
-int counthash(struct node *xhash[]){
-   int i, n=0;
    struct node *q;
 
    for(i=0;i<MAXHASH;i++){
       q = xhash[i];
       while(q != NULL){
+         printf("%s\n", (char *)q->str);
          q = q->r;
-         n++;
       }
    }
-
-   return n;
 }
 
-
-/*
- * create a new node
- */
 
 struct node *makenewnode(struct node *xhash[], char *s, double spaminess, double deviation){
    struct node *h;
    int len;
 
-   if(s == NULL)
-      return NULL;
+   if(s == NULL) return NULL;
 
    len = strlen(s);
 
-   if(len > MAX_TOKEN_LEN-1)
-      return NULL;
-
-   if((h = malloc(sizeof(struct node))) == NULL)
-      return NULL;
+   if((h = malloc(sizeof(struct node))) == NULL) return NULL;
 
    memset(h, 0, sizeof(struct node));
 
-   strncpy(h->str, s, len);
+   h->str = malloc(len+2);
+
+   if(h->str == NULL){
+      free(h);
+      return NULL;
+   }
+
+   memset(h->str, 0, len+2);
+
+   snprintf(h->str, len+1, "%s", s);
+
    h->key = APHash(s);
    h->spaminess = spaminess;
    h->deviation = deviation;
    h->nham = 0;
    h->nspam = 0;
-   h->num = 1;
-   h->r = NULL;
 
    if(strchr(s, '*') || strchr(s, '+') || strchr(s, ':') || strchr(s, '%')) h->type = 1;
    else h->type = 0;
+
+   h->r = NULL;
 
    return h;
 }
 
 
-/*
- * add a new node
- */
-
 int addnode(struct node *xhash[], char *s, double spaminess, double deviation){
    struct node *p=NULL, *q;
-   unsigned long long key = 0;
+   uint64 key = 0;
 
-   if(s == NULL)
-      return 0;
+   if(s == NULL) return 0;
 
    key = APHash(s);
 
@@ -157,11 +122,11 @@ int addnode(struct node *xhash[], char *s, double spaminess, double deviation){
       while(q != NULL){
          p = q;
          if(p->key == key){
-            p->num++;
             return 0;
          }
-         else
+         else {
             q = q->r;
+         }
       }
       p->r = makenewnode(xhash, s, spaminess, deviation);
    }
@@ -170,35 +135,69 @@ int addnode(struct node *xhash[], char *s, double spaminess, double deviation){
 }
 
 
-/*
- * find the given node
- */
-
 struct node *findnode(struct node *xhash[], char *s){
-   struct node *p, *q;
-   unsigned long long key;
+   struct node *q;
+   uint64 key;
 
-   if(s == NULL)
-      return 0;
+   if(s == NULL) return NULL;
 
    key = APHash(s);
 
    q = xhash[hash(key)];
 
-   if(q == NULL)
-      return NULL;
+   if(q == NULL) return NULL;
 
    while(q != NULL){
-      p = q;
-      if(strcmp(q->str, s) == 0){
-         p->num++;
+      if(q->key == key){
          return q;
       }
-      else
+      else {
          q = q->r;
+      }
    }
 
    return NULL;
+}
+
+
+inline int hash(uint64 key){
+   return key % MAXHASH;
+}
+
+
+/*
+ * APHash function
+ * http://www.partow.net/programming/hashfunctions/#APHashFunction
+ */
+
+uint64 APHash(char *p){
+   uint64 hash = 0;
+   int i=0;
+
+   for(; *p; p++){
+      hash ^= ((i & 1) == 0) ? (  (hash <<  7) ^ (*p) ^ (hash >> 3)) :
+                               (~((hash << 11) ^ (*p) ^ (hash >> 5)));
+      i++;
+   }
+
+   return hash % MAX_KEY_VAL;
+}
+
+
+int is_substr_in_hash(struct node *xhash[], char *s){
+   int i;
+   struct node *q;
+
+   for(i=0;i<MAXHASH;i++){
+      q = xhash[i];
+      while(q != NULL){
+         if(q->str && strstr(s, q->str)) return 1;
+
+         q = q->r;
+      }
+   }
+
+   return 0;
 }
 
 
@@ -206,7 +205,7 @@ struct node *findnode(struct node *xhash[], char *s){
  * update token counters
  */
 
-int updatenode(struct node *xhash[], unsigned long long key, float nham, float nspam, float spaminess, float deviation){
+int updatenode(struct node *xhash[], uint64 key, float nham, float nspam, float spaminess, float deviation){
    struct node *q;
 
    q = xhash[hash(key)];
@@ -230,63 +229,4 @@ int updatenode(struct node *xhash[], unsigned long long key, float nham, float n
    return 0;
 }
 
-
-/*
- * calculate token probabilities
- */
-
-void calcnode(struct node *xhash[], float Nham, float Nspam, struct __config *cfg){
-   int i;
-   struct node *q;
-
-   for(i=0;i<MAXHASH;i++){
-      q = xhash[i];
-      while(q != NULL){
-         if(q->nham >= 0 && q->nspam >= 0 && (q->nham + q->nspam) > 0){
-            q->spaminess = getTokenSpamicity(Nham, Nspam, q->nham, q->nspam, cfg->rob_s, cfg->rob_x);
-            q->deviation = DEVIATION(q->spaminess);
-         }
-
-         q = q->r;
-      }
-   }
-}
-
-
-/*
- * calculate hash value
- */
-
-inline int hash(unsigned long long key){
-   return key % MAXHASH;
-}
-
-
-/*
- * add the tokens of a node to another
- */
-
-int roll_tokens(struct node *uhash[], struct node *xhash[]){
-   int i, n=0;
-   struct node *p, *q;
-
-   if(counthash(xhash) <= 0) return 0;
-
-   for(i=0; i<MAXHASH; i++){
-      q = xhash[i];
-      while(q != NULL){
-         p = q;
-
-         if(p->spaminess != DEFAULT_SPAMICITY){
-            addnode(uhash, p->str, 0.99, 0.49);
-            n++;
-         }
-
-         q = q->r;
-      }
-   }
-
-
-   return n;
-}
 

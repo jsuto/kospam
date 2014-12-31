@@ -10,6 +10,7 @@ class LDAP {
 
       $this->link = ldap_connect($ldaphost) or exit('Error: ldap_connect()');
       ldap_set_option($this->link, LDAP_OPT_PROTOCOL_VERSION, 3);
+      ldap_set_option($this->link, LDAP_OPT_REFERRALS, 0);
 
       if(@ldap_bind($this->link, $binddn, $bindpw)) {
          $this->bind = 1;
@@ -35,6 +36,8 @@ class LDAP {
 
       $results = ldap_get_entries($this->link, $sr);
 
+      if(ENABLE_SYSLOG == 1) { syslog(LOG_INFO, sprintf("ldap query: base dn='%s', filter='%s', attr='%s', %d hits", $basedn, $filter, implode(" ", $justthese), $results['count'])); }
+
       for($i=0; $i < $results['count']; $i++) {
          for($k=0; $k < $results[$i]['count']; $k++) {
             $attr = $results[$i][$k];
@@ -54,6 +57,7 @@ class LDAP {
 
       $query = new stdClass();
 
+      $query->filter   = $filter;
       $query->row      = isset($data[0]) ? $data[0] : array();
       $query->dn       = isset($results[0]['dn']) ? $results[0]['dn'] : "";
       $query->rows     = $data;

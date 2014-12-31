@@ -4,24 +4,17 @@
 class ModelUserImport extends Model {
 
 
-   public function getLdapParameters() {
-      $my_domain = $this->model_user_user->getDomains();
-      $query = $this->db->query("SELECT remotehost, basedn, binddn FROM " . TABLE_REMOTE . " WHERE remotedomain='" . $this->db->escape($my_domain[0]) . "'");
-
-      return $query->row;
-   }
-
-
-   public function queryRemoteUsers($host) {
+   public function query_remote_users($host) {
       $data = array();
 
-      LOGGER("running queryRemoteUsers() ...");
+      LOGGER("running query_remote_users() ...");
 
       $attrs = array("cn", "mail", "mailAlternateAddress", "memberdn", "memberaddr");
       $mailAttr = 'mail';
       $mailAttrs = array("mail", "mailalternateaddress");
 
       $memberAttrs = array("memberdn");
+      $filter="$mailAttr=*";
 
       $ldap = new LDAP($host['ldap_host'], $host['ldap_binddn'], $host['ldap_bindpw']);
       if($ldap->is_bind_ok() == 0) {
@@ -33,16 +26,17 @@ class ModelUserImport extends Model {
       LOGGER("LDAP type: " . $host['type']);
 
       if($host['type'] == "AD") {
-         $attrs = array("cn", "proxyaddresses", "member");
+         $attrs = array("cn", "samaccountname", "proxyaddresses", "member", "mail", "displayname");
 
          $mailAttr = "proxyaddresses";
-         $mailAttrs = array("proxyaddresses");
+         $mailAttrs = array("mail", "proxyaddresses");
 
          $memberAttrs = array("member");
+         $filter="(&(objectClass=user)($mailAttr=*))";
       }
 
 
-      $query = $ldap->query($host['ldap_basedn'], "$mailAttr=*", $attrs );
+      $query = $ldap->query($host['ldap_basedn'], $filter, $attrs );
       LOGGER("LDAP query: $mailAttr=* for basedn:" . $host['ldap_basedn']);
 
       foreach ($query->rows as $result) {
@@ -58,9 +52,7 @@ class ModelUserImport extends Model {
 
                   for($i = 0; $i < $result[$__mail_attr]['count']; $i++) {
                      LOGGER("found email entry: " . $result['dn'] . " => $__mail_attr:" . $result[$__mail_attr][$i]);
-                     if(preg_match("/^smtp\:/i", $result[$__mail_attr][$i])) {
-                        $emails .= strtolower(preg_replace("/^smtp\:/i", "", $result[$__mail_attr][$i])) . "\n";
-                     }
+                     $emails .= strtolower(preg_replace("/^smtp\:/i", "", $result[$__mail_attr][$i])) . "\n";
                   }
                }
                else {
@@ -94,12 +86,22 @@ class ModelUserImport extends Model {
 
          }
 
+
+         $realname = '';
+         if($host['type'] == "AD") {
+            $realname = $result['displayname'];
+         } else {
+            $realname = $result['cn'];
+         }
+
+
          $data[] = array(
-                         'username'     => preg_replace("/\n{1,}$/", "", $__emails[0]),
-                         'realname'     => $result['cn'],
-                         'dn'           => $result['dn'],
-                         'emails'       => preg_replace("/\n{1,}$/", "", $emails),
-                         'members'      => preg_replace("/\n{1,}$/", "", $members)
+                         'username'       => preg_replace("/\n{1,}$/", "", $__emails[0]),
+                         'realname'       => $realname,
+                         'dn'             => $result['dn'],
+                         'samaccountname' => isset($result['samaccountname']) ? $result['samaccountname'] : '',
+                         'emails'         => preg_replace("/\n{1,}$/", "", $emails),
+                         'members'        => preg_replace("/\n{1,}$/", "", $members)
                         );
 
       }
@@ -111,7 +113,7 @@ class ModelUserImport extends Model {
 
 
 
-   public function fillRemoteTable($host = array(), $domain = '') {
+   public function fill_remote_table($host = array(), $domain = '') {
       if($domain == '') { return 0; }
 
       /*
@@ -120,15 +122,15 @@ class ModelUserImport extends Model {
        * the authentication requests
        */
 
-      $query = $this->db->query("SELECT COUNT(*) AS num FROM " . TABLE_REMOTE . " WHERE remotedomain='" . $this->db->escape($domain) . "'");
+      $query = $this->db->query("SELECT COUNT(*) AS num FROM " . TABLE_REMOTE . " WHERE remotedomain=?", array($domain));
 
       if(isset($query->row['num'])) {
 
          if($query->row['num'] == 0) {
-            $query = $this->db->query("INSERT INTO " . TABLE_REMOTE . " (remotedomain, remotehost, basedn, binddn) VALUES('" . $this->db->escape($domain) . "', '" . $this->db->escape($host['ldap_host']) . "', '" . $this->db->escape($host['ldap_basedn']) . "', '" . $this->db->escape($host['ldap_binddn']) . "')");
+            $query = $this->db->query("INSERT INTO " . TABLE_REMOTE . " (remotedomain, remotehost, basedn, binddn) VALUES(?,?,?,?)", array($domain, $host['ldap_host'], $host['ldap_basedn'], $host['ldap_binddn']));
          }
          else {
-            $query = $this->db->query("UPDATE " . TABLE_REMOTE . " SET remotehost='" . $this->db->escape($host['ldap_host']) . "', basedn='" . $this->db->escape($host['ldap_basedn']) . "', binddn='" . $this->db->escape($host['ldap_binddn']) . "' WHERE remotedomain='" . $this->db->escape($domain) . "'");
+            $query = $this->db->query("UPDATE " . TABLE_REMOTE . " SET remotehost=?, basedn=?, binddn=? WHERE remotedomain=?", array($host['ldap_host'], $host['ldap_basedn'], $host['ldap_binddn'], $domain));
 
          }
 
@@ -141,7 +143,7 @@ class ModelUserImport extends Model {
 
 
 
-   public function processUsers($users = array(), $globals = array()) {
+   public function process_users($users = array(), $globals = array()) {
       $late_add = array();
       $uids = array();
       $exclude = array();
@@ -149,7 +151,7 @@ class ModelUserImport extends Model {
       $deleteduser = 0;
       $n = 0;
 
-      LOGGER("running processUsers() ...");
+      LOGGER("running process_users() ...");
 
       /* build a list of DNs to exclude from the import */
 
@@ -170,7 +172,7 @@ class ModelUserImport extends Model {
 
          /* Does this DN exist in the user table ? */
 
-         $__user = $this->model_user_user->getUserByDN($_user['dn']);
+         $__user = $this->model_user_user->get_user_by_dn($_user['dn']);
 
          if(isset($__user['uid'])) {
 
@@ -180,7 +182,7 @@ class ModelUserImport extends Model {
             /* if so, then verify the email addresses */
 
             $changed = 0;
-            $emails = $this->model_user_user->getEmailsByUid($__user['uid']);
+            $emails = $this->model_user_user->get_emails_by_uid($__user['uid']);
 
             /* first let's add the new email addresses */
 
@@ -189,7 +191,7 @@ class ModelUserImport extends Model {
 
             foreach ($ldap_emails as $email) {
                if(!in_array($email, $sql_emails)) {
-                  $rc = $this->model_user_user->addEmail($__user['uid'], $email);
+                  $rc = $this->model_user_user->add_email($__user['uid'], $email);
                   $changed++;
 
                   /* in case of an error add it to the $late_add array() */
@@ -208,7 +210,7 @@ class ModelUserImport extends Model {
 
             foreach ($sql_emails as $email) {
                if(!in_array($email, $ldap_emails)) {
-                  $rc = $this->model_user_user->removeEmail($__user['uid'], $email);
+                  $rc = $this->model_user_user->remove_email($__user['uid'], $email);
                   $changed++;
                }
             }
@@ -219,12 +221,20 @@ class ModelUserImport extends Model {
          }
          else {
 
+            /* update DN field if it's an existing user */
+
+            if(($cuid = $this->model_user_user->get_uid_by_name($_user['username'])) > 0) {
+               $this->model_user_user->update_dn_by_uid($cuid, $_user['dn']);
+               continue;
+            }
+
             /* or add the new user */
 
-            $user = $this->createNewUserArray($_user['dn'], $_user['username'], $_user['realname'], $_user['emails'], $globals);
+            $user = $this->createNewUserArray($_user['dn'], $_user['username'], $_user['realname'], $_user['emails'], $_user['samaccountname'], $globals);
+
             array_push($uids, $user['uid']);
 
-            $rc = $this->model_user_user->addUser($user);
+            $rc = $this->model_user_user->add_user($user);
             if($rc == 1) { $newuser++; }
          }
       }
@@ -233,7 +243,7 @@ class ModelUserImport extends Model {
       /* add the rest to the email table */
 
       foreach ($late_add as $new) {
-         $rc = $this->model_user_user->addEmail($new['uid'], $new['email']);
+         $rc = $this->model_user_user->add_email($new['uid'], $new['email']);
          if($rc == 1) { $newuser++; }
       }
 
@@ -242,12 +252,11 @@ class ModelUserImport extends Model {
 
       if(count($uids) > 0) {
          $uidlist = implode("','", $uids);
-         $query = $this->db->query("SELECT uid, username FROM " . TABLE_USER . " WHERE domain='" . $this->db->escape($globals['domain']) . "' AND dn != '*' AND dn LIKE '%" . $globals['ldap_basedn'] . "' AND dn is NOT NULL AND uid NOT IN ('$uidlist')");
-print_r($query);
+         $query = $this->db->query("SELECT uid, username FROM " . TABLE_USER . " WHERE domain=? AND dn != '*' AND dn LIKE '%" . $globals['ldap_basedn'] . "' AND dn is NOT NULL AND uid NOT IN ('$uidlist')", array($globals['domain']) );
 
          foreach ($query->rows as $deleted) {
             $deleteduser++;
-            $this->model_user_user->deleteUser($deleted['uid']);
+            $this->model_user_user->delete_user($deleted['uid']);
          }
       }
 
@@ -259,22 +268,24 @@ print_r($query);
       foreach ($users as $user) {
          if($user['members']) {
 
-            $group = $this->model_user_user->getUserByDN($user['dn']);
+            $group = $this->model_user_user->get_user_by_dn($user['dn']);
 
             $members = explode("\n", $user['members']);
             if(count($members) > 0) {
 
-               $query = $this->db->query("DELETE FROM " . TABLE_QUARANTINE_GROUP . " WHERE gid=" . $group['uid'] );
+               if(isset($group['uid'])) {
+                  $query = $this->db->query("DELETE FROM " . TABLE_EMAIL_LIST . " WHERE gid=?", array($group['uid']) );
+               }
 
                foreach ($members as $member) {
                   if(validemail($member)) {
-                     $__user = $this->model_user_user->getUserByEmail($member);
+                     $__user = $this->model_user_user->get_user_by_email($member);
                   } else {
-                     $__user = $this->model_user_user->getUserByDN($member);
+                     $__user = $this->model_user_user->get_user_by_dn($member);
                   }
 
                   if(isset($group['uid']) && isset($__user['uid'])) {
-                     $query = $this->db->query("INSERT INTO " . TABLE_QUARANTINE_GROUP . " (uid, gid) VALUES(" . (int)$__user['uid'] . "," . $group['uid'] . ")");
+                     $query = $this->db->query("INSERT INTO " . TABLE_EMAIL_LIST . " (uid, gid) VALUES(?,?)", array((int)$__user['uid'], $group['uid']));
                   }
 
                }
@@ -287,10 +298,10 @@ print_r($query);
    }
 
 
-   private function createNewUserArray($dn = '', $username = '', $realname = '', $emails = '', $globals = array()) {
+   private function createNewUserArray($dn = '', $username = '', $realname = '', $emails = '', $samaccountname = '', $globals = array()) {
       $user = array();
 
-      $user['uid'] = $this->model_user_user->getNextUid();
+      $user['uid'] = $this->model_user_user->get_next_uid();
       $user['gid'] = $globals['gid'];
 
       $user['email'] = $emails;
@@ -316,14 +327,16 @@ print_r($query);
       $user['isadmin'] = 0;
       $user['whitelist'] = '';
       $user['blacklist'] = '';
+      $user['group'] = 0;
+      $user['samaccountname'] = $samaccountname;
 
       return $user;
    }
 
 
-   public function trashPassword($users = array()) {
+   public function trash_password($users = array()) {
       foreach ($users as $user) {
-         $query = $this->db->query("UPDATE " . TABLE_USER . " SET password='*' WHERE dn='" . $user['dn'] . "'");
+         $query = $this->db->query("UPDATE " . TABLE_USER . " SET password='*' WHERE dn=?", array($user['dn']));
          $rc = $this->db->countAffected();
          LOGGER("setting default password for " . $user['dn'] . " (rc=$rc)");
       }
@@ -331,7 +344,7 @@ print_r($query);
 
 
    public function count_email_addresses() {
-      $query = $this->db->query("select count(*) as num from " . TABLE_EMAIL);
+      $query = $this->db->query("SELECT COUNT(*) AS num FROM " . TABLE_EMAIL);
 
       if(isset($query->row['num'])) { return $query->row['num']; }
 

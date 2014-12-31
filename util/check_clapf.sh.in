@@ -1,9 +1,0 @@
-#!/bin/sh
-##
-## check_clapf.sh, SJ
-##
-## periodicaly check clapf-related services and restart them if necessary
-
-NUM=`ps uaxw | grep YOUR_PATH/clapf | grep -cv grep`
-
-if [ $NUM -eq 0 ]; then export TMPDIR=YOUR_QUEUE; YOUR_PATH/clapf -d

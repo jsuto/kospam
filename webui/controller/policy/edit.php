@@ -19,28 +19,34 @@ class ControllerPolicyEdit extends Controller {
 
       $this->document->title = $this->data['text_policy'];
 
-
       $this->data['username'] = Registry::get('username');
 
-      $this->data['policy_group'] = (int)@$this->request->get['policy_group'];
+      $this->data['id'] = -1;
+
+      if(isset($this->request->get['id']) && is_numeric($this->request->get['id']) && $this->request->get['id'] > 0) {
+         $this->data['id'] = $this->request->get['id'];
+      }
+
 
       /* check if we are admin */
 
       if(Registry::get('admin_user') == 1) {
 
 
-         if($this->request->server['REQUEST_METHOD'] == 'POST' && $this->validate() == true){
-            if($this->model_policy_policy->updatePolicy($this->request->post) == 1) {
-               $this->data['x'] = $this->data['text_successfully_updated'];
-            }
-            else {
-               $this->template = "common/error.tpl";
-               $this->data['errorstring'] = $this->data['text_failed_to_update'];
+         if($this->request->server['REQUEST_METHOD'] == 'POST') {
+
+            if($this->validate() == true){
+               if($this->model_policy_policy->update($this->request->post) == 1) {
+                  $this->data['x'] = $this->data['text_successfully_updated'];
+               }
+               else {
+                  $this->template = "common/error.tpl";
+                  $this->data['errorstring'] = $this->data['text_failed_to_update'];
+               }
             }
          }
          else {
-            $this->template = "common/error.tpl";
-            $this->data['errorstring'] = array_pop($this->error);
+            $this->data['post'] = $this->model_policy_policy->get_policy($this->data['id']);
          }
       }
       else {
@@ -55,8 +61,10 @@ class ControllerPolicyEdit extends Controller {
 
    private function validate() {
 
-      if((int)@$this->request->post['policy_group'] <= 0){
-         $this->error['aaa'] = $this->data['text_invalid_policy_group'];
+      $this->model_policy_policy->fix_post_data();
+
+      if(!isset($this->request->post['id']) || !is_numeric($this->request->post['id']) || $this->request->post['id'] <= 0){
+         $this->error['aaa'] = $this->data['text_invalid_policy_setting'];
       }
 
       if(strlen(@$this->request->post['name']) < 2 || !preg_match("/^([\a-zA-ZµÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝßàáâãäåæçèéêëìíîïðñòóôõöøùúûüýÿ0-9\-\_\ ]+)$/i", iconv("utf-8", "iso-8859-2", $this->request->post['name']) )) {

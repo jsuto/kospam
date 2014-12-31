@@ -4,6 +4,7 @@
 class ControllerPolicyRemove extends Controller {
    private $error = array();
 
+
    public function index(){
 
       $this->id = "content";
@@ -21,32 +22,52 @@ class ControllerPolicyRemove extends Controller {
 
       $this->data['username'] = Registry::get('username');
 
-      /* check if we are admin */
+      $this->data['id'] = @$this->request->get['id'];
+      $this->data['confirmed'] = (int)@$this->request->get['confirmed'];
 
-      if(Registry::get('admin_user') == 1) {
 
-         if(isset($this->request->get['policy_group']) && isset($this->request->get['confirmed']) && $this->request->get['confirmed'] == 1) {
+      $this->data['policy'] = $this->model_policy_policy->get_policy($this->data['id']);
 
-            if($this->model_policy_policy->removePolicy($this->request->get['policy_group']) == 1) {
+      if($this->validate() == true) {
+
+         if($this->data['confirmed'] == 1) {
+            $ret = $this->model_policy_policy->remove($this->data['id']);
+            if($ret == 1){
                $this->data['x'] = $this->data['text_successfully_removed'];
-               header("Location: index.php?route=policy/policy");
-               exit;
             }
             else {
                $this->data['x'] = $this->data['text_failed_to_remove'];
             }
          }
-         else {
-            $this->data['x'] = $this->data['text_error'];
-         }
       }
       else {
          $this->template = "common/error.tpl";
-         $this->data['errorstring'] = $this->data['text_you_are_not_admin'];
+         $this->data['errorstring'] = array_pop($this->error);
       }
 
 
+
       $this->render();
+   }
+
+
+   private function validate() {
+
+      if(Registry::get('admin_user') == 0) {
+         $this->error['admin'] = $this->data['text_you_are_not_admin'];
+      }
+
+      if(!isset($this->request->get['id']) || $this->request->get['id'] < 1 ) {
+         $this->error['policy'] = $this->data['text_invalid_data'];
+      }
+
+
+      if (!$this->error) {
+         return true;
+      } else {
+         return false;
+      }
+
    }
 
 

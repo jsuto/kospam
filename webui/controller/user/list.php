@@ -16,18 +16,14 @@ class ControllerUserList extends Controller {
       $language = Registry::get('language');
 
       $this->load->model('user/user');
-      $this->load->model('policy/policy');
 
       $this->document->title = $language->get('text_user_management');
 
 
       $this->data['page'] = 0;
-      $this->data['page_len'] = getPageLength();
+      $this->data['page_len'] = get_page_length();
 
       $this->data['total_users'] = 0;
-
-      $this->request->get['sort'] = "username";
-      $this->data['order'] = 0;
 
       $users = array();
 
@@ -48,44 +44,28 @@ class ControllerUserList extends Controller {
       }
 
 
-      if(isset($this->request->get['order'])) { $this->data['order'] = $this->request->get['order']; }
+      $this->data['sort'] = 'username';
 
-      if(isset($this->request->get['sort'])) {
-         switch($this->request->get['sort']) {
-            case 'uid': $this->data['sort'] = "uid"; break;
-            case 'realname': $this->data['sort'] = "realname"; break;
-            case 'username': $this->data['sort'] = "username"; break;
-            case 'email': $this->data['sort'] = "email"; break;
-            case 'domain': $this->data['sort'] = "domain"; break;
-            case 'policy': $this->data['sort'] = "policy"; break;
-         };
-      }
+      $this->data['order'] = (int)@$this->request->get['order'];
 
-/* == "uid") { $this->data['sort'] = "uid"; }
+      if(@$this->request->get['sort'] == "uid") { $this->data['sort'] = "uid"; }
       if(@$this->request->get['sort'] == "realname") { $this->data['sort'] = "realname"; }
       if(@$this->request->get['sort'] == "email") { $this->data['sort'] = "email"; }
       if(@$this->request->get['sort'] == "domain") { $this->data['sort'] = "domain"; }
-      if(@$this->request->get['sort'] == "policy") { $this->data['sort'] = "policy_group"; }*/
+      if(@$this->request->get['sort'] == "policy") { $this->data['sort'] = "policy_group"; }
 
 
       /* check if we are admin */
 
-      if(Registry::get('admin_user') == 1 || Registry::get('domain_admin') == 1) {
+      if(Registry::get('admin_user') == 1) {
 
-         $users = $this->model_user_user->getUsers($this->data['search'], $this->data['page'], $this->data['page_len'], 
+         $users = $this->model_user_user->get_users($this->data['search'], $this->data['page'], $this->data['page_len'], 
                     $this->data['sort'], $this->data['order']);
 
-         $this->data['total_users'] = $this->model_user_user->howManyUsers($this->data['search']);
+         $this->data['total_users'] = $this->model_user_user->count_users($this->data['search']);
 
          foreach ($users as $user) {
-            $policy = $this->model_policy_policy->getPolicy($user['policy_group']);
-
-            if(isset($policy['name'])){
-               $policy_group = $policy['name'];
-            }
-            else {
-               $policy_group = DEFAULT_POLICY;
-            }
+            $policy_group = DEFAULT_POLICY;
 
             $this->data['users'][] = array(
                                           'uid'          => $user['uid'],
@@ -111,6 +91,9 @@ class ControllerUserList extends Controller {
 
       $this->data['total_pages'] = floor($this->data['total_users'] / $this->data['page_len']);
 
+      $this->data['querystring'] = '';
+      if ($this->data['page'] != 1) { $this->data['querystring'] .= "&amp;page=".$this->data['page']; }
+      if (strlen($this->data['search']) > 0) { $this->data['querystring'] .= "&amp;search=".$this->data['search']; }
 
       $this->render();
    }

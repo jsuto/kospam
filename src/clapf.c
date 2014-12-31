@@ -1,5 +1,5 @@
 /*
- * clapf.c, SJ
+ * piler.c, SJ
  */
 
 #include <stdio.h>
@@ -8,6 +8,7 @@
 #include <strings.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <netdb.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/time.h>
@@ -21,39 +22,227 @@
 #include <unistd.h>
 #include <locale.h>
 #include <errno.h>
+#include <openssl/ssl.h>
+#include <openssl/err.h>
 #include <clapf.h>
+
 
 extern char *optarg;
 extern int optind;
 
 int sd;
-int nconn = 0;
+int quit = 0;
+int received_sighup = 0;
 char *configfile = CONFIG_FILE;
 struct __config cfg;
 struct __data data;
 struct passwd *pwd;
 
-#ifdef HAVE_LIBCLAMAV
-   unsigned int options=0;
+struct child children[MAXCHILDREN];
+
+
+static void takesig(int sig);
+static void child_sighup_handler(int sig);
+static void child_main(struct child *ptr);
+static pid_t child_make(struct child *ptr);
+int search_slot_by_pid(pid_t pid);
+void kill_children(int sig);
+void p_clean_exit();
+void fatal(char *s);
+void initialise_configuration();
+
+
+
+
+static void takesig(int sig){
+   int i, status;
+   pid_t pid;
+
+   switch(sig){
+        case SIGHUP:
+                initialise_configuration();
+                kill_children(SIGHUP);
+                break;
+
+        case SIGTERM:
+        case SIGKILL:
+                quit = 1;
+                p_clean_exit();
+                break;
+
+        case SIGCHLD:
+                while((pid = waitpid (-1, &status, WNOHANG)) > 0){
+
+                   //syslog(LOG_PRIORITY, "child (pid: %d) has died", pid);
+
+                   if(quit == 0){
+                      i = search_slot_by_pid(pid);
+                      if(i >= 0){
+                         children[i].status = READY;
+                         children[i].pid = child_make(&children[i]);
+                      }
+                      else syslog(LOG_PRIORITY, "error: couldn't find slot for pid %d", pid);
+
+                   }
+                }
+                break;
+   }
+
+   return;
+}
+
+
+static void child_sighup_handler(int sig){
+   if(sig == SIGHUP){
+      received_sighup = 1;
+   }
+}
+
+
+static void child_main(struct child *ptr){
+   int new_sd;
+   char s[INET6_ADDRSTRLEN];
+   struct sockaddr_storage client_addr;
+   socklen_t addr_size;
+
+   ptr->messages = 0;
+
+   if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "child (pid: %d) started main()", getpid());
+
+   while(1){
+      if(received_sighup == 1){
+         if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "child (pid: %d) caught HUP signal", getpid());
+         break;
+      }
+
+      ptr->status = READY;
+
+      addr_size = sizeof(client_addr);
+      new_sd = accept(sd, (struct sockaddr *)&client_addr, &addr_size);
+
+      if(new_sd == -1) continue;
+
+      ptr->status = BUSY;
+
+      inet_ntop(client_addr.ss_family, get_in_addr((struct sockaddr *)&client_addr), s, sizeof(s));
+
+      if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "connection from %s", s);
+
+
+      sig_block(SIGHUP);
+      ptr->messages += handle_smtp_session(new_sd, &data, &cfg);
+      sig_unblock(SIGHUP);
+
+      close(new_sd);
+
+      if(cfg.max_requests_per_child > 0 && ptr->messages >= cfg.max_requests_per_child){
+         if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "child (pid: %d) served enough: %d", getpid(), ptr->messages);
+         break;
+      }
+
+   }
+
+   ptr->status = UNDEF;
+
+#ifdef HAVE_MEMCACHED
+   memcached_shutdown(&(data.memc));
 #endif
 
+   if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "child decides to exit (pid: %d)", getpid());
 
-void clean_exit(){
+   exit(0);
+}
+
+
+static pid_t child_make(struct child *ptr){
+   pid_t pid;
+
+   if((pid = fork()) > 0) return pid;
+
+   if(pid == -1) return -1;
+
+   if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "forked a child (pid: %d)", getpid());
+
+   /* reset signals */
+
+   set_signal_handler(SIGCHLD, SIG_DFL);
+   set_signal_handler(SIGTERM, SIG_DFL);
+   set_signal_handler(SIGHUP, child_sighup_handler);
+
+   child_main(ptr);
+
+   return -1;
+}
+
+
+
+int child_pool_create(){
+   int i;
+
+   for(i=0; i<MAXCHILDREN; i++){
+      children[i].pid = 0;
+      children[i].messages = 0;
+      children[i].status = UNDEF;
+   }
+
+   for(i=0; i<cfg.number_of_worker_processes; i++){
+      children[i].status = READY;
+      children[i].pid = child_make(&children[i]);
+
+      if(children[i].pid == -1){
+         syslog(LOG_PRIORITY, "error: failed to fork a child");
+         p_clean_exit();
+      }
+   }
+
+   return 0;
+}
+
+
+int search_slot_by_pid(pid_t pid){
+   int i;
+
+   for(i=0; i<MAXCHILDREN; i++){
+      if(children[i].pid == pid) return i;
+   }
+
+   return -1;
+}
+
+
+void kill_children(int sig){
+   int i;
+
+   for(i=0; i<MAXCHILDREN; i++){
+      if(children[i].status != UNDEF && children[i].pid > 1){
+         if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "sending signal to child (pid: %d)", children[i].pid);
+         kill(children[i].pid, sig);
+      }
+   }
+}
+
+
+void p_clean_exit(){
    if(sd != -1) close(sd);
 
-#ifdef HAVE_LIBCLAMAV
-   if(data.engine) cl_engine_free(data.engine);
-#endif
+   kill_children(SIGTERM);
 
-   free_list(data.blackhole);
+   clearhash(data.mydomains);
 
 #ifdef HAVE_TRE
-   freeZombieList(&data);
+   zombie_free(&data);
 #endif
 
    syslog(LOG_PRIORITY, "%s has been terminated", PROGNAME);
 
    unlink(cfg.pidfile);
+
+#ifdef HAVE_STARTTLS
+   if(data.ctx){
+      SSL_CTX_free(data.ctx);
+      ERR_free_strings();
+   }
+#endif
 
    exit(1);
 }
@@ -61,77 +250,47 @@ void clean_exit(){
 
 void fatal(char *s){
    syslog(LOG_PRIORITY, "%s\n", s);
-   clean_exit();
+   p_clean_exit();
 }
 
 
-void sigchld(){
-   int pid, wstat;
+#ifdef HAVE_STARTTLS
+int init_ssl(){
 
-   while((pid = wait_nohang(&wstat)) > 0){
-      if(nconn > 0) nconn--;
-   }
-}
+   SSL_library_init();
+   SSL_load_error_strings();
 
+   data.ctx = SSL_CTX_new(TLSv1_server_method());
 
-#ifdef HAVE_LIBCLAMAV
-void reloadClamavDB(){
-   int retval;
-   unsigned int sigs = 0;
-   const char *dbdir;
-   struct cl_stat dbstat;
+   if(data.ctx == NULL){ syslog(LOG_PRIORITY, "SSL_CTX_new() failed"); return ERR; }
 
-   if(data.engine){
-      cl_engine_free(data.engine);
-      cl_statfree(&dbstat);
-      data.engine = NULL;
-   }
+   if(SSL_CTX_set_cipher_list(data.ctx, cfg.cipher_list) == 0){ syslog(LOG_PRIORITY, "failed to set cipher list: '%s'", cfg.cipher_list); return ERR; }
 
-   if((retval = cl_init(CL_INIT_DEFAULT)) != CL_SUCCESS) fatal(ERR_INIT_ERROR);
+   if(SSL_CTX_use_PrivateKey_file(data.ctx, cfg.pemfile, SSL_FILETYPE_PEM) != 1){ syslog(LOG_PRIORITY, "cannot load private key from %s", cfg.pemfile); return ERR; }
 
-   dbdir = cl_retdbdir();
-   if(dbdir == NULL) fatal(ERR_NO_DB_DIR);
+   if(SSL_CTX_use_certificate_file(data.ctx, cfg.pemfile, SSL_FILETYPE_PEM) != 1){ syslog(LOG_PRIORITY, "cannot load certificate from %s", cfg.pemfile); return ERR; }
 
-   memset(&dbstat, 0, sizeof(struct cl_stat));
-   if(cl_statinidir(dbdir, &dbstat) != 0) fatal(ERR_STAT_INI_DIR);
-
-   if(!(data.engine = cl_engine_new())) fatal("Can't create new engine");
-
-
-   if(cfg.clamav_use_phishing_db == 1){
-      options |= CL_DB_PHISHING;
-      options |= CL_DB_PHISHING_URLS;
-   }
-
-   if((retval = cl_load(cl_retdbdir(), data.engine, &sigs, options)) != CL_SUCCESS){
-      syslog(LOG_PRIORITY, "reloading db failed: %s", cl_strerror(retval));
-      clean_exit();
-   }
-
-   if((retval = cl_engine_compile(data.engine)) != CL_SUCCESS){
-      syslog(LOG_PRIORITY, "Database initialization error: can't build engine: %s", cl_strerror(retval));
-      cl_engine_free(data.engine);
-      clean_exit();
-   }
-
-   syslog(LOG_PRIORITY, "reloaded with %d viruses", sigs);
+   return OK;
 }
 #endif
 
 
-void initialiseConfiguration(){
-   char *p, puf[SMALLBUFSIZE];
+void initialise_configuration(){
+   struct session_data sdata;
 
    cfg = read_config(configfile);
 
+   if(cfg.number_of_worker_processes < 5) cfg.number_of_worker_processes = 5;
+   if(cfg.number_of_worker_processes > MAXCHILDREN) cfg.number_of_worker_processes = MAXCHILDREN;
+
    if(strlen(cfg.username) > 1){
       pwd = getpwnam(cfg.username);
-      if(!pwd) fatal(ERR_NON_EXISTENT_CLAPF_USER);
+      if(!pwd) fatal(ERR_NON_EXISTENT_USER);
    }
 
 
    if(getuid() == 0 && pwd){
-      checkAndCreateClapfDirectories(&cfg, pwd->pw_uid, pwd->pw_gid);
+      check_and_create_directories(&cfg, pwd->pw_uid, pwd->pw_gid);
    }
 
 
@@ -140,35 +299,32 @@ void initialiseConfiguration(){
       fatal(ERR_CHDIR);
    }
 
-#ifdef HAVE_LIBCLAMAV
-   cl_engine_set_num(data.engine, CL_ENGINE_MAX_FILES, cfg.clamav_maxfile);
-   cl_engine_set_num(data.engine, CL_ENGINE_MAX_FILESIZE, cfg.clamav_max_archived_file_size);
-   cl_engine_set_num(data.engine, CL_ENGINE_MAX_RECURSION, cfg.clamav_max_recursion_level);
-
-   options = 0;
-
-   if(cfg.clamav_use_phishing_db == 1) options = CL_DB_STDOPT|CL_DB_PHISHING|CL_DB_PHISHING_URLS;
-#endif
-
    setlocale(LC_MESSAGES, cfg.locale);
    setlocale(LC_CTYPE, cfg.locale);
 
-   free_list(data.blackhole);
-   data.blackhole = NULL;
 
-   p = cfg.blackhole_email_list;
-   do {
-      p = split(p, ' ', puf, SMALLBUFSIZE-1);
-      if(strlen(puf) > 3) append_list(&(data.blackhole), puf);
-   } while(p);
+   clearhash(data.mydomains);
 
+   inithash(data.mydomains);
 
-   syslog(LOG_PRIORITY, "reloaded config: %s", configfile);
-
-#ifdef HAVE_TRE
-   initialiseZombieList(&data, &cfg);
+#ifdef HAVE_STARTTLS
+   if(cfg.tls_enable > 0 && data.ctx == NULL && init_ssl() == OK){
+      snprintf(data.starttls, sizeof(data.starttls)-1, "250-STARTTLS\r\n");
+   }
 #endif
 
+   if(open_database(&sdata, &cfg) == ERR){
+      syslog(LOG_PRIORITY, "cannot connect to mysql server");
+      return;
+   }
+
+   close_database(&sdata);
+
+#ifdef HAVE_TRE
+   zombie_init(&data, &cfg);
+#endif
+
+   syslog(LOG_PRIORITY, "reloaded config: %s", configfile);
 
 #ifdef HAVE_MEMCACHED
    memcached_init(&(data.memc), cfg.memcached_servers, 11211);
@@ -177,10 +333,10 @@ void initialiseConfiguration(){
 
 
 int main(int argc, char **argv){
-   int i, new_sd, yes=1, pid, daemonise=0;
-   unsigned int clen;
-   struct sockaddr_in client_addr, serv_addr;
-   struct in_addr addr;
+   int i, rc, yes=1, daemonise=0;
+   char port_string[8];
+   struct addrinfo hints, *res;
+
 
    while((i = getopt(argc, argv, "c:dvVh")) > 0){
       switch(i){
@@ -195,70 +351,63 @@ int main(int argc, char **argv){
 
         case 'v' :
         case 'V' :
-                   printf("%s %s, build %d, Janos SUTO <sj@acts.hu>\n\n%s\n\n\n\nSend bugs/issues to https://bitbucket.org/jsuto/clapf/issues/\n", PROGNAME, VERSION, get_build(), CONFIGURE_PARAMS);
+                   printf("%s %s, build %d, Janos SUTO <sj@acts.hu>\n\n%s\n\n", PROGNAME, VERSION, get_build(), CONFIGURE_PARAMS);
                    return 0;
 
         case 'h' :
         default  : 
-                   __fatal(CLAPFUSAGE);
+                   __fatal("usage: ...");
       }
    }
 
    (void) openlog(PROGNAME, LOG_PID, LOG_MAIL);
 
-   sig_catch(SIGINT, clean_exit);
-   sig_catch(SIGQUIT, clean_exit);
-   sig_catch(SIGKILL, clean_exit);
-   sig_catch(SIGTERM, clean_exit);
-   sig_catch(SIGHUP, initialiseConfiguration);
-
-
-   data.blackhole = NULL;
-
-#ifdef HAVE_TRE
+   inithash(data.mydomains);
+   data.ctx = NULL;
+   data.ssl = NULL;
    data.n_regex = 0;
-#endif
-#ifdef HAVE_LIBCLAMAV
-   data.engine = NULL;
-   sig_catch(SIGALRM, reloadClamavDB);
-#endif
+   memset(data.starttls, 0, sizeof(data.starttls));
 
 
-   sig_block(SIGCHLD);
-   sig_catch(SIGCHLD, sigchld);
+   initialise_configuration();
+
+   set_signal_handler (SIGPIPE, SIG_IGN);
 
 
-   initialiseConfiguration();
+   memset(&hints, 0, sizeof(hints));
+   hints.ai_family = AF_UNSPEC;
+   hints.ai_socktype = SOCK_STREAM;
+
+   snprintf(port_string, sizeof(port_string)-1, "%d", cfg.listen_port);
+
+   if((rc = getaddrinfo(cfg.listen_addr, port_string, &hints, &res)) != 0){
+      fprintf(stderr, "getaddrinfo for '%s': %s\n", cfg.listen_addr, gai_strerror(rc));
+      return 1;
+   }
 
 
-   if((sd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
+   if((sd = socket(res->ai_family, res->ai_socktype, res->ai_protocol)) == -1)
       fatal(ERR_OPEN_SOCKET);
-
-   serv_addr.sin_family = AF_INET;
-   serv_addr.sin_port = htons(cfg.listen_port);
-   inet_aton(cfg.listen_addr, &addr);
-   serv_addr.sin_addr.s_addr = addr.s_addr;
-   bzero(&(serv_addr.sin_zero), 8);
 
    if(setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1)
       fatal(ERR_SET_SOCK_OPT);
 
-   if(bind(sd, (struct sockaddr *)&serv_addr, sizeof(struct sockaddr)) == -1)
+   syslog(LOG_PRIORITY, "trying to bind to %s:%d", cfg.listen_addr, cfg.listen_port);
+
+   if(bind(sd, res->ai_addr, res->ai_addrlen) == -1)
       fatal(ERR_BIND_TO_PORT);
 
    if(listen(sd, cfg.backlog) == -1)
       fatal(ERR_LISTEN);
 
 
+   freeaddrinfo(res);
+
+
    if(drop_privileges(pwd)) fatal(ERR_SETUID);
 
 
-   syslog(LOG_PRIORITY, "%s %s starting", PROGNAME, VERSION);
-
-
-#ifdef HAVE_LIBCLAMAV
-   reloadClamavDB();
-#endif
+   syslog(LOG_PRIORITY, "%s %s, build %d starting", PROGNAME, VERSION, get_build());
 
 
 #if HAVE_DAEMON == 1
@@ -268,49 +417,17 @@ int main(int argc, char **argv){
    write_pid_file(cfg.pidfile);
 
 
-   /* main accept loop */
+   child_pool_create();
 
-   for(;;){
+   set_signal_handler(SIGCHLD, takesig);
+   set_signal_handler(SIGTERM, takesig);
+   set_signal_handler(SIGKILL, takesig);
+   set_signal_handler(SIGHUP, takesig);
 
-      /* let new connections wait if we are too busy now */
 
-      if(nconn >= cfg.max_connections) sig_pause();
+   for(;;){ sleep(1); }
 
-      clen = sizeof(client_addr);
-
-      sig_unblock(SIGCHLD);
-      new_sd = accept(sd, (struct sockaddr *)&client_addr, &clen);
-      sig_block(SIGCHLD);
-
-      if(new_sd == -1) continue;
-
-      pid = fork();
-
-      if(pid == 0){
-          sig_uncatch(SIGCHLD);
-          sig_unblock(SIGCHLD);
-
-          sig_uncatch(SIGINT);
-          sig_uncatch(SIGQUIT);
-          sig_uncatch(SIGKILL);
-          sig_uncatch(SIGTERM);
-          sig_block(SIGHUP);
-
-          handleSession(new_sd, &data, &cfg);
-
-          _exit(0);
-      }
-
-      else if(pid > 0){
-         nconn++;
-      }
-
-      else {
-         syslog(LOG_PRIORITY, "%s", ERR_FORK_FAILED);
-      }
-
-      close(new_sd);
-   }
+   p_clean_exit();
 
    return 0;
 }

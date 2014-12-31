@@ -5,43 +5,257 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <time.h>
 #include <syslog.h>
-#include <sys/mman.h>
 #include <clapf.h>
 
 
-struct te getHamSpamCounters(struct session_data *sdata, char *stmt){
-   struct te TE;
+int open_database(struct session_data *sdata, struct __config *cfg){
+   int rc=1;
+
+   mysql_init(&(sdata->mysql));
+
+   mysql_options(&(sdata->mysql), MYSQL_OPT_CONNECT_TIMEOUT, (const char*)&cfg->mysql_connect_timeout);
+   mysql_options(&(sdata->mysql), MYSQL_OPT_RECONNECT, (const char*)&rc);
+
+   if(mysql_real_connect(&(sdata->mysql), cfg->mysqlhost, cfg->mysqluser, cfg->mysqlpwd, cfg->mysqldb, cfg->mysqlport, cfg->mysqlsocket, 0) == 0){
+      printf("cant connect to mysql server\n");
+      return ERR;
+   }
+
+   mysql_real_query(&(sdata->mysql), "SET NAMES utf8", strlen("SET NAMES utf8"));
+   mysql_real_query(&(sdata->mysql), "SET CHARACTER SET utf8", strlen("SET CHARACTER SET utf8"));
+
+   return OK;
+}
+
+
+void close_database(struct session_data *sdata){
+   mysql_close(&(sdata->mysql));
+}
+
+
+void p_bind_init(struct __data *data){
+   int i;
+
+   data->pos = 0;
+
+   for(i=0; i<MAX_SQL_VARS; i++){
+      data->sql[i] = NULL;
+      data->type[i] = TYPE_UNDEF;
+      data->len[i] = 0;
+   }
+}
+
+
+void p_query(struct session_data *sdata, char *s){
+   mysql_real_query(&(sdata->mysql), s, strlen(s));
+}
+
+
+int p_exec_query(struct session_data *sdata, MYSQL_STMT *stmt, struct __data *data){
+   MYSQL_BIND bind[MAX_SQL_VARS];
+   unsigned long length[MAX_SQL_VARS];
+   int i, ret=ERR;
+
+   sdata->sql_errno = 0;
+   memset(bind, 0, sizeof(bind));
+
+   for(i=0; i<MAX_SQL_VARS; i++){
+      if(data->type[i] > TYPE_UNDEF){
+
+
+         switch(data->type[i]) {
+             case TYPE_SHORT:
+                                  bind[i].buffer_type = MYSQL_TYPE_SHORT;
+                                  bind[i].length = 0;
+                                  break;
+
+             case TYPE_LONG:
+                                  bind[i].buffer_type = MYSQL_TYPE_LONG;
+                                  bind[i].length = 0;
+                                  break;
+
+
+             case TYPE_LONGLONG:
+                                  bind[i].buffer_type = MYSQL_TYPE_LONGLONG;
+                                  bind[i].length = 0;
+                                  break;
+
+
+             case TYPE_STRING:
+                                  bind[i].buffer_type = MYSQL_TYPE_STRING;
+                                  length[i] = strlen(data->sql[i]);
+                                  bind[i].length = &length[i];
+                                  break;
+
+
+             default:
+                                  bind[i].buffer_type = 0;
+                                  bind[i].length = 0;
+                                  break;
+
+         };
+
+
+         bind[i].buffer = data->sql[i];
+         bind[i].is_null = 0;
+
+         
+      }
+      else { break; }
+   }
+
+   if(mysql_stmt_bind_param(stmt, bind)){
+      sdata->sql_errno = mysql_stmt_errno(stmt);
+      syslog(LOG_PRIORITY, "%s: mysql_stmt_bind_param() error: %s (errno: %d)", sdata->ttmpfile, mysql_stmt_error(stmt), sdata->sql_errno);
+      goto CLOSE;
+   }
+
+   if(mysql_stmt_execute(stmt)){
+      sdata->sql_errno = mysql_stmt_errno(stmt);
+      syslog(LOG_PRIORITY, "%s: mysql_stmt_execute error: *%s* (errno: %d)", sdata->ttmpfile, mysql_error(&(sdata->mysql)), sdata->sql_errno);
+      goto CLOSE;
+   }
+
+   ret = OK;
+
+CLOSE:
+   return ret;
+}
+
+
+int p_store_results(struct session_data *sdata, MYSQL_STMT *stmt, struct __data *data){
+   MYSQL_BIND bind[MAX_SQL_VARS];
+   int i, ret=ERR;
+
+   memset(bind, 0, sizeof(bind));
+
+   for(i=0; i<MAX_SQL_VARS; i++){
+      if(data->type[i] > TYPE_UNDEF){
+
+         switch(data->type[i]) {
+             case TYPE_SHORT:     bind[i].buffer_type = MYSQL_TYPE_SHORT;
+                                  break;
+
+
+             case TYPE_LONG:      bind[i].buffer_type = MYSQL_TYPE_LONG;
+                                  break;
+
+
+             case TYPE_LONGLONG:
+                                  bind[i].buffer_type = MYSQL_TYPE_LONGLONG;
+                                  break;
+
+
+             case TYPE_STRING:
+                                  bind[i].buffer_type = MYSQL_TYPE_STRING;
+                                  bind[i].buffer_length = data->len[i];
+                                  break;
+
+             default:
+                                  bind[i].buffer_type = 0;
+                                  break;
+
+         };
+
+
+         bind[i].buffer = (char *)data->sql[i];
+         bind[i].is_null = &(data->is_null[i]);
+         bind[i].length = &(data->length[i]);
+         bind[i].error = &(data->error[i]);
+
+      }
+      else { break; }
+   }
+
+   if(mysql_stmt_bind_result(stmt, bind)){
+      goto CLOSE;
+   }
+
+
+   if(mysql_stmt_store_result(stmt)){
+      goto CLOSE;
+   }
+
+   ret = OK;
+
+CLOSE:
+
+   return ret;
+}
+
+
+int p_fetch_results(MYSQL_STMT *stmt){
+
+   if(mysql_stmt_fetch(stmt) == 0) return OK;
+
+   return ERR;
+}
+
+
+void p_free_results(MYSQL_STMT *stmt){
+   mysql_stmt_free_result(stmt);
+}
+
+
+uint64 p_get_insert_id(MYSQL_STMT *stmt){
+   return mysql_stmt_insert_id(stmt);
+}
+
+
+int p_get_affected_rows(MYSQL_STMT *stmt){
+   return mysql_stmt_affected_rows(stmt);
+}
+
+
+int prepare_sql_statement(struct session_data *sdata, MYSQL_STMT **stmt, char *s){
+
+   *stmt = mysql_stmt_init(&(sdata->mysql));
+   if(!*stmt){
+      syslog(LOG_PRIORITY, "%s: mysql_stmt_init() error", sdata->ttmpfile);
+      return ERR;
+   }
+
+   if(mysql_stmt_prepare(*stmt, s, strlen(s))){
+      syslog(LOG_PRIORITY, "%s: mysql_stmt_prepare() error: %s => sql: %s", sdata->ttmpfile, mysql_stmt_error(*stmt), s);
+      return ERR;
+   }
+
+   return OK; 
+}
+
+
+void close_prepared_statement(MYSQL_STMT *stmt){
+   if(stmt) mysql_stmt_close(stmt);
+}
+
+
+struct te get_ham_spam_counters(struct session_data *sdata, char *stmt){
+   struct te te;
    MYSQL_RES *res;
    MYSQL_ROW row;
 
-   TE.nham = TE.nspam = 0;
+   te.nham = te.nspam = 0;
 
    if(mysql_real_query(&(sdata->mysql), stmt, strlen(stmt)) == 0){
       res = mysql_store_result(&(sdata->mysql));
       if(res != NULL){
          while((row = mysql_fetch_row(res))){
-            TE.nham += atof(row[0]);
-            TE.nspam += atof(row[1]);
+            te.nham += atof(row[0]);
+            te.nspam += atof(row[1]);
          }
          mysql_free_result(res);
       }
    }
-   return TE;
+   return te;
 }
 
 
-int update_hash(struct session_data *sdata, char *qry, struct node *xhash[]){
+void update_hash(struct session_data *sdata, char *qry, struct node *xhash[]){
    MYSQL_RES *res;
    MYSQL_ROW row;
    float nham, nspam;
-   unsigned long long token;
+   uint64 token;
 
    if(mysql_real_query(&(sdata->mysql), qry, strlen(qry)) == 0){
       res = mysql_store_result(&(sdata->mysql));
@@ -59,202 +273,6 @@ int update_hash(struct session_data *sdata, char *qry, struct node *xhash[]){
 
    }
 
-   return 1;
 }
 
-
-/*
- * introduce tokens to database with zero (0) counter values
- */
-
-int introduceTokens(struct session_data *sdata, struct node *xhash[]){
-   int i, n=0;
-   time_t cclock;
-   unsigned long now;
-   char s[SMALLBUFSIZE];
-   struct node *q;
-   buffer *query;
-
-   if(counthash(xhash) <= 0) return 0;
-
-   query = buffer_create(NULL);
-   if(!query) return 0;
-
-   snprintf(s, SMALLBUFSIZE-1, "SELECT token, nham, nspam FROM %s WHERE token in (", SQL_TOKEN_TABLE);
-   buffer_cat(query, s);
-
-   for(i=0; i<MAXHASH; i++){
-      q = xhash[i];
-      while(q != NULL){
-         if(n) snprintf(s, SMALLBUFSIZE-1, ",%llu", q->key);
-         else snprintf(s, SMALLBUFSIZE-1, "%llu", q->key);
-
-         buffer_cat(query, s);
-         n++;
-
-         q = q->r;
-      }
-   }
-
-   snprintf(s, SMALLBUFSIZE-1, ") AND uid=%ld", sdata->gid);
-   buffer_cat(query, s);
-
-   update_hash(sdata, query->data, xhash);
-
-   buffer_destroy(query);
-
-
-   query = buffer_create(NULL);
-   if(!query) return 0;
-
-   snprintf(s, SMALLBUFSIZE-1, "INSERT INTO %s (token, nham, nspam, uid, timestamp) VALUES", SQL_TOKEN_TABLE);
-   buffer_cat(query, s);
-
-   time(&cclock);
-   now = cclock;
-
-   n = 0;
-
-   for(i=0; i<MAXHASH; i++){
-      q = xhash[i];
-      while(q != NULL){
-         if(q->nham + q->nspam == 0){
-            if(n) snprintf(s, SMALLBUFSIZE-1, ",(%llu,0,0,%ld,%ld)", q->key, sdata->gid, now);
-            else snprintf(s, SMALLBUFSIZE-1, "(%llu,0,0,%ld,%ld)", q->key, sdata->gid, now);
-
-            buffer_cat(query, s);
-            n++;
-         }
-
-         q = q->r;
-      }
-   }
-
-   mysql_real_query(&(sdata->mysql), query->data, strlen(query->data));
-
-   buffer_destroy(query);
-
-   return 1;
-}
-
-
-int updateTokenCounters(struct session_data *sdata, int ham_or_spam, struct node *xhash[], int train_mode){
-   int i, n=0;
-   char s[SMALLBUFSIZE];
-   struct node *q;
-   buffer *query;
-
-   if(counthash(xhash) <= 0) return 0;
-
-   query = buffer_create(NULL);
-   if(!query) return n;
-
-   if(ham_or_spam == 1){
-      if(train_mode == T_TUM) snprintf(s, SMALLBUFSIZE-1, "UPDATE %s SET nham=nham-1 WHERE token IN (", SQL_TOKEN_TABLE);
-      else snprintf(s, SMALLBUFSIZE-1, "UPDATE %s SET nspam=nspam+1 WHERE token IN (", SQL_TOKEN_TABLE); 
-   } else {
-      if(train_mode == T_TUM) snprintf(s, SMALLBUFSIZE-1, "UPDATE %s SET nspam=nspam-1 WHERE token IN (", SQL_TOKEN_TABLE); 
-      else snprintf(s, SMALLBUFSIZE-1, "UPDATE %s SET nham=nham+1 WHERE token IN (", SQL_TOKEN_TABLE);
-   }
-
-   buffer_cat(query, s);
-
-   for(i=0; i<MAXHASH; i++){
-      q = xhash[i];
-      while(q != NULL){
-         if(n) snprintf(s, SMALLBUFSIZE-1, ",%llu", q->key);
-         else snprintf(s, SMALLBUFSIZE-1, "%llu", q->key);
-
-         buffer_cat(query, s);
-
-         q = q->r;
-         n++;
-      }
-   }
-
-   buffer_cat(query, ")");
-
-   if(train_mode == T_TUM){
-      if(ham_or_spam == 1) buffer_cat(query, " AND nham > 0");
-      else buffer_cat(query, " AND nspam > 0");
-   }
-
-   snprintf(s, SMALLBUFSIZE-1, " AND uid=%ld", sdata->gid);
-   buffer_cat(query, s);
-
-   mysql_real_query(&(sdata->mysql), query->data, strlen(query->data));
-
-   buffer_destroy(query);
-
-   return 1;
-}
-
-
-int updateMiscTable(struct session_data *sdata, int ham_or_spam, int train_mode){
-   char s[SMALLBUFSIZE];
-
-   if(ham_or_spam == 1){
-      if(train_mode == T_TUM) snprintf(s, SMALLBUFSIZE-1, "UPDATE %s SET nham=nham-1 WHERE uid=%ld AND nham > 0", SQL_MISC_TABLE, sdata->gid);
-      else snprintf(s, SMALLBUFSIZE-1, "UPDATE %s SET nspam=nspam+1 WHERE uid=%ld", SQL_MISC_TABLE, sdata->gid);
-   } else {
-      if(train_mode == T_TUM) snprintf(s, SMALLBUFSIZE-1, "UPDATE %s SET nspam=nspam-1 WHERE uid=%ld AND nspam > 0", SQL_MISC_TABLE, sdata->gid);
-      else snprintf(s, SMALLBUFSIZE-1, "UPDATE %s SET nham=nham+1 WHERE uid=%ld", SQL_MISC_TABLE, sdata->gid);
-   }
-
-   mysql_real_query(&(sdata->mysql), s, strlen(s));
-
-   return 1;
-}
-
-
-int updateTokenTimestamps(struct session_data *sdata, struct node *xhash[]){
-   int i, n=0;
-   unsigned long now;
-   time_t cclock;
-   char s[SMALLBUFSIZE];
-   struct node *q;
-   buffer *query;
-
-   if(counthash(xhash) <= 0) return 0;
-
-   query = buffer_create(NULL);
-   if(!query) return n;
-
-   time(&cclock);
-   now = cclock;
-
-   snprintf(s, SMALLBUFSIZE-1, "UPDATE %s SET timestamp=%ld WHERE token in (", SQL_TOKEN_TABLE, now);
-
-   buffer_cat(query, s);
-
-   for(i=0; i<MAXHASH; i++){
-      q = xhash[i];
-      while(q != NULL){
-         if(q->spaminess != DEFAULT_SPAMICITY){
-            if(n) snprintf(s, SMALLBUFSIZE-1, ",%llu", q->key);
-            else snprintf(s, SMALLBUFSIZE-1, "%llu", q->key);
-            buffer_cat(query, s);
-            n++;
-         }
-
-         q = q->r;
-      }
-   }
-
-
-   if(sdata->gid > 0)
-      snprintf(s, SMALLBUFSIZE-1, ") AND (uid=0 OR uid=%ld)", sdata->gid);
-   else
-      snprintf(s, SMALLBUFSIZE-1, ") AND uid=0");
-
-   buffer_cat(query, s);
-
-   if(mysql_real_query(&(sdata->mysql), query->data, strlen(query->data)) != 0){
-      n = -1;
-   }
-
-   buffer_destroy(query);
-
-   return n;
-}
 

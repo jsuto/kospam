@@ -3,49 +3,88 @@
 function LOGGER($event = '', $username = '') {
    if($event == "") { return 0; }
 
+   $session = Registry::get('session');
+
    if($username == '') {
-      if(isset($_SESSION['username'])) { $username = $_SESSION['username']; }
+      if($session->get("username")) { $username = $session->get("username"); }
       else { $username = 'unknown'; }
    }
 
-   syslog(LOG_INFO, sprintf("%s, %s, '%s'", date(LOG_DATE_FORMAT), $username, $_SERVER['REMOTE_ADDR'], $event));
+   syslog(LOG_INFO, "username=$username, event='$event'");
 }
 
-function getAuthenticatedUsername() {
 
-   if(isset($_SESSION['username'])){ return $_SESSION['username']; }
+function AUDIT($action = 0, $email = '', $ipaddr = '', $id = 0, $description = '') {
+
+   if(ENABLE_AUDIT == 0) { return 0; }
+
+   $session = Registry::get('session');
+
+   if($ipaddr == '' && isset($_SERVER['REMOTE_ADDR'])) { $ipaddr = $_SERVER['REMOTE_ADDR']; }
+   if($email == '') { $email = $session->get("email"); }
+
+   $a = explode("@", $email);
+
+   $db = Registry::get('db');
+
+   $description = htmlspecialchars($description);
+
+   $query = $db->query("INSERT INTO " . TABLE_AUDIT . " (ts, email, domain, action, ipaddr, meta_id, description) VALUES(?,?,?,?,?,?,?)", array(time(), $email, $a[1], $action, $ipaddr, $id, $description));
+
+   return $db->countAffected();
+}
+
+
+function getAuthenticatedUsername() {
+   $session = Registry::get('session');
+
+   if($session->get("username")) { return $session->get("username"); }
 
    return "";
 }
 
 
 function isAdminUser() {
-   if(isset($_SESSION['admin_user']) && $_SESSION['admin_user'] == 1){ return 1; }
+   $session = Registry::get('session');
+
+   if($session->get("admin_user") == 1){ return 1; }
 
    return 0;
 }
 
 
-function isDomainAdmin() {
-   if(isset($_SESSION['admin_user']) && $_SESSION['admin_user'] == 2){ return 1; }
+function isAuditorUser() {
+   $session = Registry::get('session');
+
+   if($session->get("admin_user") == 2){ return 1; }
 
    return 0;
 }
 
 
 function isReadonlyAdmin() {
-   if(isset($_SESSION['admin_user']) && $_SESSION['admin_user'] == 3){ return 1; }
+   $session = Registry::get('session');
+
+   if($session->get("admin_user") == 3){ return 1; }
 
    return 0;
 }
 
 
 function logout() {
-   $_SESSION['username'] = "";
-   $_SESSION['admin_user'] = 0;
+   $session = Registry::get('session');
 
-   unset($_SESSION['username']);
-   unset($_SESSION['admin_user']);
+   AUDIT(ACTION_LOGOUT, $session->get("email"), '', '', '');
+
+   $session->set("username", "");
+   $session->set("admin_user", 0);
+
+   $session->remove("username");
+   $session->remove("admin_user");
+
+   Registry::set('username', '');
+
+   session_destroy();
 }
 
 
@@ -56,11 +95,12 @@ function isBinary($num = '') {
 }
 
 
-function getPageLength() {
+function get_page_length() {
    $page_len = PAGE_LEN;
-   
-   if(isset($_SESSION['pagelen']) && is_numeric($_SESSION['pagelen']) && $_SESSION['pagelen'] >= 10 && $_SESSION['pagelen'] <= 50) {
-      $page_len = $_SESSION['pagelen'];
+   $session = Registry::get('session');
+
+   if($session->get("pagelen") && is_numeric($session->get("pagelen")) && $session->get("pagelen") >= 10 && $session->get("pagelen") <= MAX_SEARCH_HITS) {
+      $page_len = $session->get("pagelen");
    }
 
    return $page_len;
@@ -73,7 +113,6 @@ function checkemail($email, $domains) {
    }
 
    if($email == 'admin@local') { return 1; }
-
 
    list($u, $d) = explode('@', $email);
 
@@ -88,9 +127,37 @@ function checkemail($email, $domains) {
 function validemail($email = '') {
    if($email == '') { return 0; }
 
-   if($email == 'admin@local') { return 1; }
+   if(preg_match("/@local$/", $email)) { return 1; }
 
-   if(preg_match('/^[_a-zA-Z0-9-]+(\.[_a-zA-Z0-9-]+)*@[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*(\.[a-zA-Z]{2,4})$/', $email)) {
+   if(preg_match('/^[_a-zA-Z0-9-]+(\.[_a-zA-Z0-9-]+)*@[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*(\.[a-zA-Z]{2,10})$/', $email)) {
+      return 1;
+   }
+
+   return 0;
+}
+
+
+function checkdomain($domain, $domains) {
+   if(validdomain($domain) == 0){
+      return 0;
+   }
+
+   if($domain == 'local') { return 1; }
+
+   if(in_array($domain, $domains) ) {
+      return 1;
+   } else {
+      return -1;
+   }
+}
+
+
+function validdomain($domain = '') {
+   if($domain == '') { return 0; }
+
+   if(preg_match("/@local$/", $domain)) { return 1; }
+
+   if(preg_match('/@?[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*(\.[a-zA-Z]{2,10})$/', $domain)) {
       return 1;
    }
 
@@ -112,39 +179,6 @@ function first_n_characters($what, $n){
 }
 
 
-function get_per_user_queue_dir($domain = '', $username = '', $uid = 0){
-
-   if(QUEUE_DIR_SPLITTING == 1) {
-      if(!is_numeric($uid) || $uid <= 0){ return ""; }
-
-      $h = $uid;
-
-      $i = $h % 10000;
-      if($i > 0) {
-         $plus1 = 1;
-      }
-      else {
-         $plus1 = 0;
-      }
-
-      $i = $h % 100;
-      if($i > 0){
-         $plus1b = 1;
-      }
-      else {
-         $plus1b = 0;
-      }
-
-      return QUEUE_DIRECTORY . "/" . 10000 * (floor($h / 10000) + $plus1) . "/" . 100 * (floor($h / 100) + $plus1b) . "/" . $uid;
-
-   }
-   else {
-      return QUEUE_DIRECTORY . "/$domain/" . substr($username, 0, 1) . "/" . $username;
-   }
-
-}
-
-
 function short_email($email) {
    if(strlen($email) > 25) {
       return substr($email, 0, 25) . "...";
@@ -154,8 +188,16 @@ function short_email($email) {
 }
 
 
-function createTempName($dir = '', $prefix = '') {
-   $length = 8;
+function verify_piler_id($id = '') {
+   if($id == '') { return 0; }
+
+   if(preg_match("/^([0-9a-f]+)$/", $id)) { return 1; }
+
+   return 0;
+}
+
+
+function generate_random_string($length = 8) {
    $rnd = "";
    $aZ09 = array_merge(range('A', 'Z'), range('a', 'z'),range(0, 9));
 
@@ -163,7 +205,12 @@ function createTempName($dir = '', $prefix = '') {
       $rnd .= $aZ09[mt_rand(0, count($aZ09)-1)];
    }
 
-   return $dir . "/" . $prefix . $rnd;
+   return $rnd;
+}
+
+
+function createTempName($dir = '', $prefix = '') {
+   return $dir . "/" . $prefix . generate_random_string(8);
 }
 
 
@@ -213,7 +260,7 @@ function my_qp_encode($s){
             //if($i > 0 && ($i % 76) == 0) $part .= "=\r\n";
 
             $c = substr($v, $i, 1);
-            if(ord($c) >= 128 || $c == '.'){
+            if(ord($c) >= 128){
                $c = "=" . strtoupper(dechex(ord($c)));
             }
 
@@ -229,24 +276,267 @@ function my_qp_encode($s){
 }
 
 
-function format_qshape($desc = '', $filename = '') {
+function nice_size($size = 0, $space = '') {
+   if($size < 1000) return "1k";
+   if($size < 1000000) return round($size/1000) . $space . "k";
+   if($size < 1000000000) return round($size/1000000) . $space . "M";
 
-   if($filename == '' || !file_exists($filename) ) { return array(); }
-
-   $stat = stat($filename);
-
-   //$s = preg_replace("/ {1,}/", '</div><div class="healthcell">', file_get_contents($filename));
-
-   $s = file_get_contents($filename);
-
-   $a = explode("\n", $s);
-
-   return array('desc' => $desc, 'date' => date(LOG_DATE_FORMAT, $stat['ctime']), 'lines' => $a);
+   return sprintf("%.1f", $size/1000000000) . $space . "G";
 }
 
 
-function assemble_quarantine_link($arr = array(), $page = 0) {
-   return "index.php?route=quarantine/quarantine&amp;page=" . $page . "&amp;to=" . $arr['to'] . "&amp;from=" . $arr['from'] . "&amp;subj=" . $arr['subj'] . "&date=" . $arr['date'] . "&hamspam=" . $arr['hamspam'] . "&amp;sort=" . $arr['sort'] . "&amp;order=" . $arr['order'];
+function assemble_search_url($term = '') {
+   $term_value = "";
+
+   if($term == '') { return $term_value; }
+
+   parse_str($term, $a);
+
+   if(isset($a['search'])) { $term_value = $a['search']; }
+
+   if(isset($a['f'])) {
+    foreach($a['f'] as $f) {
+      $val = array_shift($a['v']);
+
+      if($val == '') { continue; }
+
+      if($f == 'from') { $term_value .= ", from: " . $val; }
+      if($f == 'to') { $term_value .= ", to: " . $val; }
+      if($f == 'subject') { $term_value .= ", subj: " . $val; }
+      if($f == 'body') { $term_value .= ", body: " . $val; }
+    }
+   }
+
+   if(isset($a['from'])) { $term_value .= ", from: " . $a['from'];}
+   if(isset($a['to'])) { $term_value .= ", to: " . $a['to'];}
+   if(isset($a['subject'])) { $term_value .= ", text: " . $a['subject'];}
+
+   if(isset($a['date1'])) { $term_value .= ", date1: " . $a['date1']; }
+   if(isset($a['date2'])) { $term_value .= ", date2: " . $a['date2']; }
+   if(isset($a['direction'])) { $term_value .= ", d: " . $a['direction']; }
+
+   if(isset($a['sort'])) { $term_value .= ", sort: " . $a['sort']; }
+   if(isset($a['order'])) { $term_value .= ", order: " . $a['order']; }
+
+
+   $term_value = preg_replace("/^\, /", "", $term_value);
+
+   return $term_value;
+}
+
+
+function fix_email_address($email = '') {
+   return preg_replace("/(^\ {0,}|\ {0,}$)/", "", $email);
+}
+
+
+function assemble_search_term($data = array()) {
+   $term = "";
+
+   if(isset($data['advanced']) && $data['advanced'] == 1) {
+      $term = "advanced=1&date1=" . $data['date1'] . "&date2=" . $data['date2'];
+
+      $term .= "&from=" . $data['from'];
+      for($i=2; $i<MAX_NUMBER_OF_FROM_ITEMS; $i++) {
+         if(isset($data['from'.$i])) { $term .= "&from$i=" .  $data['from'.$i]; }
+      }
+
+      $term .= "&to=" . $data['to'];
+      for($i=2; $i<MAX_NUMBER_OF_FROM_ITEMS; $i++) {
+         if(isset($data['to'.$i])) { $term .= "&to$i=" .  $data['to'.$i]; }
+      }
+
+      $term .= "&subj=" . $data['subj'] . "&body=" . $data['body'] . "&tag=" . $data['tag'];
+
+      if(isset($data['w_attachment'])) { $term .= "&w_attachment=on"; }
+      if(isset($data['wo_attachment'])) { $term .= "&wo_attachment=on"; }
+   }
+   else {
+      $term = "date1=" . $data['date1'] . "&date2=" . $data['date2'] . "&subj=" . $data['subj'] . "&from=" . $data['from'] . "&to=" . $data['to'] . "&tag=" . $data['tag'];
+      if(strlen($term) < 36) { return ""; }
+   }
+
+   return $term;
+}
+
+
+function escape_gt_lt_quote_symbols($s = '') {
+   if($s == '') { return $s; }
+
+   $s = preg_replace("/\>/", "&gt;", $s);
+   $s = preg_replace("/\</", "&lt;", $s);
+   $s = preg_replace('/"/', "&quot;", $s);
+
+   return $s;
+}
+
+
+function get_search_url_by_page($page = 0) {
+
+   return "/search-helper.php?page=$page";
+
+   /*isset($_SERVER['REQUEST_URI']) ? $a = preg_replace("/\/([\w]+)\.php\?{0,1}/", "", $_SERVER['REQUEST_URI']) : "";
+
+   $a = preg_replace("/page=\d{0,100}\&{0,1}/", "", $a);
+
+   if($page <= 0) { return "search.php?$a"; }
+   if($page >= 1 && $a == "") { return "search.php?page=$page"; }
+
+   return "search.php?page=$page&$a";*/
+}
+
+
+function parse_string_to_array($s = '', $arr = array()) {
+   $a = array();
+
+   parse_str($s, $a);
+
+   while(list($k, $v) = each($a)) {
+      if(!isset($arr[$k]) || $arr[$k] == '') $arr[$k] = $v;
+   }
+
+}
+
+
+function fetch_url($url = '') {
+   if($url == '') { return ''; }
+
+   $ch = curl_init();
+
+   curl_setopt($ch, CURLOPT_URL, $url);
+   curl_setopt($ch, CURLOPT_HEADER, 0);
+   curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+
+   $result = curl_exec($ch);
+
+   curl_close($ch);
+
+   return $result;
+}
+
+
+function fixup_date_condition($field = '', $date1 = 0, $date2 = 0) {
+   $date = "";
+
+   if($date1) {
+      list($y,$m,$d) = preg_split("/(\.|\-|\/)/", $date1);
+
+      if(DATE_TEMPLATE == 'd/m/Y') { $a = $y; $y = $d; $d = $a; }
+
+      if($m == '*') { $m = 0; }
+      if($d == '*') { $d = 0; }
+
+      $date1 = mktime(0, 0, 0, $m, $d, $y);
+
+      if($date1 > 0) { $date .= "$field >= $date1 "; }
+   }
+
+   if($date2) {
+      list($y,$m,$d) = preg_split("/(\.|\-|\/)/", $date2);
+
+      if(DATE_TEMPLATE == 'd/m/Y') { $a = $y; $y = $d; $d = $a; }
+
+      $date2 = mktime(23, 59, 59, $m, $d, $y);
+
+      if($date2 > 0) {
+         if($date) { $date .= " AND "; }
+         $date .= "$field <= $date2 ";
+      }
+   }
+
+
+   return $date;
+}
+
+
+function make_short_string($what, $length) {
+   return strlen($what) > $length ? substr($what, 0, $length) . "..." : $what;
+}
+
+
+function convert_days_ymd($convert) {
+   $years = ($convert / 365) ; // days / 365 days
+   $years = floor($years); // Remove all decimals
+
+   $month = ($convert % 365) / 30.5; // I choose 30.5 for Month (30,31) ;)
+   $month = floor($month); // Remove all decimals
+
+   $days = ($convert % 365) % 30.5; // the rest of days
+
+   // Return array of years, months, days
+   return array( $years,$month,$days );
+}
+
+
+function fix_evolution_mime_name_crap($s = '') {
+   if(preg_match("/iso\-\d{1,4}\-\d{1,}\'\'/i", $s)) {
+      $s = preg_replace("/iso\-\d{1,4}\-\d{1,}\'\'/i", "", $s);
+      $s = utf8_encode(urldecode($s));
+   }
+
+   return $s;
+}
+
+
+function safe_feof($fp, &$start = NULL) {
+   $start = microtime(true);
+   return feof($fp);
+}
+
+
+function anonimize_ip_addr($ip = '') {
+   $ip = explode(".", $ip);
+   if(count($ip) == 4) {
+      $ip[0] = $ip[1] = 'x';
+
+      $ip = implode(".", $ip);
+   }
+
+   return $ip;
+}
+
+
+function get_ldap_attribute_names($ldap_type = '') {
+
+   $ldap_mail_attr = LDAP_MAIL_ATTR;
+   $ldap_account_objectclass = LDAP_ACCOUNT_OBJECTCLASS;
+   $ldap_distributionlist_attr = LDAP_DISTRIBUTIONLIST_ATTR;
+   $ldap_distributionlist_objectclass = LDAP_DISTRIBUTIONLIST_OBJECTCLASS;
+
+   switch ($ldap_type) {
+
+            case 'AD':
+                       $ldap_mail_attr = 'proxyAddresses';
+                       $ldap_account_objectclass = 'user';
+                       $ldap_distributionlist_attr = 'member';
+                       $ldap_distributionlist_objectclass = 'group';
+                       break;
+
+            case 'zimbra':
+                       $ldap_mail_attr = 'mail';
+                       $ldap_account_objectclass = 'zimbraAccount';
+                       $ldap_distributionlist_attr = 'zimbraMailForwardingAddress';
+                       $ldap_distributionlist_objectclass = 'zimbraDistributionList';
+                       break;
+
+            case 'iredmail':
+                       $ldap_mail_attr = 'mail';
+                       $ldap_account_objectclass = 'mailUser';
+                       $ldap_distributionlist_attr = 'memberOfGroup';
+                       $ldap_distributionlist_objectclass = 'mailList';
+                       break;
+
+            case 'lotus':
+                       $ldap_mail_attr = 'mail';
+                       $ldap_account_objectclass = 'dominoPerson';
+                       $ldap_distributionlist_attr = 'mail';
+                       $ldap_distributionlist_objectclass = 'dominoGroup';
+                       break;
+
+
+   }
+
+   return array($ldap_mail_attr, $ldap_account_objectclass, $ldap_distributionlist_attr, $ldap_distributionlist_objectclass);
 }
 
 

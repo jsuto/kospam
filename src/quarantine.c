@@ -37,7 +37,7 @@ int store_file_to_quarantine(char *filename, struct __config *cfg){
       *p2 = '/';
       rc = mkdir(s, 0755);
       *p1 = '/';
-      rc = mkdir(s, 0770); if(rc == -1) syslog(LOG_PRIORITY, "%s: mkdir %s: error=%s", filename, s, strerror(errno));
+      rc = mkdir(s, 0755); if(rc == -1) syslog(LOG_PRIORITY, "%s: mkdir %s: error=%s", filename, s, strerror(errno));
    }
 
    *p0 = '/';

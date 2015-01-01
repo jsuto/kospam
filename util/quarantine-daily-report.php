@@ -103,7 +103,37 @@ Registry::set('admin_user', 0);
 
 foreach ($users as $user) {
 
-   if($verbose) { print $user['username'] . "\n"; }
+   if(ENABLE_LDAP_AUTH == 1) {
+      if(strlen($user["dn"]) < 5 || !strstr($user["dn"], "OU") ) { continue; }
+
+      $basedn = strstr($user['dn'], "OU");
+
+      $ldap_mail_attr = LDAP_MAIL_ATTR;
+      if($ldap_mail_attr == 'proxyAddresses') { $ldap_mail_attr = "proxyaddresses=smtp:"; }
+
+      $query = $ldap->query($user['dn'], "(|(mail=" . $user['email'] . ")($ldap_mail_attr" . $user['email'] . "))", array("objectclass", "mail", "mailalternateaddress", "proxyaddresses", "zimbraMailForwardingAddress") );
+
+      if(!isset($query->row["objectclass"])) { continue; }
+
+      $send_report = 0;
+
+      for($i=0; $i<$query->row["objectclass"]["count"]; $i++) {
+         if($query->row["objectclass"][$i] == "user") { $send_report = 1; }
+      }
+
+      if($send_report == 0) {
+         continue;
+      }
+
+      /*
+       * TODO:
+       *
+       * check if this account is a list address, and if so, then skip it
+       */
+
+
+   }
+
 
    $session->set("username", $user['username']);
    $session->set("uid", $user['uid']);
@@ -148,14 +178,10 @@ foreach ($users as $user) {
       }
    }
    else {
-      print_r($all_ids);
-      print EOL;
+      print $user['username'] . ", count=$n ($all_ids)". EOL;
    }
 
 }
-
-
-if($verbose) { print "$text_total/$text_failed: $total_notifications/$failed_notifications\n"; }
 
 
 function display_help() {

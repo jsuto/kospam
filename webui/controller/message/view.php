@@ -31,6 +31,9 @@ class ControllerMessageView extends Controller {
          $this->data['id'] = $this->request->post['id'];
          $this->data['search'] = $this->request->post['search'];
       }
+      else if(isset($this->request->get['id'])) {
+         $this->data['id'] = $this->request->get['id'];
+      }
 
       if(substr($this->data['id'], 0, 1) == 'a') {
          $this->template = "message/auto.tpl";

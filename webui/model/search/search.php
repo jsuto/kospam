@@ -25,7 +25,7 @@ class ModelSearchSearch extends Model {
       AUDIT(ACTION_SEARCH, '', '', 0, $s);
 
 
-      if($data['sort'] == "sent") { $sort = "sent"; }
+      if($data['sort'] == "ts") { $sort = "ts"; }
       if($data['sort'] == "size") { $sort = "size"; }
       if($data['sort'] == "from") { $sort = "from"; }
       if($data['sort'] == "subj") { $sort = "subject"; }

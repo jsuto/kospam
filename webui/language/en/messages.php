@@ -479,4 +479,12 @@ $_['text_ldap_delete_confirm_message'] = 'Do you wish to delete the LDAP entry';
 $_['text_customer_delete_confirm_message'] = 'Do you wish to delete the customer';
 $_['text_with_selected'] = 'With Selected';
 
+$_['text_quarantine_digest_for1'] = 'Quarantine digest for';
+$_['text_quarantine_digest_for2'] = '';
+$_['text_withheld'] = 'Withheld';
+$_['text_from_your_mailbox'] = 'from your mailbox in accordance with current email policy.';
+$_['text_q_digest_1'] = 'Please manage your messages regularlay as they are held for a limited time after which they are automatically deleted.';
+$_['text_q_digest_2'] = 'Note: Some subject lines may contain profane or offensive content.';
+
+
 ?>

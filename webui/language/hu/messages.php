@@ -279,6 +279,7 @@ $_['text_recipient'] = "Címzett";
 $_['text_ref'] = "Hivatkozás";
 $_['text_refresh_period'] = "Frissítési periódus";
 $_['text_refresh_qr_code'] = "QR kód frissítése";
+$_['text_relay'] = "Relay";
 $_['text_relay_details'] = "Relay részletek";
 $_['text_relay_status'] = "Relay státusz";
 $_['text_remove'] = "Törlés";
@@ -479,5 +480,12 @@ $_['text_group_delete_confirm_message'] = 'Törölni akarja a csoportot';
 $_['text_ldap_delete_confirm_message'] = 'Törölni akarja az LDAP bejegyzést';
 $_['text_customer_delete_confirm_message'] = 'Törölni akarja az ügyfelet';
 $_['text_with_selected'] = 'Kiválasztott levelek';
+
+$_['text_quarantine_digest_for1'] = 'Napi karantén riport';
+$_['text_quarantine_digest_for2'] = 'számára';
+$_['text_withheld'] = 'A karanténban visszatartásra került';
+$_['text_from_your_mailbox'] = 'a jelenlegi email házirendnek megfelelően.';
+$_['text_q_digest_1'] = 'Kérjük, hogy rendszeresen nézze át a karantént, mert ott csak korlátozott ideig kerülnek megőrzésre a levelek, azután automatikusan törlődnek.';
+$_['text_q_digest_2'] = 'Figyelem: Bizonyos levelek tárgysora aggresszív üzenetet tartalmazhat!';
 
 ?>

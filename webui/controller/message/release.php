@@ -59,7 +59,11 @@ class ControllerMessageRelease extends Controller {
 
          $train_message = $this->model_mail_mail->message_as_rfc822_attachment($this->data['clapf_id'], $session->get("email"), $train_address, $message);
 
-         $rc = $this->model_mail_mail->send_smtp_email(CLAPF_HOST, CLAPF_PORT, SMTP_DOMAIN, $session->get("email"), array($train_address), $train_message);
+         if(DEMO_MODE == 0) {
+            $rc = $this->model_mail_mail->send_smtp_email(CLAPF_HOST, CLAPF_PORT, SMTP_DOMAIN, $session->get("email"), array($train_address), $train_message);
+         } else {
+            $rc = 1;
+         }
 
          if($rc == 1) {
             $this->model_search_search->hide_message($this->data['id']);
@@ -75,7 +79,7 @@ class ControllerMessageRelease extends Controller {
 
             array_push($rcpt, $session->get("email"));
 
-            $this->deliver_message($message, $rcpt);
+            if(DEMO_MODE == 0) { $this->deliver_message($message, $rcpt); }
          }
 
       }

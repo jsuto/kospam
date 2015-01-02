@@ -83,7 +83,7 @@ create table if not exists history (
    `relay` varchar(64) default null,
    `status` varchar(64) default null,
    `hidden` tinyint default 0,
-   primary key (`id`)
+   key (`id`)
 ) ENGINE=InnoDB PARTITION BY RANGE (ts) ( PARTITION p0 VALUES LESS THAN (1) );
 
 create index history_idx1 on history(clapf_id);

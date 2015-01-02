@@ -72,6 +72,8 @@ void is_sender_on_minefield(struct session_data *sdata, struct __data *data, cha
 int inject_mail(struct session_data *sdata, int msg, char *spaminessbuf, char *buf, struct __config *cfg);
 
 int write_history(struct session_data *sdata, struct __state *state, struct __data *data, char *status, struct __config *cfg);
+int create_partition(struct __config *cfg);
+int drop_partition(struct __config *cfg);
 
 void check_rbl_lists(struct session_data *sdata, struct __state *state, char *domainlist, struct __config *cfg);
 

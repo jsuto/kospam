@@ -86,3 +86,51 @@ int write_history(struct session_data *sdata, struct __state *state, struct __da
 }
 
 
+int create_partition(struct __config *cfg){
+   int rc=ERR;
+   char buf[SMALLBUFSIZE];
+   struct tm *t;
+   struct session_data sdata;
+
+   init_session_data(&sdata, cfg);
+
+   t = localtime(&(sdata.now));
+
+   snprintf(buf, sizeof(buf)-1, "ALTER TABLE `%s` ADD PARTITION ( PARTITION p%d%02d%02d VALUES LESS THAN (%ld) )", SQL_HISTORY_TABLE, t->tm_year+1900, t->tm_mon+1, t->tm_mday, sdata.now + 86400);
+
+   if(open_database(&sdata, cfg) == OK){
+      syslog(LOG_PRIORITY, "partition query: %s", buf);
+      p_query(&sdata, buf);
+      close_database(&sdata);
+
+      rc = OK;
+   }
+
+   return rc;
+}
+
+
+int drop_partition(struct __config *cfg){
+   int rc=ERR;
+   char buf[SMALLBUFSIZE];
+   struct tm *t;
+   struct session_data sdata;
+
+   init_session_data(&sdata, cfg);
+
+   sdata.now -= 31*86400;
+   t = localtime(&(sdata.now));
+
+   snprintf(buf, sizeof(buf)-1, "ALTER TABLE `%s` DROP PARTITION p%d%02d%02d", SQL_HISTORY_TABLE, t->tm_year+1900, t->tm_mon+1, t->tm_mday);
+
+   if(open_database(&sdata, cfg) == OK){
+      syslog(LOG_PRIORITY, "partition query: %s", buf);
+      p_query(&sdata, buf);
+      close_database(&sdata);
+
+      rc = OK;
+   }
+
+   return rc;
+}
+

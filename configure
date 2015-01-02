@@ -4544,14 +4544,7 @@ fi
 echo; echo
 
 echo "run as user: $RUNNING_USER"
-echo "clapf data directory: $data_dir/clapf"
-
-if test "$have_static_build" = "yes"; then
-   echo "link mode: static"
-   static="-static"
-else
-   echo "link mode: dynamic"
-fi
+echo "clapf directory: $data_dir/clapf"
 
 echo
 
@@ -4631,7 +4624,7 @@ echo; echo
 
 CFLAGS="$static -O2 -Wall -g"
 LIBS="$antispam_libs $sunos_libs "
-OBJS="dirs.o misc.o counters.o cfg.o sig.o decoder.o hash.o tokenizer.o parser.o parser_utils.o session.o tai.o digest.o chi.o antispam.o spam.o buffer.o zombie.o train.o users.o policy.o black.o smtp.o quarantine.o rbl.o $objs"
+OBJS="dirs.o misc.o counters.o cfg.o sig.o decoder.o hash.o tokenizer.o parser.o parser_utils.o session.o tai.o digest.o chi.o antispam.o spam.o buffer.o zombie.o train.o users.o policy.o black.o smtp.o history.o rbl.o $objs"
 
 ac_config_files="$ac_config_files Makefile src/Makefile etc/Makefile init.d/Makefile util/Makefile"
 

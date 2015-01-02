@@ -84,7 +84,7 @@ create table if not exists history (
    `status` varchar(64) default null,
    `hidden` tinyint default 0,
    primary key (`id`)
-) ENGINE=InnoDB;
+) ENGINE=InnoDB PARTITION BY RANGE (ts) ( PARTITION p0 VALUES LESS THAN (1) );
 
 create index history_idx1 on history(clapf_id);
 create index history_idx2 on history(hidden);

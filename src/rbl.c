@@ -50,8 +50,8 @@ int is_host_on_rbl_lists(char *host, char *domainlist){
 }
 
 
-void check_rbl_lists(struct __state *state, char *domainlist, struct __config *cfg){
-   int i;
+int check_rbl_lists(struct __state *state, char *domainlist, struct __config *cfg){
+   int i, rc=0;
    char rbl_token[MAXVAL];
    struct node *q;
    struct timezone tz;
@@ -59,7 +59,7 @@ void check_rbl_lists(struct __state *state, char *domainlist, struct __config *c
 
    /* consult URL blacklists */
 
-   if(!domainlist) return;
+   if(!domainlist) return rc;
 
    gettimeofday(&tv1, &tz);
 
@@ -69,6 +69,7 @@ void check_rbl_lists(struct __state *state, char *domainlist, struct __config *c
 
          if(count_character_in_buffer(q->str+4, '.') > 0){
             if(is_host_on_rbl_lists(q->str+4, domainlist) > 0){
+               rc = 1;
                snprintf(rbl_token, sizeof(rbl_token)-1, "SURBL*%s", (char*)(q->str)+4);
                addnode(state->token_hash, rbl_token, REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
             }
@@ -79,5 +80,7 @@ void check_rbl_lists(struct __state *state, char *domainlist, struct __config *c
    }
 
    gettimeofday(&tv2, &tz);
+
+   return rc;
 }
 

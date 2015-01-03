@@ -75,7 +75,7 @@ int write_history(struct session_data *sdata, struct __state *state, struct __da
 int create_partition(struct __config *cfg);
 int drop_partition(struct __config *cfg);
 
-void check_rbl_lists(struct __state *state, char *domainlist, struct __config *cfg);
+int check_rbl_lists(struct __state *state, char *domainlist, struct __config *cfg);
 
 #endif /* _CLAPF_H */
 

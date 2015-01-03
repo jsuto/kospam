@@ -11,7 +11,7 @@
 #include <clapf.h>
 
 
-void store_minefield_ip(struct session_data *sdata, struct __data *data, char *ip, struct __config *cfg){
+void store_minefield_ip(struct session_data *sdata, struct __data *data, char *ip){
    if(prepare_sql_statement(sdata, &(data->stmt_insert_into_blackhole), SQL_PREPARED_STMT_INSERT_INTO_BLACKHOLE) == ERR) return;
 
    p_bind_init(data);
@@ -25,7 +25,7 @@ void store_minefield_ip(struct session_data *sdata, struct __data *data, char *i
 }
 
 
-void is_sender_on_minefield(struct session_data *sdata, struct __data *data, char *ip, struct __config *cfg){
+void is_sender_on_minefield(struct session_data *sdata, struct __data *data, char *ip){
    unsigned long ts=0;
 
    if(prepare_sql_statement(sdata, &(data->stmt_generic), SQL_PREPARED_STMT_QUERY_MINEFIELD) == ERR) return;

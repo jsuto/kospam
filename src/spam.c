@@ -197,7 +197,7 @@ double evaluate_tokens(struct session_data *sdata, struct __state *state, struct
 
    /* if we are still unsure, consult blacklists */
 
-   check_rbl_lists(sdata, state, cfg->surbl_domain, cfg);
+   check_rbl_lists(state, cfg->surbl_domain, cfg);
 
    spaminess = get_spam_probability(state->token_hash, &n_tokens, cfg);
    if(cfg->debug == 1) printf("mix after blacklists: %.4f\n", spaminess);

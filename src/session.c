@@ -473,7 +473,7 @@ AFTER_PERIOD:
                       if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: we trapped %s on the blackhole", sdata.ttmpfile, sdata.rcptto[sdata.num_of_rcpt_to]);
 
                       gettimeofday(&tv1, &tz);
-                      store_minefield_ip(&sdata, data, sdata.ip, cfg);
+                      store_minefield_ip(&sdata, data, sdata.ip);
                       gettimeofday(&tv2, &tz);
                       sdata.__minefield = tvdiff(tv2, tv1);
                    }

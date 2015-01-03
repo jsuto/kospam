@@ -121,6 +121,7 @@ int check_spam(struct session_data *sdata, struct __state *state, struct __data 
 
    if(is_item_on_list(fromemail, sdata->blacklist, "") == 1){
       sdata->spaminess = 0.99;
+      syslog(LOG_PRIORITY, "%s: sender (%s) found on blacklist", sdata->ttmpfile, fromemail);
       return DISCARD;
    }
 
@@ -130,7 +131,7 @@ int check_spam(struct session_data *sdata, struct __state *state, struct __data 
     */
 
    gettimeofday(&tv1, &tz);
-   is_sender_on_minefield(sdata, data, sdata->ip, cfg);
+   is_sender_on_minefield(sdata, data, sdata->ip);
    gettimeofday(&tv2, &tz);
    sdata->__minefield += tvdiff(tv2, tv1);
 
@@ -139,7 +140,7 @@ int check_spam(struct session_data *sdata, struct __state *state, struct __data 
     * run zombie test
     */
 
-   check_zombie_sender(sdata, data, state, cfg);
+   check_zombie_sender(sdata, data, state, my_cfg);
 
    if(sdata->tre == '+'){
       sdata->spaminess = 0.99;

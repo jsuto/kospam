@@ -50,7 +50,7 @@ int is_host_on_rbl_lists(char *host, char *domainlist){
 }
 
 
-void check_rbl_lists(struct session_data *sdata, struct __state *state, char *domainlist, struct __config *cfg){
+void check_rbl_lists(struct __state *state, char *domainlist, struct __config *cfg){
    int i;
    char rbl_token[MAXVAL];
    struct node *q;

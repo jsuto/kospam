@@ -66,8 +66,8 @@ void zombie_init(struct __data *data, struct __config *cfg);
 void check_zombie_sender(struct session_data *sdata, struct __data *data, struct __state *state, struct __config *cfg);
 void zombie_free(struct __data *data);
 
-void store_minefield_ip(struct session_data *sdata, struct __data *data, char *ip, struct __config *cfg);
-void is_sender_on_minefield(struct session_data *sdata, struct __data *data, char *ip, struct __config *cfg);
+void store_minefield_ip(struct session_data *sdata, struct __data *data, char *ip);
+void is_sender_on_minefield(struct session_data *sdata, struct __data *data, char *ip);
 
 int inject_mail(struct session_data *sdata, int msg, char *spaminessbuf, char *buf, struct __config *cfg);
 
@@ -75,7 +75,7 @@ int write_history(struct session_data *sdata, struct __state *state, struct __da
 int create_partition(struct __config *cfg);
 int drop_partition(struct __config *cfg);
 
-void check_rbl_lists(struct session_data *sdata, struct __state *state, char *domainlist, struct __config *cfg);
+void check_rbl_lists(struct __state *state, char *domainlist, struct __config *cfg);
 
 #endif /* _CLAPF_H */
 

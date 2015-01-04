@@ -31,6 +31,7 @@ all:
 
 install:
 	if [ ! -f "$(DESTDIR)$(sysconfdir)/clapf.conf" ]; then $(INSTALL) -m 0640 -g $(RUNNING_GROUP) $(srcdir)/clapf.conf $(DESTDIR)$(sysconfdir)/clapf.conf; fi
+	$(INSTALL) -m 0644 -g $(RUNNING_GROUP) $(srcdir)/clapf.conf $(DESTDIR)$(sysconfdir)/clapf.conf.dist
 	$(INSTALL) -m 0644 -g $(RUNNING_GROUP) $(srcdir)/sphinx.conf.in $(DESTDIR)$(sysconfdir)/sphinx.conf.dist
 
 clean:

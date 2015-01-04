@@ -40,7 +40,7 @@ int is_host_on_rbl_lists(char *host, char *domainlist){
 
    p = domainlist;
    do {
-      p = split(p, ' ', domain, sizeof(domain)-1, &result);
+      p = split(p, ',', domain, sizeof(domain)-1, &result);
 
       if(is_host_on_rbl(host, domain) == 1) return 1;
 

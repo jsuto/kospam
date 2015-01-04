@@ -100,7 +100,6 @@ struct __config {
 
    char clapf_header_field[MAXVAL];
    char clapf_spam_header_field[MAXVAL];
-   char clapf_possible_spam_header_field[MAXVAL];
 
    int max_message_size_to_filter;
    int max_number_of_tokens_to_filter;

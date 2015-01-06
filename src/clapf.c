@@ -60,9 +60,11 @@ static void takesig(int sig){
 
    switch(sig){
         case SIGALRM:
-                create_partition(&cfg);
-                drop_partition(&cfg);
-                alarm(PARTITION_MGMT_INTERVAL);
+                if(cfg.history == 0){
+                   create_partition(&cfg);
+                   drop_partition(&cfg);
+                   alarm(PARTITION_MGMT_INTERVAL);
+                }
                 break;
 
         case SIGHUP:
@@ -412,7 +414,7 @@ int main(int argc, char **argv){
 
    if(drop_privileges(pwd)) fatal(ERR_SETUID);
 
-   create_partition(&cfg);
+   if(cfg.history == 0) create_partition(&cfg);
 
    syslog(LOG_PRIORITY, "%s %s, build %d starting", PROGNAME, VERSION, get_build());
 
@@ -430,9 +432,12 @@ int main(int argc, char **argv){
    set_signal_handler(SIGTERM, takesig);
    set_signal_handler(SIGKILL, takesig);
    set_signal_handler(SIGHUP, takesig);
-   set_signal_handler(SIGALRM, takesig);
 
-   alarm(PARTITION_MGMT_INTERVAL);
+   if(cfg.history == 0){
+      set_signal_handler(SIGALRM, takesig);
+      alarm(PARTITION_MGMT_INTERVAL);
+   }
+
 
    for(;;){ sleep(1); }
 

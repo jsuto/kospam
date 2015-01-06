@@ -278,7 +278,7 @@ int handle_smtp_session(int new_sd, struct __data *data, struct __config *cfg){
 
 
                if(sdata.training_request == 0){
-                  if(!write_history(&sdata, &state, inject_resp, &my_cfg)) syslog(LOG_PRIORITY, "%s: error: could not insert to history", sdata.ttmpfile);
+                  if(write_history(&sdata, &state, inject_resp, &my_cfg) != OK) syslog(LOG_PRIORITY, "%s: error: failed inserting to history", sdata.ttmpfile);
                }
 
                unlink(sdata.ttmpfile);

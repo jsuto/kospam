@@ -11,6 +11,7 @@
 #include <time.h>
 #include <syslog.h>
 #include <unistd.h>
+#include <zlib.h>
 #include <errno.h>
 #include <clapf.h>
 
@@ -52,12 +53,10 @@ int store_file_to_quarantine(char *filename, struct __config *cfg){
 }
 
 
-int write_history(struct session_data *sdata, struct __state *state, char *status, struct __config *cfg){
-   int i, rc = 0; 
+int write_history_to_sql(struct session_data *sdata, struct __state *state, char *status, struct __config *cfg){
+   int i, rc=ERR;
    char relay[SMALLBUFSIZE];
    struct sql sql;
-
-   if(cfg->store_emails == 1 && (cfg->store_only_spam == 0 || sdata->spaminess < cfg->spam_overall_limit) ) store_file_to_quarantine(sdata->ttmpfile, cfg);
 
    if(prepare_sql_statement(sdata, &sql, SQL_PREPARED_STMT_INSERT_INTO_HISTORY) == ERR) return rc;
 
@@ -77,13 +76,62 @@ int write_history(struct session_data *sdata, struct __state *state, char *statu
       sql.sql[sql.pos] = &relay[0]; sql.type[sql.pos] = TYPE_STRING; sql.pos++;
       sql.sql[sql.pos] = status; sql.type[sql.pos] = TYPE_STRING; sql.pos++;
 
-      if(p_exec_stmt(sdata, &sql) == OK) rc = 1;
+      if(p_exec_stmt(sdata, &sql) == OK) rc = OK;
    }
 
 
    close_prepared_statement(&sql);
 
    return rc;
+}
+
+
+int write_history_to_fs(struct session_data *sdata, struct __state *state, char *status, struct __config *cfg){
+   int i, rc=ERR, fd, len=0;
+   char tmpname[SMALLBUFSIZE], name[SMALLBUFSIZE], buf[SMALLBUFSIZE];
+   Bytef *z=NULL;
+   uLongf dstlen;
+
+   for(i=0; i<sdata->num_of_rcpt_to; i++){
+
+      snprintf(tmpname, sizeof(tmpname)-1, "%s/tmp/%s", HISTORY_DIR, sdata->ttmpfile);
+      snprintf(name, sizeof(name)-1, "%s/new/%s", HISTORY_DIR, sdata->ttmpfile);
+
+      snprintf(buf, sizeof(buf)-1, "%s%c%ld%c%s%c%s%c%d%c%d%c%d%c%s:%d%c%s%c%s", sdata->ttmpfile, DELIM, sdata->now, DELIM, sdata->fromemail, DELIM, sdata->rcptto[i], DELIM, sdata->tot_len, DELIM, state->n_attachments, DELIM, sdata->status, DELIM, cfg->smtp_addr, cfg->smtp_port, DELIM, status, DELIM, state->b_subject);
+
+      len = strlen(buf);
+      dstlen = compressBound(len);
+      z = malloc(dstlen);
+      if(!z) continue;
+
+      rc = compress(z, &dstlen, (const Bytef *)&buf[0], len);
+
+      fd = open(tmpname, O_CREAT|O_RDWR, S_IRUSR|S_IWUSR|S_IRGRP);
+      if(fd == -1){
+         syslog(LOG_PRIORITY, "%s: error: cannot open '%s'", sdata->ttmpfile, tmpname);
+      }
+      else {
+         write(fd, z, dstlen);
+         close(fd);
+
+         if(!rename(tmpname, name)) rc = OK;
+      }
+
+      free(z);
+   }
+
+   return rc;
+}
+
+
+int write_history(struct session_data *sdata, struct __state *state, char *status, struct __config *cfg){
+
+   if(cfg->store_emails == 1 && (cfg->store_only_spam == 0 || sdata->spaminess >= cfg->spam_overall_limit) ) store_file_to_quarantine(sdata->ttmpfile, cfg);
+
+   if(cfg->history == 0)
+      return write_history_to_sql(sdata, state, status, cfg);
+   else
+      return write_history_to_fs(sdata, state, status, cfg);
 }
 
 

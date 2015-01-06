@@ -20,6 +20,7 @@
 #define CONFIG_FILE CONFDIR "/clapf.conf"
 #define WORK_DIR DATADIR "/clapf/tmp"
 #define QUEUE_DIR DATADIR "/clapf/queue"
+#define HISTORY_DIR DATADIR "/clapf/history"
 
 #define SPAMINESS_HEADER_FIELD "X-Clapf-spamicity: "
 #define SPAM_HEADER_FIELD SPAMINESS_HEADER_FIELD "Yes"

@@ -36,6 +36,8 @@
 #define MSG_REFERENCES 10
 #define MSG_RECIPIENT 11
 
+#define DELIM ''
+
 #define PARTITION_MGMT_INTERVAL 1800
 
 #define MAXHASH 8171

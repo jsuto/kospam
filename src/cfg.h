@@ -46,6 +46,8 @@ struct __config {
    char workdir[MAXVAL];
    char queuedir[MAXVAL];
 
+   int history;
+
    int verbosity;
    char locale[MAXVAL];
 

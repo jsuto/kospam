@@ -76,6 +76,7 @@ struct _parse_rule config_parse_rules[] =
    { "exclusion_radius", "float", (void*) float_parser, offsetof(struct __config, exclusion_radius), "0.375", sizeof(float)},
    { "group_type", "integer", (void*) int_parser, offsetof(struct __config, group_type), "0", sizeof(int)},
    { "helper_timeout", "integer", (void*) int_parser, offsetof(struct __config, helper_timeout), "20", sizeof(int)},
+   { "history", "integer", (void*) int_parser, offsetof(struct __config, history), "0", sizeof(int)},
    { "hostid", "string", (void*) string_parser, offsetof(struct __config, hostid), HOSTID, MAXVAL-1},
    { "listen_addr", "string", (void*) string_parser, offsetof(struct __config, listen_addr), "127.0.0.1", MAXVAL-1},
    { "listen_port", "integer", (void*) int_parser, offsetof(struct __config, listen_port), "10025", sizeof(int)},

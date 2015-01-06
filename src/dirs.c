@@ -57,5 +57,11 @@ void check_and_create_directories(struct __config *cfg, uid_t uid, gid_t gid){
       *p = '/';
    }
 
+
+   createdir(HISTORY_DIR, uid, gid, 0700);
+   createdir(HISTORY_DIR "/tmp", uid, gid, 0700);
+   createdir(HISTORY_DIR "/new", uid, gid, 0700);
+
+
 }
 

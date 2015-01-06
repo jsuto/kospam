@@ -24,7 +24,7 @@ void createdir(char *path, uid_t uid, gid_t gid, mode_t mode){
             chown(path, uid, gid);
             syslog(LOG_PRIORITY, "created directory: *%s*", path);
          }
-         else syslog(LOG_PRIORITY, "could not create directory: *%s*", path);
+         else syslog(LOG_PRIORITY, "error: could not create directory '%s'", path);
       }
 
    }

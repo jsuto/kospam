@@ -268,13 +268,13 @@ int init_ssl(){
 
    data.ctx = SSL_CTX_new(TLSv1_server_method());
 
-   if(data.ctx == NULL){ syslog(LOG_PRIORITY, "SSL_CTX_new() failed"); return ERR; }
+   if(data.ctx == NULL){ syslog(LOG_PRIORITY, "error: SSL_CTX_new() failed"); return ERR; }
 
-   if(SSL_CTX_set_cipher_list(data.ctx, cfg.cipher_list) == 0){ syslog(LOG_PRIORITY, "failed to set cipher list: '%s'", cfg.cipher_list); return ERR; }
+   if(SSL_CTX_set_cipher_list(data.ctx, cfg.cipher_list) == 0){ syslog(LOG_PRIORITY, "error: failed to set cipher list: '%s'", cfg.cipher_list); return ERR; }
 
-   if(SSL_CTX_use_PrivateKey_file(data.ctx, cfg.pemfile, SSL_FILETYPE_PEM) != 1){ syslog(LOG_PRIORITY, "cannot load private key from %s", cfg.pemfile); return ERR; }
+   if(SSL_CTX_use_PrivateKey_file(data.ctx, cfg.pemfile, SSL_FILETYPE_PEM) != 1){ syslog(LOG_PRIORITY, "error: cannot load private key from %s", cfg.pemfile); return ERR; }
 
-   if(SSL_CTX_use_certificate_file(data.ctx, cfg.pemfile, SSL_FILETYPE_PEM) != 1){ syslog(LOG_PRIORITY, "cannot load certificate from %s", cfg.pemfile); return ERR; }
+   if(SSL_CTX_use_certificate_file(data.ctx, cfg.pemfile, SSL_FILETYPE_PEM) != 1){ syslog(LOG_PRIORITY, "error: cannot load certificate from %s", cfg.pemfile); return ERR; }
 
    return OK;
 }
@@ -320,7 +320,7 @@ void initialise_configuration(){
 #endif
 
    if(open_database(&sdata, &cfg) == ERR){
-      syslog(LOG_PRIORITY, "cannot connect to mysql server");
+      syslog(LOG_PRIORITY, "error: cannot connect to mysql server");
       return;
    }
 

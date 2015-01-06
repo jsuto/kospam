@@ -214,7 +214,7 @@ void do_training(struct session_data *sdata, struct __state *state, char *email,
     */
 
    if(sdata->clapf_id[0] == '\0'){
-      syslog(LOG_PRIORITY, "%s: missing signature", sdata->ttmpfile);
+      syslog(LOG_PRIORITY, "%s: error: missing signature", sdata->ttmpfile);
       return;
    }
 
@@ -234,7 +234,7 @@ void do_training(struct session_data *sdata, struct __state *state, char *email,
    p_store_results(sdata, &sql);
 
    if(p_fetch_results(&sql) == ERR){
-      syslog(LOG_PRIORITY, "%s: invalid signature: %s", sdata->ttmpfile, sdata->clapf_id);
+      syslog(LOG_PRIORITY, "%s: error: invalid signature '%s'", sdata->ttmpfile, sdata->clapf_id);
       return;
    }
 

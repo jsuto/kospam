@@ -54,7 +54,7 @@ void p_bind_init(struct sql *sql){
 
 void p_query(struct session_data *sdata, char *s){
    if(mysql_real_query(&(sdata->mysql), s, strlen(s))){
-      syslog(LOG_PRIORITY, "%s: mysql_real_query() error: %s (errno: %d)", sdata->ttmpfile, mysql_error(&(sdata->mysql)), mysql_errno(&(sdata->mysql)));
+      syslog(LOG_PRIORITY, "%s: error: mysql_real_query() '%s' (errno: %d)", sdata->ttmpfile, mysql_error(&(sdata->mysql)), mysql_errno(&(sdata->mysql)));
    }
 }
 
@@ -114,13 +114,13 @@ int p_exec_stmt(struct session_data *sdata, struct sql *sql){
 
    if(mysql_stmt_bind_param(sql->stmt, bind)){
       sdata->sql_errno = mysql_stmt_errno(sql->stmt);
-      syslog(LOG_PRIORITY, "%s: mysql_stmt_bind_param() error: %s (errno: %d)", sdata->ttmpfile, mysql_stmt_error(sql->stmt), sdata->sql_errno);
+      syslog(LOG_PRIORITY, "%s: error: mysql_stmt_bind_param() '%s' (errno: %d)", sdata->ttmpfile, mysql_stmt_error(sql->stmt), sdata->sql_errno);
       goto CLOSE;
    }
 
    if(mysql_stmt_execute(sql->stmt)){
       sdata->sql_errno = mysql_stmt_errno(sql->stmt);
-      syslog(LOG_PRIORITY, "%s: mysql_stmt_execute error: *%s* (errno: %d)", sdata->ttmpfile, mysql_error(&(sdata->mysql)), sdata->sql_errno);
+      syslog(LOG_PRIORITY, "%s: error: mysql_stmt_execute() '%s' (errno: %d)", sdata->ttmpfile, mysql_error(&(sdata->mysql)), sdata->sql_errno);
       goto CLOSE;
    }
 
@@ -219,12 +219,12 @@ int prepare_sql_statement(struct session_data *sdata, struct sql *sql, char *s){
 
    sql->stmt = mysql_stmt_init(&(sdata->mysql));
    if(!(sql->stmt)){
-      syslog(LOG_PRIORITY, "%s: mysql_stmt_init() error", sdata->ttmpfile);
+      syslog(LOG_PRIORITY, "%s: error: mysql_stmt_init()", sdata->ttmpfile);
       return ERR;
    }
 
    if(mysql_stmt_prepare(sql->stmt, s, strlen(s))){
-      syslog(LOG_PRIORITY, "%s: mysql_stmt_prepare() error: %s => sql: %s", sdata->ttmpfile, mysql_stmt_error(sql->stmt), s);
+      syslog(LOG_PRIORITY, "%s: error: mysql_stmt_prepare() %s => sql: %s", sdata->ttmpfile, mysql_stmt_error(sql->stmt), s);
       return ERR;
    }
 

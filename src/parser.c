@@ -30,7 +30,7 @@ struct __state parse_message(struct session_data *sdata, int take_into_pieces, s
 
    f = fopen(sdata->filename, "r");
    if(!f){
-      syslog(LOG_PRIORITY, "%s: cannot open", sdata->ttmpfile);
+      syslog(LOG_PRIORITY, "%s: error: cannot open", sdata->ttmpfile);
       return state;
    }
 

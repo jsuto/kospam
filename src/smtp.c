@@ -211,12 +211,12 @@ int inject_mail(struct session_data *sdata, int msg, char *spaminessbuf, char *b
 
 
    if(cfg->smtp_addr == NULL || cfg->smtp_port <= 0){
-      syslog(LOG_PRIORITY, "%s: ERR: invalid smtp address (%s) or port (%d)", sdata->ttmpfile, cfg->smtp_addr, cfg->smtp_port);
+      syslog(LOG_PRIORITY, "%s: error: invalid smtp address (%s) or port (%d)", sdata->ttmpfile, cfg->smtp_addr, cfg->smtp_port);
       return ERR_INJECT;
    }
 
    if((psd = socket(AF_INET, SOCK_STREAM, 0)) == -1){
-      syslog(LOG_PRIORITY, "%s: ERR: create socket", sdata->ttmpfile);
+      syslog(LOG_PRIORITY, "%s: error: create socket", sdata->ttmpfile);
       return ERR_INJECT;
    }
 
@@ -227,7 +227,7 @@ int inject_mail(struct session_data *sdata, int msg, char *spaminessbuf, char *b
    bzero(&(postfix_addr.sin_zero), 8);
 
    if(connect(psd, (struct sockaddr *)&postfix_addr, sizeof(struct sockaddr)) == -1){
-      syslog(LOG_PRIORITY, "%s: ERR: connect to %s %d", sdata->ttmpfile, cfg->smtp_addr, cfg->smtp_port);
+      syslog(LOG_PRIORITY, "%s: error: connect to %s %d", sdata->ttmpfile, cfg->smtp_addr, cfg->smtp_port);
       return ERR_INJECT;
    }
 

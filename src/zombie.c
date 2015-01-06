@@ -36,7 +36,7 @@ void zombie_init(struct __data *data, struct __config *cfg){
                data->n_regex++;
             }
             else
-               syslog(LOG_PRIORITY, "failed to compile: %s", buf);
+               syslog(LOG_PRIORITY, "error: failed to compile '%s'", buf);
          }
 
          if(data->n_regex == NUM_OF_REGEXES-1) break;
@@ -44,7 +44,7 @@ void zombie_init(struct __data *data, struct __config *cfg){
       }
       fclose(f);
    }
-   else syslog(LOG_PRIORITY, "cannot open: %s", ZOMBIE_NET_REGEX);
+   else syslog(LOG_PRIORITY, "error: cannot open '%s'", ZOMBIE_NET_REGEX);
 }
 
 

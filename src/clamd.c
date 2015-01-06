@@ -33,12 +33,12 @@ int clamd_scan(char *tmpfile, char *engine, char *avinfo, struct __config *cfg){
    server.sun_family = AF_UNIX;
 
    if((s = socket(AF_UNIX, SOCK_STREAM, 0)) == -1){
-      syslog(LOG_PRIORITY, "ERR: create socket");
+      syslog(LOG_PRIORITY, "%s: error: create socket", tmpfile);
       return AV_ERROR;
    }
 
    if(connect(s, (struct sockaddr *)&server, strlen(server.sun_path) + sizeof (server.sun_family)) == -1){
-      syslog(LOG_PRIORITY, "CLAMD ERR: connect to %s", cfg->clamd_socket);
+      syslog(LOG_PRIORITY, "%s: error: cannot connect to clamd (%s)", tmpfile, cfg->clamd_socket);
       return AV_ERROR;
    }
 
@@ -97,18 +97,18 @@ int clamd_net_scan(char *tmpfile, char *engine, char *avinfo, struct __config *c
    hints.ai_socktype = SOCK_STREAM;
 
    if((rc = getaddrinfo(cfg->clamd_addr, port_string, &hints, &res)) != 0){
-      syslog(LOG_PRIORITY, "%s: getaddrinfo for '%s': %s\n", tmpfile, cfg->clamd_addr, gai_strerror(rc));
+      syslog(LOG_PRIORITY, "%s: error: getaddrinfo for '%s': %s\n", tmpfile, cfg->clamd_addr, gai_strerror(rc));
       return AV_ERROR;
    }
 
    if((psd = socket(res->ai_family, res->ai_socktype, res->ai_protocol)) == -1){
-      syslog(LOG_PRIORITY, "%s: ERR: create socket", tmpfile);
+      syslog(LOG_PRIORITY, "%s: error creating socket", tmpfile);
       ret = AV_ERROR;
       goto ENDE_CLAMD;
    }
 
    if(connect(psd, res->ai_addr, res->ai_addrlen) == -1){
-      syslog(LOG_PRIORITY, "%s: CLAMD ERR: connect to %s %d", tmpfile, cfg->clamd_addr, cfg->clamd_port);
+      syslog(LOG_PRIORITY, "%s: error: connect to %s/%d", tmpfile, cfg->clamd_addr, cfg->clamd_port);
       ret = AV_ERROR;
       goto ENDE_CLAMD;
    }

@@ -309,7 +309,7 @@ int get_random_bytes(unsigned char *buf, int len, unsigned char server_id){
    *(buf + 12) = server_id;
 
    if(readFromEntropyPool(fd, buf+12+1, len-12-1) != len-12-1){
-      syslog(LOG_PRIORITY, "%s: %s", ERR_CANNOT_READ_FROM_POOL, RANDOM_POOL);
+      syslog(LOG_PRIORITY, "%s: error: %s", ERR_CANNOT_READ_FROM_POOL, RANDOM_POOL);
    }
 
    close(fd);
@@ -450,7 +450,7 @@ void write_pid_file(char *pidfile){
       fprintf(f, "%d", (int)getpid());
       fclose(f);
    }
-   else syslog(LOG_PRIORITY, "cannot write pidfile: %s", pidfile);
+   else syslog(LOG_PRIORITY, "error: cannot write pidfile '%s'", pidfile);
 }
 
 
@@ -543,7 +543,7 @@ int read_from_stdin(struct session_data *sdata){
 
    fd = open(sdata->ttmpfile, O_CREAT|O_EXCL|O_RDWR|O_TRUNC, S_IRUSR|S_IWUSR);
    if(fd == -1){
-      syslog(LOG_PRIORITY, "%s: cannot open ttmpfile", sdata->ttmpfile);
+      syslog(LOG_PRIORITY, "%s: error: open ttmpfile", sdata->ttmpfile);
       return rc;
    }
 
@@ -552,7 +552,7 @@ int read_from_stdin(struct session_data *sdata){
    }
 
    if(fsync(fd)){
-      syslog(LOG_PRIORITY, "%s: fsync() error", sdata->ttmpfile);
+      syslog(LOG_PRIORITY, "%s: error: fsync()", sdata->ttmpfile);
    }
    else rc = OK;
 

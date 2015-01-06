@@ -68,7 +68,7 @@ int handle_smtp_session(int new_sd, struct __data *data, struct __config *cfg){
       db_conn = 1;
    }
    else
-      syslog(LOG_PRIORITY, "%s", ERR_MYSQL_CONNECT);
+      syslog(LOG_PRIORITY, "error: %s", ERR_MYSQL_CONNECT);
 #endif
 
    if(db_conn == 0){
@@ -133,7 +133,7 @@ int handle_smtp_session(int new_sd, struct __data *data, struct __config *cfg){
                sdata.__acquire = tvdiff(tv2, tv1);
 
                if(rc){
-                  syslog(LOG_PRIORITY, "failed writing data: %s", sdata.ttmpfile);
+                  syslog(LOG_PRIORITY, "error: failed writing data: %s", sdata.ttmpfile);
 
                   if(cfg->server_mode == SMTP_MODE) k = 1; else k = sdata.num_of_rcpt_to;
 
@@ -278,7 +278,7 @@ int handle_smtp_session(int new_sd, struct __data *data, struct __config *cfg){
 
 
                if(sdata.training_request == 0){
-                  if(!write_history(&sdata, &state, inject_resp, &my_cfg)) syslog(LOG_PRIORITY, "%s: could not insert to history", sdata.ttmpfile);
+                  if(!write_history(&sdata, &state, inject_resp, &my_cfg)) syslog(LOG_PRIORITY, "%s: error: could not insert to history", sdata.ttmpfile);
                }
 
                unlink(sdata.ttmpfile);
@@ -409,9 +409,9 @@ AFTER_PERIOD:
                      smtp_state = SMTP_STATE_INIT;
 
                      continue;
-                  } syslog(LOG_PRIORITY, "%s: SSL_set_fd() failed", sdata.ttmpfile);
-               } syslog(LOG_PRIORITY, "%s: SSL_new() failed", sdata.ttmpfile);
-            } syslog(LOG_PRIORITY, "%s: SSL ctx is null!", sdata.ttmpfile);
+                  } syslog(LOG_PRIORITY, "%s: error: SSL_set_fd() failed", sdata.ttmpfile);
+               } syslog(LOG_PRIORITY, "%s: error: SSL_new() failed", sdata.ttmpfile);
+            } syslog(LOG_PRIORITY, "%s: error: SSL ctx is null!", sdata.ttmpfile);
 
 
             strncat(resp, SMTP_RESP_454_ERR_TLS_TEMP_ERROR, MAXBUFSIZE-1);
@@ -564,7 +564,7 @@ AFTER_PERIOD:
 
          /* by default send 502 command not implemented message */
 
-         syslog(LOG_PRIORITY, "%s: invalid command: *%s*", sdata.ttmpfile, buf);
+         syslog(LOG_PRIORITY, "%s: error: invalid command *%s*", sdata.ttmpfile, buf);
          strncat(resp, SMTP_RESP_502_ERR, MAXBUFSIZE-1);
       }
 
@@ -591,7 +591,7 @@ AFTER_PERIOD:
             }
             else {
                ERR_error_string_n(ERR_get_error(), ssl_error, SMALLBUFSIZE);
-               syslog(LOG_PRIORITY, "%s: SSL_accept() failed, rc=%d, errorcode: %d, error text: %s\n", sdata.ttmpfile, rc, SSL_get_error(data->ssl, rc), ssl_error);
+               syslog(LOG_PRIORITY, "%s: error: SSL_accept() failed, rc=%d, errorcode: %d, error text: %s\n", sdata.ttmpfile, rc, SSL_get_error(data->ssl, rc), ssl_error);
             }
          }
       #endif

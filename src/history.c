@@ -163,7 +163,7 @@ int create_partition(struct __config *cfg){
 
 int drop_partition(struct __config *cfg){
    int rc=ERR;
-   char buf[SMALLBUFSIZE];
+   char buf[SMALLBUFSIZE], partition[TINYBUFSIZE];
    struct tm *t;
    struct session_data sdata;
 
@@ -172,9 +172,19 @@ int drop_partition(struct __config *cfg){
    sdata.now -= 31*86400;
    t = localtime(&(sdata.now));
 
-   snprintf(buf, sizeof(buf)-1, "ALTER TABLE `%s` DROP PARTITION p%d%02d%02d", SQL_HISTORY_TABLE, t->tm_year+1900, t->tm_mon+1, t->tm_mday);
+   snprintf(partition, sizeof(partition)-1, "p%d%02d%02d", t->tm_year+1900, t->tm_mon+1, t->tm_mday);
+
+   snprintf(buf, sizeof(buf)-1, "ALTER TABLE `%s` DROP PARTITION %s", SQL_HISTORY_TABLE, partition);
 
    if(open_database(&sdata, cfg) == OK){
+
+      if(is_existing_partition(&sdata, partition, cfg) > 0) return 1;
+
+      if(select_db(&sdata, cfg->mysqldb)){
+         syslog(LOG_PRIORITY, "error: cannot open db: '%s'", cfg->mysqldb);
+         return rc;
+      }
+
       if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "partition query: %s", buf);
       p_query(&sdata, buf);
       close_database(&sdata);

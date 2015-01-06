@@ -142,7 +142,7 @@ int create_partition(struct __config *cfg){
 
    if(open_database(&sdata, cfg) == OK){
 
-      if(is_existing_partition(&sdata, partition, cfg) > 0) return 1;
+      if(is_existing_partition(&sdata, partition, cfg) > 0) return rc;
 
       if(select_db(&sdata, cfg->mysqldb)){
          syslog(LOG_PRIORITY, "error: cannot open db: '%s'", cfg->mysqldb);
@@ -178,7 +178,7 @@ int drop_partition(struct __config *cfg){
 
    if(open_database(&sdata, cfg) == OK){
 
-      if(is_existing_partition(&sdata, partition, cfg) > 0) return 1;
+      if(is_existing_partition(&sdata, partition, cfg) <= 0) return rc;
 
       if(select_db(&sdata, cfg->mysqldb)){
          syslog(LOG_PRIORITY, "error: cannot open db: '%s'", cfg->mysqldb);

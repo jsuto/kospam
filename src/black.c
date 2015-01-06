@@ -11,46 +11,49 @@
 #include <clapf.h>
 
 
-void store_minefield_ip(struct session_data *sdata, struct __data *data, char *ip){
-   if(prepare_sql_statement(sdata, &(data->stmt_insert_into_blackhole), SQL_PREPARED_STMT_INSERT_INTO_BLACKHOLE) == ERR) return;
+void store_minefield_ip(struct session_data *sdata, char *ip){
+   struct sql sql;
 
-   p_bind_init(data);
+   if(prepare_sql_statement(sdata, &sql, SQL_PREPARED_STMT_INSERT_INTO_BLACKHOLE) == ERR) return;
 
-   data->sql[data->pos] = ip; data->type[data->pos] = TYPE_STRING; data->pos++;
-   data->sql[data->pos] = (char *)&(sdata->now); data->type[data->pos] = TYPE_LONG; data->pos++;
+   p_bind_init(&sql);
 
-   p_exec_query(sdata, data->stmt_insert_into_blackhole, data);
+   sql.sql[sql.pos] = ip; sql.type[sql.pos] = TYPE_STRING; sql.pos++;
+   sql.sql[sql.pos] = (char *)&(sdata->now); sql.type[sql.pos] = TYPE_LONG; sql.pos++;
 
-   mysql_stmt_close(data->stmt_insert_into_blackhole);
+   p_exec_stmt(sdata, &sql);
+
+   close_prepared_statement(&sql);
 }
 
 
-void is_sender_on_minefield(struct session_data *sdata, struct __data *data, char *ip){
+void is_sender_on_minefield(struct session_data *sdata, char *ip){
    unsigned long ts=0;
+   struct sql sql;
 
-   if(prepare_sql_statement(sdata, &(data->stmt_generic), SQL_PREPARED_STMT_QUERY_MINEFIELD) == ERR) return;
+   if(prepare_sql_statement(sdata, &sql, SQL_PREPARED_STMT_QUERY_MINEFIELD) == ERR) return;
 
-   p_bind_init(data);
+   p_bind_init(&sql);
 
-   data->sql[data->pos] = ip; data->type[data->pos] = TYPE_STRING; data->pos++;
+   sql.sql[sql.pos] = ip; sql.type[sql.pos] = TYPE_STRING; sql.pos++;
 
-   if(p_exec_query(sdata, data->stmt_generic, data) == ERR) goto ENDE;
+   if(p_exec_stmt(sdata, &sql) == ERR) goto ENDE;
 
-   p_bind_init(data);
+   p_bind_init(&sql);
 
-   data->sql[data->pos] = (char *)&ts; data->type[data->pos] = TYPE_LONG; data->len[data->pos] = sizeof(int); data->pos++;
+   sql.sql[sql.pos] = (char *)&ts; sql.type[sql.pos] = TYPE_LONG; sql.len[sql.pos] = sizeof(int); sql.pos++;
 
-   p_store_results(sdata, data->stmt_generic, data);
+   p_store_results(sdata, &sql);
 
-   if(p_fetch_results(data->stmt_generic) == OK){
+   if(p_fetch_results(&sql) == OK){
       sdata->trapped_client = 1;
       syslog(LOG_PRIORITY, "%s: %s is trapped on minefield", sdata->ttmpfile, ip);
    }
 
-   p_free_results(data->stmt_generic);
+   p_free_results(&sql);
 
 ENDE:
-   close_prepared_statement(data->stmt_generic);
+   close_prepared_statement(&sql);
 
 }
 

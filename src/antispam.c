@@ -56,7 +56,7 @@ int check_spam(struct session_data *sdata, struct __state *state, struct __data 
       /* get user from 'MAIL FROM:', 2008.10.25, SJ */
 
       gettimeofday(&tv1, &tz);
-      get_user_data_from_email(sdata, data, fromemail, cfg);
+      get_user_data_from_email(sdata, fromemail, cfg);
       gettimeofday(&tv2, &tz);
       sdata->__user += tvdiff(tv2, tv1);
 
@@ -71,15 +71,15 @@ int check_spam(struct session_data *sdata, struct __state *state, struct __data 
 
       if(sdata->name[0] == 0){
          gettimeofday(&tv1, &tz);
-         get_user_data_from_email(sdata, data, rcpttoemail, cfg);
+         get_user_data_from_email(sdata, rcpttoemail, cfg);
          gettimeofday(&tv2, &tz);
          sdata->__user += tvdiff(tv2, tv1);
       }
 
-      if(sdata->policy_group > 0) get_policy(sdata, data, cfg, my_cfg);
+      if(sdata->policy_group > 0) get_policy(sdata, cfg, my_cfg);
 
       gettimeofday(&tv1, &tz);
-      do_training(sdata, state, data, rcpttoemail, my_cfg);
+      do_training(sdata, state, rcpttoemail, my_cfg);
       gettimeofday(&tv2, &tz);
       sdata->__training += tvdiff(tv2, tv1);
 
@@ -101,12 +101,12 @@ int check_spam(struct session_data *sdata, struct __state *state, struct __data 
     * get per user settings and policy
     */
 
-   if(get_user_data_from_email(sdata, data, rcpttoemail, cfg) == 0){
+   if(get_user_data_from_email(sdata, rcpttoemail, cfg) == 0){
       p = strchr(rcpttoemail, '@');
-      if(p) get_user_data_from_email(sdata, data, p, cfg);
+      if(p) get_user_data_from_email(sdata, p, cfg);
    }
 
-   if(sdata->policy_group > 0) get_policy(sdata, data, cfg, my_cfg);
+   if(sdata->policy_group > 0) get_policy(sdata, cfg, my_cfg);
 
 
    /*
@@ -131,7 +131,7 @@ int check_spam(struct session_data *sdata, struct __state *state, struct __data 
     */
 
    gettimeofday(&tv1, &tz);
-   is_sender_on_minefield(sdata, data, sdata->ip);
+   is_sender_on_minefield(sdata, sdata->ip);
    gettimeofday(&tv2, &tz);
    sdata->__minefield += tvdiff(tv2, tv1);
 
@@ -236,7 +236,7 @@ int check_spam(struct session_data *sdata, struct __state *state, struct __data 
          strncat(sdata->spaminessbuf, tmpbuf, MAXBUFSIZE-1);
 
          gettimeofday(&tv1, &tz);
-         train_message(sdata, state, data, 1, is_spam, T_TOE, my_cfg);
+         train_message(sdata, state, 1, is_spam, T_TOE, my_cfg);
          gettimeofday(&tv2, &tz);
          sdata->__training = tvdiff(tv2, tv1);
       }
@@ -251,7 +251,7 @@ int check_spam(struct session_data *sdata, struct __state *state, struct __data 
          strncat(sdata->spaminessbuf, tmpbuf, MAXBUFSIZE-1);
 
          gettimeofday(&tv1, &tz);
-         train_message(sdata, state, data, MAX_ITERATIVE_TRAIN_LOOPS, 1, T_TOE, my_cfg);
+         train_message(sdata, state, MAX_ITERATIVE_TRAIN_LOOPS, 1, T_TOE, my_cfg);
          gettimeofday(&tv2, &tz);
          sdata->__training = tvdiff(tv2, tv1);
 

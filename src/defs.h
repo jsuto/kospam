@@ -36,6 +36,8 @@
 #define MSG_REFERENCES 10
 #define MSG_RECIPIENT 11
 
+#define PARTITION_MGMT_INTERVAL 1800
+
 #define MAXHASH 8171
 
 #define NUM_OF_REGEXES 30
@@ -294,15 +296,19 @@ struct __data {
    char starttls[TINYBUFSIZE];
    struct node *mydomains[MAXHASH];
 
-#ifdef NEED_MYSQL
-   MYSQL_STMT *stmt_generic;
-   MYSQL_STMT *stmt_insert_into_blackhole;
-   MYSQL_STMT *stmt_insert_into_history;
-   MYSQL_STMT *stmt_get_user_data;
-   MYSQL_STMT *stmt_get_policy;
-   MYSQL_STMT *stmt_get_training_signature;
+#ifdef HAVE_MEMCACHED
+   struct memcached_server memc;
 #endif
 
+   SSL_CTX *ctx;
+   SSL *ssl;
+};
+
+
+struct sql {
+#ifdef NEED_MYSQL
+   MYSQL_STMT *stmt;
+#endif
    char *sql[MAX_SQL_VARS];
    int type[MAX_SQL_VARS];
    int len[MAX_SQL_VARS];
@@ -310,13 +316,6 @@ struct __data {
    my_bool is_null[MAX_SQL_VARS];
    my_bool error[MAX_SQL_VARS];
    int pos;
-
-#ifdef HAVE_MEMCACHED
-   struct memcached_server memc;
-#endif
-
-   SSL_CTX *ctx;
-   SSL *ssl;
 };
 
 

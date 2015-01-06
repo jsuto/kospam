@@ -46,7 +46,7 @@ void check_and_create_directories(struct __config *cfg, uid_t uid, gid_t gid);
 void update_counters(struct session_data *sdata, struct __data *data, struct __counters *counters, struct __config *cfg);
 int update_token_timestamps(struct session_data *sdata, struct node *xhash[]);
 
-int get_policy(struct session_data *sdata, struct __data *data, struct __config *cfg, struct __config *my_cfg);
+int get_policy(struct session_data *sdata, struct __config *cfg, struct __config *my_cfg);
 
 int import_message(char *filename, struct session_data *sdata, struct __data *data, struct __config *cfg);
 int get_folder_id(struct session_data *sdata, struct __data *data, char *foldername, int parent_id);
@@ -56,8 +56,8 @@ int check_spam(struct session_data *sdata, struct __state *state, struct __data 
 float run_statistical_check(struct session_data *sdata, struct __state *state, struct __config *cfg);
 void add_penalties(struct session_data *sdata, struct __state *state, struct __config *cfg);
 
-int train_message(struct session_data *sdata, struct __state *state, struct __data *data, int rounds, int is_spam, int train_mode, struct __config *cfg);
-void do_training(struct session_data *sdata, struct __state *state, struct __data *data, char *email, struct __config *cfg);
+int train_message(struct session_data *sdata, struct __state *state, int rounds, int is_spam, int train_mode, struct __config *cfg);
+void do_training(struct session_data *sdata, struct __state *state, char *email, struct __config *cfg);
 
 int generate_tokens_from_string(struct __state *state, char *s, char *label);
 void tokenize(char *buf, struct __state *state, struct session_data *sdata, struct __data *data, struct __config *cfg);
@@ -66,12 +66,12 @@ void zombie_init(struct __data *data, struct __config *cfg);
 void check_zombie_sender(struct session_data *sdata, struct __data *data, struct __state *state, struct __config *cfg);
 void zombie_free(struct __data *data);
 
-void store_minefield_ip(struct session_data *sdata, struct __data *data, char *ip);
-void is_sender_on_minefield(struct session_data *sdata, struct __data *data, char *ip);
+void store_minefield_ip(struct session_data *sdata, char *ip);
+void is_sender_on_minefield(struct session_data *sdata, char *ip);
 
 int inject_mail(struct session_data *sdata, int msg, char *spaminessbuf, char *buf, struct __config *cfg);
 
-int write_history(struct session_data *sdata, struct __state *state, struct __data *data, char *status, struct __config *cfg);
+int write_history(struct session_data *sdata, struct __state *state, char *status, struct __config *cfg);
 int create_partition(struct __config *cfg);
 int drop_partition(struct __config *cfg);
 

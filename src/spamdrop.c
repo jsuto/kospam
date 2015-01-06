@@ -1,5 +1,5 @@
 /*
- * test.c, SJ
+ * spamdrop.c, SJ
  */
 
 #include <stdio.h>
@@ -181,9 +181,9 @@ int main(int argc, char **argv){
    if(recipient){
       if(cfg.debug == 1) printf("checking user data...\n");
 
-      if(get_user_data_from_email(&sdata, &data, recipient, &cfg) == 0){
+      if(get_user_data_from_email(&sdata, recipient, &cfg) == 0){
          p = strchr(recipient, '@');
-         if(p) get_user_data_from_email(&sdata, &data, p, &cfg);
+         if(p) get_user_data_from_email(&sdata, p, &cfg);
       }
 
       if(sdata.uid > 0 && cfg.debug == 1) printf("uid=%d, gid=%d, username='%s', domain='%s', policygroup=%d\n", sdata.uid, sdata.gid, sdata.name, sdata.domain, sdata.policy_group);
@@ -192,7 +192,7 @@ int main(int argc, char **argv){
    if(cfg.debug == 1) printf("policy id: %d\n", sdata.policy_group);
 
    if(sdata.policy_group > 0){
-      get_policy(&sdata, &data, &cfg, &my_cfg);
+      get_policy(&sdata, &cfg, &my_cfg);
       if(cfg.debug == 1) printf("policy settings: %d/%d/%d/%s/%d/%s/%.4f/%.4f/%d/%d/%d/%d/%d/%d/%d/%d/%s/%d\n", my_cfg.deliver_infected_email, my_cfg.silently_discard_infected_email, my_cfg.use_antispam, my_cfg.spam_subject_prefix, my_cfg.max_message_size_to_filter, my_cfg.surbl_domain, my_cfg.spam_overall_limit, my_cfg.spaminess_oblivion_limit, my_cfg.replace_junk_characters, my_cfg.penalize_images, my_cfg.penalize_embed_images, my_cfg.penalize_octet_stream, my_cfg.training_mode, my_cfg.store_emails, my_cfg.store_only_spam, my_cfg.message_from_a_zombie, my_cfg.smtp_addr, my_cfg.smtp_port);
    }
 
@@ -230,7 +230,7 @@ int main(int argc, char **argv){
 
       if(state.train_mode == T_TUM) train_mode=T_TUM;
 
-      train_message(&sdata, &state, &data, rounds, is_spam, train_mode, &my_cfg);
+      train_message(&sdata, &state, rounds, is_spam, train_mode, &my_cfg);
    }
 
    sdata.spaminess = run_statistical_check(&sdata, &state, &my_cfg);

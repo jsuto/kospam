@@ -11,42 +11,43 @@
 #include <clapf.h>
 
 
-struct __counters load_counters(struct session_data *sdata, struct __data *data, struct __config *cfg){
+struct __counters load_counters(struct session_data *sdata, struct __config *cfg){
    char buf[SMALLBUFSIZE];
    struct __counters counters;
+   struct sql sql;
 
    bzero(&counters, sizeof(counters));
 
    snprintf(buf, sizeof(buf)-1, "SELECT `rcvd`, `size`, `ham`, `spam`, `possible_spam`, `unsure`, `minefield`, `virus`, `fp`, `fn`, `zombie`, `mynetwork` FROM `%s`", SQL_COUNTER_TABLE);
 
-   if(prepare_sql_statement(sdata, &(data->stmt_generic), buf) == ERR) return counters;
+   if(prepare_sql_statement(sdata, &sql, buf) == ERR) return counters;
 
 
-   p_bind_init(data);
+   p_bind_init(&sql);
 
-   if(p_exec_query(sdata, data->stmt_generic, data) == OK){
+   if(p_exec_stmt(sdata, &sql) == OK){
 
-      p_bind_init(data);
+      p_bind_init(&sql);
 
-      data->sql[data->pos] = (char *)&counters.c_rcvd; data->type[data->pos] = TYPE_LONGLONG; data->len[data->pos] = sizeof(uint64); data->pos++;
-      data->sql[data->pos] = (char *)&counters.c_size; data->type[data->pos] = TYPE_LONGLONG; data->len[data->pos] = sizeof(uint64); data->pos++;
-      data->sql[data->pos] = (char *)&counters.c_ham; data->type[data->pos] = TYPE_LONGLONG; data->len[data->pos] = sizeof(uint64); data->pos++;
-      data->sql[data->pos] = (char *)&counters.c_spam; data->type[data->pos] = TYPE_LONGLONG; data->len[data->pos] = sizeof(uint64); data->pos++;
-      data->sql[data->pos] = (char *)&counters.c_possible_spam; data->type[data->pos] = TYPE_LONGLONG; data->len[data->pos] = sizeof(uint64); data->pos++;
-      data->sql[data->pos] = (char *)&counters.c_unsure; data->type[data->pos] = TYPE_LONGLONG; data->len[data->pos] = sizeof(uint64); data->pos++;
-      data->sql[data->pos] = (char *)&counters.c_minefield; data->type[data->pos] = TYPE_LONGLONG; data->len[data->pos] = sizeof(uint64); data->pos++;
-      data->sql[data->pos] = (char *)&counters.c_virus; data->type[data->pos] = TYPE_LONGLONG; data->len[data->pos] = sizeof(uint64); data->pos++;
-      data->sql[data->pos] = (char *)&counters.c_fp; data->type[data->pos] = TYPE_LONGLONG; data->len[data->pos] = sizeof(uint64); data->pos++;
-      data->sql[data->pos] = (char *)&counters.c_fn; data->type[data->pos] = TYPE_LONGLONG; data->len[data->pos] = sizeof(uint64); data->pos++;
-      data->sql[data->pos] = (char *)&counters.c_zombie; data->type[data->pos] = TYPE_LONGLONG; data->len[data->pos] = sizeof(uint64); data->pos++;
-      data->sql[data->pos] = (char *)&counters.c_mynetwork; data->type[data->pos] = TYPE_LONGLONG; data->len[data->pos] = sizeof(uint64); data->pos++;
+      sql.sql[sql.pos] = (char *)&counters.c_rcvd; sql.type[sql.pos] = TYPE_LONGLONG; sql.len[sql.pos] = sizeof(uint64); sql.pos++;
+      sql.sql[sql.pos] = (char *)&counters.c_size; sql.type[sql.pos] = TYPE_LONGLONG; sql.len[sql.pos] = sizeof(uint64); sql.pos++;
+      sql.sql[sql.pos] = (char *)&counters.c_ham; sql.type[sql.pos] = TYPE_LONGLONG; sql.len[sql.pos] = sizeof(uint64); sql.pos++;
+      sql.sql[sql.pos] = (char *)&counters.c_spam; sql.type[sql.pos] = TYPE_LONGLONG; sql.len[sql.pos] = sizeof(uint64); sql.pos++;
+      sql.sql[sql.pos] = (char *)&counters.c_possible_spam; sql.type[sql.pos] = TYPE_LONGLONG; sql.len[sql.pos] = sizeof(uint64); sql.pos++;
+      sql.sql[sql.pos] = (char *)&counters.c_unsure; sql.type[sql.pos] = TYPE_LONGLONG; sql.len[sql.pos] = sizeof(uint64); sql.pos++;
+      sql.sql[sql.pos] = (char *)&counters.c_minefield; sql.type[sql.pos] = TYPE_LONGLONG; sql.len[sql.pos] = sizeof(uint64); sql.pos++;
+      sql.sql[sql.pos] = (char *)&counters.c_virus; sql.type[sql.pos] = TYPE_LONGLONG; sql.len[sql.pos] = sizeof(uint64); sql.pos++;
+      sql.sql[sql.pos] = (char *)&counters.c_fp; sql.type[sql.pos] = TYPE_LONGLONG; sql.len[sql.pos] = sizeof(uint64); sql.pos++;
+      sql.sql[sql.pos] = (char *)&counters.c_fn; sql.type[sql.pos] = TYPE_LONGLONG; sql.len[sql.pos] = sizeof(uint64); sql.pos++;
+      sql.sql[sql.pos] = (char *)&counters.c_zombie; sql.type[sql.pos] = TYPE_LONGLONG; sql.len[sql.pos] = sizeof(uint64); sql.pos++;
+      sql.sql[sql.pos] = (char *)&counters.c_mynetwork; sql.type[sql.pos] = TYPE_LONGLONG; sql.len[sql.pos] = sizeof(uint64); sql.pos++;
 
-      p_store_results(sdata, data->stmt_generic, data);
-      p_fetch_results(data->stmt_generic);
-      p_free_results(data->stmt_generic);
+      p_store_results(sdata, &sql);
+      p_fetch_results(&sql);
+      p_free_results(&sql);
    }
 
-   close_prepared_statement(data->stmt_generic);
+   close_prepared_statement(&sql);
 
    return counters;
 }
@@ -113,7 +114,7 @@ void update_counters(struct session_data *sdata, struct __data *data, struct __c
       }
       else {
 
-         c = load_counters(sdata, data, cfg);
+         c = load_counters(sdata, cfg);
 
          snprintf(buf, sizeof(buf)-1, "%ld", sdata->now); memcached_add(&(data->memc), MEMCACHED_COUNTERS_LAST_UPDATE, strlen(MEMCACHED_COUNTERS_LAST_UPDATE), buf, strlen(buf), 0, 0);
 

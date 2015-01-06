@@ -23,6 +23,8 @@ int clamd_scan(char *tmpfile, char *engine, char *avinfo, struct __config *cfg){
    char *p, *q, buf[MAXBUFSIZE], scan_cmd[SMALLBUFSIZE];
    struct sockaddr_un server;
 
+   if(cfg->clamd_socket[0] == '\0') return AV_OK;
+
    memset(avinfo, 0, SMALLBUFSIZE);
 
    chmod(tmpfile, 0644);

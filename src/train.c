@@ -149,7 +149,7 @@ int introduce_tokens(struct session_data *sdata, struct __state *state, struct n
 }
 
 
-int train_message(struct session_data *sdata, struct __state *state, struct __data *data, int rounds, int is_spam, int train_mode, struct __config *cfg){
+int train_message(struct session_data *sdata, struct __state *state, int rounds, int is_spam, int train_mode, struct __config *cfg){
    int i=0, n=0, tm=train_mode;
 
    if(state->n_token <= 0) return 0;
@@ -202,8 +202,9 @@ int train_message(struct session_data *sdata, struct __state *state, struct __da
  * train this message
  */
 
-void do_training(struct session_data *sdata, struct __state *state, struct __data *data, char *email, struct __config *cfg){
+void do_training(struct session_data *sdata, struct __state *state, char *email, struct __config *cfg){
    int i, is_spam = 0, is_spam_q = 0;
+   struct sql sql;
 
    if(strcasestr(sdata->rcptto[0], "+spam@") || strncmp(email, "spam@", 5) == 0) is_spam = 1;
 
@@ -218,38 +219,38 @@ void do_training(struct session_data *sdata, struct __state *state, struct __dat
    }
 
 
-   if(prepare_sql_statement(sdata, &(data->stmt_get_training_signature), SQL_PREPARED_STMT_QUERY_TRAINING_ID) == ERR) return;
+   if(prepare_sql_statement(sdata, &sql, SQL_PREPARED_STMT_QUERY_TRAINING_ID) == ERR) return;
 
-   p_bind_init(data);
+   p_bind_init(&sql);
 
-   data->sql[data->pos] = sdata->clapf_id; data->type[data->pos] = TYPE_STRING; data->pos++;
+   sql.sql[sql.pos] = sdata->clapf_id; sql.type[sql.pos] = TYPE_STRING; sql.pos++;
 
-   if(p_exec_query(sdata, data->stmt_get_training_signature, data) == ERR) goto ENDE;
+   if(p_exec_stmt(sdata, &sql) == ERR) goto ENDE;
 
-   p_bind_init(data);
+   p_bind_init(&sql);
 
-   data->sql[data->pos] = (char *)&is_spam_q; data->type[data->pos] = TYPE_LONG; data->len[data->pos] = sizeof(int); data->pos++;
+   sql.sql[sql.pos] = (char *)&is_spam_q; sql.type[sql.pos] = TYPE_LONG; sql.len[sql.pos] = sizeof(int); sql.pos++;
 
-   p_store_results(sdata, data->stmt_get_training_signature, data);
+   p_store_results(sdata, &sql);
 
-   if(p_fetch_results(data->stmt_get_training_signature) == ERR){
+   if(p_fetch_results(&sql) == ERR){
       syslog(LOG_PRIORITY, "%s: invalid signature: %s", sdata->ttmpfile, sdata->clapf_id);
       return;
    }
 
-   p_free_results(data->stmt_get_training_signature);
+   p_free_results(&sql);
 
 
    // FIXME: fix sdata->gid = 0 in case of global training request
 
 
-   i = train_message(sdata, state, data, MAX_ITERATIVE_TRAIN_LOOPS, is_spam, state->train_mode, cfg);
+   i = train_message(sdata, state, MAX_ITERATIVE_TRAIN_LOOPS, is_spam, state->train_mode, cfg);
 
    syslog(LOG_PRIORITY, "%s: training %s in %d rounds", sdata->ttmpfile, sdata->clapf_id, i);
 
 
 ENDE:
-   close_prepared_statement(data->stmt_get_training_signature);
+   close_prepared_statement(&sql);
 
 }
 

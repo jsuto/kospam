@@ -13,9 +13,10 @@
 #include <clapf.h>
 
 
-int get_user_data_from_email(struct session_data *sdata, struct __data *data, char *email, struct __config *cfg){
+int get_user_data_from_email(struct session_data *sdata, char *email, struct __config *cfg){
    int rc=0;
    char *p, *q, tmpbuf[SMALLBUFSIZE];
+   struct sql sql;
 
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: query user data for %s", sdata->ttmpfile, email);
 
@@ -41,62 +42,63 @@ int get_user_data_from_email(struct session_data *sdata, struct __data *data, ch
    else snprintf(tmpbuf, sizeof(tmpbuf)-1, "%s", email);
 
 
-   if(prepare_sql_statement(sdata, &(data->stmt_get_user_data), SQL_PREPARED_STMT_QUERY_USER_DATA) == ERR) return rc;
+   if(prepare_sql_statement(sdata, &sql, SQL_PREPARED_STMT_QUERY_USER_DATA) == ERR) return rc;
 
-   p_bind_init(data);
+   p_bind_init(&sql);
 
-   data->sql[data->pos] = &tmpbuf[0]; data->type[data->pos] = TYPE_STRING; data->pos++;
+   sql.sql[sql.pos] = &tmpbuf[0]; sql.type[sql.pos] = TYPE_STRING; sql.pos++;
 
-   if(p_exec_query(sdata, data->stmt_get_user_data, data) == ERR) goto ENDE;
+   if(p_exec_stmt(sdata, &sql) == ERR) goto ENDE;
 
-   p_bind_init(data);
+   p_bind_init(&sql);
 
-   data->sql[data->pos] = (char *)&(sdata->uid); data->type[data->pos] = TYPE_LONG; data->pos++;
-   data->sql[data->pos] = (char *)&(sdata->gid); data->type[data->pos] = TYPE_LONG; data->pos++;
-   data->sql[data->pos] = &(sdata->name[0]); data->type[data->pos] = TYPE_STRING; data->len[data->pos] = SMALLBUFSIZE-1; data->pos++;
-   data->sql[data->pos] = &(sdata->domain[0]); data->type[data->pos] = TYPE_STRING; data->len[data->pos] = SMALLBUFSIZE-1; data->pos++;
-   data->sql[data->pos] = (char *)&(sdata->policy_group); data->type[data->pos] = TYPE_LONG; data->pos++;
+   sql.sql[sql.pos] = (char *)&(sdata->uid); sql.type[sql.pos] = TYPE_LONG; sql.pos++;
+   sql.sql[sql.pos] = (char *)&(sdata->gid); sql.type[sql.pos] = TYPE_LONG; sql.pos++;
+   sql.sql[sql.pos] = &(sdata->name[0]); sql.type[sql.pos] = TYPE_STRING; sql.len[sql.pos] = SMALLBUFSIZE-1; sql.pos++;
+   sql.sql[sql.pos] = &(sdata->domain[0]); sql.type[sql.pos] = TYPE_STRING; sql.len[sql.pos] = SMALLBUFSIZE-1; sql.pos++;
+   sql.sql[sql.pos] = (char *)&(sdata->policy_group); sql.type[sql.pos] = TYPE_LONG; sql.pos++;
 
-   p_store_results(sdata, data->stmt_get_user_data, data);
+   p_store_results(sdata, &sql);
 
-   if(p_fetch_results(data->stmt_get_user_data) == OK){
+   if(p_fetch_results(&sql) == OK){
       rc = 1;
 
       /* query white/black list data */
-      get_wbl_data(sdata, data, cfg);
+      get_wbl_data(sdata, cfg);
    }
 
-   p_free_results(data->stmt_get_user_data);
+   p_free_results(&sql);
 
 ENDE:
-   close_prepared_statement(data->stmt_get_user_data);
+   close_prepared_statement(&sql);
 
    return rc;
 }
 
 
-void get_wbl_data(struct session_data *sdata, struct __data *data, struct __config *cfg){
+void get_wbl_data(struct session_data *sdata, struct __config *cfg){
    char wh[MAXBUFSIZE], bl[MAXBUFSIZE];
+   struct sql sql;
 
    memset(sdata->whitelist, 0, MAXBUFSIZE);
    memset(sdata->blacklist, 0, MAXBUFSIZE);
 
-   if(prepare_sql_statement(sdata, &(data->stmt_generic), SQL_PREPARED_STMT_QUERY_WHITE_BLACK_LIST) == ERR) return;
+   if(prepare_sql_statement(sdata, &sql, SQL_PREPARED_STMT_QUERY_WHITE_BLACK_LIST) == ERR) return;
 
-   p_bind_init(data);
+   p_bind_init(&sql);
 
-   data->sql[data->pos] = (char *)&(sdata->uid); data->type[data->pos] = TYPE_LONG; data->pos++;
+   sql.sql[sql.pos] = (char *)&(sdata->uid); sql.type[sql.pos] = TYPE_LONG; sql.pos++;
 
-   if(p_exec_query(sdata, data->stmt_generic, data) == ERR) goto ENDE;
+   if(p_exec_stmt(sdata, &sql) == ERR) goto ENDE;
 
-   p_bind_init(data);
+   p_bind_init(&sql);
 
-   data->sql[data->pos] = &wh[0]; data->type[data->pos] = TYPE_STRING; data->len[data->pos] = sizeof(wh)-1; data->pos++;
-   data->sql[data->pos] = &bl[0]; data->type[data->pos] = TYPE_STRING; data->len[data->pos] = sizeof(bl)-1; data->pos++;
+   sql.sql[sql.pos] = &wh[0]; sql.type[sql.pos] = TYPE_STRING; sql.len[sql.pos] = sizeof(wh)-1; sql.pos++;
+   sql.sql[sql.pos] = &bl[0]; sql.type[sql.pos] = TYPE_STRING; sql.len[sql.pos] = sizeof(bl)-1; sql.pos++;
 
-   p_store_results(sdata, data->stmt_generic, data);
+   p_store_results(sdata, &sql);
 
-   while(p_fetch_results(data->stmt_generic) == OK){
+   while(p_fetch_results(&sql) == OK){
 
       if(strlen(sdata->whitelist) > 0) strncat(sdata->whitelist, "\n", MAXBUFSIZE-1);
       strncat(sdata->whitelist, wh, MAXBUFSIZE-1);
@@ -111,10 +113,10 @@ void get_wbl_data(struct session_data *sdata, struct __data *data, struct __conf
    replace_character_in_buffer(sdata->blacklist, '\r', ',');
    replace_character_in_buffer(sdata->blacklist, '\n', ',');
 
-   p_free_results(data->stmt_generic);
+   p_free_results(&sql);
 
 ENDE:
-   close_prepared_statement(data->stmt_generic);
+   close_prepared_statement(&sql);
 }
 
 

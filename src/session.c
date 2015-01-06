@@ -278,7 +278,7 @@ int handle_smtp_session(int new_sd, struct __data *data, struct __config *cfg){
 
 
                if(sdata.training_request == 0){
-                  if(!write_history(&sdata, &state, data, inject_resp, &my_cfg)) syslog(LOG_PRIORITY, "%s: could not insert to history", sdata.ttmpfile);
+                  if(!write_history(&sdata, &state, inject_resp, &my_cfg)) syslog(LOG_PRIORITY, "%s: could not insert to history", sdata.ttmpfile);
                }
 
                unlink(sdata.ttmpfile);
@@ -473,7 +473,7 @@ AFTER_PERIOD:
                       if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: we trapped %s on the blackhole", sdata.ttmpfile, sdata.rcptto[sdata.num_of_rcpt_to]);
 
                       gettimeofday(&tv1, &tz);
-                      store_minefield_ip(&sdata, data, sdata.ip);
+                      store_minefield_ip(&sdata, sdata.ip);
                       gettimeofday(&tv2, &tz);
                       sdata.__minefield = tvdiff(tv2, tv1);
                    }

@@ -15,6 +15,7 @@ int parse_line(char *buf, struct __state *state, struct session_data *sdata, int
 
 void init_state(struct __state *state);
 unsigned long parse_date_header(char *s, struct __config *cfg);
+long get_local_timezone_offset();
 int is_hex_number(char *p);
 int extract_boundary(char *p, struct __state *state);
 void fixupEncodedHeaderLine(char *buf, int buflen);

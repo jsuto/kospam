@@ -630,7 +630,7 @@ AFTER_PERIOD:
 
 QUITTING:
 
-   update_counters(&sdata, data, &counters, cfg);
+   if(cfg->history == 0) update_counters(&sdata, data, &counters, cfg);
 
 #ifdef NEED_MYSQL
    close_database(&sdata);

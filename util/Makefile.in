@@ -29,6 +29,7 @@ all:
 
 install:
 	$(INSTALL) -m 0755 $(srcdir)/quarantine-daily-report.php $(DESTDIR)$(libexecdir)/clapf
+	$(INSTALL) -m 0755 $(srcdir)/history-to-sql.php $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 $(srcdir)/indexer.main.sh $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0644 $(srcdir)/zombienets.regex $(DESTDIR)$(datarootdir)/clapf
 	$(INSTALL) -m 0644 $(srcdir)/db-mysql.sql $(DESTDIR)$(datarootdir)/clapf

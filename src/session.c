@@ -72,7 +72,7 @@ int handle_smtp_session(int new_sd, struct __data *data, struct __config *cfg){
 #endif
 
    if(db_conn == 0){
-      snprintf(buf, MAXBUFSIZE-1, SMTP_RESP_421_ERR_TMP, cfg->hostid);
+      snprintf(buf, sizeof(buf)-1, SMTP_RESP_421_ERR_TMP, cfg->hostid);
       send(new_sd, buf, strlen(buf), 0);
       return 0;
    }
@@ -81,15 +81,15 @@ int handle_smtp_session(int new_sd, struct __data *data, struct __config *cfg){
    gettimeofday(&tv1, &tz);
 
    if(cfg->server_mode == SMTP_MODE)
-      snprintf(buf, MAXBUFSIZE-1, SMTP_RESP_220_BANNER, cfg->hostid);
+      snprintf(buf, sizeof(buf)-1, SMTP_RESP_220_BANNER, cfg->hostid);
    else
-      snprintf(buf, MAXBUFSIZE-1, LMTP_RESP_220_BANNER, cfg->hostid);
+      snprintf(buf, sizeof(buf)-1, LMTP_RESP_220_BANNER, cfg->hostid);
 
 
    send(new_sd, buf, strlen(buf), 0);
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent: %s", sdata.ttmpfile, buf);
 
-   while((n = recvtimeoutssl(new_sd, puf, MAXBUFSIZE, TIMEOUT, sdata.tls, data->ssl)) > 0){
+   while((n = recvtimeoutssl(new_sd, puf, sizeof(puf), TIMEOUT, sdata.tls, data->ssl)) > 0){
          pos = 0;
 
          /* accept mail data */
@@ -98,12 +98,12 @@ int handle_smtp_session(int new_sd, struct __data *data, struct __config *cfg){
 
             /* join the last 2 buffer */
 
-            memset(last2buf, 0, 2*MAXBUFSIZE+1);
-            memcpy(last2buf, prevbuf, MAXBUFSIZE);
-            memcpy(last2buf+prevlen, puf, MAXBUFSIZE);
+            memset(last2buf, 0, sizeof(last2buf));
+            memcpy(last2buf, prevbuf, sizeof(prevbuf));
+            memcpy(last2buf+prevlen, puf, sizeof(puf));
 
 
-            pos = search_string_in_buffer(last2buf, 2*MAXBUFSIZE+1, SMTP_CMD_PERIOD, 5);
+            pos = search_string_in_buffer(last2buf, sizeof(last2buf), SMTP_CMD_PERIOD, 5);
             if(pos > 0){
 
 	       /* fix position */
@@ -141,7 +141,7 @@ int handle_smtp_session(int new_sd, struct __data *data, struct __config *cfg){
                      write1(new_sd, SMTP_RESP_421_ERR_WRITE_FAILED, strlen(SMTP_RESP_421_ERR_WRITE_FAILED), sdata.tls, data->ssl);
                   } 
 
-                  memset(puf, 0, MAXBUFSIZE);
+                  memset(puf, 0, sizeof(puf));
                   goto AFTER_PERIOD;
                }
 
@@ -249,7 +249,7 @@ int handle_smtp_session(int new_sd, struct __data *data, struct __config *cfg){
 
                   counters.c_rcvd++;
 
-                  snprintf(delay, SMALLBUFSIZE-1, "delay=%.2f, delays=%.2f/%.2f/%.2f/%.2f/%.2f/%.2f/%.2f/%.2f/%.2f/%.2f/%.2f", 
+                  snprintf(delay, sizeof(delay)-1, "delay=%.2f, delays=%.2f/%.2f/%.2f/%.2f/%.2f/%.2f/%.2f/%.2f/%.2f/%.2f/%.2f", 
                                (sdata.__acquire+sdata.__parsed+sdata.__av+sdata.__user+sdata.__policy+sdata.__minefield+sdata.__as+sdata.__training+sdata.__update+sdata.__store+sdata.__inject)/1000000.0,
                                    sdata.__acquire/1000000.0, sdata.__parsed/1000000.0, sdata.__av/1000000.0, sdata.__user/1000000.0, sdata.__policy/1000000.0, sdata.__minefield/1000000.0,
                                        sdata.__as/1000000.0, sdata.__training/1000000.0, sdata.__update/1000000.0, sdata.__store/1000000.0, sdata.__inject/1000000.0);
@@ -300,9 +300,9 @@ int handle_smtp_session(int new_sd, struct __data *data, struct __config *cfg){
 
                if(puf[n-2] != '\r' && puf[n-1] != '\n'){
                   memmove(puf, puf+pos, n-pos);
-                  memset(puf+n-pos, 0, MAXBUFSIZE-n+pos);
-                  i = recvtimeout(new_sd, buf, MAXBUFSIZE, TIMEOUT);
-                  strncat(puf, buf, MAXBUFSIZE-1-n+pos);
+                  memset(puf+n-pos, 0, sizeof(puf)-n+pos);
+                  i = recvtimeout(new_sd, buf, sizeof(buf), TIMEOUT);
+                  strncat(puf, buf, sizeof(puf)-1-n+pos);
                   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: partial read: %s", sdata.ttmpfile, puf);
                   pos = 0;
                }
@@ -324,21 +324,21 @@ AFTER_PERIOD:
 
       /* handle smtp commands */
 
-      memset(resp, 0, MAXBUFSIZE);
+      memset(resp, 0, sizeof(resp));
 
       p = &puf[pos];
 
-      while((p = split_str(p, "\r\n", buf, MAXBUFSIZE-1))){
+      while((p = split_str(p, "\r\n", buf, sizeof(buf)-1))){
          if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: got: %s", sdata.ttmpfile, buf);
 
 
          if(strncasecmp(buf, SMTP_CMD_EHLO, strlen(SMTP_CMD_EHLO)) == 0 || strncasecmp(buf, LMTP_CMD_LHLO, strlen(LMTP_CMD_LHLO)) == 0){
             if(smtp_state == SMTP_STATE_INIT) smtp_state = SMTP_STATE_HELO;
 
-            if(sdata.tls == 0) snprintf(buf, MAXBUFSIZE-1, SMTP_RESP_250_EXTENSIONS, cfg->hostid, data->starttls);
-            else snprintf(buf, MAXBUFSIZE-1, SMTP_RESP_250_EXTENSIONS, cfg->hostid, "");
+            if(sdata.tls == 0) snprintf(buf, sizeof(buf)-1, SMTP_RESP_250_EXTENSIONS, cfg->hostid, data->starttls);
+            else snprintf(buf, sizeof(buf)-1, SMTP_RESP_250_EXTENSIONS, cfg->hostid, "");
 
-            strncat(resp, buf, MAXBUFSIZE-1);
+            strncat(resp, buf, sizeof(resp)-1);
 
             continue;
 
@@ -349,7 +349,7 @@ AFTER_PERIOD:
          if(strncasecmp(buf, SMTP_CMD_HELO, strlen(SMTP_CMD_HELO)) == 0){
             if(smtp_state == SMTP_STATE_INIT) smtp_state = SMTP_STATE_HELO;
 
-            strncat(resp, SMTP_RESP_250_OK, MAXBUFSIZE-1);
+            strncat(resp, SMTP_RESP_250_OK, sizeof(resp)-1);
 
             continue;
          }
@@ -387,7 +387,7 @@ AFTER_PERIOD:
             }
 
 
-            strncat(resp, SMTP_RESP_250_OK, MAXBUFSIZE-1);
+            strncat(resp, SMTP_RESP_250_OK, sizeof(resp)-1);
 
             continue;
          }
@@ -404,7 +404,7 @@ AFTER_PERIOD:
                   SSL_set_options(data->ssl, SSL_OP_NO_SSLv2|SSL_OP_NO_SSLv3);
 
                   if(SSL_set_fd(data->ssl, new_sd) == 1){
-                     strncat(resp, SMTP_RESP_220_READY_TO_START_TLS, MAXBUFSIZE-1);
+                     strncat(resp, SMTP_RESP_220_READY_TO_START_TLS, sizeof(resp)-1);
                      starttls = 1;
                      smtp_state = SMTP_STATE_INIT;
 
@@ -414,7 +414,7 @@ AFTER_PERIOD:
             } syslog(LOG_PRIORITY, "%s: error: SSL ctx is null!", sdata.ttmpfile);
 
 
-            strncat(resp, SMTP_RESP_454_ERR_TLS_TEMP_ERROR, MAXBUFSIZE-1);
+            strncat(resp, SMTP_RESP_454_ERR_TLS_TEMP_ERROR, sizeof(resp)-1);
             continue;
          }
       #endif
@@ -423,7 +423,7 @@ AFTER_PERIOD:
          if(strncasecmp(buf, SMTP_CMD_MAIL_FROM, strlen(SMTP_CMD_MAIL_FROM)) == 0){
 
             if(smtp_state != SMTP_STATE_HELO && smtp_state != SMTP_STATE_PERIOD){
-               strncat(resp, SMTP_RESP_503_ERR, MAXBUFSIZE-1);
+               strncat(resp, SMTP_RESP_503_ERR, sizeof(resp)-1);
             }
             else {
 
@@ -455,7 +455,7 @@ AFTER_PERIOD:
 
             if(smtp_state == SMTP_STATE_MAIL_FROM || smtp_state == SMTP_STATE_RCPT_TO){
                if(strlen(buf) > SMALLBUFSIZE/2){
-                  strncat(resp, SMTP_RESP_550_ERR_TOO_LONG_RCPT_TO, MAXBUFSIZE-1);
+                  strncat(resp, SMTP_RESP_550_ERR_TOO_LONG_RCPT_TO, sizeof(resp)-1);
                   continue;
                }
 
@@ -491,10 +491,10 @@ AFTER_PERIOD:
 
                if(sdata.num_of_rcpt_to < MAX_RCPT_TO-1) sdata.num_of_rcpt_to++;
 
-               strncat(resp, SMTP_RESP_250_OK, MAXBUFSIZE-1);
+               strncat(resp, SMTP_RESP_250_OK, sizeof(resp)-1);
             }
             else {
-               strncat(resp, SMTP_RESP_503_ERR, MAXBUFSIZE-1);
+               strncat(resp, SMTP_RESP_503_ERR, sizeof(resp)-1);
             }
 
             continue;
@@ -503,23 +503,23 @@ AFTER_PERIOD:
 
          if(strncasecmp(buf, SMTP_CMD_DATA, strlen(SMTP_CMD_DATA)) == 0){
 
-            memset(last2buf, 0, 2*MAXBUFSIZE+1);
-            memset(prevbuf, 0, MAXBUFSIZE);
+            memset(last2buf, 0, sizeof(last2buf));
+            memset(prevbuf, 0, sizeof(prevbuf));
             inj = ERR;
             prevlen = 0;
 
             if(smtp_state != SMTP_STATE_RCPT_TO){
-               strncat(resp, SMTP_RESP_503_ERR, MAXBUFSIZE-1);
+               strncat(resp, SMTP_RESP_503_ERR, sizeof(resp)-1);
             }
             else {
                sdata.fd = open(sdata.filename, O_CREAT|O_RDWR, S_IRUSR|S_IWUSR|S_IRGRP);
                if(sdata.fd == -1){
                   syslog(LOG_PRIORITY, "%s: %s", ERR_OPEN_TMP_FILE, sdata.ttmpfile);
-                  strncat(resp, SMTP_RESP_451_ERR, MAXBUFSIZE-1);
+                  strncat(resp, SMTP_RESP_451_ERR, sizeof(resp)-1);
                }
                else {
                   smtp_state = SMTP_STATE_DATA;
-                  strncat(resp, SMTP_RESP_354_DATA_OK, MAXBUFSIZE-1);
+                  strncat(resp, SMTP_RESP_354_DATA_OK, sizeof(resp)-1);
                }
 
             }
@@ -532,8 +532,8 @@ AFTER_PERIOD:
 
             smtp_state = SMTP_STATE_FINISHED;
 
-            snprintf(buf, MAXBUFSIZE-1, SMTP_RESP_221_GOODBYE, cfg->hostid);
-            strncat(resp, buf, MAXBUFSIZE-1);
+            snprintf(buf, sizeof(buf)-1, SMTP_RESP_221_GOODBYE, cfg->hostid);
+            strncat(resp, buf, sizeof(resp)-1);
 
             unlink(sdata.ttmpfile);
             if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: removed", sdata.ttmpfile);
@@ -543,14 +543,14 @@ AFTER_PERIOD:
 
 
          if(strncasecmp(buf, SMTP_CMD_NOOP, strlen(SMTP_CMD_NOOP)) == 0){
-            strncat(resp, SMTP_RESP_250_OK, MAXBUFSIZE-1);
+            strncat(resp, SMTP_RESP_250_OK, sizeof(resp)-1);
             continue;
          }
 
 
          if(strncasecmp(buf, SMTP_CMD_RESET, strlen(SMTP_CMD_RESET)) == 0){
 
-            strncat(resp, SMTP_RESP_250_OK, MAXBUFSIZE-1);
+            strncat(resp, SMTP_RESP_250_OK, sizeof(resp)-1);
 
             if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: removed", sdata.ttmpfile);
             unlink(sdata.ttmpfile);
@@ -565,7 +565,7 @@ AFTER_PERIOD:
          /* by default send 502 command not implemented message */
 
          syslog(LOG_PRIORITY, "%s: error: invalid command *%s*", sdata.ttmpfile, buf);
-         strncat(resp, SMTP_RESP_502_ERR, MAXBUFSIZE-1);
+         strncat(resp, SMTP_RESP_502_ERR, sizeof(resp)-1);
       }
 
 
@@ -575,7 +575,7 @@ AFTER_PERIOD:
          write1(new_sd, resp, strlen(resp), sdata.tls, data->ssl);
 
          if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent: %s", sdata.ttmpfile, resp);
-         memset(resp, 0, MAXBUFSIZE);
+         memset(resp, 0, sizeof(resp));
 
       #ifdef HAVE_STARTTLS
          if(starttls == 1 && sdata.tls == 0){
@@ -611,7 +611,7 @@ AFTER_PERIOD:
     */
 
    if(smtp_state < SMTP_STATE_QUIT && inj == ERR){
-      snprintf(buf, MAXBUFSIZE-1, SMTP_RESP_421_ERR, cfg->hostid);
+      snprintf(buf, sizeof(buf)-1, SMTP_RESP_421_ERR, cfg->hostid);
       write1(new_sd, buf, strlen(buf), sdata.tls, data->ssl);
 
       if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent: %s", sdata.ttmpfile, buf);

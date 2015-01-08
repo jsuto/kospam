@@ -86,12 +86,20 @@ class MySQL {
 
 $history_dir = "/var/clapf/history/new";
 $dry_run = 0;
+$database = 'clapf';
+$host = '';
+$username = 'clapf';
+$password = '';
 $verbose = 0;
 $delimiter = '';
 
 $opts = 'dhv';
 $lopts = array(
                'dir:',
+               'host:',
+               'database:',
+               'username:',
+               'password:',
                'dry-run',
                'verbose'
          );
@@ -100,6 +108,26 @@ if($options = getopt($opts, $lopts)) {
 
     if(isset($options['dir'])) { 
         $history_dir = $options['dir'];
+    }
+
+    if(isset($options['host'])) {
+        $host = $options['host'];
+    } else {
+        die("you must specify --host <sql server>\n");
+    }
+
+    if(isset($options['database'])) {
+        $database = $options['database'];
+    }
+
+    if(isset($options['username'])) {
+        $username = $options['username'];
+    }
+
+    if(isset($options['password'])) {
+        $password = $options['password'];
+    } else {
+        die("you must specify --password <password>\n");
     }
 
     if(isset($options['dry-run']) || isset($options['d'])) {
@@ -117,14 +145,54 @@ if($options = getopt($opts, $lopts)) {
 
 }
 
+if($host == '' || $password == '') {
+    display_help();
+    exit;
+}
+
+
 openlog("history-to-sql.php", LOG_PID, LOG_MAIL);
 
-$n = processdir($history_dir);
+$db = new MySQL($host, $username, $password, $database);
+
+fix_partitions($db);
+
+$n = processdir($history_dir, $db);
 
 syslog(LOG_INFO, "processed $n messages in '$history_dir'");
 
 
-function processdir($dir = '') {
+function get_gmt_offset() {
+   $origin_dtz = new DateTimeZone(date_default_timezone_get());
+   $remote_dtz = new DateTimeZone('GMT');
+
+   $origin_dt = new DateTime("now", $origin_dtz);
+   $remote_dt = new DateTime("now", $remote_dtz);
+
+   $offset = $origin_dtz->getOffset($origin_dt) - $remote_dtz->getOffset($remote_dt);
+
+   return $offset;
+}
+
+
+function fix_partitions($db = '') {
+   $now = time();
+   $offset = get_gmt_offset();
+
+   $mod = $now % 86400;
+   $tomorrow = $now - $mod - $offset + 2*86400 - 1;
+   $partition = gmdate("Ymd", $tomorrow);
+
+   $db->query("ALTER TABLE `history` ADD PARTITION ( PARTITION p$partition VALUES LESS THAN ($tomorrow) )");
+
+   $onemonthago = $now -= 31*86400;
+   $partition = gmdate("Ymd", $onemonthago);
+
+   $db->query("ALTER TABLE `history` DROP PARTITION p$partition");
+}
+
+
+function processdir($dir = '', $db = '') {
    global $delimiter;
    global $dry_run;
    global $verbose;
@@ -139,8 +207,6 @@ function processdir($dir = '') {
 
 
    if($dir == '') { return $n; }
-
-   $db = new MySQL("", "clapf", "changeme", "clapf");
 
    $dh = opendir($dir);
    if($dh) {
@@ -197,6 +263,10 @@ function processdir($dir = '') {
 
 function display_help() {
    print "--dir|-d               history directory\n";
+   print "--host                 database host\n";
+   print "--database             clapf database (default: clapf)\n";
+   print "--username             sql username (default: clapf)\n";
+   print "--password             sql password\n";
    print "\n\n";
 }
 

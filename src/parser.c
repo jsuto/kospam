@@ -348,12 +348,17 @@ int parse_line(char *buf, struct __state *state, struct session_data *sdata, int
       }
       else {
 
-         p = strrchr(state->b_subject, ' ');
-         if(p && ( strcasestr(p+1, "?Q?") || strcasestr(p+1, "?B?") ) ){
-            strncat(state->b_subject, buf+1, MAXBUFSIZE-1);
-         }
-         else strncat(state->b_subject, buf, MAXBUFSIZE-1);
+         /*
+          * if the next subject line is encoded, then strip the whitespace characters at the beginning of the line
+          */
 
+         p = buf;
+
+         if(strcasestr(buf, "?Q?") || strcasestr(buf, "?B?")){
+            while(isspace(*p)) p++;
+         }
+
+         strncat(state->b_subject, p, MAXBUFSIZE-1);
       }
 
    }

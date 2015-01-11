@@ -380,7 +380,7 @@ int append_html_tag(char *buf, char *htmlbuf, int pos, struct __state *state){
    char *p, *q;
    int len=0;
 
-   if(pos == 0 && strncmp(htmlbuf, "style ", 6) == 0){ state->style = 1; return 0; }
+   if(pos <= 1 && strncmp(htmlbuf, "style ", 6) == 0){ state->style = 1; return 0; }
    if(pos == 0 && strncmp(htmlbuf, "/style ", 7) == 0){ state->style = 0; return 0; }
 
    // skip ....html xmlns="http://www.w3.org/1999/xhtml...

@@ -281,6 +281,7 @@ define('TABLE_EMAIL', 'email');
 define('TABLE_HISTORY', 'history');
 define('TABLE_RCPT', 'rcpt');
 define('TABLE_SEARCH', 'search');
+define('TABLE_SEARCH_CACHE', 'search_cache');
 define('TABLE_EMAIL_LIST', 'email_groups');
 define('TABLE_POLICY', 'policy');
 define('TABLE_USER_SETTINGS', 'user_settings');

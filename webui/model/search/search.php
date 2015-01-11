@@ -79,10 +79,19 @@ class ModelSearchSearch extends Model {
 
       }
 
+      if(isset($data['history'])) {
+         $one_page_of_ids = $all_ids;
+         $q = str_repeat("?,", count($all_ids)) . "-1";
+      }
+
       $all_ids_csv = substr($all_ids_csv, 1, strlen($all_ids_csv));
 
-
-      return array($total_hits, $total_found, $all_ids_csv, $this->get_meta_data($one_page_of_ids, $q, $sortorder));
+      return array(
+                   'total_hits'  => $total_hits,
+                   'total_found' => $total_found,
+                   'all_ids'     => $all_ids_csv,
+                   'messages'    => $this->get_meta_data($one_page_of_ids, $q, $sortorder)
+                  );
    }
 
 
@@ -387,6 +396,64 @@ class ModelSearchSearch extends Model {
       }
 
       return $messages;
+   }
+
+
+   public function store_search_result_to_blob($query = array(), $data = array()) {
+      $email = $this->session->get("email");
+
+      if($email == '' || count($data) == 0) { return 0; }
+
+      $cksum = $this->create_search_session_key($query);
+
+      $expiry = NOW + 300;
+      $s = zlib_encode(serialize($data), ZLIB_ENCODING_GZIP);
+
+      $query = $this->db->query("INSERT INTO " . TABLE_SEARCH_CACHE . " (cksum, expiry, result) VALUES(?,?,?)", array($cksum, $expiry, $s));
+   }
+
+
+   public function get_search_session_data($data = array()) {
+      $this->cksum = $this->create_search_session_key($data);
+
+      $this->db->query("DELETE FROM " . TABLE_SEARCH_CACHE . " WHERE expiry < ?", array(NOW));
+
+      $query = $this->db->query("SELECT expiry, result FROM " . TABLE_SEARCH_CACHE . " WHERE cksum=?", array($this->cksum));
+
+      if(isset($query->row['result'])) {
+         syslog(LOG_INFO, "result found in search cache (exp:" . $query->row['expiry'] . ")");
+         return unserialize(zlib_decode($query->row['result']));
+      }
+
+      return array();
+   }
+
+
+   private function create_search_session_key($data = array()) {
+      if($this->session->get("email") == '') { return 'null'; }
+
+      $data['page'] = 0;
+
+      return sha1($this->session->get("email") . serialize($data));
+   }
+
+
+   public function search_result_to_csv($cksum = '') {
+      $email = $this->session->get("email");
+
+      print "Date" . DELIMITER . "ID" . DELIMITER . "Sender" . DELIMITER . "Recipient" . DELIMITER . "Subject" . DELIMITER . "Size" . DELIMITER . "Spam" . DELIMITER . "Relay" . DELIMITER . "Status\n";
+
+      $query = $this->db->query("SELECT result FROM " . TABLE_SEARCH_CACHE . " WHERE cksum=?", array($cksum));
+
+      if(isset($query->row['result'])) {
+         $data = unserialize(zlib_decode($query->row['result']));
+
+         if(count($data['messages']) > 0) {
+            foreach($data['messages'] as $d) {
+               print $d['date'] . DELIMITER . $d['clapf_id'] . DELIMITER . $d['sender'] . DELIMITER . $d['rcpt'] . DELIMITER . $d['subject'] . DELIMITER . $d['size'] . DELIMITER . $d['spam'] . DELIMITER . $d['relay'] . DELIMITER . $d['status'] . "\n";
+            } 
+         }
+      }
    }
 
 

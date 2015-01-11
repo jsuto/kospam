@@ -1,7 +1,7 @@
 
 <div id="sspinner" class="alert alert-info lead"><i class="icon-spinner icon-spin icon-2x pull-left"></i><?php print $text_working; ?></div>
 <div id="messagelistcontainer" class="boxlistcontent">
-    <?php if($n > 0) { ?>
+    <?php if($result['total_hits'] > 0) { ?>
     <table id="results" class="table table-striped table-condensed">
       <thead>
         <tr>
@@ -27,10 +27,13 @@
        </tr>
       </thead>
       <tbody>
-    <?php $i=0; foreach ($messages as $message) { ?>
-            
+    <?php for($i=$page*$page_len; $i<($page+1)*$page_len; $i++) {
+         if(isset($result['messages'][$i])) {
+            $message = $result['messages'][$i];
+?>
+
          <tr id="e_<?php print $message['id']; ?>" class="resultrow new">
-            <td id="c2_r<?php print $i; ?>" class="resultcell id"><?php print ($page*$page_len) + $i + 1; ?>.</td>
+            <td id="c2_r<?php print $i; ?>" class="resultcell id"><?php print $i + 1; ?>.</td>
             <td id="c3_r<?php print $i; ?>" class="resultcell date"><?php print $message['date']; ?></td>
             <td id="c4_r<?php print $i; ?>" class="resultcell from"><?php if($message['from'] != $message['shortfrom']) { ?><span title="<?php print $message['from']; ?>"><?php print $message['shortfrom']; ?></span><?php } else { print $message['from']; } ?></td>
             <td id="c5_r<?php print $i; ?>" class="resultcell to"><?php if($message['to'] != $message['shortto']) { ?><span title="<?php print $message['to']; ?>"><?php print $message['shortto']; ?>&nbsp;<i class=" muted icon-group"></i></span><?php } else { print $message['to']; } ?></td>
@@ -41,12 +44,13 @@
             <td id="c9_r<?php print $i; ?>" class="resultcell end"><?php print $message['status']; ?></td>
          </tr>
 
-    <?php $i++; } ?>
+    <?php }
+       } ?>
       </tbody>
       
     </table>
 
-    <?php } else if($n == 0) { ?>
+    <?php } else if($result['total_hits'] == 0) { ?>
                 <div class="alert alert-block alert-error lead"><i class="icon-exclamation-sign icon-2x pull-left"></i> <?php print $text_empty_search_result; ?></div>
     <?php } ?>
 
@@ -56,13 +60,13 @@
     <div class="row-fluid">
        <div id="pagingrow" class="span4">
             <div id="pagingbox">
-    <?php if($n > 0){ ?>
+    <?php if($result['total_hits'] > 0){ ?>
             &nbsp;
             <?php if($page > 0) { ?><a href="#" class="navlink" onclick="Piler.navigation(0);"><i class="icon-double-angle-left icon-large"></i></a><?php } else { ?><span class="navlink"><i class="icon-double-angle-left icon-large muted"></i></span><?php } ?>
             &nbsp;
             <?php if($page > 0) { ?><a href="#" class="navlink" onclick="Piler.navigation(<?php print $prev_page; ?>);"><i class="icon-angle-left icon-large"></i></a><?php } else { ?><span class="navlink"><i class="icon-angle-left icon-large muted"></i></span><?php } ?>
             &nbsp;
-            <?php print $hits_from; ?>-<?php print $hits_to; ?>, <?php print $text_total; ?>: <?php print $n; ?><?php if($total_found > $n) { ?> (<?php print $total_found; ?>)<?php } ?>
+            <?php print $hits_from; ?>-<?php print $hits_to; ?>, <?php print $text_total; ?>: <?php print $result['total_hits']; ?><?php if($result['total_found'] > $result['total_hits']) { ?> (<?php print $result['total_found']; ?>)<?php } ?>
             &nbsp;
             <?php if($next_page <= $total_pages){ ?><a href="#" class="navlink" onclick="Piler.navigation(<?php print $next_page; ?>);"><i class="icon-angle-right icon-large"></i></a> <?php } else { ?><span class="navlink"><i class="icon-angle-right icon-large muted"></i></span><?php } ?>
             &nbsp;
@@ -70,6 +74,11 @@
             &nbsp;
 
     <?php } else { print $text_none_found; } ?>
+
+<?php if($result['total_hits'] > 0) { ?>
+   &nbsp; <a href="index.php?route=history/download&cksum=<?php print $this->cksum; ?>">Export CSV</a>
+<?php } ?>
+
             </div>
         </div>
         <div id="functionrow" class="span8">

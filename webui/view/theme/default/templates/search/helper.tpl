@@ -1,7 +1,7 @@
 
 <div id="sspinner" class="alert alert-info lead"><i class="icon-spinner icon-spin icon-2x pull-left"></i><?php print $text_working; ?></div>
 <div id="messagelistcontainer" class="boxlistcontent">
-    <?php if($n > 0) { ?>
+    <?php if($result['total_hits'] > 0) { ?>
     <table id="results" class="table table-striped table-condensed">
       <thead>
         <tr>
@@ -39,7 +39,7 @@
        </tr>
       </thead>
       <tbody>
-    <?php $i=0; foreach ($messages as $message) { ?>
+    <?php $i=0; foreach ($result['messages'] as $message) { ?>
             
          <tr onmouseover="Piler.current_message_id = <?php print $message['id']; ?>; return false;" id="e_<?php print $message['id']; ?>" class="resultrow <?php if($message['hidden'] == 1) { ?>removed<?php } else { ?>new<?php } ?>" onclick="Piler.view_message_by_pos(<?php print $i; ?>);">
             <td id="c1_r<?php print $i; ?>" class="resultcell restore" onclick="Piler.stop_propagation(event);"><input type="checkbox" id="r_<?php print $message['id']; ?>" name="r_<?php print $message['id']; ?>" value="iiii" <?php if(SEARCH_RESULT_CHECKBOX_CHECKED == 1) { ?>checked="checked"<?php } ?> class="restorebox" /></td>
@@ -62,7 +62,7 @@
       
     </table>
 
-    <?php } else if($n == 0) { ?>
+    <?php } else if($result['total_hits'] == 0) { ?>
                 <div class="alert alert-block alert-error lead"><i class="icon-exclamation-sign icon-2x pull-left"></i> <?php print $text_empty_search_result; ?></div>
     <?php } ?>
 
@@ -72,13 +72,13 @@
     <div class="row-fluid">
        <div id="pagingrow" class="span4">
             <div id="pagingbox">
-    <?php if($n > 0){ ?>
+    <?php if($result['total_hits'] > 0){ ?>
             &nbsp;
             <?php if($page > 0) { ?><a href="#" class="navlink" onclick="Piler.navigation(0);"><i class="icon-double-angle-left icon-large"></i></a><?php } else { ?><span class="navlink"><i class="icon-double-angle-left icon-large muted"></i></span><?php } ?>
             &nbsp;
             <?php if($page > 0) { ?><a href="#" class="navlink" onclick="Piler.navigation(<?php print $prev_page; ?>);"><i class="icon-angle-left icon-large"></i></a><?php } else { ?><span class="navlink"><i class="icon-angle-left icon-large muted"></i></span><?php } ?>
             &nbsp;
-            <?php print $hits_from; ?>-<?php print $hits_to; ?>, <?php print $text_total; ?>: <?php print $n; ?><?php if($total_found > $n) { ?> (<?php print $total_found; ?>)<?php } ?>
+            <?php print $hits_from; ?>-<?php print $hits_to; ?>, <?php print $text_total; ?>: <?php print $result['total_hits']; ?><?php if($result['total_found'] > $result['total_hits']) { ?> (<?php print $result['total_found']; ?>)<?php } ?>
             &nbsp;
             <?php if($next_page <= $total_pages){ ?><a href="#" class="navlink" onclick="Piler.navigation(<?php print $next_page; ?>);"><i class="icon-angle-right icon-large"></i></a> <?php } else { ?><span class="navlink"><i class="icon-angle-right icon-large muted"></i></span><?php } ?>
             &nbsp;
@@ -89,7 +89,7 @@
             </div>
         </div>
         <div id="functionrow" class="span8">
-            <input type="hidden" id="tag_keys" name="tag_keys" value="<?php print $all_ids; ?>" />
+            <input type="hidden" id="tag_keys" name="tag_keys" value="<?php print $result['all_ids']; ?>" />
             <input type="hidden" id="_ref" name="_ref" value="<?php if(isset($_ref)) { print $_ref; } ?>" />
             <div id="functionbox" class="input-prepend input-append pull-right">
 

@@ -38,8 +38,6 @@ class ControllerSearchHelper extends Controller {
 
       $this->data['page_len'] = get_page_length();
 
-      $this->data['n'] = -1;
-
       if($this->request->post['searchtype'] == 'expert'){
 
          if(isset($this->request->post['search']) && preg_match("/(from|to|subject|body|direction|d|size|date1|date2|attachment|a|tag|note|id)\:/", $this->request->post['search'])) {
@@ -50,15 +48,13 @@ class ControllerSearchHelper extends Controller {
          }
 
          $this->fixup_post_request();
-
-         list ($this->data['n'], $this->data['total_found'], $this->data['all_ids'], $this->data['messages']) = $this->model_search_search->search_messages($this->a, $this->data['page']);
       }
 
       else {
          $this->fixup_post_simple_request();
-         list ($this->data['n'], $this->data['total_found'], $this->data['all_ids'], $this->data['messages']) = $this->model_search_search->search_messages($this->a, $this->data['page']);
       }
 
+      $this->data['result'] = $this->model_search_search->search_messages($this->a, $this->data['page']);
 
       if($this->a['ref']) { $this->data['_ref'] = $this->a['ref']; }
       if(isset($this->request->post['ref']) && $this->request->post['ref']) { $this->data['_ref'] = $this->request->post['ref']; }
@@ -68,12 +64,12 @@ class ControllerSearchHelper extends Controller {
       $this->data['prev_page'] = $this->data['page'] - 1;
       $this->data['next_page'] = $this->data['page'] + 1;
 
-      $this->data['total_pages'] = ceil($this->data['n'] / $this->data['page_len'])-1;
+      $this->data['total_pages'] = ceil($this->data['result']['total_hits'] / $this->data['page_len'])-1;
 
       $this->data['hits_from'] = $this->data['page'] * $this->data['page_len'] + 1;
       $this->data['hits_to'] = ($this->data['page']+1) * $this->data['page_len'];
 
-      if($this->data['hits_to'] > $this->data['n']) { $this->data['hits_to'] = $this->data['n']; }
+      if($this->data['hits_to'] > $this->data['result']['total_hits']) { $this->data['hits_to'] = $this->data['result']['total_hits']; }
 
       $this->data['sort'] = $this->request->post['sort'];
       $this->data['order'] = $this->request->post['order'];

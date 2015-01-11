@@ -216,3 +216,12 @@ create table if not exists `search` (
 create index `search_idx` on `search`(`email`);
 
 
+create table if not exists `search_cache` (
+   `cksum` char(128) not null,
+   `expiry` int default 0,
+   `result` longblob not null
+) Engine=MyISAM;
+
+create index `search_cache_idx` on `search_cache`(`cksum`);
+create index `search_cache_idx2` on `search_cache`(`expiry`);
+

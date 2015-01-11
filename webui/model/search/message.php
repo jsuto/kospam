@@ -345,6 +345,8 @@ class ModelSearchMessage extends Model {
 
          $chunk = preg_replace("/document\.write/", "document.writeee", $chunk);
          $chunk = preg_replace("/<\s{0,}script([\w\W]+)\/script\s{0,}\>/i", "<!-- disabled javascript here -->", $chunk);
+
+         $chunk = preg_replace("/\<base\s{1,}href/", "<bbbase href", $chunk);
       }
 
       return $chunk;

@@ -33,10 +33,10 @@ source delta1: base
 index main1
 {
 	source			= main1
-	path			= /var/clapf/sphinx/main1
+	path			= LOCALSTATEDIR/clapf/sphinx/main1
 	docinfo			= extern
 	dict			= keywords
-        min_prefix_len          = 6
+        min_prefix_len          = 5
         min_word_len            = 1
 
         # uncomment these if you want to search for CJK text
@@ -47,10 +47,10 @@ index main1
 index delta1
 {
         source                  = delta1
-        path                    = /var/clapf/sphinx/delta1
+        path                    = LOCALSTATEDIR/clapf/sphinx/delta1
         docinfo                 = extern
         dict                    = keywords
-        min_prefix_len          = 6
+        min_prefix_len          = 5
         min_word_len            = 1
 }
 

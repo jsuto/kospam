@@ -25,7 +25,7 @@ class ControllerStatGraph extends Controller {
 
       $aa = new ModelStatChart();
 
-      $aa->lineChartHamSpam($timespan, $this->data['text_archived_messages'], SIZE_X, SIZE_Y, "");
+      $aa->lineChartHamSpam($timespan, $this->data['rcvd'], SIZE_X, SIZE_Y, "");
 
    }
 

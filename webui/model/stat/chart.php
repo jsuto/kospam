@@ -12,11 +12,12 @@ class ModelStatChart extends Model {
       $chart = new LineChart($size_x, $size_y);
 
       $chart->getPlot()->getPalette()->setLineColor(array(
-         //new Color(26, 192, 144),
+         new Color(26, 192, 144),
          new Color(208, 48, 128),
       ));
 
       $line1 = new XYDataSet();
+      $line2 = new XYDataSet();
 
       $limit = $this->getDataPoints($timespan);
 
@@ -34,12 +35,19 @@ class ModelStatChart extends Model {
          $date_format = "m.d.";
       }
 
-      $query = $this->db->query("select ts-(ts%$delta) as ts, count(*) as num from " . TABLE_HISTORY . " where ts > $range $grouping ORDER BY ts DESC limit $limit");
+      $query = $this->db->query("SELECT ts-(ts%$delta) AS ts, count(*) AS num FROM " . TABLE_HISTORY . " WHERE spam=0 AND ts > $range $grouping ORDER BY ts DESC LIMIT $limit");
+      $query2 = $this->db->query("SELECT ts-(ts%$delta) AS ts, count(*) AS num FROM " . TABLE_HISTORY . " WHERE spam=1 AND ts > $range $grouping ORDER BY ts DESC LIMIT $limit");
 
       foreach ($query->rows as $q) {
          array_push($ydata, $q['num']);
          array_push($dates, date($date_format, $q['ts']));
       }
+
+      foreach ($query2->rows as $q) {
+         array_push($ydata2, $q['num']);
+         array_push($dates, date($date_format, $q['ts']));
+      }
+
 
       if($query->num_rows >= 15) {
          $i = 0;
@@ -53,16 +61,21 @@ class ModelStatChart extends Model {
 
 
       $ydata = array_reverse($ydata);
+      $ydata2 = array_reverse($ydata2);
       $dates = array_reverse($dates);
 
-      for($i=0; $i<count($ydata); $i++){
+      for($i=0; $i<count($ydata); $i++) {
+         $ham = $ydata[$i];
+         if(isset($ydata2[$i])) { $spam = $ydata2[$i]; } else { $spam = 0; }
          $ts = $dates[$i];
-         $line1->addPoint(new Point("$ts", $ydata[$i]));
+         $line1->addPoint(new Point("$ts", $ham));
+         $line2->addPoint(new Point("$ts", $spam));
       }
 
 
       $dataSet = new XYSeriesDataSet();
-      $dataSet->addSerie("RCVD", $line1);
+      $dataSet->addSerie("HAM", $line1);
+      $dataSet->addSerie("SPAM", $line2);
 
       $chart->setDataSet($dataSet);
 
@@ -73,17 +86,18 @@ class ModelStatChart extends Model {
    }
 
 
-   public function pieChartHamSpam($emails = '', $timespan, $title, $output) {
+   public function pieChartHamSpam($timespan, $title, $output) {
       $ham = $spam = 0;
 
       $range = $this->getRangeInSeconds($timespan);
 
       $chart = new PieChart(SIZE_X, SIZE_Y);
 
-      $query = $this->db->query("SELECT COUNT(*) AS SPAM FROM " . TABLE_HISTORY . " WHERE $emails AND ts > $range");
+      $query = $this->db->query("SELECT COUNT(*) AS SPAM FROM " . TABLE_HISTORY . " WHERE spam=1 AND ts > $range");
+
       if($query->num_rows > 0) { $spam = $query->row['SPAM']; }
 
-      $query = $this->db->query("SELECT COUNT(*) AS HAM FROM " . TABLE_HISTORY . " WHERE $emails AND ts > $range");
+      $query = $this->db->query("SELECT COUNT(*) AS HAM FROM " . TABLE_HISTORY . " WHERE spam=0 AND ts > $range");
       if($query->num_rows > 0) { $ham = $query->row['HAM']; }
 
       if($ham > $spam) {

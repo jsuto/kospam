@@ -8,5 +8,6 @@
 
 </p>
 
-<p><img src="index.php?route=stat/graph&amp;timespan=<?php print $timespan; ?>&amp;uid=<?php print $uid; ?>" border="1" /> </p>
+<p><img src="index.php?route=stat/graph&amp;timespan=<?php print $timespan; ?>&amp;uid=<?php print $uid; ?>" border="1" /> 
+<img src="index.php?route=stat/chart&amp;timespan=<?php print $timespan; ?>&amp;uid=<?php print $uid; ?>" border="1" /> </p>
 

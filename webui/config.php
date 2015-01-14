@@ -147,7 +147,7 @@ $config['PILER_HEADER_FIELD'] = 'X-piler-id: ';
 
 $config['DEFAULT_POLICY'] = 'default_policy';
 
-$config['DIR_BASE'] = '/var/www/clapf.yourdomain.com/';
+$config['DIR_BASE'] = '/var/clapf/www/';
 
 $config['DIR_QUEUE'] = '/var/clapf/queue/';
 $config['DIR_SPHINX'] = '/var/clapf/sphinx/';

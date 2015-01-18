@@ -19,13 +19,13 @@ source base
 source main1 : base
 {
    sql_query_pre = SET NAMES utf8
-   sql_query = SELECT id, `ts`, `spam`, `sender`, `rcpt`, `subject`, `size`, `attachments` FROM `history`
+   sql_query = SELECT id, `ts`, `spam`, `sender`, `rcpt`, `subject`, `size`, `attachments`, `status` FROM `history`
 }
 
 source delta1: base
 {
    sql_query_pre = SET NAMES utf8
-   sql_query = SELECT id, `ts`, `spam`, `sender`, `rcpt`, `subject`, `size`, `attachments` FROM `history` WHERE id=-1
+   sql_query = SELECT id, `ts`, `spam`, `sender`, `rcpt`, `subject`, `size`, `attachments`, `status` FROM `history` WHERE id=-1
 
    sql_query_killlist = SELECT `id` FROM `history` WHERE `hidden`=1 OR `spam`=0
 }
@@ -36,7 +36,7 @@ index main1
 	path			= LOCALSTATEDIR/clapf/sphinx/main1
 	docinfo			= extern
 	dict			= keywords
-        min_prefix_len          = 5
+        min_prefix_len          = 4
         min_word_len            = 1
 
         # uncomment these if you want to search for CJK text
@@ -50,7 +50,7 @@ index delta1
         path                    = LOCALSTATEDIR/clapf/sphinx/delta1
         docinfo                 = extern
         dict                    = keywords
-        min_prefix_len          = 5
+        min_prefix_len          = 4
         min_word_len            = 1
 }
 

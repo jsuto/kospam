@@ -114,7 +114,7 @@ class ModelSearchSearch extends Model {
       $tag_id_list = '';
       $a = "";
       $id = "";
-      $fields = array("@(subject,body)", "@sender", "@rcpt", "@subject", "@body", "@attachment_types");
+      $fields = array("@(subject,body)", "@sender", "@rcpt", "@subject", "@body", "@attachment_types", "@status");
       $sph_index = SPHINX_MAIN_INDEX;
 
       $emailfilter = $this->assemble_email_address_filter();
@@ -284,6 +284,7 @@ class ModelSearchSearch extends Model {
          else if($v == 'note:') { $token = 'note'; continue; }
          else if($v == 'ref:') { $token = 'ref'; continue; }
          else if($v == 'spam:') { $token = 'spam'; continue; }
+         else if($v == 'status:') { $token = 'match'; $a['match'][] = '@status'; continue; }
          else if($v == 'id:') { $token = 'id'; continue; }
          else {
             if(preg_match("/\d{4}\-\d{1,2}\-\d{1,2}/", $v) || preg_match("/\d{1,2}\/\d{1,2}\/\d{4}/", $v)) {

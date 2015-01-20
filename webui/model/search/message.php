@@ -479,6 +479,13 @@ class ModelSearchMessage extends Model {
    }
 
 
+   public function get_rcpt_by_id($id = 0) {
+      $query = $this->db->query("SELECT `rcpt` FROM `" . TABLE_HISTORY . "` WHERE id=?", array($id));
+      if(isset($query->row['rcpt'])) { return $query->row['rcpt']; }
+      return '';
+   }
+
+
    public function is_message_spam($id = 0) {
       $spam = 0;
 

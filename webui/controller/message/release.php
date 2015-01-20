@@ -47,6 +47,14 @@ class ControllerMessageRelease extends Controller {
          $this->data['clapf_id'] = $this->model_search_message->get_clapf_id_by_id($this->data['id']);
          $message = 'Received: ' . $this->data['clapf_id'] . EOL . $this->model_search_message->get_raw_message($this->data['clapf_id']);
 
+         $your_email = $session->get("email");
+
+         // get the rcpt for the given email if you are an admin
+
+         if(Registry::get('admin_user') == 1) {
+            $your_email = $this->model_search_message->get_rcpt_by_id($this->data['id']);
+         }
+
          /*
           * send a training message
           */
@@ -57,10 +65,10 @@ class ControllerMessageRelease extends Controller {
             $train_address = SPAM_TRAIN_ADDRESS;
          }
 
-         $train_message = $this->model_mail_mail->message_as_rfc822_attachment($this->data['clapf_id'], $session->get("email"), $train_address, $message);
+         $train_message = $this->model_mail_mail->message_as_rfc822_attachment($this->data['clapf_id'], $your_email, $train_address, $message);
 
          if(DEMO_MODE == 0) {
-            $rc = $this->model_mail_mail->send_smtp_email(CLAPF_HOST, CLAPF_PORT, SMTP_DOMAIN, $session->get("email"), array($train_address), $train_message);
+            $rc = $this->model_mail_mail->send_smtp_email(CLAPF_HOST, CLAPF_PORT, SMTP_DOMAIN, $your_email, array($train_address), $train_message);
          } else {
             $rc = 1;
          }
@@ -77,7 +85,7 @@ class ControllerMessageRelease extends Controller {
          if($this->data['spam'] == 1) {
             $rcpt = array();
 
-            array_push($rcpt, $session->get("email"));
+            array_push($rcpt, $your_email);
 
             if(DEMO_MODE == 0) { $this->deliver_message($message, $rcpt); }
          }

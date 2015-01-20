@@ -77,7 +77,7 @@ fi
 echo "\"Configure command: ./configure $PARAMS\"" >> $CONFIGURE_PARAMS_FILE
 
 
-SUBDIRS="src etc init.d util"
+SUBDIRS="src etc init.d util zombie"
 
 
 dnl static build
@@ -407,7 +407,7 @@ CFLAGS="$static -O2 -Wall -g"
 LIBS="$antispam_libs $sunos_libs "
 OBJS="dirs.o misc.o counters.o cfg.o sig.o decoder.o hash.o tokenizer.o parser.o parser_utils.o session.o tai.o digest.o chi.o antispam.o spam.o buffer.o zombie.o train.o users.o policy.o black.o smtp.o history.o rbl.o $objs"
 
-AC_CONFIG_FILES([Makefile src/Makefile etc/Makefile init.d/Makefile util/Makefile])
+AC_CONFIG_FILES([Makefile src/Makefile etc/Makefile init.d/Makefile util/Makefile zombie/Makefile])
 AC_OUTPUT
 
 

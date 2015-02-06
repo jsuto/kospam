@@ -13,7 +13,7 @@
 ### END INIT INFO
 
 
-NAME=piler
+NAME=clapf
 OPTIONS=""
 PID_FILE=`SBINDIR/clapfconf $OPTIONS -q pidfile | cut -f2 -d=`
 PID_NUMBER=`test -f ${PID_FILE} && cat ${PID_FILE}`

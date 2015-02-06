@@ -3443,8 +3443,6 @@ have_starttls="no"
 have_tcpwrappers="no"
 have_gsl="no"
 
-gsl_libs=""
-
 timeout_binary=""
 
 have_static_build="no"
@@ -4484,14 +4482,24 @@ _ACEOF
 
 
 
+dataroot_dir=`echo $datarootdir | grep prefix`
+
+if test -n "$dataroot_dir"; then
+    if test "$prefix" = "NONE"
+    then
+        dataroot_dir="$ac_default_prefix/share"
+    else
+        dataroot_dir="$prefix/share"
+    fi
+else
+    dataroot_dir="$datarootdir"
+fi
+
+
+
 
 cat >>confdefs.h <<_ACEOF
-#define VIRUS_TEMPLATE "$my_prefix/share/clapf/template.virus"
-_ACEOF
-
-
-cat >>confdefs.h <<_ACEOF
-#define ZOMBIE_NET_REGEX "$my_prefix/share/clapf/zombienets.regex"
+#define ZOMBIE_NET_REGEX "$dataroot_dir/clapf/zombienets.regex"
 _ACEOF
 
 
@@ -4597,8 +4605,6 @@ _ACEOF
 else
    echo "tcpwrappers support: no"
 fi
-
-echo
 
 if test "$have_clamd" = "yes"; then
    echo "clamd support: yes"

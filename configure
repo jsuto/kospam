@@ -3443,6 +3443,8 @@ have_starttls="no"
 have_tcpwrappers="no"
 have_gsl="no"
 
+gsl_libs=""
+
 timeout_binary=""
 
 have_static_build="no"
@@ -3951,10 +3953,6 @@ fi
 done
 
 
-if test "$have_gsl" = "yes"; then
-   defs="$defs -DHAVE_GSL"
-   gsl_libs="-lgslcblas -lgsl"
-fi
 
 
 
@@ -4556,6 +4554,12 @@ if test "$have_tre" = "yes"; then
    echo "tre library: yes"
    defs="$defs -DHAVE_TRE"
    antispam_libs="$antispam_libs -ltre"
+fi
+
+if test "$have_gsl" = "yes"; then
+   echo "gsl library: yes"
+   defs="$defs -DHAVE_GSL"
+   antispam_libs="$antispam_libs -lgslcblas -lgsl"
 fi
 
 if test "$have_zip" = "yes"; then

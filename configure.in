@@ -143,10 +143,6 @@ dnl gsl support
 
 AC_CHECK_HEADERS(gsl/gsl_cdf.h, have_gsl=yes, echo "gsl_cdf.h is not found")
 
-if test "$have_gsl" = "yes"; then
-   defs="$defs -DHAVE_GSL"
-   gsl_libs="-lgslcblas -lgsl"
-fi
 
 
 dnl TRE library
@@ -351,6 +347,12 @@ if test "$have_tre" = "yes"; then
    antispam_libs="$antispam_libs -ltre"
 fi
 
+if test "$have_gsl" = "yes"; then
+   echo "gsl library: yes"
+   defs="$defs -DHAVE_GSL"
+   antispam_libs="$antispam_libs -lgslcblas -lgsl"
+fi
+
 if test "$have_zip" = "yes"; then
    echo "zip library: yes"
    AC_DEFINE_UNQUOTED(HAVE_ZIP, 1, [libzip support])
@@ -374,8 +376,6 @@ if test "$have_tcpwrappers" = "yes"; then
 else
    echo "tcpwrappers support: no"
 fi
-
-echo
 
 if test "$have_clamd" = "yes"; then
    echo "clamd support: yes"

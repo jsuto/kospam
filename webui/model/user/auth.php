@@ -16,13 +16,27 @@ class ModelUserAuth extends Model {
       if(ENABLE_IMAP_AUTH == 1) {
          require 'Zend/Mail/Protocol/Imap.php';
          $ok = $this->checkLoginAgainstIMAP($username, $password);
-         if($ok == 1) { return $ok; }
+
+         if($ok == 1) {
+            if(CUSTOM_EMAIL_QUERY_FUNCTION && function_exists(CUSTOM_EMAIL_QUERY_FUNCTION)) {
+               call_user_func(CUSTOM_EMAIL_QUERY_FUNCTION, $username);
+            }
+
+            return $ok;
+         }
       }
 
       if(ENABLE_POP3_AUTH == 1) {
          require 'Zend/Mail/Protocol/Pop3.php';
          $ok = $this->checkLoginAgainstPOP3($username, $password);
-         if($ok == 1) { return $ok; }
+
+         if($ok == 1) {
+            if(CUSTOM_EMAIL_QUERY_FUNCTION && function_exists(CUSTOM_EMAIL_QUERY_FUNCTION)) {
+               call_user_func(CUSTOM_EMAIL_QUERY_FUNCTION, $username);
+            }
+
+            return $ok;
+         }
       }
 
       // fallback local auth

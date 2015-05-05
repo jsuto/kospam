@@ -105,7 +105,7 @@ void update_counters(struct session_data *sdata, struct __data *data, struct __c
             if(sdata->now - mc > cfg->memcached_to_db_interval && c.c_rcvd > 0 && c.c_rcvd >= rcvd){
                snprintf(buf, sizeof(buf)-1, "%ld", sdata->now); memcached_set(&(data->memc), MEMCACHED_COUNTERS_LAST_UPDATE, strlen(MEMCACHED_COUNTERS_LAST_UPDATE), buf, strlen(buf), 0, 0);
 
-               snprintf(buf, sizeof(buf)-1, "UPDATE t_counters SET rcvd=%llu, size=%llu, mynetwork=%llu, ham=%llu, spam=%llu, possible_spam=%llu, unsure=%llu, minefield=%llu, virus=%llu, zombie=%llu, fp=%llu, fn=%llu", c.c_rcvd, c.c_size, c.c_mynetwork, c.c_ham, c.c_spam, c.c_possible_spam, c.c_unsure, c.c_minefield, c.c_virus, c.c_zombie, c.c_fp, c.c_fn);
+               snprintf(buf, sizeof(buf)-1, "UPDATE %s SET rcvd=%llu, size=%llu, mynetwork=%llu, ham=%llu, spam=%llu, possible_spam=%llu, unsure=%llu, minefield=%llu, virus=%llu, zombie=%llu, fp=%llu, fn=%llu", SQL_COUNTER_TABLE, c.c_rcvd, c.c_size, c.c_mynetwork, c.c_ham, c.c_spam, c.c_possible_spam, c.c_unsure, c.c_minefield, c.c_virus, c.c_zombie, c.c_fp, c.c_fn);
  
                p_query(sdata, buf);
             }

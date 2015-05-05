@@ -225,3 +225,14 @@ create table if not exists `search_cache` (
 create index `search_cache_idx` on `search_cache`(`cksum`);
 create index `search_cache_idx2` on `search_cache`(`expiry`);
 
+
+create table if not exists `status` (
+   pid int default 0, messages int default 0, status char(1) default '?', ts int unsigned default 0
+) ENGINE=MEMORY;
+
+
+create table if not exists `attach_digest` (
+   `digest` char(64) unique not null,
+   `counter` int default 1
+) Engine=InnoDB;
+

@@ -86,6 +86,8 @@ int handle_smtp_session(int new_sd, struct __data *data, struct __config *cfg){
       snprintf(buf, sizeof(buf)-1, LMTP_RESP_220_BANNER, cfg->hostid);
 
 
+   update_child_stat_entry(&sdata, 'R', 0);
+
    send(new_sd, buf, strlen(buf), 0);
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent: %s", sdata.ttmpfile, buf);
 
@@ -147,14 +149,14 @@ int handle_smtp_session(int new_sd, struct __data *data, struct __config *cfg){
 
 
                gettimeofday(&tv1, &tz);
+               update_child_stat_entry(&sdata, 'P', 0);
                state = parse_message(&sdata, 1, data, cfg);
                post_parse(&sdata, &state, cfg);
                gettimeofday(&tv2, &tz);
                sdata.__parsed = tvdiff(tv2, tv1);
 
-               for(i=1; i<=state.n_attachments; i++){
-                  syslog(LOG_PRIORITY, "%s: name=*%s*, type=%s, size=%d, digest=%s", sdata.ttmpfile, state.attachments[i].filename, state.attachments[i].type, state.attachments[i].size, state.attachments[i].digest);
-               }
+               sdata.rav = check_for_known_bad_attachments(&sdata, &state);
+               if(sdata.rav == AVIR_VIRUS) snprintf(virusinfo, sizeof(virusinfo)-1, "MARKED.AS.MALWARE");
 
                if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: parsed message", sdata.ttmpfile);
 
@@ -168,8 +170,9 @@ int handle_smtp_session(int new_sd, struct __data *data, struct __config *cfg){
 
 
             #ifdef HAVE_ANTIVIRUS
-               if(cfg->use_antivirus == 1){
+               if(cfg->use_antivirus == 1 && sdata.rav == AVIR_OK){
                   gettimeofday(&tv1, &tz);
+                  update_child_stat_entry(&sdata, 'A', 0);
                   sdata.rav = do_av_check(&sdata, &virusinfo[0], data, cfg);
                   gettimeofday(&tv2, &tz);
                   sdata.__av = tvdiff(tv2, tv1);
@@ -194,6 +197,8 @@ int handle_smtp_session(int new_sd, struct __data *data, struct __config *cfg){
 
                   if(db_conn == 1){
 
+                     update_child_stat_entry(&sdata, 'S', 0);
+
                      if(check_spam(&sdata, &state, data, sdata.fromemail, sdata.rcptto[i], cfg, &my_cfg) == DISCARD){
                         snprintf(inject_resp, sizeof(inject_resp)-1, "discarded");
                         goto SEND_RESULT;
@@ -205,6 +210,8 @@ int handle_smtp_session(int new_sd, struct __data *data, struct __config *cfg){
                   /* inject message back */
 
                   gettimeofday(&tv1, &tz);
+
+                  update_child_stat_entry(&sdata, 'W', 0);
 
                   if( (sdata.rav == AVIR_VIRUS && cfg->silently_discard_infected_email == 1) || sdata.spaminess >= my_cfg.spaminess_oblivion_limit ){
                      inj = OK;
@@ -254,15 +261,14 @@ int handle_smtp_session(int new_sd, struct __data *data, struct __config *cfg){
                                    sdata.__acquire/1000000.0, sdata.__parsed/1000000.0, sdata.__av/1000000.0, sdata.__user/1000000.0, sdata.__policy/1000000.0, sdata.__minefield/1000000.0,
                                        sdata.__as/1000000.0, sdata.__training/1000000.0, sdata.__update/1000000.0, sdata.__store/1000000.0, sdata.__inject/1000000.0);
 
-                  if(sdata.spaminess >= my_cfg.spam_overall_limit){
-                     sdata.status = S_SPAM;
-                     counters.c_spam++;
-                     snprintf(tmpbuf, sizeof(tmpbuf)-1, "SPAM");
-                  }
-                  else if(sdata.rav == AVIR_VIRUS){
+                  if(sdata.rav == AVIR_VIRUS){
                      counters.c_virus++;
                      sdata.status = S_VIRUS;
                      snprintf(tmpbuf, sizeof(tmpbuf)-1, "VIRUS (%s)", virusinfo);
+                  } else if(sdata.spaminess >= my_cfg.spam_overall_limit){
+                     sdata.status = S_SPAM;
+                     counters.c_spam++;
+                     snprintf(tmpbuf, sizeof(tmpbuf)-1, "SPAM");
                   } else {
                      sdata.status = S_HAM;
                      counters.c_ham++;

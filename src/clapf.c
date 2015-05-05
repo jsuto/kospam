@@ -57,6 +57,7 @@ void initialise_configuration();
 static void takesig(int sig){
    int i, status;
    pid_t pid;
+   struct session_data sdata;
 
    switch(sig){
         case SIGALRM:
@@ -83,6 +84,11 @@ static void takesig(int sig){
 
                    //syslog(LOG_PRIORITY, "child (pid: %d) has died", pid);
 
+                   if(open_database(&sdata, &cfg) == OK){
+                      remove_child_stat_entry(&sdata, pid);
+                      close_database(&sdata);
+                   }
+
                    if(quit == 0){
                       i = search_slot_by_pid(pid);
                       if(i >= 0){
@@ -108,10 +114,17 @@ static void child_sighup_handler(int sig){
 
 
 static void child_main(struct child *ptr){
-   int new_sd;
+   int new_sd, rc=ERR;
    char s[INET6_ADDRSTRLEN];
    struct sockaddr_storage client_addr;
    socklen_t addr_size;
+   struct session_data sdata;
+
+   rc = open_database(&sdata, &cfg);
+
+   sdata.pid = getpid();
+
+   if(rc == OK) create_child_stat_entry(&sdata, getpid());
 
    ptr->messages = 0;
 
@@ -143,6 +156,8 @@ static void child_main(struct child *ptr){
 
       close(new_sd);
 
+      if(rc == OK) update_child_stat_entry(&sdata, 'I', ptr->messages);
+
       if(cfg.max_requests_per_child > 0 && ptr->messages >= cfg.max_requests_per_child){
          if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "child (pid: %d) served enough: %d", getpid(), ptr->messages);
          break;
@@ -157,6 +172,8 @@ static void child_main(struct child *ptr){
 #endif
 
    if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "child decides to exit (pid: %d)", getpid());
+
+   if(rc == OK) close_database(&sdata);
 
    exit(0);
 }
@@ -227,6 +244,7 @@ void kill_children(int sig){
          kill(children[i].pid, sig);
       }
    }
+
 }
 
 
@@ -325,6 +343,8 @@ void initialise_configuration(){
       syslog(LOG_PRIORITY, "error: cannot connect to mysql server");
       return;
    }
+
+   init_child_stat_entry(&sdata);
 
    close_database(&sdata);
 

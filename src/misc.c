@@ -527,6 +527,8 @@ void init_session_data(struct session_data *sdata, struct __config *cfg){
    sdata->uid = sdata->gid = 0;
    sdata->status = S_HAM;
 
+   sdata->pid = getpid();
+
    //sdata->skip_id_check = 0;
    sdata->from_address_in_mydomain = 0;
    memset(sdata->name, 0, SMALLBUFSIZE);

@@ -13,7 +13,7 @@
 
 #define VERSION "0.5.1-rc2"
 
-#define BUILD 1308
+#define BUILD 1309
 
 #define HOSTID "av-engine.localhost"
 
@@ -100,7 +100,8 @@
 #define SQL_BLACK_LIST "t_black_list"
 #define SQL_POLICY_TABLE "policy"
 #define SQL_HISTORY_TABLE "history"
-
+#define SQL_STATUS_TABLE "status"
+#define SQL_ATTACH_DIGEST_TABLE "attach_digest"
 
 #define SQL_PREPARED_STMT_QUERY_MINEFIELD "SELECT ts FROM " SQL_MINEFIELD_TABLE " WHERE ip=?"
 #define SQL_PREPARED_STMT_INSERT_INTO_BLACKHOLE "REPLACE INTO " SQL_MINEFIELD_TABLE " (ip, ts) VALUES(?, ?)"
@@ -109,6 +110,8 @@
 #define SQL_PREPARED_STMT_QUERY_POLICY "SELECT deliver_infected_email, silently_discard_infected_email, use_antispam, spam_subject_prefix, max_message_size_to_filter, surbl_domain, spam_overall_limit, spaminess_oblivion_limit, replace_junk_characters, penalize_images, penalize_embed_images, penalize_octet_stream, training_mode, store_emails, store_only_spam, message_from_a_zombie, smtp_addr, smtp_port FROM " SQL_POLICY_TABLE " WHERE id=?"
 #define SQL_PREPARED_STMT_INSERT_INTO_HISTORY "INSERT INTO " SQL_HISTORY_TABLE " (ts, clapf_id, spam, sender, rcpt, subject, size, attachments, relay, status) VALUES (?,?,?,?,?,?,?,?,?,?)"
 #define SQL_PREPARED_STMT_QUERY_TRAINING_ID "SELECT spam FROM " SQL_HISTORY_TABLE " WHERE clapf_id=?"
+#define SQL_PREPARED_STMT_QUERY_ADIGEST "SELECT counter FROM " SQL_ATTACH_DIGEST_TABLE " WHERE digest=?"
+#define SQL_PREPARED_STMT_UPDATE_ADIGEST "UPDATE " SQL_ATTACH_DIGEST_TABLE " SET counter=counter+1 WHERE digest=?"
 
 
 /* Error codes */

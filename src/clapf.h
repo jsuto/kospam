@@ -30,6 +30,7 @@
 #define DEVIATION(n) fabs((n)-0.5f)
 
 int do_av_check(struct session_data *sdata, char *virusinfo, struct __data *data, struct __config *cfg);
+int check_for_known_bad_attachments(struct session_data *sdata, struct __state *state);
 
 void digest_file(char *filename, char *digest);
 
@@ -76,6 +77,11 @@ int create_partition(struct __config *cfg);
 int drop_partition(struct __config *cfg);
 
 int check_rbl_lists(struct __state *state, char *domainlist, struct __config *cfg);
+
+void init_child_stat_entry(struct session_data *sdata);
+void create_child_stat_entry(struct session_data *sdata, pid_t pid);
+void remove_child_stat_entry(struct session_data *sdata, pid_t pid);
+void update_child_stat_entry(struct session_data *sdata, char status, int count);
 
 #endif /* _CLAPF_H */
 

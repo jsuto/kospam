@@ -242,6 +242,7 @@ struct session_data {
    char bodydigest[2*DIGEST_LENGTH+1];
    char digest[2*DIGEST_LENGTH+1];
    time_t now, sent;
+   pid_t pid;
    unsigned int sql_errno;
 #ifdef NEED_MYSQL
    MYSQL mysql;

@@ -85,7 +85,6 @@ class MySQL {
 
 
 $history_dir = "/var/clapf/history/new";
-$dry_run = 0;
 $database = 'clapf';
 $host = '';
 $username = 'clapf';
@@ -93,14 +92,13 @@ $password = '';
 $verbose = 0;
 $delimiter = '';
 
-$opts = 'dhv';
+$opts = 'dhupv';
 $lopts = array(
                'dir:',
                'host:',
                'database:',
                'username:',
                'password:',
-               'dry-run',
                'verbose'
          );
     
@@ -128,10 +126,6 @@ if($options = getopt($opts, $lopts)) {
         $password = $options['password'];
     } else {
         die("you must specify --password <password>\n");
-    }
-
-    if(isset($options['dry-run']) || isset($options['d'])) {
-        $dry_run = 1;
     }
 
     if(isset($options['h'])) { 
@@ -194,7 +188,6 @@ function fix_partitions($db = '') {
 
 function processdir($dir = '', $db = '') {
    global $delimiter;
-   global $dry_run;
    global $verbose;
    $n = 0;
    $stat = array(
@@ -262,7 +255,7 @@ function processdir($dir = '', $db = '') {
 
 
 function display_help() {
-   print "--dir|-d               history directory\n";
+   print "--dir                  history directory\n";
    print "--host                 database host\n";
    print "--database             clapf database (default: clapf)\n";
    print "--username             sql username (default: clapf)\n";

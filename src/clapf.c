@@ -378,13 +378,16 @@ int main(int argc, char **argv){
                    break;
 
         case 'v' :
+                   printf("%s %s, build %d\n", PROGNAME, VERSION, get_build());
+                   break;
+
         case 'V' :
                    printf("%s %s, build %d, Janos SUTO <sj@acts.hu>\n\n%s\n\n", PROGNAME, VERSION, get_build(), CONFIGURE_PARAMS);
                    return 0;
 
         case 'h' :
         default  : 
-                   __fatal("usage: ...");
+                   __fatal("\nusage:\n      -c <config file>\n      -d: daemonize\n      -v|-V: show version\n      -h: show this help\n\n");
       }
    }
 

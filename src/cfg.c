@@ -67,7 +67,7 @@ struct _parse_rule config_parse_rules[] =
    { "clamd_port", "integer", (void*) int_parser, offsetof(struct __config, clamd_port), "0", sizeof(int)},
    { "clamd_socket", "string", (void*) string_parser, offsetof(struct __config, clamd_socket), CLAMD_SOCKET, MAXVAL-1},
    { "clapf_header_field", "string", (void*) string_parser, offsetof(struct __config, clapf_header_field), SPAMINESS_HEADER_FIELD, MAXVAL-1},
-   { "clapf_spam_header_field", "multi_line_string", (void*) multi_line_string_parser, offsetof(struct __config, clapf_spam_header_field), SPAM_HEADER_FIELD, MAXVAL-1},
+   { "clapf_spam_header_field", "multi_line_string", (void*) multi_line_string_parser, offsetof(struct __config, clapf_spam_header_field), "", MAXVAL-1},
    { "debug", "integer", (void*) int_parser, offsetof(struct __config, debug), "0", sizeof(int)},
    { "default_retention_days", "integer", (void*) int_parser, offsetof(struct __config, default_retention_days), "2557", sizeof(int)},
    { "enable_cjk", "integer", (void*) int_parser, offsetof(struct __config, enable_cjk), "0", sizeof(int)},

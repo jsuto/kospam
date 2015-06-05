@@ -233,6 +233,8 @@ int main(int argc, char **argv){
       train_message(&sdata, &state, rounds, is_spam, train_mode, &my_cfg);
    }
 
+   check_zombie_sender(&sdata, &data, &state, &my_cfg);
+
    sdata.spaminess = run_statistical_check(&sdata, &state, &my_cfg);
 
 CLEANUP:
@@ -248,7 +250,7 @@ CLEANUP:
    if(cfg.debug == 1){
       printf("spaminess: %.4f in %ld [ms]\n", sdata.spaminess, tvdiff(tv_stop, tv_start)/1000);
       printf("%d %d\n", state.c_shit, state.l_shit);
-      printf("rcvd host/ip: %s/%s\n", sdata.hostname, sdata.ip);
+      printf("rcvd host/ip/zombie: %s/%s/%c\n", sdata.hostname, sdata.ip, sdata.tre);
       printf("number of tokens: %d/%d\n", state.n_token, state.n_deviating_token);
    }
 

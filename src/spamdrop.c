@@ -133,7 +133,7 @@ int main(int argc, char **argv){
 
    if(train_as_spam == 1 && train_as_ham == 1){
       fprintf(stderr, "cannot train a message as ham and spam at the same time\n");
-      return 0;
+      return 1;
    }
 
    srand(getpid());
@@ -142,7 +142,7 @@ int main(int argc, char **argv){
 
    if(stat(message, &st) != 0){
       fprintf(stderr, "%s is not found\n", message);
-      return 0;
+      return 1;
    }
 
    (void) openlog("spamdrop", LOG_PID, LOG_MAIL);

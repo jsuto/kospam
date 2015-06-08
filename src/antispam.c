@@ -146,6 +146,7 @@ int check_spam(struct session_data *sdata, struct __state *state, struct __data 
       sdata->spaminess = 0.99;
 
       if(my_cfg->message_from_a_zombie == 1){
+         syslog(LOG_PRIORITY, "%s: marking message from a zombie as spam", sdata->ttmpfile);
          return OK;
       }
 

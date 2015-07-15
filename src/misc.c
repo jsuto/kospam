@@ -597,9 +597,11 @@ int can_i_write_current_directory(){
 
 int is_item_on_list(char *item, char *list, char *extralist){
    int result;
-   char *p, *q, w[SMALLBUFSIZE], my_list[SMALLBUFSIZE];
+   char *p, *q, w[MAXBUFSIZE], my_list[MAXBUFSIZE];
 
    if(!item) return 0;
+
+   if(strlen(list) + strlen(extralist) < 3) return 0;
 
    snprintf(my_list, sizeof(my_list)-1, "%s,%s", extralist, list);
 

@@ -100,11 +100,16 @@ void get_wbl_data(struct session_data *sdata, struct __config *cfg){
 
    while(p_fetch_results(&sql) == OK){
 
-      if(strlen(sdata->whitelist) > 0) strncat(sdata->whitelist, "\n", MAXBUFSIZE-1);
-      strncat(sdata->whitelist, wh, MAXBUFSIZE-1);
+      if(!sql.is_null[0]){
+         if(strlen(sdata->whitelist) > 0) strncat(sdata->whitelist, "\n", MAXBUFSIZE-1);
+         strncat(sdata->whitelist, wh, MAXBUFSIZE-1);
+      }
 
-      if(strlen(sdata->blacklist) > 0) strncat(sdata->blacklist, "\n", MAXBUFSIZE-1);
-      strncat(sdata->blacklist, bl, MAXBUFSIZE-1);
+      if(!sql.is_null[1]){
+         if(strlen(sdata->blacklist) > 0) strncat(sdata->blacklist, "\n", MAXBUFSIZE-1);
+         strncat(sdata->blacklist, bl, MAXBUFSIZE-1);
+      }
+
    }
 
    replace_character_in_buffer(sdata->whitelist, '\r', ',');

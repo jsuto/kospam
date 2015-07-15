@@ -310,6 +310,8 @@ void initialise_configuration(){
    if(cfg.number_of_worker_processes > MAXCHILDREN) cfg.number_of_worker_processes = MAXCHILDREN;
 
    if(strlen(cfg.username) > 1){
+      if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "username='%s'", cfg.username);
+
       pwd = getpwnam(cfg.username);
       if(!pwd) fatal(ERR_NON_EXISTENT_USER);
    }

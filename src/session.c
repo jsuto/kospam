@@ -184,7 +184,7 @@ int handle_smtp_session(int new_sd, struct __data *data, struct __config *cfg){
 
                if(cfg->server_mode == SMTP_MODE) k = 1; else k = sdata.num_of_rcpt_to;
 
-               for(i=0; i<sdata.num_of_rcpt_to; i++){
+               for(i=0; i<k; i++){
                   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: round %d in injection", sdata.ttmpfile, i);
 
                   inj = ERR;

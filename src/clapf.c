@@ -60,13 +60,6 @@ static void takesig(int sig){
    struct session_data sdata;
 
    switch(sig){
-        case SIGALRM:
-                if(cfg.history == 0){
-                   create_partition(&cfg);
-                   drop_partition(&cfg);
-                   alarm(PARTITION_MGMT_INTERVAL);
-                }
-                break;
 
         case SIGHUP:
                 initialise_configuration();
@@ -457,12 +450,6 @@ int main(int argc, char **argv){
    set_signal_handler(SIGTERM, takesig);
    set_signal_handler(SIGKILL, takesig);
    set_signal_handler(SIGHUP, takesig);
-
-   if(cfg.history == 0){
-      set_signal_handler(SIGALRM, takesig);
-      alarm(PARTITION_MGMT_INTERVAL);
-   }
-
 
    for(;;){ sleep(1); }
 

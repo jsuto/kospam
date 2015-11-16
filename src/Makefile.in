@@ -33,7 +33,7 @@ MAKE = `which make`
 
 INSTALL = @INSTALL@
 
-all: libclapf.a clapf clapfconf spamdrop splitmbox
+all: libclapf.a clapf clapfconf spamdrop splitmbox cpartition
 install: install-clapf
 
 
@@ -57,6 +57,9 @@ spamdrop: spamdrop.c libclapf.a
 splitmbox: splitmbox.c libclapf.a
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $< -lclapf $(LIBS) $(LIBDIR) @LDFLAGS@
 
+cpartition: cpartition.c libclapf.a
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $< -lclapf $(LIBS) $(LIBDIR) @LDFLAGS@
+
 %.o: $(srcdir)/%.c
 	$(CC) $(CFLAGS) -fPIC $(INCDIR) $(DEFS) -c $< -o $@
 
@@ -71,9 +74,10 @@ install-clapf:
 	$(INSTALL) -m 0755 clapfconf $(DESTDIR)$(sbindir)
 	$(INSTALL) -m 0755 spamdrop $(DESTDIR)$(bindir)
 	$(INSTALL) -m 0755 splitmbox $(DESTDIR)$(bindir)
+	$(INSTALL) -m 0755 cpartition $(DESTDIR)$(bindir)
 
 clean:
-	rm -f *.o *.a libclapf.so* clapf clapfconf spamdrop splitmbox
+	rm -f *.o *.a libclapf.so* clapf clapfconf spamdrop splitmbox cpartition
 
 distclean: clean
 	rm -f Makefile

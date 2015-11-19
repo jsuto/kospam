@@ -263,7 +263,9 @@ int check_spam(struct session_data *sdata, struct __state *state, struct __data 
       strncat(sdata->spaminessbuf, tmpbuf, MAXBUFSIZE-1);
 
    }
-
+   else {
+      syslog(LOG_PRIORITY, "%s: skipping spam check, size: %d/%d, tokens: %d/%d", sdata->ttmpfile, sdata->tot_len, my_cfg->max_message_size_to_filter, state->n_token, my_cfg->max_number_of_tokens_to_filter);
+   }
 
 
    if(cfg->update_tokens == 1 && state->n_token > 3){

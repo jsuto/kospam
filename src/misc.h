@@ -24,6 +24,7 @@ void replace_character_in_buffer(char *p, char from, char to);
 char *split(char *str, int ch, char *buf, int buflen, int *result);
 char *split_str(char *row, char *what, char *s, int size);
 int trim_buffer(char *s);
+int extract_verp_address(char *email);
 int extractEmail(char *rawmail, char *email);
 void make_random_string(char *buf, int buflen);
 void create_id(char *id, unsigned char server_id);

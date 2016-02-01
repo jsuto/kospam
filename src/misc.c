@@ -233,7 +233,11 @@ int extractEmail(char *rawmail, char *email){
       p = strchr(email, '>');
       if(p){
          *p = '\0';
-         extract_verp_address(email);
+         /*
+          * we can't perform verp extraction here, because it breaks the rcpt to email used in the smtp injection, eg.
+          *
+          * <piler-user+confsub-215840341cf5090a-suto.janos=aaa.fu@list.acts.hu> -> confsub-215840341cf5090a-suto.janos@aaa.fu
+          */
          return 1;
       }
    }

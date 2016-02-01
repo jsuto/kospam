@@ -22,7 +22,7 @@
 int handle_smtp_session(int new_sd, struct __data *data, struct __config *cfg){
    int i, k, ret, pos, n, inj=ERR, smtp_state, prevlen=0;
    char *p, *q, buf[MAXBUFSIZE], puf[MAXBUFSIZE], resp[MAXBUFSIZE], inject_resp[MAXBUFSIZE], prevbuf[MAXBUFSIZE], last2buf[2*MAXBUFSIZE+1];
-   char virusinfo[SMALLBUFSIZE], delay[SMALLBUFSIZE], tmpbuf[SMALLBUFSIZE];
+   char virusinfo[SMALLBUFSIZE], delay[SMALLBUFSIZE], tmpbuf[SMALLBUFSIZE], recipient[SMALLBUFSIZE];
    struct session_data sdata;
    struct __state state;
    struct __config my_cfg;
@@ -199,7 +199,10 @@ int handle_smtp_session(int new_sd, struct __data *data, struct __config *cfg){
 
                      update_child_stat_entry(&sdata, 'S', 0);
 
-                     if(check_spam(&sdata, &state, data, sdata.fromemail, sdata.rcptto[i], cfg, &my_cfg) == DISCARD){
+                     snprintf(recipient, sizeof(recipient)-1, "%s", sdata.rcptto[i]);
+                     extract_verp_address(recipient);
+
+                     if(check_spam(&sdata, &state, data, sdata.fromemail, recipient, cfg, &my_cfg) == DISCARD){
                         snprintf(inject_resp, sizeof(inject_resp)-1, "discarded");
                         goto SEND_RESULT;
                      }

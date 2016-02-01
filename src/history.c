@@ -55,7 +55,7 @@ int store_file_to_quarantine(char *filename, struct __config *cfg){
 
 int write_history_to_sql(struct session_data *sdata, struct __state *state, char *status, struct __config *cfg){
    int i, rc=ERR;
-   char relay[SMALLBUFSIZE];
+   char relay[SMALLBUFSIZE], recipient[SMALLBUFSIZE];
    struct sql sql;
 
    if(prepare_sql_statement(sdata, &sql, SQL_PREPARED_STMT_INSERT_INTO_HISTORY) == ERR) return rc;
@@ -65,11 +65,14 @@ int write_history_to_sql(struct session_data *sdata, struct __state *state, char
    for(i=0; i<sdata->num_of_rcpt_to; i++){
       p_bind_init(&sql);
 
+      snprintf(recipient, sizeof(recipient)-1, "%s", sdata->rcptto[i]);
+      extract_verp_address(recipient);
+
       sql.sql[sql.pos] = (char *)&(sdata->now); sql.type[sql.pos] = TYPE_LONG; sql.pos++;
       sql.sql[sql.pos] = sdata->ttmpfile; sql.type[sql.pos] = TYPE_STRING; sql.pos++;
       sql.sql[sql.pos] = (char *)&(sdata->status); sql.type[sql.pos] = TYPE_LONG; sql.pos++;
       sql.sql[sql.pos] = sdata->fromemail; sql.type[sql.pos] = TYPE_STRING; sql.pos++;
-      sql.sql[sql.pos] = sdata->rcptto[i]; sql.type[sql.pos] = TYPE_STRING; sql.pos++;
+      sql.sql[sql.pos] = recipient; sql.type[sql.pos] = TYPE_STRING; sql.pos++;
       sql.sql[sql.pos] = state->b_subject; sql.type[sql.pos] = TYPE_STRING; sql.pos++;
       sql.sql[sql.pos] = (char *)&(sdata->tot_len); sql.type[sql.pos] = TYPE_LONG; sql.pos++;
       sql.sql[sql.pos] = (char *)&(state->n_attachments); sql.type[sql.pos] = TYPE_LONG; sql.pos++;
@@ -88,16 +91,19 @@ int write_history_to_sql(struct session_data *sdata, struct __state *state, char
 
 int write_history_to_fs(struct session_data *sdata, struct __state *state, char *status, struct __config *cfg){
    int i, rc=ERR, fd, len=0;
-   char tmpname[SMALLBUFSIZE], name[SMALLBUFSIZE], buf[SMALLBUFSIZE];
+   char tmpname[SMALLBUFSIZE], name[SMALLBUFSIZE], buf[SMALLBUFSIZE], recipient[SMALLBUFSIZE];
    Bytef *z=NULL;
    uLongf dstlen;
 
    for(i=0; i<sdata->num_of_rcpt_to; i++){
 
+      snprintf(recipient, sizeof(recipient)-1, "%s", sdata->rcptto[i]);
+      extract_verp_address(recipient);
+
       snprintf(tmpname, sizeof(tmpname)-1, "%s/tmp/%s", HISTORY_DIR, sdata->ttmpfile);
       snprintf(name, sizeof(name)-1, "%s/new/%s", HISTORY_DIR, sdata->ttmpfile);
 
-      snprintf(buf, sizeof(buf)-1, "%s%c%ld%c%s%c%s%c%d%c%d%c%d%c%s:%d%c%s%c%s", sdata->ttmpfile, DELIM, sdata->now, DELIM, sdata->fromemail, DELIM, sdata->rcptto[i], DELIM, sdata->tot_len, DELIM, state->n_attachments, DELIM, sdata->status, DELIM, cfg->smtp_addr, cfg->smtp_port, DELIM, status, DELIM, state->b_subject);
+      snprintf(buf, sizeof(buf)-1, "%s%c%ld%c%s%c%s%c%d%c%d%c%d%c%s:%d%c%s%c%s", sdata->ttmpfile, DELIM, sdata->now, DELIM, sdata->fromemail, DELIM, recipient, DELIM, sdata->tot_len, DELIM, state->n_attachments, DELIM, sdata->status, DELIM, cfg->smtp_addr, cfg->smtp_port, DELIM, status, DELIM, state->b_subject);
 
       len = strlen(buf);
       dstlen = compressBound(len);

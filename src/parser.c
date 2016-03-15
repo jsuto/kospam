@@ -86,7 +86,6 @@ void post_parse(struct session_data *sdata, struct __state *state, struct __conf
    int i;
 
    trim_buffer(state->b_subject);
-   fixupEncodedHeaderLine(state->b_subject, MAXBUFSIZE);
 
    state->message_state = MSG_SUBJECT;
    translate_line((unsigned char*)state->b_subject, state);
@@ -337,34 +336,36 @@ int parse_line(char *buf, struct __state *state, struct session_data *sdata, int
    }
 
 
-   if(state->is_1st_header == 1 && state->message_state == MSG_SUBJECT && strlen(state->b_subject) + strlen(buf) < MAXBUFSIZE-1){
-
-      if(state->b_subject[0] == '\0'){
-         p = &buf[0];
-         if(strncmp(buf, "Subject:", strlen("Subject:")) == 0) p += strlen("Subject:");
-         if(*p == ' ') p++;
-
-         strncat(state->b_subject, p, MAXBUFSIZE-1);
-      }
-      else {
-
-         /*
-          * if the next subject line is encoded, then strip the whitespace characters at the beginning of the line
-          */
-
-         p = buf;
-
-         if(strcasestr(buf, "?Q?") || strcasestr(buf, "?B?")){
-            while(isspace(*p)) p++;
-         }
-
-         strncat(state->b_subject, p, MAXBUFSIZE-1);
-      }
-
-   }
-
    if(state->is_1st_header == 1){
-      fixupEncodedHeaderLine(buf, MAXBUFSIZE);
+
+      if(state->message_state == MSG_SUBJECT && strlen(state->b_subject) + strlen(buf) < MAXBUFSIZE-1){
+
+         if(state->b_subject[0] == '\0'){
+            p = &buf[0];
+            if(strncmp(buf, "Subject:", strlen("Subject:")) == 0) p += strlen("Subject:");
+            if(*p == ' ') p++;
+
+            fixupEncodedHeaderLine(p, MAXBUFSIZE);
+            strncat(state->b_subject, p, MAXBUFSIZE-strlen(state->b_subject)-1);
+         }
+         else {
+
+            /*
+             * if the next subject line is encoded, then strip the whitespace characters at the beginning of the line
+             */
+
+            p = buf;
+
+            if(strcasestr(buf, "?Q?") || strcasestr(buf, "?B?")){
+               while(isspace(*p)) p++;
+            }
+
+            fixupEncodedHeaderLine(p, MAXBUFSIZE);
+
+            strncat(state->b_subject, p, MAXBUFSIZE-strlen(state->b_subject)-1);
+         }
+      }
+      else { fixupEncodedHeaderLine(buf, MAXBUFSIZE); }
    }
 
 

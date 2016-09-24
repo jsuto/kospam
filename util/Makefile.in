@@ -28,6 +28,7 @@ INSTALL = @INSTALL@
 all:
 
 install:
+	sed -e "s%SYSCONFDIR%$(sysconfdir)%" $(srcdir)/indexer.main.sh.in > $(srcdir)/indexer.main.sh
 	$(INSTALL) -m 0755 $(srcdir)/quarantine-daily-report.php $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 $(srcdir)/history-to-sql.php $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0755 $(srcdir)/indexer.main.sh $(DESTDIR)$(libexecdir)/clapf

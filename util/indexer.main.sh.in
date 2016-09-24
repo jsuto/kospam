@@ -2,7 +2,7 @@
 
 export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin
 MAINTMPFILE=/var/run/clapf/main.indexer.tmp
-INDEXER=indexer
+INDEXER="indexer --config SYSCONFDIR/clapf/sphinx.conf"
 PRIORITY=mail.error
 TOUCHFILE=/var/clapf/stat/indexer
 

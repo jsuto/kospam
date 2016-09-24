@@ -17,7 +17,7 @@
 
 #define HOSTID "av-engine.localhost"
 
-#define CONFIG_FILE CONFDIR "/clapf.conf"
+#define CONFIG_FILE CONFDIR "/clapf/clapf.conf"
 #define WORK_DIR DATADIR "/clapf/tmp"
 #define QUEUE_DIR DATADIR "/clapf/queue"
 #define HISTORY_DIR DATADIR "/clapf/history"

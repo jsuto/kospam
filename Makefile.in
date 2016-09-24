@@ -67,6 +67,7 @@ $(RECURSIVE_TARGETS):
 installdirs: mkinstalldirs
 	$(srcdir)/mkinstalldirs \
 		$(DESTDIR)$(bindir) $(DESTDIR)$(sbindir) $(DESTDIR)$(libdir) $(DESTDIR)$(libexecdir)/clapf $(DESTDIR)$(datarootdir)/clapf $(DESTDIR)$(sysconfdir) \
+		$(DESTDIR)$(sysconfdir)/clapf \
 		$(DESTDIR)$(localstatedir)/clapf/history \
 		$(DESTDIR)$(localstatedir)/clapf/queue \
 		$(DESTDIR)$(localstatedir)/clapf/sphinx \

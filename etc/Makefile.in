@@ -26,14 +26,14 @@ INSTALL = @INSTALL@
 
 all:
 	sed -e 's%pidfile=.*%pidfile=$(localstatedir)/run/clapf/clapf.pid%g' \
-	-e 's%pemfile=%pemfile=$(sysconfdir)/clapf.pem%g' \
+	-e 's%pemfile=%pemfile=$(sysconfdir)/clapf/clapf.pem%g' \
 	-e 's%workdir=.*%workdir=$(localstatedir)/clapf/tmp%g' < $(srcdir)/example.conf | grep -v ^\; | grep '=' | sort > $(srcdir)/clapf.conf
 
 install:
-	if [ ! -f "$(DESTDIR)$(sysconfdir)/clapf.conf" ]; then $(INSTALL) -m 0640 -g $(RUNNING_GROUP) $(srcdir)/clapf.conf $(DESTDIR)$(sysconfdir)/clapf.conf; fi
-	$(INSTALL) -m 0644 -g $(RUNNING_GROUP) $(srcdir)/clapf.conf $(DESTDIR)$(sysconfdir)/clapf.conf.dist
+	if [ ! -f "$(DESTDIR)$(sysconfdir)/clapf.conf" ]; then $(INSTALL) -m 0640 -g $(RUNNING_GROUP) $(srcdir)/clapf.conf $(DESTDIR)$(sysconfdir)/clapf/clapf.conf; fi
+	$(INSTALL) -m 0644 -g $(RUNNING_GROUP) $(srcdir)/clapf.conf $(DESTDIR)$(sysconfdir)/clapf/clapf.conf.dist
 	sed -e 's%LOCALSTATEDIR%$(localstatedir)%g' $(srcdir)/sphinx.conf.in > sphinx.conf.dist
-	$(INSTALL) -m 0640 -g $(RUNNING_GROUP) $(srcdir)/sphinx.conf.dist $(DESTDIR)$(sysconfdir)/sphinx.conf.dist
+	$(INSTALL) -m 0640 -g $(RUNNING_GROUP) $(srcdir)/sphinx.conf.dist $(DESTDIR)$(sysconfdir)/clapf/sphinx.conf.dist
 
 clean:
 	rm -f clapf.conf sphinx.conf.dist

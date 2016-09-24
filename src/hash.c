@@ -9,6 +9,11 @@
 #include <clapf.h>
 
 
+inline int hash(uint64 key){
+   return key % MAXHASH;
+}
+
+
 void inithash(struct node *xhash[]){
    int i;
 
@@ -157,11 +162,6 @@ struct node *findnode(struct node *xhash[], char *s){
    }
 
    return NULL;
-}
-
-
-inline int hash(uint64 key){
-   return key % MAXHASH;
 }
 
 

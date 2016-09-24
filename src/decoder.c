@@ -60,6 +60,45 @@ static char hex_table[] = {
 };
 
 
+inline void utf8_encode_char(unsigned char c, unsigned char *buf, int buflen, int *len){
+   int count=0;
+
+   memset(buf, 0, buflen);
+
+      /*
+       * Code point          1st byte    2nd byte    3rd byte    4th byte
+       * ----------          --------    --------    --------    --------
+       * U+0000..U+007F      00..7F
+       * U+0080..U+07FF      C2..DF      80..BF
+       * U+0800..U+0FFF      E0          A0..BF      80..BF
+       */
+
+      if(c <= 0x7F){
+         *(buf+count) = c;
+         count++;
+      }
+
+      else if(c <= 0x7FF){
+         *(buf+count) = ( 0xC0 | (c >> 6) );
+         count++;
+         *(buf+count) = ( 0x80 | (c & 0x3F) );
+         count++;
+      }
+
+
+      else if (c <= 0xFFFF){
+         *(buf+count) = ( 0xE0 | (c >> 12) );
+         count++;
+         *(buf+count) = ( 0x80 | ((c >> 6) & 0x3F) );
+         count++;
+         *(buf+count) = ( 0x80 | (c & 0x3F) );
+         count++;
+      }
+
+   *len = count;
+}
+
+
 static int compmi(const void *m1, const void *m2){
    struct mi *mi1 = (struct mi *) m1;
    struct mi *mi2 = (struct mi *) m2;
@@ -282,45 +321,6 @@ void decodeURL(char *p){
    }
 
    p[k] = '\0';
-}
-
-
-inline void utf8_encode_char(unsigned char c, unsigned char *buf, int buflen, int *len){
-   int count=0;
-
-   memset(buf, 0, buflen);
-
-      /*
-       * Code point          1st byte    2nd byte    3rd byte    4th byte
-       * ----------          --------    --------    --------    --------
-       * U+0000..U+007F      00..7F
-       * U+0080..U+07FF      C2..DF      80..BF
-       * U+0800..U+0FFF      E0          A0..BF      80..BF
-       */
-
-      if(c <= 0x7F){
-         *(buf+count) = c;
-         count++;
-      }
-
-      else if(c <= 0x7FF){
-         *(buf+count) = ( 0xC0 | (c >> 6) );
-         count++;
-         *(buf+count) = ( 0x80 | (c & 0x3F) );
-         count++;
-      }
-
-
-      else if (c <= 0xFFFF){
-         *(buf+count) = ( 0xE0 | (c >> 12) );
-         count++;
-         *(buf+count) = ( 0x80 | ((c >> 6) & 0x3F) );
-         count++;
-         *(buf+count) = ( 0x80 | (c & 0x3F) );
-         count++;
-      }
-
-   *len = count;
 }
 
 

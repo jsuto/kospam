@@ -34,7 +34,7 @@ install:
 	$(INSTALL) -m 0755 $(srcdir)/indexer.main.sh $(DESTDIR)$(libexecdir)/clapf
 	$(INSTALL) -m 0644 $(srcdir)/zombienets.regex $(DESTDIR)$(datarootdir)/clapf/zombienets.regex.dist
 	$(INSTALL) -m 0644 $(srcdir)/db-mysql.sql $(DESTDIR)$(datarootdir)/clapf
-	$(INSTALL) -m 0755 $(srcdir)/db-mysql-root.sql.in $(DESTDIR)$(datarootdir)/clapf
+	$(INSTALL) -m 0644 $(srcdir)/db-mysql-root.sql.in $(DESTDIR)$(datarootdir)/clapf
 
 clean:
 	echo

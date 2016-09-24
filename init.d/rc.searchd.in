@@ -29,7 +29,7 @@ start() {
         if [ `id -u` -eq 0 ]; then
 		su clapf -c "searchd --config SYSCONFDIR/clapf/sphinx.conf"
 	else
-		searchd
+		searchd --config SYSCONFDIR/clapf/sphinx.conf
 	fi
 }
 

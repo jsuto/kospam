@@ -281,6 +281,7 @@ int handle_smtp_session(int new_sd, struct __data *data, struct __config *cfg){
                      else if(sdata.spaminess < my_cfg.possible_spam_limit && sdata.spaminess > my_cfg.max_ham_spamicity) counters.c_unsure++;
                   }
 
+                  if(cfg->log_subject == 1) syslog(LOG_PRIORITY, "%s: subject=%s", sdata.ttmpfile, state.b_subject);
                   syslog(LOG_PRIORITY, "%s: from=%s, to=%s, result=%s/%.4f, size=%d, attachments=%d, relay=%s:%d, %s, status=%s", sdata.ttmpfile, sdata.fromemail, sdata.rcptto[i], tmpbuf, sdata.spaminess, sdata.tot_len, state.n_attachments, my_cfg.smtp_addr, my_cfg.smtp_port, delay, inject_resp);
 
                } /* for */
@@ -656,5 +657,3 @@ QUITTING:
 
    return (int)counters.c_rcvd;
 }
-
-

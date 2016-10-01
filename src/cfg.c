@@ -80,6 +80,7 @@ struct _parse_rule config_parse_rules[] =
    { "hostid", "string", (void*) string_parser, offsetof(struct __config, hostid), HOSTID, MAXVAL-1},
    { "listen_addr", "string", (void*) string_parser, offsetof(struct __config, listen_addr), "127.0.0.1", MAXVAL-1},
    { "listen_port", "integer", (void*) int_parser, offsetof(struct __config, listen_port), "10025", sizeof(int)},
+   { "log_subject", "integer", (void*) int_parser, offsetof(struct __config, log_subject), "0", sizeof(int)},
    { "locale", "string", (void*) string_parser, offsetof(struct __config, locale), "", MAXVAL-1},
    { "maillog", "string", (void*) string_parser, offsetof(struct __config, maillog), "", MAXVAL-1},
    { "max_ham_spamicity", "float", (void*) float_parser, offsetof(struct __config, max_ham_spamicity), "0.45", sizeof(float)},

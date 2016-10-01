@@ -130,6 +130,8 @@ struct __config {
    int use_antispam;
    int use_antivirus;
 
+   int log_subject;
+
    char our_signo[MAXVAL];
    char skipped_received_ips[MAXVAL];
 

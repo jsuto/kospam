@@ -175,7 +175,7 @@ class ModelSearchMessage extends Model {
          $body = preg_replace("/\<body ([\w\s\;\"\'\#\d\:\-\=]+)\>/i", "<body>", $body);
 
          $body = preg_replace("/\<a\s{1,}([\w=\"\'\s]+){0,}\s{0,}href/i", "<qqqq", $body);
-         $body = preg_replace("/\<base href/i", "<qqqq", $body);
+         $body = preg_replace("/\<(link|base) href/i", "<qqqq", $body);
 
          $body = preg_replace("/document\.write/", "document.writeee", $body);
          $body = preg_replace("/<\s{0,}script([\w\W]+)\/script\s{0,}\>/i", "<!-- disabled javascript here -->", $body);

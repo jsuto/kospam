@@ -31,13 +31,10 @@ int handle_smtp_session(int new_sd, struct __data *data, struct __config *cfg){
    int rc;
    struct timezone tz;
    struct timeval tv1, tv2;
-#ifdef HAVE_STARTTLS
    int starttls = 0;
    char ssl_error[SMALLBUFSIZE];
-#endif
 
 
-#ifdef HAVE_LIBWRAP
    struct request_info req;
 
    request_init(&req, RQ_DAEMON, PROGNAME, RQ_FILE, new_sd, 0);
@@ -47,7 +44,6 @@ int handle_smtp_session(int new_sd, struct __data *data, struct __config *cfg){
       syslog(LOG_PRIORITY, "denied connection from %s by tcp_wrappers", eval_client(&req));
       return 0;
    }
-#endif
 
    srand(getpid());
 
@@ -403,7 +399,6 @@ AFTER_PERIOD:
          }
 
 
-      #ifdef HAVE_STARTTLS
          if(cfg->tls_enable > 0 && strncasecmp(buf, SMTP_CMD_STARTTLS, strlen(SMTP_CMD_STARTTLS)) == 0 && strlen(data->starttls) > 4 && sdata.tls == 0){
             if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: starttls request from client", sdata.ttmpfile);
 
@@ -427,7 +422,6 @@ AFTER_PERIOD:
             strncat(resp, SMTP_RESP_454_ERR_TLS_TEMP_ERROR, sizeof(resp)-1);
             continue;
          }
-      #endif
 
 
          if(strncasecmp(buf, SMTP_CMD_MAIL_FROM, strlen(SMTP_CMD_MAIL_FROM)) == 0){
@@ -587,7 +581,6 @@ AFTER_PERIOD:
          if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: sent: %s", sdata.ttmpfile, resp);
          memset(resp, 0, sizeof(resp));
 
-      #ifdef HAVE_STARTTLS
          if(starttls == 1 && sdata.tls == 0){
 
             if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: waiting for ssl handshake", sdata.ttmpfile);
@@ -604,9 +597,6 @@ AFTER_PERIOD:
                syslog(LOG_PRIORITY, "%s: error: SSL_accept() failed, rc=%d, errorcode: %d, error text: %s\n", sdata.ttmpfile, rc, SSL_get_error(data->ssl, rc), ssl_error);
             }
          }
-      #endif
-
-
       }
 
       if(smtp_state == SMTP_STATE_FINISHED){
@@ -646,12 +636,10 @@ QUITTING:
    close_database(&sdata);
 #endif
 
-#ifdef HAVE_STARTTLS
    if(sdata.tls == 1){
       SSL_shutdown(data->ssl);
       SSL_free(data->ssl);
    }
-#endif
 
    if(cfg->verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "processed %llu messages", counters.c_rcvd);
 

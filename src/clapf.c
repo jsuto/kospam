@@ -75,8 +75,6 @@ static void takesig(int sig){
         case SIGCHLD:
                 while((pid = waitpid (-1, &status, WNOHANG)) > 0){
 
-                   //syslog(LOG_PRIORITY, "child (pid: %d) has died", pid);
-
                    if(open_database(&sdata, &cfg) == OK){
                       remove_child_stat_entry(&sdata, pid);
                       close_database(&sdata);
@@ -256,12 +254,10 @@ void p_clean_exit(){
 
    unlink(cfg.pidfile);
 
-#ifdef HAVE_STARTTLS
    if(data.ctx){
       SSL_CTX_free(data.ctx);
       ERR_free_strings();
    }
-#endif
 
    exit(1);
 }
@@ -273,7 +269,6 @@ void fatal(char *s){
 }
 
 
-#ifdef HAVE_STARTTLS
 int init_ssl(){
 
    SSL_library_init();
@@ -291,7 +286,6 @@ int init_ssl(){
 
    return OK;
 }
-#endif
 
 
 void initialise_configuration(){
@@ -328,11 +322,9 @@ void initialise_configuration(){
 
    inithash(data.mydomains);
 
-#ifdef HAVE_STARTTLS
    if(cfg.tls_enable > 0 && data.ctx == NULL && init_ssl() == OK){
       snprintf(data.starttls, sizeof(data.starttls)-1, "250-STARTTLS\r\n");
    }
-#endif
 
    if(open_database(&sdata, &cfg) == ERR){
       syslog(LOG_PRIORITY, "error: cannot connect to mysql server");
@@ -377,7 +369,7 @@ int main(int argc, char **argv){
                    break;
 
         case 'V' :
-                   printf("%s %s, build %d, Janos SUTO <sj@acts.hu>\n\n%s\n\n", PROGNAME, VERSION, get_build(), CONFIGURE_PARAMS);
+                   printf("%s %s, build %d, Janos SUTO <sj@acts.hu>\n\n%s\nMySQL client library version: %s\n", PROGNAME, VERSION, get_build(), CONFIGURE_PARAMS, mysql_get_client_info());
                    return 0;
 
         case 'h' :

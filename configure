@@ -696,8 +696,6 @@ enable_option_checking
 enable_static_build
 enable_clamd
 enable_memcached
-enable_starttls
-enable_tcpwrappers
 with_database
 with_clapf_user
 '
@@ -1320,8 +1318,6 @@ Optional Features:
   --enable-static-build   build statically linked executables (default: dynamically linked)
   --enable-clamd          build clamd antivirus support
   --enable-memcached      build memcached support
-  --enable-starttls       build starttls support
-  --enable-tcpwrappers    build tcpwrappers support
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -3439,8 +3435,6 @@ have_psql="no"
 have_tre="no"
 have_zip="no"
 have_zlib="no"
-have_starttls="no"
-have_tcpwrappers="no"
 have_gsl="no"
 
 timeout_binary=""
@@ -3512,26 +3506,7 @@ fi
 
 
 
-# Check whether --enable-starttls was given.
-if test "${enable_starttls+set}" = set; then :
-  enableval=$enable_starttls; have_starttls=$enableval
-else
-  have_starttls="no"
-fi
-
-
-
-# Check whether --enable-tcpwrappers was given.
-if test "${enable_tcpwrappers+set}" = set; then :
-  enableval=$enable_tcpwrappers; want_tcpwrappers=$enableval
-else
-  want_tcpwrappers="no"
-fi
-
-
-
-if test "$want_tcpwrappers" = "yes"; then
-   for ac_header in tcpd.h
+for ac_header in tcpd.h
 do :
   ac_fn_c_check_header_mongrel "$LINENO" "tcpd.h" "ac_cv_header_tcpd_h" "$ac_includes_default"
 if test "x$ac_cv_header_tcpd_h" = xyes; then :
@@ -3545,7 +3520,7 @@ fi
 
 done
 
-   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for hosts_access in -lwrap" >&5
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for hosts_access in -lwrap" >&5
 $as_echo_n "checking for hosts_access in -lwrap... " >&6; }
 if ${ac_cv_lib_wrap_hosts_access+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -3627,10 +3602,9 @@ fi
 fi
 ac_cv_lib_wrap=ac_cv_lib_wrap_main
 
-   if test "$have_tcpwrappers" = "no"; then
-      echo "can't find either tcpd.h or libwrap";
-      exit 1;
-   fi
+if test "$have_tcpwrappers" = "no"; then
+   echo "can't find either tcpd.h or libwrap";
+   exit 1;
 fi
 
 
@@ -4578,15 +4552,6 @@ cat >>confdefs.h <<_ACEOF
 _ACEOF
 
    antispam_libs="$antispam_libs -lzip"
-fi
-
-if test "$have_starttls" = "yes"; then
-   echo "starttls support: yes"
-
-cat >>confdefs.h <<_ACEOF
-#define HAVE_STARTTLS 1
-_ACEOF
-
 fi
 
 if test "$have_tcpwrappers" = "yes"; then

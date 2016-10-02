@@ -18,8 +18,5 @@
 #undef HAVE_TNEF
 #undef HAVE_ZIP
 
-#undef HAVE_STARTTLS
-#undef HAVE_LIBWRAP
-
 #define ZOMBIE_NET_REGEX DATAROOTDIR "/clapf/zombienets.regex"
 

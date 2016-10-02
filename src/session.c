@@ -200,6 +200,7 @@ int handle_smtp_session(int new_sd, struct __data *data, struct __config *cfg){
 
                      if(check_spam(&sdata, &state, data, sdata.fromemail, recipient, cfg, &my_cfg) == DISCARD){
                         snprintf(inject_resp, sizeof(inject_resp)-1, "discarded");
+                        snprintf(sdata.acceptbuf, SMALLBUFSIZE-1, "250 Ok %s <%s>\r\n", sdata.ttmpfile, sdata.rcptto[i]);
                         goto SEND_RESULT;
                      }
 

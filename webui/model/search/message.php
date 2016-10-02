@@ -1,11 +1,34 @@
 <?php
 
+require 'Zend/Mime/Decode.php';
+
 class ModelSearchMessage extends Model {
 
    public $encoding_aliases = array(
                                      'GB2312'   => 'GBK',
                                      'GB231280' => 'GBK'
                                    );
+
+   public $message;
+
+
+   public function get_boundary($line='') {
+      $parts = explode(";", $line);
+
+      for($i=0; $i<count($parts); $i++) {
+         if(stristr($parts[$i], "boundary")) {
+            $parts[$i] = preg_replace("/boundary\s{0,}=\s{0,}/i", "boundary=", $parts[$i]);
+            $parts[$i] = preg_replace("/\"\;{0,1}/", "", $parts[$i]);
+            $parts[$i] = preg_replace("/\'/", "", $parts[$i]);
+
+            $b = explode("boundary=", $parts[$i]);
+
+            return rtrim($b[count($b)-1]);
+         }
+      }
+
+      return "";
+   }
 
 
    public function get_filename_by_clapf_id($id = '') {
@@ -44,192 +67,129 @@ class ModelSearchMessage extends Model {
 
       $msg = $this->get_raw_message($id);
 
-      $pos = strpos($msg, "\n\r\n");
-      if($pos == false) {
-         $pos = strpos($msg, "\n\n");
-      }
+      Zend_Mime_Decode::splitMessageRaw($msg, $headers, $body);
 
-      if($pos == false) { return $msg; }
+      $headers = $this->escape_lt_gt_symbols($headers);
 
-      $data = substr($msg, 0, $pos);
-      $msg = '';
-
-      $data = preg_replace("/\</", "&lt;", $data);
-      $data = preg_replace("/\>/", "&gt;", $data);
-
-      return array('headers' => $data);
+      return array('headers' => $headers);
    }
 
 
    public function extract_message($id = '', $terms = '') {
-      $header = "";
-      $body_chunk = "";
-      $is_header = 1;
-      $state = "UNDEF";
-      $b = array();
-      $boundary = array();
-      $text_plain = 1;
-      $text_html = 0;
-      $charset = "";
-      $qp = $base64 = 0;
-      $has_text_plain = 0;
-      $rfc822 = 0;
-      $_1st_header = 1;
+      $from = "From: ";
+      $to = "To: ";
+      $subject = "Subject: ";
+      $date = "Date: ";
       $verification = 1;
-
-      $from = $to = $subject = $date = $text_message = $html_message = "";
 
       $msg = $this->get_raw_message($id);
 
-      $a = explode("\n", $msg); $msg = "";
 
-      while(list($k, $l) = each($a)){
-            $l .= "\n";
+      Zend_Mime_Decode::splitMessage($msg, $headers, $body);
+      $boundary = $this->get_boundary($headers['content-type']);
 
-            if(($l[0] == "\r" && $l[1] == "\n" && $is_header == 1) || ($l[0] == "\n" && $is_header == 1) ){
-               $is_header = $_1st_header = 0;
+      if(is_array($headers['date'])) { $headers['date'] = $headers['date'][0]; }
 
-               if($rfc822 == 1) { $rfc822 = 0; $is_header = 1; }
+      if(isset($headers['from'])) $from .= $this->escape_lt_gt_symbols($headers['from']);
+      if(isset($headers['to'])) $to .= $this->escape_lt_gt_symbols($headers['to']);
+      if(isset($headers['subject'])) $subject .= $this->escape_lt_gt_symbols($headers['subject']);
+      if(isset($headers['date'])) $date .= $headers['date'];
 
-            }
+      $this->message = array(
+                             'text/plain' => '',
+                             'text/html' => ''
+                            );
 
-            if($is_header == 1 && preg_match("/^Content-Type:/i", $l)) $state = "CONTENT_TYPE";
-            if($is_header == 1 && preg_match("/^Content-Transfer-Encoding:/i", $l)) $state = "CONTENT_TRANSFER_ENCODING";
+      $this->extract_textuals_from_mime_parts($headers, $body, $boundary);
 
-            if($state == "CONTENT_TYPE"){
-
-               $x = stristr($l, "boundary");
-               if($x){
-
-                  $s1 = explode(";", $x);
-                  $x = $s1[0];
-
-                  $x = preg_replace("/boundary\s{0,}=\s{0,}/i", "boundary=", $x);
-                  //$x = preg_replace("/boundary= /i", "boundary=", $x);
-
-                  $x = preg_replace("/\"\;{0,1}/", "", $x);
-                  $x = preg_replace("/\'/", "", $x);
-
-                  $b = explode("boundary=", $x);
-
-                  $__boundary = rtrim($b[count($b)-1]);
-
-                  if($__boundary) { array_push($boundary, $__boundary); }
-
-               }
-
-               if(preg_match("/charset/i", $l)){
-                  $types = explode(";", $l);
-                  foreach ($types as $type){
-                     if(preg_match("/charset/i", $type)){
-                        $type = preg_replace("/[\"\'\ ]/", "", $type);
-
-                        $x = explode("=", $type);
-                        $charset = rtrim(strtoupper($x[1]));
-
-                        if(isset($this->encoding_aliases[$charset])) { $charset = $this->encoding_aliases[$charset]; }
-
-                     }
-                  }
-               }
-
-               if(strstr($l, "message/rfc822")) { $rfc822 = 1; }
-
-               if(stristr($l, "text/plain")){ $text_plain = 1; $text_html = 0; $has_text_plain = 1; }
-               if(stristr($l, "text/html")){ $text_html = 1; $text_plain = 0; }
-            }
-
-            if($state == "CONTENT_TRANSFER_ENCODING"){
-               if(preg_match("/quoted-printable/i", $l)){ $qp = 1; }
-               if(preg_match("/base64/i", $l)){ $base64 = 1; }
-            }
-
-
-            if($is_header == 1){
-               if($l[0] != " " && $l[0] != "\t"){ $state = "UNDEF"; }
-               if(preg_match("/^From:/i", $l)){ $state = "FROM"; }
-               if(preg_match("/^To:/i", $l) || preg_match("/^Cc:/i", $l)){ $state = "TO"; }
-               if(preg_match("/^Date:/i", $l)){ $state = "DATE"; }
-               if(preg_match("/^Subject:/i", $l)){ $state = "SUBJECT"; }
-               if(preg_match("/^Content-Type:/", $l)){ $state = "CONTENT_TYPE"; }
-               if(preg_match("/^Content-Disposition:/", $l)){ $state = "CONTENT_DISPOSITION"; }
-
-               $l = preg_replace("/</", "&lt;", $l);
-               $l = preg_replace("/>/", "&gt;", $l);
-
-               if($_1st_header == 1) {
-                  if($state == "FROM"){ $from .= preg_replace("/\r|\n/", "", $l); }
-                  if($state == "TO"){ $to .= preg_replace("/\r|\n/", "", $l); }
-                  if($state == "SUBJECT"){ $subject .= preg_replace("/\r|\n/", "", $l); }
-                  if($state == "DATE"){ $date .= preg_replace("/\r|\n/", "", $l); }
-               }
-            }
-            else {
-
-               if($this->check_boundary($boundary, $l) == 1){
-
-                  if($text_plain == 1 || $has_text_plain == 0) {
-                     $text_message .= $this->flush_body_chunk($body_chunk, $charset, $qp, $base64, $text_plain, $text_html);
-                  }
-
-                  if($text_html == 1) {
-                     $html_message .= $this->flush_body_chunk($body_chunk, $charset, $qp, $base64, $text_plain, $text_html);
-                  }
-
-                  $text_plain = $text_html = $qp = $base64 = 0;
-
-                  $charset = $body_chunk = "";
-
-                  $is_header = 1;
-
-                  continue;
-               }
-
-               else if(($l[0] == "\r" && $l[1] == "\n") || $l[0] == "\n"){
-                  $state = "BODY";
-                  $body_chunk .= $l;
-               }
-
-               else if($state == "BODY"){
-                  if($text_plain == 1 || $text_html == 1){ $body_chunk .= $l; }
-               }
-
-            }
-
-
-         }
-
-      if($body_chunk) {
-         if($text_plain == 1 || $has_text_plain == 0) {
-            $text_message .= $this->flush_body_chunk($body_chunk, $charset, $qp, $base64, $text_plain, $text_html);
-         }
-
-         if($text_html == 1) {
-            $html_message .= $this->flush_body_chunk($body_chunk, $charset, $qp, $base64, $text_plain, $text_html);
-         }
-      }
-
-
-      if(strlen($html_message) > 20) {
-         $message = $this->highlight_search_terms($html_message, $terms, 1);
-      } else {
-         $message = $this->highlight_search_terms($text_message, $terms);
-      }
-
-      return array('from' => $this->decode_my_str($from),
-                   'to' => $this->decode_my_str($to),
-                   'subject' => $this->highlight_search_terms($this->decode_my_str($subject), $terms),
-                   'date' => $this->decode_my_str($date),
-                   'message' => $message,
+      return array('from' => $from,
+                   'to' => $to,
+                   'subject' => $this->highlight_search_terms($subject, $terms),
+                   'date' => $date,
+                   'message' => $this->message['text/html'] ? $this->message['text/html'] : $this->message['text/plain'],
                    'verification' => $verification
             );
+   }
+
+
+   private function extract_textuals_from_mime_parts($headers = array(), $body = '', $boundary = '') {
+      $mime_parts = array();
+
+      if($boundary) {
+         $mime_parts = Zend_Mime_Decode::splitMessageStruct($body, $boundary);
+      } else {
+         $mime_parts[] = array('header' => $headers, 'body' => $body);
+      }
+
+      for($i=0; $i<count($mime_parts); $i++) {
+         $mime = array(
+                       'content-type' => '',
+                       'encoding' => ''
+                      );
+
+         if(isset($mime_parts[$i]['header']['content-type']))
+            $mime['content-type'] = Zend_Mime_Decode::splitContentType($mime_parts[$i]['header']['content-type']);
+
+         if(in_array($mime['content-type']['type'], array('multipart/mixed', 'multipart/related', 'multipart/alternative')))
+            $this->extract_textuals_from_mime_parts($mime_parts[$i]['header'], $mime_parts[$i]['body'], $mime['content-type']['boundary']);
+
+         if(isset($mime_parts[$i]['header']['content-transfer-encoding']))
+            $mime['encoding'] = $mime_parts[$i]['header']['content-transfer-encoding'];
+
+         if(in_array($mime['content-type']['type'], array('text/plain', 'text/html')))
+            $this->message[$mime['content-type']['type']] .= $this->fix_mime_body_part($mime, $mime_parts[$i]['body']);
+      }
+   }
+
+
+   private function fix_mime_body_part($mime = array(), $body = '') {
+      if($mime['encoding'] == 'quoted-printable')
+         $body = Zend_Mime_Decode::decodeQuotedPrintable($body);
+
+      if($mime['encoding'] == 'base64')
+         $body = base64_decode($body);
+
+      if(strtolower($mime['content-type']['charset']) != 'utf-8')
+         $body = iconv($mime['content-type']['charset'], 'utf-8' . '//IGNORE', $body);
+
+
+      if(strtolower($mime['content-type']['type']) == 'text/plain') {
+
+         $body = $this->escape_lt_gt_symbols($body);
+
+         $body = preg_replace("/\n/", "<br />\n", $body);
+         $body = "\n" . $this->print_nicely($body);
+      }
+
+      if(strtolower($mime['content-type']['type']) == 'text/html') {
+
+         $body = preg_replace("/\<style([\w\W]+)style\>/", "", $body);
+
+         if(ENABLE_REMOTE_IMAGES == 0) {
+            $body = preg_replace("/style([\s]{0,}=[\s]{0,})\"([^\"]+)/", "style=\"xxxx", $body);
+            $body = preg_replace("/style([\s]{0,}=[\s]{0,})\'([^\']+)/", "style='xxxx", $body);
+
+            $body = preg_replace("/\<img([^\>]+)\>/i", "<img src=\"" . REMOTE_IMAGE_REPLACEMENT . "\" />", $body);
+         }
+
+         $body = preg_replace("/\<body ([\w\s\;\"\'\#\d\:\-\=]+)\>/i", "<body>", $body);
+
+         $body = preg_replace("/\<a\s{1,}([\w=\"\'\s]+){0,}\s{0,}href/i", "<qqqq", $body);
+         $body = preg_replace("/\<base href/i", "<qqqq", $body);
+
+         $body = preg_replace("/document\.write/", "document.writeee", $body);
+         $body = preg_replace("/<\s{0,}script([\w\W]+)\/script\s{0,}\>/i", "<!-- disabled javascript here -->", $body);
+      }
+
+      return $body;
    }
 
 
    private function highlight_search_terms($s = '', $terms = '', $html = 0) {
       $fields = array("from:", "to:", "subject:", "body:");
 
-      $terms = preg_replace("/(\'|\"|\=|\>|\<)/", "", $terms);
+      //$terms = preg_replace("/(\'|\"|\=|\>|\<)/", "", $terms);
+      $terms = preg_replace("/(\,|\s){1,}/", " ", $terms);
 
       $a = explode(" ", $terms);
       $terms = array();
@@ -282,74 +242,11 @@ class ModelSearchMessage extends Model {
    }
 
 
-   private function check_boundary($boundary, $line) {
+   private function escape_lt_gt_symbols($s = '') {
+      $s = preg_replace("/</", "&lt;", $s);
+      $s = preg_replace("/>/", "&gt;", $s);
 
-      for($i=0; $i<count($boundary); $i++){
-         if(strstr($line, $boundary[$i])){
-            return 1;
-         }
-      }
-
-      return 0;
-   }
-
-
-   private function flush_body_chunk($chunk, $charset, $qp, $base64, $text_plain, $text_html) {
-
-      if($qp == 1){
-         $chunk = $this->qp_decode($chunk);
-      }
-
-      if($base64 == 1){
-         $chunk = base64_decode($chunk);
-      }
-
-      if($charset && !preg_match("/utf-8/i", $charset)){
-         $s = @iconv($charset, 'utf-8' . '//IGNORE', $chunk);
-         if($s) { $chunk = $s; $s = ''; }
-      }
-
-      if($text_plain == 1){
-         $chunk = preg_replace("/</", "&lt;", $chunk);
-         $chunk = preg_replace("/>/", "&gt;", $chunk);
-
-         $chunk = preg_replace("/\n/", "<br />\n", $chunk);
-         $chunk = "\n" . $this->print_nicely($chunk);
-      }
-
-      if($text_html == 1){
-
-         $h = preg_split("/\<style/i", $chunk);
-         $chunk = '';
-
-         for($i=0; $i<count($h); $i++) {
-            $pos = stripos($h[$i], "</style>");
-            if($pos != FALSE) {
-               $s = substr($h[$i], $pos+8, strlen($h[$i]));
-               $chunk .= $s . "\n";
-            }
-            else { $chunk .= $h[$i] . "\n"; }
-         }
-
-
-         if(ENABLE_REMOTE_IMAGES == 0) {
-            $chunk = preg_replace("/style([\s]{0,}=[\s]{0,})\"([^\"]+)/", "style=\"xxxx", $chunk);
-            $chunk = preg_replace("/style([\s]{0,}=[\s]{0,})\'([^\']+)/", "style='xxxx", $chunk);
-         }
-
-         $chunk = preg_replace("/\<body ([\w\s\;\"\'\#\d\:\-\=]+)\>/i", "<body>", $chunk);
-
-         if(ENABLE_REMOTE_IMAGES == 0) { $chunk = preg_replace("/\<img([^\>]+)\>/i", "<img src=\"" . REMOTE_IMAGE_REPLACEMENT . "\" />", $chunk); }
-
-         /* prevent scripts in the HTML part */
-
-         $chunk = preg_replace("/document\.write/", "document.writeee", $chunk);
-         $chunk = preg_replace("/<\s{0,}script([\w\W]+)\/script\s{0,}\>/i", "<!-- disabled javascript here -->", $chunk);
-
-         $chunk = preg_replace("/\<base\s{1,}href/", "<bbbase href", $chunk);
-      }
-
-      return $chunk;
+      return $s;
    }
 
 
@@ -360,7 +257,7 @@ class ModelSearchMessage extends Model {
       $x = explode(" ", $chunk);
 
       for($i=0; $i<count($x); $i++){
-         $nice_chunk .= "$x[$i] ";
+         $nice_chunk .= $x[$i] . " ";
          $k += strlen($x[$i]);
 
          if(strstr($x[$i], "\n")){ $k = 0; }
@@ -377,98 +274,6 @@ class ModelSearchMessage extends Model {
       if($size < 100000) return round($size/1000) . "k";
 
       return sprintf("%.1f", $size/1000000) . "M";
-   }
-
-
-   private function qp_decode($l) {
-      $res = "";
-      $c = "";
-
-      if($l == ""){ return ""; }
-
-      /* remove soft breaks at the end of lines */
-
-      if(preg_match("/\=\r\n/", $l)){ $l = preg_replace("/\=\r\n/", "", $l); }
-      if(preg_match("/\=\n/", $l)){ $l = preg_replace("/\=\n/", "", $l); }
-
-      for($i=0; $i<strlen($l); $i++){
-         $c = $l[$i];
-
-         if($c == '=' && ctype_xdigit($l[$i+1]) && ctype_xdigit($l[$i+2])){
-            $a = $l[$i+1];
-            $b = $l[$i+2];
-
-            $c = chr(16*hexdec($a) + hexdec($b));
-
-            $i += 2;
-         }
-
-         $res .= $c;
-
-      }
-
-      return $res;
-   }
-
-
-   public function decode_my_str($what = '') {
-      $result = "";
-
-      $what = rtrim($what);
-
-      $a = preg_split("/\s/", $what);
-
-      while(list($k, $v) = each($a)){
-         $x = preg_match("/\?\=$/", $v);
-
-         if( ($x == 0 && $k > 0) || ($x == 1 && $k == 1) ){
-            $result .= " ";
-         }
-
-         $result .= $this->fix_encoded_string($v);
-      }
-
-      return $result;
-   }
-
-
-   private function fix_encoded_string($what = '') {
-      $s = "";
-
-      $what = rtrim($what, "\"\r\n");
-      $what = ltrim($what, "\"");
-
-      if(preg_match("/^\=\?/", $what) && preg_match("/\?\=$/", $what)){
-         $what = preg_replace("/^\=\?/", "", $what);
-         $what = preg_replace("/\?\=$/", "", $what);
-
-         $encoding = strtoupper(substr($what, 0, strpos($what, '?')));
-         if(isset($this->encoding_aliases[$encoding])) { $encoding = $this->encoding_aliases[$encoding]; }
-
-         if(preg_match("/\?Q\?/i", $what)){
-            $x = preg_replace("/^([\w\-]+)\?Q\?/i", "", $what);
-
-            $s = quoted_printable_decode($x);
-            $s = preg_replace("/_/", " ", $s);
-         }
-
-         if(preg_match("/\?B\?/i", $what)){
-            $x = preg_replace("/^([\w\-]+)\?B\?/i", "", $what);
-
-            $s = base64_decode($x);
-            $s = preg_replace('/\0/', "*", $s);
-         }
-
-         if(!preg_match("/utf-8/i", $encoding)){
-            $s = iconv($encoding, 'utf-8' . '//IGNORE', $s);
-         }
-
-      }
-      else {
-         $s = utf8_encode($what);
-      }
-
-      return $s;
    }
 
 

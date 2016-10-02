@@ -171,7 +171,7 @@ $config['SPHINX_TAG_INDEX'] = 'tag1';
 $config['SPHINX_NOTE_INDEX'] = 'note1';
 
 $config['RELOAD_COMMAND'] = 'sudo -n /etc/init.d/rc.clapf reload';
-$config['CPU_USAGE_COMMAND'] = "LC_ALL=C mpstat | tail -1 | awk '{print $11}'";
+$config['CPU_USAGE_COMMAND'] = "LC_ALL=C mpstat | tail -1 | rev | awk '{print $1}' | rev";
 
 $config['LDAP_IMPORT_CONFIG_FILE'] = '/usr/local/etc/ldap-import.cfg';
 

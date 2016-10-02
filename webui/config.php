@@ -293,6 +293,8 @@ define('TABLE_OPTION', 'option');
 define('TABLE_LDAP', 'ldap');
 define('TABLE_ONLINE', 'online');
 define('TABLE_AUTOSEARCH', 'autosearch');
+define('TABLE_WHITELIST', 't_white_list');
+define('TABLE_BLACKLIST', 't_black_list');
 define('VIEW_MESSAGES', 'v_messages');
 
 define('EOL', "\n");

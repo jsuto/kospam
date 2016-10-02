@@ -45,6 +45,8 @@
     <?php } else { ?>
 
                     <li><a href="search.php" <?php if($settings['text_colour']) { ?> style="color: <?php print $settings['text_colour']; ?>;"<?php } ?>><i class="icon-search"></i>&nbsp;<?php print $text_search; ?></a></li>
+                    <li><a href="whitelist.php" <?php if($settings['text_colour']) { ?> style="color: <?php print $settings['text_colour']; ?>;"<?php } ?>>&nbsp;<?php print $text_whitelist; ?></a></li>
+                    <li><a href="blacklist.php" <?php if($settings['text_colour']) { ?> style="color: <?php print $settings['text_colour']; ?>;"<?php } ?>>&nbsp;<?php print $text_blacklist; ?></a></li>
 
         <?php if(ENABLE_AUDIT == 1 && $auditor_user == 1) { ?>
                     <li><a href="index.php?route=audit/audit" <?php if($settings['text_colour']) { ?> style="color: <?php print $settings['text_colour']; ?>;"<?php } ?>><i class="icon-book"></i>&nbsp;<?php print $text_audit; ?></a></li>

@@ -35,6 +35,8 @@ $_['text_automated_search'] = "Автоматизированный поиск";
 
 $_['text_back'] = "Назад";                                                                                                                                                    
 $_['text_background_colour'] = "Цвет фона";                                                                                                                                   
+$_['text_blacklist'] = "Blacklist";
+$_['text_blacklist_settings'] = "Blacklist settings";
 $_['text_body'] = "Тело";                                                                                                                                                     
 $_['text_branding_logo'] = "Собственный логотип";                                                                                                                             
 $_['text_branding_text'] = "Собственный текст";                                                                                                                               

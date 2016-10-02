@@ -36,6 +36,8 @@ $_['text_automated_search'] = "Automatikus keresés";
 
 $_['text_back'] = "Vissza";
 $_['text_background_colour'] = "Háttérszín";
+$_['text_blacklist'] = "Feketelista";
+$_['text_blacklist_settings'] = "Feketelista beállítások";
 $_['text_branding_logo'] = "Brand logo";
 $_['text_branding_text'] = "Brand szöveg";
 $_['text_branding_url'] = "Brand URL";

@@ -35,6 +35,8 @@ $_['text_automated_search'] = "Recherche automatisée";
 
 $_['text_back'] = "Retour";
 $_['text_background_colour'] = "Couleur de fond";
+$_['text_blacklist'] = "Blacklist";
+$_['text_blacklist_settings'] = "Blacklist settings";
 $_['text_body'] = "Corps";
 $_['text_branding_logo'] = "Logo de marque";
 $_['text_branding_text'] = "Texte de marque";

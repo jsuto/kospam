@@ -33,6 +33,8 @@ $_['text_audit'] = "Revision";
 
 $_['text_back'] = "Zurück";
 $_['text_background_colour'] = "Hintergrundfarbe";
+$_['text_blacklist'] = "Blacklist";
+$_['text_blacklist_settings'] = "Blacklist settings";
 $_['text_body'] = "Nachricht";
 $_['text_branding_logo'] = "Eigenes Logo";
 $_['text_branding_text'] = "Logo-Text";

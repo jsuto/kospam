@@ -35,6 +35,8 @@ $_['text_automated_search'] = "Otomatik arama";
 
 $_['text_back'] = "Geri";
 $_['text_background_colour'] = "Arkaplan rengi";
+$_['text_blacklist'] = "Blacklist";
+$_['text_blacklist_settings'] = "Blacklist settings";
 $_['text_body'] = "Gövde";
 $_['text_branding_logo'] = "Marka logosu";
 $_['text_branding_text'] = "Marka metni";

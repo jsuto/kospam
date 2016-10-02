@@ -350,6 +350,9 @@ class ModelUserUser extends Model {
       $this->update_domains_settings((int)$user['uid'], $user['domains']);
       $this->update_group_settings($emails[0], $user['group']);
 
+      $this->db->query("INSERT INTO " . TABLE_WHITELIST . " (uid) VALUES(?)", array($user['uid']));
+      $this->db->query("INSERT INTO " . TABLE_BLACKLIST . " (uid) VALUES(?)", array($user['uid']));
+
       return 1;
    }
 
@@ -509,6 +512,8 @@ class ModelUserUser extends Model {
 
       $query = $this->db->query("DELETE FROM " . TABLE_EMAIL . " WHERE uid=?", array((int)$uid));
       $query = $this->db->query("DELETE FROM " . TABLE_USER . " WHERE uid=?", array((int)$uid));
+      $query = $this->db->query("DELETE FROM " . TABLE_WHITELIST . " WHERE uid=?", array((int)$uid));
+      $query = $this->db->query("DELETE FROM " . TABLE_BLACKLIST . " WHERE uid=?", array((int)$uid));
 
       LOGGER("remove user: uid=$uid");
 

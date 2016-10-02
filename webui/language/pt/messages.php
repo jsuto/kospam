@@ -31,6 +31,8 @@ $_['text_audit'] = "Auditoria";
 
 $_['text_back'] = "Voltar";
 $_['text_background_colour'] = "Background colour";
+$_['text_blacklist'] = "Blacklist";
+$_['text_blacklist_settings'] = "Blacklist settings";
 $_['text_branding_logo'] = "Logomarca";
 $_['text_branding_text'] = "Site texto";
 $_['text_branding_url'] = "Site URL";

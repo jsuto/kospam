@@ -11,9 +11,9 @@
 
 #define PROGNAME "clapf"
 
-#define VERSION "0.5.1-rc2"
+#define VERSION "0.5.2"
 
-#define BUILD 1321
+#define BUILD 1322
 
 #define HOSTID "av-engine.localhost"
 

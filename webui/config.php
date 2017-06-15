@@ -1,7 +1,5 @@
 <?php
 
-define('BUILD', '2014-12-25 1295');
-
 $config = array();
 
 
@@ -256,7 +254,7 @@ define('NOW', time());
  * normally you don't have to change anything below
  */
 
-require_once 'config-site.php';
+require_once '/etc/clapf/config-site.php';
 
 require($config['DIR_BASE'] . "/system/registry.php");
 require($config['DIR_BASE'] . "/system/request.php");

@@ -71,7 +71,17 @@ int qry_spaminess(struct session_data *sdata, struct __state *state, char type, 
    query = buffer_create(NULL);
    if(!query) return 0;
 
-   snprintf(s, sizeof(s)-1, "SELECT token, nham, nspam FROM %s WHERE token in(%llu", SQL_TOKEN_TABLE, APHash(state->from));
+   /*
+    * I've noticed recently that mysql has a hard time executing queries like
+    * SELECT token, nham, nspam FROM token WHERE token IN ( .... );
+    *
+    * The problem is that mysql uses a full table scan in such case and won't use
+    * any index. The workaround seems to be rewriting the query:
+    *
+    * SELECT token, nham, nspam FROM token WHERE (token=a OR token=b OR token=c ...);
+    */
+
+   snprintf(s, sizeof(s)-1, "SELECT token, nham, nspam FROM %s WHERE (token=%llu", SQL_TOKEN_TABLE, APHash(state->from));
    buffer_cat(query, s);
 
 
@@ -81,7 +91,7 @@ int qry_spaminess(struct session_data *sdata, struct __state *state, char type, 
 
          if( (type == 1 && q->type == 1) || (type == 0 && q->type == 0) ){
             n++;
-            snprintf(s, sizeof(s)-1, ",%llu", APHash(q->str));
+            snprintf(s, sizeof(s)-1, " OR token=%llu", APHash(q->str));
 
             buffer_cat(query, s);
          }

@@ -22,8 +22,8 @@ int open_database(struct session_data *sdata, struct __config *cfg){
       return ERR;
    }
 
-   mysql_real_query(&(sdata->mysql), "SET NAMES utf8", strlen("SET NAMES utf8"));
-   mysql_real_query(&(sdata->mysql), "SET CHARACTER SET utf8", strlen("SET CHARACTER SET utf8"));
+   mysql_real_query(&(sdata->mysql), "SET NAMES utf8mb4", strlen("SET NAMES utf8mb4"));
+   mysql_real_query(&(sdata->mysql), "SET CHARACTER SET utf8mb4", strlen("SET CHARACTER SET utf8mb4"));
 
    return OK;
 }
@@ -216,7 +216,6 @@ int p_get_affected_rows(struct sql *sql){
 
 
 int prepare_sql_statement(struct session_data *sdata, struct sql *sql, char *s){
-
    sql->stmt = mysql_stmt_init(&(sdata->mysql));
    if(!(sql->stmt)){
       syslog(LOG_PRIORITY, "%s: error: mysql_stmt_init()", sdata->ttmpfile);

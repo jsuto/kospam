@@ -94,14 +94,14 @@ int introduce_tokens(struct session_data *sdata, struct __state *state, struct n
    query = buffer_create(NULL);
    if(!query) return 0;
 
-   snprintf(s, sizeof(s)-1, "SELECT token, nham, nspam FROM %s WHERE token in (", SQL_TOKEN_TABLE);
+   snprintf(s, sizeof(s)-1, "SELECT token, nham, nspam FROM %s WHERE (", SQL_TOKEN_TABLE);
    buffer_cat(query, s);
 
    for(i=0; i<MAXHASH; i++){
       q = xhash[i];
       while(q != NULL){
-         if(n) snprintf(s, sizeof(s)-1, ",%llu", q->key);
-         else snprintf(s, sizeof(s)-1, "%llu", q->key);
+         if(n) snprintf(s, sizeof(s)-1, " OR token=%llu", q->key);
+         else snprintf(s, sizeof(s)-1, "token=%llu", q->key);
 
          buffer_cat(query, s);
          n++;

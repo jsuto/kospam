@@ -26,10 +26,10 @@ int update_token_counters(struct session_data *sdata, struct __state *state, int
    if(!query) return n;
 
    if(ham_or_spam == 1){
-      if(train_mode == T_TUM) snprintf(s, sizeof(s)-1, "UPDATE %s SET nham=nham-1 WHERE token IN (", SQL_TOKEN_TABLE);
+      if(train_mode == T_TUM) snprintf(s, sizeof(s)-1, "UPDATE %s SET nham=nham-1 WHERE (", SQL_TOKEN_TABLE);
       else snprintf(s, sizeof(s)-1, "UPDATE %s SET nspam=nspam+1 WHERE token IN (", SQL_TOKEN_TABLE);
    } else {
-      if(train_mode == T_TUM) snprintf(s, sizeof(s)-1, "UPDATE %s SET nspam=nspam-1 WHERE token IN (", SQL_TOKEN_TABLE);
+      if(train_mode == T_TUM) snprintf(s, sizeof(s)-1, "UPDATE %s SET nspam=nspam-1 WHERE (", SQL_TOKEN_TABLE);
       else snprintf(s, sizeof(s)-1, "UPDATE %s SET nham=nham+1 WHERE token IN (", SQL_TOKEN_TABLE);
    }
 
@@ -38,8 +38,8 @@ int update_token_counters(struct session_data *sdata, struct __state *state, int
    for(i=0; i<MAXHASH; i++){
       q = xhash[i];
       while(q != NULL){
-         if(n) snprintf(s, sizeof(s)-1, ",%llu", q->key);
-         else snprintf(s, sizeof(s)-1, "%llu", q->key);
+         if(n) snprintf(s, sizeof(s)-1, "OR token=%llu", q->key);
+         else snprintf(s, sizeof(s)-1, "token=%llu", q->key);
 
          buffer_cat(query, s);
 

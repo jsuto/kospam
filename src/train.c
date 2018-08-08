@@ -38,7 +38,7 @@ int update_token_counters(struct session_data *sdata, struct __state *state, int
    for(i=0; i<MAXHASH; i++){
       q = xhash[i];
       while(q != NULL){
-         if(n) snprintf(s, sizeof(s)-1, "OR token=%llu", q->key);
+         if(n) snprintf(s, sizeof(s)-1, " OR token=%llu", q->key);
          else snprintf(s, sizeof(s)-1, "token=%llu", q->key);
 
          buffer_cat(query, s);

@@ -27,10 +27,10 @@ int update_token_counters(struct session_data *sdata, struct __state *state, int
 
    if(ham_or_spam == 1){
       if(train_mode == T_TUM) snprintf(s, sizeof(s)-1, "UPDATE %s SET nham=nham-1 WHERE (", SQL_TOKEN_TABLE);
-      else snprintf(s, sizeof(s)-1, "UPDATE %s SET nspam=nspam+1 WHERE token IN (", SQL_TOKEN_TABLE);
+      else snprintf(s, sizeof(s)-1, "UPDATE %s SET nspam=nspam+1 WHERE (", SQL_TOKEN_TABLE);
    } else {
       if(train_mode == T_TUM) snprintf(s, sizeof(s)-1, "UPDATE %s SET nspam=nspam-1 WHERE (", SQL_TOKEN_TABLE);
-      else snprintf(s, sizeof(s)-1, "UPDATE %s SET nham=nham+1 WHERE token IN (", SQL_TOKEN_TABLE);
+      else snprintf(s, sizeof(s)-1, "UPDATE %s SET nham=nham+1 WHERE (", SQL_TOKEN_TABLE);
    }
 
    buffer_cat(query, s);

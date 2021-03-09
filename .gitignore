@@ -1,0 +1,3 @@
+*.o
+libclapf.so*
+libclapf.a

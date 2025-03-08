@@ -58,13 +58,13 @@ int get_user_data_from_email(struct session_data *sdata, char *email, struct __c
    sql.sql[sql.pos] = &(sdata->domain[0]); sql.type[sql.pos] = TYPE_STRING; sql.len[sql.pos] = SMALLBUFSIZE-1; sql.pos++;
    sql.sql[sql.pos] = (char *)&(sdata->policy_group); sql.type[sql.pos] = TYPE_LONG; sql.pos++;
 
-   p_store_results(sdata, &sql);
+   p_store_results(&sql);
 
    if(p_fetch_results(&sql) == OK){
       rc = 1;
 
       /* query white/black list data */
-      get_wbl_data(sdata, cfg);
+      get_wbl_data(sdata);
    }
 
    p_free_results(&sql);
@@ -76,7 +76,7 @@ ENDE:
 }
 
 
-void get_wbl_data(struct session_data *sdata, struct __config *cfg){
+void get_wbl_data(struct session_data *sdata){
    char wh[MAXBUFSIZE], bl[MAXBUFSIZE];
    struct sql sql;
 
@@ -96,18 +96,24 @@ void get_wbl_data(struct session_data *sdata, struct __config *cfg){
    sql.sql[sql.pos] = &wh[0]; sql.type[sql.pos] = TYPE_STRING; sql.len[sql.pos] = sizeof(wh)-1; sql.pos++;
    sql.sql[sql.pos] = &bl[0]; sql.type[sql.pos] = TYPE_STRING; sql.len[sql.pos] = sizeof(bl)-1; sql.pos++;
 
-   p_store_results(sdata, &sql);
+   p_store_results(&sql);
 
    while(p_fetch_results(&sql) == OK){
 
       if(!sql.is_null[0]){
-         if(strlen(sdata->whitelist) > 0) strncat(sdata->whitelist, "\n", MAXBUFSIZE-1);
-         strncat(sdata->whitelist, wh, MAXBUFSIZE-1);
+         size_t len = strlen(sdata->whitelist);
+         size_t rem = MAXBUFSIZE - len - 1;
+         if(rem > 0){
+            snprintf(sdata->whitelist + len, rem, "%s%s", len > 0 ? "\n" : "", wh);
+         }
       }
 
       if(!sql.is_null[1]){
-         if(strlen(sdata->blacklist) > 0) strncat(sdata->blacklist, "\n", MAXBUFSIZE-1);
-         strncat(sdata->blacklist, bl, MAXBUFSIZE-1);
+         size_t len = strlen(sdata->blacklist);
+         size_t rem = MAXBUFSIZE - len - 1;
+         if(rem > 0){
+            snprintf(sdata->blacklist + len, rem, "%s%s", len > 0 ? "\n" : "", bl);
+         }
       }
 
    }
@@ -123,6 +129,3 @@ void get_wbl_data(struct session_data *sdata, struct __config *cfg){
 ENDE:
    close_prepared_statement(&sql);
 }
-
-
-

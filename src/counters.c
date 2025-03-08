@@ -11,7 +11,7 @@
 #include <clapf.h>
 
 
-struct __counters load_counters(struct session_data *sdata, struct __config *cfg){
+struct __counters load_counters(struct session_data *sdata){
    char buf[SMALLBUFSIZE];
    struct __counters counters;
    struct sql sql;
@@ -42,7 +42,7 @@ struct __counters load_counters(struct session_data *sdata, struct __config *cfg
       sql.sql[sql.pos] = (char *)&counters.c_zombie; sql.type[sql.pos] = TYPE_LONGLONG; sql.len[sql.pos] = sizeof(uint64); sql.pos++;
       sql.sql[sql.pos] = (char *)&counters.c_mynetwork; sql.type[sql.pos] = TYPE_LONGLONG; sql.len[sql.pos] = sizeof(uint64); sql.pos++;
 
-      p_store_results(sdata, &sql);
+      p_store_results(&sql);
       p_fetch_results(&sql);
       p_free_results(&sql);
    }
@@ -53,7 +53,7 @@ struct __counters load_counters(struct session_data *sdata, struct __config *cfg
 }
 
 
-void update_counters(struct session_data *sdata, struct __data *data, struct __counters *counters, struct __config *cfg){
+void update_counters(struct session_data *sdata, struct __counters *counters){
    char buf[MAXBUFSIZE];
 #ifdef HAVE_MEMCACHED
    unsigned long long mc, rcvd;
@@ -80,7 +80,7 @@ void update_counters(struct session_data *sdata, struct __data *data, struct __c
          if(counters->c_fn > 0) memcached_increment(&(data->memc), MEMCACHED_MSGS_FN, strlen(MEMCACHED_MSGS_FN), counters->c_fn, &mc);
          if(counters->c_mynetwork > 0) memcached_increment(&(data->memc), MEMCACHED_MSGS_MYNETWORK, strlen(MEMCACHED_MSGS_MYNETWORK), counters->c_mynetwork, &mc);
 
-         bzero(&c, sizeof(c)); 
+         bzero(&c, sizeof(c));
 
          snprintf(buf, sizeof(buf)-1, "%s %s %s %s %s %s %s %s %s %s %s %s %s", MEMCACHED_MSGS_RCVD, MEMCACHED_MSGS_SIZE, MEMCACHED_MSGS_MYNETWORK, MEMCACHED_MSGS_HAM, MEMCACHED_MSGS_SPAM, MEMCACHED_MSGS_POSSIBLE_SPAM, MEMCACHED_MSGS_UNSURE, MEMCACHED_MSGS_MINEFIELD, MEMCACHED_MSGS_VIRUS, MEMCACHED_MSGS_ZOMBIE, MEMCACHED_MSGS_FP, MEMCACHED_MSGS_FN, MEMCACHED_COUNTERS_LAST_UPDATE);
 
@@ -106,7 +106,7 @@ void update_counters(struct session_data *sdata, struct __data *data, struct __c
                snprintf(buf, sizeof(buf)-1, "%ld", sdata->now); memcached_set(&(data->memc), MEMCACHED_COUNTERS_LAST_UPDATE, strlen(MEMCACHED_COUNTERS_LAST_UPDATE), buf, strlen(buf), 0, 0);
 
                snprintf(buf, sizeof(buf)-1, "UPDATE %s SET rcvd=%llu, size=%llu, mynetwork=%llu, ham=%llu, spam=%llu, possible_spam=%llu, unsure=%llu, minefield=%llu, virus=%llu, zombie=%llu, fp=%llu, fn=%llu", SQL_COUNTER_TABLE, c.c_rcvd, c.c_size, c.c_mynetwork, c.c_ham, c.c_spam, c.c_possible_spam, c.c_unsure, c.c_minefield, c.c_virus, c.c_zombie, c.c_fp, c.c_fn);
- 
+
                p_query(sdata, buf);
             }
          }
@@ -114,7 +114,7 @@ void update_counters(struct session_data *sdata, struct __data *data, struct __c
       }
       else {
 
-         c = load_counters(sdata, cfg);
+         c = load_counters(sdata);
 
          snprintf(buf, sizeof(buf)-1, "%ld", sdata->now); memcached_add(&(data->memc), MEMCACHED_COUNTERS_LAST_UPDATE, strlen(MEMCACHED_COUNTERS_LAST_UPDATE), buf, strlen(buf), 0, 0);
 

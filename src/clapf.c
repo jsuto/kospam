@@ -304,11 +304,6 @@ void initialise_configuration(){
    }
 
 
-   if(getuid() == 0 && pwd){
-      check_and_create_directories(&cfg, pwd->pw_uid, pwd->pw_gid);
-   }
-
-
    if(chdir(cfg.workdir)){
       syslog(LOG_PRIORITY, "workdir: *%s*", cfg.workdir);
       fatal(ERR_CHDIR);
@@ -373,7 +368,7 @@ int main(int argc, char **argv){
                    return 0;
 
         case 'h' :
-        default  : 
+        default  :
                    __fatal("\nusage:\n      -c <config file>\n      -d: daemonize\n      -v|-V: show version\n      -h: show this help\n\n");
       }
    }
@@ -424,6 +419,8 @@ int main(int argc, char **argv){
 
    if(drop_privileges(pwd)) fatal(ERR_SETUID);
 
+   check_and_create_directories(&cfg);
+
    if(cfg.history == 0) create_partition(&cfg);
 
    syslog(LOG_PRIORITY, "%s %s, build %d starting", PROGNAME, VERSION, get_build());
@@ -449,4 +446,3 @@ int main(int argc, char **argv){
 
    return 0;
 }
-

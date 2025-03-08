@@ -204,7 +204,7 @@ struct __state {
    int found_our_signo;
    int train_mode;
 
-   int bodylen;
+   unsigned int bodylen;
 };
 
 

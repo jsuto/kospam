@@ -16,7 +16,7 @@
 #include <clapf.h>
 
 
-struct __state parse_message(struct session_data *sdata, int take_into_pieces, struct __data *data, struct __config *cfg){
+struct __state parse_message(struct session_data *sdata, int take_into_pieces, struct __config *cfg){
    FILE *f;
    int tumlen;
    int skipped_header = 0, found_clapf_signature = 0;
@@ -41,7 +41,7 @@ struct __state parse_message(struct session_data *sdata, int take_into_pieces, s
    while(fgets(buf, sizeof(buf)-1, f)){
 
       if(sdata->training_request == 0 || found_clapf_signature == 1){
-         parse_line(buf, &state, sdata, take_into_pieces, &abuffer[0], sizeof(abuffer), data, cfg);
+         parse_line(buf, &state, sdata, take_into_pieces, &abuffer[0], sizeof(abuffer), cfg);
          if(strncmp(buf, tumbuf, tumlen) == 0) state.train_mode = T_TUM;
       }
 
@@ -82,7 +82,7 @@ struct __state parse_message(struct session_data *sdata, int take_into_pieces, s
 }
 
 
-void post_parse(struct session_data *sdata, struct __state *state, struct __config *cfg){
+void post_parse(struct __state *state){
    int i;
 
    trim_buffer(state->b_subject);
@@ -140,7 +140,7 @@ void storno_attachment(struct __state *state){
 }
 
 
-int parse_line(char *buf, struct __state *state, struct session_data *sdata, int take_into_pieces, char *abuffer, int abuffersize, struct __data *data, struct __config *cfg){
+int parse_line(char *buf, struct __state *state, struct session_data *sdata, int take_into_pieces, char *abuffer, int abuffersize, struct __config *cfg){
    char *p;
    unsigned char b64buffer[MAXBUFSIZE];
    char tmpbuf[MAXBUFSIZE];
@@ -167,12 +167,12 @@ int parse_line(char *buf, struct __state *state, struct session_data *sdata, int
    if(state->message_state == MSG_BODY && state->attachment == 1 && is_substr_in_hash(state->boundaries, buf) == 0){
       if(take_into_pieces == 1){
          if(state->fd != -1 && len + state->abufpos > abuffersize-1){
-            write(state->fd, abuffer, state->abufpos); 
+            if(write(state->fd, abuffer, state->abufpos) == -1) syslog(LOG_PRIORITY, "ERROR: %s: write(), %s, %d, %s", sdata->ttmpfile, __func__, __LINE__, __FILE__);
 
             if(state->b64fd != -1){
                abuffer[state->abufpos] = '\0';
                if(state->base64 == 1){
-                  n64 = base64_decode_attachment_buffer(abuffer, state->abufpos, &b64buffer[0], sizeof(b64buffer));
+                  n64 = base64_decode_attachment_buffer(abuffer, &b64buffer[0], sizeof(b64buffer));
                   n64 = write(state->b64fd, b64buffer, n64);
                }
                else {
@@ -447,12 +447,12 @@ int parse_line(char *buf, struct __state *state, struct session_data *sdata, int
       if(state->has_to_dump == 1){
          if(take_into_pieces == 1 && state->fd != -1){
             if(state->abufpos > 0){
-               write(state->fd, abuffer, state->abufpos);
+               if(write(state->fd, abuffer, state->abufpos) == -1) syslog(LOG_PRIORITY, "ERROR: %s: write(), %s, %d, %s", sdata->ttmpfile, __func__, __LINE__, __FILE__);
 
                if(state->b64fd != -1){
                   abuffer[state->abufpos] = '\0';
                   if(state->base64 == 1){
-                     n64 = base64_decode_attachment_buffer(abuffer, state->abufpos, &b64buffer[0], sizeof(b64buffer));
+                     n64 = base64_decode_attachment_buffer(abuffer, &b64buffer[0], sizeof(b64buffer));
                      n64 = write(state->b64fd, b64buffer, n64);
                   }
                   else {
@@ -460,7 +460,7 @@ int parse_line(char *buf, struct __state *state, struct session_data *sdata, int
                   }
                }
 
-               state->abufpos = 0; memset(abuffer, 0, abuffersize); 
+               state->abufpos = 0; memset(abuffer, 0, abuffersize);
             }
             close(state->fd);
             close(state->b64fd);
@@ -489,7 +489,7 @@ int parse_line(char *buf, struct __state *state, struct session_data *sdata, int
 
       state->message_state = MSG_UNDEF;
 
-      return 0;      
+      return 0;
    }
 
    if(boundary_line == 1){ return 0; }
@@ -539,7 +539,7 @@ int parse_line(char *buf, struct __state *state, struct session_data *sdata, int
    //state->c_shit += count_invalid_junk_characters(buf, 0);
 
 
-   tokenize(buf, state, sdata, data, cfg);
+   tokenize(buf, state, sdata, cfg);
 
    return 0;
 }

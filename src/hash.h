@@ -13,7 +13,7 @@ void inithash(struct node *xhash[]);
 void clearhash(struct node *xhash[]);
 void resetcounters(struct node *xhash[]);
 void printhash(struct node *xhash[]);
-struct node *makenewnode(struct node *xhash[], char *s, double spaminess, double deviation);
+struct node *makenewnode(char *s, double spaminess, double deviation);
 int addnode(struct node *xhash[], char *s, double spaminess, double deviation);
 struct node *findnode(struct node *xhash[], char *s);
 uint64 APHash(char *p);

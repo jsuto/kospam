@@ -12,7 +12,7 @@ int select_db(struct session_data *sdata, const char *db);
 int prepare_sql_statement(struct session_data *sdata, struct sql *sql, char *s);
 void p_query(struct session_data *sdata, char *s);
 int p_exec_stmt(struct session_data *sdata, struct sql *sql);
-int p_store_results(struct session_data *sdata, struct sql *sql);
+int p_store_results(struct sql *sql);
 int p_fetch_results(struct sql *sql);
 void p_free_results(struct sql *sql);
 void p_bind_init(struct sql *sql);

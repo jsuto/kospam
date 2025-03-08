@@ -35,16 +35,6 @@ int handle_smtp_session(int new_sd, struct __data *data, struct __config *cfg){
    char ssl_error[SMALLBUFSIZE];
 
 
-   struct request_info req;
-
-   request_init(&req, RQ_DAEMON, PROGNAME, RQ_FILE, new_sd, 0);
-   fromhost(&req);
-   if(!hosts_access(&req)){
-      send(new_sd, SMTP_RESP_550_ERR_YOU_ARE_BANNED_BY_LOCAL_POLICY, strlen(SMTP_RESP_550_ERR_YOU_ARE_BANNED_BY_LOCAL_POLICY), 0);
-      syslog(LOG_PRIORITY, "denied connection from %s by tcp_wrappers", eval_client(&req));
-      return 0;
-   }
-
    srand(getpid());
 
    smtp_state = SMTP_STATE_INIT;
@@ -146,8 +136,8 @@ int handle_smtp_session(int new_sd, struct __data *data, struct __config *cfg){
 
                gettimeofday(&tv1, &tz);
                update_child_stat_entry(&sdata, 'P', 0);
-               state = parse_message(&sdata, 1, data, cfg);
-               post_parse(&sdata, &state, cfg);
+               state = parse_message(&sdata, 1, cfg);
+               post_parse(&state);
                gettimeofday(&tv2, &tz);
                sdata.__parsed = tvdiff(tv2, tv1);
 
@@ -342,10 +332,16 @@ AFTER_PERIOD:
          if(strncasecmp(buf, SMTP_CMD_EHLO, strlen(SMTP_CMD_EHLO)) == 0 || strncasecmp(buf, LMTP_CMD_LHLO, strlen(LMTP_CMD_LHLO)) == 0){
             if(smtp_state == SMTP_STATE_INIT) smtp_state = SMTP_STATE_HELO;
 
-            if(sdata.tls == 0) snprintf(buf, sizeof(buf)-1, SMTP_RESP_250_EXTENSIONS, cfg->hostid, data->starttls);
-            else snprintf(buf, sizeof(buf)-1, SMTP_RESP_250_EXTENSIONS, cfg->hostid, "");
+            if(sdata.tls == 0){
+               snprintf(buf, sizeof(buf), SMTP_RESP_250_EXTENSIONS, cfg->hostid, data->starttls);
+            } else {
+               snprintf(buf, sizeof(buf), SMTP_RESP_250_EXTENSIONS, cfg->hostid, "");
+            }
 
-            strncat(resp, buf, sizeof(resp)-1);
+            size_t len = strlen(resp);
+            size_t rem = sizeof(resp) - len - 1; // Ensure space for null terminator
+
+            if(rem > 0) snprintf(resp + len, rem + 1, "%s", buf);
 
             continue;
 
@@ -529,16 +525,19 @@ AFTER_PERIOD:
 
             }
 
-            continue; 
+            continue;
          }
 
 
          if(strncasecmp(buf, SMTP_CMD_QUIT, strlen(SMTP_CMD_QUIT)) == 0){
-
             smtp_state = SMTP_STATE_FINISHED;
 
-            snprintf(buf, sizeof(buf)-1, SMTP_RESP_221_GOODBYE, cfg->hostid);
-            strncat(resp, buf, sizeof(resp)-1);
+            snprintf(buf, sizeof(buf), SMTP_RESP_221_GOODBYE, cfg->hostid);
+
+            size_t len = strlen(resp);
+            size_t rem = sizeof(resp) - len - 1; // Ensure space for null terminator
+
+            if(rem > 0) snprintf(resp + len, rem + 1, "%s", buf);
 
             unlink(sdata.ttmpfile);
             if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: removed", sdata.ttmpfile);
@@ -631,7 +630,7 @@ AFTER_PERIOD:
 
 QUITTING:
 
-   if(cfg->history == 0) update_counters(&sdata, data, &counters, cfg);
+   if(cfg->history == 0) update_counters(&sdata, &counters);
 
 #ifdef NEED_MYSQL
    close_database(&sdata);

@@ -25,7 +25,7 @@ int send_headers(int sd, char *bigbuf, int n, char *spaminessbuf, int put_subjec
 
    memset(headerbuf, 0, sizeof(headerbuf));
 
-   /* 
+   /*
     * prepend the clapf id to the mail header. This obsoletes
     * the Outlook hack, and required for store-less training.
     */
@@ -115,7 +115,7 @@ int send_headers(int sd, char *bigbuf, int n, char *spaminessbuf, int put_subjec
                sent_subject_spam_prefix = 1;
             }
             else strncat(headerbuf, buf, sizeof(headerbuf)-1);
-	 }
+         }
 
          /* or just append the header line */
 
@@ -210,7 +210,7 @@ int inject_mail(struct session_data *sdata, int msg, char *spaminessbuf, char *b
       snprintf(oursigno, sizeof(oursigno)-1, "%s\r\n", cfg->our_signo);
 
 
-   if(cfg->smtp_addr == NULL || cfg->smtp_port <= 0){
+   if(strlen(cfg->smtp_addr) < 3 || cfg->smtp_port <= 0){
       syslog(LOG_PRIORITY, "%s: error: invalid smtp address (%s) or port (%d)", sdata->ttmpfile, cfg->smtp_addr, cfg->smtp_port);
       return ERR_INJECT;
    }
@@ -370,4 +370,3 @@ int inject_mail(struct session_data *sdata, int msg, char *spaminessbuf, char *b
    else
       return ERR_INJECT;
 }
-

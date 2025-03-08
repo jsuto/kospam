@@ -9,9 +9,9 @@
 #include "config.h"
 #include "defs.h"
 
-struct __state parse_message(struct session_data *sdata, int take_into_pieces, struct __data *data, struct __config *cfg);
-void post_parse(struct session_data *sdata, struct __state *state, struct __config *cfg);
-int parse_line(char *buf, struct __state *state, struct session_data *sdata, int take_into_pieces, char *abuffer, int abuffersize, struct __data *data, struct __config *cfg);
+struct __state parse_message(struct session_data *sdata, int take_into_pieces, struct __config *cfg);
+void post_parse(struct __state *state);
+int parse_line(char *buf, struct __state *state, struct session_data *sdata, int take_into_pieces, char *abuffer, int abuffersize, struct __config *cfg);
 
 void init_state(struct __state *state);
 unsigned long parse_date_header(char *s, struct __config *cfg);
@@ -37,7 +37,7 @@ int count_invalid_junk_lines(char *p);
 int extract_name_from_header_line(char *s, char *name, char *resultbuf);
 char *determine_attachment_type(char *filename, char *type);
 char *get_attachment_extractor_by_filename(char *filename);
-int base64_decode_attachment_buffer(char *p, int plen, unsigned char *b, int blen);
+int base64_decode_attachment_buffer(char *p, unsigned char *b, int blen);
 
 int has_octet_stream(struct __state *state);
 int has_image_attachment(struct __state *state);

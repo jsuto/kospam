@@ -73,7 +73,7 @@ void printhash(struct node *xhash[]){
 }
 
 
-struct node *makenewnode(struct node *xhash[], char *s, double spaminess, double deviation){
+struct node *makenewnode(char *s, double spaminess, double deviation){
    struct node *h;
    int len;
 
@@ -120,7 +120,7 @@ int addnode(struct node *xhash[], char *s, double spaminess, double deviation){
    key = APHash(s);
 
    if(xhash[hash(key)] == NULL){
-      xhash[hash(key)] = makenewnode(xhash, s, spaminess, deviation);
+      xhash[hash(key)] = makenewnode(s, spaminess, deviation);
    }
    else {
       q = xhash[hash(key)];
@@ -133,7 +133,7 @@ int addnode(struct node *xhash[], char *s, double spaminess, double deviation){
             q = q->r;
          }
       }
-      p->r = makenewnode(xhash, s, spaminess, deviation);
+      p->r = makenewnode(s, spaminess, deviation);
    }
 
    return 1;

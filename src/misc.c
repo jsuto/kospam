@@ -84,9 +84,9 @@ int count_character_in_buffer(char *p, char c){
 
 
 void replace_character_in_buffer(char *p, char from, char to){
-   int i, k=0;
+   int k=0;
 
-   for(i=0; i<strlen(p); i++){
+   for(size_t i=0; i<strlen(p); i++){
       if(p[i] == from){
          if(to > 0){
             p[k] = to;
@@ -260,14 +260,13 @@ void make_random_string(char *buf, int buflen){
 
 
 void create_id(char *id, unsigned char server_id){
-   int i;
    unsigned char buf[RND_STR_LEN/2];
 
    memset(id, 0, SMALLBUFSIZE);
 
    get_random_bytes(buf, sizeof(buf), server_id);
 
-   for(i=0; i < sizeof(buf); i++){
+   for(size_t i=0; i < sizeof(buf); i++){
       sprintf(id, "%02x", buf[i]);
       id += 2;
    }
@@ -327,7 +326,7 @@ int get_random_bytes(unsigned char *buf, int len, unsigned char server_id){
 
 int readFromEntropyPool(int fd, void *_s, size_t n){
    char *s = _s;
-   ssize_t res, pos = 0;
+   size_t res, pos = 0;
 
    while(n > pos){
       res = read(fd, s + pos, n - pos);
@@ -388,28 +387,28 @@ int ssl_want_retry(SSL *ssl, int ret, int timeout){
    i = SSL_get_error(ssl, ret);
    if(i == SSL_ERROR_NONE)
       return 1;
- 
+
    tv.tv_sec = timeout/1000;
    tv.tv_usec = 0;
    FD_ZERO(&fds);
- 
+
    switch(i){
       case SSL_ERROR_WANT_READ: // pause until the socket is readable
           sock = SSL_get_rfd(ssl);
           FD_SET(sock, &fds);
           i = select(sock+1, &fds, 0, 0, &tv);
           break;
- 
+
       case SSL_ERROR_WANT_WRITE: // pause until the socket is writeable
          sock = SSL_get_wfd(ssl);
          FD_SET(sock, &fds);
          i = select(sock+1, 0, &fds, 0, &tv);
          break;
- 
+
       case SSL_ERROR_ZERO_RETURN: // the sock closed, just return quietly
          i = 0;
          break;
- 
+
       default: // ERROR - unexpected error code
          i = -1;
          break;
@@ -688,4 +687,3 @@ char *strcasestr(const char *s, const char *find){
    return((char*)s);
 }
 #endif
-

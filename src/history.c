@@ -117,7 +117,7 @@ int write_history_to_fs(struct session_data *sdata, struct __state *state, char 
          syslog(LOG_PRIORITY, "%s: error: cannot open '%s'", sdata->ttmpfile, tmpname);
       }
       else {
-         write(fd, z, dstlen);
+         if(write(fd, z, dstlen) == -1) syslog(LOG_PRIORITY, "%s: error: write()", sdata->ttmpfile);
          close(fd);
 
          if(!rename(tmpname, name)) rc = OK;
@@ -164,7 +164,7 @@ int is_existing_partition(struct session_data *sdata, char *partition, struct __
    p_bind_init(&sql);
    sql.sql[sql.pos] = (char *)&count; sql.type[sql.pos] = TYPE_LONG; sql.len[sql.pos] = sizeof(int); sql.pos++;
 
-   p_store_results(sdata, &sql);
+   p_store_results(&sql);
    p_fetch_results(&sql);
    p_free_results(&sql);
 

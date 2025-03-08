@@ -59,7 +59,6 @@ static char hex_table[] = {
    0,  0,  0,  0,   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0
 };
 
-
 inline void utf8_encode_char(unsigned char c, unsigned char *buf, int buflen, int *len){
    int count=0;
 
@@ -71,6 +70,8 @@ inline void utf8_encode_char(unsigned char c, unsigned char *buf, int buflen, in
        * U+0000..U+007F      00..7F
        * U+0080..U+07FF      C2..DF      80..BF
        * U+0800..U+0FFF      E0          A0..BF      80..BF
+       *
+       * FIXME: See http://www.unicode.org/versions/Unicode5.2.0/ch03.pdf#G7404 for valid sequences
        */
 
       if(c <= 0x7F){
@@ -78,18 +79,8 @@ inline void utf8_encode_char(unsigned char c, unsigned char *buf, int buflen, in
          count++;
       }
 
-      else if(c <= 0x7FF){
+      else {
          *(buf+count) = ( 0xC0 | (c >> 6) );
-         count++;
-         *(buf+count) = ( 0x80 | (c & 0x3F) );
-         count++;
-      }
-
-
-      else if (c <= 0xFFFF){
-         *(buf+count) = ( 0xE0 | (c >> 12) );
-         count++;
-         *(buf+count) = ( 0x80 | ((c >> 6) & 0x3F) );
          count++;
          *(buf+count) = ( 0x80 | (c & 0x3F) );
          count++;
@@ -120,7 +111,7 @@ void sanitiseBase64(char *s){
 }
 
 
-inline void pack_4_into_3(char *s, char *s2){
+inline static void pack_4_into_3(char *s, char *s2){
    int j, n[4], k1, k2;
 
    memset(s2, 0, 3);
@@ -197,13 +188,13 @@ int decode_base64_to_buffer(char *p, int plen, unsigned char *b, int blen){
 
 
 void decodeQP(char *p){
-   int i, k=0, a, b;
-   char c;
+   unsigned int i;
+   int k=0, a, b;
 
    if(p == NULL) return;
 
    for(i=0; i<strlen((char*)p); i++){
-      c = p[i];
+      char c = p[i];
 
       if(p[i] == '=' && isxdigit(p[i+1]) && isxdigit(p[i+2])){
          a = p[i+1];
@@ -213,6 +204,10 @@ void decodeQP(char *p){
 
          i += 2;
       }
+      else if(p[i] == '_'){
+         c = ' ';
+      }
+
 
       p[k] = c;
       k++;
@@ -286,11 +281,11 @@ void decodeHTML(char *p, int utf8){
 
 
 void decodeURL(char *p){
-   int i, c, k=0, a, b;
+   int c, k=0, a, b;
 
    if(p == NULL) return;
 
-   for(i=0; i<strlen(p); i++){
+   for(size_t i=0; i<strlen(p); i++){
       switch(p[i]){
          case '+':
             c = ' ';
@@ -326,23 +321,29 @@ void decodeURL(char *p){
 
 int utf8_encode(char *inbuf, int inbuflen, char *outbuf, int outbuflen, char *encoding){
    iconv_t cd;
-   size_t size, inbytesleft, outbytesleft;
+   size_t inbytesleft, outbytesleft;
+   int ret = ERR;
 
    memset(outbuf, 0, outbuflen);
 
-   cd = iconv_open("utf-8", encoding);
+   if(strcasecmp(encoding, "gb2312") == 0)
+      cd = iconv_open("utf-8", "cp936");
+   else if(strcasecmp(encoding, "ks_c_5601-1987") == 0)
+      cd = iconv_open("utf-8", "EUC-KR");
+   else
+      cd = iconv_open("utf-8", encoding);
 
    if(cd != (iconv_t)-1){
       inbytesleft = inbuflen;
       outbytesleft = outbuflen-1;
 
-      size = iconv(cd, &inbuf, &inbytesleft, &outbuf, &outbytesleft);
+      if(iconv(cd, &inbuf, &inbytesleft, &outbuf, &outbytesleft) == (size_t) -1)
+         ret = ERR;
+      else
+         ret = OK;
 
       iconv_close(cd);
-
-      if(size >= 0) return OK;
    }
 
-   return ERR;
+   return ret;
 }
-

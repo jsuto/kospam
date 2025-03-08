@@ -202,10 +202,10 @@ int main(int argc, char **argv){
    }
 
    if(cfg.debug == 1) printf("parsing...\n");
-   state = parse_message(&sdata, 0, &data, &my_cfg);
+   state = parse_message(&sdata, 0, &my_cfg);
 
    if(cfg.debug == 1) printf("post parsing...\n");
-   post_parse(&sdata, &state, &my_cfg);
+   post_parse(&state);
 
    if(show_tokens == 1){
       printhash(state.token_hash);
@@ -233,7 +233,7 @@ int main(int argc, char **argv){
       train_message(&sdata, &state, rounds, is_spam, train_mode, &my_cfg);
    }
 
-   check_zombie_sender(&sdata, &data, &state, &my_cfg);
+   check_zombie_sender(&sdata, &data, &my_cfg);
 
    sdata.spaminess = run_statistical_check(&sdata, &state, &my_cfg);
 

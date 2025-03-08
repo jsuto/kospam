@@ -231,7 +231,7 @@ void do_training(struct session_data *sdata, struct __state *state, char *email,
 
    sql.sql[sql.pos] = (char *)&is_spam_q; sql.type[sql.pos] = TYPE_LONG; sql.len[sql.pos] = sizeof(int); sql.pos++;
 
-   p_store_results(sdata, &sql);
+   p_store_results(&sql);
 
    if(p_fetch_results(&sql) == ERR){
       syslog(LOG_PRIORITY, "%s: error: invalid signature '%s'", sdata->ttmpfile, sdata->clapf_id);

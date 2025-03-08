@@ -43,7 +43,7 @@ void is_sender_on_minefield(struct session_data *sdata, char *ip){
 
    sql.sql[sql.pos] = (char *)&ts; sql.type[sql.pos] = TYPE_LONG; sql.len[sql.pos] = sizeof(int); sql.pos++;
 
-   p_store_results(sdata, &sql);
+   p_store_results(&sql);
 
    if(p_fetch_results(&sql) == OK){
       sdata->trapped_client = 1;

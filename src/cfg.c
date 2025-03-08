@@ -17,7 +17,7 @@ int string_parser(char *src, char *target, int limit){
    return 0;
 };
 
-int multi_line_string_parser(char *src, char *target, int limit){
+int multi_line_string_parser(char *src, char *target, unsigned int limit){
    if(strlen(src) > 0 && strlen(target) + strlen(src) + 3 < limit){
       strncat(target, src, limit);
       strncat(target, "\r\n", limit);
@@ -28,14 +28,14 @@ int multi_line_string_parser(char *src, char *target, int limit){
    return 1;
 };
 
-int int_parser(char *src, int *target, int limit){
+int int_parser(char *src, int *target){
    *target = strtol(src, (char **) NULL, 10);
 
    return 0;
 };
 
 
-int float_parser(char *src, float *target, int limit){
+int float_parser(char *src, float *target){
    *target = strtof(src, (char **) NULL);
 
    return 0;
@@ -139,7 +139,7 @@ struct _parse_rule config_parse_rules[] =
    { "verbosity", "integer", (void*) int_parser, offsetof(struct __config, verbosity), "1", sizeof(int)},
    { "workdir", "string", (void*) string_parser, offsetof(struct __config, workdir), WORK_DIR, MAXVAL-1},
 
-   {NULL, NULL, NULL, 0, 0}
+   {NULL, NULL, NULL, 0, 0, 0}
 };
 
 
@@ -172,7 +172,7 @@ int parse_config_file(char *configfile, struct __config *target_cfg, struct _par
                   printf("failed to parse %s: \"%s\"\n", line, chpos+1);
                }
                break;
-            }				
+            }
 
             i++;
          }
@@ -321,7 +321,7 @@ void print_config(char *configfile, struct __config *cfg){
 
             i++;
          }
- 
+
          if(!rules[i].name) printf("unknown key: \"%s\" \n", line);
       }
    }

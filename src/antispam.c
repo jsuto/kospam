@@ -140,7 +140,7 @@ int check_spam(struct session_data *sdata, struct __state *state, struct __data 
     * run zombie test
     */
 
-   check_zombie_sender(sdata, data, state, my_cfg);
+   check_zombie_sender(sdata, data, my_cfg);
 
    if(sdata->tre == '+' && my_cfg->message_from_a_zombie > 0){
       sdata->spaminess = 0.99;

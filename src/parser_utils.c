@@ -311,7 +311,8 @@ void fixupBase64EncodedLine(char *buf, struct __state *state){
 
 void remove_html(char *buf, struct __state *state){
    char *s, puf[MAXBUFSIZE], html[SMALLBUFSIZE];
-   int k=0, j=0, pos=0;
+   int k=0, pos=0;
+   size_t j=0;
 
    memset(puf, 0, MAXBUFSIZE);
    memset(html, 0, SMALLBUFSIZE);
@@ -330,12 +331,12 @@ void remove_html(char *buf, struct __state *state){
       }
 
       if(state->htmltag == 1){
-    
+
          if(j == 0 && *s == '!'){
             state->skip_html = 1;
          }
 
-         if(state->skip_html == 0){ 
+         if(state->skip_html == 0){
             if(*s != '>' && *s != '<' && *s != '"'){
                html[j] = tolower(*s);
                if(j < sizeof(html)-10) j++;
@@ -481,9 +482,9 @@ int does_it_seem_like_an_email_address(char *email){
  */
 
 void reassemble_token(char *p){
-   int i, k=0;
+   int k=0;
 
-   for(i=0; i<strlen(p); i++){
+   for(size_t i=0; i<strlen(p); i++){
 
       if(isspace(*(p+i-1)) && !isspace(*(p+i)) && isspace(*(p+i+1)) && !isspace(*(p+i+2)) && isspace(*(p+i+3)) && !isspace(*(p+i+4)) && isspace(*(p+i+5)) ){
          p[k] = *(p+i); k++;
@@ -534,7 +535,7 @@ void degenerate_token(unsigned char *p){
 
 void fix_URL(char *url){
    char *p, *q, m[MAX_TOKEN_LEN], fixed_url[MAXBUFSIZE];
-   int i, dots=0, result;
+   int dots=0, result;
    struct in_addr addr;
 
    /* chop trailing dot */
@@ -576,7 +577,7 @@ void fix_URL(char *url){
          strcpy(url, fixed_url);
       }
       else {
-         for(i=0; i<=dots; i++){
+         for(int i=0; i<=dots; i++){
             q = split(p, '.', m, sizeof(m)-1, &result);
             if(i>dots-2){
                strncat(fixed_url, m, sizeof(fixed_url)-1);
@@ -595,7 +596,7 @@ void fix_URL(char *url){
          if(count_character_in_buffer(fixed_url, '.') != 1)
             memset(url, 0, MAXBUFSIZE);
          else {
-            for(i=4; i<strlen(fixed_url); i++)
+            for(size_t i=4; i<strlen(fixed_url); i++)
                fixed_url[i] = tolower(fixed_url[i]);
 
             strcpy(url, fixed_url);
@@ -870,7 +871,7 @@ char *get_attachment_extractor_by_filename(char *filename){
 }
 
 
-int base64_decode_attachment_buffer(char *p, int plen, unsigned char *b, int blen){
+int base64_decode_attachment_buffer(char *p, unsigned char *b, int blen){
    int b64len=0;
    char puf[2*SMALLBUFSIZE];
 

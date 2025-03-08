@@ -44,7 +44,7 @@ int check_for_known_bad_attachments(struct session_data *sdata, struct __state *
       p_bind_init(&sql);
       sql.sql[sql.pos] = (char *)&counter; sql.type[sql.pos] = TYPE_LONG; sql.len[sql.pos] = sizeof(int); sql.pos++;
 
-      p_store_results(sdata, &sql);
+      p_store_results(&sql);
       p_fetch_results(&sql);
       p_free_results(&sql);
 

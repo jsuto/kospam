@@ -48,7 +48,7 @@ void zombie_init(struct __data *data, struct __config *cfg){
 }
 
 
-void check_zombie_sender(struct session_data *sdata, struct __data *data, struct __state *state, struct __config *cfg){
+void check_zombie_sender(struct session_data *sdata, struct __data *data, struct __config *cfg){
    int i=0;
    size_t nmatch=0;
 

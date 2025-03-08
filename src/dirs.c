@@ -13,7 +13,7 @@
 #include <clapf.h>
 
 
-void createdir(char *path, uid_t uid, gid_t gid, mode_t mode){
+void createdir(char *path, mode_t mode){
    struct stat st;
 
    if(strlen(path) > 2){
@@ -21,7 +21,6 @@ void createdir(char *path, uid_t uid, gid_t gid, mode_t mode){
 
       if(stat(path, &st)){
          if(mkdir(path, mode) == 0){
-            chown(path, uid, gid);
             syslog(LOG_PRIORITY, "created directory: *%s*", path);
          }
          else syslog(LOG_PRIORITY, "error: could not create directory '%s'", path);
@@ -31,37 +30,34 @@ void createdir(char *path, uid_t uid, gid_t gid, mode_t mode){
 }
 
 
-void check_and_create_directories(struct __config *cfg, uid_t uid, gid_t gid){
+void check_and_create_directories(struct __config *cfg){
    char *p;
 
    p = strrchr(cfg->workdir, '/');
    if(p){
       *p = '\0';
-      createdir(cfg->workdir, uid, gid, 0755);
+      createdir(cfg->workdir, 0755);
       *p = '/';
    }
-   createdir(cfg->workdir, uid, gid, 0711);
+   createdir(cfg->workdir, 0711);
 
    p = strrchr(cfg->queuedir, '/');
    if(p){
       *p = '\0';
-      createdir(cfg->queuedir, uid, gid, 0755);
+      createdir(cfg->queuedir, 0755);
       *p = '/';
    }
-   createdir(cfg->queuedir, uid, gid, 0700);
+   createdir(cfg->queuedir, 0700);
 
    p = strrchr(cfg->pidfile, '/');
    if(p){
       *p = '\0';
-      createdir(cfg->pidfile, uid, gid, 0755);
+      createdir(cfg->pidfile, 0755);
       *p = '/';
    }
 
 
-   createdir(HISTORY_DIR, uid, gid, 0700);
-   createdir(HISTORY_DIR "/tmp", uid, gid, 0700);
-   createdir(HISTORY_DIR "/new", uid, gid, 0700);
-
-
+   createdir(HISTORY_DIR, 0700);
+   createdir(HISTORY_DIR "/tmp", 0700);
+   createdir(HISTORY_DIR "/new", 0700);
 }
-

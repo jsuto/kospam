@@ -51,7 +51,7 @@ int get_policy(struct session_data *sdata, struct __config *cfg, struct __config
    sql.sql[sql.pos] = (char *)&(my_cfg->smtp_port); sql.type[sql.pos] = TYPE_LONG; sql.len[sql.pos] = sizeof(int); sql.pos++;
 
 
-   p_store_results(sdata, &sql);
+   p_store_results(&sql);
 
    if(p_fetch_results(&sql) == OK){
       f = atof(f1); if(f > 0.1) my_cfg->spam_overall_limit = f;

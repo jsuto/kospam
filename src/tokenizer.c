@@ -50,8 +50,9 @@ int generate_tokens_from_string(struct __state *state, char *s, char *label){
 }
 
 
-void tokenize(char *buf, struct __state *state, struct session_data *sdata, struct __data *data, struct __config *cfg){
-   int x, len, result;
+void tokenize(char *buf, struct __state *state, struct session_data *sdata, struct __config *cfg){
+   int x, result;
+   unsigned int len;
    char *p, *q, u[SMALLBUFSIZE], puf[SMALLBUFSIZE];
 
    /*
@@ -95,7 +96,7 @@ void tokenize(char *buf, struct __state *state, struct session_data *sdata, stru
 
       if(state->is_header == 0 && strncmp(puf, "URL*", 4) && (puf[0] == ' ' || (len > MAX_WORD_LEN && cfg->enable_cjk == 0) || is_hex_number(puf)) ) continue;
 
-      if(state->message_state == MSG_BODY && len >= cfg->min_word_len && state->bodylen < BIGBUFSIZE-len-1){
+      if(state->message_state == MSG_BODY && len >= (unsigned int)cfg->min_word_len && state->bodylen < BIGBUFSIZE-len-1){
          memcpy(&(state->b_body[state->bodylen]), puf, len);
          state->bodylen += len;
 
@@ -113,7 +114,7 @@ void tokenize(char *buf, struct __state *state, struct session_data *sdata, stru
          puf[len-1] = '\0';
          x = puf[len-2];
 
-         /* 
+         /*
           * skip Received line token, if
           *    - no punctuation (eg. by, from, esmtp, ...)
           *    - not "unknown"
@@ -126,7 +127,7 @@ void tokenize(char *buf, struct __state *state, struct session_data *sdata, stru
          }
 
 
-         /* 
+         /*
           * fill state.ip and state.hostname fields _after_
           * eliminated all entries matched by skipped_received_ips,
           * and skipped_received_hosts.

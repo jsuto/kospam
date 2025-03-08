@@ -107,7 +107,6 @@ int p_exec_stmt(struct session_data *sdata, struct sql *sql){
          bind[i].buffer = sql->sql[i];
          bind[i].is_null = 0;
 
-         
       }
       else { break; }
    }
@@ -131,7 +130,7 @@ CLOSE:
 }
 
 
-int p_store_results(struct session_data *sdata, struct sql *sql){
+int p_store_results(struct sql *sql){
    MYSQL_BIND bind[MAX_SQL_VARS];
    int i, ret=ERR;
 

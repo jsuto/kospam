@@ -27,7 +27,7 @@
 
 #define CLAMD_SOCKET "/var/run/clamav/clamd.ctl"
 
-#define PIDFILE "/var/run/clapf/clapf.pid"
+#define PIDFILE "/var/clapf/run/clapf.pid"
 #define QUARANTINELEN 255
 #define TIMEOUT 60
 #define TIMEOUT_USEC 500000

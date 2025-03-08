@@ -71,6 +71,7 @@ installdirs: mkinstalldirs
 		$(DESTDIR)$(localstatedir)/clapf/history \
 		$(DESTDIR)$(localstatedir)/clapf/queue \
 		$(DESTDIR)$(localstatedir)/clapf/sphinx \
+		$(DESTDIR)$(localstatedir)/clapf/run \
 		$(DESTDIR)$(localstatedir)/clapf/stat \
 		$(DESTDIR)$(localstatedir)/clapf/tmp \
 		$(DESTDIR)$(localstatedir)/clapf/www
@@ -78,6 +79,7 @@ installdirs: mkinstalldirs
 	$(INSTALL) -d -m 0755 -o $(RUNNING_USER) -g $(RUNNING_GROUP) $(DESTDIR)$(localstatedir)/run/clapf
 	$(INSTALL) -d -m 0700 -o $(RUNNING_USER) -g $(RUNNING_GROUP) $(DESTDIR)$(localstatedir)/clapf/history
 	$(INSTALL) -d -m 0711 -o $(RUNNING_USER) -g $(RUNNING_GROUP) $(DESTDIR)$(localstatedir)/clapf/queue
+	$(INSTALL) -d -m 0755 -o $(RUNNING_USER) -g $(RUNNING_GROUP) $(DESTDIR)$(localstatedir)/clapf/run
 	$(INSTALL) -d -m 0750 -o $(RUNNING_USER) -g $(RUNNING_GROUP) $(DESTDIR)$(localstatedir)/clapf/sphinx
 	$(INSTALL) -d -m 0755 -o $(RUNNING_USER) -g $(RUNNING_GROUP) $(DESTDIR)$(localstatedir)/clapf/stat
 	$(INSTALL) -d -m 0711 -o $(RUNNING_USER) -g $(RUNNING_GROUP) $(DESTDIR)$(localstatedir)/clapf/tmp

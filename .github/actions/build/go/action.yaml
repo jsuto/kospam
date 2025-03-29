@@ -38,6 +38,8 @@ runs:
 
         go build -o kospam-smtp cmd/smtpd/main.go
 
+        ./kospam-smtp -version
+
         ls -la kospam-smtp
       working-directory: go-app
       shell: bash

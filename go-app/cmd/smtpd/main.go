@@ -138,7 +138,7 @@ func (s *Session) Data(r io.Reader) error {
     }
     defer envFile.Close()
 
-    envData := fmt.Sprintf("MAIL FROM: %s\nRCPT TO: %s\n", s.mailFrom, strings.Join(s.rcptTo, ", "))
+    envData := fmt.Sprintf("MAIL FROM: %s\nRCPT TO: %s\n", s.mailFrom, strings.Join(s.rcptTo, ","))
     _, err = envFile.WriteString(envData)
     if err != nil {
         return fmt.Errorf("failed to write envelope data: %w", err)

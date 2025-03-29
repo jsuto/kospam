@@ -1,0 +1,54 @@
+name: 'Build piler package'
+
+inputs:
+  ARCH:
+    required: true
+  COMMIT_ID:
+    required: true
+  DOCKER_USERNAME:
+    required: true
+  DOCKER_TOKEN:
+    required: true
+  IMAGE_NAME:
+    required: true
+  VERSION:
+    required: true
+
+runs:
+  using: 'composite'
+
+  steps:
+    - name: Set up Go environment
+      uses: actions/setup-go@v3
+      with:
+        go-version: '1.23.7'
+
+    - name: Build static Go executable
+      run: |
+        go mod tidy
+
+        go test -timeout 10s ./...
+
+        export GOOS=linux GOARCH=${{ inputs.ARCH }} CGO_ENABLED=0
+
+        APP_VERSION="${{ inputs.VERSION }}-${{ inputs.COMMIT_ID }}"
+        sed -i "s/APP_VERSION/${APP_VERSION}/" pkg/version/version.go
+
+        cat pkg/version/version.go
+
+        go build -o kospam-smtp cmd/smtpd/main.go
+
+        ls -la kospam-smtp
+      working-directory: go-app
+      shell: bash
+
+    - name: Upload packages
+      uses: actions/upload-artifact@v4
+      with:
+        retention-days: 7
+        path: |
+          go-app/kospam-smtp
+        name: kospam-smtp-${{ inputs.ARCH }}
+        overwrite: true
+
+// TODO: build a docker image

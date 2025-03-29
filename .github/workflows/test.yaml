@@ -1,0 +1,66 @@
+name: Build and test
+
+on:
+  pull_request:
+    types:
+      - opened # PR created
+      - synchronize # commit pushed to PR
+      - reopened # closed PR reopened
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: read
+
+env:
+  IMAGE_NAME: sutoj/kospam
+  TEST_TAG: test
+  DISTRO: noble
+  PROJECT_ID: kospam
+  ARCH: amd64
+
+jobs:
+  build:
+    runs-on:
+      - ubuntu-latest
+
+    outputs:
+      IMAGE_TAG: ${{ steps.get-version.outputs.IMAGE_TAG }}
+      COMMIT_ID: ${{ steps.get-version.outputs.COMMIT_ID }}
+      VERSION: ${{ steps.get-version.outputs.VERSION }}
+      PACKAGE: ${{ steps.build-package.outputs.PACKAGE }}
+      BUILD_IMAGE: ${{ steps.filter.outputs.build_image }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get version
+        id: get-version
+        uses: ./.github/actions/version
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            build_image:
+              - 'build/**'
+              - 'docker/**'
+              - 'etc/**'
+              - 'go-app/**'
+              - 'src/**'
+              - 'util/**'
+              - 'webui/**'
+
+      - name: Build and publish Go apps
+        id: build-go
+        uses: ./.github/actions/build/go
+        with:
+          ARCH: ${{ env.ARCH }}
+          COMMIT_ID: ${{ steps.get-version.outputs.COMMIT_ID }}
+          DOCKER_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKER_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+          IMAGE_NAME: ${{ env.SLACK_IMAGE_NAME }}:${{ env.TEST_TAG }}
+          VERSION: ${{ steps.get-version.outputs.VERSION }}

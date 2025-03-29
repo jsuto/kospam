@@ -17,8 +17,7 @@ create table if not exists token (
     `timestamp` int unsigned default 0
 ) Engine=InnoDB;
 
-create index token_idx1 on token(token);
-create index token_idx2 on token(uid);
+create index token_uid_idx ON token(uid, token);
 
 
 create table if not exists user (

@@ -72,18 +72,70 @@ int qry_spaminess(struct session_data *sdata, struct __state *state, char type, 
    if(!query) return 0;
 
    /*
-    * I've noticed recently that mysql has a hard time executing queries like
-    * SELECT token, nham, nspam FROM token WHERE token IN ( .... );
+    * CREATE TEMPORARY TABLE temp_tokens (token BIGINT UNSIGNED PRIMARY KEY);
     *
-    * The problem is that mysql uses a full table scan in such case and won't use
-    * any index. The workaround seems to be rewriting the query:
+    * INSERT INTO temp_tokens (token) VALUES (...);
     *
-    * SELECT token, nham, nspam FROM token WHERE (token=a OR token=b OR token=c ...);
+    * EXPLAIN SELECT t.token, t.nham, t.nspam  FROM token t FORCE INDEX (token_uid_idx)  JOIN temp_tokens tt ON t.token = tt.token  WHERE t.uid IN (0,10);
+    *
+    * TRUNCATE temp_tokens; // after the update
+    *
+    *
+    * EXPLAIN UPDATE token t FORCE INDEX (token_uid_idx) JOIN temp_tokens tt ON t.token = tt.token SET t.timestamp = 1743219892 WHERE t.uid IN (0,10);
+    * +------+-------------+-------+--------+---------------+---------------+---------+---------------+--------+-------------+
+    * | id   | select_type | table | type   | possible_keys | key           | key_len | ref           | rows   | Extra       |
+    * +------+-------------+-------+--------+---------------+---------------+---------+---------------+--------+-------------+
+    * |    1 | SIMPLE      | t     | range  | token_uid_idx | token_uid_idx | 2       | NULL          | 849817 | Using where |
+    * |    1 | SIMPLE      | tt    | eq_ref | PRIMARY       | PRIMARY       | 8       | clapf.t.token | 1      | Using index |
+    * +------+-------------+-------+--------+---------------+---------------+---------+---------------+--------+-------------+
+    *
+    * EXPLAIN UPDATE token t FORCE INDEX (token_uid_idx) JOIN temp_tokens tt ON t.token = tt.token SET t.timestamp = 1743219892 WHERE t.uid = 0;
+    * +------+-------------+-------+-------+---------------+---------------+---------+----------------------+------+-------------+
+    * | id   | select_type | table | type  | possible_keys | key           | key_len | ref                  | rows | Extra       |
+    * +------+-------------+-------+-------+---------------+---------------+---------+----------------------+------+-------------+
+    * |    1 | SIMPLE      | tt    | index | PRIMARY       | PRIMARY       | 8       | NULL                 | 6    | Using index |
+    * |    1 | SIMPLE      | t     | ref   | token_uid_idx | token_uid_idx | 10      | const,clapf.tt.token | 1    |             |
+    * +------+-------------+-------+-------+---------------+---------------+---------+----------------------+------+-------------+
+    *
+    * EXPLAIN UPDATE token t FORCE INDEX (token_uid_idx) JOIN temp_tokens tt ON t.token = tt.token SET t.timestamp = 1743219892 WHERE t.uid = 10;
+    * +------+-------------+-------+--------+---------------+---------------+---------+---------------+------+-------------+
+    * | id   | select_type | table | type   | possible_keys | key           | key_len | ref           | rows | Extra       |
+    * +------+-------------+-------+--------+---------------+---------------+---------+---------------+------+-------------+
+    * |    1 | SIMPLE      | t     | ref    | token_uid_idx | token_uid_idx | 2       | const         | 1    |             |
+    * |    1 | SIMPLE      | tt    | eq_ref | PRIMARY       | PRIMARY       | 8       | clapf.t.token | 1    | Using index |
+    * +------+-------------+-------+--------+---------------+---------------+---------+---------------+------+-------------+
+    *
+    *
+    * Why Running Two Queries Might Be Better:
+
+    Optimized Index Usage for uid = 0:
+
+        Since the uid = 0 tokens are the majority, the query will be optimized for this subset, and it will not need to process the much smaller uid = 10 set.
+
+        The UPDATE with uid = 0 will likely work on fewer rows in memory and will use the index efficiently, making it much faster.
+
+    Lower Number of Rows Processed for uid = 10:
+
+        Since there are fewer rows for uid = 10, the second query will perform more efficiently with less data to update, reducing the overall workload for MySQL.
+
+    Fewer Locking Contention and Better Performance:
+
+        By running two separate updates, the locking contention on the table will be lower. This is important if there are other operations happening on the table concurrently.
+
+        This also minimizes the chance of a full table scan for each set, as MySQL can more efficiently optimize the query for the smaller result set (uid = 10).
+
     */
 
-   snprintf(s, sizeof(s)-1, "SELECT token, nham, nspam FROM %s WHERE (token=%llu", SQL_TOKEN_TABLE, APHash(state->from));
+   snprintf(s, sizeof(s)-1, "SELECT token, nham, nspam FROM %s FORCE INDEX (token_uid_idx) WHERE ", SQL_TOKEN_TABLE);
    buffer_cat(query, s);
 
+   if (sdata->gid > 0) {
+      snprintf(s, sizeof(s)-1, "(uid=0 OR uid=%d) AND token IN (0,", sdata->gid);
+      buffer_cat(query, s);
+   }
+   else {
+      buffer_cat(query, ") uid=0 token IN (0,");
+   }
 
    for(i=0; i<MAXHASH; i++){
       q = state->token_hash[i];
@@ -91,7 +143,7 @@ int qry_spaminess(struct session_data *sdata, struct __state *state, char type, 
 
          if( (type == 1 && q->type == 1) || (type == 0 && q->type == 0) ){
             n++;
-            snprintf(s, sizeof(s)-1, " OR token=%llu", APHash(q->str));
+            snprintf(s, sizeof(s)-1, ",%llu", APHash(q->str));
 
             buffer_cat(query, s);
          }
@@ -100,12 +152,7 @@ int qry_spaminess(struct session_data *sdata, struct __state *state, char type, 
       }
    }
 
-   if(sdata->gid > 0){
-      snprintf(s, sizeof(s)-1, ") AND (uid=0 OR uid=%d)", sdata->gid);
-      buffer_cat(query, s);
-   }
-   else
-      buffer_cat(query, ") AND uid=0");
+   buffer_cat(query, ")");
 
    update_hash(sdata, query->data, state->token_hash);
 

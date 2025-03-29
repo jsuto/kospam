@@ -226,7 +226,7 @@ int prepare_sql_statement(struct session_data *sdata, struct sql *sql, char *s){
       return ERR;
    }
 
-   return OK; 
+   return OK;
 }
 
 

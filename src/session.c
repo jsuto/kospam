@@ -127,7 +127,7 @@ int handle_smtp_session(int new_sd, struct __data *data, struct __config *cfg){
 
                   for(i=0; i<k; i++){
                      write1(new_sd, SMTP_RESP_421_ERR_WRITE_FAILED, strlen(SMTP_RESP_421_ERR_WRITE_FAILED), sdata.tls, data->ssl);
-                  } 
+                  }
 
                   memset(puf, 0, sizeof(puf));
                   goto AFTER_PERIOD;

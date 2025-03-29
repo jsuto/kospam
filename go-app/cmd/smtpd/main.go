@@ -130,16 +130,7 @@ func (s *Session) Data(r io.Reader) error {
     filePath := filepath.Join(s.queueDir, subdir, s.queueID)
     envPath := filepath.Join(s.envelopeDir, subdir, s.queueID)
 
-    file, err := os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0600)
-    if err != nil {
-        return fmt.Errorf("failed to create file: %w", err)
-    }
-    defer file.Close()
-
-    _, err = io.Copy(file, r)
-    if err != nil {
-        return fmt.Errorf("failed to write email to file: %w", err)
-    }
+    // Save the envelope sender and recipients to file
 
     envFile, err := os.OpenFile(envPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0600)
     if err != nil {
@@ -153,8 +144,23 @@ func (s *Session) Data(r io.Reader) error {
         return fmt.Errorf("failed to write envelope data: %w", err)
     }
 
-    log.Printf("Email saved to %s", filePath)
     log.Printf("Envelope saved to %s", envPath)
+
+
+    // Save the email to file
+
+    file, err := os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0600)
+    if err != nil {
+        return fmt.Errorf("failed to create file: %w", err)
+    }
+    defer file.Close()
+
+    _, err = io.Copy(file, r)
+    if err != nil {
+        return fmt.Errorf("failed to write email to file: %w", err)
+    }
+
+    log.Printf("Email saved to %s", filePath)
 
     return nil
 }

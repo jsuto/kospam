@@ -1,9 +1,7 @@
 package main
 
 import (
-    "crypto/rand"
     "crypto/tls"
-    "encoding/base32"
     "flag"
     "fmt"
     "io"
@@ -111,9 +109,10 @@ func (s *Session) Xforward(opts *smtp.XforwardOptions) error {
 }
 
 func (s *Session) Mail(from string, opts *smtp.MailOptions) error {
-    s.queueID = generateQueueID()
+    s.queueID = opts.QueueId
     s.mailFrom = from
-    log.Printf("MAIL FROM: %s, Queue ID: %s", from, s.queueID)
+    log.Printf("MAIL FROM: %s", from)
+
     //log.Printf("forward: %s %s %s %s", s.xforward.Name, s.xforward.Addr, s.xforward.Proto, s.xforward.Helo)
     return nil
 }
@@ -177,15 +176,6 @@ func (s *Session) Logout() error {
     return nil
 }
 
-func generateQueueID() string {
-    b := make([]byte, 15) // 20 characters when base32 encoded
-    _, err := rand.Read(b)
-    if err != nil {
-        log.Fatal("failed to generate queue ID")
-    }
-    return strings.ToUpper(base32.StdEncoding.WithPadding(base32.NoPadding).EncodeToString(b))
-}
-
 func createDirs(config *config.SmtpdConfig) {
     utils.CreateSubDirs(config.QueueDir, config.NumWorkers)
     utils.CreateSubDirs(config.EnvelopeDir, config.NumWorkers)
@@ -231,6 +221,7 @@ func main() {
     server.ReadTimeout = 30 * time.Second
     server.WriteTimeout = 30 * time.Second
     server.MaxRecipients = config.MaxRecipients
+    server.MaxLineLength = 6000
 
     tlsCert, err := tls.LoadX509KeyPair(config.PemFile, config.PemFile)
     if err != nil {

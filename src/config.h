@@ -6,28 +6,24 @@
  #define _CONFIG_H
 
 #include <syslog.h>
-#include "clapf-config.h"
+#include "kospam-config.h"
 #include "params.h"
 
-#define PROGNAME "clapf"
-
-#define VERSION "0.5.2"
-
-#define BUILD 1322
+#define PROGNAME "kospam"
 
 #define HOSTID "av-engine.localhost"
 
-#define CONFIG_FILE CONFDIR "/clapf/clapf.conf"
-#define WORK_DIR DATADIR "/clapf/tmp"
-#define QUEUE_DIR DATADIR "/clapf/queue"
-#define HISTORY_DIR DATADIR "/clapf/history"
+#define CONFIG_FILE CONFDIR "/kospam/kospam.conf"
+#define WORK_DIR DATADIR "/kospam/tmp"
+#define QUEUE_DIR DATADIR "/kospam/queue"
+#define HISTORY_DIR DATADIR "/kospam/history"
 
 #define SPAMINESS_HEADER_FIELD "X-Clapf-spamicity: "
 #define SPAM_HEADER_FIELD SPAMINESS_HEADER_FIELD "Yes"
 
 #define CLAMD_SOCKET "/var/run/clamav/clamd.ctl"
 
-#define PIDFILE "/var/clapf/run/clapf.pid"
+#define PIDFILE "/var/kospam/run/kospam.pid"
 #define QUARANTINELEN 255
 #define TIMEOUT 60
 #define TIMEOUT_USEC 500000

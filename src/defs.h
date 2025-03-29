@@ -85,6 +85,7 @@ struct child {
    pid_t pid;
    int messages;
    int status;
+   int serial;
 };
 
 

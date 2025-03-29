@@ -15,7 +15,6 @@
 #define CHK_NULL(x, errmsg) if ((x)==NULL) { printf("error: %s\n", errmsg); return ERR; }
 #define CHK_SSL(err, msg) if ((err)==-1) { printf("ssl error: %s\n", msg); return ERR; }
 
-int get_build();
 void __fatal(char *s);
 long tvdiff(struct timeval a, struct timeval b);
 int search_string_in_buffer(char *s, int len1, char *what, int len2);

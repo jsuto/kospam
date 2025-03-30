@@ -13,6 +13,7 @@ ARG TARGETARCH
 
 COPY ${PACKAGE}_${TARGETARCH}.deb /
 COPY kospam-smtpd /usr/libexec/kospam/kospam-smtpd
+COPY kospam-client /usr/libexec/kospam/kospam-client
 
 # hadolint ignore=DL3008,DL3015
 RUN apt-get update && \

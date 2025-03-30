@@ -16,7 +16,6 @@ void printhash(struct node *xhash[]);
 struct node *makenewnode(char *s, double spaminess, double deviation);
 int addnode(struct node *xhash[], char *s, double spaminess, double deviation);
 struct node *findnode(struct node *xhash[], char *s);
-uint64 APHash(char *p);
 int is_substr_in_hash(struct node *xhash[], char *s);
 int updatenode(struct node *xhash[], uint64 key, float nham, float nspam, float spaminess, float deviation);
 

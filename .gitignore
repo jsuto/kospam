@@ -1,3 +1,4 @@
 *.o
-libclapf.so*
-libclapf.a
+libkospam.so*
+libkospam.a
+go.sum

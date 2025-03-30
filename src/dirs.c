@@ -56,6 +56,11 @@ void check_and_create_directories(struct __config *cfg){
       *p = '/';
    }
 
+   for(int i=0; i<cfg->number_of_worker_processes; i++){
+      char s[SMALLBUFSIZE];
+      snprintf(s, sizeof(s)-1, "%s/%d", cfg->workdir, i);
+      createdir(s, 0700);
+   }
 
    createdir(HISTORY_DIR, 0700);
    createdir(HISTORY_DIR "/tmp", 0700);

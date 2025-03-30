@@ -13,7 +13,6 @@
    #include <tre/tre.h>
    #include <tre/regex.h>
 #endif
-#include <tcpd.h>
 
 #include <openssl/sha.h>
 #include <openssl/ssl.h>
@@ -79,12 +78,13 @@
 #define T_TUM 1
 
 typedef void signal_func (int);
-
+typedef unsigned long long uint64;
 
 struct child {
    pid_t pid;
    int messages;
    int status;
+   int serial;
 };
 
 
@@ -336,4 +336,3 @@ struct __counters {
 };
 
 #endif /* _DEFS_H */
-

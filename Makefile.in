@@ -31,7 +31,7 @@ MAKE = `which @MAKE@`
 INSTALL = @INSTALL@
 
 am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
-	clapf-config.h stamp.h stamp-h1 params.h
+	kospam-config.h stamp.h stamp-h1 params.h
 
 all: all-recursive
 install: installdirs install-recursive
@@ -66,37 +66,41 @@ $(RECURSIVE_TARGETS):
 
 installdirs: mkinstalldirs
 	$(srcdir)/mkinstalldirs \
-		$(DESTDIR)$(bindir) $(DESTDIR)$(sbindir) $(DESTDIR)$(libdir) $(DESTDIR)$(libexecdir)/clapf $(DESTDIR)$(datarootdir)/clapf $(DESTDIR)$(sysconfdir) \
-		$(DESTDIR)$(sysconfdir)/clapf \
-		$(DESTDIR)$(localstatedir)/clapf/history \
-		$(DESTDIR)$(localstatedir)/clapf/queue \
-		$(DESTDIR)$(localstatedir)/clapf/sphinx \
-		$(DESTDIR)$(localstatedir)/clapf/run \
-		$(DESTDIR)$(localstatedir)/clapf/stat \
-		$(DESTDIR)$(localstatedir)/clapf/tmp \
-		$(DESTDIR)$(localstatedir)/clapf/www
+		$(DESTDIR)$(bindir) $(DESTDIR)$(sbindir) $(DESTDIR)$(libdir) $(DESTDIR)$(libexecdir)/kospam $(DESTDIR)$(datarootdir)/kospam $(DESTDIR)$(sysconfdir) \
+		$(DESTDIR)$(sysconfdir)/kospam \
+		$(DESTDIR)$(localstatedir)/kospam/history \
+		$(DESTDIR)$(localstatedir)/kospam/queue \
+		$(DESTDIR)$(localstatedir)/kospam/sphinx \
+		$(DESTDIR)$(localstatedir)/kospam/run \
+		$(DESTDIR)$(localstatedir)/kospam/send \
+		$(DESTDIR)$(localstatedir)/kospam/send-error \
+		$(DESTDIR)$(localstatedir)/kospam/stat \
+		$(DESTDIR)$(localstatedir)/kospam/tmp \
+		$(DESTDIR)$(localstatedir)/kospam/www
 
-	$(INSTALL) -d -m 0755 -o $(RUNNING_USER) -g $(RUNNING_GROUP) $(DESTDIR)$(localstatedir)/run/clapf
-	$(INSTALL) -d -m 0700 -o $(RUNNING_USER) -g $(RUNNING_GROUP) $(DESTDIR)$(localstatedir)/clapf/history
-	$(INSTALL) -d -m 0711 -o $(RUNNING_USER) -g $(RUNNING_GROUP) $(DESTDIR)$(localstatedir)/clapf/queue
-	$(INSTALL) -d -m 0755 -o $(RUNNING_USER) -g $(RUNNING_GROUP) $(DESTDIR)$(localstatedir)/clapf/run
-	$(INSTALL) -d -m 0750 -o $(RUNNING_USER) -g $(RUNNING_GROUP) $(DESTDIR)$(localstatedir)/clapf/sphinx
-	$(INSTALL) -d -m 0755 -o $(RUNNING_USER) -g $(RUNNING_GROUP) $(DESTDIR)$(localstatedir)/clapf/stat
-	$(INSTALL) -d -m 0711 -o $(RUNNING_USER) -g $(RUNNING_GROUP) $(DESTDIR)$(localstatedir)/clapf/tmp
+	$(INSTALL) -d -m 0755 -o $(RUNNING_USER) -g $(RUNNING_GROUP) $(DESTDIR)$(localstatedir)/run/kospam
+	$(INSTALL) -d -m 0700 -o $(RUNNING_USER) -g $(RUNNING_GROUP) $(DESTDIR)$(localstatedir)/kospam/history
+	$(INSTALL) -d -m 0711 -o $(RUNNING_USER) -g $(RUNNING_GROUP) $(DESTDIR)$(localstatedir)/kospam/queue
+	$(INSTALL) -d -m 0755 -o $(RUNNING_USER) -g $(RUNNING_GROUP) $(DESTDIR)$(localstatedir)/kospam/run
+	$(INSTALL) -d -m 0750 -o $(RUNNING_USER) -g $(RUNNING_GROUP) $(DESTDIR)$(localstatedir)/kospam/sphinx
+	$(INSTALL) -d -m 0700 -o $(RUNNING_USER) -g $(RUNNING_GROUP) $(DESTDIR)$(localstatedir)/kospam/send
+	$(INSTALL) -d -m 0700 -o $(RUNNING_USER) -g $(RUNNING_GROUP) $(DESTDIR)$(localstatedir)/kospam/send-error
+	$(INSTALL) -d -m 0755 -o $(RUNNING_USER) -g $(RUNNING_GROUP) $(DESTDIR)$(localstatedir)/kospam/stat
+	$(INSTALL) -d -m 0711 -o $(RUNNING_USER) -g $(RUNNING_GROUP) $(DESTDIR)$(localstatedir)/kospam/tmp
 
-	cp -R $(srcdir)/webui/* $(DESTDIR)$(localstatedir)/clapf/www
-	cp -R $(srcdir)/webui/.ht* $(DESTDIR)$(localstatedir)/clapf/www
+	cp -R $(srcdir)/webui/* $(DESTDIR)$(localstatedir)/kospam/www
+	cp -R $(srcdir)/webui/.ht* $(DESTDIR)$(localstatedir)/kospam/www
 
 install-am:
 
 
 uninstall:
 	rm -f \
-		$(DESTDIR)$(sbindir)/clapf $(DESTDIR)$(sbindir)/clapfconf $(DESTDIR)$(libdir)/libclapf.* \
-		$(DESTDIR)$(sysconfdir)/clapf.conf
+		$(DESTDIR)$(sbindir)/kospam $(DESTDIR)$(sbindir)/kospamconf $(DESTDIR)$(libdir)/libkospam.* \
+		$(DESTDIR)$(sysconfdir)/kospam.conf
 
-	rm -rf $(DESTDIR)$(libexecdir)/clapf $(DESTDIR)$(includedir)/clapf $(DESTDIR)$(datarootdir)/clapf
-	@echo "I left the $(DESTDIR)$(localstatedir)/clapf directory, remove it for yourself"
+	rm -rf $(DESTDIR)$(libexecdir)/kospam $(DESTDIR)$(includedir)/kospam $(DESTDIR)$(datarootdir)/kospam
+	@echo "I left the $(DESTDIR)$(localstatedir)/kospam directory, remove it for yourself"
 
 
 all-am: Makefile

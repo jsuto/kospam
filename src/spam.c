@@ -15,7 +15,7 @@
 #include <math.h>
 #include <time.h>
 #include <ctype.h>
-#include <clapf.h>
+#include <kospam.h>
 
 
 float calc_token_spamicity(float NHAM, float NSPAM, unsigned int nham, unsigned int nspam, float rob_s, float rob_x){
@@ -130,11 +130,11 @@ int qry_spaminess(struct session_data *sdata, struct __state *state, char type, 
    buffer_cat(query, s);
 
    if (sdata->gid > 0) {
-      snprintf(s, sizeof(s)-1, "(uid=0 OR uid=%d) AND token IN (0,", sdata->gid);
+      snprintf(s, sizeof(s)-1, "(uid=0 OR uid=%d) AND token IN (0", sdata->gid);
       buffer_cat(query, s);
    }
    else {
-      buffer_cat(query, ") uid=0 token IN (0,");
+      buffer_cat(query, "uid=0 AND token IN (0");
    }
 
    for(i=0; i<MAXHASH; i++){
@@ -143,7 +143,7 @@ int qry_spaminess(struct session_data *sdata, struct __state *state, char type, 
 
          if( (type == 1 && q->type == 1) || (type == 0 && q->type == 0) ){
             n++;
-            snprintf(s, sizeof(s)-1, ",%llu", APHash(q->str));
+            snprintf(s, sizeof(s)-1, ",%llu", xxh3_64(q->str, strlen(q->str)));
 
             buffer_cat(query, s);
          }
@@ -153,6 +153,8 @@ int qry_spaminess(struct session_data *sdata, struct __state *state, char type, 
    }
 
    buffer_cat(query, ")");
+
+   if (cfg->debug) printf("query: *%s*\n", query->data);
 
    update_hash(sdata, query->data, state->token_hash);
 
@@ -305,7 +307,7 @@ float run_statistical_check(struct session_data *sdata, struct __state *state, s
 
    if(sdata->training_request == 0){
 
-      snprintf(buf, sizeof(buf)-1, "SELECT nham, nspam FROM %s WHERE token=%llu AND (uid=0 OR uid=%d)", SQL_TOKEN_TABLE, APHash(state->from), sdata->gid);
+      snprintf(buf, sizeof(buf)-1, "SELECT nham, nspam FROM %s WHERE token=%llu AND (uid=0 OR uid=%d)", SQL_TOKEN_TABLE, xxh3_64(state->from, strlen(state->from)), sdata->gid);
 
       te = get_ham_spam_counters(sdata, buf);
       ham_from = te.nham;

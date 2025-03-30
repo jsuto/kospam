@@ -5,12 +5,6 @@ inputs:
     required: true
   COMMIT_ID:
     required: true
-  DOCKER_USERNAME:
-    required: true
-  DOCKER_TOKEN:
-    required: true
-  IMAGE_NAME:
-    required: true
   VERSION:
     required: true
 
@@ -36,11 +30,12 @@ runs:
 
         cat pkg/version/version.go
 
+        go build -o kospam-client cmd/smtp/main.go
         go build -o kospam-smtp cmd/smtpd/main.go
 
         ./kospam-smtp -version
 
-        ls -la kospam-smtp
+        ls -la kospam-smtp kospam-client
       working-directory: go-app
       shell: bash
 
@@ -49,8 +44,7 @@ runs:
       with:
         retention-days: 7
         path: |
+          go-app/kospam-client
           go-app/kospam-smtp
         name: kospam-smtp-${{ inputs.ARCH }}
         overwrite: true
-
-// TODO: build a docker image

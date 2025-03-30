@@ -1,9 +1,7 @@
 package main
 
 import (
-    "crypto/rand"
     "crypto/tls"
-    "encoding/base32"
     "flag"
     "fmt"
     "io"
@@ -111,9 +109,10 @@ func (s *Session) Xforward(opts *smtp.XforwardOptions) error {
 }
 
 func (s *Session) Mail(from string, opts *smtp.MailOptions) error {
-    s.queueID = generateQueueID()
+    s.queueID = opts.QueueId
     s.mailFrom = from
-    log.Printf("MAIL FROM: %s, Queue ID: %s", from, s.queueID)
+    log.Printf("MAIL FROM: %s", from)
+
     //log.Printf("forward: %s %s %s %s", s.xforward.Name, s.xforward.Addr, s.xforward.Proto, s.xforward.Helo)
     return nil
 }
@@ -128,7 +127,8 @@ func (s *Session) Data(r io.Reader) error {
     subdir := strconv.Itoa(randmath.Intn(1000) % s.numWorkers)
 
     filePath := filepath.Join(s.queueDir, subdir, s.queueID)
-    envPath := filepath.Join(s.envelopeDir, subdir, s.queueID)
+
+    // Save the email to file
 
     file, err := os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0600)
     if err != nil {
@@ -136,25 +136,17 @@ func (s *Session) Data(r io.Reader) error {
     }
     defer file.Close()
 
+    header := fmt.Sprintf("Kospam-Envelope-From: %s\r\nKospam-Envelope-Recipient: %s\r\n", s.mailFrom, strings.Join(s.rcptTo, ","))
+    if _, err := file.WriteString(header); err != nil {
+        return fmt.Errorf("failed to write header: %w", err)
+    }
+
     _, err = io.Copy(file, r)
     if err != nil {
         return fmt.Errorf("failed to write email to file: %w", err)
     }
 
-    envFile, err := os.OpenFile(envPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0600)
-    if err != nil {
-        return fmt.Errorf("failed to create envelope file: %w", err)
-    }
-    defer envFile.Close()
-
-    envData := fmt.Sprintf("MAIL FROM: %s\nRCPT TO: %s\n", s.mailFrom, strings.Join(s.rcptTo, ", "))
-    _, err = envFile.WriteString(envData)
-    if err != nil {
-        return fmt.Errorf("failed to write envelope data: %w", err)
-    }
-
     log.Printf("Email saved to %s", filePath)
-    log.Printf("Envelope saved to %s", envPath)
 
     return nil
 }
@@ -170,18 +162,8 @@ func (s *Session) Logout() error {
     return nil
 }
 
-func generateQueueID() string {
-    b := make([]byte, 15) // 20 characters when base32 encoded
-    _, err := rand.Read(b)
-    if err != nil {
-        log.Fatal("failed to generate queue ID")
-    }
-    return strings.ToUpper(base32.StdEncoding.WithPadding(base32.NoPadding).EncodeToString(b))
-}
-
 func createDirs(config *config.SmtpdConfig) {
     utils.CreateSubDirs(config.QueueDir, config.NumWorkers)
-    utils.CreateSubDirs(config.EnvelopeDir, config.NumWorkers)
 }
 
 func main() {
@@ -224,6 +206,7 @@ func main() {
     server.ReadTimeout = 30 * time.Second
     server.WriteTimeout = 30 * time.Second
     server.MaxRecipients = config.MaxRecipients
+    server.MaxLineLength = 6000 // The RFC says the max line length is 1000
 
     tlsCert, err := tls.LoadX509KeyPair(config.PemFile, config.PemFile)
     if err != nil {

@@ -14,17 +14,13 @@
 #include <netdb.h>
 #include <sys/time.h>
 #include <time.h>
+#include <sys/resource.h>
 #include <fcntl.h>
 #include <syslog.h>
 #include <unistd.h>
 #include <ctype.h>
 #include <openssl/ssl.h>
 #include <clapf.h>
-
-
-int get_build(){
-   return BUILD;
-}
 
 
 void __fatal(char *s){
@@ -41,6 +37,14 @@ long tvdiff(struct timeval a, struct timeval b){
 
    res = (a.tv_sec * 1000000 + a.tv_usec) - (b.tv_sec * 1000000 + b.tv_usec);
    return (long) res;
+}
+
+
+void disable_coredump() {
+   struct rlimit rlim;
+
+   rlim.rlim_cur = rlim.rlim_max = 0;
+   setrlimit(RLIMIT_CORE, &rlim);
 }
 
 

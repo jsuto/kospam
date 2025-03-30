@@ -29,12 +29,12 @@ all:
 
 install:
 	sed -e "s%SYSCONFDIR%$(sysconfdir)%" $(srcdir)/indexer.main.sh.in > $(srcdir)/indexer.main.sh
-	$(INSTALL) -m 0755 $(srcdir)/quarantine-daily-report.php $(DESTDIR)$(libexecdir)/clapf
-	$(INSTALL) -m 0755 $(srcdir)/history-to-sql.php $(DESTDIR)$(libexecdir)/clapf
-	$(INSTALL) -m 0755 $(srcdir)/indexer.main.sh $(DESTDIR)$(libexecdir)/clapf
-	$(INSTALL) -m 0644 $(srcdir)/zombienets.regex $(DESTDIR)$(datarootdir)/clapf/zombienets.regex.dist
-	$(INSTALL) -m 0644 $(srcdir)/db-mysql.sql $(DESTDIR)$(datarootdir)/clapf
-	$(INSTALL) -m 0644 $(srcdir)/db-mysql-root.sql.in $(DESTDIR)$(datarootdir)/clapf
+	$(INSTALL) -m 0755 $(srcdir)/quarantine-daily-report.php $(DESTDIR)$(libexecdir)/kospam
+	$(INSTALL) -m 0755 $(srcdir)/history-to-sql.php $(DESTDIR)$(libexecdir)/kospam
+	$(INSTALL) -m 0755 $(srcdir)/indexer.main.sh $(DESTDIR)$(libexecdir)/kospam
+	$(INSTALL) -m 0644 $(srcdir)/zombienets.regex $(DESTDIR)$(datarootdir)/kospam/zombienets.regex.dist
+	$(INSTALL) -m 0644 $(srcdir)/db-mysql.sql $(DESTDIR)$(datarootdir)/kospam
+	$(INSTALL) -m 0644 $(srcdir)/db-mysql-root.sql.in $(DESTDIR)$(datarootdir)/kospam
 
 clean:
 	echo

@@ -60,7 +60,15 @@ jobs:
         with:
           ARCH: ${{ env.ARCH }}
           COMMIT_ID: ${{ steps.get-version.outputs.COMMIT_ID }}
-          DOCKER_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-          DOCKER_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
-          IMAGE_NAME: ${{ env.SLACK_IMAGE_NAME }}:${{ env.TEST_TAG }}
+          VERSION: ${{ steps.get-version.outputs.VERSION }}
+
+      - name: Build package
+        id: build-package
+        uses: ./.github/actions/build/package
+        with:
+          ARCH: ${{ env.ARCH }}
+          BUILDER_IMAGE: sutoj/builder:${{ env.DISTRO }}
+          COMMIT_ID: ${{ steps.get-version.outputs.COMMIT_ID }}
+          DISTRO: ${{ env.DISTRO }}
+          PROJECT_ID: ${{ env.PROJECT_ID }}
           VERSION: ${{ steps.get-version.outputs.VERSION }}

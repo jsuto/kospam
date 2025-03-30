@@ -612,7 +612,7 @@ PACKAGE_STRING=''
 PACKAGE_BUGREPORT=''
 PACKAGE_URL=''
 
-ac_unique_file="src/clapf.c"
+ac_unique_file="src/kospam.c"
 # Factoring default headers for most tests.
 ac_includes_default="\
 #include <stddef.h>
@@ -654,7 +654,6 @@ MYSQL_CONFIG
 iv
 id_bin
 libclamav_extra_libs
-sql_obj
 sql_libs
 sql_includes
 MAKE
@@ -720,8 +719,7 @@ enable_option_checking
 with_confdir
 enable_clamd
 enable_memcached
-with_database
-with_clapf_user
+with_kospam_user
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1354,8 +1352,7 @@ Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   --with-confdir=DIR      Specify the configuration directory
-  --with-database[=mysql]  select the used database, currently mysql only (default: none)
-  --with-clapf-user=username      what user the clapf daemon shall be run as
+  --with-kospam-user=username      what user the kospam daemon shall be run as
 
 Some influential environment variables:
   CC          C compiler command
@@ -2407,7 +2404,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
-ac_config_headers="$ac_config_headers clapf-config.h"
+ac_config_headers="$ac_config_headers kospam-config.h"
 
 
 CONFIGURE_PARAMS_FILE=params.h
@@ -3642,13 +3639,12 @@ if test ${with_confdir+y}
 then :
   withval=$with_confdir; CONFDIR="$withval"
 else $as_nop
-  CONFDIR="/etc/clapf"  # Default value
+  CONFDIR="/etc/kospam"  # Default value
 
 fi
 
 
 printf "%s\n" "#define CONFDIR \"$CONFDIR\"" >>confdefs.h
-
 
 
 
@@ -3683,7 +3679,6 @@ antispam_libs="-lz -lm -ldl -lcrypto -lssl"
 defs=""
 objs=""
 user_obj=""
-sql_obj=""
 os=`uname -s`
 
 id_bin="id"
@@ -3699,12 +3694,13 @@ GCC_VERSION=''
 
 if test -f `which gcc`; then gcc -v 2> aa; GCC_VERSION=`tail -1 aa`; rm -f aa; fi
 
-if test "$os" = "SunOS"; then
-   echo "#define CONFIGURE_PARAMS \"Build Date: "`date`'\\n" \\' > $CONFIGURE_PARAMS_FILE
-else
-   echo "#define CONFIGURE_PARAMS \"Build Date: "`date`"\\nldd version: $LDD_VERSION\\ngcc version: $GCC_VERSION\n"\" \\ > $CONFIGURE_PARAMS_FILE
-fi
-echo "\"Configure command: ./configure $PARAMS\"" >> $CONFIGURE_PARAMS_FILE
+echo "#define CONFIGURE_PARAMS \"Build Date: "$(date)"\\nldd version: $LDD_VERSION\\ngcc version: $GCC_VERSION\\nOS: "$(uname -a)"\n"\" \\ > $CONFIGURE_PARAMS_FILE
+echo "\"Configure command: ./configure $PARAMS\\n\"" >> $CONFIGURE_PARAMS_FILE
+echo "#define COMMIT_ID \"$(git log -1 --format=%h)\"" >> $CONFIGURE_PARAMS_FILE
+
+echo "#define VERSION \"$(head -1 VERSION)\"" >> $CONFIGURE_PARAMS_FILE
+echo "#define DISTRO \"${DISTRO:-unknown}\"" >> $CONFIGURE_PARAMS_FILE
+echo "#define ARCH \"${ARCH:-amd64}\"" >> $CONFIGURE_PARAMS_FILE
 
 
 SUBDIRS="src etc init.d util zombie"
@@ -4335,160 +4331,7 @@ if test "$have_zlib" = "no"; then
 fi
 
 
-
-# Check whether --with-database was given.
-if test ${with_database+y}
-then :
-  withval=$with_database;
-   if test "$withval" != "no" -a "$withval" != "yes"; then
-      DATABASE=$withval
-   fi
-
-
-   if test "$withval" = "mysql"; then
-
-      # Extract the first word of "mysql_config", so it can be a program name with args.
-set dummy mysql_config; ac_word=$2
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
-printf %s "checking for $ac_word... " >&6; }
-if test ${ac_cv_prog_MYSQL_CONFIG+y}
-then :
-  printf %s "(cached) " >&6
-else $as_nop
-  if test -n "$MYSQL_CONFIG"; then
-  ac_cv_prog_MYSQL_CONFIG="$MYSQL_CONFIG" # Let the user override the test.
-else
-as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  case $as_dir in #(((
-    '') as_dir=./ ;;
-    */) ;;
-    *) as_dir=$as_dir/ ;;
-  esac
-    for ac_exec_ext in '' $ac_executable_extensions; do
-  if as_fn_executable_p "$as_dir$ac_word$ac_exec_ext"; then
-    ac_cv_prog_MYSQL_CONFIG="yes"
-    printf "%s\n" "$as_me:${as_lineno-$LINENO}: found $as_dir$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-  done
-IFS=$as_save_IFS
-
-fi
-fi
-MYSQL_CONFIG=$ac_cv_prog_MYSQL_CONFIG
-if test -n "$MYSQL_CONFIG"; then
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $MYSQL_CONFIG" >&5
-printf "%s\n" "$MYSQL_CONFIG" >&6; }
-else
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
-printf "%s\n" "no" >&6; }
-fi
-
-
-
-      if test x$MYSQL_CONFIG = xyes; then
-         have_mysql="yes"
-      fi
-
-      if test "$have_mysql" = "yes"; then
-
-         sql_includes=`mysql_config --cflags`
-         sql_libs=`mysql_config --libs_r`
-         sql_obj="mysql.o"
-
-         { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for main in -lguide" >&5
-printf %s "checking for main in -lguide... " >&6; }
-if test ${ac_cv_lib_guide_main+y}
-then :
-  printf %s "(cached) " >&6
-else $as_nop
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lguide  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-
-int
-main (void)
-{
-return main ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_link "$LINENO"
-then :
-  ac_cv_lib_guide_main=yes
-else $as_nop
-  ac_cv_lib_guide_main=no
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.beam \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_guide_main" >&5
-printf "%s\n" "$ac_cv_lib_guide_main" >&6; }
-if test "x$ac_cv_lib_guide_main" = xyes
-then :
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for _intel_fast_memset in -lguide" >&5
-printf %s "checking for _intel_fast_memset in -lguide... " >&6; }
-if test ${ac_cv_lib_guide__intel_fast_memset+y}
-then :
-  printf %s "(cached) " >&6
-else $as_nop
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lguide  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-/* Override any GCC internal prototype to avoid an error.
-   Use char because int might match the return type of a GCC
-   builtin and then its argument prototype would still apply.  */
-char _intel_fast_memset ();
-int
-main (void)
-{
-return _intel_fast_memset ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_link "$LINENO"
-then :
-  ac_cv_lib_guide__intel_fast_memset=yes
-else $as_nop
-  ac_cv_lib_guide__intel_fast_memset=no
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.beam \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_guide__intel_fast_memset" >&5
-printf "%s\n" "$ac_cv_lib_guide__intel_fast_memset" >&6; }
-if test "x$ac_cv_lib_guide__intel_fast_memset" = xyes
-then :
-  have_icc_guide=yes
-else $as_nop
-  have_icc_guide=no
-fi
-
-fi
-ac_cv_lib_guide=ac_cv_lib_guide_main
-
-      else
-         echo "MySQL support is not found"
-         exit 1;
-      fi
-   fi
-
-
-   if test "$withval" = "mariadb"; then
-
-      # Extract the first word of "mariadb_config", so it can be a program name with args.
+# Extract the first word of "mariadb_config", so it can be a program name with args.
 set dummy mariadb_config; ac_word=$2
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
 printf %s "checking for $ac_word... " >&6; }
@@ -4531,24 +4374,18 @@ fi
 
 
 
-      if test x$MYSQL_CONFIG = xyes; then
-         have_mysql="yes"
-      fi
+if test x$MYSQL_CONFIG = xyes; then
+   have_mysql="yes"
+fi
 
-      if test "$have_mysql" = "yes"; then
+if test "$have_mysql" = "yes"; then
 
-         sql_includes=`mariadb_config --cflags`
-         sql_libs=`mariadb_config --libs_r`
-         sql_obj="mysql.o"
+   sql_includes=`mariadb_config --cflags`
+   sql_libs=`mariadb_config --libs_r`
 
-      else
-         echo "mariadb_config is not found, please install \"MariaDB Client Library for C 1.0.0 Stable\", see https://downloads.mariadb.org/client-native/1.0.0/"
-         exit 1;
-      fi
-   fi
-
-
-
+else
+   echo "mariadb_config is not found"
+   exit 1;
 fi
 
 
@@ -4564,12 +4401,12 @@ fi
 
 
 
-# Check whether --with-clapf-user was given.
-if test ${with_clapf_user+y}
+# Check whether --with-kospam-user was given.
+if test ${with_kospam_user+y}
 then :
-  withval=$with_clapf_user;  RUNNING_USER=$withval
+  withval=$with_kospam_user;  RUNNING_USER=$withval
 else $as_nop
-   RUNNING_USER=clapf
+   RUNNING_USER=kospam
 
 fi
 
@@ -4657,7 +4494,7 @@ fi
 
 
 
-printf "%s\n" "#define ZOMBIE_NET_REGEX \"$dataroot_dir/clapf/zombienets.regex\"" >>confdefs.h
+printf "%s\n" "#define ZOMBIE_NET_REGEX \"$dataroot_dir/kospam/zombienets.regex\"" >>confdefs.h
 
 
 
@@ -4669,24 +4506,8 @@ if test "$have_mysql" = "no"; then
 fi
 
 
-
-if test "$os" = "FreeBSD"; then
-   defs="$defs -DFREEBSD"
-   antispam_libs="-lz -lm -lcrypto -lssl"
-   MAKE="gmake"
-fi
-
 if test "$os" = "Linux"; then
    defs="$defs -D_GNU_SOURCE"
-fi
-
-if test "$os" = "SunOS"; then
-
-printf "%s\n" "#define HAVE_DAEMON 0" >>confdefs.h
-
-   sunos_libs="-lnsl -lsocket"
-
-   if test -x /usr/xpg4/bin/id; then id_bin="/usr/xpg4/bin/id"; fi
 fi
 
 if test `echo $os | grep -c CYGWIN` -eq 1; then
@@ -4705,7 +4526,7 @@ fi
 echo; echo
 
 echo "run as user: $RUNNING_USER"
-echo "clapf directory: $data_dir/clapf"
+echo "kospam directory: $data_dir/kospam"
 
 echo
 
@@ -4749,10 +4570,6 @@ if test "$have_mysql" = "yes"; then
    defs="$defs -DNEED_MYSQL"
 fi
 
-if test "$have_icc_guide" = "yes" && test "$have_mysql" = "yes"; then
-   sql_libs="$sql_libs -lguide"
-fi
-
 
 id -u $RUNNING_USER 2>/dev/null 1>/dev/null
 if test $? -eq 1; then echo "the user \"$RUNNING_USER\" does not exists, please create it, first with adduser..."; exit 1; fi
@@ -4761,7 +4578,7 @@ echo; echo
 
 CFLAGS="-std=c99 -O2 -fPIC -Wall -Wextra -Wimplicit-fallthrough=2 ${GGDB3} -Wuninitialized -Wno-format-truncation"
 LIBS="$antispam_libs $sunos_libs "
-OBJS="dirs.o misc.o counters.o cfg.o sig.o decoder.o hash.o tokenizer.o parser.o parser_utils.o session.o tai.o digest.o attachment.o chi.o antispam.o spam.o buffer.o zombie.o train.o users.o policy.o black.o smtp.o history.o rbl.o status.o $objs"
+OBJS="dirs.o misc.o counters.o cfg.o sig.o decoder.o hash.o tokenizer.o parser.o parser_utils.o tai.o digest.o attachment.o chi.o antispam.o spam.o buffer.o zombie.o train.o users.o policy.o black.o history.o rbl.o status.o mysql.o xxh3_64.o $objs"
 
 ac_config_files="$ac_config_files Makefile src/Makefile etc/Makefile init.d/Makefile util/Makefile zombie/Makefile"
 
@@ -5450,7 +5267,7 @@ cat >>$CONFIG_STATUS <<\_ACEOF || ac_write_fail=1
 for ac_config_target in $ac_config_targets
 do
   case $ac_config_target in
-    "clapf-config.h") CONFIG_HEADERS="$CONFIG_HEADERS clapf-config.h" ;;
+    "kospam-config.h") CONFIG_HEADERS="$CONFIG_HEADERS kospam-config.h" ;;
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
     "src/Makefile") CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
     "etc/Makefile") CONFIG_FILES="$CONFIG_FILES etc/Makefile" ;;

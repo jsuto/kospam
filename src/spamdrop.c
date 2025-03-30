@@ -161,14 +161,12 @@ int main(int argc, char **argv){
    if(cfg.debug == 1) printf("locale: %s\n", setlocale(LC_MESSAGES, cfg.locale));
    setlocale(LC_CTYPE, cfg.locale);
 
-   if(cfg.debug == 1) printf("build: %d\n", get_build());
-
    data.n_regex = 0;
 
    zombie_init(&data, &cfg);
 
    init_session_data(&sdata, &cfg);
- 
+
    sdata.sent = 0;
    sdata.tot_len = st.st_size;
    sdata.num_of_rcpt_to = 1;

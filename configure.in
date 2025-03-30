@@ -1,6 +1,6 @@
 AC_INIT
-AC_CONFIG_SRCDIR([src/clapf.c])
-AC_CONFIG_HEADERS(clapf-config.h)
+AC_CONFIG_SRCDIR([src/kospam.c])
+AC_CONFIG_HEADERS(kospam-config.h)
 
 CONFIGURE_PARAMS_FILE=params.h
 
@@ -26,7 +26,7 @@ AC_CHECK_FUNCS([daemon])
 AC_ARG_WITH([confdir],
   [AS_HELP_STRING([--with-confdir=DIR], [Specify the configuration directory])],
   [CONFDIR="$withval"],
-  [CONFDIR="/etc/clapf"]  # Default value
+  [CONFDIR="/etc/kospam"]  # Default value
 )
 AC_DEFINE_UNQUOTED([CONFDIR], ["$CONFDIR"], [where to look for the config file])
 
@@ -40,7 +40,6 @@ AC_SUBST(SUBDIRS)
 AC_SUBST(MAKE)
 AC_SUBST(sql_includes)
 AC_SUBST(sql_libs)
-AC_SUBST(sql_obj)
 AC_SUBST(libclamav_extra_libs)
 AC_SUBST(id_bin)
 AC_SUBST(iv)
@@ -63,7 +62,6 @@ antispam_libs="-lz -lm -ldl -lcrypto -lssl"
 defs=""
 objs=""
 user_obj=""
-sql_obj=""
 os=`uname -s`
 
 id_bin="id"
@@ -79,12 +77,13 @@ GCC_VERSION=''
 
 if test -f `which gcc`; then gcc -v 2> aa; GCC_VERSION=`tail -1 aa`; rm -f aa; fi
 
-if test "$os" = "SunOS"; then
-   echo "#define CONFIGURE_PARAMS \"Build Date: "`date`'\\n" \\' > $CONFIGURE_PARAMS_FILE
-else
-   echo "#define CONFIGURE_PARAMS \"Build Date: "`date`"\\nldd version: $LDD_VERSION\\ngcc version: $GCC_VERSION\n"\" \\ > $CONFIGURE_PARAMS_FILE
-fi
-echo "\"Configure command: ./configure $PARAMS\"" >> $CONFIGURE_PARAMS_FILE
+echo "#define CONFIGURE_PARAMS \"Build Date: "$(date)"\\nldd version: $LDD_VERSION\\ngcc version: $GCC_VERSION\\nOS: "$(uname -a)"\n"\" \\ > $CONFIGURE_PARAMS_FILE
+echo "\"Configure command: ./configure $PARAMS\\n\"" >> $CONFIGURE_PARAMS_FILE
+echo "#define COMMIT_ID \"$(git log -1 --format=%h)\"" >> $CONFIGURE_PARAMS_FILE
+
+echo "#define VERSION \"$(head -1 VERSION)\"" >> $CONFIGURE_PARAMS_FILE
+echo "#define DISTRO \"${DISTRO:-unknown}\"" >> $CONFIGURE_PARAMS_FILE
+echo "#define ARCH \"${ARCH:-amd64}\"" >> $CONFIGURE_PARAMS_FILE
 
 
 SUBDIRS="src etc init.d util zombie"
@@ -159,58 +158,22 @@ if test "$have_zlib" = "no"; then
 fi
 
 
-AC_ARG_WITH(database,
-[  --with-database[[=mysql]]  select the used database, currently mysql only (default: none)],[
-   if test "$withval" != "no" -a "$withval" != "yes"; then
-      DATABASE=$withval
-   fi
+AC_CHECK_PROG(MYSQL_CONFIG, mariadb_config, yes)
 
+if test x$MYSQL_CONFIG = xyes; then
+   have_mysql="yes"
+fi
 
-   if test "$withval" = "mysql"; then
+if test "$have_mysql" = "yes"; then
 
-      AC_CHECK_PROG(MYSQL_CONFIG, mysql_config, yes)
+   sql_includes=`mariadb_config --cflags`
+   sql_libs=`mariadb_config --libs_r`
 
-      if test x$MYSQL_CONFIG = xyes; then
-         have_mysql="yes"
-      fi
+else
+   echo "mariadb_config is not found"
+   exit 1;
+fi
 
-      if test "$have_mysql" = "yes"; then
-
-         sql_includes=`mysql_config --cflags`
-         sql_libs=`mysql_config --libs_r`
-         sql_obj="mysql.o"
-
-         AC_CHECK_LIB([guide],[main],[AC_CHECK_LIB(guide, _intel_fast_memset, have_icc_guide=yes, have_icc_guide=no)],[],[])ac_cv_lib_guide=ac_cv_lib_guide_main
-
-      else
-         echo "MySQL support is not found"
-         exit 1;
-      fi
-   fi
-
-
-   if test "$withval" = "mariadb"; then
-
-      AC_CHECK_PROG(MYSQL_CONFIG, mariadb_config, yes)
-
-      if test x$MYSQL_CONFIG = xyes; then
-         have_mysql="yes"
-      fi
-
-      if test "$have_mysql" = "yes"; then
-
-         sql_includes=`mariadb_config --cflags`
-         sql_libs=`mariadb_config --libs_r`
-         sql_obj="mysql.o"
-
-      else
-         echo "mariadb_config is not found, please install \"MariaDB Client Library for C 1.0.0 Stable\", see https://downloads.mariadb.org/client-native/1.0.0/"
-         exit 1;
-      fi
-   fi
-
-
-])
 
 
 dnl timeout binary
@@ -221,12 +184,12 @@ if test z`which timeout 2>/dev/null` != "z"; then
 fi
 
 
-dnl user running clapf
+dnl user running kospam
 
-AC_ARG_WITH(clapf-user,
-    [  --with-clapf-user=username      what user the clapf daemon shall be run as],
+AC_ARG_WITH(kospam-user,
+    [  --with-kospam-user=username      what user the kospam daemon shall be run as],
     [ RUNNING_USER=$withval ],
-    [ RUNNING_USER=clapf ]
+    [ RUNNING_USER=kospam ]
     )
 
 
@@ -308,7 +271,7 @@ fi
 
 
 
-AC_DEFINE_UNQUOTED(ZOMBIE_NET_REGEX, "$dataroot_dir/clapf/zombienets.regex", [where the virus template is])
+AC_DEFINE_UNQUOTED(ZOMBIE_NET_REGEX, "$dataroot_dir/kospam/zombienets.regex", [where the virus template is])
 
 
 if test "$have_mysql" = "no"; then
@@ -319,23 +282,8 @@ if test "$have_mysql" = "no"; then
 fi
 
 
-dnl let us know if we are building on FreeBSD
-
-if test "$os" = "FreeBSD"; then
-   defs="$defs -DFREEBSD"
-   antispam_libs="-lz -lm -lcrypto -lssl"
-   MAKE="gmake"
-fi
-
 if test "$os" = "Linux"; then
    defs="$defs -D_GNU_SOURCE"
-fi
-
-if test "$os" = "SunOS"; then
-   AC_DEFINE(HAVE_DAEMON, 0, [daemon() support])
-   sunos_libs="-lnsl -lsocket"
-
-   if test -x /usr/xpg4/bin/id; then id_bin="/usr/xpg4/bin/id"; fi
 fi
 
 if test `echo $os | grep -c CYGWIN` -eq 1; then
@@ -353,7 +301,7 @@ fi
 echo; echo
 
 echo "run as user: $RUNNING_USER"
-echo "clapf directory: $data_dir/clapf"
+echo "kospam directory: $data_dir/kospam"
 
 echo
 
@@ -395,10 +343,6 @@ if test "$have_mysql" = "yes"; then
    defs="$defs -DNEED_MYSQL"
 fi
 
-if test "$have_icc_guide" = "yes" && test "$have_mysql" = "yes"; then
-   sql_libs="$sql_libs -lguide"
-fi
-
 
 id -u $RUNNING_USER 2>/dev/null 1>/dev/null
 if test $? -eq 1; then echo "the user \"$RUNNING_USER\" does not exists, please create it, first with adduser..."; exit 1; fi
@@ -407,7 +351,7 @@ echo; echo
 
 CFLAGS="-std=c99 -O2 -fPIC -Wall -Wextra -Wimplicit-fallthrough=2 ${GGDB3} -Wuninitialized -Wno-format-truncation"
 LIBS="$antispam_libs $sunos_libs "
-OBJS="dirs.o misc.o counters.o cfg.o sig.o decoder.o hash.o tokenizer.o parser.o parser_utils.o session.o tai.o digest.o attachment.o chi.o antispam.o spam.o buffer.o zombie.o train.o users.o policy.o black.o smtp.o history.o rbl.o status.o $objs"
+OBJS="dirs.o misc.o counters.o cfg.o sig.o decoder.o hash.o tokenizer.o parser.o parser_utils.o tai.o digest.o attachment.o chi.o antispam.o spam.o buffer.o zombie.o train.o users.o policy.o black.o history.o rbl.o status.o mysql.o xxh3_64.o $objs"
 
 AC_CONFIG_FILES([Makefile src/Makefile etc/Makefile init.d/Makefile util/Makefile zombie/Makefile])
 AC_OUTPUT

@@ -18,6 +18,7 @@
 #define ERR_OPEN_TMP_FILE "error: opening a tempfile"
 #define ERR_TIMED_OUT "error: timed out"
 #define ERR_FORK_FAILED "error: cannot fork()"
+#define ERR_DAEMON "ERROR: daemon()"
 
 #define ERR_MYSQL_CONNECT "cannot connect to mysql server"
 #define ERR_SQL_DATA "no valid data from sql table"

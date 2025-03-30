@@ -5,6 +5,10 @@
 #ifndef _SQL_H
  #define _SQL_H
 
+#include <config.h>
+#include <defs.h>
+#include <cfg.h>
+#include <kospam.h>
 
 int open_database(struct session_data *sdata, struct __config *cfg);
 void close_database(struct session_data *sdata);

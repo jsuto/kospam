@@ -25,18 +25,15 @@ RUNNING_GROUP = `@id_bin@ -gn $(RUNNING_USER)`
 INSTALL = @INSTALL@
 
 all:
-	sed -e 's%pidfile=.*%pidfile=$(localstatedir)/run/clapf/clapf.pid%g' \
-	-e 's%pemfile=%pemfile=$(sysconfdir)/clapf/clapf.pem%g' \
-	-e 's%workdir=.*%workdir=$(localstatedir)/clapf/tmp%g' < $(srcdir)/example.conf | grep -v ^\; | grep '=' | sort > $(srcdir)/clapf.conf
+	sed -e 's%pemfile=%pemfile=$(sysconfdir)/kospam/kospam.pem%g' \
+	-e 's%workdir=.*%workdir=$(localstatedir)/kospam/tmp%g' < $(srcdir)/example.conf | grep -v ^\; | grep '=' | sort > $(srcdir)/kospam.conf
 
 install:
-	if [ ! -f "$(DESTDIR)$(sysconfdir)/clapf.conf" ]; then $(INSTALL) -m 0640 -g $(RUNNING_GROUP) $(srcdir)/clapf.conf $(DESTDIR)$(sysconfdir)/clapf/clapf.conf; fi
-	$(INSTALL) -m 0644 -g $(RUNNING_GROUP) $(srcdir)/clapf.conf $(DESTDIR)$(sysconfdir)/clapf/clapf.conf.dist
-	sed -e 's%LOCALSTATEDIR%$(localstatedir)%g' $(srcdir)/sphinx.conf.in > sphinx.conf.dist
-	$(INSTALL) -m 0640 -g $(RUNNING_GROUP) $(srcdir)/sphinx.conf.dist $(DESTDIR)$(sysconfdir)/clapf/sphinx.conf.dist
+	if [ ! -f "$(DESTDIR)$(sysconfdir)/kospam/kospam.conf" ]; then $(INSTALL) -m 0640 -g $(RUNNING_GROUP) $(srcdir)/kospam.conf $(DESTDIR)$(sysconfdir)/kospam/kospam.conf; fi
+	$(INSTALL) -m 0644 -g $(RUNNING_GROUP) $(srcdir)/kospam.conf $(DESTDIR)$(sysconfdir)/kospam/kospam.conf.dist
 
 clean:
-	rm -f clapf.conf sphinx.conf.dist
+	rm -f kospam.conf
 
 distclean: clean
 	rm -f Makefile

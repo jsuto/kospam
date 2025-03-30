@@ -13,7 +13,6 @@
    #include <tre/tre.h>
    #include <tre/regex.h>
 #endif
-#include <tcpd.h>
 
 #include <openssl/sha.h>
 #include <openssl/ssl.h>
@@ -337,4 +336,3 @@ struct __counters {
 };
 
 #endif /* _DEFS_H */
-

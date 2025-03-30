@@ -1,0 +1,31 @@
+FROM ubuntu:24.04
+
+LABEL description="kospam ubuntu noble image" \
+      maintainer="Janos SUTO, sj@acts.hu"
+
+ENV DEBIAN_FRONTEND="noninteractive" \
+    DISTRO="noble" \
+    MYSQL_DATABASE="kospam" \
+    PILER_USER="kospam"
+
+ARG PACKAGE
+ARG TARGETARCH
+
+COPY ${PACKAGE}_${TARGETARCH}.deb /
+#COPY s3go /usr/libexec/piler/s3go
+
+# hadolint ignore=DL3008,DL3015
+RUN apt-get update && \
+    apt-get -y --no-install-recommends install openssl curl rsyslog mariadb-client libtre5 && \
+    apt-get clean && rm -rf /var/lib/apt/lists/* && \
+    dpkg -i ${PACKAGE}_${TARGETARCH}.deb && \
+    rm -rf ${PACKAGE}_${TARGETARCH}.deb
+
+VOLUME ["/etc/kospam"]
+VOLUME ["/var/kospam"]
+
+EXPOSE 10025 80 443
+
+COPY start.sh /
+
+CMD ["/start.sh"]

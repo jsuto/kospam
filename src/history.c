@@ -60,7 +60,7 @@ int write_history_to_sql(struct session_data *sdata, struct __state *state, char
 
    if(prepare_sql_statement(sdata, &sql, SQL_PREPARED_STMT_INSERT_INTO_HISTORY) == ERR) return rc;
 
-   snprintf(relay, sizeof(relay)-1, "%s:%d", cfg->smtp_addr, cfg->smtp_port);
+   snprintf(relay, sizeof(relay)-1, "%s", cfg->smtp_addr);
 
    for(i=0; i<sdata->num_of_rcpt_to; i++){
       p_bind_init(&sql);
@@ -103,7 +103,7 @@ int write_history_to_fs(struct session_data *sdata, struct __state *state, char 
       snprintf(tmpname, sizeof(tmpname)-1, "%s/tmp/%s", HISTORY_DIR, sdata->ttmpfile);
       snprintf(name, sizeof(name)-1, "%s/new/%s", HISTORY_DIR, sdata->ttmpfile);
 
-      snprintf(buf, sizeof(buf)-1, "%s%c%ld%c%s%c%s%c%d%c%d%c%d%c%s:%d%c%s%c%s", sdata->ttmpfile, DELIM, sdata->now, DELIM, sdata->fromemail, DELIM, recipient, DELIM, sdata->tot_len, DELIM, state->n_attachments, DELIM, sdata->status, DELIM, cfg->smtp_addr, cfg->smtp_port, DELIM, status, DELIM, state->b_subject);
+      snprintf(buf, sizeof(buf)-1, "%s%c%ld%c%s%c%s%c%d%c%d%c%d%c%s:%c%s%c%s", sdata->ttmpfile, DELIM, sdata->now, DELIM, sdata->fromemail, DELIM, recipient, DELIM, sdata->tot_len, DELIM, state->n_attachments, DELIM, sdata->status, DELIM, cfg->smtp_addr, DELIM, status, DELIM, state->b_subject);
 
       len = strlen(buf);
       dstlen = compressBound(len);
@@ -249,4 +249,3 @@ int drop_partition(struct __config *cfg){
 
    return rc;
 }
-

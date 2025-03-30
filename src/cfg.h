@@ -21,7 +21,6 @@ struct __config {
    char listen_addr[MAXVAL];
 
    char smtp_addr[MAXVAL];
-   int smtp_port;
 
    char clamd_addr[MAXVAL];
    int clamd_port;

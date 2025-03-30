@@ -25,12 +25,12 @@ RUNNING_GROUP = `@id_bin@ -gn $(RUNNING_USER)`
 INSTALL = @INSTALL@
 
 all:
-	sed -e 's%pemfile=%pemfile=$(sysconfdir)/kospam/kospam.pem%g' \
-	-e 's%workdir=.*%workdir=$(localstatedir)/kospam/tmp%g' < $(srcdir)/example.conf | grep -v ^\; | grep '=' | sort > $(srcdir)/kospam.conf
+	grep -v ^\; $(srcdir)/example.conf | grep '=' | sort > $(srcdir)/kospam.conf
 
 install:
 	if [ ! -f "$(DESTDIR)$(sysconfdir)/kospam/kospam.conf" ]; then $(INSTALL) -m 0640 -g $(RUNNING_GROUP) $(srcdir)/kospam.conf $(DESTDIR)$(sysconfdir)/kospam/kospam.conf; fi
 	$(INSTALL) -m 0644 -g $(RUNNING_GROUP) $(srcdir)/kospam.conf $(DESTDIR)$(sysconfdir)/kospam/kospam.conf.dist
+	$(INSTALL) -m 0644 -g $(RUNNING_GROUP) $(srcdir)/zombienets.regex $(DESTDIR)$(sysconfdir)/kospam/zombienets.regex.dist
 
 clean:
 	rm -f kospam.conf

@@ -31,7 +31,7 @@ type Backend struct{
 }
 
 var (
-    configfile = flag.String("config", "kospam.conf", "config file to use")
+    configfile = flag.String("config", "/etc/kospam/kospam.conf", "config file to use")
     showVersion = flag.Bool("version", false, "show version number, then exit")
 )
 

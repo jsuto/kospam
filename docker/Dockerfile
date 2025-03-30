@@ -12,7 +12,7 @@ ARG PACKAGE
 ARG TARGETARCH
 
 COPY ${PACKAGE}_${TARGETARCH}.deb /
-#COPY s3go /usr/libexec/piler/s3go
+COPY kospam-smtpd /usr/libexec/kospam/kospam-smtpd
 
 # hadolint ignore=DL3008,DL3015
 RUN apt-get update && \

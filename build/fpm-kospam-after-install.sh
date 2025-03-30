@@ -35,6 +35,12 @@ make_certificate() {
 
 chown kospam:kospam /var/kospam/error /var/kospam/tmp /var/kospam/run
 
+log "Checking for /etc/kospam/zombienets.regex"
+
+if [[ ! -f /etc/kospam/zombienets.regex && -f /etc/kospam/zombienets.regex.dist ]]; then
+   cp /etc/kospam/zombienets.regex.dist /etc/kospam/zombienets.regex
+fi
+
 ## TODO: systemd services
 
 log "postinstall has finished"

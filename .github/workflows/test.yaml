@@ -72,3 +72,14 @@ jobs:
           DISTRO: ${{ env.DISTRO }}
           PROJECT_ID: ${{ env.PROJECT_ID }}
           VERSION: ${{ steps.get-version.outputs.VERSION }}
+
+      - name: Build image
+        uses: ./.github/actions/build/image
+        with:
+          DOCKER_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKER_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+          IMAGE_NAME: ${{ env.IMAGE_NAME }}:${{ env.TEST_TAG }}
+          LOAD: false
+          PACKAGE: ${{ env.PROJECT_ID }}_${{ steps.get-version.outputs.VERSION }}-${{ env.DISTRO }}-${{ steps.get-version.outputs.COMMIT_ID }}
+          PLATFORMS: linux/${{ env.ARCH }}
+          PUSH: true

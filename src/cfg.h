@@ -103,6 +103,7 @@ struct __config {
 
    int max_message_size_to_filter;
    int max_number_of_tokens_to_filter;
+   int max_line_len;
 
    char rbl_domain[MAXVAL];
    char surbl_domain[MAXVAL];

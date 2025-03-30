@@ -14,6 +14,7 @@ type SmtpdConfig struct {
     EnvelopeDir     string
     Hostname        string
     ListenAddr      string
+    MaxLineLength   int
     MaxMessageBytes int64
     MaxRecipients   int
     NumWorkers      int
@@ -36,6 +37,7 @@ func LoadSmtpdConfig(filename string) (*SmtpdConfig, error) {
         EnvelopeDir:     "/var/kospam/envelope",
         Hostname:        "kospam.local",
         ListenAddr:      "127.0.0.1:10025",
+        MaxLineLength:   2000,
         MaxMessageBytes: 50 * 1024 * 1024,
         MaxRecipients:   128,
         NumWorkers:      3,
@@ -64,6 +66,10 @@ func LoadSmtpdConfig(filename string) (*SmtpdConfig, error) {
             config.Hostname = value
         case "listen_addr":
             config.ListenAddr = value
+        case "max_line_len":
+            if n, err := strconv.Atoi(value); err == nil && n > 200 && n < 99999 {
+                config.MaxLineLength = n
+            }
         case "max_message_bytes":
             if n, err := strconv.ParseInt(value, 10, 64); err == nil && n > 0 && n < 100000000 {
                 config.MaxMessageBytes = n

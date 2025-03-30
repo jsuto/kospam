@@ -227,7 +227,7 @@ func main() {
     server.ReadTimeout = 30 * time.Second
     server.WriteTimeout = 30 * time.Second
     server.MaxRecipients = config.MaxRecipients
-    server.MaxLineLength = 6000 // The RFC says the max line length is 1000
+    server.MaxLineLength = config.MaxLineLength // The RFC says the max line length is 1000
 
     tlsCert, err := tls.LoadX509KeyPair(config.PemFile, config.PemFile)
     if err != nil {

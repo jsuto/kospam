@@ -83,6 +83,7 @@ struct _parse_rule config_parse_rules[] =
    { "locale", "string", (void*) string_parser, offsetof(struct __config, locale), "", MAXVAL-1},
    { "maillog", "string", (void*) string_parser, offsetof(struct __config, maillog), "", MAXVAL-1},
    { "max_ham_spamicity", "float", (void*) float_parser, offsetof(struct __config, max_ham_spamicity), "0.45", sizeof(float)},
+   { "max_line_len", "integer", (void*) int_parser, offsetof(struct __config, max_line_len), "2000", sizeof(int)},
    { "max_message_size_to_filter", "integer", (void*) int_parser, offsetof(struct __config, max_message_size_to_filter), "256000", sizeof(int)},
    { "max_number_of_recipients_in_ham", "integer", (void*) int_parser, offsetof(struct __config, max_number_of_recipients_in_ham), "9999", sizeof(int)},
    { "max_number_of_tokens_to_filter", "integer", (void*) int_parser, offsetof(struct __config, max_number_of_tokens_to_filter), "2000", sizeof(int)},

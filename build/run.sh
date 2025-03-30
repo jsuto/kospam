@@ -17,8 +17,6 @@ set_mysql_flavour() {
 }
 
 get_pkg_name() {
-   get_rpm_tag
-
    if [[ "$DEBUG" == true ]]; then
       DEBUG_SUFFIX="-debug"
    else

@@ -351,7 +351,7 @@ echo; echo
 
 CFLAGS="-std=c99 -O2 -fPIC -Wall -Wextra -Wimplicit-fallthrough=2 ${GGDB3} -Wuninitialized -Wno-format-truncation"
 LIBS="$antispam_libs $sunos_libs "
-OBJS="dirs.o misc.o counters.o cfg.o sig.o decoder.o hash.o tokenizer.o parser.o parser_utils.o session.o tai.o digest.o attachment.o chi.o antispam.o spam.o buffer.o zombie.o train.o users.o policy.o black.o smtp.o history.o rbl.o status.o mysql.o xxh3_64.o $objs"
+OBJS="dirs.o misc.o counters.o cfg.o sig.o decoder.o hash.o tokenizer.o parser.o parser_utils.o tai.o digest.o attachment.o chi.o antispam.o spam.o buffer.o zombie.o train.o users.o policy.o black.o history.o rbl.o status.o mysql.o xxh3_64.o $objs"
 
 AC_CONFIG_FILES([Makefile src/Makefile etc/Makefile init.d/Makefile util/Makefile zombie/Makefile])
 AC_OUTPUT

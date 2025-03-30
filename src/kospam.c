@@ -213,6 +213,14 @@ int process_email(char *filename, struct session_data *sdata, int size){
    clearhash(parser_state.token_hash);
    clearhash(parser_state.url);
 
+   // Move message to send dir
+
+   snprintf(tmpbuf, sizeof(tmpbuf)-1, "%s/%s", SEND_DIR, filename);
+
+   if (rename(filename, tmpbuf)) {
+      syslog(LOG_PRIORITY, "ERROR: failed to rename %s to %s", filename, tmpbuf);
+   }
+
    return rc;
 }
 

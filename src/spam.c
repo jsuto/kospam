@@ -130,11 +130,11 @@ int qry_spaminess(struct session_data *sdata, struct __state *state, char type, 
    buffer_cat(query, s);
 
    if (sdata->gid > 0) {
-      snprintf(s, sizeof(s)-1, "(uid=0 OR uid=%d) AND token IN (0,", sdata->gid);
+      snprintf(s, sizeof(s)-1, "(uid=0 OR uid=%d) AND token IN (0", sdata->gid);
       buffer_cat(query, s);
    }
    else {
-      buffer_cat(query, ") uid=0 token IN (0,");
+      buffer_cat(query, "uid=0 AND token IN (0");
    }
 
    for(i=0; i<MAXHASH; i++){
@@ -153,6 +153,8 @@ int qry_spaminess(struct session_data *sdata, struct __state *state, char type, 
    }
 
    buffer_cat(query, ")");
+
+   if (cfg->debug) printf("query: *%s*\n", query->data);
 
    update_hash(sdata, query->data, state->token_hash);
 

@@ -17,6 +17,7 @@
 #define WORK_DIR DATADIR "/kospam/tmp"
 #define QUEUE_DIR DATADIR "/kospam/queue"
 #define HISTORY_DIR DATADIR "/kospam/history"
+#define SEND_DIR DATADIR "/kospam/send"
 
 #define SPAMINESS_HEADER_FIELD "X-Clapf-spamicity: "
 #define SPAM_HEADER_FIELD SPAMINESS_HEADER_FIELD "Yes"

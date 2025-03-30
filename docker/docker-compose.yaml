@@ -1,0 +1,56 @@
+x-networks: &networks
+  networks:
+    - kospam
+
+services:
+  mysql:
+    image: mariadb:11.6.2
+    container_name: mysql
+    restart: unless-stopped
+    <<: *networks
+    cap_drop:
+      - ALL
+    cap_add:
+      - dac_override
+      - setuid
+      - setgid
+    environment:
+      - MYSQL_DATABASE=aaaaa
+      - MYSQL_USER=kospam
+      - MYSQL_PASSWORD=kospam123
+      - MYSQL_ROOT_PASSWORD=abcde123
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --plugin-load=file_key_management
+    volumes:
+      - db_data:/var/lib/mysql
+
+  smarthost:
+    image: sutoj/smtp-sink
+    container_name: smarthost.aaa.fu
+    <<: *networks
+    command: smtp-sink -h smarthost.aaa.fu -u nobody :25 10
+
+  kospam:
+    image: sutoj/kospam:test
+    container_name: kospam
+    init: true
+    networks:
+      - kospam
+    environment:
+      - MYSQL_HOSTNAME=mysql
+      - MYSQL_DATABASE=kospam
+      - MYSQL_USER=kospam
+      - MYSQL_PASSWORD=kospam123
+      - MYSQL_ROOT_PASSWORD=abcde123
+    volumes:
+      - ./kospam.conf:/etc/kospam/kospam.conf
+    ports:
+      - "10025:10025"
+    depends_on:
+      - "mysql"
+
+volumes:
+  db_data: {}
+
+networks:
+  kospam:
+    name: kospam

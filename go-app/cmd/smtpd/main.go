@@ -6,13 +6,14 @@ import (
     "fmt"
     "io"
     "log"
+    "log/syslog"
+    "math/rand"
     "net"
     "os"
     "path/filepath"
     "strconv"
     "strings"
     "time"
-    randmath "math/rand"
 
     "github.com/jsuto/go-smtp"
 
@@ -31,8 +32,9 @@ type Backend struct{
 }
 
 var (
-    configfile = flag.String("config", "kospam.conf", "config file to use")
+    configfile = flag.String("config", "/etc/kospam/kospam.conf", "config file to use")
     showVersion = flag.Bool("version", false, "show version number, then exit")
+    daemon = flag.Bool("daemon", false, "run in daemon mode")
 )
 
 func (b *Backend) NewSession(c *smtp.Conn) (smtp.Session, error) {
@@ -124,7 +126,7 @@ func (s *Session) Rcpt(to string, opts *smtp.RcptOptions) error {
 }
 
 func (s *Session) Data(r io.Reader) error {
-    subdir := strconv.Itoa(randmath.Intn(1000) % s.numWorkers)
+    subdir := strconv.Itoa(rand.Intn(1000) % s.numWorkers)
 
     filePath := filepath.Join(s.queueDir, subdir, s.queueID)
 
@@ -189,6 +191,25 @@ func main() {
         log.Printf("Successfully switched to user %s", config.Username)
     }
 
+    if *daemon {
+        // If running as daemon, fork to background
+        if os.Getppid() != 1 {
+            args := append([]string{os.Args[0]}, os.Args[1:]...)
+            os.StartProcess(os.Args[0], args, &os.ProcAttr{
+                Files: []*os.File{os.Stdin, os.Stdout, os.Stderr},
+            })
+            return
+        }
+
+        logwriter, err := syslog.New(syslog.LOG_MAIL, "kospam/smtpd")
+        if err != nil {
+            log.Fatal("Failed to connect to syslog: ", err)
+        }
+        // Direct log output to syslog
+        log.SetOutput(logwriter)
+        log.SetFlags(log.Lshortfile)
+    }
+
     createDirs(config)
 
     backend := &Backend{
@@ -206,7 +227,7 @@ func main() {
     server.ReadTimeout = 30 * time.Second
     server.WriteTimeout = 30 * time.Second
     server.MaxRecipients = config.MaxRecipients
-    server.MaxLineLength = 6000 // The RFC says the max line length is 1000
+    server.MaxLineLength = config.MaxLineLength // The RFC says the max line length is 1000
 
     tlsCert, err := tls.LoadX509KeyPair(config.PemFile, config.PemFile)
     if err != nil {

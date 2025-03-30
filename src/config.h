@@ -18,6 +18,7 @@
 #define QUEUE_DIR DATADIR "/kospam/queue"
 #define HISTORY_DIR DATADIR "/kospam/history"
 #define SEND_DIR DATADIR "/kospam/send"
+#define ZOMBIE_NET_REGEX CONFDIR "/kospam/zombienets.regex"
 
 #define SPAMINESS_HEADER_FIELD "X-Clapf-spamicity: "
 #define SPAM_HEADER_FIELD SPAMINESS_HEADER_FIELD "Yes"
@@ -104,7 +105,7 @@
 #define SQL_PREPARED_STMT_INSERT_INTO_BLACKHOLE "REPLACE INTO " SQL_MINEFIELD_TABLE " (ip, ts) VALUES(?, ?)"
 #define SQL_PREPARED_STMT_QUERY_WHITE_BLACK_LIST "SELECT whitelist, blacklist FROM " SQL_WHITE_LIST "," SQL_BLACK_LIST " where (" SQL_WHITE_LIST ".uid=? OR " SQL_WHITE_LIST ".uid=0) AND " SQL_WHITE_LIST ".uid=" SQL_BLACK_LIST ".uid"
 #define SQL_PREPARED_STMT_QUERY_USER_DATA "SELECT u.uid, u.gid, u.username, u.domain, u.policy_group FROM " SQL_USER_TABLE " u, " SQL_EMAIL_TABLE " e WHERE u.uid=e.uid AND e.email=?"
-#define SQL_PREPARED_STMT_QUERY_POLICY "SELECT deliver_infected_email, silently_discard_infected_email, use_antispam, spam_subject_prefix, max_message_size_to_filter, surbl_domain, spam_overall_limit, spaminess_oblivion_limit, replace_junk_characters, penalize_images, penalize_embed_images, penalize_octet_stream, training_mode, store_emails, store_only_spam, message_from_a_zombie, smtp_addr, smtp_port FROM " SQL_POLICY_TABLE " WHERE id=?"
+#define SQL_PREPARED_STMT_QUERY_POLICY "SELECT deliver_infected_email, silently_discard_infected_email, use_antispam, spam_subject_prefix, max_message_size_to_filter, surbl_domain, spam_overall_limit, spaminess_oblivion_limit, replace_junk_characters, penalize_images, penalize_embed_images, penalize_octet_stream, training_mode, store_emails, store_only_spam, message_from_a_zombie, smtp_addr FROM " SQL_POLICY_TABLE " WHERE id=?"
 #define SQL_PREPARED_STMT_INSERT_INTO_HISTORY "INSERT INTO " SQL_HISTORY_TABLE " (ts, clapf_id, spam, sender, rcpt, subject, size, attachments, relay, status) VALUES (?,?,?,?,?,?,?,?,?,?)"
 #define SQL_PREPARED_STMT_QUERY_TRAINING_ID "SELECT spam FROM " SQL_HISTORY_TABLE " WHERE clapf_id=?"
 #define SQL_PREPARED_STMT_QUERY_ADIGEST "SELECT counter FROM " SQL_ATTACH_DIGEST_TABLE " WHERE digest=?"
@@ -145,4 +146,3 @@
 
 
 #endif /* _CONFIG_H */
-

@@ -123,7 +123,7 @@ int main(int argc, char **argv){
                     break;
 
 
-         default  : 
+         default  :
                     break;
        }
    }
@@ -191,7 +191,7 @@ int main(int argc, char **argv){
 
    if(sdata.policy_group > 0){
       get_policy(&sdata, &cfg, &my_cfg);
-      if(cfg.debug == 1) printf("policy settings: %d/%d/%d/%s/%d/%s/%.4f/%.4f/%d/%d/%d/%d/%d/%d/%d/%d/%s/%d\n", my_cfg.deliver_infected_email, my_cfg.silently_discard_infected_email, my_cfg.use_antispam, my_cfg.spam_subject_prefix, my_cfg.max_message_size_to_filter, my_cfg.surbl_domain, my_cfg.spam_overall_limit, my_cfg.spaminess_oblivion_limit, my_cfg.replace_junk_characters, my_cfg.penalize_images, my_cfg.penalize_embed_images, my_cfg.penalize_octet_stream, my_cfg.training_mode, my_cfg.store_emails, my_cfg.store_only_spam, my_cfg.message_from_a_zombie, my_cfg.smtp_addr, my_cfg.smtp_port);
+      if(cfg.debug == 1) printf("policy settings: %d/%d/%d/%s/%d/%s/%.4f/%.4f/%d/%d/%d/%d/%d/%d/%d/%d/%s\n", my_cfg.deliver_infected_email, my_cfg.silently_discard_infected_email, my_cfg.use_antispam, my_cfg.spam_subject_prefix, my_cfg.max_message_size_to_filter, my_cfg.surbl_domain, my_cfg.spam_overall_limit, my_cfg.spaminess_oblivion_limit, my_cfg.replace_junk_characters, my_cfg.penalize_images, my_cfg.penalize_embed_images, my_cfg.penalize_octet_stream, my_cfg.training_mode, my_cfg.store_emails, my_cfg.store_only_spam, my_cfg.message_from_a_zombie, my_cfg.smtp_addr);
    }
 
 
@@ -254,5 +254,3 @@ CLEANUP:
 
    return 0;
 }
-
-

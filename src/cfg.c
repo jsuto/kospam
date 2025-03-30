@@ -83,7 +83,8 @@ struct _parse_rule config_parse_rules[] =
    { "locale", "string", (void*) string_parser, offsetof(struct __config, locale), "", MAXVAL-1},
    { "maillog", "string", (void*) string_parser, offsetof(struct __config, maillog), "", MAXVAL-1},
    { "max_ham_spamicity", "float", (void*) float_parser, offsetof(struct __config, max_ham_spamicity), "0.45", sizeof(float)},
-   { "max_message_size_to_filter", "integer", (void*) int_parser, offsetof(struct __config, max_message_size_to_filter), "128000", sizeof(int)},
+   { "max_line_len", "integer", (void*) int_parser, offsetof(struct __config, max_line_len), "2000", sizeof(int)},
+   { "max_message_size_to_filter", "integer", (void*) int_parser, offsetof(struct __config, max_message_size_to_filter), "256000", sizeof(int)},
    { "max_number_of_recipients_in_ham", "integer", (void*) int_parser, offsetof(struct __config, max_number_of_recipients_in_ham), "9999", sizeof(int)},
    { "max_number_of_tokens_to_filter", "integer", (void*) int_parser, offsetof(struct __config, max_number_of_tokens_to_filter), "2000", sizeof(int)},
    { "max_requests_per_child", "integer", (void*) int_parser, offsetof(struct __config, max_requests_per_child), "1000", sizeof(int)},
@@ -119,8 +120,7 @@ struct _parse_rule config_parse_rules[] =
    { "server_mode", "integer", (void*) int_parser, offsetof(struct __config, server_mode), "1", sizeof(int)},
    { "silently_discard_infected_email", "integer", (void*) int_parser, offsetof(struct __config, silently_discard_infected_email), "1", sizeof(int)},
    { "skipped_received_ips", "string", (void*) string_parser, offsetof(struct __config, skipped_received_ips), "", MAXVAL-1},
-   { "smtp_addr", "string", (void*) string_parser, offsetof(struct __config, smtp_addr), "127.0.0.1", MAXVAL-1},
-   { "smtp_port", "integer", (void*) int_parser, offsetof(struct __config, smtp_port), "10026", sizeof(int)},
+   { "smtp_addr", "string", (void*) string_parser, offsetof(struct __config, smtp_addr), "127.0.0.1:10026", MAXVAL-1},
    { "spaminess_oblivion_limit", "float", (void*) float_parser, offsetof(struct __config, spaminess_oblivion_limit), "1.01", sizeof(float)},
    { "spam_overall_limit", "float", (void*) float_parser, offsetof(struct __config, spam_overall_limit), "0.92", sizeof(float)},
    { "spam_subject_prefix", "string", (void*) string_parser, offsetof(struct __config, spam_subject_prefix), "", MAXVAL-1},
@@ -253,7 +253,7 @@ void print_config_item(struct __config *cfg, struct _parse_rule *rules, int i){
       trim_buffer(p);
       printf("%s=%s\n", rules[i].name, p);
    }
- 
+
 }
 
 
@@ -327,5 +327,3 @@ void print_config(char *configfile, struct __config *cfg){
 
    fclose(f);
 }
-
-

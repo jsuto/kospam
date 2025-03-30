@@ -48,7 +48,6 @@ int get_policy(struct session_data *sdata, struct __config *cfg, struct __config
    sql.sql[sql.pos] = (char *)&(my_cfg->store_only_spam); sql.type[sql.pos] = TYPE_LONG; sql.len[sql.pos] = sizeof(int); sql.pos++;
    sql.sql[sql.pos] = (char *)&(my_cfg->message_from_a_zombie); sql.type[sql.pos] = TYPE_LONG; sql.len[sql.pos] = sizeof(int); sql.pos++;
    sql.sql[sql.pos] = my_cfg->smtp_addr; sql.type[sql.pos] = TYPE_STRING; sql.len[sql.pos] = MAXVAL-1; sql.pos++;
-   sql.sql[sql.pos] = (char *)&(my_cfg->smtp_port); sql.type[sql.pos] = TYPE_LONG; sql.len[sql.pos] = sizeof(int); sql.pos++;
 
 
    p_store_results(&sql);
@@ -57,12 +56,12 @@ int get_policy(struct session_data *sdata, struct __config *cfg, struct __config
       f = atof(f1); if(f > 0.1) my_cfg->spam_overall_limit = f;
       f = atof(f2); if(f > 0.1) my_cfg->spaminess_oblivion_limit = f;
 
-      if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: policy settings: %d/%d/%d/%s/%d/%s/%.4f/%.4f/%d/%d/%d/%d/%d/%d/%d/%d/%s/%d",
+      if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: policy settings: %d/%d/%d/%s/%d/%s/%.4f/%.4f/%d/%d/%d/%d/%d/%d/%d/%d/%s",
                                               sdata->ttmpfile, my_cfg->deliver_infected_email, my_cfg->silently_discard_infected_email, my_cfg->use_antispam,
                                               my_cfg->spam_subject_prefix, my_cfg->max_message_size_to_filter, my_cfg->surbl_domain, my_cfg->spam_overall_limit,
                                               my_cfg->spaminess_oblivion_limit, my_cfg->replace_junk_characters, my_cfg->penalize_images, my_cfg->penalize_embed_images,
                                               my_cfg->penalize_octet_stream, my_cfg->training_mode, my_cfg->store_emails, my_cfg->store_only_spam, my_cfg->message_from_a_zombie,
-                                              my_cfg->smtp_addr, my_cfg->smtp_port);
+                                              my_cfg->smtp_addr);
    }
 
    p_free_results(&sql);
@@ -73,5 +72,3 @@ ENDE:
 
    return rc;
 }
-
-

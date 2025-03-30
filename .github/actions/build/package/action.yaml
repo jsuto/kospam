@@ -1,0 +1,58 @@
+name: 'Build piler package'
+
+inputs:
+  ARCH:
+    required: true
+  BUILDER_IMAGE:
+    required: true
+  COMMIT_ID:
+    required: true
+  DISTRO:
+    required: true
+  PROJECT_ID:
+    required: true
+  VERSION:
+    required: true
+
+outputs:
+  PACKAGE:
+    description: 'The built package'
+    value: ${{ steps.build-package.outputs.PACKAGE }}
+
+runs:
+  using: 'composite'
+
+  steps:
+    - name: Build package
+      id: build-package
+      run: |
+        docker run --rm \
+           -e PROJECT_ID=${{ inputs.PROJECT_ID }} \
+           -e DISTRO=${{ inputs.DISTRO }} \
+           -e ARCH=${{ inputs.ARCH }} \
+           -e VERSION=${{ inputs.VERSION }} \
+           -e COMMIT_ID=${{ inputs.COMMIT_ID }} \
+           -e BUILD_NUMBER=$GITHUB_RUN_ID \
+           -v $PWD:/repo \
+           -v $PWD/docker:/data \
+           --entrypoint /repo/build/run.sh \
+           ${{ inputs.BUILDER_IMAGE }}
+
+        docker run --rm -v ${{ github.workspace }}:/workspace ${{ inputs.BUILDER_IMAGE }} bash -c "chown -R $(id -u):$(id -g) /workspace"
+
+        ls -la docker
+        a="$(ls docker/*[dr][ep][bm])"
+        PACKAGE="${a##*/}"
+        echo "PACKAGE=$PACKAGE" >> $GITHUB_OUTPUT
+        echo "PACKAGE=$PACKAGE" >> $GITHUB_ENV
+        echo "Package: ${PACKAGE}"
+      shell: bash
+
+    - name: Upload package
+      uses: actions/upload-artifact@v4
+      with:
+        retention-days: 7
+        path: |
+          docker/*deb
+        name: package-${{ inputs.DISTRO }}
+        overwrite: true

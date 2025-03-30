@@ -54,6 +54,8 @@ rsyslogd
 wait_until_mysql_server_is_ready
 check_database
 
-kospam -d
+/usr/sbin/kospam -d
+
+/usr/libexec/kospam/kospam-smtpd -daemon
 
 sleep infinity

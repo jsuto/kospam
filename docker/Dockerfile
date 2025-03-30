@@ -20,7 +20,8 @@ RUN apt-get update && \
     apt-get -y --no-install-recommends install openssl curl rsyslog mariadb-client libtre5 && \
     apt-get clean && rm -rf /var/lib/apt/lists/* && \
     dpkg -i ${PACKAGE}_${TARGETARCH}.deb && \
-    rm -rf ${PACKAGE}_${TARGETARCH}.deb
+    rm -rf ${PACKAGE}_${TARGETARCH}.deb && \
+    chmod +x /usr/libexec/kospam/kospam-smtpd /usr/libexec/kospam/kospam-client
 
 VOLUME ["/etc/kospam"]
 VOLUME ["/var/kospam"]

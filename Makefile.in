@@ -72,6 +72,8 @@ installdirs: mkinstalldirs
 		$(DESTDIR)$(localstatedir)/kospam/queue \
 		$(DESTDIR)$(localstatedir)/kospam/sphinx \
 		$(DESTDIR)$(localstatedir)/kospam/run \
+		$(DESTDIR)$(localstatedir)/kospam/send \
+		$(DESTDIR)$(localstatedir)/kospam/send-error \
 		$(DESTDIR)$(localstatedir)/kospam/stat \
 		$(DESTDIR)$(localstatedir)/kospam/tmp \
 		$(DESTDIR)$(localstatedir)/kospam/www
@@ -81,6 +83,8 @@ installdirs: mkinstalldirs
 	$(INSTALL) -d -m 0711 -o $(RUNNING_USER) -g $(RUNNING_GROUP) $(DESTDIR)$(localstatedir)/kospam/queue
 	$(INSTALL) -d -m 0755 -o $(RUNNING_USER) -g $(RUNNING_GROUP) $(DESTDIR)$(localstatedir)/kospam/run
 	$(INSTALL) -d -m 0750 -o $(RUNNING_USER) -g $(RUNNING_GROUP) $(DESTDIR)$(localstatedir)/kospam/sphinx
+	$(INSTALL) -d -m 0700 -o $(RUNNING_USER) -g $(RUNNING_GROUP) $(DESTDIR)$(localstatedir)/kospam/send
+	$(INSTALL) -d -m 0700 -o $(RUNNING_USER) -g $(RUNNING_GROUP) $(DESTDIR)$(localstatedir)/kospam/send-error
 	$(INSTALL) -d -m 0755 -o $(RUNNING_USER) -g $(RUNNING_GROUP) $(DESTDIR)$(localstatedir)/kospam/stat
 	$(INSTALL) -d -m 0711 -o $(RUNNING_USER) -g $(RUNNING_GROUP) $(DESTDIR)$(localstatedir)/kospam/tmp
 

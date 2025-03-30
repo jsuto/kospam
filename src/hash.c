@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include <clapf.h>
+#include <kospam.h>
 
 
 inline int hash(uint64 key){
@@ -96,7 +96,7 @@ struct node *makenewnode(char *s, double spaminess, double deviation){
 
    snprintf(h->str, len+1, "%s", s);
 
-   h->key = APHash(s);
+   h->key = xxh3_64(s, strlen(s));
    h->spaminess = spaminess;
    h->deviation = deviation;
    h->nham = 0;
@@ -117,7 +117,7 @@ int addnode(struct node *xhash[], char *s, double spaminess, double deviation){
 
    if(s == NULL) return 0;
 
-   key = APHash(s);
+   key = xxh3_64(s, strlen(s));
 
    if(xhash[hash(key)] == NULL){
       xhash[hash(key)] = makenewnode(s, spaminess, deviation);
@@ -146,7 +146,7 @@ struct node *findnode(struct node *xhash[], char *s){
 
    if(s == NULL) return NULL;
 
-   key = APHash(s);
+   key = xxh3_64(s, strlen(s));
 
    q = xhash[hash(key)];
 
@@ -162,25 +162,6 @@ struct node *findnode(struct node *xhash[], char *s){
    }
 
    return NULL;
-}
-
-
-/*
- * APHash function
- * http://www.partow.net/programming/hashfunctions/#APHashFunction
- */
-
-uint64 APHash(char *p){
-   uint64 hash = 0;
-   int i=0;
-
-   for(; *p; p++){
-      hash ^= ((i & 1) == 0) ? (  (hash <<  7) ^ (*p) ^ (hash >> 3)) :
-                               (~((hash << 11) ^ (*p) ^ (hash >> 5)));
-      i++;
-   }
-
-   return hash % MAX_KEY_VAL;
 }
 
 

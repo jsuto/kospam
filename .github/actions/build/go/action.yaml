@@ -36,6 +36,7 @@ runs:
 
         cat pkg/version/version.go
 
+        go build -o kospam-client cmd/smtp/main.go
         go build -o kospam-smtp cmd/smtpd/main.go
 
         ./kospam-smtp -version
@@ -49,6 +50,7 @@ runs:
       with:
         retention-days: 7
         path: |
+          go-app/kospam-client
           go-app/kospam-smtp
         name: kospam-smtp-${{ inputs.ARCH }}
         overwrite: true

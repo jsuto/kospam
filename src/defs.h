@@ -79,7 +79,7 @@
 #define T_TUM 1
 
 typedef void signal_func (int);
-
+typedef unsigned long long uint64;
 
 struct child {
    pid_t pid;

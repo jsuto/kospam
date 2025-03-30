@@ -40,12 +40,6 @@ struct passwd *pwd;
 struct child children[MAXCHILDREN];
 
 
-void p_clean_exit();
-void initialise_configuration();
-int search_slot_by_pid(pid_t pid);
-pid_t child_make(struct child *ptr);
-signal_func *set_signal_handler(int signo, signal_func * func);
-
 void usage(){
    printf("\nusage: %s\n\n", PROGNAME);
    printf("    -c <config file>                  Config file to use if not the default\n");
@@ -68,6 +62,7 @@ static void takesig(int sig){
                 break;
 
         case SIGTERM:
+        case SIGKILL:
                 quit = 1;
                 p_clean_exit();
                 break;
@@ -122,10 +117,8 @@ int process_email(char *filename, struct session_data *sdata, int size){
    //char *p;
    struct timezone tz;
    struct timeval tv1, tv2;
-   //struct parser_state parser_state;
+   struct __state parser_state;
    struct __counters counters;
-
-   gettimeofday(&tv1, &tz);
 
    bzero(&counters, sizeof(counters));
 
@@ -135,9 +128,35 @@ int process_email(char *filename, struct session_data *sdata, int size){
 
    snprintf(sdata->filename, SMALLBUFSIZE-1, "%s", filename);
 
-   //parser_state = parse_message(sdata, 1, &data, &cfg);
-   //post_parse(sdata, &parser_state, &cfg);
-   //fix_m_file(sdata->tmpframe, &parser_state);
+   // parse message
+
+   gettimeofday(&tv1, &tz);
+   parser_state = parse_message(sdata, 1, &cfg);
+   post_parse(&parser_state);
+   gettimeofday(&tv2, &tz);
+   sdata->__parsed = tvdiff(tv2, tv1);
+
+   // TODO: virus check
+
+   char virusinfo[SMALLBUFSIZE];
+
+   sdata->rav = check_for_known_bad_attachments(sdata, &parser_state);
+   if(sdata->rav == AVIR_VIRUS) snprintf(virusinfo, sizeof(virusinfo)-1, "MARKED.AS.MALWARE");
+
+   if (is_item_on_list(sdata->ip, cfg.mynetwork, "") == 1) {
+      syslog(LOG_PRIORITY, "%s: client ip (%s) on mynetwork", sdata->ttmpfile, sdata->ip);
+      sdata->mynetwork = 1;
+   }
+
+   struct __config my_cfg;
+   memcpy(&my_cfg, &cfg, sizeof(struct __config));
+
+   char recipient[SMALLBUFSIZE];
+
+   snprintf(recipient, sizeof(recipient)-1, "%s", sdata->rcptto[0]);
+   extract_verp_address(recipient);
+
+   check_spam(sdata, &parser_state, &data, sdata->fromemail, recipient, &cfg, &my_cfg);
 
    int rc = ERR;
    //int rc = perform_checks(sdata, &data, &parser_state, &cfg);
@@ -147,21 +166,52 @@ int process_email(char *filename, struct session_data *sdata, int size){
 
    //update_counters(sdata, &counters);
 
-   gettimeofday(&tv2, &tz);
+   char delay[SMALLBUFSIZE];
+   snprintf(delay, sizeof(delay)-1, "delay=%.2f, delays=%.2f/%.2f/%.2f/%.2f/%.2f/%.2f/%.2f/%.2f/%.2f/%.2f/%.2f",
+           (sdata->__acquire+sdata->__parsed+sdata->__av+sdata->__user+sdata->__policy+sdata->__minefield+sdata->__as+sdata->__training+sdata->__update+sdata->__store+sdata->__inject)/1000000.0,
+           sdata->__acquire/1000000.0,
+           sdata->__parsed/1000000.0,
+           sdata->__av/1000000.0,
+           sdata->__user/1000000.0,
+           sdata->__policy/1000000.0,
+           sdata->__minefield/1000000.0,
+           sdata->__as/1000000.0,
+           sdata->__training/1000000.0,
+           sdata->__update/1000000.0,
+           sdata->__store/1000000.0,
+           sdata->__inject/1000000.0);
 
-   /*syslog(LOG_PRIORITY, "%s: %s, size=%d/%d, attachments=%d, reference=%s, "
-                        "message-id=%s, retention=%d, delay=%.2f, delays=%.2f/%.2f/%.2f/%.2f/%.2f/%.2f/%.2f, status=%s",
-                             sdata->filename, sdata->ttmpfile, sdata->tot_len, sdata->stored_len,
-                             parser_state.n_attachments, parser_state.reference, parser_state.message_id,
-                             parser_state.retention, tvdiff(tv2,tv1)/1000000.0,
-                             sdata->__parse/1000000.0,
-                             sdata->__post_parse/1000000.0,
-                             sdata->__rules/1000000.0,
-                             sdata->__header_checks/1000000.0,
-                             sdata->__process_message/1000000.0,
-                             sdata->__counters/1000000.0,
-                             sdata->__pq/1000000.0,
-                             status);*/
+
+   char tmpbuf[SMALLBUFSIZE];
+
+   if(sdata->rav == AVIR_VIRUS){
+      counters.c_virus++;
+      sdata->status = S_VIRUS;
+      snprintf(tmpbuf, sizeof(tmpbuf)-1, "VIRUS (%s)", virusinfo);
+   } else if(sdata->spaminess >= my_cfg.spam_overall_limit){
+      sdata->status = S_SPAM;
+      counters.c_spam++;
+      snprintf(tmpbuf, sizeof(tmpbuf)-1, "SPAM");
+   } else {
+      sdata->status = S_HAM;
+      counters.c_ham++;
+      snprintf(tmpbuf, sizeof(tmpbuf)-1, "HAM");
+
+      if(sdata->spaminess < my_cfg.spam_overall_limit && sdata->spaminess > my_cfg.possible_spam_limit) counters.c_possible_spam++;
+      else if(sdata->spaminess < my_cfg.possible_spam_limit && sdata->spaminess > my_cfg.max_ham_spamicity) counters.c_unsure++;
+   }
+
+   if(cfg.log_subject == 1) syslog(LOG_PRIORITY, "%s: subject=%s", sdata->ttmpfile, parser_state.b_subject);
+   syslog(LOG_PRIORITY, "%s: from=%s, result=%s/%.4f, size=%d, attachments=%d, %s", sdata->ttmpfile, sdata->fromemail, tmpbuf, sdata->spaminess, sdata->tot_len, parser_state.n_attachments, delay);
+
+   /*if(sdata->training_request == 0){
+      if(write_history(sdata, &state, inject_resp, &my_cfg) != OK) syslog(LOG_PRIORITY, "%s: error: failed inserting to history", sdata->ttmpfile);
+   }*/
+
+   unlink(sdata->ttmpfile);
+
+   clearhash(parser_state.token_hash);
+   clearhash(parser_state.url);
 
    return rc;
 }
@@ -334,6 +384,12 @@ void kill_children(int sig, char *sig_text){
 void p_clean_exit(){
    kill_children(SIGTERM, "SIGTERM");
 
+   clearhash(data.mydomains);
+
+#ifdef HAVE_TRE
+   zombie_free(&data);
+#endif
+
    syslog(LOG_PRIORITY, "%s has been terminated", PROGNAME);
 
    unlink(cfg.pidfile);
@@ -351,7 +407,6 @@ void fatal(char *s){
 
 
 void initialise_configuration(){
-   //struct session_data sdata;
    struct stat st;
 
    if(stat(configfile, &st)) fatal("cannot read config file");
@@ -377,6 +432,13 @@ void initialise_configuration(){
    setlocale(LC_MESSAGES, cfg.locale);
    setlocale(LC_CTYPE, cfg.locale);
 
+   clearhash(data.mydomains);
+
+   inithash(data.mydomains);
+
+#ifdef HAVE_TRE
+   zombie_init(&data, &cfg);
+#endif
 
    syslog(LOG_PRIORITY, "reloaded config: %s", configfile);
 

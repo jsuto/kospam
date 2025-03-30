@@ -127,7 +127,6 @@ func (s *Session) Data(r io.Reader) error {
     subdir := strconv.Itoa(randmath.Intn(1000) % s.numWorkers)
 
     filePath := filepath.Join(s.queueDir, subdir, s.queueID)
-    envPath := filepath.Join(s.envelopeDir, subdir, s.queueID)
 
     // Save the email to file
 
@@ -137,30 +136,17 @@ func (s *Session) Data(r io.Reader) error {
     }
     defer file.Close()
 
+    header := fmt.Sprintf("Kospam-Envelope-From: %s\r\nKospam-Envelope-Recipient: %s\r\n", s.mailFrom, strings.Join(s.rcptTo, ","))
+    if _, err := file.WriteString(header); err != nil {
+        return fmt.Errorf("failed to write header: %w", err)
+    }
+
     _, err = io.Copy(file, r)
     if err != nil {
         return fmt.Errorf("failed to write email to file: %w", err)
     }
 
     log.Printf("Email saved to %s", filePath)
-
-
-   // Save the envelope sender and recipients to file
-
-    envFile, err := os.OpenFile(envPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0600)
-    if err != nil {
-        return fmt.Errorf("failed to create envelope file: %w", err)
-    }
-    defer envFile.Close()
-
-    envData := fmt.Sprintf("MAIL FROM: %s\nRCPT TO: %s\n", s.mailFrom, strings.Join(s.rcptTo, ","))
-    _, err = envFile.WriteString(envData)
-    if err != nil {
-        return fmt.Errorf("failed to write envelope data: %w", err)
-    }
-
-    log.Printf("Envelope saved to %s", envPath)
-
 
     return nil
 }
@@ -178,7 +164,6 @@ func (s *Session) Logout() error {
 
 func createDirs(config *config.SmtpdConfig) {
     utils.CreateSubDirs(config.QueueDir, config.NumWorkers)
-    utils.CreateSubDirs(config.EnvelopeDir, config.NumWorkers)
 }
 
 func main() {

@@ -95,22 +95,6 @@ void child_sighup_handler(int sig){
 }
 
 
-/*int perform_checks(struct session_data *sdata, struct data *data, struct parser_state *parser_state, struct __config *cfg){
-   struct timezone tz;
-   struct timeval tv1, tv2;
-   int rc=ERR;
-
-   gettimeofday(&tv1, &tz);
-   int rc = process_message(sdata, parser_state, data, cfg);
-   unlink(parser_state->message_id_hash);
-
-   gettimeofday(&tv2, &tz);
-   sdata->__process_message = tvdiff(tv2, tv1);
-
-   return rc;
-}*/
-
-
 int process_email(char *filename, struct session_data *sdata, int size){
    //char tmpbuf[SMALLBUFSIZE];
    //char *status=S_STATUS_UNDEF;
@@ -221,6 +205,8 @@ int process_email(char *filename, struct session_data *sdata, int size){
       syslog(LOG_PRIORITY, "ERROR: failed to rename %s to %s", filename, tmpbuf);
    }
 
+   // TODO: udpate counters
+
    return rc;
 }
 
@@ -310,8 +296,6 @@ void child_main(struct child *ptr){
    //if(cfg.memcached_enable == 1) memcached_shutdown(&(data.memc));
 
    if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "child decides to exit (pid: %d)", getpid());
-
-   //post_process(&data, &cfg);
 
    exit(0);
 }

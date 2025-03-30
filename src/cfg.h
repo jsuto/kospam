@@ -19,7 +19,6 @@ struct __config {
    char pidfile[MAXVAL];
 
    char listen_addr[MAXVAL];
-   int listen_port;
 
    char smtp_addr[MAXVAL];
    int smtp_port;

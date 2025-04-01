@@ -18,28 +18,11 @@
 #include <kospam.h>
 
 
-float calc_token_spamicity(float NHAM, float NSPAM, unsigned int nham, unsigned int nspam, float rob_s, float rob_x){
-   float spamicity=DEFAULT_SPAMICITY;
-   int n;
-
-   n = nham + nspam;
-   if(n <= 0) return DEFAULT_SPAMICITY;
-
-   spamicity = nspam * NHAM / (nspam * NHAM + nham * NSPAM);
-   spamicity = (rob_s * rob_x + n * spamicity) / (rob_s + n);
-
-   if(spamicity < REAL_HAM_TOKEN_PROBABILITY) spamicity = REAL_HAM_TOKEN_PROBABILITY;
-   if(spamicity > REAL_SPAM_TOKEN_PROBABILITY) spamicity = REAL_SPAM_TOKEN_PROBABILITY;
-
-   return spamicity;
-}
-
-
 /*
  * calculate token probabilities
  */
 
-void calcnode(struct node *xhash[], float nham, float nspam, struct __config *cfg){
+void calcnode(struct node *xhash[], float NHAM, float NSPAM, struct __config *cfg){
    int i;
    struct node *q;
 
@@ -47,8 +30,18 @@ void calcnode(struct node *xhash[], float nham, float nspam, struct __config *cf
       q = xhash[i];
       while(q != NULL){
 
-         if(q->nham >= 0 && q->nspam >= 0 && (q->nham + q->nspam) > 0){
-            q->spaminess = calc_token_spamicity(nham, nspam, q->nham, q->nspam, cfg->rob_s, cfg->rob_x);
+         if (q->nham >= 0 && q->nspam >= 0 && (q->nham + q->nspam) > 0) {
+            int n = q->nham + q->nspam;
+            if (n > 0) {
+               q->spaminess = q->nspam * NHAM / (q->nspam * NHAM + q->nham * NSPAM);
+               q->spaminess = (cfg->rob_s * cfg->rob_x + n * q->spaminess) / (cfg->rob_s + n);
+
+               if(q->spaminess < REAL_HAM_TOKEN_PROBABILITY) q->spaminess = REAL_HAM_TOKEN_PROBABILITY;
+               if(q->spaminess > REAL_SPAM_TOKEN_PROBABILITY) q->spaminess = REAL_SPAM_TOKEN_PROBABILITY;
+            } else {
+               q->spaminess = DEFAULT_SPAMICITY;
+            }
+
             q->deviation = DEVIATION(q->spaminess);
          }
 
@@ -62,6 +55,7 @@ void calcnode(struct node *xhash[], float nham, float nspam, struct __config *cf
  * query the spaminess values at once
  */
 
+
 int qry_spaminess(struct session_data *sdata, struct __state *state, char type, struct __config *cfg){
    int i, n=0;
    char s[SMALLBUFSIZE];
@@ -69,7 +63,7 @@ int qry_spaminess(struct session_data *sdata, struct __state *state, char type, 
    buffer *query;
 
    query = buffer_create(NULL);
-   if(!query) return 0;
+   if(!query) return 1;
 
    /*
     * CREATE TEMPORARY TABLE temp_tokens (token BIGINT UNSIGNED PRIMARY KEY);
@@ -126,43 +120,88 @@ int qry_spaminess(struct session_data *sdata, struct __state *state, char type, 
 
     */
 
-   snprintf(s, sizeof(s)-1, "SELECT token, nham, nspam FROM %s FORCE INDEX (token_uid_idx) WHERE ", SQL_TOKEN_TABLE);
-   buffer_cat(query, s);
+    MYSQL *conn = mysql_init(NULL);
+    if (conn == NULL) {
+        syslog(LOG_PRIORITY, "ERROR: mysql_init() failed");
+        return 1;
+    }
 
-   if (sdata->gid > 0) {
-      snprintf(s, sizeof(s)-1, "(uid=0 OR uid=%d) AND token IN (0", sdata->gid);
-      buffer_cat(query, s);
-   }
-   else {
-      buffer_cat(query, "uid=0 AND token IN (0");
-   }
+    if (!mysql_real_connect(conn, cfg->mysqlhost, cfg->mysqluser, cfg->mysqlpwd, cfg->mysqldb, cfg->mysqlport, cfg->mysqlsocket, 0)) {
+        syslog(LOG_PRIORITY, "ERROR: cant connect to mysql server: '%s', error: %s", cfg->mysqldb, mysql_error(conn));
+        mysql_close(conn);
+        return 1;
+    }
 
-   for(i=0; i<MAXHASH; i++){
-      q = state->token_hash[i];
-      while(q != NULL){
+    // Create a temporary table
+    snprintf(s, sizeof(s)-1, "CREATE TEMPORARY TABLE %s (token BIGINT UNSIGNED PRIMARY KEY)", SQL_TEMP_TOKEN_TABLE);
 
-         if( (type == 1 && q->type == 1) || (type == 0 && q->type == 0) ){
-            n++;
-            snprintf(s, sizeof(s)-1, ",%llu", xxh3_64(q->str, strlen(q->str)));
+    if (mysql_query(conn, s)) {
+        syslog(LOG_PRIORITY, "ERROR: %s", mysql_error(conn));
+        mysql_close(conn);
+        return 1;
+    }
 
-            buffer_cat(query, s);
-         }
+    snprintf(s, sizeof(s)-1, "INSERT INTO %s (token) VALUES (0)", SQL_TEMP_TOKEN_TABLE);
 
-         q = q->r;
-      }
-   }
+    buffer_cat(query, s);
 
-   buffer_cat(query, ")");
+    for(i=0; i<MAXHASH; i++){
+        q = state->token_hash[i];
+        while(q != NULL){
 
-   if (cfg->debug) printf("query: *%s*\n", query->data);
+           if( (type == 1 && q->type == 1) || (type == 0 && q->type == 0) ){
+              n++;
+              snprintf(s, sizeof(s)-1, ",(%llu)", xxh3_64(q->str, strlen(q->str)));
 
-   update_hash(sdata, query->data, state->token_hash);
+              buffer_cat(query, s);
+           }
 
-   buffer_destroy(query);
+           q = q->r;
+        }
+    }
 
-   calcnode(state->token_hash, sdata->nham, sdata->nspam, cfg);
+    int rc = mysql_query(conn, query->data);
 
-   return 1;
+    buffer_destroy(query);
+
+    if (rc != 0) {
+        syslog(LOG_PRIORITY, "ERROR: %s", mysql_error(conn));
+        mysql_close(conn);
+        return 1;
+    }
+
+    // Query the main token table using a JOIN
+    const char *select_query =
+        "SELECT t.token, t.nham, t.nspam FROM " SQL_TOKEN_TABLE " t "
+        "JOIN " SQL_TEMP_TOKEN_TABLE " lt ON t.token = lt.token";
+
+    if (mysql_query(conn, select_query) != 0) {
+        syslog(LOG_PRIORITY, "ERROR: %s", mysql_error(conn));
+        mysql_close(conn);
+        return 1;
+    }
+
+    MYSQL_RES *result = mysql_store_result(conn);
+    if (!result) {
+        syslog(LOG_PRIORITY, "ERROR: %s", mysql_error(conn));
+        mysql_close(conn);
+        return 1;
+    }
+
+    MYSQL_ROW row;
+    while ((row = mysql_fetch_row(result))) {
+        updatenode(state->token_hash, strtoull(row[0], NULL, 10), atof(row[1]), atof(row[2]), DEFAULT_SPAMICITY, 0);
+    }
+
+    mysql_free_result(result);
+
+    mysql_close(conn);
+
+    printf("INFO: %f, %f\n", sdata->nham, sdata->nspam);
+
+    calcnode(state->token_hash, sdata->nham, sdata->nspam, cfg);
+
+    return 0;
 }
 
 
@@ -206,6 +245,7 @@ int update_token_timestamps(struct session_data *sdata, struct node *xhash[]){
    buffer_cat(query, s);
 
    if(mysql_real_query(&(sdata->mysql), query->data, strlen(query->data)) != 0){
+      printf("update query: %s\n", query->data);
       n = -1;
    }
 
@@ -331,5 +371,3 @@ float run_statistical_check(struct session_data *sdata, struct __state *state, s
 
    return spaminess;
 }
-
-

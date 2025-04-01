@@ -1,7 +1,7 @@
 
 create table if not exists misc (
    nham int default 0,
-   nspam int default 0,
+   nspam int default 0
 ) Engine=InnoDB;
 
 insert into misc (nham, nspam) values(0, 0);

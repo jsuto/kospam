@@ -83,7 +83,7 @@ int update_misc_table(struct session_data *sdata, int ham_or_spam, int train_mod
 }
 
 
-int introduce_tokens(struct session_data *sdata, struct __state *state, struct node *xhash[]){
+int introduce_tokens(struct session_data *sdata, struct __state *state, struct node *xhash[], struct __config *cfg){
    int i, n=0;
    char s[SMALLBUFSIZE];
    struct node *q;
@@ -91,31 +91,9 @@ int introduce_tokens(struct session_data *sdata, struct __state *state, struct n
 
    if(state->n_token <= 0) return 0;
 
-   query = buffer_create(NULL);
-   if(!query) return 0;
+   get_tokens(state, -1, cfg);
 
-   snprintf(s, sizeof(s)-1, "SELECT token, nham, nspam FROM %s WHERE (", SQL_TOKEN_TABLE);
-   buffer_cat(query, s);
-
-   for(i=0; i<MAXHASH; i++){
-      q = xhash[i];
-      while(q != NULL){
-         if(n) snprintf(s, sizeof(s)-1, " OR token=%llu", q->key);
-         else snprintf(s, sizeof(s)-1, "token=%llu", q->key);
-
-         buffer_cat(query, s);
-         n++;
-
-         q = q->r;
-      }
-   }
-
-   snprintf(s, sizeof(s)-1, ") AND uid=%d", sdata->gid);
-   buffer_cat(query, s);
-
-   update_hash(sdata, query->data, xhash);
-
-   buffer_destroy(query);
+   //update_hash(sdata, query->data, xhash);
 
 
    query = buffer_create(NULL);
@@ -156,7 +134,7 @@ int train_message(struct session_data *sdata, struct __state *state, int rounds,
 
    if(cfg->group_type == GROUP_SHARED) sdata->gid = 0;
 
-   introduce_tokens(sdata, state, state->token_hash);
+   introduce_tokens(sdata, state, state->token_hash, cfg);
 
    for(i=1; i<=rounds; i++){
 
@@ -253,5 +231,3 @@ ENDE:
    close_prepared_statement(&sql);
 
 }
-
-

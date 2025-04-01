@@ -205,7 +205,7 @@ int process_email(char *filename, struct session_data *sdata, int size){
       syslog(LOG_PRIORITY, "ERROR: failed to rename %s to %s", filename, tmpbuf);
    }
 
-   // TODO: udpate counters
+   update_counters(sdata, &counters);
 
    return rc;
 }

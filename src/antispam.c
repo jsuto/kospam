@@ -38,7 +38,6 @@ void add_penalties(struct session_data *sdata, struct __state *state, struct __c
 
 
 int check_spam(struct session_data *sdata, struct __state *state, struct __data *data, char *fromemail, char *rcpttoemail, struct __config *cfg, struct __config *my_cfg){
-   int utokens=0;
    char *p, tmpbuf[SMALLBUFSIZE];
    struct timezone tz;
    struct timeval tv1, tv2;
@@ -269,14 +268,13 @@ int check_spam(struct session_data *sdata, struct __state *state, struct __data 
    }
 
 
-   // TODO: update token timestamps
-
-   /*if(cfg->update_tokens == 1 && state->n_token > 3){
+   if(cfg->update_tokens == 1 && state->n_token > 3){
       gettimeofday(&tv1, &tz);
+      int utokens = update_token_dates(state, cfg);
       gettimeofday(&tv2, &tz);
       sdata->__update = tvdiff(tv2, tv1);
       if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: updated %d/%d tokens", sdata->ttmpfile, utokens, state->n_token);
-   }*/
+   }
 
 
    return OK;

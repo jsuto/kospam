@@ -111,3 +111,75 @@ int get_tokens(struct __state *state, char type, struct __config *cfg){
 
     return 0;
 }
+
+
+int update_token_dates(struct __state *state, struct __config *cfg) {
+    int utokens = 0;
+    char s[SMALLBUFSIZE];
+    struct node *q;
+    buffer *query;
+
+    query = buffer_create(NULL);
+    if(!query) return utokens;
+
+    MYSQL *conn = mysql_init(NULL);
+    if (conn == NULL) {
+        syslog(LOG_PRIORITY, "ERROR: mysql_init() failed");
+        return utokens;
+    }
+
+    if (!mysql_real_connect(conn, cfg->mysqlhost, cfg->mysqluser, cfg->mysqlpwd, cfg->mysqldb, cfg->mysqlport, cfg->mysqlsocket, 0)) {
+        syslog(LOG_PRIORITY, "ERROR: cant connect to mysql server: '%s', error: %s", cfg->mysqldb, mysql_error(conn));
+        mysql_close(conn);
+        return utokens;
+    }
+
+    // Create a temporary table
+    snprintf(s, sizeof(s)-1, "CREATE TEMPORARY TABLE %s (token BIGINT UNSIGNED PRIMARY KEY)", SQL_TEMP_TOKEN_TABLE);
+
+    if (mysql_query(conn, s)) {
+        syslog(LOG_PRIORITY, "ERROR: %s", mysql_error(conn));
+        mysql_close(conn);
+        return utokens;
+    }
+
+    snprintf(s, sizeof(s)-1, "INSERT INTO %s (token) VALUES (0)", SQL_TEMP_TOKEN_TABLE);
+
+    buffer_cat(query, s);
+
+    for(int i=0; i<MAXHASH; i++){
+        q = state->token_hash[i];
+        while(q != NULL) {
+            if (q->nham + q->nspam > 0) {
+               utokens++;
+               snprintf(s, sizeof(s)-1, ",(%llu)", q->key);
+               //printf("%llu, %f, %f\n", q->key, q->nham, q->nspam);
+               buffer_cat(query, s);
+            }
+
+            q = q->r;
+        }
+    }
+
+    //if (cfg->debug) printf("update date query: *%s*\n", query->data);
+
+    int rc = mysql_query(conn, query->data);
+
+    buffer_destroy(query);
+
+    if (rc != 0) {
+        syslog(LOG_PRIORITY, "ERROR: %s", mysql_error(conn));
+        mysql_close(conn);
+        return utokens;
+    }
+
+    snprintf(s, sizeof(s)-1, "UPDATE %s t JOIN %s tt ON t.token = tt.token SET updated=NOW()", SQL_TOKEN_TABLE, SQL_TEMP_TOKEN_TABLE);
+
+    if (mysql_query(conn, s) != 0) {
+        syslog(LOG_PRIORITY, "ERROR: %s", mysql_error(conn));
+    }
+
+    mysql_close(conn);
+
+    return utokens;
+}

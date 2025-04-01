@@ -14,11 +14,56 @@
 #include <clapf.h>
 
 
-int introduce_tokens(struct session_data *sdata, struct __state *state, struct __config *cfg);
+// introduce new token with timestamp=NOW(), nham=0, nspam=0
+
+int introduce_tokens(struct session_data *sdata, struct __state *state, struct __config *cfg){
+   int i, n=0;
+   char s[SMALLBUFSIZE];
+   struct node *q;
+   buffer *query;
+
+   if(state->n_token <= 0) return 1;
+
+   get_tokens(state, -1, cfg);
+
+   query = buffer_create(NULL);
+   if(!query) return 0;
+
+   snprintf(s, sizeof(s)-1, "INSERT INTO %s (token, nham, nspam) VALUES", SQL_TOKEN_TABLE);
+   buffer_cat(query, s);
+
+   n = 0;
+
+   for(i=0; i<MAXHASH; i++){
+      q = state->token_hash[i];
+      while(q != NULL){
+
+         // use q->timestamp == 0?
+         if(q->nham + q->nspam == 0){
+            if(n) snprintf(s, sizeof(s)-1, ",(%llu,0,0)", q->key);
+            else snprintf(s, sizeof(s)-1, "(%llu,0,0)", q->key);
+            buffer_cat(query, s);
+            n++;
+
+            //printf("new token: %llu\n", q->key);
+         }
+         /*else {
+            printf("old token: %llu\n", q->key);
+         }*/
+
+         q = q->r;
+      }
+   }
+
+   mysql_real_query(&(sdata->mysql), query->data, strlen(query->data));
+
+   buffer_destroy(query);
+
+   return 0;
+}
+
 
 int train_message(struct session_data *sdata, struct __state *state, char *column, struct __config *cfg){
-
-   // introduce new token with timestamp=NOW(), nham=0, nspam=0
 
    if(state->n_token <= 0) return 0;
 
@@ -82,11 +127,9 @@ int train_message(struct session_data *sdata, struct __state *state, char *colum
         return 1;
     }
 
-    // all tokens are in the temo table
-
+    // all tokens are in the temp table
     // run update on the main token table using a JOIN
 
-    //UPDATE " SQL_TOKEN_TABLE " t JOIN " SQL_TEMP_TOKEN_TABLE " tt ON t.token = tt.token SET nham=nham+1, t.timestamp = 1743219892 WHERE t.uid = 10;
     snprintf(s, sizeof(s)-1, "UPDATE %s t JOIN %s tt ON t.token = tt.token SET %s=%s+1, updated=NOW()", SQL_TOKEN_TABLE, SQL_TEMP_TOKEN_TABLE, column, column);
 
     if (mysql_query(conn, s) != 0) {
@@ -105,185 +148,19 @@ int train_message(struct session_data *sdata, struct __state *state, char *colum
     return 0;
 }
 
-int update_token_counters(struct session_data *sdata, struct __state *state, int ham_or_spam, struct node *xhash[], int train_mode){
-   int i, n=0;
-   char s[SMALLBUFSIZE];
-   struct node *q;
-   buffer *query;
-
-   if(state->n_token <= 0) return 0;
-
-   query = buffer_create(NULL);
-   if(!query) return n;
-
-   if(ham_or_spam == 1){
-      if(train_mode == T_TUM) snprintf(s, sizeof(s)-1, "UPDATE %s SET nham=nham-1 WHERE (", SQL_TOKEN_TABLE);
-      else snprintf(s, sizeof(s)-1, "UPDATE %s SET nspam=nspam+1 WHERE (", SQL_TOKEN_TABLE);
-   } else {
-      if(train_mode == T_TUM) snprintf(s, sizeof(s)-1, "UPDATE %s SET nspam=nspam-1 WHERE (", SQL_TOKEN_TABLE);
-      else snprintf(s, sizeof(s)-1, "UPDATE %s SET nham=nham+1 WHERE (", SQL_TOKEN_TABLE);
-   }
-
-   buffer_cat(query, s);
-
-   for(i=0; i<MAXHASH; i++){
-      q = xhash[i];
-      while(q != NULL){
-         if(n) snprintf(s, sizeof(s)-1, " OR token=%llu", q->key);
-         else snprintf(s, sizeof(s)-1, "token=%llu", q->key);
-
-         buffer_cat(query, s);
-
-         q = q->r;
-         n++;
-      }
-   }
-
-   buffer_cat(query, ")");
-
-   if(train_mode == T_TUM){
-      if(ham_or_spam == 1) buffer_cat(query, " AND nham > 0");
-      else buffer_cat(query, " AND nspam > 0");
-   }
-
-   snprintf(s, sizeof(s)-1, " AND uid=%d", sdata->gid);
-   buffer_cat(query, s);
-
-   p_query(sdata, query->data);
-
-   buffer_destroy(query);
-
-   return 1;
-}
-
-
-int update_misc_table(struct session_data *sdata, int ham_or_spam, int train_mode){
-   char s[SMALLBUFSIZE];
-
-   if(ham_or_spam == 1){
-      if(train_mode == T_TUM) snprintf(s, sizeof(s)-1, "UPDATE %s SET nham=nham-1 WHERE uid=%d AND nham > 0", SQL_MISC_TABLE, sdata->gid);
-      else snprintf(s, sizeof(s)-1, "UPDATE %s SET nspam=nspam+1 WHERE uid=%d", SQL_MISC_TABLE, sdata->gid);
-   } else {
-      if(train_mode == T_TUM) snprintf(s, sizeof(s)-1, "UPDATE %s SET nspam=nspam-1 WHERE uid=%d AND nspam > 0", SQL_MISC_TABLE, sdata->gid);
-      else snprintf(s, sizeof(s)-1, "UPDATE %s SET nham=nham+1 WHERE uid=%d", SQL_MISC_TABLE, sdata->gid);
-   }
-
-   p_query(sdata, s);
-
-   return 1;
-}
-
-
-int introduce_tokens(struct session_data *sdata, struct __state *state, struct __config *cfg){
-   int i, n=0;
-   char s[SMALLBUFSIZE];
-   struct node *q;
-   buffer *query;
-
-   if(state->n_token <= 0) return 0;
-
-   get_tokens(state, -1, cfg);
-
-   query = buffer_create(NULL);
-   if(!query) return 0;
-
-   snprintf(s, sizeof(s)-1, "INSERT INTO %s (token, nham, nspam) VALUES", SQL_TOKEN_TABLE);
-   buffer_cat(query, s);
-
-   n = 0;
-
-   for(i=0; i<MAXHASH; i++){
-      q = state->token_hash[i];
-      while(q != NULL){
-
-         // use q->timestamp == 0?
-         if(q->nham + q->nspam == 0){
-            if(n) snprintf(s, sizeof(s)-1, ",(%llu,0,0)", q->key);
-            else snprintf(s, sizeof(s)-1, "(%llu,0,0)", q->key);
-            buffer_cat(query, s);
-            n++;
-
-            //printf("new token: %llu\n", q->key);
-         }
-         /*else {
-            printf("old token: %llu\n", q->key);
-         }*/
-
-         q = q->r;
-      }
-   }
-
-   mysql_real_query(&(sdata->mysql), query->data, strlen(query->data));
-
-   //printf("introduce query: *%s*\n", query->data);
-
-   buffer_destroy(query);
-
-   return 1;
-}
-
-
-int train_message2(struct session_data *sdata, struct __state *state, int rounds, int is_spam, int train_mode, struct __config *cfg){
-   int i=0, n=0, tm=train_mode;
-
-   if(state->n_token <= 0) return 0;
-
-   if(cfg->group_type == GROUP_SHARED) sdata->gid = 0;
-
-   introduce_tokens(sdata, state, cfg);
-
-   return 0;
-
-   for(i=1; i<=rounds; i++){
-
-      /* query the spaminess to see if we still have to train the message */
-
-      resetcounters(state->token_hash);
-
-      sdata->spaminess = run_statistical_check(sdata, state, cfg);
-
-      if(cfg->verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: training %d, round: %d spaminess was: %0.4f, deviating tokens: %d", sdata->ttmpfile, is_spam, n, sdata->spaminess, state->n_deviating_token);
-
-      /*
-       * don't skip the training if the message has <20 deviating token
-       */
-
-      if(state->n_deviating_token > 20 && is_spam == 1 && sdata->spaminess > 0.99) break;
-      if(state->n_deviating_token > 20 && is_spam == 0 && sdata->spaminess < 0.1) break;
-
-
-      /* then update the counters */
-
-      update_token_counters(sdata, state, is_spam, state->token_hash, T_TOE);
-      update_misc_table(sdata, is_spam, T_TOE);
-
-      /* fix counters if it was a TUM training */
-
-      if(tm == T_TUM){
-         update_token_counters(sdata, state, is_spam, state->token_hash, T_TUM);
-         update_misc_table(sdata, is_spam, T_TUM);
-      }
-
-      n++;
-
-      tm = T_TOE;
-   }
-
-
-   return n;
-}
-
 
 /*
  * train this message
  */
 
 void do_training(struct session_data *sdata, struct __state *state, char *email, struct __config *cfg){
-   int i, is_spam = 0, is_spam_q = 0;
+   int is_spam = 0, is_spam_q = 0;
    struct sql sql;
 
    if(strcasestr(sdata->rcptto[0], "+spam@") || strncmp(email, "spam@", 5) == 0) is_spam = 1;
 
+
+   // TODO: Add training in rounds
 
    /*
     * check if clapf_id exists in database
@@ -317,12 +194,13 @@ void do_training(struct session_data *sdata, struct __state *state, char *email,
    p_free_results(&sql);
 
 
-   // FIXME: fix sdata->gid = 0 in case of global training request
+   char s[SMALLBUFSIZE];
+   if(is_spam) snprintf(s, sizeof(s)-1, "nspam");
+   else snprintf(s, sizeof(s)-1, "nham");
 
+   train_message(sdata, state, s, cfg);
 
-   i = train_message2(sdata, state, MAX_ITERATIVE_TRAIN_LOOPS, is_spam, state->train_mode, cfg);
-
-   syslog(LOG_PRIORITY, "%s: training %s in %d rounds", sdata->ttmpfile, sdata->clapf_id, i);
+   syslog(LOG_PRIORITY, "%s: training %s", sdata->ttmpfile, sdata->clapf_id);
 
 
 ENDE:

@@ -19,21 +19,20 @@
 
 
 /*
- * calculate token probabilities
+ * pull tokens from database and calculate spam probabilities
  */
 
-void calcnode(struct node *xhash[], float NHAM, float NSPAM, struct __config *cfg){
-   int i;
-   struct node *q;
+void qry_spaminess(struct session_data *sdata, struct __state *state, char type, struct __config *cfg){
+   get_tokens(state, type, cfg);
 
-   for(i=0;i<MAXHASH;i++){
-      q = xhash[i];
+   for(int i=0;i<MAXHASH;i++){
+      struct node *q = state->token_hash[i];
       while(q != NULL){
 
          if (q->nham >= 0 && q->nspam >= 0 && (q->nham + q->nspam) > 0) {
             int n = q->nham + q->nspam;
             if (n > 0) {
-               q->spaminess = q->nspam * NHAM / (q->nspam * NHAM + q->nham * NSPAM);
+               q->spaminess = q->nspam * sdata->nham / (q->nspam * sdata->nham + q->nham * sdata->nspam);
                q->spaminess = (cfg->rob_s * cfg->rob_x + n * q->spaminess) / (cfg->rob_s + n);
 
                if(q->spaminess < REAL_HAM_TOKEN_PROBABILITY) q->spaminess = REAL_HAM_TOKEN_PROBABILITY;
@@ -48,70 +47,6 @@ void calcnode(struct node *xhash[], float NHAM, float NSPAM, struct __config *cf
          q = q->r;
       }
    }
-}
-
-
-/*
- * query the spaminess values at once
- */
-
-
-int qry_spaminess(struct session_data *sdata, struct __state *state, char type, struct __config *cfg){
-   get_tokens(state, type, cfg);
-   calcnode(state->token_hash, sdata->nham, sdata->nspam, cfg);
-
-   return 0;
-}
-
-
-/*
- * update token timestamps
- */
-
-int update_token_timestamps(struct session_data *sdata, struct node *xhash[]){
-   int i, n=0;
-   char s[SMALLBUFSIZE];
-   struct node *q;
-   buffer *query;
-
-   query = buffer_create(NULL);
-   if(!query) return n;
-
-   snprintf(s, sizeof(s)-1, "UPDATE %s SET timestamp=%ld WHERE (token=", SQL_TOKEN_TABLE, sdata->now);
-
-   buffer_cat(query, s);
-
-   for(i=0; i<MAXHASH; i++){
-      q = xhash[i];
-      while(q != NULL){
-         if(q->spaminess != DEFAULT_SPAMICITY){
-            if(n) snprintf(s, sizeof(s)-1, " OR token=%llu", q->key);
-            else snprintf(s, sizeof(s)-1, "%llu", q->key);
-            buffer_cat(query, s);
-            n++;
-         }
-
-         q = q->r;
-      }
-   }
-
-
-   if(sdata->gid > 0)
-      snprintf(s, sizeof(s)-1, ") AND (uid=0 OR uid=%d)", sdata->gid);
-   else
-      snprintf(s, sizeof(s)-1, ") AND uid=0");
-
-   buffer_cat(query, s);
-
-   if(mysql_real_query(&(sdata->mysql), query->data, strlen(query->data)) != 0){
-      printf("update query: %s\n", query->data);
-      n = -1;
-   }
-
-   buffer_destroy(query);
-
-   return n;
-
 }
 
 
@@ -185,10 +120,7 @@ float run_statistical_check(struct session_data *sdata, struct __state *state, s
 
    /* query message counters */
 
-   if(cfg->group_type == GROUP_SHARED)
-      snprintf(buf, sizeof(buf)-1, "SELECT nham, nspam FROM %s WHERE uid=0", SQL_MISC_TABLE);
-   else
-      snprintf(buf, sizeof(buf)-1, "SELECT nham, nspam FROM %s WHERE uid=0 OR uid=%d", SQL_MISC_TABLE, sdata->gid);
+   snprintf(buf, sizeof(buf)-1, "SELECT nham, nspam FROM %s", SQL_MISC_TABLE);
 
    te = get_ham_spam_counters(sdata, buf);
    sdata->nham = te.nham;
@@ -206,7 +138,7 @@ float run_statistical_check(struct session_data *sdata, struct __state *state, s
 
    if(sdata->training_request == 0){
 
-      snprintf(buf, sizeof(buf)-1, "SELECT nham, nspam FROM %s WHERE token=%llu AND (uid=0 OR uid=%d)", SQL_TOKEN_TABLE, xxh3_64(state->from, strlen(state->from)), sdata->gid);
+      snprintf(buf, sizeof(buf)-1, "SELECT nham, nspam FROM %s WHERE token=%llu", SQL_TOKEN_TABLE, xxh3_64(state->from, strlen(state->from)));
 
       te = get_ham_spam_counters(sdata, buf);
       ham_from = te.nham;

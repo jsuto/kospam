@@ -38,7 +38,7 @@ void add_penalties(struct session_data *sdata, struct __state *state, struct __c
 
 
 int check_spam(struct session_data *sdata, struct __state *state, struct __data *data, char *fromemail, char *rcpttoemail, struct __config *cfg, struct __config *my_cfg){
-   int is_spam = 0, utokens;
+   int utokens=0;
    char *p, tmpbuf[SMALLBUFSIZE];
    struct timezone tz;
    struct timeval tv1, tv2;
@@ -224,12 +224,13 @@ int check_spam(struct session_data *sdata, struct __state *state, struct __data 
       )
       {
 
+         char s[SMALLBUFSIZE];
          if(sdata->spaminess >= my_cfg->spam_overall_limit){
-            is_spam = 1;
+            snprintf(s, sizeof(s)-1, "nspam");
             syslog(LOG_PRIORITY, "%s: TUM training a spam", sdata->ttmpfile);
          }
          else {
-            is_spam = 0;
+            snprintf(s, sizeof(s)-1, "nham");
             syslog(LOG_PRIORITY, "%s: TUM training a ham", sdata->ttmpfile);
          }
 
@@ -237,7 +238,7 @@ int check_spam(struct session_data *sdata, struct __state *state, struct __data 
          strncat(sdata->spaminessbuf, tmpbuf, MAXBUFSIZE-1);
 
          gettimeofday(&tv1, &tz);
-         train_message2(sdata, state, 1, is_spam, T_TOE, my_cfg);
+         train_message(sdata, state, s, my_cfg);
          gettimeofday(&tv2, &tz);
          sdata->__training = tvdiff(tv2, tv1);
       }
@@ -252,7 +253,7 @@ int check_spam(struct session_data *sdata, struct __state *state, struct __data 
          strncat(sdata->spaminessbuf, tmpbuf, MAXBUFSIZE-1);
 
          gettimeofday(&tv1, &tz);
-         train_message2(sdata, state, MAX_ITERATIVE_TRAIN_LOOPS, 1, T_TOE, my_cfg);
+         train_message(sdata, state, "nspam", my_cfg);
          gettimeofday(&tv2, &tz);
          sdata->__training = tvdiff(tv2, tv1);
 
@@ -268,13 +269,14 @@ int check_spam(struct session_data *sdata, struct __state *state, struct __data 
    }
 
 
-   if(cfg->update_tokens == 1 && state->n_token > 3){
+   // TODO: update token timestamps
+
+   /*if(cfg->update_tokens == 1 && state->n_token > 3){
       gettimeofday(&tv1, &tz);
-      utokens = update_token_timestamps(sdata, state->token_hash);
       gettimeofday(&tv2, &tz);
       sdata->__update = tvdiff(tv2, tv1);
       if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: updated %d/%d tokens", sdata->ttmpfile, utokens, state->n_token);
-   }
+   }*/
 
 
    return OK;

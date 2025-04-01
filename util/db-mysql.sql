@@ -1,23 +1,20 @@
 
 create table if not exists misc (
-   `uid` int unsigned default 0,
-   `nham` int default 0,
-   `nspam` int default 0,
-    primary key (`uid`)
+   nham int default 0,
+   nspam int default 0,
 ) Engine=InnoDB;
 
-insert into misc (uid, nham, nspam) values(0, 0, 0);
+insert into misc (nham, nspam) values(0, 0);
 
 
 create table if not exists token (
-   `token` bigint unsigned not null,
-    `uid` smallint unsigned not null default 0,
-    `nham` int default 0,
-    `nspam` int default 0,
-    `timestamp` int unsigned default 0
+   token bigint unsigned not null,
+   nham int default 0,
+   nspam int default 0,
+   updated date default CURRENT_DATE()
 ) Engine=InnoDB;
 
-create index token_uid_idx ON token(uid, token);
+create index token_idx ON token(token);
 
 
 create table if not exists user (
@@ -234,4 +231,3 @@ create table if not exists `attach_digest` (
    `digest` char(64) unique not null,
    `counter` int default 1
 ) Engine=InnoDB;
-

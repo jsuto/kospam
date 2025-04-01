@@ -14,6 +14,97 @@
 #include <clapf.h>
 
 
+int introduce_tokens(struct session_data *sdata, struct __state *state, struct __config *cfg);
+
+int train_message(struct session_data *sdata, struct __state *state, char *column, struct __config *cfg){
+
+   // introduce new token with timestamp=NOW(), nham=0, nspam=0
+
+   if(state->n_token <= 0) return 0;
+
+   introduce_tokens(sdata, state, cfg);
+
+   // update token nham or nspam column and the timestamp
+
+
+    // insert all tokens to temp table
+
+    char s[SMALLBUFSIZE];
+    struct node *q;
+    buffer *query;
+
+    query = buffer_create(NULL);
+    if(!query) return 1;
+
+    MYSQL *conn = mysql_init(NULL);
+    if (conn == NULL) {
+        syslog(LOG_PRIORITY, "ERROR: mysql_init() failed");
+        return 1;
+    }
+
+    if (!mysql_real_connect(conn, cfg->mysqlhost, cfg->mysqluser, cfg->mysqlpwd, cfg->mysqldb, cfg->mysqlport, cfg->mysqlsocket, 0)) {
+        syslog(LOG_PRIORITY, "ERROR: cant connect to mysql server: '%s', error: %s", cfg->mysqldb, mysql_error(conn));
+        mysql_close(conn);
+        return 1;
+    }
+
+    // Create a temporary table
+    snprintf(s, sizeof(s)-1, "CREATE TEMPORARY TABLE %s (token BIGINT UNSIGNED PRIMARY KEY)", SQL_TEMP_TOKEN_TABLE);
+
+    if (mysql_query(conn, s)) {
+        syslog(LOG_PRIORITY, "ERROR: %s", mysql_error(conn));
+        mysql_close(conn);
+        return 1;
+    }
+
+    snprintf(s, sizeof(s)-1, "INSERT INTO %s (token) VALUES (0)", SQL_TEMP_TOKEN_TABLE);
+
+    buffer_cat(query, s);
+
+    for(int i=0; i<MAXHASH; i++){
+        q = state->token_hash[i];
+        while(q != NULL){
+           snprintf(s, sizeof(s)-1, ",(%llu)", q->key);
+
+           buffer_cat(query, s);
+
+           q = q->r;
+        }
+    }
+
+    int rc = mysql_query(conn, query->data);
+
+    buffer_destroy(query);
+
+    if (rc != 0) {
+        syslog(LOG_PRIORITY, "ERROR: %s", mysql_error(conn));
+        mysql_close(conn);
+        return 1;
+    }
+
+    // all tokens are in the temo table
+
+    // run update on the main token table using a JOIN
+
+    //UPDATE " SQL_TOKEN_TABLE " t JOIN " SQL_TEMP_TOKEN_TABLE " tt ON t.token = tt.token SET nham=nham+1, t.timestamp = 1743219892 WHERE t.uid = 10;
+    snprintf(s, sizeof(s)-1, "UPDATE %s t JOIN %s tt ON t.token = tt.token SET %s=%s+1, updated=NOW()", SQL_TOKEN_TABLE, SQL_TEMP_TOKEN_TABLE, column, column);
+
+    if (mysql_query(conn, s) != 0) {
+        syslog(LOG_PRIORITY, "ERROR: %s", mysql_error(conn));
+        mysql_close(conn);
+        return 1;
+    }
+
+
+    // update misc table
+
+    snprintf(s, sizeof(s)-1, "UPDATE %s SET %s=%s+1", SQL_MISC_TABLE, column, column);
+
+    p_query(sdata, s);
+
+    return 0;
+}
+
 int update_token_counters(struct session_data *sdata, struct __state *state, int ham_or_spam, struct node *xhash[], int train_mode){
    int i, n=0;
    char s[SMALLBUFSIZE];
@@ -83,7 +174,7 @@ int update_misc_table(struct session_data *sdata, int ham_or_spam, int train_mod
 }
 
 
-int introduce_tokens(struct session_data *sdata, struct __state *state, struct node *xhash[], struct __config *cfg){
+int introduce_tokens(struct session_data *sdata, struct __state *state, struct __config *cfg){
    int i, n=0;
    char s[SMALLBUFSIZE];
    struct node *q;
@@ -93,27 +184,30 @@ int introduce_tokens(struct session_data *sdata, struct __state *state, struct n
 
    get_tokens(state, -1, cfg);
 
-   //update_hash(sdata, query->data, xhash);
-
-
    query = buffer_create(NULL);
    if(!query) return 0;
 
-   snprintf(s, sizeof(s)-1, "INSERT INTO %s (token, nham, nspam, uid, timestamp) VALUES", SQL_TOKEN_TABLE);
+   snprintf(s, sizeof(s)-1, "INSERT INTO %s (token, nham, nspam) VALUES", SQL_TOKEN_TABLE);
    buffer_cat(query, s);
 
    n = 0;
 
    for(i=0; i<MAXHASH; i++){
-      q = xhash[i];
+      q = state->token_hash[i];
       while(q != NULL){
-         if(q->nham + q->nspam == 0){
-            if(n) snprintf(s, sizeof(s)-1, ",(%llu,0,0,%d,%ld)", q->key, sdata->gid, sdata->now);
-            else snprintf(s, sizeof(s)-1, "(%llu,0,0,%d,%ld)", q->key, sdata->gid, sdata->now);
 
+         // use q->timestamp == 0?
+         if(q->nham + q->nspam == 0){
+            if(n) snprintf(s, sizeof(s)-1, ",(%llu,0,0)", q->key);
+            else snprintf(s, sizeof(s)-1, "(%llu,0,0)", q->key);
             buffer_cat(query, s);
             n++;
+
+            //printf("new token: %llu\n", q->key);
          }
+         /*else {
+            printf("old token: %llu\n", q->key);
+         }*/
 
          q = q->r;
       }
@@ -121,20 +215,24 @@ int introduce_tokens(struct session_data *sdata, struct __state *state, struct n
 
    mysql_real_query(&(sdata->mysql), query->data, strlen(query->data));
 
+   //printf("introduce query: *%s*\n", query->data);
+
    buffer_destroy(query);
 
    return 1;
 }
 
 
-int train_message(struct session_data *sdata, struct __state *state, int rounds, int is_spam, int train_mode, struct __config *cfg){
+int train_message2(struct session_data *sdata, struct __state *state, int rounds, int is_spam, int train_mode, struct __config *cfg){
    int i=0, n=0, tm=train_mode;
 
    if(state->n_token <= 0) return 0;
 
    if(cfg->group_type == GROUP_SHARED) sdata->gid = 0;
 
-   introduce_tokens(sdata, state, state->token_hash, cfg);
+   introduce_tokens(sdata, state, cfg);
+
+   return 0;
 
    for(i=1; i<=rounds; i++){
 
@@ -222,7 +320,7 @@ void do_training(struct session_data *sdata, struct __state *state, char *email,
    // FIXME: fix sdata->gid = 0 in case of global training request
 
 
-   i = train_message(sdata, state, MAX_ITERATIVE_TRAIN_LOOPS, is_spam, state->train_mode, cfg);
+   i = train_message2(sdata, state, MAX_ITERATIVE_TRAIN_LOOPS, is_spam, state->train_mode, cfg);
 
    syslog(LOG_PRIORITY, "%s: training %s in %d rounds", sdata->ttmpfile, sdata->clapf_id, i);
 

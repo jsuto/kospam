@@ -57,7 +57,7 @@ int check_spam(struct session_data *sdata, struct __state *state, struct __data 
 float run_statistical_check(struct session_data *sdata, struct __state *state, struct __config *cfg);
 void add_penalties(struct session_data *sdata, struct __state *state, struct __config *cfg);
 
-int train_message(struct session_data *sdata, struct __state *state, int rounds, int is_spam, int train_mode, struct __config *cfg);
+int train_message2(struct session_data *sdata, struct __state *state, int rounds, int is_spam, int train_mode, struct __config *cfg);
 void do_training(struct session_data *sdata, struct __state *state, char *email, struct __config *cfg);
 
 int generate_tokens_from_string(struct __state *state, char *s, char *label);
@@ -84,4 +84,3 @@ void remove_child_stat_entry(struct session_data *sdata, pid_t pid);
 void update_child_stat_entry(struct session_data *sdata, char status, int count);
 
 #endif /* _CLAPF_H */
-

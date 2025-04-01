@@ -113,7 +113,7 @@ func (s *Session) Xforward(opts *smtp.XforwardOptions) error {
 func (s *Session) Mail(from string, opts *smtp.MailOptions) error {
     s.queueID = opts.QueueId
     s.mailFrom = from
-    log.Printf("MAIL FROM: %s", from)
+    //log.Printf("MAIL FROM: %s", from)
 
     //log.Printf("forward: %s %s %s %s", s.xforward.Name, s.xforward.Addr, s.xforward.Proto, s.xforward.Helo)
     return nil
@@ -121,7 +121,7 @@ func (s *Session) Mail(from string, opts *smtp.MailOptions) error {
 
 func (s *Session) Rcpt(to string, opts *smtp.RcptOptions) error {
     s.rcptTo = append(s.rcptTo, to)
-    log.Printf("RCPT TO: %s", to)
+    //log.Printf("RCPT TO: %s", to)
     return nil
 }
 
@@ -138,17 +138,20 @@ func (s *Session) Data(r io.Reader) error {
     }
     defer file.Close()
 
-    header := fmt.Sprintf("Kospam-Envelope-From: %s\r\nKospam-Envelope-Recipient: %s\r\n", s.mailFrom, strings.Join(s.rcptTo, ","))
+    recipients := strings.Join(s.rcptTo, ",")
+
+    header := fmt.Sprintf("Kospam-Envelope-From: %s\r\nKospam-Envelope-Recipient: %s\r\n", s.mailFrom, recipients)
+
     if _, err := file.WriteString(header); err != nil {
         return fmt.Errorf("failed to write header: %w", err)
     }
 
-    _, err = io.Copy(file, r)
+    bytesWritten, err := io.Copy(file, r)
     if err != nil {
         return fmt.Errorf("failed to write email to file: %w", err)
     }
 
-    log.Printf("Email saved to %s", filePath)
+    log.Printf("%s: from=%s, to=%s, size=%d", s.queueID, s.mailFrom, recipients, bytesWritten)
 
     return nil
 }

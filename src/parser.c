@@ -309,6 +309,10 @@ int parse_line(char *buf, struct __state *state, struct session_data *sdata, int
       else if(strncasecmp(buf, "Subject:", strlen("Subject:")) == 0) state->message_state = MSG_SUBJECT;
       else if(strncasecmp(buf, "Recipient:", strlen("Recipient:")) == 0) state->message_state = MSG_RECIPIENT;
       else if(strncasecmp(buf, "Received:", strlen("Received:")) == 0) state->message_state = MSG_RECEIVED;
+      else if(state->line_num == 1 && strncasecmp(buf, "Kospam-Envelope-From: ", strlen("Kospam-Envelope-From: ")) == 0) {
+         snprintf(sdata->fromemail, sizeof(sdata->fromemail)-1, "%s", buf+strlen("Kospam-Envelope-From: "));
+         trim_buffer(sdata->fromemail);
+      }
 
       if(state->message_state == MSG_MESSAGE_ID && state->message_id[0] == 0){
          p = strchr(buf+11, ' ');
@@ -543,4 +547,3 @@ int parse_line(char *buf, struct __state *state, struct session_data *sdata, int
 
    return 0;
 }
-

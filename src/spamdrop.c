@@ -37,9 +37,8 @@ void usage(){
 
 
 int main(int argc, char **argv){
-   int i, c, debug=0, rounds=1;
-   int is_spam=0, train_as_ham=0, train_as_spam=0;
-   int train_mode=T_TOE;
+   int i, c, debug=0;
+   int train_as_ham=0, train_as_spam=0;
    int print_message=1;
    int show_tokens=0;
    char *p;
@@ -223,12 +222,11 @@ int main(int argc, char **argv){
    }
 
    if(train_as_ham == 1 || train_as_spam == 1){
-      if(train_as_spam == 1) is_spam = 1;
-      else is_spam = 0;
+      char s[SMALLBUFSIZE];
+      if(train_as_spam == 1) snprintf(s, sizeof(s)-1, "nspam");
+      else snprintf(s, sizeof(s)-1, "nham");
 
-      if(state.train_mode == T_TUM) train_mode=T_TUM;
-
-      train_message(&sdata, &state, rounds, is_spam, train_mode, &my_cfg);
+      train_message(&sdata, &state, s, &my_cfg);
    }
 
    check_zombie_sender(&sdata, &data, &my_cfg);

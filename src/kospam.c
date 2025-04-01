@@ -25,7 +25,7 @@
 #include <errno.h>
 #include <kospam.h>
 
-#define PROGNAME "kospam"
+#define PROGNAME "kospam/filter"
 
 extern char *optarg;
 extern int optind;
@@ -185,8 +185,8 @@ int process_email(char *filename, struct session_data *sdata, int size){
       else if(sdata->spaminess < my_cfg.possible_spam_limit && sdata->spaminess > my_cfg.max_ham_spamicity) counters.c_unsure++;
    }
 
-   if(cfg.log_subject == 1) syslog(LOG_PRIORITY, "%s: subject=%s", sdata->ttmpfile, parser_state.b_subject);
-   syslog(LOG_PRIORITY, "%s: from=%s, result=%s/%.4f, size=%d, attachments=%d, %s", sdata->ttmpfile, sdata->fromemail, tmpbuf, sdata->spaminess, sdata->tot_len, parser_state.n_attachments, delay);
+   if(cfg.log_subject == 1) syslog(LOG_PRIORITY, "%s: subject=%s", filename, parser_state.b_subject);
+   syslog(LOG_PRIORITY, "%s: from=%s, result=%s/%.4f, size=%d, attachments=%d, %s", filename, sdata->fromemail, tmpbuf, sdata->spaminess, sdata->tot_len, parser_state.n_attachments, delay);
 
    /*if(sdata->training_request == 0){
       if(write_history(sdata, &state, inject_resp, &my_cfg) != OK) syslog(LOG_PRIORITY, "%s: error: failed inserting to history", sdata->ttmpfile);

@@ -47,4 +47,6 @@ int update_token_dates(struct __state *state, struct __config *cfg);
 
 int train_message(struct session_data *sdata, struct __state *state, char *column, struct __config *cfg);
 
+void update_counters(struct session_data *sdata, struct __counters *counters);
+
 #endif /* _KOSPAM_H */

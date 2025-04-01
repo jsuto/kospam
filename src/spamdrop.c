@@ -233,7 +233,10 @@ int main(int argc, char **argv){
 
    check_zombie_sender(&sdata, &data, &my_cfg);
 
+   struct timeval tv_spam1, tv_spam2;
+   gettimeofday(&tv_spam1, &tz);
    sdata.spaminess = run_statistical_check(&sdata, &state, &my_cfg);
+   gettimeofday(&tv_spam2, &tz);
 
 CLEANUP:
    clearhash(state.token_hash);
@@ -246,7 +249,7 @@ CLEANUP:
    gettimeofday(&tv_stop, &tz);
 
    if(cfg.debug == 1){
-      printf("spaminess: %.4f in %ld [ms]\n", sdata.spaminess, tvdiff(tv_stop, tv_start)/1000);
+      printf("spaminess: %.4f in %ld/%ld [ms]\n", sdata.spaminess, tvdiff(tv_spam2, tv_spam1)/1000, tvdiff(tv_stop, tv_start)/1000);
       printf("%d %d\n", state.c_shit, state.l_shit);
       printf("rcvd host/ip/zombie: %s/%s/%c\n", sdata.hostname, sdata.ip, sdata.tre);
       printf("number of tokens: %d/%d\n", state.n_token, state.n_deviating_token);

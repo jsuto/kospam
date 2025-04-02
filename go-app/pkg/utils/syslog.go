@@ -18,6 +18,10 @@ func RedirectSyslog(syslogId string) {
         // Redirect standard log package to syslog
         log.SetOutput(syslogWriter)
 
+        // Remove the timestamp flag (and other flags) when redirecting to syslog
+        // This will prevent the duplicate timestamps
+        log.SetFlags(0) // Setting flags to 0 removes all prefixes including timestamps
+
         // Redirect fmt output by replacing stdout and stderr
         // Note: This won't capture direct writes to file descriptors 1 and 2
         r, w, err := os.Pipe()

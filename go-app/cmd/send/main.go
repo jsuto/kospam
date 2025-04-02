@@ -55,7 +55,6 @@ func parseEmailFile(filename string) (string, []string, string, error) {
 
     if strings.HasPrefix(lines[0], "Kospam-Envelope-From: ") {
         sender = strings.TrimSpace(strings.TrimPrefix(lines[0], "Kospam-Envelope-From: "))
-        fmt.Printf("sender=*%s*\n", sender)
     }
 
     rcpt := []string{}

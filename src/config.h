@@ -11,7 +11,7 @@
 
 #define PROGNAME "kospam"
 
-#define HOSTID "av-engine.localhost"
+#define HOSTNAME "kospam.localhost"
 
 #define CONFIG_FILE CONFDIR "/kospam/kospam.conf"
 #define WORK_DIR DATADIR "/kospam/tmp"

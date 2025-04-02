@@ -6,7 +6,6 @@ import (
     "fmt"
     "io"
     "log"
-    "log/syslog"
     "math/rand"
     "net"
     "os"
@@ -23,6 +22,8 @@ import (
     "kospam/smtpd/pkg/version"
 
 )
+
+const syslogId = "kospam/smtpd"
 
 type Backend struct{
     acl []acl.CIDRRule;
@@ -171,6 +172,15 @@ func createDirs(config *config.SmtpdConfig) {
     utils.CreateSubDirs(config.QueueDir, config.NumWorkers)
 }
 
+func init() {
+    isDaemon := *daemon || os.Getenv("RUNNING_AS_DAEMON") == "true"
+
+    // If running as daemon, redirect logs to syslog
+    if isDaemon {
+        utils.RedirectSyslog(syslogId)
+    }
+}
+
 func main() {
     flag.Parse()
 
@@ -195,22 +205,7 @@ func main() {
     }
 
     if *daemon {
-        // If running as daemon, fork to background
-        if os.Getppid() != 1 {
-            args := append([]string{os.Args[0]}, os.Args[1:]...)
-            os.StartProcess(os.Args[0], args, &os.ProcAttr{
-                Files: []*os.File{os.Stdin, os.Stdout, os.Stderr},
-            })
-            return
-        }
-
-        logwriter, err := syslog.New(syslog.LOG_MAIL, "kospam/smtpd")
-        if err != nil {
-            log.Fatal("Failed to connect to syslog: ", err)
-        }
-        // Direct log output to syslog
-        log.SetOutput(logwriter)
-        log.SetFlags(log.Lshortfile)
+        utils.Daemonize()
     }
 
     createDirs(config)

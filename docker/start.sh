@@ -58,4 +58,6 @@ check_database
 
 /usr/libexec/kospam/kospam-smtpd -daemon
 
+/usr/libexec/kospam/kospam-send -daemon
+
 sleep infinity

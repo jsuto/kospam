@@ -27,6 +27,9 @@ const scanInterval = 5 * time.Second
 const syslogId = "kospam/send"
 
 type Email struct {
+    QueueId  string
+    Sender   string
+    Rcpt     []string
     FilePath string
     Content  string
 }
@@ -36,6 +39,27 @@ var (
     showVersion = flag.Bool("version", false, "show version number, then exit")
     daemon = flag.Bool("daemon", false, "run in daemon mode")
 )
+
+// TODO: Write a test!
+
+func parseEmailFile(filename string) (string, []string, string, error) {
+    data, err := os.ReadFile(filename)
+    if err != nil {
+        return "", nil, "", err
+    }
+
+    content := string(data)
+    lines := strings.SplitN(content, "\r\n", 3)
+    if len(lines) < 3 {
+        return "", nil, "", fmt.Errorf("invalid file format")
+    }
+
+    sender := strings.TrimSpace(strings.TrimPrefix(lines[0], "Kospam-Envelope-From: "))
+    rcpt := strings.Split(strings.TrimSpace(strings.TrimPrefix(lines[1], "Kospam-Envelope-Recipient: ")), ",")
+    remainingContent := lines[2]
+
+    return sender, rcpt, remainingContent, nil
+}
 
 func sendEmail(config *config.SmtpdConfig, email Email) bool {
     dialer := net.Dialer{Timeout: 15 * time.Second}
@@ -66,7 +90,7 @@ func sendEmail(config *config.SmtpdConfig, email Email) bool {
     }
 
     if supportsStartTLS {
-        fmt.Fprintln(conn, "STARTTLS")
+        fmt.Fprintf(conn, "STARTTLS\r\n")
         conn.SetReadDeadline(time.Now().Add(15 * time.Second))
         resp, _ = reader.ReadString('\n')
         //fmt.Print(resp)
@@ -94,17 +118,23 @@ func sendEmail(config *config.SmtpdConfig, email Email) bool {
         }
     }
 
-    fmt.Fprintln(conn, "MAIL FROM:<sender@example.com>")
+    // TODO: use the address in the Kospam-* headers
+
+    fmt.Fprintf(conn, "MAIL FROM: <%s>\r\n", email.Sender)
     conn.SetReadDeadline(time.Now().Add(15 * time.Second))
     resp, _ = reader.ReadString('\n')
     //fmt.Print(resp)
 
-    fmt.Fprintln(conn, "RCPT TO:<recipient@example.com>")
-    conn.SetReadDeadline(time.Now().Add(15 * time.Second))
-    resp, _ = reader.ReadString('\n')
-    //fmt.Print(resp)
+    // TODO: pipeline support?
 
-    fmt.Fprintln(conn, "DATA")
+    for _, rcpt := range email.Rcpt {
+        fmt.Fprintf(conn, "RCPT TO: <%s>\r\n", rcpt)
+        conn.SetReadDeadline(time.Now().Add(15 * time.Second))
+        resp, _ = reader.ReadString('\n')
+        //fmt.Print(resp)
+    }
+
+    fmt.Fprintf(conn, "DATA\r\n")
     conn.SetReadDeadline(time.Now().Add(15 * time.Second))
     resp, _ = reader.ReadString('\n')
     //fmt.Print(resp)
@@ -118,13 +148,13 @@ func sendEmail(config *config.SmtpdConfig, email Email) bool {
 
     conn.SetReadDeadline(time.Now().Add(15 * time.Second))
     resp, _ = reader.ReadString('\n')
-    fmt.Printf("status=%s", resp)
+    fmt.Printf("%s: relay=%s, status=%s", email.QueueId, config.SmtpAddr, resp)
 
     if !strings.HasPrefix(resp, "250") {
         return false
     }
 
-    fmt.Fprintln(conn, "QUIT")
+    fmt.Fprintf(conn, "QUIT\r\n")
     conn.SetReadDeadline(time.Now().Add(15 * time.Second))
     resp, _ = reader.ReadString('\n')
     //fmt.Print(resp)
@@ -146,13 +176,16 @@ func processQueue(config *config.SmtpdConfig) {
         for _, file := range files {
             if !file.IsDir() {
                 path := filepath.Join(queueDir, file.Name())
-                content, err := os.ReadFile(path)
+
+                sender, rcpt, content, err := parseEmailFile(path)
                 if err != nil {
-                    fmt.Println("Failed to read file:", path, err)
+                    fmt.Println("Error:", err)
+                    destPath := filepath.Join(errorDir, filepath.Base(path))
+                    os.Rename(path, destPath)
                     continue
                 }
 
-                email := Email{FilePath: path, Content: string(content)}
+                email := Email{FilePath: path, QueueId: file.Name(), Sender: sender, Rcpt: rcpt, Content: content}
 
                 wg.Add(1)
                 sem <- struct{}{}

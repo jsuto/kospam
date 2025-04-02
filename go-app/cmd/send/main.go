@@ -39,8 +39,6 @@ var (
     daemon = flag.Bool("daemon", false, "run in daemon mode")
 )
 
-// TODO: Write a test!
-
 func parseEmailFile(filename string) (string, []string, string, error) {
     data, err := os.ReadFile(filename)
     if err != nil {
@@ -53,9 +51,28 @@ func parseEmailFile(filename string) (string, []string, string, error) {
         return "", nil, "", fmt.Errorf("invalid file format")
     }
 
-    sender := strings.TrimSpace(strings.TrimPrefix(lines[0], "Kospam-Envelope-From: "))
-    rcpt := strings.Split(strings.TrimSpace(strings.TrimPrefix(lines[1], "Kospam-Envelope-Recipient: ")), ",")
+    sender := ""
+
+    if strings.HasPrefix(lines[0], "Kospam-Envelope-From: ") {
+        sender = strings.TrimSpace(strings.TrimPrefix(lines[0], "Kospam-Envelope-From: "))
+        fmt.Printf("sender=*%s*\n", sender)
+    }
+
+    rcpt := []string{}
+
+    if strings.HasPrefix(lines[1], "Kospam-Envelope-Recipient: ") {
+        rcpt = strings.Split(strings.TrimSpace(strings.TrimPrefix(lines[1], "Kospam-Envelope-Recipient: ")), ",")
+    }
+
     remainingContent := lines[2]
+
+    if sender == "" {
+        return "", nil, "", fmt.Errorf("Missing Kospam-Envelope-From: header line")
+    }
+
+    if rcpt == nil {
+        return "", nil, "", fmt.Errorf("Missing Kospam-Envelope-Recipient: header line")
+    }
 
     return sender, rcpt, remainingContent, nil
 }

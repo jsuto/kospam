@@ -1,4 +1,4 @@
-name: 'Build piler package'
+name: 'Build kospam package'
 
 inputs:
   ARCH:
@@ -32,6 +32,7 @@ runs:
 
         go build -o kospam-send cmd/send/main.go
         go build -o kospam-smtpd cmd/smtpd/main.go
+        go build -o smtptest cmd/smtptest/smtp.go
 
         ./kospam-smtpd -version
 
@@ -46,5 +47,6 @@ runs:
         path: |
           go-app/kospam-send
           go-app/kospam-smtpd
+          go-app/smtptest
         name: kospam-smtp-${{ inputs.ARCH }}
         overwrite: true

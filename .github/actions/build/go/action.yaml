@@ -44,7 +44,7 @@ runs:
       with:
         retention-days: 7
         path: |
-          go-app/kospam-client
+          go-app/kospam-send
           go-app/kospam-smtpd
         name: kospam-smtp-${{ inputs.ARCH }}
         overwrite: true

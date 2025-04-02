@@ -20,6 +20,7 @@ type SmtpdConfig struct {
     NumWorkers      int
     PemFile         string
     QueueDir        string
+    SmtpAddr        string
     Username        string
 }
 
@@ -34,7 +35,6 @@ func LoadSmtpdConfig(filename string) (*SmtpdConfig, error) {
 
     config := &SmtpdConfig{
         Acl:             "/etc/kospam/smtp.acl",
-        EnvelopeDir:     "/var/kospam/envelope",
         Hostname:        "kospam.local",
         ListenAddr:      "127.0.0.1:10025",
         MaxLineLength:   2000,
@@ -43,6 +43,7 @@ func LoadSmtpdConfig(filename string) (*SmtpdConfig, error) {
         NumWorkers:      3,
         PemFile:         "/etc/kospam/kospam.pem",
         QueueDir:        "/var/kospam/tmp",
+        SmtpAddr:        "127.0.0.1:10026",
         Username:        "kospam",
     }
 
@@ -58,8 +59,6 @@ func LoadSmtpdConfig(filename string) (*SmtpdConfig, error) {
         value := strings.TrimSpace(parts[1])
 
         switch key {
-        case "envelope_dir":
-            config.EnvelopeDir = value
         case "smtp_acl":
             config.Acl = value
         case "hostname":
@@ -86,6 +85,8 @@ func LoadSmtpdConfig(filename string) (*SmtpdConfig, error) {
             config.PemFile = value
         case "queue_dir":
             config.QueueDir = value
+        case "smtp_addr":
+            config.SmtpAddr = value
         case "username":
             config.Username = value
         }

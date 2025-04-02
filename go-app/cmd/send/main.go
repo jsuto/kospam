@@ -3,29 +3,43 @@ package main
 import (
     "bufio"
     "crypto/tls"
+    "flag"
     "fmt"
+    "log"
+    "log/syslog"
     "net"
     "os"
     "path/filepath"
     "strings"
     "sync"
     "time"
+
+    "kospam/smtpd/pkg/config"
+    "kospam/smtpd/pkg/utils"
+    "kospam/smtpd/pkg/version"
+
 )
 
 const queueDir = "/var/kospam/send"
 const errorDir = "/var/kospam/send-error"
 const maxConcurrency = 10
 const scanInterval = 5 * time.Second
-const myHostname = "kospam.localhost"
+const syslogId = "kospam/send"
 
 type Email struct {
     FilePath string
     Content  string
 }
 
-func sendEmail(email Email) bool {
+var (
+    configfile = flag.String("config", "/etc/kospam/kospam.conf", "config file to use")
+    showVersion = flag.Bool("version", false, "show version number, then exit")
+    daemon = flag.Bool("daemon", false, "run in daemon mode")
+)
+
+func sendEmail(config *config.SmtpdConfig, email Email) bool {
     dialer := net.Dialer{Timeout: 15 * time.Second}
-    conn, err := dialer.Dial("tcp", "127.0.0.1:10025")
+    conn, err := dialer.Dial("tcp", config.SmtpAddr)
     if err != nil {
         fmt.Println("Failed to connect:", err)
         return false
@@ -37,7 +51,7 @@ func sendEmail(email Email) bool {
     resp, _ := reader.ReadString('\n')
     //fmt.Print(resp)
 
-    fmt.Fprintf(conn, "EHLO %s\r\n", myHostname)
+    fmt.Fprintf(conn, "EHLO %s\r\n", config.Hostname)
     var supportsStartTLS bool
     for {
         conn.SetReadDeadline(time.Now().Add(15 * time.Second))
@@ -69,7 +83,7 @@ func sendEmail(email Email) bool {
         conn = tlsConn
         reader = bufio.NewReader(conn)
 
-        fmt.Fprintf(conn, "EHLO %s\r\n", myHostname)
+        fmt.Fprintf(conn, "EHLO %s\r\n", config.Hostname)
         for {
             conn.SetReadDeadline(time.Now().Add(15 * time.Second))
             resp, _ := reader.ReadString('\n')
@@ -104,7 +118,7 @@ func sendEmail(email Email) bool {
 
     conn.SetReadDeadline(time.Now().Add(15 * time.Second))
     resp, _ = reader.ReadString('\n')
-    fmt.Print(resp) // TODO: Log this!
+    fmt.Printf("status=%s", resp)
 
     if !strings.HasPrefix(resp, "250") {
         return false
@@ -118,7 +132,7 @@ func sendEmail(email Email) bool {
     return true
 }
 
-func processQueue() {
+func processQueue(config *config.SmtpdConfig) {
     for {
         files, err := os.ReadDir(queueDir)
         if err != nil {
@@ -144,7 +158,7 @@ func processQueue() {
                 sem <- struct{}{}
                 go func(email Email) {
                     defer wg.Done()
-                    if sendEmail(email) {
+                    if sendEmail(config, email) {
                         os.Remove(email.FilePath)
                     } else {
                         destPath := filepath.Join(errorDir, filepath.Base(email.FilePath))
@@ -161,6 +175,47 @@ func processQueue() {
 }
 
 func main() {
-    os.MkdirAll(errorDir, 0755)
-    processQueue()
+    flag.Parse()
+
+    if *showVersion {
+       fmt.Println("version:", version.VERSION)
+       return
+    }
+
+    // Load configuration
+    config, err := config.LoadSmtpdConfig(*configfile)
+    if err != nil {
+        log.Fatalf("Error loading config: %v", err)
+    }
+
+    //log.Printf("%+v\n", config)
+
+    if os.Geteuid() == 0 && config.Username != "" {
+        if err := utils.SwitchUser(config.Username); err != nil {
+            log.Fatal(err)
+        }
+        log.Printf("Successfully switched to user %s", config.Username)
+    }
+
+    if *daemon {
+        // If running as daemon, fork to background
+        if os.Getppid() != 1 {
+            args := append([]string{os.Args[0]}, os.Args[1:]...)
+            os.StartProcess(os.Args[0], args, &os.ProcAttr{
+                Files: []*os.File{os.Stdin, os.Stdout, os.Stderr},
+            })
+            return
+        }
+
+        logwriter, err := syslog.New(syslog.LOG_MAIL, syslogId)
+        if err != nil {
+            log.Fatal("Failed to connect to syslog: ", err)
+        }
+        // Direct log output to syslog
+        log.SetOutput(logwriter)
+        log.SetFlags(log.Lshortfile)
+    }
+
+    //os.MkdirAll(errorDir, 0755)
+    processQueue(config)
 }

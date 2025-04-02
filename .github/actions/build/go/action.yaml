@@ -30,12 +30,12 @@ runs:
 
         cat pkg/version/version.go
 
-        go build -o kospam-client cmd/smtp/main.go
+        go build -o kospam-send cmd/send/main.go
         go build -o kospam-smtpd cmd/smtpd/main.go
 
         ./kospam-smtpd -version
 
-        ls -la kospam-smtpd kospam-client
+        ls -la kospam-send kospam-smtpd
       working-directory: go-app
       shell: bash
 

@@ -10,8 +10,7 @@
 struct __config {
    char username[MAXVAL];
 
-   char hostid[MAXVAL];
-   int hostid_len;
+   char hostname[MAXVAL];
 
    int server_id;
    int server_mode;

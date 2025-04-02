@@ -12,8 +12,8 @@ ARG PACKAGE
 ARG TARGETARCH
 
 COPY ${PACKAGE}_${TARGETARCH}.deb /
+COPY kospam-send /usr/libexec/kospam/kospam-send
 COPY kospam-smtpd /usr/libexec/kospam/kospam-smtpd
-COPY kospam-client /usr/libexec/kospam/kospam-client
 
 # hadolint ignore=DL3008,DL3015
 RUN apt-get update && \
@@ -21,7 +21,7 @@ RUN apt-get update && \
     apt-get clean && rm -rf /var/lib/apt/lists/* && \
     dpkg -i ${PACKAGE}_${TARGETARCH}.deb && \
     rm -rf ${PACKAGE}_${TARGETARCH}.deb && \
-    chmod +x /usr/libexec/kospam/kospam-smtpd /usr/libexec/kospam/kospam-client
+    chmod +x /usr/libexec/kospam/kospam-smtpd /usr/libexec/kospam/kospam-send
 
 VOLUME ["/etc/kospam"]
 VOLUME ["/var/kospam"]

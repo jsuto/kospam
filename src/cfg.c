@@ -77,7 +77,7 @@ struct _parse_rule config_parse_rules[] =
    { "group_type", "integer", (void*) int_parser, offsetof(struct __config, group_type), "0", sizeof(int)},
    { "helper_timeout", "integer", (void*) int_parser, offsetof(struct __config, helper_timeout), "20", sizeof(int)},
    { "history", "integer", (void*) int_parser, offsetof(struct __config, history), "0", sizeof(int)},
-   { "hostid", "string", (void*) string_parser, offsetof(struct __config, hostid), HOSTID, MAXVAL-1},
+   { "hostname", "string", (void*) string_parser, offsetof(struct __config, hostname), HOSTNAME, MAXVAL-1},
    { "listen_addr", "string", (void*) string_parser, offsetof(struct __config, listen_addr), "127.0.0.1:10025", MAXVAL-1},
    { "log_subject", "integer", (void*) int_parser, offsetof(struct __config, log_subject), "0", sizeof(int)},
    { "locale", "string", (void*) string_parser, offsetof(struct __config, locale), "", MAXVAL-1},
@@ -215,8 +215,6 @@ struct __config read_config(char *configfile){
    /* parse the config file */
 
    if(parse_config_file(configfile, &cfg, config_parse_rules) == -1) printf("error parsing the configfile: %s\n", configfile);
-
-   cfg.hostid_len = strlen(cfg.hostid);
 
    return cfg;
 }

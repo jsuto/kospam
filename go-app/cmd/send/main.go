@@ -9,9 +9,11 @@ import (
     "log/syslog"
     "net"
     "os"
+    "os/exec"
     "path/filepath"
     "strings"
     "sync"
+    "syscall"
     "time"
 
     "kospam/smtpd/pkg/config"
@@ -207,6 +209,83 @@ func processQueue(config *config.SmtpdConfig) {
     }
 }
 
+func daemonize() {
+    // Get the full path of the current executable
+    executable, err := os.Executable()
+    if err != nil {
+        log.Fatalf("Failed to get executable path: %v", err)
+    }
+    execPath, err := filepath.Abs(executable)
+    if err != nil {
+        log.Fatalf("Failed to get absolute path: %v", err)
+    }
+
+    // Start the process in the background
+    // But use a special environment variable to signal to the child that it's a daemon
+    cmd := exec.Command(execPath)
+    cmd.Env = append(os.Environ(), "RUNNING_AS_DAEMON=true")
+    cmd.Stdout = nil
+    cmd.Stderr = nil
+    cmd.Stdin = nil
+    cmd.SysProcAttr = &syscall.SysProcAttr{
+        Setsid: true, // Create a new session
+    }
+
+    if err := cmd.Start(); err != nil {
+        log.Fatalf("Failed to start daemon: %v", err)
+    }
+
+    // Exit the parent process
+    fmt.Printf("Daemon started with PID %d\n", cmd.Process.Pid)
+    os.Exit(0)
+}
+
+
+func init() {
+    isDaemon := *daemon || os.Getenv("RUNNING_AS_DAEMON") == "true"
+
+    // If running as daemon, redirect logs to syslog
+    if isDaemon {
+        // Connect to syslog
+        syslogWriter, err := syslog.New(syslog.LOG_MAIL, syslogId)
+        if err != nil {
+            log.Fatalf("Failed to connect to syslog: %v", err)
+        }
+
+        // Redirect standard log package to syslog
+        log.SetOutput(syslogWriter)
+
+        // Redirect fmt output by replacing stdout and stderr
+        // Note: This won't capture direct writes to file descriptors 1 and 2
+        r, w, err := os.Pipe()
+        if err != nil {
+            syslogWriter.Err(fmt.Sprintf("Failed to create pipe: %v", err))
+            return
+        }
+
+        os.Stdout = w
+        os.Stderr = w
+
+        // Start a goroutine to forward pipe output to syslog
+        go func() {
+            buffer := make([]byte, 1024)
+            for {
+                n, err := r.Read(buffer)
+                if err != nil {
+                    syslogWriter.Err(fmt.Sprintf("Error reading from pipe: %v", err))
+                    return
+                }
+                if n > 0 {
+                    syslogWriter.Notice(string(buffer[:n]))
+                }
+            }
+        }()
+
+        // Log that we've started as a daemon
+        log.Println("Started in daemon mode, redirected outputs to syslog")
+    }
+}
+
 func main() {
     flag.Parse()
 
@@ -231,24 +310,8 @@ func main() {
     }
 
     if *daemon {
-        // If running as daemon, fork to background
-        if os.Getppid() != 1 {
-            args := append([]string{os.Args[0]}, os.Args[1:]...)
-            os.StartProcess(os.Args[0], args, &os.ProcAttr{
-                Files: []*os.File{os.Stdin, os.Stdout, os.Stderr},
-            })
-            return
-        }
-
-        logwriter, err := syslog.New(syslog.LOG_MAIL, syslogId)
-        if err != nil {
-            log.Fatal("Failed to connect to syslog: ", err)
-        }
-        // Direct log output to syslog
-        log.SetOutput(logwriter)
-        log.SetFlags(log.Lshortfile)
+        daemonize()
     }
 
-    //os.MkdirAll(errorDir, 0755)
     processQueue(config)
 }

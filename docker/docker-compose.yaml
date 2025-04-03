@@ -39,7 +39,7 @@ services:
       - ./server.pem:/etc/postfix/server.pem
 
   kospam:
-    image: sutoj/kospam:test
+    image: sutoj/kospam:alpine
     container_name: kospam
     init: true
     networks:
@@ -52,8 +52,8 @@ services:
       - MYSQL_ROOT_PASSWORD=abcde123
     volumes:
       - ./kospam.conf:/etc/kospam/kospam.conf
+      - ./server.pem:/etc/kospam/kospam.pem
       - ./kospam.sql.gz:/kospam.sql.gz
-      - ./1.sh:/start.sh
     ports:
       - "10025:10025"
     depends_on:

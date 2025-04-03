@@ -27,4 +27,3 @@ COPY --chown=root:root --from=build /usr/sbin/kospam /usr/sbin
 COPY --chown=root:root --from=build /usr/sbin/kospamconf /usr/sbin
 COPY --chown=root:root --from=build /usr/bin/spamdrop /usr/bin
 COPY --chown=root:root --from=build /etc/kospam/kospam.conf.dist /etc/kospam/
-COPY --chown=root:root --from=build /usr/share/kospam/zombienets.regex.dist /usr/share/kospam/zombienets.regex.dist

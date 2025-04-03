@@ -1,0 +1,26 @@
+smtpd_banner = $myhostname ESMTP
+biff = no
+
+compatibility_level = 3.6
+
+smtpd_tls_cert_file=/etc/postfix/server.pem
+smtpd_tls_key_file=/etc/postfix/server.pem
+smtpd_tls_security_level=may
+
+smtp_tls_CApath=/etc/ssl/certs
+smtp_tls_security_level=may
+smtp_tls_session_cache_database = lmdb:${data_directory}/smtp_scache
+
+
+myhostname = mail.kospam
+mynetworks = 127.0.0.0/8
+inet_protocols = ipv4
+
+smtpd_recipient_restrictions = check_recipient_access lmdb:/etc/postfix/virtual_domains, reject
+virtual_mailbox_domains = lmdb:/etc/postfix/virtual_domains
+virtual_mailbox_maps = lmdb:/etc/postfix/virtual_users
+virtual_mailbox_base = /var/mail
+virtual_minimum_uid = 100
+virtual_uid_maps = static:1000
+virtual_gid_maps = static:1000
+message_size_limit = 20000000

@@ -20,6 +20,7 @@ inet_protocols = ipv4
 smtpd_recipient_restrictions = check_recipient_access lmdb:/etc/postfix/virtual_domains, reject
 virtual_mailbox_domains = lmdb:/etc/postfix/virtual_domains
 virtual_mailbox_maps = lmdb:/etc/postfix/virtual_users
+virtual_alias_maps = lmdb:/etc/postfix/virtual_aliases
 virtual_mailbox_base = /var/mail
 virtual_minimum_uid = 100
 virtual_uid_maps = static:1000

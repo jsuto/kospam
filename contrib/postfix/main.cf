@@ -13,6 +13,7 @@ smtp_tls_session_cache_database = lmdb:${data_directory}/smtp_scache
 
 
 myhostname = mail.kospam
+alias_maps =
 mynetworks = 127.0.0.0/8
 inet_protocols = ipv4
 

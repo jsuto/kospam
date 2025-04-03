@@ -25,12 +25,13 @@ runs:
     - name: Download package
       uses: actions/download-artifact@v4
       with:
-        path: docker
+        path: build
         merge-multiple: true
 
     - name: Alpine image
       id: alpine
       run: |
+         ls -la build
          docker buildx build --target prod -t aaa:latest . --load -f build/Dockerfile
          docker images
       shell: bash

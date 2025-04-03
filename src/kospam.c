@@ -96,9 +96,6 @@ void child_sighup_handler(int sig){
 
 
 int process_email(char *filename, struct session_data *sdata, int size){
-   //char tmpbuf[SMALLBUFSIZE];
-   //char *status=S_STATUS_UNDEF;
-   //char *p;
    struct timezone tz;
    struct timeval tv1, tv2;
    struct __state parser_state;
@@ -143,8 +140,6 @@ int process_email(char *filename, struct session_data *sdata, int size){
    check_spam(sdata, &parser_state, &data, sdata->fromemail, recipient, &cfg, &my_cfg);
 
    int rc = ERR;
-   //int rc = perform_checks(sdata, &data, &parser_state, &cfg);
-   //unlink(sdata->tmpframe);
 
    if(rc != ERR) unlink(sdata->filename);
 
@@ -196,6 +191,10 @@ int process_email(char *filename, struct session_data *sdata, int size){
 
    clearhash(parser_state.token_hash);
    clearhash(parser_state.url);
+
+   // Modify message, and add our headers
+
+   fix_message_file(filename, sdata, &cfg);
 
    // Move message to send dir
 

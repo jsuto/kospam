@@ -109,34 +109,6 @@ void replace_character_in_buffer(char *p, char from, char to){
 
 
 /*
- * split a string by a character as delimiter
- */
-
-char *split(char *str, int ch, char *buf, int buflen, int *result){
-   char *p;
-
-   *result = 0;
-
-   if(str == NULL || buf == NULL || buflen < 2) return NULL;
-
-   p = strchr(str, ch);
-   if(p){
-      *p = '\0';
-   }
-
-   snprintf(buf, buflen, "%s", str);
-
-   if(p){
-      *p = ch;
-      *result = 1;
-      p++;
-   }
-
-   return p;
-}
-
-
-/*
  * split a string by a string as delimiter
  */
 

@@ -22,6 +22,15 @@ runs:
   using: 'composite'
 
   steps:
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Login to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ inputs.DOCKER_USERNAME }}
+        password: ${{ inputs.DOCKER_TOKEN }}
+
     - name: Download package
       uses: actions/download-artifact@v4
       with:
@@ -31,7 +40,7 @@ runs:
     - name: Alpine image
       id: alpine
       run: |
-         ls -la build
-         docker buildx build --target prod -t aaa:latest . --load -f build/Dockerfile
+         docker buildx build --target prod -t sutoj/kospam:alpine . --load -f build/Dockerfile
          docker images
+         docker push sutoj/kospam:alpine
       shell: bash

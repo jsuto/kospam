@@ -1,0 +1,30 @@
+name: 'Build alpine image'
+
+inputs:
+  DOCKER_USERNAME:
+    required: true
+  DOCKER_TOKEN:
+    required: true
+  IMAGE_NAME:
+    required: true
+  LOAD:
+    required: false
+    default: true
+  PACKAGE:
+    required: true
+  PLATFORMS:
+    required: true
+  PUSH:
+    required: false
+    default: false
+
+runs:
+  using: 'composite'
+
+  steps:
+    - name: Alpine image
+      id: alpine
+      run: |
+         docker buildx build --target prod -t aaa:latest . --load -f build/Dockerfile
+         docker images
+      shell: bash

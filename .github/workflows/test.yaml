@@ -62,6 +62,18 @@ jobs:
           COMMIT_ID: ${{ steps.get-version.outputs.COMMIT_ID }}
           VERSION: ${{ steps.get-version.outputs.VERSION }}
 
+      - name: Build alpine image
+        id: alpine
+        uses: ./.github/actions/build/alpine
+        with:
+          DOCKER_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKER_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+          IMAGE_NAME: ${{ env.IMAGE_NAME }}:alpine
+          LOAD: load
+          PACKAGE: aaaa
+          PLATFORMS: linux/${{ env.ARCH }}
+          PUSH: false
+
       - name: Build package
         id: build-package
         uses: ./.github/actions/build/package

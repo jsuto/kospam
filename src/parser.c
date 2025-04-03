@@ -54,6 +54,8 @@ struct __state parse_message(struct session_data *sdata, int take_into_pieces, s
 
          if(skipped_header == 1){
 
+            // FIXME: get the legacy clapf id from the X-Clapf-spamicity: header
+
             if(strncmp(buf, "Received: ", 10) == 0){
                trim_buffer(buf);
                p = strchr(buf, ' ');

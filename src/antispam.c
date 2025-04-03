@@ -44,7 +44,9 @@ int check_spam(struct session_data *sdata, struct __state *state, struct __data 
 
    sdata->spaminess = DEFAULT_SPAMICITY;
 
-   snprintf(sdata->spaminessbuf, MAXBUFSIZE-1, "%s%s\r\n", cfg->clapf_header_field, sdata->ttmpfile);
+   int spaminessbuf_size_left = sizeof(sdata->spaminessbuf)-2;
+   snprintf(sdata->spaminessbuf, spaminessbuf_size_left, "%s%s\r\n", cfg->clapf_header_field, sdata->ttmpfile);
+   spaminessbuf_size_left -= strlen(sdata->spaminessbuf);
 
    /*
     * do training
@@ -234,7 +236,8 @@ int check_spam(struct session_data *sdata, struct __state *state, struct __data 
          }
 
          snprintf(tmpbuf, sizeof(tmpbuf)-1, "%sTUM\r\n", cfg->clapf_header_field);
-         strncat(sdata->spaminessbuf, tmpbuf, MAXBUFSIZE-1);
+         strncat(sdata->spaminessbuf, tmpbuf, spaminessbuf_size_left);
+         spaminessbuf_size_left -= strlen(tmpbuf);
 
          gettimeofday(&tv1, &tz);
          train_message(sdata, state, s, my_cfg);
@@ -249,7 +252,8 @@ int check_spam(struct session_data *sdata, struct __state *state, struct __data 
       if(sdata->blackhole == 1 && sdata->spaminess < 0.99){
 
          snprintf(tmpbuf, sizeof(tmpbuf)-1, "%sTUM on minefield\r\n", cfg->clapf_header_field);
-         strncat(sdata->spaminessbuf, tmpbuf, MAXBUFSIZE-1);
+         strncat(sdata->spaminessbuf, tmpbuf, spaminessbuf_size_left);
+         spaminessbuf_size_left -= strlen(tmpbuf);
 
          gettimeofday(&tv1, &tz);
          train_message(sdata, state, "nspam", my_cfg);
@@ -260,8 +264,13 @@ int check_spam(struct session_data *sdata, struct __state *state, struct __data 
       }
 
       snprintf(tmpbuf, SMALLBUFSIZE-1, "%s%.4f\r\n", cfg->clapf_header_field, sdata->spaminess);
-      strncat(sdata->spaminessbuf, tmpbuf, MAXBUFSIZE-1);
+      strncat(sdata->spaminessbuf, tmpbuf, spaminessbuf_size_left);
+      spaminessbuf_size_left -= strlen(tmpbuf);
 
+      if(sdata->spaminess >= cfg->spam_overall_limit) {
+         strncat(sdata->spaminessbuf, cfg->clapf_spam_header_field, spaminessbuf_size_left);
+         spaminessbuf_size_left -= strlen(cfg->clapf_spam_header_field);
+      }
    }
    else {
       syslog(LOG_PRIORITY, "%s: skipping spam check, size: %d/%d, tokens: %d/%d", sdata->ttmpfile, sdata->tot_len, my_cfg->max_message_size_to_filter, state->n_token, my_cfg->max_number_of_tokens_to_filter);

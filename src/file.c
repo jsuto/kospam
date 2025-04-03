@@ -6,7 +6,7 @@
 char* read_file(const char* filename, size_t* size_out) {
     FILE *file = fopen(filename, "rb");
     if (!file) {
-        perror("Failed to open file");
+        syslog(LOG_PRIORITY, "ERROR: failed to open %s", filename);
         return NULL;
     }
 
@@ -19,7 +19,7 @@ char* read_file(const char* filename, size_t* size_out) {
     char *buffer = (char *)malloc(file_size + 1);
     if (!buffer) {
         fclose(file);
-        perror("Memory allocation failed");
+        syslog(LOG_PRIORITY, "ERROR: memory allocation failed");
         return NULL;
     }
 
@@ -28,7 +28,7 @@ char* read_file(const char* filename, size_t* size_out) {
 
     if (bytes_read != file_size) {
         free(buffer);
-        fprintf(stderr, "Read error: expected %zu bytes, got %zu bytes\n", file_size, bytes_read);
+        syslog(LOG_PRIORITY, "ERROR: read error: expected %zu bytes, got %zu bytes", file_size, bytes_read);
         return NULL;
     }
 
@@ -42,14 +42,14 @@ char* read_file(const char* filename, size_t* size_out) {
 int write_buffers_to_file(const char* filename, const char* buffer1, size_t size1, const char* buffer2, size_t size2) {
     FILE *file = fopen(filename, "wb");
     if (!file) {
-        perror("Failed to open file for writing");
+        syslog(LOG_PRIORITY, "ERROR: failed to open %s for writing", filename);
         return -1;
     }
 
     // Write first buffer
     size_t written1 = fwrite(buffer1, 1, size1, file);
     if (written1 != size1) {
-        perror("Failed to write first buffer");
+        syslog(LOG_PRIORITY, "ERROR: failed to write first buffer to %s", filename);
         fclose(file);
         return -1;
     }
@@ -57,14 +57,14 @@ int write_buffers_to_file(const char* filename, const char* buffer1, size_t size
     // Write second buffer
     size_t written2 = fwrite(buffer2, 1, size2, file);
     if (written2 != size2) {
-        perror("Failed to write second buffer");
+        syslog(LOG_PRIORITY, "ERROR: failed to write second buffer to %s", filename);
         fclose(file);
         return -1;
     }
 
     // Close file and check for errors
     if (fclose(file) != 0) {
-        perror("Error when closing file");
+        syslog(LOG_PRIORITY, "ERROR: closing file %s", filename);
         return -1;
     }
 
@@ -78,15 +78,17 @@ int fix_message_file(const char *filename, struct session_data *sdata, struct __
 
     if (!buffer) return 1;
 
+    size_t body_size = 0;
+
     char *headers_end = strstr(buffer, "\r\n\r\n");
     if (!headers_end) {
        headers_end = strstr(buffer, "\n\n");
     }
 
-    size_t body_size = size_out - (headers_end - buffer);
-
-    *headers_end = '\0';
-
+    if (headers_end) {
+       body_size = size_out - (headers_end - buffer);
+       *headers_end = '\0';
+    }
 
     char *q = buffer;
 
@@ -95,13 +97,12 @@ int fix_message_file(const char *filename, struct session_data *sdata, struct __
     memset(headerbuf, 0, sizeof(headerbuf));
     int headerbuf_pos = 0;
 
-    // Prepend our internal ID
-    snprintf(headerbuf, sizeof(headerbuf)-1, "Received: %s\r\n", sdata->ttmpfile);
-    headerbuf_pos += strlen(headerbuf);
-
     int spaminess_header_len = strlen(cfg->clapf_header_field);
 
+    int i = 0;
+
     while (q) {
+       i++;
        int result;
        char v[SMALLBUFSIZE];
        q = split(q, '\n', v, sizeof(v), &result);

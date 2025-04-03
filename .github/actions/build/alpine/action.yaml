@@ -22,6 +22,12 @@ runs:
   using: 'composite'
 
   steps:
+    - name: Download package
+      uses: actions/download-artifact@v4
+      with:
+        path: docker
+        merge-multiple: true
+
     - name: Alpine image
       id: alpine
       run: |

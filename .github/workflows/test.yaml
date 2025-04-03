@@ -69,10 +69,9 @@ jobs:
           DOCKER_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
           DOCKER_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
           IMAGE_NAME: ${{ env.IMAGE_NAME }}:alpine
-          LOAD: load
-          PACKAGE: aaaa
+          LOAD: false
           PLATFORMS: linux/${{ env.ARCH }}
-          PUSH: false
+          PUSH: true
 
       - name: Build package
         id: build-package

@@ -20,8 +20,6 @@ RUN apk update && \
     mkdir -p /var/kospam/tmp /var/kospam/send /var/kospam/send-error && \
     chown kospam:kospam /var/kospam/tmp /var/kospam/send /var/kospam/send-error
 
-COPY docker/a.sh /start.sh
-
 COPY --chown=root:root --from=build /usr/local/lib/libtre.so.5 /usr/local/lib/libtre.so.5
 COPY --chown=root:root --from=build /usr/lib/libkospam.so.0.1.1 /usr/lib/libkospam.so
 COPY --chown=root:root --from=build /usr/sbin/kospam /usr/sbin
@@ -30,6 +28,8 @@ COPY --chown=root:root --from=build /usr/bin/spamdrop /usr/bin
 COPY --chown=root:root --from=build /etc/kospam/kospam.conf.dist /etc/kospam/
 COPY --chown=root:root --from=build /etc/kospam/zombienets.regex.dist /etc/kospam/
 COPY --chown=root:root --from=build /usr/share/kospam/db-mysql.sql /usr/share/kospam/db-mysql.sql
+
+COPY build/start.sh /start.sh
 
 EXPOSE 25 10025
 

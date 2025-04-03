@@ -10,8 +10,6 @@ inputs:
   LOAD:
     required: false
     default: true
-  PACKAGE:
-    required: true
   PLATFORMS:
     required: true
   PUSH:
@@ -37,10 +35,13 @@ runs:
         path: .
         merge-multiple: true
 
-    - name: Alpine image
-      id: alpine
-      run: |
-         docker buildx build --target prod -t sutoj/kospam:alpine . --load -f build/Dockerfile
-         docker images
-         docker push sutoj/kospam:alpine
-      shell: bash
+    - name: Build image from package
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: build/Dockerfile
+        push: ${{ inputs.PUSH }}
+        load: ${{ inputs.LOAD }}
+        tags: ${{ inputs.IMAGE_NAME }}
+        platforms: ${{ inputs.PLATFORMS }}
+        target: prod

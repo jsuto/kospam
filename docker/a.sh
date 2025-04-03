@@ -38,7 +38,7 @@ wait_until_mariadb_server_is_ready() {
 
    if [ $has_token_table -eq 0 ]; then
       log "no token table, creating tables"
-      mariadb -uroot -h"$MYSQL_HOSTNAME" -p"$MYSQL_ROOT_PASSWORD" "$MYSQL_DATABASE" < /usr/share/kospam/db-mariadb.sql
+      mariadb -uroot -h"$MYSQL_HOSTNAME" -p"$MYSQL_ROOT_PASSWORD" "$MYSQL_DATABASE" < /usr/share/kospam/db-mysql.sql
    else
       log "token table exists"
    fi

@@ -49,4 +49,8 @@ int train_message(struct session_data *sdata, struct __state *state, char *colum
 
 void update_counters(struct session_data *sdata, struct __counters *counters);
 
+
+char *split(char *str, int ch, char *buf, int buflen, int *result);
+int fix_message_file(const char *filename, struct session_data *sdata, struct __config *cfg);
+
 #endif /* _KOSPAM_H */

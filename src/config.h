@@ -9,8 +9,6 @@
 #include "kospam-config.h"
 #include "params.h"
 
-#define PROGNAME "kospam"
-
 #define HOSTNAME "kospam.localhost"
 
 #define CONFIG_FILE CONFDIR "/kospam/kospam.conf"

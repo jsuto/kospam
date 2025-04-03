@@ -276,6 +276,7 @@ int check_spam(struct session_data *sdata, struct __state *state, struct __data 
       if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: updated %d/%d tokens", sdata->ttmpfile, utokens, state->n_token);
    }
 
+   trim_buffer(sdata->spaminessbuf);
 
    return OK;
 }

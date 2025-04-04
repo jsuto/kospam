@@ -1,0 +1,3 @@
+Create a certificate
+
+./makecert.sh aaa.pem "/C=US/ST=Denial/L=Springfield/O=Dis/CN=mail.kospam"

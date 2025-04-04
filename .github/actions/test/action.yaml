@@ -1,0 +1,21 @@
+name: 'Run tests against the built docker image'
+
+inputs:
+  TESTCASE:
+    required: false
+    default: case3
+  TEST_TAG:
+    required: true
+
+runs:
+  using: 'composite'
+
+  steps:
+
+    - name: Run tests
+      run: |
+        ./tests/run.sh
+      shell: bash
+      env:
+        TESTCASE: ${{ inputs.TESTCASE }}
+        VERSION: ${{ inputs.TEST_TAG }}

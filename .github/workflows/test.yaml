@@ -94,3 +94,34 @@ jobs:
           PACKAGE: ${{ env.PROJECT_ID }}_${{ steps.get-version.outputs.VERSION }}-${{ env.DISTRO }}-${{ steps.get-version.outputs.COMMIT_ID }}
           PLATFORMS: linux/${{ env.ARCH }}
           PUSH: true
+
+  run-tests:
+    runs-on:
+      - ubuntu-latest
+
+    needs:
+      - build
+
+    strategy:
+      matrix:
+        testcase: ['case1']
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            tests
+            .github
+          sparse-checkout-cone-mode: false
+
+      - name: Download package
+        uses: actions/download-artifact@v4
+        with:
+          path: tests
+          merge-multiple: true
+
+      - name: Run tests
+        uses: ./.github/actions/test
+        with:
+          TESTCASE: ${{ matrix.testcase }}
+          TEST_TAG: ${{ env.TEST_TAG }}

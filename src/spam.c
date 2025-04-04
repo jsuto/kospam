@@ -138,7 +138,7 @@ float run_statistical_check(struct session_data *sdata, struct __state *state, s
 
    if(sdata->training_request == 0){
 
-      snprintf(buf, sizeof(buf)-1, "SELECT nham, nspam FROM %s WHERE token=%llu", SQL_TOKEN_TABLE, xxh3_64(state->from, strlen(state->from)));
+      snprintf(buf, sizeof(buf)-1, "SELECT nham, nspam FROM %s WHERE token=%llu", SQL_TOKEN_TABLE, xxh3_64(state->from));
 
       te = get_ham_spam_counters(sdata, buf);
       ham_from = te.nham;

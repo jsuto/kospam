@@ -40,7 +40,7 @@ void add_penalties(struct session_data *sdata, struct __state *state, struct __c
 
 int check_rbl_lists(struct __state *state, char *domainlist);
 
-uint64 xxh3_64(const void *data, size_t len);
+uint64 xxh3_64(const void *data);
 
 int get_tokens(struct __state *state, char type, struct __config *cfg);
 int update_token_dates(struct __state *state, struct __config *cfg);

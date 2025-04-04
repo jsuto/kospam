@@ -6,7 +6,9 @@
 #define XXH3_PRIME64_2 0xC2B2AE3D27D4EB4FULL
 #define XXH3_PRIME64_3 0x165667B19E3779F9ULL
 
-uint64 xxh3_64(const void *data, size_t len) {
+uint64 xxh3_64(const void *data) {
+    size_t len = strlen(data);
+
     const uint8_t *p = (const uint8_t *)data;
     uint64 hash = XXH3_PRIME64_1 + len * XXH3_PRIME64_2;
     size_t i;

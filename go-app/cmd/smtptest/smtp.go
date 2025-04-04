@@ -17,7 +17,7 @@ const (
 )
 
 var from = "sender@example.com"
-var to = []string{"recipient@example.com", "bubu@example.com"}
+var to = []string{"recipient@example.com"}
 
 func main() {
     if len(os.Args) < 2 {

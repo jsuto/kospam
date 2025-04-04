@@ -41,6 +41,7 @@ runs:
       uses: docker/build-push-action@v5
       with:
         context: docker
+        file: docker/Dockerfile.ubuntu
         push: ${{ inputs.PUSH }}
         load: ${{ inputs.LOAD }}
         tags: ${{ inputs.IMAGE_NAME }}

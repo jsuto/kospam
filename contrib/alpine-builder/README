@@ -1,0 +1,8 @@
+Alpine doesn't ship the tre library, we need to build it:
+
+curl -L -o tre-0.9.0.tar.gz https://github.com/laurikari/tre/releases/download/v0.9.0/tre-0.9.0.tar.gz
+tar zxvf tre-0.9.0.tar.gz
+cd tre-0.9.0/
+./configure
+make clean all
+make install

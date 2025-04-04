@@ -29,7 +29,7 @@ COPY --chown=root:root --from=build /etc/kospam/kospam.conf.dist /etc/kospam/
 COPY --chown=root:root --from=build /etc/kospam/zombienets.regex.dist /etc/kospam/
 COPY --chown=root:root --from=build /usr/share/kospam/db-mysql.sql /usr/share/kospam/db-mysql.sql
 
-COPY build/start.sh /start.sh
+COPY docker/start-alpine.sh /start.sh
 
 EXPOSE 25 10025
 

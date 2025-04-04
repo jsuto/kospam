@@ -28,6 +28,6 @@ VOLUME ["/var/kospam"]
 
 EXPOSE 10025 80 443
 
-COPY start.sh /
+COPY start-ubuntu.sh /start.sh
 
 CMD ["/start.sh"]

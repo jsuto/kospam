@@ -11,5 +11,4 @@ TAG="${a//kospam_}"
 
 IMAGE_NAME="sutoj/kospam:${TAG}"
 
-docker buildx build --load --build-arg PACKAGE="${1%_*}" -t "$IMAGE_NAME" .
-#rm -f "$1"
+docker buildx build --load --build-arg PACKAGE="${1%_*}" -t "$IMAGE_NAME" . -f Dockerfile.ubuntu

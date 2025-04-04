@@ -6,7 +6,7 @@ RUN apk update && \
     addgroup -g 1000 kospam && \
     adduser -h /var/kospam -G kospam -u 1000 -D kospam
 
-ADD tre-0.9.0.tar.gz /
+ADD tre-0.9.0-alpine-bin.tar.gz /
 COPY run.sh /run.sh
 
 CMD ["/run.sh"]

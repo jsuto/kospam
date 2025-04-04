@@ -63,7 +63,7 @@ int get_tokens(struct __state *state, char type, struct __config *cfg){
 
            if( type == -1 || (type == 1 && q->type == 1) || (type == 0 && q->type == 0) ){
               n++;
-              snprintf(s, sizeof(s)-1, ",(%llu)", xxh3_64(q->str, strlen(q->str)));
+              snprintf(s, sizeof(s)-1, ",(%llu)", xxh3_64(q->str));
 
               buffer_cat(query, s);
            }

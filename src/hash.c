@@ -96,7 +96,7 @@ struct node *makenewnode(char *s, double spaminess, double deviation){
 
    snprintf(h->str, len+1, "%s", s);
 
-   h->key = xxh3_64(s, strlen(s));
+   h->key = xxh3_64(s);
    h->spaminess = spaminess;
    h->deviation = deviation;
    h->nham = 0;
@@ -117,7 +117,7 @@ int addnode(struct node *xhash[], char *s, double spaminess, double deviation){
 
    if(s == NULL) return 0;
 
-   key = xxh3_64(s, strlen(s));
+   key = xxh3_64(s);
 
    if(xhash[hash(key)] == NULL){
       xhash[hash(key)] = makenewnode(s, spaminess, deviation);
@@ -146,7 +146,7 @@ struct node *findnode(struct node *xhash[], char *s){
 
    if(s == NULL) return NULL;
 
-   key = xxh3_64(s, strlen(s));
+   key = xxh3_64(s);
 
    q = xhash[hash(key)];
 
@@ -209,5 +209,3 @@ int updatenode(struct node *xhash[], uint64 key, float nham, float nspam, float 
 
    return 0;
 }
-
-

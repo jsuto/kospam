@@ -32,7 +32,7 @@ MAKE = `which make`
 
 INSTALL = @INSTALL@
 
-all: libkospam.a kospam kospamconf spamdrop splitmbox cpartition
+all: libkospam.a kospam kospamconf spamdrop splitmbox cpartition tests
 install: install-kospam
 
 
@@ -59,6 +59,9 @@ splitmbox: splitmbox.c libkospam.a
 cpartition: cpartition.c libkospam.a
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $< -lkospam $(LIBS) $(LIBDIR) @LDFLAGS@
 
+tests: tests.c libkospam.a
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $< -lkospam $(LIBS) $(LIBDIR) @LDFLAGS@
+
 %.o: $(srcdir)/%.c
 	$(CC) $(CFLAGS) -fPIC $(INCDIR) $(DEFS) -c $< -o $@
 
@@ -75,9 +78,11 @@ install-kospam:
 	$(INSTALL) -m 0755 splitmbox $(DESTDIR)$(bindir)
 	$(INSTALL) -m 0755 cpartition $(DESTDIR)$(bindir)
 
+test:
+	@LD_LIBRARY_PATH=. ./tests
+
 clean:
 	rm -f *.o *.a libkospam.so* kospam kospamconf spamdrop splitmbox cpartition
 
 distclean: clean
 	rm -f Makefile
-

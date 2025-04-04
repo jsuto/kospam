@@ -46,11 +46,6 @@ jobs:
         with:
           filters: |
             build_image:
-              - 'build/**'
-              - 'docker/**'
-              - 'etc/**'
-              - 'go-app/**'
-              - 'src/**'
               - 'util/**'
               - 'webui/**'
 
@@ -63,7 +58,7 @@ jobs:
           VERSION: ${{ steps.get-version.outputs.VERSION }}
 
       - name: Build alpine image
-        id: alpine
+        id: alpine-image
         uses: ./.github/actions/build/alpine
         with:
           DOCKER_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -73,7 +68,8 @@ jobs:
           PLATFORMS: linux/${{ env.ARCH }}
           PUSH: true
 
-      - name: Build package
+      - if: steps.filter.outputs.build_image == 'true'
+        name: Build package
         id: build-package
         uses: ./.github/actions/build/package
         with:
@@ -84,7 +80,9 @@ jobs:
           PROJECT_ID: ${{ env.PROJECT_ID }}
           VERSION: ${{ steps.get-version.outputs.VERSION }}
 
-      - name: Build image
+      - if: steps.filter.outputs.build_image == 'true'
+        name: Build image
+        id: ubuntu-image
         uses: ./.github/actions/build/image
         with:
           DOCKER_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -94,3 +92,37 @@ jobs:
           PACKAGE: ${{ env.PROJECT_ID }}_${{ steps.get-version.outputs.VERSION }}-${{ env.DISTRO }}-${{ steps.get-version.outputs.COMMIT_ID }}
           PLATFORMS: linux/${{ env.ARCH }}
           PUSH: true
+
+  run-tests:
+    runs-on:
+      - ubuntu-latest
+
+    needs:
+      - build
+
+    strategy:
+      matrix:
+        testcase: ['case1']
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            tests
+            .github
+          sparse-checkout-cone-mode: false
+
+      - name: Download package
+        uses: actions/download-artifact@v4
+        with:
+          path: tests
+          merge-multiple: true
+
+      - name: Run tests
+        uses: ./.github/actions/test
+        with:
+          MINIO_URL: ${{ secrets.MINIO_URL }}
+          MINIO_USER: ${{ secrets.MINIO_USER }}
+          MINIO_PASSWORD: ${{ secrets.MINIO_PASSWORD }}
+          TESTCASE: ${{ matrix.testcase }}
+          TEST_TAG: ${{ env.TEST_TAG }}

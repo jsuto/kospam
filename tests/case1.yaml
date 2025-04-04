@@ -1,0 +1,77 @@
+x-networks: &networks
+  networks:
+    - kospam
+
+services:
+  mysql:
+    image: mariadb:11.6.2
+    container_name: mysql
+    restart: unless-stopped
+    <<: *networks
+    cap_drop:
+      - ALL
+    cap_add:
+      - dac_override
+      - setuid
+      - setgid
+    environment:
+      - MYSQL_DATABASE=aaaaa
+      - MYSQL_USER=kospam
+      - MYSQL_PASSWORD=kospam123
+      - MYSQL_ROOT_PASSWORD=abcde123
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --plugin-load=file_key_management
+    volumes:
+      - db_data:/var/lib/mysql
+
+  postfix:
+    image: sutoj/postfix:kospam
+    container_name: mail.aaa.fu
+    init: true
+    <<: *networks
+    volumes:
+      - ./server.pem:/etc/postfix/server.pem
+
+  syslog:
+    image: sutoj/syslog
+    container_name: syslog.host
+    <<: *networks
+    volumes:
+      - syslog:/var/log
+
+  kospam:
+    image: sutoj/kospam:alpine
+    container_name: kospam
+    init: true
+    <<: *networks
+    environment:
+      - MYSQL_HOSTNAME=mysql
+      - MYSQL_DATABASE=kospam
+      - MYSQL_USER=kospam
+      - MYSQL_PASSWORD=kospam123
+      - MYSQL_ROOT_PASSWORD=abcde123
+      - MYSQL_DUMP=/kospam.sql.gz
+    volumes:
+      - ./11-aaaa.conf:/etc/rsyslog.d/11-aaaa.conf:ro
+      - ./kospam.conf:/etc/kospam/kospam.conf
+      - ./server.pem:/etc/kospam/kospam.pem
+      - ./kospam.sql.gz:/kospam.sql.gz
+    healthcheck:
+      test: curl -s --request NOOP smtp://localhost:10025/
+      interval: "10s"
+      timeout: "3s"
+      start_period: "15s"
+      retries: 3
+    ports:
+      - "10025:10025"
+    depends_on:
+      - "mysql"
+      - "postfix"
+      - "syslog"
+
+volumes:
+  db_data: {}
+  syslog: {}
+
+networks:
+  kospam:
+    name: kospam

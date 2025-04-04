@@ -35,11 +35,11 @@ runs:
         path: .
         merge-multiple: true
 
-    - name: Build image from package
+    - name: Build image using a multi-stage build
       uses: docker/build-push-action@v5
       with:
         context: .
-        file: build/Dockerfile
+        file: docker/Dockerfile.alpine
         push: ${{ inputs.PUSH }}
         load: ${{ inputs.LOAD }}
         tags: ${{ inputs.IMAGE_NAME }}

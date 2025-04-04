@@ -16,12 +16,13 @@ log() {
 
 
 wait_until_mariadb_server_is_ready() {
+   while true; do if echo "show databases" | mariadb -uroot -h"$MYSQL_HOSTNAME" -p"$MYSQL_ROOT_PASSWORD" ; then break; fi; log "${MYSQL_HOSTNAME} is not ready"; sleep 3; done
+    log "${MYSQL_HOSTNAME} is ready"
+}
+
+check_database() {
    has_kospam_db=0
    has_token_table=0
-
-   while true; do if echo "show databases" | mariadb -uroot -h"$MYSQL_HOSTNAME" -p"$MYSQL_ROOT_PASSWORD" ; then break; fi; log "${MYSQL_HOSTNAME} is not ready"; sleep 3; done
-
-   log "${MYSQL_HOSTNAME} is ready"
 
    for i in $(echo "show databases" | mariadb -uroot -h"$MYSQL_HOSTNAME" -p"$MYSQL_ROOT_PASSWORD" "$MYSQL_DATABASE" ); do
       if [ "$i" = "$MYSQL_DATABASE" ]; then has_kospam_db=1; fi
@@ -47,9 +48,10 @@ wait_until_mariadb_server_is_ready() {
 rsyslogd
 
 wait_until_mariadb_server_is_ready
+check_database
 
-if [ -f /kospam.sql.gz ]; then
-   gzip -dc /kospam.sql.gz | mariadb -u root -h"$MYSQL_HOSTNAME" -p"$MYSQL_ROOT_PASSWORD" "$MYSQL_DATABASE"
+if [ -n "${MYSQL_DUMP+x}" ]; then
+   gzip -dc "$MYSQL_DUMP" | mariadb -u "$MYSQL_USER" -h "$MYSQL_HOSTNAME" -p "$MYSQL_ROOT_PASSWORD" "$MYSQL_DATABASE"
 fi
 
 /usr/sbin/kospam -d

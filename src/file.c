@@ -54,12 +54,14 @@ int write_buffers_to_file(const char* filename, const char* buffer1, size_t size
         return -1;
     }
 
-    // Write second buffer
-    size_t written2 = fwrite(buffer2, 1, size2, file);
-    if (written2 != size2) {
-        syslog(LOG_PRIORITY, "ERROR: failed to write second buffer to %s", filename);
-        fclose(file);
-        return -1;
+    if (buffer2) {
+        // Write second buffer, the body
+        size_t written2 = fwrite(buffer2, 1, size2, file);
+        if (written2 != size2) {
+            syslog(LOG_PRIORITY, "ERROR: failed to write second buffer to %s", filename);
+            fclose(file);
+            return -1;
+        }
     }
 
     // Close file and check for errors
@@ -146,7 +148,8 @@ int fix_message_file(const char *filename, struct session_data *sdata, struct __
     memcpy(headerbuf+headerbuf_pos, sdata->spaminessbuf, len);
     headerbuf_pos += len;
 
-    *headers_end = '\n';
+    // Beware of header only messages
+    if (headers_end) *headers_end = '\n';
 
     // Write to temp file
     char tmp[SMALLBUFSIZE];

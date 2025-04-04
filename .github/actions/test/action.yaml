@@ -1,6 +1,12 @@
 name: 'Run tests against the built docker image'
 
 inputs:
+  MINIO_PASSWORD:
+    required: true
+  MINIO_URL:
+    required: true
+  MINIO_USER:
+    required: true
   TESTCASE:
     required: false
     default: case3
@@ -17,5 +23,8 @@ runs:
         ./tests/run.sh
       shell: bash
       env:
+        MINIO_URL: ${{ inputs.MINIO_URL }}
+        MINIO_USER: ${{ inputs.MINIO_USER }}
+        MINIO_PASSWORD: ${{ inputs.MINIO_PASSWORD }}
         TESTCASE: ${{ inputs.TESTCASE }}
         VERSION: ${{ inputs.TEST_TAG }}

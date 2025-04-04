@@ -123,5 +123,8 @@ jobs:
       - name: Run tests
         uses: ./.github/actions/test
         with:
+          MINIO_URL: ${{ secrets.MINIO_URL }}
+          MINIO_USER: ${{ secrets.MINIO_USER }}
+          MINIO_PASSWORD: ${{ secrets.MINIO_PASSWORD }}
           TESTCASE: ${{ matrix.testcase }}
           TEST_TAG: ${{ env.TEST_TAG }}

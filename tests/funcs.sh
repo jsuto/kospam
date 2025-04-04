@@ -80,6 +80,8 @@ prepare() {
    fi
 
    create_pem_file "$PEMFILE" "/C=US/ST=Denial/L=Springfield/O=Dis/CN=mail.kospam"
+
+   "$MC_COMMAND" cp ibm/piler-ci/kospam.sql.gz .
 }
 
 start_containers() {

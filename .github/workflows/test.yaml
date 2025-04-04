@@ -68,7 +68,8 @@ jobs:
           PLATFORMS: linux/${{ env.ARCH }}
           PUSH: true
 
-      - name: Build package
+      - if: steps.filter.outputs.build_image == 'true'
+        name: Build package
         id: build-package
         uses: ./.github/actions/build/package
         with:
@@ -79,8 +80,8 @@ jobs:
           PROJECT_ID: ${{ env.PROJECT_ID }}
           VERSION: ${{ steps.get-version.outputs.VERSION }}
 
-      - name: Build image
-        if: steps.filter.outputs.build_image == 'true'
+      - if: steps.filter.outputs.build_image == 'true'
+        name: Build image
         id: ubuntu-image
         uses: ./.github/actions/build/image
         with:

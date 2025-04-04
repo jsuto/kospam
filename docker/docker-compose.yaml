@@ -23,13 +23,6 @@ services:
     volumes:
       - db_data:/var/lib/mysql
 
-  smarthost:
-    image: sutoj/smtp-sink
-    container_name: smarthost.aaa.fu
-    init: true
-    <<: *networks
-    command: smtp-sink -h smarthost.aaa.fu -u nobody :25 10
-
   postfix:
     image: sutoj/postfix:kospam
     container_name: mail.aaa.fu
@@ -50,6 +43,7 @@ services:
       - MYSQL_USER=kospam
       - MYSQL_PASSWORD=kospam123
       - MYSQL_ROOT_PASSWORD=abcde123
+      - MYSQL_DUMP=/kospam.sql.gz
     volumes:
       - ./kospam.conf:/etc/kospam/kospam.conf
       - ./server.pem:/etc/kospam/kospam.pem

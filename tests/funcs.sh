@@ -8,7 +8,7 @@ VERDICT=0
 PEMFILE="${SCRIPT_DIR}/server.pem"
 LOGFILE="mail.log"
 EML_DIR="${SCRIPT_DIR}/eml"
-##SYSLOG_HOST="syslog.host"
+SYSLOG_HOST="syslog.host"
 
 error() {
    echo "$@"
@@ -87,8 +87,6 @@ start_containers() {
    local container="$2"
    local i
 
-   if [[ -v BUILD_NUMBER ]]; then setup_compose_files; fi
-
    docker compose -f "$compose_file" up -d
    i=0
    while [[ "$(docker inspect -f '{{.State.Health.Status}}' "$container")" != "healthy" ]]; do
@@ -107,5 +105,5 @@ start_containers() {
 
 print_errors() {
    echo "Getting errors from mail.log"
-   docker exec syslog.host grep -ri ERROR /var/log/mail.log || true
+   docker exec "$SYSLOG_HOST" grep -ri ERROR /var/log/mail.log || true
 }

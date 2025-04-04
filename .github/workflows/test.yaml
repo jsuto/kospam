@@ -46,11 +46,6 @@ jobs:
         with:
           filters: |
             build_image:
-              - 'build/**'
-              - 'docker/**'
-              - 'etc/**'
-              - 'go-app/**'
-              - 'src/**'
               - 'util/**'
               - 'webui/**'
 
@@ -63,7 +58,7 @@ jobs:
           VERSION: ${{ steps.get-version.outputs.VERSION }}
 
       - name: Build alpine image
-        id: alpine
+        id: alpine-image
         uses: ./.github/actions/build/alpine
         with:
           DOCKER_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -85,6 +80,8 @@ jobs:
           VERSION: ${{ steps.get-version.outputs.VERSION }}
 
       - name: Build image
+        if: steps.filter.outputs.build_image == 'true'
+        id: ubuntu-image
         uses: ./.github/actions/build/image
         with:
           DOCKER_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}

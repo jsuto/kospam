@@ -8,7 +8,10 @@ VERDICT=0
 PEMFILE="${SCRIPT_DIR}/server.pem"
 LOGFILE="mail.log"
 EML_DIR="${SCRIPT_DIR}/eml"
+# shellcheck disable=SC2034
+MAIL_HOST="mail.aaa.fu"
 SYSLOG_HOST="syslog.host"
+SMTPTEST="${SCRIPT_DIR}/smtptest"
 
 error() {
    echo "$@"
@@ -48,7 +51,8 @@ wait_until_emails_are_processed() {
    loops=$(( num / 100 ))
 
    while true; do
-      processed="$( docker exec "$container" grep -c -E 'piler/store.*status=' "/var/log/${LOGFILE}" )"
+      processed="$( docker exec "$container" find /var/mail/example.com/bbb/new/ -type f|wc -l )"
+
       i=$(( i + 1 ))
       echo "processed ${processed} messages"
 
@@ -81,7 +85,13 @@ prepare() {
 
    create_pem_file "$PEMFILE" "/C=US/ST=Denial/L=Springfield/O=Dis/CN=mail.kospam"
 
+   chmod 644 "$PEMFILE"
+
    "$MC_COMMAND" cp ibm/piler-ci/kospam.sql.gz .
+
+   ls -la
+
+   chmod +x "$SMTPTEST"
 }
 
 start_containers() {

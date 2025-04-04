@@ -2,6 +2,7 @@ package main
 
 import (
     "crypto/tls"
+    "flag"
     "fmt"
     "io/ioutil"
     "log"
@@ -16,15 +17,23 @@ const (
     maxWorkers = 10
 )
 
-var from = "sender@example.com"
-var to = []string{"recipient@example.com"}
+var (
+    from = "sender@example.com"
+    to = []string{"recipient@example.com"}
+
+    dir = flag.String("dir", "", "dir where the eml files to be sent are")
+    smtpaddr = flag.String("smtpaddr", "127.0.0.1:10025", "smtp address in host:port format")
+    verbose = flag.Bool("verbose", false, "print more verbose stuff")
+)
 
 func main() {
-    if len(os.Args) < 2 {
-        log.Fatalf("Usage: %s <server:port> <directory>", os.Args[0])
+    flag.Parse()
+
+    if *dir == "" {
+        log.Fatalf("missing -dir")
     }
-    smtpServer := os.Args[1]
-    dir := os.Args[2]
+
+    smtpServer := *smtpaddr
 
     files := make(chan string, maxWorkers)
     var wg sync.WaitGroup
@@ -36,7 +45,10 @@ func main() {
         go func() {
             defer wg.Done()
             for path := range files {
-                log.Printf("Processing: %s", path)
+                if *verbose {
+                    log.Printf("Processing: %s", path)
+                }
+
                 if err := sendEmail(smtpServer, path); err != nil {
                     log.Printf("Failed to send %s: %v", path, err)
                 } else {
@@ -46,7 +58,7 @@ func main() {
         }()
     }
 
-    err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+    err := filepath.Walk(*dir, func(path string, info os.FileInfo, err error) error {
         if err != nil {
             return err
         }
@@ -58,7 +70,7 @@ func main() {
     close(files)
 
     if err != nil {
-        log.Fatalf("Error walking the path %s: %v", dir, err)
+        log.Fatalf("Error walking the path %s: %v", *dir, err)
     }
 
     wg.Wait()

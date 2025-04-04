@@ -48,5 +48,5 @@ runs:
           go-app/kospam-send
           go-app/kospam-smtpd
           go-app/smtptest
-        name: kospam-smtp-${{ inputs.ARCH }}
+        name: go-app-${{ inputs.ARCH }}
         overwrite: true

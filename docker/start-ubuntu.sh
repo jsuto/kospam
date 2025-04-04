@@ -55,7 +55,7 @@ wait_until_mysql_server_is_ready
 check_database
 
 if [[ -v MYSQL_DUMP ]]; then
-   gzip -dc "$MYSQL_DUMP" | mariadb -u "$MYSQL_USER" -h "$MYSQL_HOSTNAME" -p "$MYSQL_ROOT_PASSWORD" "$MYSQL_DATABASE"
+   gzip -dc "$MYSQL_DUMP" | mysql -u "$MYSQL_USER" -h "$MYSQL_HOSTNAME" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE"
 fi
 
 /usr/sbin/kospam -d

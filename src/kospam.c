@@ -210,9 +210,11 @@ void child_main(struct child *ptr){
 
       sig_unblock(SIGHUP);
 
+      syslog(LOG_PRIORITY, "child pid: %d, serial: %d, messages: %d, max: %d", getpid(),  ptr->serial, ptr->messages, cfg.max_requests_per_child);
+
       if(cfg.max_requests_per_child > 0 && ptr->messages >= cfg.max_requests_per_child){
          if(cfg.verbosity >= _LOG_DEBUG)
-            syslog(LOG_PRIORITY, "child (pid: %d, serial: %d) served enough: %d", getpid(), ptr->messages, ptr->serial);
+            syslog(LOG_PRIORITY, "child (pid: %d, serial: %d) served enough: %d", getpid(), ptr->serial, ptr->messages);
          break;
       }
 

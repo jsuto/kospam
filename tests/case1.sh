@@ -14,4 +14,6 @@ wait_until_emails_are_processed "$MAIL_HOST" 3021
 
 docker exec kospam find /var/kospam
 
+echo "select * from history limit 10" | docker exec "$CONTAINER" sh -c 'mariadb -h "$MYSQL_HOSTNAME" -u "$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE"'
+
 print_errors

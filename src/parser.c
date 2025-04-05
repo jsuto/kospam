@@ -314,6 +314,44 @@ int parse_line(char *buf, struct __state *state, struct session_data *sdata, int
       else if(state->line_num == 1 && strncasecmp(buf, "Kospam-Envelope-From: ", strlen("Kospam-Envelope-From: ")) == 0) {
          snprintf(sdata->fromemail, sizeof(sdata->fromemail)-1, "%s", buf+strlen("Kospam-Envelope-From: "));
          trim_buffer(sdata->fromemail);
+      } else if(state->line_num == 2 && strncasecmp(buf, "Kospam-Envelope-Recipient: ", strlen("Kospam-Envelope-Recipient: ")) == 0) {
+         char *p = buf + strlen("Kospam-Envelope-Recipient: ");
+
+         int i = 0;
+         while (p) {
+            int result;
+            if (i < MAX_RCPT_TO) {
+               p = split(p, ',', sdata->rcptto[i], SMALLBUFSIZE-1, &result);
+               sdata->num_of_rcpt_to++;
+            } else {
+               break;
+            }
+
+            i++;
+         }
+      } else if(state->line_num == 3 && strncasecmp(buf, "Kospam-Xforward: ", strlen("Kospam-Xforward: ")) == 0) {
+         char *p = buf + strlen("Kospam-Xforward: ");
+
+         // Data is expected in this order
+         // NAME=smtp.example.com ADDR=1.2.3.4 PROTO=ESMTP HELO=smtp.example.com
+
+         int i = 0;
+         while (p) {
+            int result;
+            char v[SMALLBUFSIZE];
+            p = split(p, ',', v, sizeof(v)-1, &result);
+
+            if(strlen(v) > 5) sdata->ipcnt++;
+
+            if (i == 0) {
+               snprintf(sdata->hostname, sizeof(sdata->hostname)-1, "%s", v);
+            }
+            if (i == 1) {
+               snprintf(sdata->ip, sizeof(sdata->ip)-1, "%s", v);
+            }
+
+            i++;
+         }
       }
 
       if(state->message_state == MSG_MESSAGE_ID && state->message_id[0] == 0){

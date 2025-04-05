@@ -71,6 +71,7 @@ struct _parse_rule config_parse_rules[] =
    { "debug", "integer", (void*) int_parser, offsetof(struct __config, debug), "0", sizeof(int)},
    { "default_retention_days", "integer", (void*) int_parser, offsetof(struct __config, default_retention_days), "2557", sizeof(int)},
    { "enable_cjk", "integer", (void*) int_parser, offsetof(struct __config, enable_cjk), "0", sizeof(int)},
+   { "enable_xforward", "string", (void*) string_parser, offsetof(struct __config, enable_xforward), "false", MAXVAL-1},
    { "esf_h", "float", (void*) float_parser, offsetof(struct __config, esf_h), "1.0", sizeof(float)},
    { "esf_s", "float", (void*) float_parser, offsetof(struct __config, esf_s), "1.0", sizeof(float)},
    { "exclusion_radius", "float", (void*) float_parser, offsetof(struct __config, exclusion_radius), "0.375", sizeof(float)},

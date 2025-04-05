@@ -8,7 +8,6 @@
 #include <misc.h>
 #include <parser.h>
 #include <errmsg.h>
-#include <smtpcodes.h>
 #include <decoder.h>
 #include <buffer.h>
 #include <hash.h>

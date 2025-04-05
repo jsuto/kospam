@@ -71,4 +71,6 @@ void manage_partitions(struct __config *cfg);
 
 int write_history_to_sql(struct session_data *sdata, struct __state *state);
 
+void store_minefield_ip(struct session_data *sdata, char *ip);
+
 #endif /* _KOSPAM_H */

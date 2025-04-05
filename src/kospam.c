@@ -14,7 +14,7 @@ void usage(){
    printf("\nusage: %s\n\n", PROGNAME);
    printf("    -c <config file>                  Config file to use if not the default\n");
    printf("    -d                                Fork to the background\n");
-   printf("    -v                                Return the version and build number\n");
+   printf("    -v                                Return the version\n");
    printf("    -V                                Return the version and some build parameters\n");
 
    exit(0);
@@ -43,6 +43,8 @@ void process_email(char *filename, struct session_data *sdata, int size){
    gettimeofday(&tv2, &tz);
    sdata->__parsed = tvdiff(tv2, tv1);
 
+   if (cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "INFO: %s: hostname=%s, ip=%s", sdata->filename, sdata->hostname, sdata->ip);
+
    // TODO: virus check
 
    char virusinfo[SMALLBUFSIZE];
@@ -62,6 +64,24 @@ void process_email(char *filename, struct session_data *sdata, int size){
 
    snprintf(recipient, sizeof(recipient)-1, "%s", sdata->rcptto[0]);
    extract_verp_address(recipient);
+
+
+   if(cfg.blackhole_email_list[0]) {
+      for(int i=0; i < sdata->num_of_rcpt_to; i++) {
+         if(is_item_on_list(sdata->rcptto[i], cfg.blackhole_email_list, "") == 1){
+            sdata->blackhole = 1;
+            counters.c_minefield++;
+
+            syslog(LOG_PRIORITY, "INFO: %s: we trapped %s on the blackhole", sdata->filename, sdata->rcptto[i]);
+
+            gettimeofday(&tv1, &tz);
+            store_minefield_ip(sdata, sdata->ip);
+            gettimeofday(&tv2, &tz);
+            sdata->__minefield = tvdiff(tv2, tv1);
+         }
+      }
+   }
+
 
    check_spam(sdata, &parser_state, &data, sdata->fromemail, recipient, &cfg, &my_cfg);
 

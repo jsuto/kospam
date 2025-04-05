@@ -103,11 +103,6 @@ func (s *Session) Xforward(opts *smtp.XforwardOptions) error {
         s.xforward.Helo = opts.Helo
     }
 
-    /*log.Printf("XFORWARD NAME: %s", opts.Name)
-    log.Printf("XFORWARD ADDR: %s", opts.Addr)
-    log.Printf("XFORWARD PROTO: %s", opts.Proto)
-    log.Printf("XFORWARD HELO: %s", opts.Helo)*/
-
     return nil
 }
 
@@ -115,8 +110,6 @@ func (s *Session) Mail(from string, opts *smtp.MailOptions) error {
     s.queueID = opts.QueueId
     s.mailFrom = from
     //log.Printf("MAIL FROM: %s", from)
-
-    //log.Printf("forward: %s %s %s %s", s.xforward.Name, s.xforward.Addr, s.xforward.Proto, s.xforward.Helo)
     return nil
 }
 
@@ -141,7 +134,9 @@ func (s *Session) Data(r io.Reader) error {
 
     recipients := strings.Join(s.rcptTo, ",")
 
-    header := fmt.Sprintf("Kospam-Envelope-From: %s\r\nKospam-Envelope-Recipient: %s\r\n", s.mailFrom, recipients)
+    xforward := fmt.Sprintf("%s,%s,%s,%s", s.xforward.Name, s.xforward.Addr, s.xforward.Proto, s.xforward.Helo)
+
+    header := fmt.Sprintf("Kospam-Envelope-From: %s\r\nKospam-Envelope-Recipient: %s\r\nKospam-Xforward: %s\r\n", s.mailFrom, recipients, xforward)
 
     if _, err := file.WriteString(header); err != nil {
         return fmt.Errorf("failed to write header: %w", err)
@@ -226,6 +221,7 @@ func main() {
     server.WriteTimeout = 30 * time.Second
     server.MaxRecipients = config.MaxRecipients
     server.MaxLineLength = config.MaxLineLength // The RFC says the max line length is 1000
+    server.EnableXFORWARD = config.EnableXforward
 
     tlsCert, err := tls.LoadX509KeyPair(config.PemFile, config.PemFile)
     if err != nil {

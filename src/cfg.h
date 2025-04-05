@@ -41,7 +41,7 @@ struct __config {
    int backlog;
 
    char workdir[MAXVAL];
-   char queuedir[MAXVAL];
+   char quarantinedir[MAXVAL];
 
    int history;
 

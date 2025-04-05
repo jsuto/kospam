@@ -13,9 +13,9 @@
 
 #define CONFIG_FILE CONFDIR "/kospam/kospam.conf"
 #define WORK_DIR DATADIR "/kospam/tmp"
-#define QUEUE_DIR DATADIR "/kospam/queue"
 #define HISTORY_DIR DATADIR "/kospam/history"
 #define SEND_DIR DATADIR "/kospam/send"
+#define QUARANTINE_DIR DATADIR "/kospam/quarantine"
 #define ZOMBIE_NET_REGEX CONFDIR "/kospam/zombienets.regex"
 
 #define SPAMINESS_HEADER_FIELD "X-Clapf-spamicity: "

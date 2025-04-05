@@ -23,7 +23,7 @@ int store_file_to_quarantine(char *filename, struct __config *cfg){
 
    /* create a filename in the store based on piler_id */
 
-   snprintf(s, sizeof(s)-1, "%s/%02x/%c%c/%c%c/%s", cfg->queuedir, cfg->server_id, filename[RND_STR_LEN-4], filename[RND_STR_LEN-3], filename[RND_STR_LEN-2], filename[RND_STR_LEN-1], filename);
+   snprintf(s, sizeof(s)-1, "%s/%02x/%c%c/%c%c/%s", cfg->quarantinedir, cfg->server_id, filename[RND_STR_LEN-4], filename[RND_STR_LEN-3], filename[RND_STR_LEN-2], filename[RND_STR_LEN-1], filename);
 
    p0 = strrchr(s, '/'); if(!p0) return rc;
    *p0 = '\0';

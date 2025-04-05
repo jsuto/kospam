@@ -1,12 +1,8 @@
 /*
- * clapfconf.c, SJ
+ * kospamconf.c, SJ
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <clapf.h>
+#include <kospam.h>
 
 extern char *optarg;
 extern int optind;
@@ -37,11 +33,11 @@ int main(int argc, char **argv){
 
          case 'h' :
          case '?' :
-                    printf("clapfconf [-n -c <configfile>] [-q <key>]\n");
+                    printf("kospamconf [-n -c <configfile>] [-q <key>]\n");
                     break;
 
 
-         default  : 
+         default  :
                     break;
        }
    }

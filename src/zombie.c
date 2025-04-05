@@ -2,13 +2,7 @@
  * zombie.c, SJ
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <strings.h>
-#include <syslog.h>
-#include <unistd.h>
-#include <clapf.h>
+#include <kospam.h>
 
 
 void zombie_init(struct __data *data, struct __config *cfg){
@@ -36,7 +30,7 @@ void zombie_init(struct __data *data, struct __config *cfg){
                data->n_regex++;
             }
             else
-               syslog(LOG_PRIORITY, "error: failed to compile '%s'", buf);
+               syslog(LOG_PRIORITY, "ERROR: failed to compile '%s'", buf);
          }
 
          if(data->n_regex == NUM_OF_REGEXES-1) break;
@@ -44,7 +38,7 @@ void zombie_init(struct __data *data, struct __config *cfg){
       }
       fclose(f);
    }
-   else syslog(LOG_PRIORITY, "error: cannot open '%s'", ZOMBIE_NET_REGEX);
+   else syslog(LOG_PRIORITY, "WARN: cannot open '%s'", ZOMBIE_NET_REGEX);
 }
 
 
@@ -71,4 +65,3 @@ void zombie_free(struct __data *data){
       regfree(&(data->pregs[i]));
    }
 }
-

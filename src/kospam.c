@@ -72,8 +72,10 @@ void process_email(char *filename, struct session_data *sdata, int size){
    //update_counters(sdata, &counters);
 
    char delay[SMALLBUFSIZE];
+   float total = sdata->__acquire+sdata->__parsed+sdata->__av+sdata->__user+sdata->__policy+sdata->__minefield+sdata->__as+sdata->__training+sdata->__update+sdata->__store+sdata->__inject;
+
    snprintf(delay, sizeof(delay)-1, "delay=%.2f, delays=%.2f/%.2f/%.2f/%.2f/%.2f/%.2f/%.2f/%.2f/%.2f/%.2f/%.2f",
-           (sdata->__acquire+sdata->__parsed+sdata->__av+sdata->__user+sdata->__policy+sdata->__minefield+sdata->__as+sdata->__training+sdata->__update+sdata->__store+sdata->__inject)/1000000.0,
+           total/1000000.0,
            sdata->__acquire/1000000.0,
            sdata->__parsed/1000000.0,
            sdata->__av/1000000.0,
@@ -209,8 +211,6 @@ void child_main(struct child *ptr){
 
       sig_unblock(SIGHUP);
 
-      syslog(LOG_PRIORITY, "child pid: %d, serial: %d, messages: %d, max: %d", getpid(),  ptr->serial, ptr->messages, cfg.max_requests_per_child);
-
       if(cfg.max_requests_per_child > 0 && ptr->messages >= cfg.max_requests_per_child){
          if(cfg.verbosity >= _LOG_DEBUG)
             syslog(LOG_PRIORITY, "child (pid: %d, serial: %d) served enough: %d", getpid(), ptr->serial, ptr->messages);
@@ -218,8 +218,6 @@ void child_main(struct child *ptr){
       }
 
    }
-
-   //if(cfg.memcached_enable == 1) memcached_shutdown(&(data.memc));
 
    if(cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "child decides to exit (pid: %d)", getpid());
 
@@ -268,8 +266,6 @@ void initialise_configuration(){
 #endif
 
    syslog(LOG_PRIORITY, "reloaded config: %s", configfile);
-
-   //if(cfg.memcached_enable == 1) memcached_init(&(data.memc), cfg.memcached_servers, 11211);
 }
 
 
@@ -316,7 +312,10 @@ int main(int argc, char **argv){
 
    check_and_create_directories(&cfg);
 
-   if(stat(cfg.pidfile, &st) == 0) fatal("pidfile exists! Unclean shutdown?");
+   if(stat(cfg.pidfile, &st) == 0) {
+       syslog(LOG_PRIORITY, "WARN: pidfile %s exists, unclean shutdown?", cfg.pidfile);
+       unlink(cfg.pidfile);
+   }
 
    syslog(LOG_PRIORITY, "%s %s-%s starting", PROGNAME, VERSION, COMMIT_ID);
 

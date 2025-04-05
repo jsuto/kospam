@@ -18,6 +18,7 @@ func TestLoadS3Config(t *testing.T) {
         {
             name: "valid full config",
             content: `hostname = antispam.local
+enable_xforward=true
 listen_addr = 127.0.0.1:10025
 max_line_len=1000
 max_message_bytes = 1000000
@@ -30,6 +31,7 @@ smtp_addr=127.0.0.1:10026
 username = kospam`,
             want: &SmtpdConfig{
                 Acl:             "test.acl",
+                EnableXforward:  true,
                 Hostname:        "antispam.local",
                 ListenAddr:      "127.0.0.1:10025",
                 MaxLineLength:   1000,
@@ -50,6 +52,7 @@ listen_addr = 127.0.0.1:10025
 max_message_bytes = 2000000`,
             want: &SmtpdConfig{
                 Acl:             "/etc/kospam/smtp.acl",
+                EnableXforward:  false,
                 Hostname:        "antispam.local",
                 ListenAddr:      "127.0.0.1:10025",
                 MaxLineLength:   2000,
@@ -69,6 +72,7 @@ max_message_bytes = 2000000`,
 max_recipients = invalid`,
             want: &SmtpdConfig{
                 Acl:             "/etc/kospam/smtp.acl",
+                EnableXforward:  false,
                 Hostname:        "antispam.local",
                 ListenAddr:      "127.0.0.1:10025",
                 MaxLineLength:   2000,
@@ -88,6 +92,7 @@ max_recipients = invalid`,
 max_recipients = -5`,
             want: &SmtpdConfig{
                 Acl:             "/etc/kospam/smtp.acl",
+                EnableXforward:  false,
                 Hostname:        "antispam.local",
                 ListenAddr:      "127.0.0.1:10025",
                 MaxLineLength:   2000,
@@ -108,6 +113,7 @@ invalid_line_without_equals
 max_message_bytes = 2000000`,
             want: &SmtpdConfig{
                 Acl:             "/etc/kospam/smtp.acl",
+                EnableXforward:  false,
                 Hostname:        "antispam.local",
                 ListenAddr:      "127.0.0.1:10025",
                 MaxLineLength:   2000,

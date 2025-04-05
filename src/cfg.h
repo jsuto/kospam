@@ -138,6 +138,8 @@ struct __config {
    char mydomains[2*MAXVAL];
    int mydomains_from_outside_is_spam;
 
+   char enable_xforward[MAXVAL];
+
    int debug;
 };
 

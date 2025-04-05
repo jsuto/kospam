@@ -22,6 +22,7 @@ type SmtpdConfig struct {
     QueueDir        string
     SmtpAddr        string
     Username        string
+    EnableXforward  bool
 }
 
 func LoadSmtpdConfig(filename string) (*SmtpdConfig, error) {
@@ -35,6 +36,7 @@ func LoadSmtpdConfig(filename string) (*SmtpdConfig, error) {
 
     config := &SmtpdConfig{
         Acl:             "/etc/kospam/smtp.acl",
+        EnableXforward:  false,
         Hostname:        "kospam.local",
         ListenAddr:      "127.0.0.1:10025",
         MaxLineLength:   2000,
@@ -59,6 +61,12 @@ func LoadSmtpdConfig(filename string) (*SmtpdConfig, error) {
         value := strings.TrimSpace(parts[1])
 
         switch key {
+        case "enable_xforward":
+            if value == "true" {
+                config.EnableXforward = true
+            } else {
+                config.EnableXforward = false
+            }
         case "smtp_acl":
             config.Acl = value
         case "hostname":

@@ -21,7 +21,7 @@ void usage(){
 }
 
 
-int process_email(char *filename, struct session_data *sdata, int size){
+void process_email(char *filename, struct session_data *sdata, int size){
    struct timezone tz;
    struct timeval tv1, tv2;
    struct __state parser_state;
@@ -131,8 +131,6 @@ int process_email(char *filename, struct session_data *sdata, int size){
    }
 
    update_counters(sdata, &counters);
-
-   return rc;
 }
 
 
@@ -161,7 +159,8 @@ int process_dir(char *directory, struct session_data *sdata){
 
          rename(fname, de->d_name);
 
-         if(S_ISREG(st.st_mode) && process_email(de->d_name, sdata, st.st_size) != ERR){
+         if(S_ISREG(st.st_mode)) {
+            process_email(de->d_name, sdata, st.st_size);
             tot_msgs++;
          }
       }

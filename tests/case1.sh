@@ -4,6 +4,8 @@ export CONTAINER="kospam"
 
 start_containers "${TESTCASE}.yaml" "$CONTAINER"
 
+echo "Sending emails"
+
 "$SMTPTEST" -smtpaddr 127.0.0.1:10025 -dir "$EML_DIR"
 
 docker exec "$SYSLOG_HOST" tail -50 /var/log/mail.log

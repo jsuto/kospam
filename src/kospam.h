@@ -67,4 +67,8 @@ int fix_message_file(const char *filename, struct session_data *sdata, struct __
 int get_policy(struct session_data *sdata, struct __config *cfg, struct __config *my_cfg);
 float run_statistical_check(struct session_data *sdata, struct __state *state, struct __config *cfg);
 
+void manage_partitions(struct __config *cfg);
+
+int write_history_to_sql(struct session_data *sdata, struct __state *state);
+
 #endif /* _KOSPAM_H */

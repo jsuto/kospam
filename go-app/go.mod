@@ -5,7 +5,7 @@ go 1.23.7
 replace kospam/smtpd => ./
 
 require (
-	github.com/jsuto/go-smtp v0.0.0-20250405111010-20ce6913d019
+	github.com/jsuto/go-smtp v0.0.0-20250405160823-4f4fb785027f
 	github.com/stretchr/testify v1.10.0
 	kospam/smtpd v0.0.0-00010101000000-000000000000
 )

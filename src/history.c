@@ -61,6 +61,8 @@ int write_history_to_sql(struct session_data *sdata, struct __state *state){
 
    p_bind_init(&sql);
 
+   if(strlen(state->b_subject) > 250) state->b_subject[250] = '\0';
+
    sql.sql[sql.pos] = (char *)&(sdata->now); sql.type[sql.pos] = TYPE_LONG; sql.pos++;
    sql.sql[sql.pos] = sdata->ttmpfile; sql.type[sql.pos] = TYPE_STRING; sql.pos++;
    sql.sql[sql.pos] = (char *)&(sdata->status); sql.type[sql.pos] = TYPE_LONG; sql.pos++;

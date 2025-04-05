@@ -111,9 +111,7 @@ void process_email(char *filename, struct session_data *sdata, int size){
    if(cfg.log_subject == 1) syslog(LOG_PRIORITY, "%s: subject=%s", filename, parser_state.b_subject);
    syslog(LOG_PRIORITY, "%s: from=%s, result=%s/%.4f, size=%d, attachments=%d, %s", filename, sdata->fromemail, tmpbuf, sdata->spaminess, sdata->tot_len, parser_state.n_attachments, delay);
 
-   if(sdata->training_request == 0){
-      if(write_history_to_sql(sdata, &parser_state) != OK) syslog(LOG_PRIORITY, "%s: ERROR: insert to history", sdata->ttmpfile);
-   }
+   if(sdata->training_request == 0 && write_history_to_sql(sdata, &parser_state) != OK) syslog(LOG_PRIORITY, "%s: ERROR: insert to history", sdata->ttmpfile);
 
    unlink(sdata->ttmpfile);
 

@@ -46,8 +46,7 @@ jobs:
         with:
           filters: |
             build_image:
-              - 'util/**'
-              - 'webui/**'
+              - 'aaaa/**'
 
       - name: Build and publish Go apps
         id: build-go

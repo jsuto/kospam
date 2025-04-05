@@ -72,12 +72,9 @@ create table if not exists history (
    `ts` int unsigned not null,
    `spam` tinyint default 0,
    `sender` varchar(128) default null,
-   `rcpt` varchar(128) default null,
    `subject` varchar(128) default null,
    `size` int default 0,
    `attachments` int default 0,
-   `relay` varchar(64) default null,
-   `status` varchar(64) default null,
    `hidden` tinyint default 0,
    key (`id`)
 ) ENGINE=InnoDB PARTITION BY RANGE (ts) ( PARTITION p0 VALUES LESS THAN (1) );

@@ -54,30 +54,22 @@ int store_file_to_quarantine(char *filename, struct __config *cfg){
 
 
 int write_history_to_sql(struct session_data *sdata, struct __state *state){
-   int i, rc=ERR;
-   char recipient[SMALLBUFSIZE];
+   int rc=ERR;
    struct sql sql;
 
    if(prepare_sql_statement(sdata, &sql, SQL_PREPARED_STMT_INSERT_INTO_HISTORY) == ERR) return rc;
 
-   for(i=0; i<sdata->num_of_rcpt_to; i++){
-      p_bind_init(&sql);
+   p_bind_init(&sql);
 
-      snprintf(recipient, sizeof(recipient)-1, "%s", sdata->rcptto[i]);
-      extract_verp_address(recipient);
+   sql.sql[sql.pos] = (char *)&(sdata->now); sql.type[sql.pos] = TYPE_LONG; sql.pos++;
+   sql.sql[sql.pos] = sdata->ttmpfile; sql.type[sql.pos] = TYPE_STRING; sql.pos++;
+   sql.sql[sql.pos] = (char *)&(sdata->status); sql.type[sql.pos] = TYPE_LONG; sql.pos++;
+   sql.sql[sql.pos] = sdata->fromemail; sql.type[sql.pos] = TYPE_STRING; sql.pos++;
+   sql.sql[sql.pos] = state->b_subject; sql.type[sql.pos] = TYPE_STRING; sql.pos++;
+   sql.sql[sql.pos] = (char *)&(sdata->tot_len); sql.type[sql.pos] = TYPE_LONG; sql.pos++;
+   sql.sql[sql.pos] = (char *)&(state->n_attachments); sql.type[sql.pos] = TYPE_LONG; sql.pos++;
 
-      sql.sql[sql.pos] = (char *)&(sdata->now); sql.type[sql.pos] = TYPE_LONG; sql.pos++;
-      sql.sql[sql.pos] = sdata->ttmpfile; sql.type[sql.pos] = TYPE_STRING; sql.pos++;
-      sql.sql[sql.pos] = (char *)&(sdata->status); sql.type[sql.pos] = TYPE_LONG; sql.pos++;
-      sql.sql[sql.pos] = sdata->fromemail; sql.type[sql.pos] = TYPE_STRING; sql.pos++;
-      sql.sql[sql.pos] = recipient; sql.type[sql.pos] = TYPE_STRING; sql.pos++;
-      sql.sql[sql.pos] = state->b_subject; sql.type[sql.pos] = TYPE_STRING; sql.pos++;
-      sql.sql[sql.pos] = (char *)&(sdata->tot_len); sql.type[sql.pos] = TYPE_LONG; sql.pos++;
-      sql.sql[sql.pos] = (char *)&(state->n_attachments); sql.type[sql.pos] = TYPE_LONG; sql.pos++;
-
-      if(p_exec_stmt(sdata, &sql) == OK) rc = OK;
-   }
-
+   if(p_exec_stmt(sdata, &sql) == OK) rc = OK;
 
    close_prepared_statement(&sql);
 

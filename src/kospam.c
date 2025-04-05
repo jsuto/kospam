@@ -14,7 +14,7 @@ void usage(){
    printf("\nusage: %s\n\n", PROGNAME);
    printf("    -c <config file>                  Config file to use if not the default\n");
    printf("    -d                                Fork to the background\n");
-   printf("    -v                                Return the version and build number\n");
+   printf("    -v                                Return the version\n");
    printf("    -V                                Return the version and some build parameters\n");
 
    exit(0);
@@ -43,7 +43,7 @@ void process_email(char *filename, struct session_data *sdata, int size){
    gettimeofday(&tv2, &tz);
    sdata->__parsed = tvdiff(tv2, tv1);
 
-   syslog(LOG_PRIORITY, "INFO: hostname: *%s*, ip: *%s*", sdata->hostname, sdata->ip);
+   if (cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "INFO: %s: hostname=%s, ip=%s", sdata->filename, sdata->hostname, sdata->ip);
 
    // TODO: virus check
 

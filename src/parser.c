@@ -340,12 +340,14 @@ int parse_line(char *buf, struct __state *state, struct session_data *sdata, int
             int result;
             char v[SMALLBUFSIZE];
             p = split(p, ',', v, sizeof(v)-1, &result);
+
+            if(strlen(v) > 5) sdata->ipcnt++;
+
             if (i == 0) {
                snprintf(sdata->hostname, sizeof(sdata->hostname)-1, "%s", v);
             }
             if (i == 1) {
                snprintf(sdata->ip, sizeof(sdata->ip)-1, "%s", v);
-               sdata->ipcnt = 2;
             }
 
             i++;

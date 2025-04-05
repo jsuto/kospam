@@ -46,8 +46,7 @@ jobs:
         with:
           filters: |
             build_image:
-              - 'util/**'
-              - 'webui/**'
+              - 'aaaa/**'
 
       - name: Build and publish Go apps
         id: build-go
@@ -63,7 +62,7 @@ jobs:
         with:
           DOCKER_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
           DOCKER_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
-          IMAGE_NAME: ${{ env.IMAGE_NAME }}:alpine
+          IMAGE_NAME: ${{ env.IMAGE_NAME }}:${{ env.TEST_TAG }}
           LOAD: false
           PLATFORMS: linux/${{ env.ARCH }}
           PUSH: true
@@ -87,7 +86,7 @@ jobs:
         with:
           DOCKER_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
           DOCKER_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
-          IMAGE_NAME: ${{ env.IMAGE_NAME }}:${{ env.TEST_TAG }}
+          IMAGE_NAME: ${{ env.IMAGE_NAME }}:${{ env.TEST_TAG }}-ubuntu
           LOAD: false
           PACKAGE: ${{ env.PROJECT_ID }}_${{ steps.get-version.outputs.VERSION }}-${{ env.DISTRO }}-${{ steps.get-version.outputs.COMMIT_ID }}
           PLATFORMS: linux/${{ env.ARCH }}

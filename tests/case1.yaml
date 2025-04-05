@@ -39,7 +39,7 @@ services:
       - syslog:/var/log
 
   kospam:
-    image: sutoj/kospam:alpine
+    image: sutoj/kospam:test
     container_name: kospam
     init: true
     <<: *networks

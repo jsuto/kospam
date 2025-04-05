@@ -111,9 +111,7 @@ void process_email(char *filename, struct session_data *sdata, int size){
    if(cfg.log_subject == 1) syslog(LOG_PRIORITY, "%s: subject=%s", filename, parser_state.b_subject);
    syslog(LOG_PRIORITY, "%s: from=%s, result=%s/%.4f, size=%d, attachments=%d, %s", filename, sdata->fromemail, tmpbuf, sdata->spaminess, sdata->tot_len, parser_state.n_attachments, delay);
 
-   /*if(sdata->training_request == 0){
-      if(write_history(sdata, &state, inject_resp, &my_cfg) != OK) syslog(LOG_PRIORITY, "%s: error: failed inserting to history", sdata->ttmpfile);
-   }*/
+   if(sdata->training_request == 0 && write_history_to_sql(sdata, &parser_state) != OK) syslog(LOG_PRIORITY, "%s: ERROR: insert to history", sdata->ttmpfile);
 
    unlink(sdata->ttmpfile);
 
@@ -325,6 +323,10 @@ int main(int argc, char **argv){
 
    write_pid_file(cfg.pidfile);
 
+   manage_partitions(&cfg);
+
+   time_t last_partition_maintenance = time(NULL);
+
    child_pool_create(cfg.number_of_worker_processes);
 
    set_signal_handler(SIGCHLD, takesig);
@@ -332,7 +334,15 @@ int main(int argc, char **argv){
    set_signal_handler(SIGHUP, takesig);
 
 
-   for(;;){ sleep(1); }
+   for(;;){
+      sleep(10);
+
+      time_t now = time(NULL);
+      if (now - last_partition_maintenance >= 3600) {
+         manage_partitions(&cfg);
+         last_partition_maintenance = now;
+      }
+   }
 
    p_clean_exit();
 

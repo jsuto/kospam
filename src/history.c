@@ -53,35 +53,26 @@ int store_file_to_quarantine(char *filename, struct __config *cfg){
 }
 
 
-int write_history_to_sql(struct session_data *sdata, struct __state *state, char *status, struct __config *cfg){
-   int i, rc=ERR;
-   char relay[SMALLBUFSIZE], recipient[SMALLBUFSIZE];
+int write_history_to_sql(struct session_data *sdata, struct __state *state){
+   int rc=ERR;
    struct sql sql;
 
    if(prepare_sql_statement(sdata, &sql, SQL_PREPARED_STMT_INSERT_INTO_HISTORY) == ERR) return rc;
 
-   snprintf(relay, sizeof(relay)-1, "%s", cfg->smtp_addr);
+   p_bind_init(&sql);
 
-   for(i=0; i<sdata->num_of_rcpt_to; i++){
-      p_bind_init(&sql);
+   char subject[TINYBUFSIZE];
+   snprintf(subject, sizeof(subject)-1, "%s", state->b_subject);
 
-      snprintf(recipient, sizeof(recipient)-1, "%s", sdata->rcptto[i]);
-      extract_verp_address(recipient);
+   sql.sql[sql.pos] = (char *)&(sdata->now); sql.type[sql.pos] = TYPE_LONG; sql.pos++;
+   sql.sql[sql.pos] = sdata->ttmpfile; sql.type[sql.pos] = TYPE_STRING; sql.pos++;
+   sql.sql[sql.pos] = (char *)&(sdata->status); sql.type[sql.pos] = TYPE_LONG; sql.pos++;
+   sql.sql[sql.pos] = sdata->fromemail; sql.type[sql.pos] = TYPE_STRING; sql.pos++;
+   sql.sql[sql.pos] = &subject[0]; sql.type[sql.pos] = TYPE_STRING; sql.pos++;
+   sql.sql[sql.pos] = (char *)&(sdata->tot_len); sql.type[sql.pos] = TYPE_LONG; sql.pos++;
+   sql.sql[sql.pos] = (char *)&(state->n_attachments); sql.type[sql.pos] = TYPE_LONG; sql.pos++;
 
-      sql.sql[sql.pos] = (char *)&(sdata->now); sql.type[sql.pos] = TYPE_LONG; sql.pos++;
-      sql.sql[sql.pos] = sdata->ttmpfile; sql.type[sql.pos] = TYPE_STRING; sql.pos++;
-      sql.sql[sql.pos] = (char *)&(sdata->status); sql.type[sql.pos] = TYPE_LONG; sql.pos++;
-      sql.sql[sql.pos] = sdata->fromemail; sql.type[sql.pos] = TYPE_STRING; sql.pos++;
-      sql.sql[sql.pos] = recipient; sql.type[sql.pos] = TYPE_STRING; sql.pos++;
-      sql.sql[sql.pos] = state->b_subject; sql.type[sql.pos] = TYPE_STRING; sql.pos++;
-      sql.sql[sql.pos] = (char *)&(sdata->tot_len); sql.type[sql.pos] = TYPE_LONG; sql.pos++;
-      sql.sql[sql.pos] = (char *)&(state->n_attachments); sql.type[sql.pos] = TYPE_LONG; sql.pos++;
-      sql.sql[sql.pos] = &relay[0]; sql.type[sql.pos] = TYPE_STRING; sql.pos++;
-      sql.sql[sql.pos] = status; sql.type[sql.pos] = TYPE_STRING; sql.pos++;
-
-      if(p_exec_stmt(sdata, &sql) == OK) rc = OK;
-   }
-
+   if(p_exec_stmt(sdata, &sql) == OK) rc = OK;
 
    close_prepared_statement(&sql);
 
@@ -135,117 +126,7 @@ int write_history(struct session_data *sdata, struct __state *state, char *statu
    if(cfg->store_emails == 1 && (cfg->store_only_spam == 0 || sdata->spaminess >= cfg->spam_overall_limit) ) store_file_to_quarantine(sdata->ttmpfile, cfg);
 
    if(cfg->history == 0)
-      return write_history_to_sql(sdata, state, status, cfg);
+      return write_history_to_sql(sdata, state);
    else
       return write_history_to_fs(sdata, state, status, cfg);
-}
-
-
-int is_existing_partition(struct session_data *sdata, char *partition, struct __config *cfg){
-   int count=0;
-   char buf[SMALLBUFSIZE];
-   struct sql sql;
-
-   if(select_db(sdata, "information_schema")){
-      syslog(LOG_PRIORITY, "error: cannot open db: 'information_schema'");
-      return count;
-   }
-
-   snprintf(buf, sizeof(buf)-1, "SELECT COUNT(*) AS num FROM PARTITIONS WHERE TABLE_SCHEMA=? AND TABLE_NAME='%s' AND PARTITION_NAME=?", SQL_HISTORY_TABLE);
-
-   if(prepare_sql_statement(sdata, &sql, buf) == ERR) return count;
-
-   p_bind_init(&sql);
-   sql.sql[sql.pos] = cfg->mysqldb; sql.type[sql.pos] = TYPE_STRING; sql.pos++;
-   sql.sql[sql.pos] = partition; sql.type[sql.pos] = TYPE_STRING; sql.pos++;
-
-   if(p_exec_stmt(sdata, &sql) == ERR) goto ENDE;
-
-   p_bind_init(&sql);
-   sql.sql[sql.pos] = (char *)&count; sql.type[sql.pos] = TYPE_LONG; sql.len[sql.pos] = sizeof(int); sql.pos++;
-
-   p_store_results(&sql);
-   p_fetch_results(&sql);
-   p_free_results(&sql);
-
-ENDE:
-   close_prepared_statement(&sql);
-
-   return count;
-}
-
-
-int create_partition(struct __config *cfg){
-   int rc=ERR;
-   long offset=0;
-   time_t tomorrow;
-   char buf[SMALLBUFSIZE], partition[TINYBUFSIZE];
-   struct tm *t;
-   struct session_data sdata;
-
-   offset = get_local_timezone_offset();
-
-   init_session_data(&sdata, cfg);
-
-   tomorrow = sdata.now +    86400 - (sdata.now % 86400) - offset    + 86400 - 1;
-   t = gmtime(&tomorrow);
-
-   snprintf(partition, sizeof(partition)-1, "p%d%02d%02d", t->tm_year+1900, t->tm_mon+1, t->tm_mday);
-
-   snprintf(buf, sizeof(buf)-1, "ALTER TABLE `%s` ADD PARTITION ( PARTITION %s VALUES LESS THAN (%ld) )", SQL_HISTORY_TABLE, partition, tomorrow);
-
-   if(open_database(&sdata, cfg) == OK){
-
-      if(is_existing_partition(&sdata, partition, cfg) > 0) return rc;
-
-      if(select_db(&sdata, cfg->mysqldb)){
-         syslog(LOG_PRIORITY, "error: cannot open db: '%s'", cfg->mysqldb);
-         return rc;
-      }
-
-      if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "partition query: %s", buf);
-      p_query(&sdata, buf);
-      close_database(&sdata);
-
-      rc = OK;
-   }
-   else syslog(LOG_PRIORITY, "error: open db failed in create_partition()");
-
-   return rc;
-}
-
-
-int drop_partition(struct __config *cfg){
-   int rc=ERR;
-   char buf[SMALLBUFSIZE], partition[TINYBUFSIZE];
-   struct tm *t;
-   struct session_data sdata;
-
-   init_session_data(&sdata, cfg);
-
-   sdata.now -= 31*86400;
-   t = localtime(&(sdata.now));
-
-   snprintf(partition, sizeof(partition)-1, "p%d%02d%02d", t->tm_year+1900, t->tm_mon+1, t->tm_mday);
-
-   snprintf(buf, sizeof(buf)-1, "ALTER TABLE `%s` DROP PARTITION %s", SQL_HISTORY_TABLE, partition);
-
-   if(open_database(&sdata, cfg) == OK){
-
-      if(is_existing_partition(&sdata, partition, cfg) <= 0) return rc;
-
-      if(select_db(&sdata, cfg->mysqldb)){
-         syslog(LOG_PRIORITY, "error: cannot open db: '%s'", cfg->mysqldb);
-         return rc;
-      }
-
-      if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "partition query: %s", buf);
-      p_query(&sdata, buf);
-      close_database(&sdata);
-
-      rc = OK;
-   }
-   else syslog(LOG_PRIORITY, "error: open db failed in drop_partition()");
-
-   return rc;
 }

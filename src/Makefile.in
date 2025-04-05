@@ -19,7 +19,7 @@ DEFS = @defs@
 INCDIR = -I. -I.. @INCDIR@ @sql_includes@
 LIBDIR = -L. @LIBDIR@ @LDFLAGS@
 LIBS = @LIBS@ @sql_libs@
-OBJS = @OBJS@
+OBJS = file.o strings.o dirs.o misc.o counters.o cfg.o sig.o decoder.o hash.o tokenizer.o parser.o parser_utils.o tai.o digest.o attachment.o chi.o antispam.o spam.o buffer.o zombie.o train.o partition.o users.o policy.o black.o history.o rbl.o mysql.o xxh3_64.o qqq.o
 RUNNING_USER = @RUNNING_USER@
 RUNNING_GROUP = `@id_bin@ -gn $(RUNNING_USER)`
 
@@ -32,7 +32,7 @@ MAKE = `which make`
 
 INSTALL = @INSTALL@
 
-all: child.o libkospam.a kospam kospamconf spamdrop splitmbox cpartition tests
+all: child.o libkospam.a kospam kospamconf spamdrop splitmbox tests
 install: install-kospam
 
 
@@ -56,9 +56,6 @@ spamdrop: spamdrop.c libkospam.a
 splitmbox: splitmbox.c libkospam.a
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $< -lkospam $(LIBS) $(LIBDIR) @LDFLAGS@
 
-cpartition: cpartition.c libkospam.a
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $< -lkospam $(LIBS) $(LIBDIR) @LDFLAGS@
-
 tests: tests.c libkospam.a
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $< -lkospam $(LIBS) $(LIBDIR) @LDFLAGS@
 
@@ -76,13 +73,12 @@ install-kospam:
 	$(INSTALL) -m 0755 kospamconf $(DESTDIR)$(sbindir)
 	$(INSTALL) -m 0755 spamdrop $(DESTDIR)$(bindir)
 	$(INSTALL) -m 0755 splitmbox $(DESTDIR)$(bindir)
-	$(INSTALL) -m 0755 cpartition $(DESTDIR)$(bindir)
 
 test:
 	@LD_LIBRARY_PATH=. ./tests
 
 clean:
-	rm -f *.o *.a libkospam.so* kospam kospamconf spamdrop splitmbox cpartition
+	rm -f *.o *.a libkospam.so* kospam kospamconf spamdrop splitmbox
 
 distclean: clean
 	rm -f Makefile

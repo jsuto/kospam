@@ -141,7 +141,9 @@ func (s *Session) Data(r io.Reader) error {
 
     recipients := strings.Join(s.rcptTo, ",")
 
-    header := fmt.Sprintf("Kospam-Envelope-From: %s\r\nKospam-Envelope-Recipient: %s\r\n", s.mailFrom, recipients)
+    xforward := fmt.Sprintf("%s,%s,%s,%s", s.xforward.Name, s.xforward.Addr, s.xforward.Proto, s.xforward.Helo)
+
+    header := fmt.Sprintf("Kospam-Envelope-From: %s\r\nKospam-Envelope-Recipient: %s\r\nKospam-Xforward: %s\r\n", s.mailFrom, recipients, xforward)
 
     if _, err := file.WriteString(header); err != nil {
         return fmt.Errorf("failed to write header: %w", err)

@@ -46,8 +46,8 @@ func parseEmailFile(filename string) (string, []string, string, error) {
     }
 
     content := string(data)
-    lines := strings.SplitN(content, "\r\n", 3)
-    if len(lines) < 3 {
+    lines := strings.SplitN(content, "\r\n", 4)
+    if len(lines) < 4 {
         return "", nil, "", fmt.Errorf("invalid file format")
     }
 
@@ -63,7 +63,9 @@ func parseEmailFile(filename string) (string, []string, string, error) {
         rcpt = strings.Split(strings.TrimSpace(strings.TrimPrefix(lines[1], "Kospam-Envelope-Recipient: ")), ",")
     }
 
-    remainingContent := lines[2]
+    // Don't send the 3rd line, the XFORWARD info
+
+    remainingContent := lines[3]
 
     if sender == "" {
         return "", nil, "", fmt.Errorf("Missing Kospam-Envelope-From: header line")

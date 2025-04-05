@@ -43,6 +43,8 @@ void process_email(char *filename, struct session_data *sdata, int size){
    gettimeofday(&tv2, &tz);
    sdata->__parsed = tvdiff(tv2, tv1);
 
+   syslog(LOG_PRIORITY, "INFO: hostname: *%s*, ip: *%s*", sdata->hostname, sdata->ip);
+
    // TODO: virus check
 
    char virusinfo[SMALLBUFSIZE];
@@ -62,6 +64,24 @@ void process_email(char *filename, struct session_data *sdata, int size){
 
    snprintf(recipient, sizeof(recipient)-1, "%s", sdata->rcptto[0]);
    extract_verp_address(recipient);
+
+
+   if(cfg.blackhole_email_list[0]) {
+      for(int i=0; i < sdata->num_of_rcpt_to; i++) {
+         if(is_item_on_list(sdata->rcptto[i], cfg.blackhole_email_list, "") == 1){
+            sdata->blackhole = 1;
+            counters.c_minefield++;
+
+            syslog(LOG_PRIORITY, "INFO: %s: we trapped %s on the blackhole", sdata->filename, sdata->rcptto[i]);
+
+            gettimeofday(&tv1, &tz);
+            store_minefield_ip(sdata, sdata->ip);
+            gettimeofday(&tv2, &tz);
+            sdata->__minefield = tvdiff(tv2, tv1);
+         }
+      }
+   }
+
 
    check_spam(sdata, &parser_state, &data, sdata->fromemail, recipient, &cfg, &my_cfg);
 

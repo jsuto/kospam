@@ -5,6 +5,18 @@
 #ifndef _KOSPAM_H
  #define _KOSPAM_H
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <signal.h>
+#include <unistd.h>
+#include <dirent.h>
+#include <locale.h>
+#include <errno.h>
+#include <sys/stat.h>
+#include <sys/wait.h>
+#include <getopt.h>
+
 #include <sig.h>
 #include <sql.h>
 #include <misc.h>
@@ -14,14 +26,13 @@
 #include <buffer.h>
 #include <parser.h>
 #include <errmsg.h>
+#include <users.h>
+#include <child.h>
 #include <config.h>
 
-#define DEVIATION(n) fabs((n)-0.5f)
+#define PROGNAME "kospam/filter"
 
-void p_clean_exit();
-void initialise_configuration();
-int search_slot_by_pid(pid_t pid);
-pid_t child_make(struct child *ptr);
+#define DEVIATION(n) fabs((n)-0.5f)
 
 signal_func *set_signal_handler(int signo, signal_func * func);
 
@@ -52,5 +63,8 @@ void update_counters(struct session_data *sdata, struct __counters *counters);
 
 char *split(char *str, int ch, char *buf, int buflen, int *result);
 int fix_message_file(const char *filename, struct session_data *sdata, struct __config *cfg);
+
+int get_policy(struct session_data *sdata, struct __config *cfg, struct __config *my_cfg);
+float run_statistical_check(struct session_data *sdata, struct __state *state, struct __config *cfg);
 
 #endif /* _KOSPAM_H */

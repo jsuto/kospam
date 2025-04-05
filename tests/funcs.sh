@@ -87,7 +87,7 @@ prepare() {
 
    chmod 644 "$PEMFILE"
 
-   "$MC_COMMAND" cp ibm/piler-ci/kospam.sql.gz .
+   [[ -f kospam.sql.gz ]] || "$MC_COMMAND" cp ibm/piler-ci/kospam.sql.gz .
 
    ls -la
 

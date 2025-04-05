@@ -41,13 +41,13 @@ void check_and_create_directories(struct __config *cfg){
    }
    createdir(cfg->workdir, 0711);
 
-   p = strrchr(cfg->queuedir, '/');
+   p = strrchr(cfg->quarantinedir, '/');
    if(p){
-      *p = '\0';
-      createdir(cfg->queuedir, 0755);
+     *p = '\0';
+      createdir(cfg->quarantinedir, 0755);
       *p = '/';
    }
-   createdir(cfg->queuedir, 0700);
+   createdir(cfg->quarantinedir, 0700);
 
    p = strrchr(cfg->pidfile, '/');
    if(p){
@@ -61,8 +61,4 @@ void check_and_create_directories(struct __config *cfg){
       snprintf(s, sizeof(s)-1, "%s/%d", cfg->workdir, i);
       createdir(s, 0700);
    }
-
-   createdir(HISTORY_DIR, 0700);
-   createdir(HISTORY_DIR "/tmp", 0700);
-   createdir(HISTORY_DIR "/new", 0700);
 }

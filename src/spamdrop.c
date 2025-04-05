@@ -2,18 +2,7 @@
  * spamdrop.c, SJ
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <time.h>
-#include <locale.h>
-#include <getopt.h>
-#include <syslog.h>
-#include <clapf.h>
+#include <kospam.h>
 
 
 extern char *optarg;

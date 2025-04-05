@@ -32,12 +32,9 @@ MAKE = `which make`
 
 INSTALL = @INSTALL@
 
-all: libkospam.a kospam kospamconf spamdrop splitmbox cpartition tests
+all: child.o libkospam.a kospam kospamconf spamdrop splitmbox cpartition tests
 install: install-kospam
 
-
-kospam: kospam.c libkospam.a
-	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $< -lkospam $(LIBS) $(LIBDIR) @LDFLAGS@ @libclamav_extra_libs@
 
 libkospam.a: $(OBJS)
 	ar cr libkospam.a $(OBJS)
@@ -46,6 +43,9 @@ libkospam.a: $(OBJS)
 	ln -sf libkospam.so.$(LIBCLAPF_VERSION) libkospam.so
 	ln -sf libkospam.so.$(LIBCLAPF_VERSION) libkospam.so.$(PILER_VERSION)
 
+
+kospam: kospam.c libkospam.a
+	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $< -lkospam child.o $(LIBS) $(LIBDIR) @LDFLAGS@ @libclamav_extra_libs@
 
 kospamconf: kospamconf.c libkospam.a
 	$(CC) $(CFLAGS) $(INCDIR) $(DEFS) -o $@ $< -lkospam $(LIBS) $(LIBDIR)

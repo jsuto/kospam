@@ -37,6 +37,7 @@ struct __state parse_message(struct session_data *sdata, int take_into_pieces, s
    snprintf(tumbuf, sizeof(tumbuf)-1, "%sTUM", cfg->clapf_header_field);
    tumlen = strlen(tumbuf);
 
+   size_t spamicity_header_len = strlen(cfg->clapf_header_field);
 
    while(fgets(buf, sizeof(buf)-1, f)){
 
@@ -56,7 +57,8 @@ struct __state parse_message(struct session_data *sdata, int take_into_pieces, s
 
             // FIXME: get the legacy clapf id from the X-Clapf-spamicity: header
 
-            if(strncmp(buf, "Received: ", 10) == 0){
+            //if(strncmp(buf, "Received: ", 10) == 0){
+            if(strncmp(buf, cfg->clapf_header_field, spamicity_header_len) == 0){
                trim_buffer(buf);
                p = strchr(buf, ' ');
                if(p){
@@ -66,6 +68,8 @@ struct __state parse_message(struct session_data *sdata, int take_into_pieces, s
 
                   if(is_valid_clapf_id(p)){
                      snprintf(sdata->clapf_id, SMALLBUFSIZE-1, "%s", p);
+                     printf("%s: found id in training request: *%s*\n", sdata->ttmpfile, p);
+
                      if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: found id in training request: *%s*", sdata->ttmpfile, p);
                      found_clapf_signature = 1;
                   }
@@ -322,6 +326,15 @@ int parse_line(char *buf, struct __state *state, struct session_data *sdata, int
             int result;
             if (i < MAX_RCPT_TO) {
                p = split(p, ',', sdata->rcptto[i], SMALLBUFSIZE-1, &result);
+               printf("rcpt %d: *%s*\n", i, sdata->rcptto[i]);
+               if (i == 0 && ( strstr(sdata->rcptto[i], "spam@") ||
+                               strstr(sdata->rcptto[i], "+spam@") ||
+                               strstr(sdata->rcptto[i], "ham@") ||
+                               strstr(sdata->rcptto[i], "+ham@") )
+               ) {
+                   sdata->training_request = 1;
+               }
+
                sdata->num_of_rcpt_to++;
             } else {
                break;

@@ -24,7 +24,7 @@
 #include <hash.h>
 #include <chi.h>
 #include <buffer.h>
-#include <parser.h>
+#include <oldparser.h>
 #include <errmsg.h>
 #include <users.h>
 #include <child.h>

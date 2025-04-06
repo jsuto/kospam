@@ -1,9 +1,9 @@
 /*
- * parser.h, SJ
+ * oldparser.h, SJ
  */
 
-#ifndef _PARSER_H
- #define _PARSER_H
+#ifndef _OLDPARSER_H
+ #define _OLDPARSER_H
 
 #include "cfg.h"
 #include "config.h"
@@ -42,4 +42,4 @@ int base64_decode_attachment_buffer(char *p, unsigned char *b, int blen);
 int has_octet_stream(struct __state *state);
 int has_image_attachment(struct __state *state);
 
-#endif /* _PARSER_H */
+#endif /* _OLDPARSER_H */

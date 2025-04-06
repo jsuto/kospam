@@ -6,7 +6,7 @@
  #define _CLAPF_H
 
 #include <misc.h>
-#include <parser.h>
+#include <oldparser.h>
 #include <errmsg.h>
 #include <decoder.h>
 #include <buffer.h>

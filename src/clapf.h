@@ -57,11 +57,11 @@ void add_penalties(struct session_data *sdata, struct __state *state, struct __c
 
 void do_training(struct session_data *sdata, struct __state *state, char *email, struct __config *cfg);
 
-int generate_tokens_from_string(struct __state *state, char *s, char *label);
+int generate_tokens_from_string(struct __state *state, const char *s, char *label, struct __config *cfg);
 void tokenize(char *buf, struct __state *state, struct session_data *sdata, struct __config *cfg);
 
 void zombie_init(struct __data *data, struct __config *cfg);
-void check_zombie_sender(struct session_data *sdata, struct __data *data, struct __config *cfg);
+void check_zombie_sender(struct __state *state, struct __data *data, struct __config *cfg);
 void zombie_free(struct __data *data);
 
 void store_minefield_ip(struct session_data *sdata, char *ip);

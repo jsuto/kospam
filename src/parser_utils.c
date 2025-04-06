@@ -21,82 +21,26 @@
 
 
 void init_state(struct __state *state){
-   int i;
+   memset((char*)state, 0, sizeof(*state)); // sizeof(state) is only 8 bytes!
+
+   state->tre = '-';
 
    state->message_state = MSG_UNDEF;
-
-   state->line_num = 0;
 
    state->is_header = 1;
    state->is_1st_header = 1;
 
    state->textplain = 1; /* by default we are a text/plain message */
    state->texthtml = 0;
-   state->message_rfc822 = 0;
-
-   state->base64 = 0;
-   state->utf8 = 0;
-
-   state->qp = 0;
-
-   state->htmltag = 0;
-   state->style = 0;
-
-   state->n_token = 0;
-   state->n_subject_token = 0;
-   state->n_deviating_token = 0;
-
-   state->skip_html = 0;
-
-   memset(state->message_id, 0, SMALLBUFSIZE);
-   memset(state->miscbuf, 0, MAX_TOKEN_LEN);
-   memset(state->qpbuf, 0, MAX_TOKEN_LEN);
-
-   memset(state->filename, 0, TINYBUFSIZE);
-   memset(state->type, 0, TINYBUFSIZE);
-
-   memset(state->attachment_name_buf, 0, SMALLBUFSIZE);
-   state->anamepos = 0;
-
-   state->has_to_dump = 0;
    state->attachment = -1;
    state->fd = -1;
    state->b64fd = -1;
-   state->pushed_pointer = 0;
-
-   state->abufpos = 0;
-
-   state->c_shit = state->l_shit = 0;
 
    inithash(state->boundaries);
    inithash(state->token_hash);
    inithash(state->url);
 
-   state->n_attachments = 0;
-
-   for(i=0; i<MAX_ATTACHMENTS; i++){
-      state->attachments[i].size = 0;
-      state->attachments[i].dumped = 0;
-      memset(state->attachments[i].type, 0, TINYBUFSIZE);
-      memset(state->attachments[i].shorttype, 0, TINYBUFSIZE);
-      memset(state->attachments[i].aname, 0, TINYBUFSIZE);
-      memset(state->attachments[i].filename, 0, TINYBUFSIZE);
-      memset(state->attachments[i].internalname, 0, TINYBUFSIZE);
-      memset(state->attachments[i].digest, 0, 2*DIGEST_LENGTH+1);
-   }
-
-   memset(state->from, 0, SMALLBUFSIZE);
-
-   memset(state->b_from, 0, SMALLBUFSIZE);
-   memset(state->b_from_domain, 0, SMALLBUFSIZE);
-   memset(state->b_subject, 0, MAXBUFSIZE);
-   memset(state->b_body, 0, BIGBUFSIZE);
-
-   state->bodylen = 0;
-
-   state->found_our_signo = 0;
    state->train_mode = T_TOE;
-
 }
 
 
@@ -228,7 +172,7 @@ void fixupEncodedHeaderLine(char *buf, int buflen){
 
                   if(need_encoding == 1 && ret == OK)
                      strncat(puf, tmpbuf, sizeof(puf)-1);
-                  else 
+                  else
                      strncat(puf, s+3, sizeof(puf)-1);
 
                   p = end + 2;
@@ -695,88 +639,6 @@ int count_invalid_junk_lines(char *p){
 }
 
 
-int extract_name_from_header_line(char *s, char *name, char *resultbuf){
-   int rc=0, extended=0;
-   char buf[SMALLBUFSIZE], puf[SMALLBUFSIZE], *p, *q, *encoding;
-
-   snprintf(buf, sizeof(buf)-1, "%s", s);
-
-   p = strstr(buf, name);
-   if(p){
-
-      /*
-       *
-       * Some examples from http://tools.ietf.org/html/rfc5987:
-       *
-       *   Non-extended notation, using "token":
-       *
-       *      foo: bar; title=Economy
-       *
-       *   Non-extended notation, using "quoted-string":
-       *
-       *      foo: bar; title="US-$ rates"
-       *
-       *   Extended notation, using the Unicode character U+00A3 (POUND SIGN):
-       *
-       *      foo: bar; title*=iso-8859-1'en'%A3%20rates
-       *
-       *   Extended notation, using the Unicode characters U+00A3 (POUND SIGN) and U+20AC (EURO SIGN):
-       *
-       *      foo: bar; title*=UTF-8''%c2%a3%20and%20%e2%82%ac%20rates
-       *
-       */
-
-      p += strlen(name);
-      if(*p == '*'){
-         extended = 1;
-      }
-
-      p = strchr(p, '=');
-      if(p){
-         p++;
-         q = strrchr(p, ';');
-         if(q) *q = '\0';
-         q = strrchr(p, '"');
-         if(q){
-            *q = '\0';
-            p = strchr(p, '"');
-            if(p){
-               p++;
-            }
-         }
-
-         if(extended == 1){
-            encoding = p;
-            q = strchr(p, '\'');
-            if(q){
-               *q = '\0';
-               p = q + 1;
-               q = strchr(p, '\'');
-               if(q) p = q + 1;
-            }
-
-            decodeURL(p);
-
-            if(strlen(encoding) > 2 && strcasecmp(encoding, "utf-8"))
-               utf8_encode(p, strlen(p), resultbuf, TINYBUFSIZE-1, encoding);
-            else
-               snprintf(resultbuf, TINYBUFSIZE-1, "%s", p);
-         }
-         else {
-            snprintf(puf, sizeof(puf)-1, "%s", p);
-            fixupEncodedHeaderLine(puf, sizeof(puf));
-
-            snprintf(resultbuf, TINYBUFSIZE-1, "%s", puf);
-         }
-
-         rc = 1;
-      }
-   }
-
-   return rc;
-}
-
-
 char *determine_attachment_type(char *filename, char *type){
    char *p;
 
@@ -835,7 +697,7 @@ char *determine_attachment_type(char *filename, char *type){
          if(strncasecmp(p, "jpg", 3) == 0) return "image,";
          if(strncasecmp(p, "jpeg", 4) == 0) return "image,";
          if(strncasecmp(p, "tiff", 4) == 0) return "image,";
-      } 
+      }
    }
 
    return "other,";
@@ -903,7 +765,7 @@ int has_octet_stream(struct __state *state){
           strstr(state->attachments[i].type, "application/msword") ||
           strstr(state->attachments[i].type, "application/rtf") ||
           strstr(state->attachments[i].type, "application/x-zip-compressed")
- 
+
       ) return 1;
    }
 
@@ -920,4 +782,3 @@ int has_image_attachment(struct __state *state){
 
    return 0;
 }
-

@@ -73,7 +73,7 @@ double evaluate_tokens(struct session_data *sdata, struct __state *state, struct
 
    state->n_deviating_token = n_tokens;
 
-   if(sdata->training_request == 1) return spaminess;
+   if(state->training_request == 1) return spaminess;
 
 
    if(cfg->debug == 1) printf("phrase: %.4f\n", spaminess);
@@ -136,7 +136,7 @@ float run_statistical_check(struct session_data *sdata, struct __state *state, s
 
    /* check if sender is autowhitelisted */
 
-   if(sdata->training_request == 0){
+   if(state->training_request == 0){
 
       snprintf(buf, sizeof(buf)-1, "SELECT nham, nspam FROM %s WHERE token=%llu", SQL_TOKEN_TABLE, xxh3_64(state->from));
 

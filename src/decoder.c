@@ -187,36 +187,6 @@ int decode_base64_to_buffer(char *p, int plen, unsigned char *b, int blen){
 }
 
 
-void decodeQP(char *p){
-   unsigned int i;
-   int k=0, a, b;
-
-   if(p == NULL) return;
-
-   for(i=0; i<strlen((char*)p); i++){
-      char c = p[i];
-
-      if(p[i] == '=' && isxdigit(p[i+1]) && isxdigit(p[i+2])){
-         a = p[i+1];
-         b = p[i+2];
-
-         c = 16 * hex_table[a] + hex_table[b];
-
-         i += 2;
-      }
-      else if(p[i] == '_'){
-         c = ' ';
-      }
-
-
-      p[k] = c;
-      k++;
-   }
-
-   p[k] = '\0';
-}
-
-
 void decodeHTML(char *p, int utf8){
    unsigned char buf[MAXBUFSIZE], __u[8];
    char *s, *q;
@@ -316,34 +286,4 @@ void decodeURL(char *p){
    }
 
    p[k] = '\0';
-}
-
-
-int utf8_encode(char *inbuf, int inbuflen, char *outbuf, int outbuflen, char *encoding){
-   iconv_t cd;
-   size_t inbytesleft, outbytesleft;
-   int ret = ERR;
-
-   memset(outbuf, 0, outbuflen);
-
-   if(strcasecmp(encoding, "gb2312") == 0)
-      cd = iconv_open("utf-8", "cp936");
-   else if(strcasecmp(encoding, "ks_c_5601-1987") == 0)
-      cd = iconv_open("utf-8", "EUC-KR");
-   else
-      cd = iconv_open("utf-8", encoding);
-
-   if(cd != (iconv_t)-1){
-      inbytesleft = inbuflen;
-      outbytesleft = outbuflen-1;
-
-      if(iconv(cd, &inbuf, &inbytesleft, &outbuf, &outbytesleft) == (size_t) -1)
-         ret = ERR;
-      else
-         ret = OK;
-
-      iconv_close(cd);
-   }
-
-   return ret;
 }

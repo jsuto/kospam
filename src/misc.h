@@ -48,6 +48,8 @@ int is_item_on_list(char *item, char *list, char *extralist);
 int is_list_on_string(char *s, char *list);
 int is_dotted_ipv4_address(char *s);
 
+long get_local_timezone_offset();
+
 #ifndef _GNU_SOURCE
    char *strcasestr(const char *s, const char *find);
 #endif

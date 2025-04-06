@@ -26,9 +26,8 @@ void usage(){
 
 
 int main(int argc, char **argv){
-   int i, c, debug=0;
+   int c, debug=0;
    int train_as_ham=0, train_as_spam=0;
-   int print_message=1;
    int show_tokens=0;
    char *p;
    char *configfile=CONFIG_FILE;
@@ -85,12 +84,10 @@ int main(int argc, char **argv){
 
          case 'S' :
                     train_as_spam = 1;
-                    print_message = 0;
                     break;
 
          case 'H' :
                     train_as_ham = 1;
-                    print_message = 0;
                     break;
 
          case 't' :
@@ -188,26 +185,14 @@ int main(int argc, char **argv){
    }
 
    if(cfg.debug == 1) printf("parsing...\n");
-   state = parse_message(&sdata, 0, &my_cfg);
+   struct Body BODY;
 
-   if(cfg.debug == 1) printf("post parsing...\n");
-   post_parse(&state);
+   parse_message(message, &state, &BODY);
+   post_parse(&state, &BODY, &cfg);
 
    if(show_tokens == 1){
       printhash(state.token_hash);
       goto CLEANUP;
-   }
-
-   if(print_message == 1){
-      printf("message-id: %s\n", state.message_id);
-      printf("from: *%s (%s)*\n", state.b_from, state.b_from_domain);
-      printf("subject: *%s*\n", state.b_subject);
-      printf("body: *%s*\n", state.b_body);
-   }
-
-   for(i=1; i<=state.n_attachments; i++){
-      if(cfg.debug == 1) printf("i:%d, name=*%s*, type: *%s* (*%s*), size: %d, int.name: %s\n", i, state.attachments[i].filename, state.attachments[i].type, state.attachments[i].shorttype, state.attachments[i].size, state.attachments[i].internalname);
-      unlink(state.attachments[i].internalname);
    }
 
    if(train_as_ham == 1 || train_as_spam == 1){
@@ -218,7 +203,7 @@ int main(int argc, char **argv){
       train_message(&sdata, &state, s, &my_cfg);
    }
 
-   check_zombie_sender(&sdata, &data, &my_cfg);
+   check_zombie_sender(&state, &data, &my_cfg);
 
    struct timeval tv_spam1, tv_spam2;
    gettimeofday(&tv_spam1, &tz);
@@ -237,8 +222,7 @@ CLEANUP:
 
    if(cfg.debug == 1){
       printf("spaminess: %.4f in %ld/%ld [ms]\n", sdata.spaminess, tvdiff(tv_spam2, tv_spam1)/1000, tvdiff(tv_stop, tv_start)/1000);
-      printf("%d %d\n", state.c_shit, state.l_shit);
-      printf("rcvd host/ip/zombie: %s/%s/%c\n", sdata.hostname, sdata.ip, sdata.tre);
+      printf("rcvd host/ip/zombie: %s/%s/%c\n", state.hostname, state.ip, state.tre);
       printf("number of tokens: %d/%d\n", state.n_token, state.n_deviating_token);
    }
 

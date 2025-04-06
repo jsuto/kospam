@@ -37,23 +37,24 @@ void process_email(char *filename, struct session_data *sdata, int size){
 
    // parse message
 
+   struct Body BODY;
+
    gettimeofday(&tv1, &tz);
-   parser_state = parse_message(sdata, 1, &cfg);
-   post_parse(&parser_state);
+   parse_message(filename, &parser_state, &BODY);
+   post_parse(&parser_state, &BODY, &cfg);
    gettimeofday(&tv2, &tz);
    sdata->__parsed = tvdiff(tv2, tv1);
 
-   if (cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "INFO: %s: hostname=%s, ip=%s", sdata->filename, sdata->hostname, sdata->ip);
+   if (cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "INFO: %s: hostname=%s, ip=%s", sdata->filename, parser_state.hostname, parser_state.ip);
 
    // TODO: virus check
 
-   char virusinfo[SMALLBUFSIZE];
+   //char virusinfo[SMALLBUFSIZE];
+   //sdata->rav = check_for_known_bad_attachments(sdata, &parser_state);
+   //if(sdata->rav == AVIR_VIRUS) snprintf(virusinfo, sizeof(virusinfo)-1, "MARKED.AS.MALWARE");
 
-   sdata->rav = check_for_known_bad_attachments(sdata, &parser_state);
-   if(sdata->rav == AVIR_VIRUS) snprintf(virusinfo, sizeof(virusinfo)-1, "MARKED.AS.MALWARE");
-
-   if (is_item_on_list(sdata->ip, cfg.mynetwork, "") == 1) {
-      syslog(LOG_PRIORITY, "%s: client ip (%s) on mynetwork", sdata->ttmpfile, sdata->ip);
+   if (is_item_on_list(parser_state.ip, cfg.mynetwork, "") == 1) {
+      syslog(LOG_PRIORITY, "%s: client ip (%s) on mynetwork", sdata->ttmpfile, parser_state.ip);
       sdata->mynetwork = 1;
    }
 
@@ -75,7 +76,7 @@ void process_email(char *filename, struct session_data *sdata, int size){
             syslog(LOG_PRIORITY, "INFO: %s: we trapped %s on the blackhole", sdata->filename, sdata->rcptto[i]);
 
             gettimeofday(&tv1, &tz);
-            store_minefield_ip(sdata, sdata->ip);
+            store_minefield_ip(sdata, parser_state.ip);
             gettimeofday(&tv2, &tz);
             sdata->__minefield = tvdiff(tv2, tv1);
          }
@@ -83,7 +84,7 @@ void process_email(char *filename, struct session_data *sdata, int size){
    }
 
 
-   check_spam(sdata, &parser_state, &data, sdata->fromemail, recipient, &cfg, &my_cfg);
+   check_spam(sdata, &parser_state, &data, parser_state.fromemail, recipient, &cfg, &my_cfg);
 
    int rc = ERR;
 
@@ -111,14 +112,14 @@ void process_email(char *filename, struct session_data *sdata, int size){
 
    char tmpbuf[SMALLBUFSIZE];
 
-   if(sdata->rav == AVIR_VIRUS){
-      counters.c_virus++;
-      sdata->status = S_VIRUS;
-      snprintf(tmpbuf, sizeof(tmpbuf)-1, "VIRUS (%s)", virusinfo);
-   } else if(sdata->spaminess >= my_cfg.spam_overall_limit){
+   if(sdata->spaminess >= my_cfg.spam_overall_limit){
       sdata->status = S_SPAM;
       counters.c_spam++;
       snprintf(tmpbuf, sizeof(tmpbuf)-1, "SPAM");
+   /*else if(sdata->rav == AVIR_VIRUS){
+      counters.c_virus++;
+      sdata->status = S_VIRUS;
+      snprintf(tmpbuf, sizeof(tmpbuf)-1, "VIRUS (%s)", virusinfo);*/
    } else {
       sdata->status = S_HAM;
       counters.c_ham++;
@@ -129,9 +130,9 @@ void process_email(char *filename, struct session_data *sdata, int size){
    }
 
    if(cfg.log_subject == 1) syslog(LOG_PRIORITY, "%s: subject=%s", filename, parser_state.b_subject);
-   syslog(LOG_PRIORITY, "%s: from=%s, result=%s/%.4f, size=%d, attachments=%d, %s", filename, sdata->fromemail, tmpbuf, sdata->spaminess, sdata->tot_len, parser_state.n_attachments, delay);
+   syslog(LOG_PRIORITY, "%s: from=%s, result=%s/%.4f, size=%d, attachments=%d, %s", filename, parser_state.fromemail, tmpbuf, sdata->spaminess, sdata->tot_len, n_attachments, delay);
 
-   if(sdata->training_request == 0 && write_history_to_sql(sdata, &parser_state) != OK) syslog(LOG_PRIORITY, "%s: ERROR: insert to history", sdata->ttmpfile);
+   if(parser_state.training_request == 0 && write_history_to_sql(sdata, &parser_state) != OK) syslog(LOG_PRIORITY, "%s: ERROR: insert to history", sdata->ttmpfile);
 
    unlink(sdata->ttmpfile);
 

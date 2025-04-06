@@ -16,7 +16,7 @@
 #include <clapf.h>
 
 
-struct __state parse_message(struct session_data *sdata, int take_into_pieces, struct __config *cfg){
+struct __state parse_message2(struct session_data *sdata, int take_into_pieces, struct __config *cfg){
    FILE *f;
    int tumlen;
    int skipped_header = 0, found_clapf_signature = 0;
@@ -88,7 +88,7 @@ struct __state parse_message(struct session_data *sdata, int take_into_pieces, s
 }
 
 
-void post_parse(struct __state *state){
+void post_parse2(struct __state *state){
    int i;
 
    trim_buffer(state->b_subject);
@@ -96,10 +96,10 @@ void post_parse(struct __state *state){
    state->message_state = MSG_SUBJECT;
    translate_line((unsigned char*)state->b_subject, state);
 
-   generate_tokens_from_string(state, state->b_from, "HEADER*");
-   generate_tokens_from_string(state, state->b_from_domain, "HEADER*");
-   state->n_subject_token = generate_tokens_from_string(state, state->b_subject, "SUBJ*");
-   state->n_token = generate_tokens_from_string(state, state->b_body, "");
+   //generate_tokens_from_string(state, state->b_from, "HEADER*");
+   //generate_tokens_from_string(state, state->b_from_domain, "HEADER*");
+   //state->n_subject_token = generate_tokens_from_string(state, state->b_subject, "SUBJ*");
+   //state->n_token = generate_tokens_from_string(state, state->b_body, "");
    addnode(state->token_hash, state->from, DEFAULT_SPAMICITY, 0);
 
    clearhash(state->boundaries);
@@ -164,7 +164,7 @@ int parse_line(char *buf, struct __state *state, struct session_data *sdata, int
       state->is_1st_header = 0;
 
       if(state->anamepos > 0){
-         extract_name_from_header_line(state->attachment_name_buf, "name", state->filename);
+         extract_name_from_header_line(state->attachment_name_buf, "name", state->filename, sizeof(state->filename)-1);
       }
 
    }
@@ -290,7 +290,7 @@ int parse_line(char *buf, struct __state *state, struct session_data *sdata, int
          state->message_state = MSG_CONTENT_TYPE;
 
          if(state->anamepos > 0){
-            extract_name_from_header_line(state->attachment_name_buf, "name", state->filename);
+            extract_name_from_header_line(state->attachment_name_buf, "name", state->filename, sizeof(state->filename)-1);
             memset(state->attachment_name_buf, 0, SMALLBUFSIZE);
             state->anamepos = 0;
          }
@@ -301,7 +301,7 @@ int parse_line(char *buf, struct __state *state, struct session_data *sdata, int
          state->message_state = MSG_CONTENT_DISPOSITION;
 
          if(state->anamepos > 0){
-            extract_name_from_header_line(state->attachment_name_buf, "name", state->filename);
+            extract_name_from_header_line(state->attachment_name_buf, "name", state->filename, sizeof(state->filename)-1);
             memset(state->attachment_name_buf, 0, SMALLBUFSIZE);
             state->anamepos = 0;
          }
@@ -357,10 +357,10 @@ int parse_line(char *buf, struct __state *state, struct session_data *sdata, int
             if(strlen(v) > 5) sdata->ipcnt++;
 
             if (i == 0) {
-               snprintf(sdata->hostname, sizeof(sdata->hostname)-1, "%s", v);
+               snprintf(state->hostname, sizeof(state->hostname)-1, "%s", v);
             }
             if (i == 1) {
-               snprintf(sdata->ip, sizeof(sdata->ip)-1, "%s", v);
+               snprintf(state->ip, sizeof(state->ip)-1, "%s", v);
             }
 
             i++;
@@ -465,7 +465,7 @@ int parse_line(char *buf, struct __state *state, struct session_data *sdata, int
       }
 
 
-      if(strcasestr(buf, "charset")) extract_name_from_header_line(buf, "charset", state->charset);
+      if(strcasestr(buf, "charset")) extract_name_from_header_line(buf, "charset", state->charset, sizeof(state->charset)-1);
       if(strcasestr(state->charset, "UTF-8")) state->utf8 = 1;
    }
 

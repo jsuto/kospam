@@ -61,5 +61,3 @@ CLOSE:
 
    return rc;
 }
-
-

@@ -2,36 +2,23 @@
  * antispam.c, SJ
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <syslog.h>
-#include <clapf.h>
-
+#include <kospam.h>
 
 void add_penalties(struct session_data *sdata, struct __state *state, struct __config *cfg){
 
-   if(cfg->penalize_octet_stream == 1 && has_octet_stream(state) == 1)
+   if(cfg->penalize_octet_stream == 1 && has_octet_stream_attachment == 1)
        addnode(state->token_hash, "OCTET_STREAM*", REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
 
-   if(cfg->penalize_images == 1 && has_image_attachment(state) == 1)
+   if(cfg->penalize_images == 1 && has_image_attachment == 1)
        addnode(state->token_hash, "IMAGE*", REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
 
    if(state->n_subject_token == 0)
       addnode(state->token_hash, "NO_SUBJECT*", REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
 
-   if(strcmp(sdata->hostname, "unknown") == 0)
-      addnode(state->token_hash, "UNKNOWN_CLIENT*", REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
-
    if(sdata->trapped_client == 1)
       addnode(state->token_hash, "TRAPPED_CLIENT*", REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
 
-   if(sdata->tre == '+')
+   if(state->tre == '+')
       addnode(state->token_hash, "ZOMBIE*", REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
 
 }
@@ -52,7 +39,7 @@ int check_spam(struct session_data *sdata, struct __state *state, struct __data 
     * do training
     */
 
-   if(sdata->training_request == 1){
+   if(state->training_request == 1){
 
       /* get user from 'MAIL FROM:', 2008.10.25, SJ */
 
@@ -93,7 +80,7 @@ int check_spam(struct session_data *sdata, struct __state *state, struct __data 
     */
 
    if(sdata->mynetwork == 1){
-      if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: mynetwork: %s", sdata->ttmpfile, sdata->ip);
+      if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: mynetwork: %s", sdata->ttmpfile, state->ip);
       return OK;
    }
 
@@ -132,7 +119,7 @@ int check_spam(struct session_data *sdata, struct __state *state, struct __data 
     */
 
    gettimeofday(&tv1, &tz);
-   is_sender_on_minefield(sdata, sdata->ip);
+   is_sender_on_minefield(sdata, state->ip);
    gettimeofday(&tv2, &tz);
    sdata->__minefield += tvdiff(tv2, tv1);
 
@@ -141,9 +128,9 @@ int check_spam(struct session_data *sdata, struct __state *state, struct __data 
     * run zombie test
     */
 
-   check_zombie_sender(sdata, data, my_cfg);
+   check_zombie_sender(state, data, my_cfg);
 
-   if(sdata->tre == '+' && my_cfg->message_from_a_zombie > 0){
+   if(state->tre == '+' && my_cfg->message_from_a_zombie > 0){
       sdata->spaminess = 0.99;
 
       if(my_cfg->message_from_a_zombie == 1){
@@ -152,7 +139,7 @@ int check_spam(struct session_data *sdata, struct __state *state, struct __data 
       }
 
       if(my_cfg->message_from_a_zombie == 2){
-         syslog(LOG_PRIORITY, "%s: dropping message from a zombie (%s) as spam", sdata->ttmpfile, sdata->hostname);
+         syslog(LOG_PRIORITY, "%s: dropping message from a zombie (%s) as spam", sdata->ttmpfile, state->hostname);
          return DISCARD;
       }
    }

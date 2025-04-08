@@ -37,11 +37,11 @@ void process_email(char *filename, struct session_data *sdata, int size){
 
    // parse message
 
-   struct Body BODY;
+   struct Message m;
 
    gettimeofday(&tv1, &tz);
-   parse_message(filename, &parser_state, &BODY);
-   post_parse(&parser_state, &BODY, &cfg);
+   parse_message(filename, &parser_state, &m);
+   post_parse(&parser_state, &m, &cfg);
    gettimeofday(&tv2, &tz);
    sdata->__parsed = tvdiff(tv2, tv1);
 
@@ -130,7 +130,7 @@ void process_email(char *filename, struct session_data *sdata, int size){
    }
 
    if(cfg.log_subject == 1) syslog(LOG_PRIORITY, "%s: subject=%s", filename, parser_state.b_subject);
-   syslog(LOG_PRIORITY, "%s: from=%s, result=%s/%.4f, size=%d, attachments=%d, %s", filename, parser_state.fromemail, tmpbuf, sdata->spaminess, sdata->tot_len, n_attachments, delay);
+   syslog(LOG_PRIORITY, "%s: from=%s, result=%s/%.4f, size=%d, attachments=%d, %s", filename, parser_state.fromemail, tmpbuf, sdata->spaminess, sdata->tot_len, m.n_attachments, delay);
 
    if(parser_state.training_request == 0 && write_history_to_sql(sdata, &parser_state) != OK) syslog(LOG_PRIORITY, "%s: ERROR: insert to history", sdata->ttmpfile);
 

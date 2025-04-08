@@ -142,7 +142,7 @@ void fixup_encoded_header(char *buf, int buflen){
 }
 
 
-char *extract_header_value(const char *buffer, int buffer_len, const char *header_name, int header_name_len) {
+void extract_header_value(const char *buffer, int buffer_len, const char *header_name, int header_name_len, char *result, size_t resultbuflen) {
     char *header_pos = NULL;
     const char *buffer_start = buffer;
 
@@ -160,7 +160,7 @@ char *extract_header_value(const char *buffer, int buffer_len, const char *heade
         buffer_start = header_pos + header_name_len;
     }
 
-    if (!header_pos) return NULL;
+    if (!header_pos) return;
 
     // Skip header name and any whitespace
     const char *value_start = header_pos + header_name_len;
@@ -195,15 +195,15 @@ char *extract_header_value(const char *buffer, int buffer_len, const char *heade
     // Calculate the value length
     size_t value_length = value_end - value_start;
 
-    // Allocate memory and copy the value
-    char *raw_value = (char *)malloc(value_length + 1);
-    if (!raw_value) return NULL;
+    memset(result, 0, resultbuflen);
 
     // Copy and process the header value (unfold lines)
     size_t j = 0;
     bool prev_was_newline = false;
 
     for (size_t i = 0; i < value_length; i++) {
+        if (j > resultbuflen - 2) break;
+
         char c = value_start[i];
 
         // Skip CR
@@ -218,28 +218,26 @@ char *extract_header_value(const char *buffer, int buffer_len, const char *heade
         if (prev_was_newline) {
             if (c == ' ' || c == '\t') {
                 // Replace the folded line with a space, but only if we don't already have one
-                if (j > 0 && raw_value[j-1] != ' ')
-                    raw_value[j++] = ' ';
+                if (j > 0 && result[j-1] != ' ')
+                    result[j++] = ' ';
             } else {
                 // Unexpected character after newline (should be whitespace for folded header)
-                raw_value[j++] = ' ';
-                raw_value[j++] = c;
+                result[j++] = ' ';
+                result[j++] = c;
             }
             prev_was_newline = false;
         } else {
-            raw_value[j++] = c;
+            result[j++] = c;
         }
     }
 
-    raw_value[j] = '\0';
+    result[j] = '\0';
 
     if(!strcmp(header_name, HEADER_SUBJECT) ||
        !strcmp(header_name, HEADER_FROM)
       ) {
-       fixup_encoded_header(raw_value, j+1);
+       fixup_encoded_header(result, j+1);
     }
-
-    return raw_value;
 }
 
 

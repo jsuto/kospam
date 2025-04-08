@@ -185,10 +185,11 @@ int main(int argc, char **argv){
    }
 
    if(cfg.debug == 1) printf("parsing...\n");
-   struct Body BODY;
 
-   parse_message(message, &state, &BODY);
-   post_parse(&state, &BODY, &cfg);
+   struct Message m;
+
+   parse_message(message, &state, &m);
+   post_parse(&state, &m, &cfg);
 
    if(show_tokens == 1){
       printhash(state.token_hash);

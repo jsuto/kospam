@@ -20,44 +20,53 @@
 #define MAXBUFSIZE 8192
 #define BIGBUFSIZE 131072
 
-// Structure to store headers
-typedef struct {
-    char *received;
-    char *from;
-    char *subject;
-    char *message_id;
-    char *content_type;
-    char *content_encoding;
-    char *kospam_envelope_from;
-    char *kospam_envelope_recipient;
-    char *kospam_xforward;
-} Email;
-
-extern Email *email;
-extern int has_image_attachment;
-extern int has_octet_stream_attachment;
-extern int n_attachments;
-extern struct attachment attachments[MAX_ATTACHMENTS];
+struct Header {
+    char received[MAXBUFSIZE];
+    char from[SMALLBUFSIZE];
+    char subject[2*SMALLBUFSIZE];
+    char message_id[2*SMALLBUFSIZE];
+    char content_type[SMALLBUFSIZE];
+    char content_encoding[SMALLBUFSIZE];
+    char kospam_envelope_from[SMALLBUFSIZE];
+    char kospam_envelope_recipient[MAXBUFSIZE];
+    char kospam_xforward[2*SMALLBUFSIZE];
+};
 
 struct Body {
     char data[BIGBUFSIZE];
     size_t pos;
 };
 
-int parse_message(const char *message, struct __state *state, struct Body *BODY);
-int post_parse(struct __state *state, struct Body *BODY, struct __config *cfg);
+struct attachment {
+   size_t size;
+   char type[TINYBUFSIZE];
+   char filename[TINYBUFSIZE];
+   char digest[2*DIGEST_LENGTH+1];
+};
+
+struct Message {
+    struct Header header;
+    struct Body body;
+    struct attachment attachments[MAX_ATTACHMENTS];
+    int n_attachments;
+    char has_image_attachment;
+    char has_octet_stream_attachment;
+};
+
+
+int parse_message(const char *message, struct __state *state, struct Message *m);
+int post_parse(struct __state *state, struct Message *m, struct __config *cfg);
 char *read_file(const char *filename, size_t *outsize);
-int parse_eml_buffer(char *buffer, struct Body *b);
-void extract_mime_parts(char *body, const char *boundary, struct Body *b);
+int parse_eml_buffer(char *buffer, struct Message *m);
+void extract_mime_parts(char *body, const char *boundary, struct Message *m);
 
 int base64_decode(char *input);
 void decodeQP(char *p);
 char *decode_mime_encoded_words(const char *input);
-char *extract_header_value(const char *buffer, int buffer_len, const char *header_name, int header_name_len);
+void extract_header_value(const char *buffer, int buffer_len, const char *header_name, int header_name_len, char *result, size_t resultbuflen);
 void extract_name_from_header_line(char *buffer, char *name, char *resultbuf, int resultbuflen);
 char *find_boundary(const char *buffer);
 void fixup_encoded_header(char *buf, int buflen);
-void free_email(Email *email);
 char *split(char *str, int ch, char *buf, int buflen, int *result);
 void normalize_buffer(char *s);
 int utf8_encode(char *inbuf, int inbuflen, char *outbuf, int outbuflen, char *encoding);

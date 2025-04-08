@@ -14,12 +14,6 @@
 } while (0)
 
 
-Email *email;
-int has_image_attachment;
-int has_octet_stream_attachment;
-int n_attachments;
-struct attachment attachments[MAX_ATTACHMENTS];
-
 void init_state(struct __state *state){
    memset((char*)state, 0, sizeof(*state)); // sizeof(state) is only 8 bytes!
 
@@ -29,7 +23,7 @@ void init_state(struct __state *state){
    inithash(state->url);
 }
 
-int parse_message(const char *message, struct __state *state, struct Body *BODY) {
+int parse_message(const char *message, struct __state *state, struct Message *m) {
     size_t s;
     char *buffer = read_file(message, &s);
 
@@ -38,64 +32,55 @@ int parse_message(const char *message, struct __state *state, struct Body *BODY)
         return 1;
     }
 
-    memset((char *)BODY, 0, sizeof(BODY));
-    memset((char *)attachments, 0, sizeof(attachments));
-    n_attachments = 0;
-    has_image_attachment = 0;
-    has_octet_stream_attachment = 0;
+    memset((char *)m, 0, sizeof(*m));
 
-    parse_eml_buffer(buffer, BODY);
+    parse_eml_buffer(buffer, m);
 
     free(buffer);
 
-    if (!email) {
-        syslog(LOG_PRIORITY, "ERROR: failed to parse buffer");
-        return 1;
-    }
-
     init_state(state);
 
-    utf8_tolower(BODY->data);
-    normalize_buffer(BODY->data);
+    utf8_tolower(m->body.data);
+    normalize_buffer(m->body.data);
+
+    state->has_image_attachment = m->has_image_attachment;
+    state->has_octet_stream_attachment = m->has_octet_stream_attachment;
 
     return 0;
 }
 
-int post_parse(struct __state *state, struct Body *BODY, struct __config *cfg) {
+int post_parse(struct __state *state, struct Message *m, struct __config *cfg) {
 
-    state->n_token = generate_tokens_from_string(state, BODY->data, "", cfg);
+    state->n_token = generate_tokens_from_string(state, m->body.data, "", cfg);
 
-    if (email->subject) {
-        state->n_subject_token = generate_tokens_from_string(state, email->subject, "SUBJ*", cfg);
-        state->n_token += generate_tokens_from_string(state, email->subject, "", cfg);
+    if (m->header.subject[0]) {
+        state->n_subject_token = generate_tokens_from_string(state, m->header.subject, "SUBJ*", cfg);
+        state->n_token += generate_tokens_from_string(state, m->header.subject, "", cfg);
+        snprintf(state->b_subject, sizeof(state->b_subject)-1, "%s", m->header.subject);
     }
 
-    if (email->from) {
-        generate_tokens_from_string(state, email->from, "HEADER*", cfg);
+    if (m->header.from[0]) {
+        generate_tokens_from_string(state, m->header.from, "HEADER*", cfg);
 
         char tmp[SMALLBUFSIZE];
-        snprintf(tmp, sizeof(tmp)-1, "FROM*%s", email->from);
+        snprintf(tmp, sizeof(tmp)-1, "FROM*%s", m->header.from);
         addnode(state->token_hash, tmp, DEFAULT_SPAMICITY, 0);
 
         // Add the From: domain as a token
-        char *p = strchr(email->from, '@');
+        char *p = strchr(m->header.from, '@');
         if (p) generate_tokens_from_string(state, p, "HEADER*", cfg);
     }
 
-    if (email->subject) {
-        snprintf(state->b_subject, sizeof(state->b_subject)-1, "%s", email->subject);
-    }
-
-    if (!email->message_id) {
+    if (m->header.message_id[0] == 0) {
         addnode(state->token_hash, "NO_MESSAGE_ID*",  REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
     }
 
-    if (email->kospam_envelope_from) {
-        snprintf(state->fromemail, sizeof(state->fromemail)-1, "%s", email->kospam_envelope_from);
+    if (m->header.kospam_envelope_from[0]) {
+        snprintf(state->fromemail, sizeof(state->fromemail)-1, "%s", m->header.kospam_envelope_from);
     }
 
-    if (email->kospam_envelope_recipient) {
-        char *p = email->kospam_envelope_recipient;
+    if (m->header.kospam_envelope_recipient[0]) {
+        char *p = m->header.kospam_envelope_recipient;
 
         while (p) {
             int result;
@@ -111,12 +96,12 @@ int post_parse(struct __state *state, struct Body *BODY, struct __config *cfg) {
         }
     }
 
-    if (email->kospam_xforward) {
+    if (m->header.kospam_xforward[0]) {
         // Data is expected in this order
         // NAME=smtp.example.com ADDR=1.2.3.4 PROTO=ESMTP HELO=smtp.example.com
 
         int i = 0;
-        char *p = email->kospam_xforward;
+        char *p = m->header.kospam_xforward;
 
         while (p) {
             int result;
@@ -134,12 +119,12 @@ int post_parse(struct __state *state, struct Body *BODY, struct __config *cfg) {
         }
     }
 
-    if (!(email->kospam_xforward) && email->received) {
-        char *p = strstr(email->received, " by ");
+    if (!m->header.kospam_xforward[0] && m->header.received[0]) {
+        char *p = strstr(m->header.received, " by ");
         if (p) *p = '\0';
 
         // from mail.trops.eu (mail.trops.eu [37.220.140.203])
-        p = email->received;
+        p = m->header.received;
         while (p) {
             int result;
             char v[SMALLBUFSIZE];
@@ -166,52 +151,30 @@ int post_parse(struct __state *state, struct Body *BODY, struct __config *cfg) {
         }
     }
 
-    if (email) {
-        if (cfg->debug == 1) {
-            printf("From: %s\n", email->from ? email->from : "N/A");
-            printf("Message-ID: %s\n", email->message_id ? email->message_id : "N/A");
-            printf("Subject: %s\n", email->subject ? email->subject : "N/A");
-            printf("Content-type: %s\n", email->content_type ? email->content_type : "N/A");
-            printf("Content-Transfer-encoding: %s\n", email->content_encoding ? email->content_encoding : "N/A");
-            printf("Received: %s\n", email->received ? email->received : "N/A");
-            printf("Kospam-Envelope-From: %s\n", email->kospam_envelope_from ? email->kospam_envelope_from : "N/A");
-            printf("Kospam-Envelope-Recipient: %s\n", email->kospam_envelope_recipient ? email->kospam_envelope_recipient : "N/A");
-            printf("Kospam-Xforward: %s\n", email->kospam_xforward ? email->kospam_xforward : "N/A");
+    if (cfg->debug == 1) {
+        printf("From: %s\n", m->header.from);
+        printf("Message-ID: %s\n", m->header.message_id);
+        printf("Subject: %s\n", m->header.subject);
+        printf("Content-type: %s\n", m->header.content_type);
+        printf("Content-Transfer-Encoding: %s\n", m->header.content_encoding);
+        printf("Received: %s\n", m->header.received);
+        printf("Kospam-Envelope-From: %s\n", m->header.kospam_envelope_from);
+        printf("Kospam-Envelope-Recipient: %s\n", m->header.kospam_envelope_recipient);
+        printf("Kospam-Xforward: %s\n", m->header.kospam_xforward);
 
-            for(int i=0; i<n_attachments; i++){
-                printf("i=%d, name=%s, type=%s, size=%ld, digest=%s\n", i, attachments[i].filename, attachments[i].type, attachments[i].size, attachments[i].digest);
-            }
-
-            printf("\n\nBODY: %s\n", BODY->data);
+        for(int i=0; i < m->n_attachments; i++){
+            printf("i=%d, name=%s, type=%s, size=%ld, digest=%s\n", i, m->attachments[i].filename, m->attachments[i].type, m->attachments[i].size, m->attachments[i].digest);
         }
 
-        free_email(email);
+        printf("\n\nBODY: %s\n", m->body.data);
     }
+
 
     return 0;
 }
 
 
-void free_email(Email *email) {
-    if (!email) return;
-
-    if (email->from) free(email->from);
-    if (email->subject) free(email->subject);
-    if (email->message_id) free(email->message_id);
-    if (email->content_type) free(email->content_type);
-    if (email->content_encoding) free(email->content_encoding);
-    if (email->received) free(email->received);
-
-    free(email);
-}
-
-int parse_eml_buffer(char *buffer, struct Body *b) {
-    // Create and populate Email structure
-    email = (Email *)calloc(1, sizeof(Email));
-    if (!email) {
-        return 1;
-    }
-
+int parse_eml_buffer(char *buffer, struct Message *m) {
     int body_offset = 4;
 
     char *headers_end = strstr(buffer, "\r\n\r\n");
@@ -231,17 +194,17 @@ int parse_eml_buffer(char *buffer, struct Body *b) {
 
     // Extract headers
 
-    email->from = extract_header_value(buffer, buffer_len, HEADER_FROM, strlen(HEADER_FROM));
-    email->subject = extract_header_value(buffer, buffer_len, HEADER_SUBJECT, strlen(HEADER_SUBJECT));
-    email->message_id = extract_header_value(buffer, buffer_len, HEADER_MESSAGE_ID, strlen(HEADER_MESSAGE_ID));
-    email->content_type = extract_header_value(buffer, buffer_len, HEADER_CONTENT_TYPE, strlen(HEADER_CONTENT_TYPE));
-    email->content_encoding = extract_header_value(buffer, buffer_len, HEADER_CONTENT_TRANSFER_ENCODING, strlen(HEADER_CONTENT_TRANSFER_ENCODING));
-    email->received = extract_header_value(buffer, buffer_len, HEADER_RECEIVED, strlen(HEADER_RECEIVED));
+    extract_header_value(buffer, buffer_len, HEADER_FROM, strlen(HEADER_FROM), m->header.from, sizeof(m->header.from));
+    extract_header_value(buffer, buffer_len, HEADER_SUBJECT, strlen(HEADER_SUBJECT), m->header.subject, sizeof(m->header.subject));
+    extract_header_value(buffer, buffer_len, HEADER_MESSAGE_ID, strlen(HEADER_MESSAGE_ID), m->header.message_id, sizeof(m->header.message_id));
+    extract_header_value(buffer, buffer_len, HEADER_CONTENT_TYPE, strlen(HEADER_CONTENT_TYPE), m->header.content_type, sizeof(m->header.content_type));
+    extract_header_value(buffer, buffer_len, HEADER_CONTENT_TRANSFER_ENCODING, strlen(HEADER_CONTENT_TRANSFER_ENCODING), m->header.content_encoding, sizeof(m->header.content_encoding));
+    extract_header_value(buffer, buffer_len, HEADER_RECEIVED, strlen(HEADER_RECEIVED), m->header.received, sizeof(m->header.received));
 
     // Kospam-* headers
-    email->kospam_envelope_from = extract_header_value(buffer, buffer_len, HEADER_KOSPAM_ENVELOPE_FROM, strlen(HEADER_KOSPAM_ENVELOPE_FROM));
-    email->kospam_envelope_recipient = extract_header_value(buffer, buffer_len, HEADER_KOSPAM_ENVELOPE_RECIPIENT, strlen(HEADER_KOSPAM_ENVELOPE_RECIPIENT));
-    email->kospam_xforward = extract_header_value(buffer, buffer_len, HEADER_KOSPAM_XFORWARD, strlen(HEADER_KOSPAM_XFORWARD));
+    extract_header_value(buffer, buffer_len, HEADER_KOSPAM_ENVELOPE_FROM, strlen(HEADER_KOSPAM_ENVELOPE_FROM), m->header.kospam_envelope_from, sizeof(m->header.kospam_envelope_from));
+    extract_header_value(buffer, buffer_len, HEADER_KOSPAM_ENVELOPE_RECIPIENT, strlen(HEADER_KOSPAM_ENVELOPE_RECIPIENT), m->header.kospam_envelope_recipient, sizeof(m->header.kospam_envelope_recipient));
+    extract_header_value(buffer, buffer_len, HEADER_KOSPAM_XFORWARD, strlen(HEADER_KOSPAM_XFORWARD), m->header.kospam_xforward, sizeof(m->header.kospam_xforward));
 
     if(!headers_end) return 1;
 
@@ -249,12 +212,12 @@ int parse_eml_buffer(char *buffer, struct Body *b) {
 
     char *body = headers_end + body_offset;
     // multipart?
-    if (email->content_type && strstr(email->content_type, "multipart/")) {
-       char *boundary = find_boundary(email->content_type);
+    if (m->header.content_type[0] && strstr(m->header.content_type, "multipart/")) {
+       char *boundary = find_boundary(m->header.content_type);
 
        if (!boundary) return 1; // TODO: error handling
 
-       extract_mime_parts(body, boundary, b);
+       extract_mime_parts(body, boundary, m);
 
        free(boundary);
 
@@ -267,12 +230,10 @@ int parse_eml_buffer(char *buffer, struct Body *b) {
        bool needs_base64_decode = false;
        bool needs_quoted_printable_decode = false;
 
-       if (email->content_encoding) {
-          //printf("INFO: encoding=%s\n", email->content_encoding);
-
-          if(strcasestr(email->content_encoding, "base64")) {
+       if (m->header.content_encoding[0]) {
+          if(strcasestr(m->header.content_encoding, "base64")) {
              needs_base64_decode = true;
-          } else if(strcasestr(email->content_encoding, "quoted-printable")) {
+          } else if(strcasestr(m->header.content_encoding, "quoted-printable")) {
              needs_quoted_printable_decode = true;
           }
        }
@@ -280,7 +241,7 @@ int parse_eml_buffer(char *buffer, struct Body *b) {
        // by default it's textual
        bool textual_part = true;
 
-       if (email->content_type && !strstr(email->content_type, "text/plain") && !strstr(email->content_type, "text/html") ) {
+       if (m->header.content_type[0] && !strstr(m->header.content_type, "text/plain") && !strstr(m->header.content_type, "text/html") ) {
            textual_part = false;
        }
 
@@ -291,11 +252,11 @@ int parse_eml_buffer(char *buffer, struct Body *b) {
               decodeQP(body);
           }
 
-          if (strcasestr(email->content_type, "text/html")) {
+          if (strcasestr(m->header.content_type, "text/html")) {
              normalize_html(body);
           }
 
-          APPENDTOBODY(body, b->data, b->pos);
+          APPENDTOBODY(body, m->body.data, m->body.pos);
        }
 
     }
@@ -304,7 +265,7 @@ int parse_eml_buffer(char *buffer, struct Body *b) {
 }
 
 
-void extract_mime_parts(char *body, const char *boundary, struct Body *b) {
+void extract_mime_parts(char *body, const char *boundary, struct Message *m) {
    char boundary_marker[SMALLBUFSIZE];
    snprintf(boundary_marker, sizeof(boundary_marker)-1, "--%s", boundary);
 
@@ -345,29 +306,27 @@ void extract_mime_parts(char *body, const char *boundary, struct Body *b) {
          char part_content_type_buf[SMALLBUFSIZE];
          memset(part_content_type_buf, 0, sizeof(part_content_type_buf));
 
-         char *content_type = extract_header_value(part_headers, strlen(part_headers), HEADER_CONTENT_TYPE, strlen(HEADER_CONTENT_TYPE));
+         char content_type[2*SMALLBUFSIZE];
+         extract_header_value(part_headers, strlen(part_headers), HEADER_CONTENT_TYPE, strlen(HEADER_CONTENT_TYPE), &content_type[0], sizeof(content_type));
 
-         if (content_type) {
+         if (content_type[0]) {
             snprintf(part_content_type_buf, sizeof(part_content_type_buf)-1, "%s", content_type);
             extract_name_from_header_line(content_type, "charset", charset, sizeof(charset));
          }
 
-         if (content_type && strcasestr(content_type, "multipart/")) {
+         if (content_type[0] && strcasestr(content_type, "multipart/")) {
             char *boundary = find_boundary(content_type);
-
-            free(content_type);
 
             if (!boundary) return; // TODO: error handling
 
-            extract_mime_parts(part_body, boundary, b);
+            extract_mime_parts(part_body, boundary, m);
 
             free(boundary);
          }
          else {
-            if (content_type) free(content_type);
-
             char c = *part_body;
             *part_body = '\0';
+
             //printf("PART HDR=%s", part);
 
             /* For non textual parts the attachment name might be important, eg.
@@ -412,9 +371,9 @@ void extract_mime_parts(char *body, const char *boundary, struct Body *b) {
             } else if (strcasestr(part_content_type, "message/rfc822")) {
                 rfc822 = true;
             } else if(strcasestr(part_content_type, "application/octet-stream")) {
-                has_octet_stream_attachment = 1;
+                m->has_octet_stream_attachment = 1;
             } else if(strcasestr(part_content_type, "image/")) {
-                has_image_attachment = 1;
+                m->has_image_attachment = 1;
             }
 
 
@@ -438,17 +397,14 @@ void extract_mime_parts(char *body, const char *boundary, struct Body *b) {
                   normalize_html(part_body);
                }
 
-               APPENDTOBODY(part_body, b->data, b->pos);
+               APPENDTOBODY(part_body, m->body.data, m->body.pos);
 
             } else if (rfc822) {
                // drop previous email headers
-
-               if (email) {
-                  free_email(email);
-               }
-
-               parse_eml_buffer(part_body, b);
-            } else {
+               memset((char*)&(m->header), 0, sizeof(struct Header));
+               parse_eml_buffer(part_body, m);
+            }
+            else {
                // Get the filename
                char filename[SMALLBUFSIZE];
                //printf("aa=**%s**\n", part_headers_buf);
@@ -460,25 +416,25 @@ void extract_mime_parts(char *body, const char *boundary, struct Body *b) {
                   extract_name_from_header_line(part_headers_buf, "name", filename, sizeof(filename));
                }
 
-               if (n_attachments < MAX_ATTACHMENTS) {
+               if (m->n_attachments < MAX_ATTACHMENTS) {
                    CONVERT_WHITESPACE_TO_UNDERSCORE(filename);
-                   snprintf(attachments[n_attachments].filename, sizeof(attachments[n_attachments].filename)-1, "ATT*%s ", filename);
-                   APPENDTOBODY(attachments[n_attachments].filename, b->data, b->pos);
+                   snprintf(m->attachments[m->n_attachments].filename, sizeof(m->attachments[m->n_attachments].filename)-1, "ATT*%s ", filename);
+                   APPENDTOBODY(m->attachments[m->n_attachments].filename, m->body.data, m->body.pos);
 
-                   attachments[n_attachments].size = strlen(part_body);
+                   m->attachments[m->n_attachments].size = strlen(part_body);
 
-                   chop_newlines(part_body, attachments[n_attachments].size);
-                   digest_string("sha256", part_body, &(attachments[n_attachments].digest[0]) );
+                   chop_newlines(part_body, m->attachments[m->n_attachments].size);
+                   digest_string("sha256", part_body, &(m->attachments[m->n_attachments].digest[0]) );
 
                    char *p = strchr(part_content_type_buf, ';');
                    if (p) {
                       *p = '\0';
-                      snprintf(attachments[n_attachments].type, sizeof(attachments[n_attachments].type)-1, "%s", part_content_type_buf);
+                      snprintf(m->attachments[m->n_attachments].type, sizeof(m->attachments[m->n_attachments].type)-1, "%s", part_content_type_buf);
                    }
 
                    //printf("MIME BODY nontext: ***%s***", part_body);
 
-                   n_attachments++;
+                   m->n_attachments++;
                }
             }
          }

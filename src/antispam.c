@@ -6,10 +6,10 @@
 
 void add_penalties(struct session_data *sdata, struct __state *state, struct __config *cfg){
 
-   if(cfg->penalize_octet_stream == 1 && has_octet_stream_attachment == 1)
+   if(cfg->penalize_octet_stream == 1 && state->has_octet_stream_attachment == 1)
        addnode(state->token_hash, "OCTET_STREAM*", REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
 
-   if(cfg->penalize_images == 1 && has_image_attachment == 1)
+   if(cfg->penalize_images == 1 && state->has_image_attachment == 1)
        addnode(state->token_hash, "IMAGE*", REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
 
    if(state->n_subject_token == 0)

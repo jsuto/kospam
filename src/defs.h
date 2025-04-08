@@ -88,14 +88,6 @@ struct child {
 };
 
 
-struct attachment {
-   size_t size;
-   char type[TINYBUFSIZE];
-   char filename[TINYBUFSIZE];
-   char digest[2*DIGEST_LENGTH+1];
-};
-
-
 typedef struct {
    double mant;
    int exp;
@@ -164,6 +156,9 @@ struct __state {
 
    int found_our_signo;
    int training_request;
+
+   char has_image_attachment;
+   char has_octet_stream_attachment;
 
    char ip[SMALLBUFSIZE];
    char hostname[SMALLBUFSIZE];

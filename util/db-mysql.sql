@@ -74,7 +74,6 @@ create table if not exists history (
    sender varchar(128) default null,
    subject tinyblob default null,
    size int default 0,
-   attachments int default 0,
    hidden tinyint default 0,
    key (id)
 ) ENGINE=InnoDB PARTITION BY RANGE (ts) ( PARTITION p0 VALUES LESS THAN (1) );

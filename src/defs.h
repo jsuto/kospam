@@ -88,18 +88,6 @@ struct child {
 };
 
 
-struct attachment {
-   int size;
-   char type[TINYBUFSIZE];
-   char shorttype[TINYBUFSIZE];
-   char aname[TINYBUFSIZE];
-   char filename[TINYBUFSIZE];
-   char internalname[TINYBUFSIZE];
-   char digest[2*DIGEST_LENGTH+1];
-   char dumped;
-};
-
-
 typedef struct {
    double mant;
    int exp;
@@ -153,58 +141,27 @@ struct rule {
 
 
 struct __state {
-   int line_num;
-   int message_state;
-   int is_header;
-   int is_1st_header;
-   int textplain;
-   int texthtml;
-   int message_rfc822;
-   int base64;
-   int utf8;
-   int qp;
-   int htmltag;
-   int style;
-   int skip_html;
-   int has_to_dump;
-   int attachment;
-   int fd;
-   int b64fd;
-   int pushed_pointer;
-   int abufpos;
-   int c_shit;
-   int l_shit;
-   char attachedfile[RND_STR_LEN+SMALLBUFSIZE];
-   char message_id[SMALLBUFSIZE];
-   char miscbuf[MAX_TOKEN_LEN];
-   char qpbuf[MAX_TOKEN_LEN];
+   char tre;
    int n_token;
    int n_subject_token;
    int n_deviating_token;
 
-   char filename[TINYBUFSIZE];
-   char type[TINYBUFSIZE];
-   char charset[TINYBUFSIZE];
-
-   char attachment_name_buf[SMALLBUFSIZE];
-   int anamepos;
-
-   struct node *boundaries[MAXHASH];
-
-   int n_attachments;
-   struct attachment attachments[MAX_ATTACHMENTS];
-
    char from[SMALLBUFSIZE];
-
-   char b_from[SMALLBUFSIZE], b_from_domain[SMALLBUFSIZE], b_subject[MAXBUFSIZE], b_body[BIGBUFSIZE];
+   char b_subject[MAXBUFSIZE];
 
    struct node *token_hash[MAXHASH];
    struct node *url[MAXHASH];
 
-   int found_our_signo;
-   int train_mode;
+   char fromemail[SMALLBUFSIZE];
 
-   unsigned int bodylen;
+   int found_our_signo;
+   int training_request;
+
+   char has_image_attachment;
+   char has_octet_stream_attachment;
+
+   char ip[SMALLBUFSIZE];
+   char hostname[SMALLBUFSIZE];
 };
 
 
@@ -213,15 +170,14 @@ struct session_data {
    char ttmpfile[SMALLBUFSIZE];
    char mailfrom[SMALLBUFSIZE], rcptto[MAX_RCPT_TO][SMALLBUFSIZE];
    char clapf_id[SMALLBUFSIZE];
-   char fromemail[SMALLBUFSIZE];
+   //char fromemail[SMALLBUFSIZE];
    char acceptbuf[SMALLBUFSIZE];
    char attachments[SMALLBUFSIZE];
-   char ip[SMALLBUFSIZE];
-   char hostname[SMALLBUFSIZE];
+   //char ip[SMALLBUFSIZE];
+   //char hostname[SMALLBUFSIZE];
    char whitelist[MAXBUFSIZE], blacklist[MAXBUFSIZE];
    char name[MAXBUFSIZE], domain[MAXBUFSIZE];
    char spaminessbuf[MAXBUFSIZE];
-   char tre;
    unsigned int status;
    int trapped_client;
    int from_address_in_mydomain;
@@ -231,7 +187,6 @@ struct session_data {
    int statistically_whitelisted;
    int need_scan, need_signo_check;
    int policy_group, blackhole;
-   int training_request;
    int mynetwork;
    unsigned int uid, gid;
    float __acquire, __parsed, __av, __user, __policy, __training, __update, __store, __inject, __as, __minefield;

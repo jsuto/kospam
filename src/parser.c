@@ -1,589 +1,489 @@
-/*
- * parser.c, SJ
- */
+#include <kospam.h>
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <clapf.h>
+#define APPENDTOBODY(p, data, pos) do { \
+    size_t __len = strlen(p); \
+    if (__len + pos + 1 < sizeof(data)) { \
+        memcpy(data + pos, (p), __len); \
+        pos += __len; \
+    } \
+} while (0)
+
+#define CONVERT_WHITESPACE_TO_UNDERSCORE(p) do { \
+    char *s = p; \
+    for(; *s; s++) { if(isspace(*s) || *s == '(' || *s == ')') *s = '_'; } \
+} while (0)
 
 
-struct __state parse_message(struct session_data *sdata, int take_into_pieces, struct __config *cfg){
-   FILE *f;
-   int tumlen;
-   int skipped_header = 0, found_clapf_signature = 0;
-   char buf[MAXBUFSIZE];
-   char tumbuf[SMALLBUFSIZE];
-   char abuffer[MAXBUFSIZE];
-   char *p;
-   struct __state state;
+void init_state(struct __state *state){
+   memset((char*)state, 0, sizeof(*state)); // sizeof(state) is only 8 bytes!
 
-   init_state(&state);
+   state->tre = '-';
 
-   f = fopen(sdata->filename, "r");
-   if(!f){
-      syslog(LOG_PRIORITY, "%s: error: cannot open", sdata->ttmpfile);
-      return state;
-   }
-
-   snprintf(tumbuf, sizeof(tumbuf)-1, "%sTUM", cfg->clapf_header_field);
-   tumlen = strlen(tumbuf);
-
-
-   while(fgets(buf, sizeof(buf)-1, f)){
-
-      if(sdata->training_request == 0 || found_clapf_signature == 1){
-         parse_line(buf, &state, sdata, take_into_pieces, &abuffer[0], sizeof(abuffer), cfg);
-         if(strncmp(buf, tumbuf, tumlen) == 0) state.train_mode = T_TUM;
-      }
-
-
-      if(found_clapf_signature == 0 && sdata->training_request == 1){
-
-         if(buf[0] == '\n' || (buf[0] == '\r' && buf[1] == '\n') ){
-            skipped_header = 1;
-         }
-
-         if(skipped_header == 1){
-
-            // FIXME: get the legacy clapf id from the X-Clapf-spamicity: header
-
-            if(strncmp(buf, "Received: ", 10) == 0){
-               trim_buffer(buf);
-               p = strchr(buf, ' ');
-               if(p){
-                  p++;
-
-                  while(*p == ' ') p++;
-
-                  if(is_valid_clapf_id(p)){
-                     snprintf(sdata->clapf_id, SMALLBUFSIZE-1, "%s", p);
-                     if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: found id in training request: *%s*", sdata->ttmpfile, p);
-                     found_clapf_signature = 1;
-                  }
-               }
-            }
-         }
-
-      }
-
-
-   }
-
-   fclose(f);
-
-   return state;
+   inithash(state->token_hash);
+   inithash(state->url);
 }
 
+int parse_message(const char *message, struct __state *state, struct Message *m) {
+    size_t s;
+    char *buffer = read_file(message, &s);
 
-void post_parse(struct __state *state){
-   int i;
+    if (!buffer) {
+        syslog(LOG_PRIORITY, "ERROR: failed to read %s", message);
+        return 1;
+    }
 
-   trim_buffer(state->b_subject);
+    memset((char *)m, 0, sizeof(*m));
 
-   state->message_state = MSG_SUBJECT;
-   translate_line((unsigned char*)state->b_subject, state);
+    parse_eml_buffer(buffer, m);
 
-   generate_tokens_from_string(state, state->b_from, "HEADER*");
-   generate_tokens_from_string(state, state->b_from_domain, "HEADER*");
-   state->n_subject_token = generate_tokens_from_string(state, state->b_subject, "SUBJ*");
-   state->n_token = generate_tokens_from_string(state, state->b_body, "");
-   addnode(state->token_hash, state->from, DEFAULT_SPAMICITY, 0);
+    free(buffer);
 
-   clearhash(state->boundaries);
+    init_state(state);
 
-   for(i=1; i<=state->n_attachments; i++){
-      digest_file(state->attachments[i].internalname, &(state->attachments[i].digest[0]));
+    utf8_tolower(m->body.data);
+    normalize_buffer(m->body.data);
 
-      unlink(state->attachments[i].internalname);
+    state->has_image_attachment = m->has_image_attachment;
+    state->has_octet_stream_attachment = m->has_octet_stream_attachment;
 
-
-      /* can we skip this? */
-
-      if(state->attachments[i].dumped == 1){
-         unlink(state->attachments[i].aname);
-      }
-
-   }
-
-
-   if(state->message_id[0] == 0){
-      addnode(state->token_hash, "NO_MESSAGE_ID*",  REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
-   }
-
+    return 0;
 }
 
+int post_parse(struct __state *state, struct Message *m, struct __config *cfg) {
 
-void storno_attachment(struct __state *state){
-   state->has_to_dump = 0;
+    state->n_token = generate_tokens_from_string(state, m->body.data, "", cfg);
 
-   if(state->n_attachments <= 0) return;
+    if (m->header.subject[0]) {
+        state->n_subject_token = generate_tokens_from_string(state, m->header.subject, "SUBJ*", cfg);
+        state->n_token += generate_tokens_from_string(state, m->header.subject, "", cfg);
+        snprintf(state->b_subject, sizeof(state->b_subject)-1, "%s", m->header.subject);
+    }
 
-   state->attachments[state->n_attachments].size = 0;
-   state->attachments[state->n_attachments].dumped = 0;
+    if (m->header.from[0]) {
+        generate_tokens_from_string(state, m->header.from, "HEADER*", cfg);
 
-   memset(state->attachments[state->n_attachments].type, 0, TINYBUFSIZE);
-   memset(state->attachments[state->n_attachments].shorttype, 0, TINYBUFSIZE);
-   memset(state->attachments[state->n_attachments].aname, 0, TINYBUFSIZE);
-   memset(state->attachments[state->n_attachments].filename, 0, TINYBUFSIZE);
-   memset(state->attachments[state->n_attachments].internalname, 0, TINYBUFSIZE);
-   memset(state->attachments[state->n_attachments].digest, 0, 2*DIGEST_LENGTH+1);
+        char tmp[SMALLBUFSIZE];
+        snprintf(tmp, sizeof(tmp)-1, "FROM*%s", m->header.from);
+        addnode(state->token_hash, tmp, DEFAULT_SPAMICITY, 0);
 
+        // Add the From: domain as a token
+        char *p = strchr(m->header.from, '@');
+        if (p) generate_tokens_from_string(state, p, "HEADER*", cfg);
+    }
 
-   state->n_attachments--;
-}
+    if (m->header.message_id[0] == 0) {
+        addnode(state->token_hash, "NO_MESSAGE_ID*",  REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
+    }
 
+    if (m->header.kospam_envelope_from[0]) {
+        snprintf(state->fromemail, sizeof(state->fromemail)-1, "%s", m->header.kospam_envelope_from);
+    }
 
-int parse_line(char *buf, struct __state *state, struct session_data *sdata, int take_into_pieces, char *abuffer, int abuffersize, struct __config *cfg){
-   char *p;
-   unsigned char b64buffer[MAXBUFSIZE];
-   char tmpbuf[MAXBUFSIZE];
-   int n64, len, boundary_line=0, result;
+    if (m->header.kospam_envelope_recipient[0]) {
+        char *p = m->header.kospam_envelope_recipient;
 
-   //if(cfg->debug == 1) printf("line: %s", buf);
-
-   state->line_num++;
-   len = strlen(buf);
-
-   if(state->message_rfc822 == 0 && (buf[0] == '\r' || buf[0] == '\n') ){
-      state->message_state = MSG_BODY;
-
-      if(state->is_header == 1) state->is_header = 0;
-      state->is_1st_header = 0;
-
-      if(state->anamepos > 0){
-         extract_name_from_header_line(state->attachment_name_buf, "name", state->filename);
-      }
-
-   }
-
-
-   if(state->message_state == MSG_BODY && state->attachment == 1 && is_substr_in_hash(state->boundaries, buf) == 0){
-      if(take_into_pieces == 1){
-         if(state->fd != -1 && len + state->abufpos > abuffersize-1){
-            if(write(state->fd, abuffer, state->abufpos) == -1) syslog(LOG_PRIORITY, "ERROR: %s: write(), %s, %d, %s", sdata->ttmpfile, __func__, __LINE__, __FILE__);
-
-            if(state->b64fd != -1){
-               abuffer[state->abufpos] = '\0';
-               if(state->base64 == 1){
-                  n64 = base64_decode_attachment_buffer(abuffer, &b64buffer[0], sizeof(b64buffer));
-                  n64 = write(state->b64fd, b64buffer, n64);
-               }
-               else {
-                  n64 = write(state->b64fd, abuffer, state->abufpos);
-               }
-            }
-
-            state->abufpos = 0; memset(abuffer, 0, abuffersize);
-         }
-         memcpy(abuffer+state->abufpos, buf, len); state->abufpos += len;
-      }
-
-      state->attachments[state->n_attachments].size += len;
-   }
-
-
-
-
-   if(state->message_state == MSG_BODY && state->has_to_dump == 1 &&  state->pushed_pointer == 0){
-
-      state->pushed_pointer = 1;
-
-      // this is a real attachment to dump, it doesn't have to be base64 encoded!
-      if(strlen(state->filename) > 4 && strlen(state->type) > 3 && state->n_attachments < MAX_ATTACHMENTS-1){
-         state->n_attachments++;
-
-         snprintf(state->attachments[state->n_attachments].filename, TINYBUFSIZE-1, "%s", state->filename);
-         snprintf(state->attachments[state->n_attachments].type, TINYBUFSIZE-1, "%s", state->type);
-         snprintf(state->attachments[state->n_attachments].internalname, TINYBUFSIZE-1, "%s.a%d", sdata->ttmpfile, state->n_attachments);
-         snprintf(state->attachments[state->n_attachments].aname, TINYBUFSIZE-1, "%s.a%d.bin", sdata->ttmpfile, state->n_attachments);
-
-         //printf("DUMP FILE: %s\n", state->attachments[state->n_attachments].internalname);
-
-         state->attachment = 1;
-
-         fixupEncodedHeaderLine(state->attachments[state->n_attachments].filename, TINYBUFSIZE);
-         p = get_attachment_extractor_by_filename(state->attachments[state->n_attachments].filename);
-         snprintf(state->attachments[state->n_attachments].shorttype, TINYBUFSIZE-1, "%s", p);
-
-         if(take_into_pieces == 1){
-            state->fd = open(state->attachments[state->n_attachments].internalname, O_CREAT|O_RDWR, S_IRUSR|S_IWUSR);
-
-            if(strcmp("other", p)){
-               state->b64fd = open(state->attachments[state->n_attachments].aname, O_CREAT|O_RDWR, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
-               state->attachments[state->n_attachments].dumped = 1;
-            }
-
-            if(state->fd == -1){
-               storno_attachment(state);
-               syslog(LOG_PRIORITY, "%s: error opening %s", sdata->ttmpfile, state->attachments[state->n_attachments].internalname);
-            }
-         }
-
-      }
-      // don't dump, not an attached file
-      else {
-         state->has_to_dump = 0;
-      }
-
-   }
-
-
-
-   if(*buf == '.' && *(buf+1) == '.') buf++;
-
-   /* undefined message state */
-   if(state->is_header == 1 && buf[0] != ' ' && buf[0] != '\t' && strchr(buf, ':')) state->message_state = MSG_UNDEF;
-
-   /* skip empty lines */
-
-   if(state->message_rfc822 == 0 && (buf[0] == '\r' || buf[0] == '\n') ){
-      return 0;
-   }
-
-
-   trim_buffer(buf);
-
-   /* check for our anti backscatter signo, SJ */
-
-   if(sdata->need_signo_check == 1){
-      if(strncmp(buf, cfg->our_signo, strlen(cfg->our_signo)) == 0)
-         state->found_our_signo = 1;
-   }
-
-
-   /* skip the first line, if it's a "From <email address> date" format */
-   if(state->line_num == 1 && strncmp(buf, "From ", 5) == 0) return 0;
-
-   if(state->is_header == 0 && buf[0] != ' ' && buf[0] != '\t') state->message_state = MSG_BODY;
-
-
-   /* header checks */
-
-   if(state->is_header == 1){
-
-      if(strncasecmp(buf, "From:", strlen("From:")) == 0){
-         state->message_state = MSG_FROM;
-
-         if(state->is_1st_header == 1){
-            p = buf+5;
-            if(*p == ' ') p++;
-            snprintf(state->from, SMALLBUFSIZE-1, "FROM*%s", p);
-
-            if(is_list_on_string(p, cfg->mydomains) == 1) sdata->from_address_in_mydomain = 1;
-         }
-      }
-
-      else if(strncasecmp(buf, "Content-Type:", strlen("Content-Type:")) == 0){
-         state->message_state = MSG_CONTENT_TYPE;
-
-         if(state->anamepos > 0){
-            extract_name_from_header_line(state->attachment_name_buf, "name", state->filename);
-            memset(state->attachment_name_buf, 0, SMALLBUFSIZE);
-            state->anamepos = 0;
-         }
-
-      }
-      else if(strncasecmp(buf, "Content-Transfer-Encoding:", strlen("Content-Transfer-Encoding:")) == 0) state->message_state = MSG_CONTENT_TRANSFER_ENCODING;
-      else if(strncasecmp(buf, "Content-Disposition:", strlen("Content-Disposition:")) == 0){
-         state->message_state = MSG_CONTENT_DISPOSITION;
-
-         if(state->anamepos > 0){
-            extract_name_from_header_line(state->attachment_name_buf, "name", state->filename);
-            memset(state->attachment_name_buf, 0, SMALLBUFSIZE);
-            state->anamepos = 0;
-         }
-
-      }
-      else if(strncasecmp(buf, "To:", 3) == 0) state->message_state = MSG_TO;
-      else if(strncasecmp(buf, "Cc:", 3) == 0) state->message_state = MSG_CC;
-      else if(strncasecmp(buf, "Bcc:", 4) == 0) state->message_state = MSG_CC;
-      else if(strncasecmp(buf, "Message-Id:", 11) == 0) state->message_state = MSG_MESSAGE_ID;
-      else if(strncasecmp(buf, "References:", 11) == 0) state->message_state = MSG_REFERENCES;
-      else if(strncasecmp(buf, "Subject:", strlen("Subject:")) == 0) state->message_state = MSG_SUBJECT;
-      else if(strncasecmp(buf, "Recipient:", strlen("Recipient:")) == 0) state->message_state = MSG_RECIPIENT;
-      else if(strncasecmp(buf, "Received:", strlen("Received:")) == 0) state->message_state = MSG_RECEIVED;
-      else if(state->line_num == 1 && strncasecmp(buf, "Kospam-Envelope-From: ", strlen("Kospam-Envelope-From: ")) == 0) {
-         snprintf(sdata->fromemail, sizeof(sdata->fromemail)-1, "%s", buf+strlen("Kospam-Envelope-From: "));
-         trim_buffer(sdata->fromemail);
-      } else if(state->line_num == 2 && strncasecmp(buf, "Kospam-Envelope-Recipient: ", strlen("Kospam-Envelope-Recipient: ")) == 0) {
-         char *p = buf + strlen("Kospam-Envelope-Recipient: ");
-
-         int i = 0;
-         while (p) {
+        while (p) {
             int result;
-            if (i < MAX_RCPT_TO) {
-               p = split(p, ',', sdata->rcptto[i], SMALLBUFSIZE-1, &result);
-               sdata->num_of_rcpt_to++;
-            } else {
-               break;
+            char v[SMALLBUFSIZE];
+            p = split(p, ',', v, sizeof(v)-1, &result);
+            if (strstr(v, "spam@") ||
+                strstr(v, "+spam@") ||
+                strstr(v, "ham@") ||
+                strstr(v, "+ham@")
+            ) {
+                state->training_request = 1;
             }
+        }
+    }
 
-            i++;
-         }
-      } else if(state->line_num == 3 && strncasecmp(buf, "Kospam-Xforward: ", strlen("Kospam-Xforward: ")) == 0) {
-         char *p = buf + strlen("Kospam-Xforward: ");
+    if (m->header.kospam_xforward[0]) {
+        // Data is expected in this order
+        // NAME=smtp.example.com ADDR=1.2.3.4 PROTO=ESMTP HELO=smtp.example.com
 
-         // Data is expected in this order
-         // NAME=smtp.example.com ADDR=1.2.3.4 PROTO=ESMTP HELO=smtp.example.com
+        int i = 0;
+        char *p = m->header.kospam_xforward;
 
-         int i = 0;
-         while (p) {
+        while (p) {
             int result;
             char v[SMALLBUFSIZE];
             p = split(p, ',', v, sizeof(v)-1, &result);
 
-            if(strlen(v) > 5) sdata->ipcnt++;
-
             if (i == 0) {
-               snprintf(sdata->hostname, sizeof(sdata->hostname)-1, "%s", v);
+               snprintf(state->hostname, sizeof(state->hostname)-1, "%s", v);
             }
             if (i == 1) {
-               snprintf(sdata->ip, sizeof(sdata->ip)-1, "%s", v);
+               snprintf(state->ip, sizeof(state->ip)-1, "%s", v);
             }
 
             i++;
+        }
+    }
+
+    if (!m->header.kospam_xforward[0] && m->header.received[0]) {
+        char *p = strstr(m->header.received, " by ");
+        if (p) *p = '\0';
+
+        // from mail.trops.eu (mail.trops.eu [37.220.140.203])
+        p = m->header.received;
+
+        while (p) {
+            int result;
+            char v[SMALLBUFSIZE];
+            p = split(p, ' ' , v, sizeof(v)-1, &result);
+            if (strchr(v, '.')) {
+                char *q = &v[0];
+                if (*q == '(') q++;
+                char *r = strrchr(q, ')');
+                if (r) *r = '\0';
+                if (*q == '[') q++;
+                size_t len = strlen(q);
+                if (*(q+len-1) == ']') *(q+len-1) = '\0';
+                if(is_dotted_ipv4_address(q) == 1){
+                    if(is_item_on_list(q, cfg->skipped_received_ips, "127.,10.,192.168.,172.16.") == 0) {
+                       snprintf(state->ip, sizeof(state->ip)-1, "%s", q);
+                    }
+                }
+                else {
+                    snprintf(state->hostname, sizeof(state->hostname)-1, "%s", q);
+                }
+            } else if(!strcmp(v, "unknown")) {
+                addnode(state->token_hash, "UNKNOWN_CLIENT*", REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
+            }
+        }
+    }
+
+    if (cfg->debug == 1) {
+        printf("From: %s\n", m->header.from);
+        printf("Message-ID: %s\n", m->header.message_id);
+        printf("Subject: %s\n", m->header.subject);
+        printf("Content-type: %s\n", m->header.content_type);
+        printf("Content-Transfer-Encoding: %s\n", m->header.content_encoding);
+        printf("Received: %s\n", m->header.received);
+        printf("Kospam-Envelope-From: %s\n", m->header.kospam_envelope_from);
+        printf("Kospam-Envelope-Recipient: %s\n", m->header.kospam_envelope_recipient);
+        printf("Kospam-Xforward: %s\n", m->header.kospam_xforward);
+
+        for(int i=0; i < m->n_attachments; i++){
+            printf("i=%d, name=%s, type=%s, size=%ld, digest=%s\n", i, m->attachments[i].filename, m->attachments[i].type, m->attachments[i].size, m->attachments[i].digest);
+        }
+
+        printf("\n\nBODY: %s\n", m->body.data);
+    }
+
+
+    return 0;
+}
+
+
+int parse_eml_buffer(char *buffer, struct Message *m) {
+    int body_offset = 4;
+
+    char *headers_end = strstr(buffer, "\r\n\r\n");
+    if (!headers_end) {
+       headers_end = strstr(buffer, "\n\n");
+       body_offset = 2;
+    }
+
+    int buffer_len;
+    if (headers_end) {
+       *headers_end = '\0';
+       buffer_len = headers_end - buffer;
+    } else {
+       // TODO: is it a header-only message?
+       buffer_len = strlen(buffer);
+    }
+
+    // Extract headers
+
+    extract_header_value(buffer, buffer_len, HEADER_FROM, strlen(HEADER_FROM), m->header.from, sizeof(m->header.from));
+    extract_header_value(buffer, buffer_len, HEADER_SUBJECT, strlen(HEADER_SUBJECT), m->header.subject, sizeof(m->header.subject));
+    extract_header_value(buffer, buffer_len, HEADER_MESSAGE_ID, strlen(HEADER_MESSAGE_ID), m->header.message_id, sizeof(m->header.message_id));
+    extract_header_value(buffer, buffer_len, HEADER_CONTENT_TYPE, strlen(HEADER_CONTENT_TYPE), m->header.content_type, sizeof(m->header.content_type));
+    extract_header_value(buffer, buffer_len, HEADER_CONTENT_TRANSFER_ENCODING, strlen(HEADER_CONTENT_TRANSFER_ENCODING), m->header.content_encoding, sizeof(m->header.content_encoding));
+    extract_header_value(buffer, buffer_len, HEADER_RECEIVED, strlen(HEADER_RECEIVED), m->header.received, sizeof(m->header.received));
+
+    // Kospam-* headers
+    extract_header_value(buffer, buffer_len, HEADER_KOSPAM_ENVELOPE_FROM, strlen(HEADER_KOSPAM_ENVELOPE_FROM), m->header.kospam_envelope_from, sizeof(m->header.kospam_envelope_from));
+    extract_header_value(buffer, buffer_len, HEADER_KOSPAM_ENVELOPE_RECIPIENT, strlen(HEADER_KOSPAM_ENVELOPE_RECIPIENT), m->header.kospam_envelope_recipient, sizeof(m->header.kospam_envelope_recipient));
+    extract_header_value(buffer, buffer_len, HEADER_KOSPAM_XFORWARD, strlen(HEADER_KOSPAM_XFORWARD), m->header.kospam_xforward, sizeof(m->header.kospam_xforward));
+
+    if(!headers_end) return 1;
+
+    *headers_end = '\n';
+
+    char *body = headers_end + body_offset;
+    // multipart?
+    if (m->header.content_type[0] && strstr(m->header.content_type, "multipart/")) {
+       char *boundary = find_boundary(m->header.content_type);
+
+       if (!boundary) return 1; // TODO: error handling
+
+       extract_mime_parts(body, boundary, m);
+
+       free(boundary);
+
+    } else {
+       // Not multipart, no boundary
+
+       //printf("INFO: not multipart\n");
+
+       // Check if we need to decode
+       bool needs_base64_decode = false;
+       bool needs_quoted_printable_decode = false;
+
+       if (m->header.content_encoding[0]) {
+          if(strcasestr(m->header.content_encoding, "base64")) {
+             needs_base64_decode = true;
+          } else if(strcasestr(m->header.content_encoding, "quoted-printable")) {
+             needs_quoted_printable_decode = true;
+          }
+       }
+
+       // by default it's textual
+       bool textual_part = true;
+
+       if (m->header.content_type[0] && !strstr(m->header.content_type, "text/plain") && !strstr(m->header.content_type, "text/html") ) {
+           textual_part = false;
+       }
+
+       if (textual_part) {
+          if (needs_base64_decode) {
+              base64_decode(body);
+          } else if (textual_part && needs_quoted_printable_decode) {
+              decodeQP(body);
+          }
+
+          if (strcasestr(m->header.content_type, "text/html")) {
+             normalize_html(body);
+          }
+
+          APPENDTOBODY(body, m->body.data, m->body.pos);
+       }
+
+    }
+
+    return 0;
+}
+
+
+void extract_mime_parts(char *body, const char *boundary, struct Message *m) {
+   char boundary_marker[SMALLBUFSIZE];
+   snprintf(boundary_marker, sizeof(boundary_marker)-1, "--%s", boundary);
+
+   //printf("boundary marker: %s\n", boundary_marker);
+
+   char *part = strstr(body, boundary_marker);
+   while (part) {
+      part = part + strlen(boundary_marker);
+
+      //printf("NEW PART\n");
+
+      // Find the headers of this part
+      const char *part_headers = part;
+
+      // Skip to the next boundary or end
+      char *next_part = strstr(part, boundary_marker);
+      if (next_part) *next_part = '\0';
+
+      const char *part_content_type = strcasestr(part_headers, "Content-Type:");
+      if (part_content_type) {
+
+         char charset[SMALLBUFSIZE];
+         memset(charset, 0, sizeof(charset));
+
+         // Find the body of this part (after the headers)
+         int part_body_offset = 4;
+         char *part_body = strstr(part_headers, "\r\n\r\n");
+         if (!part_body) {
+            part_body = strstr(part_headers, "\n\n");
+            part_body_offset = 2;
          }
-      }
+         if (!part_body) continue;
 
-      if(state->message_state == MSG_MESSAGE_ID && state->message_id[0] == 0){
-         p = strchr(buf+11, ' ');
-         if(p) p = buf + 12;
-         else p = buf + 11;
+         part_body += part_body_offset;
 
-         snprintf(state->message_id, SMALLBUFSIZE-1, "%s", p);
-      }
+         // what if we have another multipart in the MIME part?
 
-      /* we are interested in only From:, To:, Subject:, Received:, Content-*: header lines */
-      if(state->message_state <= 0) return 0;
-   }
+         char part_content_type_buf[SMALLBUFSIZE];
+         memset(part_content_type_buf, 0, sizeof(part_content_type_buf));
 
+         char content_type[2*SMALLBUFSIZE];
+         extract_header_value(part_headers, strlen(part_headers), HEADER_CONTENT_TYPE, strlen(HEADER_CONTENT_TYPE), &content_type[0], sizeof(content_type));
 
-   if(state->message_state == MSG_CONTENT_TYPE){
-      if((p = strcasestr(buf, "boundary"))){
-         extract_boundary(p, state);
-      }
-   }
+         if (content_type[0]) {
+            snprintf(part_content_type_buf, sizeof(part_content_type_buf)-1, "%s", content_type);
+            extract_name_from_header_line(content_type, "charset", charset, sizeof(charset));
+         }
 
+         if (content_type[0] && strcasestr(content_type, "multipart/")) {
+            char *boundary = find_boundary(content_type);
 
-   if(state->message_state == MSG_RECIPIENT){
-      p = strstr(buf, "Expanded:");
-      if(p) *p = '\0';
-   }
+            if (!boundary) return; // TODO: error handling
 
+            extract_mime_parts(part_body, boundary, m);
 
-   if(state->is_1st_header == 1){
-
-      if(state->message_state == MSG_SUBJECT && strlen(state->b_subject) + strlen(buf) < MAXBUFSIZE-1){
-
-         if(state->b_subject[0] == '\0'){
-            p = &buf[0];
-            if(strncmp(buf, "Subject:", strlen("Subject:")) == 0) p += strlen("Subject:");
-            if(*p == ' ') p++;
-
-            fixupEncodedHeaderLine(p, MAXBUFSIZE);
-            strncat(state->b_subject, p, MAXBUFSIZE-strlen(state->b_subject)-1);
+            free(boundary);
          }
          else {
+            char c = *part_body;
+            *part_body = '\0';
 
-            /*
-             * if the next subject line is encoded, then strip the whitespace characters at the beginning of the line
+            //printf("PART HDR=%s", part);
+
+            /* For non textual parts the attachment name might be important, eg.
+             *
+             * Content-Type: image/jpeg;
+             *      name="ubaxxezoeycayr.jpeg"
+             *
+             * or
+             *
+             * Content-Type: application/octet-stream;
+             *         name="Magnetic Filter.PDF.pdf"
+             * Content-Transfer-Encoding: base64
+             * Content-Disposition: attachment;
+             *        filename="Magnetic Filter.PDF.pdf"
              */
 
-            p = buf;
+            // Check if we need to decode
+            bool needs_base64_decode = false;
+            bool needs_quoted_printable_decode = false;
 
-            if(strcasestr(buf, "?Q?") || strcasestr(buf, "?B?")){
-               while(isspace(*p)) p++;
+            const char *transfer_encoding = strcasestr(part_headers, HEADER_CONTENT_TRANSFER_ENCODING);
+            if (transfer_encoding) {
+               if(strcasestr(transfer_encoding, "base64")) {
+                  needs_base64_decode = true;
+               } else if(strcasestr(transfer_encoding, "quoted-printable")) {
+                  needs_quoted_printable_decode = true;
+               }
             }
 
-            fixupEncodedHeaderLine(p, MAXBUFSIZE);
+            bool textual_part = false;
+            bool html = false;
+            bool rfc822 = false;
 
-            strncat(state->b_subject, p, MAXBUFSIZE-strlen(state->b_subject)-1);
-         }
-      }
-      else { fixupEncodedHeaderLine(buf, MAXBUFSIZE); }
-   }
-
-
-   /* Content-type: checking */
-
-   if(state->message_state == MSG_CONTENT_TYPE){
-      state->message_rfc822 = 0;
-
-      /* extract Content type */
-
-      p = strchr(buf, ':');
-      if(p){
-         p++;
-         if(*p == ' ' || *p == '\t') p++;
-         snprintf(state->type, TINYBUFSIZE-1, "%s", p);
-         p = strchr(state->type, ';');
-         if(p) *p = '\0';
-      }
+            if (strcasestr(part_content_type, "text/plain") ||
+                strcasestr(part_content_type, "text/calendar") ||
+                strcasestr(part_content_type, "application/ics")
+            ) {
+                textual_part = true;
+            } else if (strcasestr(part_content_type, "text/html")) {
+                textual_part = true;
+                html = true;
+            } else if (strcasestr(part_content_type, "message/rfc822")) {
+                rfc822 = true;
+            } else if(strcasestr(part_content_type, "application/octet-stream")) {
+                m->has_octet_stream_attachment = 1;
+            } else if(strcasestr(part_content_type, "image/")) {
+                m->has_image_attachment = 1;
+            }
 
 
-      if(strcasestr(buf, "text/plain") ||
-         strcasestr(buf, "multipart/mixed") ||
-         strcasestr(buf, "multipart/alternative") ||
-         strcasestr(buf, "multipart/report") ||
-         strcasestr(buf, "message/delivery-status") ||
-         strcasestr(buf, "text/rfc822-headers") ||
-         strcasestr(buf, "message/rfc822")
-      ){
-         state->textplain = 1;
-      }
-      else if(strcasestr(buf, "text/html")){
-         state->texthtml = 1;
-      }
+            char part_headers_buf[SMALLBUFSIZE];
+            snprintf(part_headers_buf, sizeof(part_headers_buf)-1, "%s", part_headers);
 
-      /* switch (back) to header mode if we encounterd an attachment with "message/rfc822" content-type */
+            *part_body = c;
 
-      if(strcasestr(buf, "message/rfc822")){
-         state->message_rfc822 = 1;
-         state->is_header = 1;
-      }
-
-
-      if(strcasestr(buf, "charset")) extract_name_from_header_line(buf, "charset", state->charset);
-      if(strcasestr(state->charset, "UTF-8")) state->utf8 = 1;
-   }
-
-
-   if((state->message_state == MSG_CONTENT_TYPE || state->message_state == MSG_CONTENT_DISPOSITION) && strlen(state->filename) < 5){
-
-      p = &buf[0];
-      for(; *p; p++){
-         if(*p != ' ' && *p != '\t') break;
-      }
-
-      len = strlen(p);
-
-      if(len + state->anamepos < SMALLBUFSIZE-2){
-         memcpy(&(state->attachment_name_buf[state->anamepos]), p, len);
-         state->anamepos += len;
-      }
-   }
-
-
-   if(state->message_state == MSG_CONTENT_TRANSFER_ENCODING){
-      if(strcasestr(buf, "base64")) state->base64 = 1;
-      if(strcasestr(buf, "quoted-printable")) state->qp = 1;
-   }
-
-
-
-   /* boundary check, and reset variables */
-
-   boundary_line = is_substr_in_hash(state->boundaries, buf);
-
-
-   if(!strstr(buf, "boundary=") && !strstr(buf, "boundary =") && boundary_line == 1){
-      state->is_header = 1;
-
-      if(state->has_to_dump == 1){
-         if(take_into_pieces == 1 && state->fd != -1){
-            if(state->abufpos > 0){
-               if(write(state->fd, abuffer, state->abufpos) == -1) syslog(LOG_PRIORITY, "ERROR: %s: write(), %s, %d, %s", sdata->ttmpfile, __func__, __LINE__, __FILE__);
-
-               if(state->b64fd != -1){
-                  abuffer[state->abufpos] = '\0';
-                  if(state->base64 == 1){
-                     n64 = base64_decode_attachment_buffer(abuffer, &b64buffer[0], sizeof(b64buffer));
-                     n64 = write(state->b64fd, b64buffer, n64);
-                  }
-                  else {
-                     n64 = write(state->b64fd, abuffer, state->abufpos);
-                  }
+            if (textual_part) {
+               if (needs_base64_decode) {
+                  base64_decode(part_body);
+               } else if (textual_part && needs_quoted_printable_decode) {
+                  decodeQP(part_body);
                }
 
-               state->abufpos = 0; memset(abuffer, 0, abuffersize);
+               if(!strcmp(charset, "windows-1251")) {
+                  decode_html_entities_utf8_inplace(part_body);
+               }
+
+               if (html) {
+                  normalize_html(part_body);
+               }
+
+               APPENDTOBODY(part_body, m->body.data, m->body.pos);
+
+            } else if (rfc822) {
+               // drop previous email headers
+               memset((char*)&(m->header), 0, sizeof(struct Header));
+               parse_eml_buffer(part_body, m);
             }
-            close(state->fd);
-            close(state->b64fd);
+            else {
+               // Get the filename
+               char filename[SMALLBUFSIZE];
+               //printf("aa=**%s**\n", part_headers_buf);
+
+               char *content_disposition = strcasestr(part_headers_buf, HEADER_CONTENT_DISPOSITION);
+               if (content_disposition) {
+                  extract_name_from_header_line(content_disposition, "name", filename, sizeof(filename));
+               } else {
+                  extract_name_from_header_line(part_headers_buf, "name", filename, sizeof(filename));
+               }
+
+               if (m->n_attachments < MAX_ATTACHMENTS) {
+                   CONVERT_WHITESPACE_TO_UNDERSCORE(filename);
+                   snprintf(m->attachments[m->n_attachments].filename, sizeof(m->attachments[m->n_attachments].filename)-1, "ATT*%s", filename);
+                   APPENDTOBODY(m->attachments[m->n_attachments].filename, m->body.data, m->body.pos);
+
+                   m->attachments[m->n_attachments].size = strlen(part_body);
+
+                   chop_newlines(part_body, m->attachments[m->n_attachments].size);
+                   digest_string("sha256", part_body, &(m->attachments[m->n_attachments].digest[0]) );
+
+                   char *p = strchr(part_content_type_buf, ';');
+                   if (p) {
+                      *p = '\0';
+                      snprintf(m->attachments[m->n_attachments].type, sizeof(m->attachments[m->n_attachments].type)-1, "%s", part_content_type_buf);
+                   }
+
+                   //printf("MIME BODY nontext: ***%s***", part_body);
+
+                   m->n_attachments++;
+               }
+            }
          }
-         state->fd = -1;
-         state->b64fd = -1;
-         state->attachment = -1;
       }
 
-
-      state->has_to_dump = 1;
-
-      state->base64 = 0; state->textplain = 0; state->texthtml = 0;
-      state->skip_html = 0;
-      state->utf8 = 0;
-      state->qp = 0;
-
-      state->pushed_pointer = 0;
-
-      memset(state->filename, 0, TINYBUFSIZE);
-      memset(state->type, 0, TINYBUFSIZE);
-      snprintf(state->charset, TINYBUFSIZE-1, "unknown");
-
-      memset(state->attachment_name_buf, 0, SMALLBUFSIZE);
-      state->anamepos = 0;
-
-      state->message_state = MSG_UNDEF;
-
-      return 0;
+      part = next_part;
    }
 
-   if(boundary_line == 1){ return 0; }
+}
 
 
-   /* end of boundary check */
+char *find_boundary(const char *buffer) {
 
+    const char *boundary = strstr(buffer, "boundary");
+    if (!boundary) return NULL;
 
-   /* skip irrelevant headers */
-   if(state->is_header == 1 && state->message_state != MSG_FROM && state->message_state != MSG_TO && state->message_state != MSG_CC && state->message_state != MSG_RECIPIENT && state->message_state != MSG_RECEIVED) return 0;
+    boundary += strlen("boundary");
 
+    // what if boundary = "..." instead of boundary="..."
 
-   /* don't process body if it's not a text or html part */
-   if(state->message_state == MSG_BODY && state->textplain == 0 && state->texthtml == 0) return 0;
+    while (isspace(*boundary)) boundary++;
+    if (*boundary == '=') boundary++;
+    while (isspace(*boundary)) boundary++;
 
+    // Check if boundary is quoted
+    if (*boundary == '"') {
+        boundary++;
+        const char *end = strchr(boundary, '"');
+        if (!end) return NULL;
 
-   if(state->base64 == 1 && state->message_state == MSG_BODY){
-      decodeBase64(buf);
-      fixupBase64EncodedLine(buf, state);
-   }
+        size_t len = end - boundary;
+        char *result = (char *)malloc(len + 1);
+        if (!result) return NULL;
 
-   if(state->message_state == MSG_BODY && state->qp == 1){
-      fixupSoftBreakInQuotedPritableLine(buf, state);
-      decodeQP(buf);
-   }
+        memcpy(result, boundary, len);
+        result[len] = '\0';
+        return result;
+    } else {
+        // Unquoted boundary
+        const char *end = boundary;
+        while (*end && !isspace(*end) && *end != ';') end++;
 
-   if(state->texthtml == 1 && state->message_state == MSG_BODY) remove_html(buf, state);
+        size_t len = end - boundary;
+        char *result = (char *)malloc(len + 1);
+        if (!result) return NULL;
 
-   /* I believe that we can live without this function call */
-   //decodeURL(buf);
-
-   if(state->texthtml == 1) decodeHTML(buf, state->utf8);
-
-   /* encode the body if it's not utf-8 encoded */
-   if(state->message_state == MSG_BODY && state->utf8 != 1){
-      result = utf8_encode(buf, strlen(buf), &tmpbuf[0], sizeof(tmpbuf), state->charset);
-      if(result == OK) snprintf(buf, MAXBUFSIZE-1, "%s", tmpbuf);
-   }
-
-
-   /* count invalid junk lines and characters */
-   /*
-    * FIXME: utf8 tokens _have_ these characters, so
-    * the ijc.h file may not be much help
-    */
-   //state->l_shit += count_invalid_junk_lines(buf);
-   //state->c_shit += count_invalid_junk_characters(buf, 0);
-
-
-   tokenize(buf, state, sdata, cfg);
-
-   return 0;
+        memcpy(result, boundary, len);
+        result[len] = '\0';
+        return result;
+    }
 }

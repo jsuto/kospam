@@ -2,18 +2,7 @@
  * history.c, SJ
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <time.h>
-#include <syslog.h>
-#include <unistd.h>
-#include <zlib.h>
-#include <errno.h>
-#include <clapf.h>
+#include <kospam.h>
 
 
 int store_file_to_quarantine(char *filename, struct __config *cfg){
@@ -52,7 +41,6 @@ int store_file_to_quarantine(char *filename, struct __config *cfg){
    return rc;
 }
 
-
 int write_history_to_sql(struct session_data *sdata, struct __state *state){
    int rc=ERR;
    struct sql sql;
@@ -67,10 +55,9 @@ int write_history_to_sql(struct session_data *sdata, struct __state *state){
    sql.sql[sql.pos] = (char *)&(sdata->now); sql.type[sql.pos] = TYPE_LONG; sql.pos++;
    sql.sql[sql.pos] = sdata->ttmpfile; sql.type[sql.pos] = TYPE_STRING; sql.pos++;
    sql.sql[sql.pos] = (char *)&(sdata->status); sql.type[sql.pos] = TYPE_LONG; sql.pos++;
-   sql.sql[sql.pos] = sdata->fromemail; sql.type[sql.pos] = TYPE_STRING; sql.pos++;
+   sql.sql[sql.pos] = state->fromemail; sql.type[sql.pos] = TYPE_STRING; sql.pos++;
    sql.sql[sql.pos] = &subject[0]; sql.type[sql.pos] = TYPE_STRING; sql.pos++;
    sql.sql[sql.pos] = (char *)&(sdata->tot_len); sql.type[sql.pos] = TYPE_LONG; sql.pos++;
-   sql.sql[sql.pos] = (char *)&(state->n_attachments); sql.type[sql.pos] = TYPE_LONG; sql.pos++;
 
    if(p_exec_stmt(sdata, &sql) == OK) rc = OK;
 
@@ -94,7 +81,7 @@ int write_history_to_fs(struct session_data *sdata, struct __state *state, char 
       snprintf(tmpname, sizeof(tmpname)-1, "%s/tmp/%s", HISTORY_DIR, sdata->ttmpfile);
       snprintf(name, sizeof(name)-1, "%s/new/%s", HISTORY_DIR, sdata->ttmpfile);
 
-      snprintf(buf, sizeof(buf)-1, "%s%c%ld%c%s%c%s%c%d%c%d%c%d%c%s:%c%s%c%s", sdata->ttmpfile, DELIM, sdata->now, DELIM, sdata->fromemail, DELIM, recipient, DELIM, sdata->tot_len, DELIM, state->n_attachments, DELIM, sdata->status, DELIM, cfg->smtp_addr, DELIM, status, DELIM, state->b_subject);
+      snprintf(buf, sizeof(buf)-1, "%s%c%ld%c%s%c%s%c%d%c%d%c%s:%c%s%c%s", sdata->ttmpfile, DELIM, sdata->now, DELIM, state->fromemail, DELIM, recipient, DELIM, sdata->tot_len, DELIM, sdata->status, DELIM, cfg->smtp_addr, DELIM, status, DELIM, state->b_subject);
 
       len = strlen(buf);
       dstlen = compressBound(len);

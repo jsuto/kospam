@@ -3,6 +3,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <unistd.h>
+#include <stdbool.h>
 #include <errno.h>
 
 
@@ -50,5 +51,50 @@ char *split(char *str, int ch, char *buf, int buflen, int *result) {
         /* Set success flag if we copied something */
         *result = (*str != '\0');
         return NULL;
+    }
+}
+
+
+void normalize_buffer(char *s) {
+    char *src = s;
+    char *dst = s;
+    bool in_space = true;
+
+    while (*src) {
+        unsigned char c = *src;
+
+        // Check for whitespace or punctuation to convert to space
+        // TODO: when tokenizing the strings, remove the trailing dot (.) and colon (:)
+        if (c <= 32 || c == ',' || c == '!' || c == '?' || c == ';' || c == '(' || c == ')' ) {
+            if (!in_space) {
+                *dst++ = ' ';
+                in_space = true;
+            }
+        } else {
+            *dst++ = c;
+            in_space = false;
+        }
+
+        src++;
+    }
+
+    // Remove trailing space
+    if (dst > s && dst[-1] == ' ')
+        dst--;
+
+    *dst = '\0';
+}
+
+
+void chop_newlines(char *str, size_t len) {
+    if (str == NULL) return;
+
+    while (len > 0) {
+        if (str[len - 1] == '\r' || str[len - 1] == '\n') {
+            str[--len] = '\0';
+        }
+        else {
+            break;
+        }
     }
 }

@@ -1,45 +1,78 @@
-/*
- * parser.h, SJ
- */
-
 #ifndef _PARSER_H
  #define _PARSER_H
 
-#include "cfg.h"
-#include "config.h"
-#include "defs.h"
+#include <kospam.h>
 
-struct __state parse_message(struct session_data *sdata, int take_into_pieces, struct __config *cfg);
-void post_parse(struct __state *state);
-int parse_line(char *buf, struct __state *state, struct session_data *sdata, int take_into_pieces, char *abuffer, int abuffersize, struct __config *cfg);
+#define HEADER_FROM "From:"
+#define HEADER_SUBJECT "Subject:"
+#define HEADER_MESSAGE_ID "Message-ID:"
+#define HEADER_CONTENT_TYPE "Content-Type:"
+#define HEADER_CONTENT_TRANSFER_ENCODING "Content-Transfer-Encoding:"
+#define HEADER_CONTENT_DISPOSITION "Content-Disposition:"
+#define HEADER_RECEIVED "Received:"
 
-void init_state(struct __state *state);
-unsigned long parse_date_header(char *s, struct __config *cfg);
-long get_local_timezone_offset();
-int is_hex_number(char *p);
-int extract_boundary(char *p, struct __state *state);
-void fixupEncodedHeaderLine(char *buf, int buflen);
-void fixupSoftBreakInQuotedPritableLine(char *buf, struct __state *state);
-void fixupBase64EncodedLine(char *buf, struct __state *state);
-void remove_html(char *buf, struct __state *state);
-int append_html_tag(char *buf, char *htmlbuf, int pos, struct __state *state);
-void translate_line(unsigned char *p, struct __state *state);
-void fix_email_address_for_sphinx(char *s);
-void split_email_address(char *s);
-int does_it_seem_like_an_email_address(char *email);
-void reassemble_token(char *p);
-void degenerate_token(unsigned char *p);
-void fix_URL(char *url);
-void fix_FQDN(char *fqdn);
-void get_tld_from_name(char *name);
-int count_invalid_junk_characters(char *p, int replace_junk);
-int count_invalid_junk_lines(char *p);
-int extract_name_from_header_line(char *s, char *name, char *resultbuf);
-char *determine_attachment_type(char *filename, char *type);
-char *get_attachment_extractor_by_filename(char *filename);
-int base64_decode_attachment_buffer(char *p, unsigned char *b, int blen);
+// Kospam-* headers
+#define HEADER_KOSPAM_ENVELOPE_FROM "Kospam-Envelope-From: "
+#define HEADER_KOSPAM_ENVELOPE_RECIPIENT "Kospam-Envelope-Recipient: "
+#define HEADER_KOSPAM_XFORWARD "Kospam-Xforward: "
 
-int has_octet_stream(struct __state *state);
-int has_image_attachment(struct __state *state);
+#define SMALLBUFSIZE 512
+#define MAXBUFSIZE 8192
+#define BIGBUFSIZE 131072
+
+struct Header {
+    char received[MAXBUFSIZE];
+    char from[SMALLBUFSIZE];
+    char subject[2*SMALLBUFSIZE];
+    char message_id[2*SMALLBUFSIZE];
+    char content_type[SMALLBUFSIZE];
+    char content_encoding[SMALLBUFSIZE];
+    char kospam_envelope_from[SMALLBUFSIZE];
+    char kospam_envelope_recipient[MAXBUFSIZE];
+    char kospam_xforward[2*SMALLBUFSIZE];
+};
+
+struct Body {
+    char data[BIGBUFSIZE];
+    size_t pos;
+};
+
+struct attachment {
+   size_t size;
+   char type[TINYBUFSIZE];
+   char filename[TINYBUFSIZE];
+   char digest[2*DIGEST_LENGTH+1];
+};
+
+struct Message {
+    struct Header header;
+    struct Body body;
+    struct attachment attachments[MAX_ATTACHMENTS];
+    int n_attachments;
+    char has_image_attachment;
+    char has_octet_stream_attachment;
+};
+
+
+int parse_message(const char *message, struct __state *state, struct Message *m);
+int post_parse(struct __state *state, struct Message *m, struct __config *cfg);
+char *read_file(const char *filename, size_t *outsize);
+int parse_eml_buffer(char *buffer, struct Message *m);
+void extract_mime_parts(char *body, const char *boundary, struct Message *m);
+
+int base64_decode(char *input);
+void decodeQP(char *p);
+char *decode_mime_encoded_words(const char *input);
+void extract_header_value(const char *buffer, int buffer_len, const char *header_name, int header_name_len, char *result, size_t resultbuflen);
+void extract_name_from_header_line(char *buffer, char *name, char *resultbuf, int resultbuflen);
+char *find_boundary(const char *buffer);
+void fixup_encoded_header(char *buf, int buflen);
+char *split(char *str, int ch, char *buf, int buflen, int *result);
+void normalize_buffer(char *s);
+int utf8_encode(char *inbuf, int inbuflen, char *outbuf, int outbuflen, char *encoding);
+void utf8_tolower(char *s);
+void decode_html_entities_utf8_inplace(char *buffer);
+void normalize_html(char *input);
+void chop_newlines(char *str, size_t len);
 
 #endif /* _PARSER_H */

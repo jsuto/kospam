@@ -466,11 +466,11 @@ void init_session_data(struct session_data *sdata, struct __config *cfg){
 
    memset(sdata->attachments, 0, SMALLBUFSIZE);
 
-   memset(sdata->fromemail, 0, SMALLBUFSIZE);
+   //memset(sdata->fromemail, 0, SMALLBUFSIZE);
 
    sdata->ipcnt = 0;
-   memset(sdata->ip, 0, SMALLBUFSIZE);
-   memset(sdata->hostname, 0, SMALLBUFSIZE);
+   //memset(sdata->ip, 0, SMALLBUFSIZE);
+   //memset(sdata->hostname, 0, SMALLBUFSIZE);
 
    memset(sdata->whitelist, 0, MAXBUFSIZE);
    memset(sdata->blacklist, 0, MAXBUFSIZE);
@@ -478,7 +478,7 @@ void init_session_data(struct session_data *sdata, struct __config *cfg){
    sdata->tot_len = 0;
    sdata->num_of_rcpt_to = 0;
 
-   sdata->tre = '-';
+   //sdata->tre = '-';
 
    sdata->rav = AVIR_OK;
 
@@ -500,7 +500,7 @@ void init_session_data(struct session_data *sdata, struct __config *cfg){
 
    sdata->uid = sdata->gid = 0;
    sdata->statistically_whitelisted = 0;
-   sdata->training_request = 0;
+   //sdata->training_request = 0;
    sdata->mynetwork = 0;
 
    sdata->uid = sdata->gid = 0;
@@ -586,7 +586,7 @@ int is_item_on_list(char *item, char *list, char *extralist){
 
    p = my_list;
 
-   do {
+   while(p) {
       p = split(p, ',', w, sizeof(w)-1, &result);
 
       trim_buffer(w);
@@ -605,7 +605,7 @@ int is_item_on_list(char *item, char *list, char *extralist){
 
       }
 
-   } while(p);
+   }
 
    return 0;
 }
@@ -663,3 +663,10 @@ char *strcasestr(const char *s, const char *find){
    return((char*)s);
 }
 #endif
+
+long get_local_timezone_offset(){
+   time_t t = time(NULL);
+   struct tm lt = {0};
+   localtime_r(&t, &lt);
+   return lt.tm_gmtoff;
+}

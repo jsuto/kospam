@@ -7,15 +7,19 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 #include <signal.h>
 #include <unistd.h>
 #include <dirent.h>
 #include <locale.h>
+#include <fcntl.h>
 #include <errno.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <getopt.h>
+#include <math.h>
+#include <zlib.h>
 
 #include <sig.h>
 #include <sql.h>
@@ -42,7 +46,7 @@ void check_and_create_directories(struct __config *cfg);
 void kill_children(int sig, char *sig_text);
 
 void zombie_init(struct __data *data, struct __config *cfg);
-void check_zombie_sender(struct session_data *sdata, struct __data *data, struct __config *cfg);
+void check_zombie_sender(struct __state *state, struct __data *data, struct __config *cfg);
 void zombie_free(struct __data *data);
 
 int check_for_known_bad_attachments(struct session_data *sdata, struct __state *state);
@@ -72,5 +76,12 @@ void manage_partitions(struct __config *cfg);
 int write_history_to_sql(struct session_data *sdata, struct __state *state);
 
 void store_minefield_ip(struct session_data *sdata, char *ip);
+
+int generate_tokens_from_string(struct __state *state, const char *s, char *label, struct __config *cfg);
+
+void digest_string(char *digestname, char *s, char *digest);
+
+void do_training(struct session_data *sdata, struct __state *state, char *email, struct __config *cfg);
+void is_sender_on_minefield(struct session_data *sdata, char *ip);
 
 #endif /* _KOSPAM_H */

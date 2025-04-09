@@ -42,19 +42,19 @@ void zombie_init(struct __data *data, struct __config *cfg){
 }
 
 
-void check_zombie_sender(struct session_data *sdata, struct __data *data, struct __config *cfg){
+void check_zombie_sender(struct __state *state, struct __data *data, struct __config *cfg){
    int i=0;
    size_t nmatch=0;
 
-   while(i < data->n_regex && sdata->tre != '+'){
-      if(regexec(&(data->pregs[i]), sdata->hostname, nmatch, NULL, 0) == 0){
-         sdata->tre = '+';
+   while(i < data->n_regex && state->tre != '+'){
+      if(regexec(&(data->pregs[i]), state->hostname, nmatch, NULL, 0) == 0){
+         state->tre = '+';
       }
 
       i++;
    }
 
-   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: zombie check: %c [%d] %s", sdata->ttmpfile, sdata->tre, i, sdata->hostname);
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "zombie check: %c [%d] %s", state->tre, i, state->hostname);
 }
 
 

@@ -2,10 +2,6 @@
  * hash.c, SJ
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <math.h>
 #include <kospam.h>
 
 

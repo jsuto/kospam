@@ -1,6 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <kospam.h>
 
 char* read_file(const char* filename, size_t* size_out) {

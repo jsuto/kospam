@@ -2,10 +2,7 @@
  * sig.c
  */
 
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <signal.h>
-#include <clapf.h>
+#include <kospam.h>
 
 
 void sig_block(int sig){
@@ -56,4 +53,3 @@ signal_func *set_signal_handler(int signo, signal_func * func){
 
    return oact.sa_handler;
 }
-

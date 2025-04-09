@@ -1,7 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
+#include <kospam.h>
 
 // Encode a single Unicode codepoint into UTF-8 at *dst
 // Returns number of bytes written

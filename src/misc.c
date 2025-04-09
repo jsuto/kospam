@@ -2,25 +2,7 @@
  * misc.c, SJ
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/un.h>
-#include <sys/stat.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-#include <sys/time.h>
-#include <time.h>
-#include <sys/resource.h>
-#include <fcntl.h>
-#include <syslog.h>
-#include <unistd.h>
-#include <ctype.h>
-#include <openssl/ssl.h>
-#include <clapf.h>
+#include <kospam.h>
 
 
 void __fatal(char *s){

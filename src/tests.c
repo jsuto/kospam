@@ -230,6 +230,32 @@ void test_normalize_html() {
     TEST_FOOTER();
 }
 
+void test_utf8_tolower() {
+    TEST_HEADER();
+
+    TestCaseStrStr tests[] = {
+        {
+          "VÁLTOZÁS TÖRTÉNT AZ IPARŰZÉSI ADÓBAN BEVEZETTÉK AZ EGYSZERŰSÍTETT TÉTELES VAGY SÁVOS IPARŰZÉSI ADÓT",
+          "változás történt az iparŰzési adóban bevezették az egyszerŰsített tételes vagy sávos iparŰzési adót"
+        },
+        {
+          "ADÓBEVALLÁS GYAKORLATIAS KITÖLTÉSI ÚTMUTATÓJÁT TARtalmaZZA",
+          "adóbevallás gyakorlatias kitöltési útmutatóját tartalmazza"
+        },
+    };
+
+    int num_tests = sizeof(tests) / sizeof(TestCaseStrStr);
+
+    for (int i = 0; i < num_tests; i++) {
+        char s[SMALLBUFSIZE];
+        snprintf(s, sizeof(s)-1, "%s", tests[i].input);
+        utf8_tolower(s);
+        ASSERT(strcmp(s, tests[i].expected) == 0, tests[i].input);
+    }
+
+    TEST_FOOTER();
+}
+
 int main() {
     test_xxh3_64();
     test_chop_newlines();
@@ -240,4 +266,5 @@ int main() {
     test_digest_string();
     test_decode_html_entities_utf8_inplace();
     test_normalize_html();
+    test_utf8_tolower();
 }

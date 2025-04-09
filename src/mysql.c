@@ -2,11 +2,7 @@
  * mysql.c, SJ
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <syslog.h>
-#include <clapf.h>
+#include <kospam.h>
 
 
 int open_database(struct session_data *sdata, struct __config *cfg){

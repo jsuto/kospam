@@ -2,16 +2,7 @@
  * train.c, SJ
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <syslog.h>
-#include <clapf.h>
+#include <kospam.h>
 
 
 // introduce new token with timestamp=NOW(), nham=0, nspam=0
@@ -38,18 +29,12 @@ int introduce_tokens(struct session_data *sdata, struct __state *state, struct _
       q = state->token_hash[i];
       while(q != NULL){
 
-         // use q->timestamp == 0?
          if(q->nham + q->nspam == 0){
             if(n) snprintf(s, sizeof(s)-1, ",(%llu,0,0)", q->key);
             else snprintf(s, sizeof(s)-1, "(%llu,0,0)", q->key);
             buffer_cat(query, s);
             n++;
-
-            //printf("new token: %llu\n", q->key);
          }
-         /*else {
-            printf("old token: %llu\n", q->key);
-         }*/
 
          q = q->r;
       }

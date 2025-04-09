@@ -90,11 +90,10 @@ void chop_newlines(char *str, size_t len) {
     if (str == NULL) return;
 
     while (len > 0) {
-        if (str[len - 1] == '\n') {
+        if (str[len - 1] == '\r' || str[len - 1] == '\n') {
             str[--len] = '\0';
-        } else if (str[len - 1] == '\r') {
-            str[--len] = '\0';
-        } else {
+        }
+        else {
             break;
         }
     }

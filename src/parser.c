@@ -125,6 +125,7 @@ int post_parse(struct __state *state, struct Message *m, struct __config *cfg) {
 
         // from mail.trops.eu (mail.trops.eu [37.220.140.203])
         p = m->header.received;
+
         while (p) {
             int result;
             char v[SMALLBUFSIZE];
@@ -145,7 +146,7 @@ int post_parse(struct __state *state, struct Message *m, struct __config *cfg) {
                 else {
                     snprintf(state->hostname, sizeof(state->hostname)-1, "%s", q);
                 }
-            } else if(strcmp(v, "unknown")) {
+            } else if(!strcmp(v, "unknown")) {
                 addnode(state->token_hash, "UNKNOWN_CLIENT*", REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
             }
         }
@@ -349,9 +350,9 @@ void extract_mime_parts(char *body, const char *boundary, struct Message *m) {
 
             const char *transfer_encoding = strcasestr(part_headers, HEADER_CONTENT_TRANSFER_ENCODING);
             if (transfer_encoding) {
-               if(strstr(transfer_encoding, "base64")) {
+               if(strcasestr(transfer_encoding, "base64")) {
                   needs_base64_decode = true;
-               } else if(strstr(transfer_encoding, "quoted-printable")) {
+               } else if(strcasestr(transfer_encoding, "quoted-printable")) {
                   needs_quoted_printable_decode = true;
                }
             }
@@ -418,7 +419,7 @@ void extract_mime_parts(char *body, const char *boundary, struct Message *m) {
 
                if (m->n_attachments < MAX_ATTACHMENTS) {
                    CONVERT_WHITESPACE_TO_UNDERSCORE(filename);
-                   snprintf(m->attachments[m->n_attachments].filename, sizeof(m->attachments[m->n_attachments].filename)-1, "ATT*%s ", filename);
+                   snprintf(m->attachments[m->n_attachments].filename, sizeof(m->attachments[m->n_attachments].filename)-1, "ATT*%s", filename);
                    APPENDTOBODY(m->attachments[m->n_attachments].filename, m->body.data, m->body.pos);
 
                    m->attachments[m->n_attachments].size = strlen(part_body);

@@ -2,23 +2,10 @@
  * clamd.c, SJ
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <strings.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/socket.h>
-#include <sys/un.h>
-#include <netdb.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <clapf.h>
+#include <kospam.h>
 
 
-int clamd_scan(char *tmpfile, char *engine, char *avinfo, struct __config *cfg){
+int clamd_scan(char *tmpfile, char *engine, char *avinfo, struct config *cfg){
    int s, n;
    char *p, *q, buf[MAXBUFSIZE], scan_cmd[SMALLBUFSIZE];
    struct sockaddr_un server;
@@ -45,7 +32,7 @@ int clamd_scan(char *tmpfile, char *engine, char *avinfo, struct __config *cfg){
 
    /* issue the SCAN command with full path to the temporary directory */
 
-   
+
    snprintf(scan_cmd, sizeof(scan_cmd)-1, "SCAN %s/%s\r\n", cfg->workdir, tmpfile);
 
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: CLAMD CMD: %s", tmpfile, scan_cmd);
@@ -78,7 +65,7 @@ int clamd_scan(char *tmpfile, char *engine, char *avinfo, struct __config *cfg){
 }
 
 
-int clamd_net_scan(char *tmpfile, char *engine, char *avinfo, struct __config *cfg){
+int clamd_net_scan(char *tmpfile, char *engine, char *avinfo, struct config *cfg){
    int n, psd, rc, ret=AV_OK;
    char *p, *q, buf[MAXBUFSIZE], scan_cmd[SMALLBUFSIZE];
    char port_string[6];
@@ -145,4 +132,3 @@ ENDE_CLAMD:
 
    return ret;
 }
-

@@ -20,15 +20,15 @@
 #define CLAMD_RESP_INFECTED "FOUND"
 #define CLAMD_RESP_ERROR "ERROR"
 
-int clamd_scan(char *tmpfile, char *engine, char *avinfo, struct __config *cfg);
-int clamd_net_scan(char *tmpfile, char *engine, char *avinfo, struct __config *cfg);
+int clamd_scan(char *tmpfile, char *engine, char *avinfo, struct config *cfg);
+int clamd_net_scan(char *tmpfile, char *engine, char *avinfo, struct config *cfg);
 
 // Dr.Web stuff
 
 #define DRWEB_RESP_VIRUS 0x20
 #define DRWEB_VIRUS_HAS_FOUND_MESSAGE "Virus has been found in message. See drwebd.log for details"
 
-int drweb_scan(char *tmpfile, char *engine, char *avinfo, struct __config *cfg);
+int drweb_scan(char *tmpfile, char *engine, char *avinfo, struct config *cfg);
 
 
 // avast! stuff
@@ -43,8 +43,8 @@ int drweb_scan(char *tmpfile, char *engine, char *avinfo, struct __config *cfg);
 #define AVAST_RESP_CLEAN "[+]"
 #define AVAST_RESP_INFECTED "[L]"
 
-int avast_scan(char *tmpfile, char *engine, char *avinfo, struct __config *cfg);
-int avast_cmd_scan(char *tmpfile, char *engine, char *avinfo, struct __config *cfg);
+int avast_scan(char *tmpfile, char *engine, char *avinfo, struct config *cfg);
+int avast_cmd_scan(char *tmpfile, char *engine, char *avinfo, struct config *cfg);
 
 // Kaspersky stuff
 
@@ -56,7 +56,7 @@ int avast_cmd_scan(char *tmpfile, char *engine, char *avinfo, struct __config *c
 #define KAV_RESP_INFECTED_NAME "322-"
 #define KAV_RESP_NOT_FOUND "525 File not found"
 
-int kav_scan(char *tmpfile, char *engine, char *avinfo, struct __config *cfg);
+int kav_scan(char *tmpfile, char *engine, char *avinfo, struct config *cfg);
 
 // avg stuff
 
@@ -70,10 +70,10 @@ int kav_scan(char *tmpfile, char *engine, char *avinfo, struct __config *cfg);
 
 #define AVG_NOT_FOUND 404
 
-int avg_scan(char *tmpdir, char *tmpfile, char *engine, char *avinfo, struct __config *cfg);
+int avg_scan(char *tmpdir, char *tmpfile, char *engine, char *avinfo, struct config *cfg);
 
 
-int moveMessageToQuarantine(struct session_data *sdata, struct __config *cfg);
-void sendNotificationToPostmaster(struct session_data *sdata, char *rcpttoemail, char *fromemail, char *virusinfo, char *avengine, struct __config *cfg);
+int moveMessageToQuarantine(struct session_data *sdata, struct config *cfg);
+void sendNotificationToPostmaster(struct session_data *sdata, char *rcpttoemail, char *fromemail, char *virusinfo, char *avengine, struct config *cfg);
 
 #endif /* _AV_H */

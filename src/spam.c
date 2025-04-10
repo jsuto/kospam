@@ -9,7 +9,7 @@
  * pull tokens from database and calculate spam probabilities
  */
 
-void qry_spaminess(struct session_data *sdata, struct __state *state, char type, struct __config *cfg){
+void qry_spaminess(struct session_data *sdata, struct parser_state *state, char type, struct config *cfg){
    get_tokens(state, type, cfg);
 
    for(int i=0;i<MAXHASH;i++){
@@ -37,7 +37,7 @@ void qry_spaminess(struct session_data *sdata, struct __state *state, char type,
 }
 
 
-double evaluate_tokens(struct session_data *sdata, struct __state *state, struct __config *cfg){
+double evaluate_tokens(struct session_data *sdata, struct parser_state *state, struct config *cfg){
    int n_tokens=0, surbl_hit=0;
    float spaminess=DEFAULT_SPAMICITY;
    //int has_embed_image=0;
@@ -99,7 +99,7 @@ END_OF_EVALUATION:
 }
 
 
-float run_statistical_check(struct session_data *sdata, struct __state *state, struct __config *cfg){
+float run_statistical_check(struct session_data *sdata, struct parser_state *state, MYSQL *conn, struct config *cfg){
    char buf[MAXBUFSIZE];
    float ham_from=0, spam_from=0;
    float spaminess = DEFAULT_SPAMICITY;
@@ -109,7 +109,7 @@ float run_statistical_check(struct session_data *sdata, struct __state *state, s
 
    snprintf(buf, sizeof(buf)-1, "SELECT nham, nspam FROM %s", SQL_MISC_TABLE);
 
-   te = get_ham_spam_counters(sdata, buf);
+   te = get_ham_spam_counters(conn, buf);
    sdata->nham = te.nham;
    sdata->nspam = te.nspam;
 
@@ -127,7 +127,7 @@ float run_statistical_check(struct session_data *sdata, struct __state *state, s
 
       snprintf(buf, sizeof(buf)-1, "SELECT nham, nspam FROM %s WHERE token=%llu", SQL_TOKEN_TABLE, xxh3_64(state->from));
 
-      te = get_ham_spam_counters(sdata, buf);
+      te = get_ham_spam_counters(conn, buf);
       ham_from = te.nham;
       spam_from = te.nspam;
 

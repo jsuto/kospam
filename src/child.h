@@ -3,8 +3,8 @@
 
 #include <kospam.h>
 
-extern struct __config cfg;
-extern struct __data data;
+extern struct config cfg;
+extern struct data data;
 
 extern struct child children[MAXCHILDREN];
 extern int quit;

@@ -5,11 +5,11 @@
 #include <kospam.h>
 
 
-int get_policy(struct session_data *sdata, struct __config *cfg, struct __config *my_cfg){
+int get_policy(struct session_data *sdata, struct config *cfg, struct config *my_cfg){
    int rc=0;
    float f;
    char f1[MAXVAL], f2[MAXVAL];
-   struct sql sql;
+   struct query sql;
 
    /*
     * in case of smtp mode don't query unless we have a single recipient

@@ -4,8 +4,8 @@ struct child children[MAXCHILDREN];
 int quit = 0;
 int received_sighup = 0;
 
-struct __config cfg;
-struct __data data;
+struct config cfg;
+struct data data;
 
 
 

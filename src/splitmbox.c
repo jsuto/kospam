@@ -2,11 +2,7 @@
  * splitmbox.c, SJ
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
-#include <clapf.h>
+#include <kospam.h>
 
 
 int main(int argc, char **argv){

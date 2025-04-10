@@ -41,7 +41,7 @@ int is_host_on_rbl_lists(char *host, char *domainlist){
 }
 
 
-int check_rbl_lists(struct __state *state, char *domainlist){
+int check_rbl_lists(struct parser_state *state, char *domainlist){
    int i, rc=0;
    char rbl_token[MAXVAL];
    struct node *q;

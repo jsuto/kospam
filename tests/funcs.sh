@@ -3,14 +3,16 @@
 set -o errexit
 
 VERDICT=0
-###RESULT_CRITICAL=2
 # shellcheck disable=SC2034
+RESULT_CRITICAL=2
 PEMFILE="${SCRIPT_DIR}/server.pem"
 LOGFILE="mail.log"
 EML_DIR="${SCRIPT_DIR}/eml"
 # shellcheck disable=SC2034
+TRAINING_DIR="${SCRIPT_DIR}/training"
+# shellcheck disable=SC2034
 MAIL_HOST="mail.aaa.fu"
-SYSLOG_HOST="syslog.host"
+SYSLOG_HOST="syslog.kospam"
 SMTPTEST="${SCRIPT_DIR}/smtptest"
 
 error() {

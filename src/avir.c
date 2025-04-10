@@ -2,15 +2,10 @@
  * avir.c, SJ
  */
 
-#include <stdio.h>
-#include <string.h>
-#include <sys/time.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <clapf.h>
+#include <kospam.h>
 
 
-int do_av_check(struct session_data *sdata, char *virusinfo, struct __data *data, struct __config *cfg){
+int do_av_check(struct session_data *sdata, char *virusinfo, struct data *data, struct config *cfg){
    int rav = AVIR_OK;
    char avengine[SMALLBUFSIZE];
 
@@ -51,5 +46,3 @@ int do_av_check(struct session_data *sdata, char *virusinfo, struct __data *data
 
    return rav;
 }
-
-

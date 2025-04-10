@@ -25,10 +25,7 @@ int trim_buffer(char *s);
 int extract_verp_address(char *email);
 int extractEmail(char *rawmail, char *email);
 void make_random_string(char *buf, int buflen);
-void create_id(char *id, unsigned char server_id);
 int is_valid_clapf_id(char *p);
-int get_random_bytes(unsigned char *buf, int len, unsigned char server_id);
-int readFromEntropyPool(int fd, void *_s, size_t n);
 int recvtimeout(int s, char *buf, int len, int timeout);
 int write1(int sd, void *buf, int buflen, int use_ssl, SSL *ssl);
 int recvtimeoutssl(int s, char *buf, int len, int timeout, int use_ssl, SSL *ssl);
@@ -36,7 +33,7 @@ int recvtimeoutssl(int s, char *buf, int len, int timeout, int use_ssl, SSL *ssl
 void write_pid_file(char *pidfile);
 int drop_privileges(struct passwd *pwd);
 
-void init_session_data(struct session_data *sdata, struct __config *cfg);
+void init_session_data(struct session_data *sdata);
 int read_from_stdin(struct session_data *sdata);
 void strtolower(char *s);
 
@@ -49,9 +46,5 @@ int is_list_on_string(char *s, char *list);
 int is_dotted_ipv4_address(char *s);
 
 long get_local_timezone_offset();
-
-#ifndef _GNU_SOURCE
-   char *strcasestr(const char *s, const char *find);
-#endif
 
 #endif /* _MISC_H */

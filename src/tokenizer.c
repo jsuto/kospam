@@ -5,7 +5,7 @@
 #include <kospam.h>
 
 
-int generate_tokens_from_string(struct __state *state, const char *s, char *label, struct __config *cfg){
+int generate_tokens_from_string(struct parser_state *state, const char *s, char *label, struct config *cfg){
    int i=0, n=0;
    char tmpbuf[SMALLBUFSIZE], chain[SMALLBUFSIZE];
 
@@ -48,7 +48,7 @@ int generate_tokens_from_string(struct __state *state, const char *s, char *labe
       }
 
       // skip single letter or too long words, but keep attachment names
-      if (len < (size_t)cfg->min_word_len || (len > MAX_WORD_LEN && strncmp(&v[skiplen], "att*", 4)) ) continue;
+      if (len < (size_t)cfg->min_word_len || (len > (size_t)cfg->max_word_len && strcmp(label, "SUBJ*") && strncmp(&v[skiplen], "att*", 4)) ) continue;
 
       if(i > 0){
          snprintf(chain, sizeof(chain)-1, "%s+%s%s", tmpbuf, label, &v[skiplen]);

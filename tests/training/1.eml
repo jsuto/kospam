@@ -1,0 +1,50 @@
+Received: from post.gts.pl (217.153.86.115) by X10CASHT1.energis.poland
+ (10.176.112.119) with Microsoft SMTP Server (TLS) id 14.3.210.2; Sun, 15 Nov
+ 2015 04:10:16 +0100
+Received: from mail.datanet.hu (mail.datanet.hu [194.149.13.140])	by
+ post.gts.pl (8.14.3/8.14.3) with ESMTP id tAF3BfFN026148	for
+ <iwadmin@gtsce.com>; Sun, 15 Nov 2015 04:11:42 +0100
+Received: from [194.149.13.173] (HELO facilus.datanet.hu)  by mail.datanet.hu
+ (CommuniGate Pro SMTP 4.3.9)  with ESMTP id 989842172 for
+ admin@interware.co.hu; Sun, 15 Nov 2015 04:11:36 +0100
+Received: by facilus.datanet.hu (DataNet, from userid 1002)	id C4ACABF; Sun,
+ 15 Nov 2015 04:11:36 +0100 (CET)
+X-Spam-Virus: No
+Received: from mx3.datanet.hu (unknown [194.149.13.183])	by facilus.datanet.hu
+ (DataNet) with ESMTP id B359FBB	for <admin@interware.co.hu>; Sun, 15 Nov 2015
+ 04:11:33 +0100 (CET)
+Received: from store-1.interware.hu (store-1.interware.hu [217.116.46.249])	by
+ mx3.datanet.hu (DataNet) with ESMTP id A2C3B78C17	for
+ <admin@interware.co.hu>; Sun, 15 Nov 2015 04:11:33 +0100 (CET)
+Received: from root by store-1.interware.hu with local (Exim 4.63 #1 (Debian))
+	id 1Zxnih-00036a-2U (authenticated sender: 9de860f744d958e33d641506845c70cb)
+	for <root@mail.truenet.hu>; Sun, 15 Nov 2015 04:11:33 +0100
+From: Cron Daemon <root@mail.truenet.hu>
+To: <root@mail.truenet.hu>
+Subject: Cron <root@store-1> /usr/local/sbin/clamchk.sh
+X-Cron-Env: <SHELL=/bin/sh>
+X-Cron-Env: <PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin>
+X-Cron-Env: <HOME=/root>
+X-Cron-Env: <LOGNAME=root>
+Message-ID: <E1Zxnih-00036a-2U@store-1.interware.hu>
+Date: Sun, 15 Nov 2015 04:11:33 +0100
+X-Authenticated-Sender: 9de860f744d958e33d641506845c70cb
+X-Virus-Scanned: clamav-milter 0.97.2 at post
+X-Virus-Status: Clean
+Return-Path: root@mail.truenet.hu
+X-MS-Exchange-Organization-AuthSource: X10CASHT1.energis.poland
+X-MS-Exchange-Organization-AuthAs: Anonymous
+Status: RO
+MIME-Version: 1.0
+Content-Type: multipart/mixed;
+	boundary="--boundary-LibPST-iamunique-811918990_-_-"
+X-Kospam-Training-Id: 40000000600790f3210ece8400cb72d324e3
+
+
+----boundary-LibPST-iamunique-811918990_-_-
+Content-Type: text/plain; charset="ANSI_X3.4-1968"
+
+Timeout: aborting command ``clamdscan'' with signal 2
+Starting ClamAV daemon clamd .
+
+----boundary-LibPST-iamunique-811918990_-_---

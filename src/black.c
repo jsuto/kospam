@@ -2,42 +2,39 @@
  * black.c, SJ
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
-#include <syslog.h>
-#include <unistd.h>
-#include <clapf.h>
+#include <kospam.h>
 
 
-void store_minefield_ip(struct session_data *sdata, char *ip){
-   struct sql sql;
+void store_minefield_ip(MYSQL *conn, char *ip){
+   struct query sql;
 
-   if(prepare_sql_statement(sdata, &sql, SQL_PREPARED_STMT_INSERT_INTO_BLACKHOLE) == ERR) return;
+   if(prepare_sql_statement(conn, &sql, SQL_PREPARED_STMT_INSERT_INTO_BLACKHOLE) == ERR) return;
 
    p_bind_init(&sql);
 
-   sql.sql[sql.pos] = ip; sql.type[sql.pos] = TYPE_STRING; sql.pos++;
-   sql.sql[sql.pos] = (char *)&(sdata->now); sql.type[sql.pos] = TYPE_LONG; sql.pos++;
+   time_t now = time(NULL);
 
-   p_exec_stmt(sdata, &sql);
+   sql.sql[sql.pos] = ip; sql.type[sql.pos] = TYPE_STRING; sql.pos++;
+   sql.sql[sql.pos] = (char *)&now; sql.type[sql.pos] = TYPE_LONG; sql.pos++;
+
+   p_exec_stmt(conn, &sql);
 
    close_prepared_statement(&sql);
 }
 
 
-void is_sender_on_minefield(struct session_data *sdata, char *ip){
+bool is_sender_on_minefield(MYSQL *conn, char *ip){
    unsigned long ts=0;
-   struct sql sql;
+   struct query sql;
+   bool trapped_client = false;
 
-   if(prepare_sql_statement(sdata, &sql, SQL_PREPARED_STMT_QUERY_MINEFIELD) == ERR) return;
+   if(prepare_sql_statement(conn, &sql, SQL_PREPARED_STMT_QUERY_MINEFIELD) == ERR) return trapped_client;
 
    p_bind_init(&sql);
 
    sql.sql[sql.pos] = ip; sql.type[sql.pos] = TYPE_STRING; sql.pos++;
 
-   if(p_exec_stmt(sdata, &sql) == ERR) goto ENDE;
+   if(p_exec_stmt(conn, &sql) == ERR) goto ENDE;
 
    p_bind_init(&sql);
 
@@ -46,8 +43,8 @@ void is_sender_on_minefield(struct session_data *sdata, char *ip){
    p_store_results(&sql);
 
    if(p_fetch_results(&sql) == OK){
-      sdata->trapped_client = 1;
-      syslog(LOG_PRIORITY, "%s: %s is trapped on minefield", sdata->ttmpfile, ip);
+      trapped_client = true;
+      syslog(LOG_PRIORITY, "%s is trapped on minefield", ip);
    }
 
    p_free_results(&sql);
@@ -55,5 +52,5 @@ void is_sender_on_minefield(struct session_data *sdata, char *ip){
 ENDE:
    close_prepared_statement(&sql);
 
+   return trapped_client;
 }
-

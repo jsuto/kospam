@@ -4,7 +4,7 @@
 
 #include <kospam.h>
 
-void add_penalties(struct session_data *sdata, struct __state *state, struct __config *cfg){
+void add_penalties(struct session_data *sdata, struct parser_state *state, struct config *cfg){
 
    if(cfg->penalize_octet_stream == 1 && state->has_octet_stream_attachment == 1)
        addnode(state->token_hash, "OCTET_STREAM*", REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
@@ -24,15 +24,15 @@ void add_penalties(struct session_data *sdata, struct __state *state, struct __c
 }
 
 
-int check_spam(struct session_data *sdata, struct __state *state, struct __data *data, char *fromemail, char *rcpttoemail, struct __config *cfg, struct __config *my_cfg){
-   char *p, tmpbuf[SMALLBUFSIZE];
+int check_spam(struct session_data *sdata, MYSQL *conn, struct parser_state *state, struct data *data, struct config *cfg, struct config *my_cfg){
+   char tmpbuf[SMALLBUFSIZE];
    struct timezone tz;
    struct timeval tv1, tv2;
 
    sdata->spaminess = DEFAULT_SPAMICITY;
 
    int spaminessbuf_size_left = sizeof(sdata->spaminessbuf)-2;
-   snprintf(sdata->spaminessbuf, spaminessbuf_size_left, "%s%s\r\n", cfg->clapf_header_field, sdata->ttmpfile);
+   snprintf(sdata->spaminessbuf, spaminessbuf_size_left, "%s%s\r\n", HEADER_KOSPAM_WATERMARK, sdata->ttmpfile);
    spaminessbuf_size_left -= strlen(sdata->spaminessbuf);
 
    /*
@@ -43,10 +43,10 @@ int check_spam(struct session_data *sdata, struct __state *state, struct __data 
 
       /* get user from 'MAIL FROM:', 2008.10.25, SJ */
 
-      gettimeofday(&tv1, &tz);
-      get_user_data_from_email(sdata, fromemail, cfg);
+      /*gettimeofday(&tv1, &tz);
+      get_user_data_from_email(sdata, state->envelope_from, cfg);
       gettimeofday(&tv2, &tz);
-      sdata->__user += tvdiff(tv2, tv1);
+      sdata->__user += tvdiff(tv2, tv1);*/
 
       /*
        * If not found, then try to get it from the RCPT TO address.
@@ -57,17 +57,18 @@ int check_spam(struct session_data *sdata, struct __state *state, struct __data 
        * In this case send training emails to xy+spam@mail.domain.com
        */
 
-      if(sdata->name[0] == 0){
+      /*if(sdata->name[0] == 0){
          gettimeofday(&tv1, &tz);
-         get_user_data_from_email(sdata, rcpttoemail, cfg);
+         get_user_data_from_email(sdata, state->envelope_recipient, cfg);
          gettimeofday(&tv2, &tz);
          sdata->__user += tvdiff(tv2, tv1);
-      }
+      }*/
 
-      if(sdata->policy_group > 0) get_policy(sdata, cfg, my_cfg);
+      // FIXME:
+      //if(sdata->policy_group > 0) get_policy(sdata, cfg, my_cfg);
 
       gettimeofday(&tv1, &tz);
-      do_training(sdata, state, rcpttoemail, my_cfg);
+      do_training(sdata, state, conn, my_cfg);
       gettimeofday(&tv2, &tz);
       sdata->__training += tvdiff(tv2, tv1);
 
@@ -89,27 +90,27 @@ int check_spam(struct session_data *sdata, struct __state *state, struct __data 
     * get per user settings and policy
     */
 
-   if(get_user_data_from_email(sdata, rcpttoemail, cfg) == 0){
-      p = strchr(rcpttoemail, '@');
+   /*if(get_user_data_from_email(sdata, state->envelope_recipient, cfg) == 0){
+      p = strchr(state->envelope_recipient, '@');
       if(p) get_user_data_from_email(sdata, p, cfg);
    }
 
-   if(sdata->policy_group > 0) get_policy(sdata, cfg, my_cfg);
+   if(sdata->policy_group > 0) get_policy(sdata, cfg, my_cfg);*/
 
 
    /*
     * check sender address on the per user whitelist, then blacklist
     */
 
-   if(is_item_on_list(fromemail, sdata->whitelist, "") == 1){
-      syslog(LOG_PRIORITY, "%s: sender (%s) found on whitelist", sdata->ttmpfile, fromemail);
+   if(is_item_on_list(state->envelope_from, sdata->whitelist, "") == 1){
+      syslog(LOG_PRIORITY, "%s: sender (%s) found on whitelist", sdata->ttmpfile, state->envelope_from);
       return OK;
    }
 
 
-   if(is_item_on_list(fromemail, sdata->blacklist, "") == 1){
+   if(is_item_on_list(state->envelope_from, sdata->blacklist, "") == 1){
       sdata->spaminess = 0.99;
-      syslog(LOG_PRIORITY, "%s: sender (%s) found on blacklist", sdata->ttmpfile, fromemail);
+      syslog(LOG_PRIORITY, "%s: sender (%s) found on blacklist", sdata->ttmpfile, state->envelope_from);
       return DISCARD;
    }
 
@@ -119,7 +120,7 @@ int check_spam(struct session_data *sdata, struct __state *state, struct __data 
     */
 
    gettimeofday(&tv1, &tz);
-   is_sender_on_minefield(sdata, state->ip);
+   sdata->trapped_client = is_sender_on_minefield(conn, state->ip);
    gettimeofday(&tv2, &tz);
    sdata->__minefield += tvdiff(tv2, tv1);
 
@@ -152,11 +153,12 @@ int check_spam(struct session_data *sdata, struct __state *state, struct __data 
     * in the RCPT TO commands, mark his messages as spam
     */
 
-    if(sdata->num_of_rcpt_to > my_cfg->max_number_of_recipients_in_ham){
+    // FIXME
+    /*if(sdata->num_of_rcpt_to > my_cfg->max_number_of_recipients_in_ham){
        sdata->spaminess = 0.99;
-       if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: marking message for %s as spam, reason: too many recipients (%d/%d)", sdata->ttmpfile, rcpttoemail, sdata->num_of_rcpt_to, my_cfg->max_number_of_recipients_in_ham);
+       if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: marking message for %s as spam, reason: too many recipients (%d/%d)", sdata->ttmpfile, state->envelope_recipient, sdata->num_of_rcpt_to, my_cfg->max_number_of_recipients_in_ham);
        return OK;
-    }
+    }*/
 
 
    /*
@@ -194,12 +196,12 @@ int check_spam(struct session_data *sdata, struct __state *state, struct __data 
 
       if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: running statistical test", sdata->ttmpfile);
 
-      if(sdata->blackhole == 1) sdata->gid = 0; // fix gid if it's a blackhole request
+      //if(sdata->blackhole == 1) sdata->gid = 0; // fix gid if it's a blackhole request
 
-      if(cfg->group_type == GROUP_SHARED) sdata->gid = 0;
+      //if(cfg->group_type == GROUP_SHARED) sdata->gid = 0;
 
       gettimeofday(&tv1, &tz);
-      sdata->spaminess = run_statistical_check(sdata, state, my_cfg);
+      sdata->spaminess = run_statistical_check(sdata, state, conn, my_cfg);
       gettimeofday(&tv2, &tz);
       sdata->__as = tvdiff(tv2, tv1);
 
@@ -227,7 +229,7 @@ int check_spam(struct session_data *sdata, struct __state *state, struct __data 
          spaminessbuf_size_left -= strlen(tmpbuf);
 
          gettimeofday(&tv1, &tz);
-         train_message(sdata, state, s, my_cfg);
+         train_message(state, s, my_cfg);
          gettimeofday(&tv2, &tz);
          sdata->__training = tvdiff(tv2, tv1);
       }
@@ -243,7 +245,7 @@ int check_spam(struct session_data *sdata, struct __state *state, struct __data 
          spaminessbuf_size_left -= strlen(tmpbuf);
 
          gettimeofday(&tv1, &tz);
-         train_message(sdata, state, "nspam", my_cfg);
+         train_message(state, "nspam", my_cfg);
          gettimeofday(&tv2, &tz);
          sdata->__training = tvdiff(tv2, tv1);
 

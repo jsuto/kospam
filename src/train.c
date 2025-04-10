@@ -7,7 +7,7 @@
 
 // introduce new token with timestamp=NOW(), nham=0, nspam=0
 
-int introduce_tokens(struct session_data *sdata, struct __state *state, struct __config *cfg){
+int introduce_tokens(MYSQL *conn, struct parser_state *state, struct config *cfg){
    int i, n=0;
    char s[SMALLBUFSIZE];
    struct node *q;
@@ -40,7 +40,7 @@ int introduce_tokens(struct session_data *sdata, struct __state *state, struct _
       }
    }
 
-   mysql_real_query(&(sdata->mysql), query->data, strlen(query->data));
+   mysql_real_query(conn, query->data, strlen(query->data));
 
    buffer_destroy(query);
 
@@ -48,14 +48,9 @@ int introduce_tokens(struct session_data *sdata, struct __state *state, struct _
 }
 
 
-int train_message(struct session_data *sdata, struct __state *state, char *column, struct __config *cfg){
+int train_message(struct parser_state *state, char *column, struct config *cfg){
 
-   if(state->n_token <= 0) return 0;
-
-   introduce_tokens(sdata, state, cfg);
-
-   // update token nham or nspam column and the timestamp
-
+    if(state->n_token <= 0) return 0;
 
     // insert all tokens to temp table
 
@@ -124,11 +119,12 @@ int train_message(struct session_data *sdata, struct __state *state, char *colum
     }
 
 
-    // update misc table
+    // update the token counters in misc table
 
     snprintf(s, sizeof(s)-1, "UPDATE %s SET %s=%s+1", SQL_MISC_TABLE, column, column);
+    p_query(conn, s);
 
-    p_query(sdata, s);
+    mysql_close(conn);
 
     return 0;
 }
@@ -138,32 +134,30 @@ int train_message(struct session_data *sdata, struct __state *state, char *colum
  * train this message
  */
 
-void do_training(struct session_data *sdata, struct __state *state, char *email, struct __config *cfg){
+void do_training(struct session_data *sdata, struct parser_state *state, MYSQL *conn, struct config *cfg){
    int is_spam = 0, is_spam_q = 0;
-   struct sql sql;
+   struct query sql;
 
-   if(strcasestr(sdata->rcptto[0], "+spam@") || strncmp(email, "spam@", 5) == 0) is_spam = 1;
+   if(strcasestr(state->envelope_recipient, "+spam@") || strncmp(state->envelope_recipient, "spam@", 5) == 0) is_spam = 1;
 
-
-   // TODO: Add training in rounds
 
    /*
-    * check if clapf_id exists in database
+    * check if the Kospam watermark exists in database
     */
 
-   if(sdata->clapf_id[0] == '\0'){
-      syslog(LOG_PRIORITY, "%s: error: missing signature", sdata->ttmpfile);
+   if(state->kospam_watermark[0] == '\0'){
+      syslog(LOG_PRIORITY, "%s: ERROR: missing signature", sdata->ttmpfile);
       return;
    }
 
 
-   if(prepare_sql_statement(sdata, &sql, SQL_PREPARED_STMT_QUERY_TRAINING_ID) == ERR) return;
+   if(prepare_sql_statement(conn, &sql, SQL_PREPARED_STMT_QUERY_TRAINING_ID) == ERR) return;
 
    p_bind_init(&sql);
 
-   sql.sql[sql.pos] = sdata->clapf_id; sql.type[sql.pos] = TYPE_STRING; sql.pos++;
+   sql.sql[sql.pos] = state->kospam_watermark; sql.type[sql.pos] = TYPE_STRING; sql.pos++;
 
-   if(p_exec_stmt(sdata, &sql) == ERR) goto ENDE;
+   if(p_exec_stmt(conn, &sql) == ERR) goto ENDE;
 
    p_bind_init(&sql);
 
@@ -172,7 +166,7 @@ void do_training(struct session_data *sdata, struct __state *state, char *email,
    p_store_results(&sql);
 
    if(p_fetch_results(&sql) == ERR){
-      syslog(LOG_PRIORITY, "%s: error: invalid signature '%s'", sdata->ttmpfile, sdata->clapf_id);
+      syslog(LOG_PRIORITY, "%s: ERROR: invalid signature '%s'", sdata->ttmpfile, state->kospam_watermark);
       return;
    }
 
@@ -183,10 +177,22 @@ void do_training(struct session_data *sdata, struct __state *state, char *email,
    if(is_spam) snprintf(s, sizeof(s)-1, "nspam");
    else snprintf(s, sizeof(s)-1, "nham");
 
-   train_message(sdata, state, s, cfg);
+   // Add new tokens first
+   introduce_tokens(conn, state, cfg);
 
-   syslog(LOG_PRIORITY, "%s: training %s", sdata->ttmpfile, sdata->clapf_id);
+   for (int i=0; i<MAX_ITERATIVE_TRAIN_LOOPS; i++) {
 
+      resetcounters(state->token_hash);
+
+      sdata->spaminess = run_statistical_check(sdata, state, conn, cfg);
+
+      if(/*state->n_deviating_token > 20 &&*/ is_spam == 1 && sdata->spaminess > 0.99) break;
+      if(/*state->n_deviating_token > 20 &&*/ is_spam == 0 && sdata->spaminess < 0.1) break;
+
+      if(cfg->verbosity >= _LOG_INFO) syslog(LOG_PRIORITY, "%s: training %d, round: %d spaminess: %0.4f, deviating tokens: %d", sdata->ttmpfile, is_spam, i, sdata->spaminess, state->n_deviating_token);
+
+      train_message(state, s, cfg);
+   }
 
 ENDE:
    close_prepared_statement(&sql);

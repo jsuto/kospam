@@ -59,85 +59,86 @@ struct _parse_rule {
 struct _parse_rule config_parse_rules[] =
 {
 
-   { "always_scan_message", "integer", (void*) int_parser, offsetof(struct __config, always_scan_message), "1", sizeof(int)},
-   { "backlog", "integer", (void*) int_parser, offsetof(struct __config, backlog), "20", sizeof(int)},
-   { "blackhole_email_list", "string", (void*) string_parser, offsetof(struct __config, blackhole_email_list), "", MAXVAL-1},
-   { "cipher_list", "string", (void*) string_parser, offsetof(struct __config, cipher_list), "HIGH:MEDIUM", MAXVAL-1},
-   { "clamd_addr", "string", (void*) string_parser, offsetof(struct __config, clamd_addr), "", MAXVAL-1},
-   { "clamd_port", "integer", (void*) int_parser, offsetof(struct __config, clamd_port), "0", sizeof(int)},
-   { "clamd_socket", "string", (void*) string_parser, offsetof(struct __config, clamd_socket), CLAMD_SOCKET, MAXVAL-1},
-   { "clapf_header_field", "string", (void*) string_parser, offsetof(struct __config, clapf_header_field), SPAMINESS_HEADER_FIELD, MAXVAL-1},
-   { "clapf_spam_header_field", "multi_line_string", (void*) multi_line_string_parser, offsetof(struct __config, clapf_spam_header_field), "", MAXVAL-1},
-   { "debug", "integer", (void*) int_parser, offsetof(struct __config, debug), "0", sizeof(int)},
-   { "default_retention_days", "integer", (void*) int_parser, offsetof(struct __config, default_retention_days), "2557", sizeof(int)},
-   { "enable_cjk", "integer", (void*) int_parser, offsetof(struct __config, enable_cjk), "0", sizeof(int)},
-   { "enable_xforward", "string", (void*) string_parser, offsetof(struct __config, enable_xforward), "false", MAXVAL-1},
-   { "esf_h", "float", (void*) float_parser, offsetof(struct __config, esf_h), "1.0", sizeof(float)},
-   { "esf_s", "float", (void*) float_parser, offsetof(struct __config, esf_s), "1.0", sizeof(float)},
-   { "exclusion_radius", "float", (void*) float_parser, offsetof(struct __config, exclusion_radius), "0.375", sizeof(float)},
-   { "group_type", "integer", (void*) int_parser, offsetof(struct __config, group_type), "0", sizeof(int)},
-   { "helper_timeout", "integer", (void*) int_parser, offsetof(struct __config, helper_timeout), "20", sizeof(int)},
-   { "history", "integer", (void*) int_parser, offsetof(struct __config, history), "0", sizeof(int)},
-   { "hostname", "string", (void*) string_parser, offsetof(struct __config, hostname), HOSTNAME, MAXVAL-1},
-   { "listen_addr", "string", (void*) string_parser, offsetof(struct __config, listen_addr), "127.0.0.1:10025", MAXVAL-1},
-   { "log_subject", "integer", (void*) int_parser, offsetof(struct __config, log_subject), "0", sizeof(int)},
-   { "locale", "string", (void*) string_parser, offsetof(struct __config, locale), "", MAXVAL-1},
-   { "maillog", "string", (void*) string_parser, offsetof(struct __config, maillog), "", MAXVAL-1},
-   { "max_ham_spamicity", "float", (void*) float_parser, offsetof(struct __config, max_ham_spamicity), "0.45", sizeof(float)},
-   { "max_line_len", "integer", (void*) int_parser, offsetof(struct __config, max_line_len), "2000", sizeof(int)},
-   { "max_message_size_to_filter", "integer", (void*) int_parser, offsetof(struct __config, max_message_size_to_filter), "256000", sizeof(int)},
-   { "max_number_of_recipients_in_ham", "integer", (void*) int_parser, offsetof(struct __config, max_number_of_recipients_in_ham), "9999", sizeof(int)},
-   { "max_number_of_tokens_to_filter", "integer", (void*) int_parser, offsetof(struct __config, max_number_of_tokens_to_filter), "2000", sizeof(int)},
-   { "max_requests_per_child", "integer", (void*) int_parser, offsetof(struct __config, max_requests_per_child), "10000", sizeof(int)},
-   { "memcached_servers", "string", (void*) string_parser, offsetof(struct __config, memcached_servers), "127.0.0.1", MAXVAL-1},
-   { "memcached_to_db_interval", "integer", (void*) int_parser, offsetof(struct __config, memcached_to_db_interval), "900", sizeof(int)},
-   { "memcached_ttl", "integer", (void*) int_parser, offsetof(struct __config, memcached_ttl), "86400", sizeof(int)},
-   { "message_from_a_zombie", "integer", (void*) int_parser, offsetof(struct __config, message_from_a_zombie), "0", sizeof(int)},
-   { "min_word_len", "integer", (void*) int_parser, offsetof(struct __config, min_word_len), "1", sizeof(int)},
-   { "mydomains", "string", (void*) string_parser, offsetof(struct __config, mydomains), "", MAXVAL-1},
-   { "mydomains_from_outside_is_spam", "integer", (void*) int_parser, offsetof(struct __config, mydomains_from_outside_is_spam), "0", sizeof(int)},
-   { "mynetwork", "string", (void*) string_parser, offsetof(struct __config, mynetwork), "", MAXVAL-1},
-   { "mysqlhost", "string", (void*) string_parser, offsetof(struct __config, mysqlhost), "", MAXVAL-1},
-   { "mysqlport", "integer", (void*) int_parser, offsetof(struct __config, mysqlport), "", sizeof(int)},
-   { "mysqlsocket", "string", (void*) string_parser, offsetof(struct __config, mysqlsocket), "/tmp/mysql.sock", MAXVAL-1},
-   { "mysqluser", "string", (void*) string_parser, offsetof(struct __config, mysqluser), "piler", MAXVAL-1},
-   { "mysqlpwd", "string", (void*) string_parser, offsetof(struct __config, mysqlpwd), "", MAXVAL-1},
-   { "mysqldb", "string", (void*) string_parser, offsetof(struct __config, mysqldb), "piler", MAXVAL-1},
-   { "mysql_connect_timeout", "integer", (void*) int_parser, offsetof(struct __config, mysql_connect_timeout), "2", sizeof(int)},
-   { "number_of_worker_processes", "integer", (void*) int_parser, offsetof(struct __config, number_of_worker_processes), "3", sizeof(int)},
-   { "our_signo", "string", (void*) string_parser, offsetof(struct __config, our_signo), "", MAXVAL-1},
-   { "pemfile", "string", (void*) string_parser, offsetof(struct __config, pemfile), "", MAXVAL-1},
-   { "penalize_embed_images", "integer", (void*) int_parser, offsetof(struct __config, penalize_embed_images), "0", sizeof(int)},
-   { "penalize_images", "integer", (void*) int_parser, offsetof(struct __config, penalize_images), "0", sizeof(int)},
-   { "penalize_octet_stream", "integer", (void*) int_parser, offsetof(struct __config, penalize_octet_stream), "0", sizeof(int)},
-   { "pidfile", "string", (void*) string_parser, offsetof(struct __config, pidfile), PIDFILE, MAXVAL-1},
-   { "possible_spam_limit", "float", (void*) float_parser, offsetof(struct __config, possible_spam_limit), "0.8", sizeof(float)},
-   { "possible_spam_subject_prefix", "string", (void*) string_parser, offsetof(struct __config, possible_spam_subject_prefix), "", MAXVAL-1},
-   { "quarantinedir", "string", (void*) string_parser, offsetof(struct __config, quarantinedir), QUARANTINE_DIR, MAXVAL-1},
-   { "replace_junk_characters", "integer", (void*) int_parser, offsetof(struct __config, replace_junk_characters), "1", sizeof(int)},
-   { "rob_s", "float", (void*) float_parser, offsetof(struct __config, rob_s), "1.0", sizeof(float)},
-   { "rob_x", "float", (void*) float_parser, offsetof(struct __config, rob_x), "0.52", sizeof(float)},
-   { "server_id", "integer", (void*) int_parser, offsetof(struct __config, server_id), "0", sizeof(int)},
-   { "server_mode", "integer", (void*) int_parser, offsetof(struct __config, server_mode), "1", sizeof(int)},
-   { "silently_discard_infected_email", "integer", (void*) int_parser, offsetof(struct __config, silently_discard_infected_email), "1", sizeof(int)},
-   { "skipped_received_ips", "string", (void*) string_parser, offsetof(struct __config, skipped_received_ips), "", MAXVAL-1},
-   { "smtp_addr", "string", (void*) string_parser, offsetof(struct __config, smtp_addr), "127.0.0.1:10026", MAXVAL-1},
-   { "spaminess_oblivion_limit", "float", (void*) float_parser, offsetof(struct __config, spaminess_oblivion_limit), "1.01", sizeof(float)},
-   { "spam_overall_limit", "float", (void*) float_parser, offsetof(struct __config, spam_overall_limit), "0.92", sizeof(float)},
-   { "spam_subject_prefix", "string", (void*) string_parser, offsetof(struct __config, spam_subject_prefix), "", MAXVAL-1},
-   { "store_emails", "integer", (void*) int_parser, offsetof(struct __config, store_emails), "1", sizeof(int)},
-   { "store_only_spam", "integer", (void*) int_parser, offsetof(struct __config, store_only_spam), "1", sizeof(int)},
-   { "surbl_domain", "string", (void*) string_parser, offsetof(struct __config, surbl_domain), "", MAXVAL-1},
-   { "surbl_condemns_the_message", "integer", (void*) int_parser, offsetof(struct __config, surbl_condemns_the_message), "0", sizeof(int)},
-   { "tls_enable", "integer", (void*) int_parser, offsetof(struct __config, tls_enable), "0", sizeof(int)},
-   { "training_mode", "integer", (void*) int_parser, offsetof(struct __config, training_mode), "0", sizeof(int)},
-   { "update_counters_to_memcached", "integer", (void*) int_parser, offsetof(struct __config, update_counters_to_memcached), "0", sizeof(int)},
-   { "update_tokens", "integer", (void*) int_parser, offsetof(struct __config, update_tokens), "1", sizeof(int)},
-   { "username", "string", (void*) string_parser, offsetof(struct __config, username), "clapf", MAXVAL-1},
-   { "use_antispam", "integer", (void*) int_parser, offsetof(struct __config, use_antispam), "1", sizeof(int)},
-   { "use_antivirus", "integer", (void*) int_parser, offsetof(struct __config, use_antivirus), "1", sizeof(int)},
-   { "verbosity", "integer", (void*) int_parser, offsetof(struct __config, verbosity), "1", sizeof(int)},
-   { "workdir", "string", (void*) string_parser, offsetof(struct __config, workdir), WORK_DIR, MAXVAL-1},
+   { "always_scan_message", "integer", (void*) int_parser, offsetof(struct config, always_scan_message), "1", sizeof(int)},
+   { "backlog", "integer", (void*) int_parser, offsetof(struct config, backlog), "20", sizeof(int)},
+   { "blackhole_email_list", "string", (void*) string_parser, offsetof(struct config, blackhole_email_list), "", MAXVAL-1},
+   { "cipher_list", "string", (void*) string_parser, offsetof(struct config, cipher_list), "HIGH:MEDIUM", MAXVAL-1},
+   { "clamd_addr", "string", (void*) string_parser, offsetof(struct config, clamd_addr), "", MAXVAL-1},
+   { "clamd_port", "integer", (void*) int_parser, offsetof(struct config, clamd_port), "0", sizeof(int)},
+   { "clamd_socket", "string", (void*) string_parser, offsetof(struct config, clamd_socket), CLAMD_SOCKET, MAXVAL-1},
+   { "clapf_header_field", "string", (void*) string_parser, offsetof(struct config, clapf_header_field), SPAMINESS_HEADER_FIELD, MAXVAL-1},
+   { "clapf_spam_header_field", "multi_line_string", (void*) multi_line_string_parser, offsetof(struct config, clapf_spam_header_field), "", MAXVAL-1},
+   { "debug", "integer", (void*) int_parser, offsetof(struct config, debug), "0", sizeof(int)},
+   { "default_retention_days", "integer", (void*) int_parser, offsetof(struct config, default_retention_days), "2557", sizeof(int)},
+   { "enable_cjk", "integer", (void*) int_parser, offsetof(struct config, enable_cjk), "0", sizeof(int)},
+   { "enable_xforward", "string", (void*) string_parser, offsetof(struct config, enable_xforward), "false", MAXVAL-1},
+   { "esf_h", "float", (void*) float_parser, offsetof(struct config, esf_h), "1.0", sizeof(float)},
+   { "esf_s", "float", (void*) float_parser, offsetof(struct config, esf_s), "1.0", sizeof(float)},
+   { "exclusion_radius", "float", (void*) float_parser, offsetof(struct config, exclusion_radius), "0.375", sizeof(float)},
+   { "group_type", "integer", (void*) int_parser, offsetof(struct config, group_type), "0", sizeof(int)},
+   { "helper_timeout", "integer", (void*) int_parser, offsetof(struct config, helper_timeout), "20", sizeof(int)},
+   { "history", "integer", (void*) int_parser, offsetof(struct config, history), "0", sizeof(int)},
+   { "hostname", "string", (void*) string_parser, offsetof(struct config, hostname), HOSTNAME, MAXVAL-1},
+   { "listen_addr", "string", (void*) string_parser, offsetof(struct config, listen_addr), "127.0.0.1:10025", MAXVAL-1},
+   { "log_subject", "integer", (void*) int_parser, offsetof(struct config, log_subject), "0", sizeof(int)},
+   { "locale", "string", (void*) string_parser, offsetof(struct config, locale), "", MAXVAL-1},
+   { "maillog", "string", (void*) string_parser, offsetof(struct config, maillog), "", MAXVAL-1},
+   { "max_ham_spamicity", "float", (void*) float_parser, offsetof(struct config, max_ham_spamicity), "0.45", sizeof(float)},
+   { "max_line_len", "integer", (void*) int_parser, offsetof(struct config, max_line_len), "2000", sizeof(int)},
+   { "max_message_size_to_filter", "integer", (void*) int_parser, offsetof(struct config, max_message_size_to_filter), "256000", sizeof(int)},
+   { "max_number_of_recipients_in_ham", "integer", (void*) int_parser, offsetof(struct config, max_number_of_recipients_in_ham), "9999", sizeof(int)},
+   { "max_number_of_tokens_to_filter", "integer", (void*) int_parser, offsetof(struct config, max_number_of_tokens_to_filter), "2000", sizeof(int)},
+   { "max_requests_per_child", "integer", (void*) int_parser, offsetof(struct config, max_requests_per_child), "10000", sizeof(int)},
+   { "max_word_len", "integer", (void*) int_parser, offsetof(struct config, max_word_len), "25", sizeof(int)},
+   { "memcached_servers", "string", (void*) string_parser, offsetof(struct config, memcached_servers), "127.0.0.1", MAXVAL-1},
+   { "memcached_to_db_interval", "integer", (void*) int_parser, offsetof(struct config, memcached_to_db_interval), "900", sizeof(int)},
+   { "memcached_ttl", "integer", (void*) int_parser, offsetof(struct config, memcached_ttl), "86400", sizeof(int)},
+   { "message_from_a_zombie", "integer", (void*) int_parser, offsetof(struct config, message_from_a_zombie), "0", sizeof(int)},
+   { "min_word_len", "integer", (void*) int_parser, offsetof(struct config, min_word_len), "1", sizeof(int)},
+   { "mydomains", "string", (void*) string_parser, offsetof(struct config, mydomains), "", MAXVAL-1},
+   { "mydomains_from_outside_is_spam", "integer", (void*) int_parser, offsetof(struct config, mydomains_from_outside_is_spam), "0", sizeof(int)},
+   { "mynetwork", "string", (void*) string_parser, offsetof(struct config, mynetwork), "", MAXVAL-1},
+   { "mysqlhost", "string", (void*) string_parser, offsetof(struct config, mysqlhost), "", MAXVAL-1},
+   { "mysqlport", "integer", (void*) int_parser, offsetof(struct config, mysqlport), "", sizeof(int)},
+   { "mysqlsocket", "string", (void*) string_parser, offsetof(struct config, mysqlsocket), "/tmp/mysql.sock", MAXVAL-1},
+   { "mysqluser", "string", (void*) string_parser, offsetof(struct config, mysqluser), "piler", MAXVAL-1},
+   { "mysqlpwd", "string", (void*) string_parser, offsetof(struct config, mysqlpwd), "", MAXVAL-1},
+   { "mysqldb", "string", (void*) string_parser, offsetof(struct config, mysqldb), "piler", MAXVAL-1},
+   { "mysql_connect_timeout", "integer", (void*) int_parser, offsetof(struct config, mysql_connect_timeout), "2", sizeof(int)},
+   { "number_of_worker_processes", "integer", (void*) int_parser, offsetof(struct config, number_of_worker_processes), "3", sizeof(int)},
+   { "our_signo", "string", (void*) string_parser, offsetof(struct config, our_signo), "", MAXVAL-1},
+   { "pemfile", "string", (void*) string_parser, offsetof(struct config, pemfile), "", MAXVAL-1},
+   { "penalize_embed_images", "integer", (void*) int_parser, offsetof(struct config, penalize_embed_images), "0", sizeof(int)},
+   { "penalize_images", "integer", (void*) int_parser, offsetof(struct config, penalize_images), "0", sizeof(int)},
+   { "penalize_octet_stream", "integer", (void*) int_parser, offsetof(struct config, penalize_octet_stream), "0", sizeof(int)},
+   { "pidfile", "string", (void*) string_parser, offsetof(struct config, pidfile), PIDFILE, MAXVAL-1},
+   { "possible_spam_limit", "float", (void*) float_parser, offsetof(struct config, possible_spam_limit), "0.8", sizeof(float)},
+   { "possible_spam_subject_prefix", "string", (void*) string_parser, offsetof(struct config, possible_spam_subject_prefix), "", MAXVAL-1},
+   { "quarantinedir", "string", (void*) string_parser, offsetof(struct config, quarantinedir), QUARANTINE_DIR, MAXVAL-1},
+   { "replace_junk_characters", "integer", (void*) int_parser, offsetof(struct config, replace_junk_characters), "1", sizeof(int)},
+   { "rob_s", "float", (void*) float_parser, offsetof(struct config, rob_s), "1.0", sizeof(float)},
+   { "rob_x", "float", (void*) float_parser, offsetof(struct config, rob_x), "0.52", sizeof(float)},
+   { "server_id", "integer", (void*) int_parser, offsetof(struct config, server_id), "0", sizeof(int)},
+   { "server_mode", "integer", (void*) int_parser, offsetof(struct config, server_mode), "1", sizeof(int)},
+   { "silently_discard_infected_email", "integer", (void*) int_parser, offsetof(struct config, silently_discard_infected_email), "1", sizeof(int)},
+   { "skipped_received_ips", "string", (void*) string_parser, offsetof(struct config, skipped_received_ips), "", MAXVAL-1},
+   { "smtp_addr", "string", (void*) string_parser, offsetof(struct config, smtp_addr), "127.0.0.1:10026", MAXVAL-1},
+   { "spaminess_oblivion_limit", "float", (void*) float_parser, offsetof(struct config, spaminess_oblivion_limit), "1.01", sizeof(float)},
+   { "spam_overall_limit", "float", (void*) float_parser, offsetof(struct config, spam_overall_limit), "0.92", sizeof(float)},
+   { "spam_subject_prefix", "string", (void*) string_parser, offsetof(struct config, spam_subject_prefix), "", MAXVAL-1},
+   { "store_emails", "integer", (void*) int_parser, offsetof(struct config, store_emails), "1", sizeof(int)},
+   { "store_only_spam", "integer", (void*) int_parser, offsetof(struct config, store_only_spam), "1", sizeof(int)},
+   { "surbl_domain", "string", (void*) string_parser, offsetof(struct config, surbl_domain), "", MAXVAL-1},
+   { "surbl_condemns_the_message", "integer", (void*) int_parser, offsetof(struct config, surbl_condemns_the_message), "0", sizeof(int)},
+   { "tls_enable", "integer", (void*) int_parser, offsetof(struct config, tls_enable), "0", sizeof(int)},
+   { "training_mode", "integer", (void*) int_parser, offsetof(struct config, training_mode), "0", sizeof(int)},
+   { "update_counters_to_memcached", "integer", (void*) int_parser, offsetof(struct config, update_counters_to_memcached), "0", sizeof(int)},
+   { "update_tokens", "integer", (void*) int_parser, offsetof(struct config, update_tokens), "1", sizeof(int)},
+   { "username", "string", (void*) string_parser, offsetof(struct config, username), "clapf", MAXVAL-1},
+   { "use_antispam", "integer", (void*) int_parser, offsetof(struct config, use_antispam), "1", sizeof(int)},
+   { "use_antivirus", "integer", (void*) int_parser, offsetof(struct config, use_antivirus), "1", sizeof(int)},
+   { "verbosity", "integer", (void*) int_parser, offsetof(struct config, verbosity), "1", sizeof(int)},
+   { "workdir", "string", (void*) string_parser, offsetof(struct config, workdir), WORK_DIR, MAXVAL-1},
 
    {NULL, NULL, NULL, 0, 0, 0}
 };
@@ -147,7 +148,7 @@ struct _parse_rule config_parse_rules[] =
  * parse configfile
  */
 
-int parse_config_file(char *configfile, struct __config *target_cfg, struct _parse_rule *rules){
+int parse_config_file(char *configfile, struct config *target_cfg, struct _parse_rule *rules){
    char line[MAXVAL], *chpos;
    FILE *f;
 
@@ -187,7 +188,7 @@ int parse_config_file(char *configfile, struct __config *target_cfg, struct _par
 }
 
 
-int load_default_config(struct __config *cfg, struct _parse_rule *rules){
+int load_default_config(struct config *cfg, struct _parse_rule *rules){
    int i=0;
 
    while(rules[i].name){
@@ -203,12 +204,12 @@ int load_default_config(struct __config *cfg, struct _parse_rule *rules){
  * read configuration file variables
  */
 
-struct __config read_config(char *configfile){
-   struct __config cfg;
+struct config read_config(char *configfile){
+   struct config cfg;
 
    /* reset config structure and fill it with defaults */
 
-   memset((char *)&cfg, 0, sizeof(struct __config));
+   memset((char *)&cfg, 0, sizeof(struct config));
 
    load_default_config(&cfg, config_parse_rules);
 
@@ -225,7 +226,7 @@ struct __config read_config(char *configfile){
  * print a single configuration item as key=value
  */
 
-void print_config_item(struct __config *cfg, struct _parse_rule *rules, int i){
+void print_config_item(struct config *cfg, struct _parse_rule *rules, int i){
    int j;
    float f;
    char *p, buf[MAXVAL];
@@ -260,7 +261,7 @@ void print_config_item(struct __config *cfg, struct _parse_rule *rules, int i){
  * print all known configuration items
  */
 
-void print_config_all(struct __config *cfg, char *key){
+void print_config_all(struct config *cfg, char *key){
    int i=0;
    struct _parse_rule *rules;
 
@@ -284,7 +285,7 @@ void print_config_all(struct __config *cfg, char *key){
  * print all configuration items found in configfile
  */
 
-void print_config(char *configfile, struct __config *cfg){
+void print_config(char *configfile, struct config *cfg){
    FILE *f;
    char line[MAXVAL], *chpos, previtem[MAXVAL];
    struct _parse_rule *rules;

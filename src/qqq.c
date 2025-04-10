@@ -10,7 +10,7 @@
  */
 
 
-int get_tokens(struct __state *state, char type, struct __config *cfg){
+int get_tokens(struct parser_state *state, char type, struct config *cfg){
     int i, n=0;
     char s[SMALLBUFSIZE];
     struct node *q;
@@ -100,7 +100,7 @@ int get_tokens(struct __state *state, char type, struct __config *cfg){
 }
 
 
-int update_token_dates(struct __state *state, struct __config *cfg) {
+int update_token_dates(struct parser_state *state, struct config *cfg) {
     int utokens = 0;
     char s[SMALLBUFSIZE];
     struct node *q;

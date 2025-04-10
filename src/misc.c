@@ -217,20 +217,6 @@ void make_random_string(char *buf, int buflen){
 }
 
 
-void create_id(char *id, unsigned char server_id){
-   unsigned char buf[RND_STR_LEN/2];
-
-   memset(id, 0, SMALLBUFSIZE);
-
-   get_random_bytes(buf, sizeof(buf), server_id);
-
-   for(size_t i=0; i < sizeof(buf); i++){
-      sprintf(id, "%02x", buf[i]);
-      id += 2;
-   }
-}
-
-
 int is_valid_clapf_id(char *p){
 
    if(strlen(p) != 36)
@@ -245,56 +231,6 @@ int is_valid_clapf_id(char *p){
    }
 
    return 1;
-}
-
-
-/*
- * reading from pool
- */
-
-int get_random_bytes(unsigned char *buf, int len, unsigned char server_id){
-   int fd, ret=0;
-   struct taia now;
-   char nowpack[TAIA_PACK];
-
-   /* the first 12 bytes are the taia timestamp */
-
-   taia_now(&now);
-   taia_pack(nowpack, &now);
-
-   memcpy(buf, nowpack, 12);
-
-   fd = open(RANDOM_POOL, O_RDONLY);
-   if(fd == -1) return ret;
-
-   *(buf + 12) = server_id;
-
-   if(readFromEntropyPool(fd, buf+12+1, len-12-1) != len-12-1){
-      syslog(LOG_PRIORITY, "%s: error: %s", ERR_CANNOT_READ_FROM_POOL, RANDOM_POOL);
-   }
-
-   close(fd);
-   return ret;
-}
-
-
-/*
- * read random data from entropy pool
- */
-
-int readFromEntropyPool(int fd, void *_s, size_t n){
-   char *s = _s;
-   size_t res, pos = 0;
-
-   while(n > pos){
-      res = read(fd, s + pos, n - pos);
-      switch(res){
-         case  -1: continue;
-         case   0: return res;
-         default : pos += res;
-      }
-   }
-   return pos;
 }
 
 
@@ -433,70 +369,12 @@ int drop_privileges(struct passwd *pwd){
 }
 
 
-void init_session_data(struct session_data *sdata, struct __config *cfg){
-   int i;
-
-
-   sdata->fd = -1;
-
-   create_id(&(sdata->ttmpfile[0]), cfg->server_id);
-   unlink(sdata->ttmpfile);
-
-   snprintf(sdata->filename, SMALLBUFSIZE-1, "%s", sdata->ttmpfile);
-
-   memset(sdata->mailfrom, 0, SMALLBUFSIZE);
-
-   memset(sdata->attachments, 0, SMALLBUFSIZE);
-
-   //memset(sdata->fromemail, 0, SMALLBUFSIZE);
-
-   sdata->ipcnt = 0;
-   //memset(sdata->ip, 0, SMALLBUFSIZE);
-   //memset(sdata->hostname, 0, SMALLBUFSIZE);
-
-   memset(sdata->whitelist, 0, MAXBUFSIZE);
-   memset(sdata->blacklist, 0, MAXBUFSIZE);
-
-   sdata->tot_len = 0;
-   sdata->num_of_rcpt_to = 0;
-
-   //sdata->tre = '-';
+void init_session_data(struct session_data *sdata){
+   memset((char*)sdata, 0, sizeof(*sdata));
 
    sdata->rav = AVIR_OK;
 
-   sdata->__acquire = sdata->__parsed = sdata->__av = sdata->__user = sdata->__policy = sdata->__as = sdata->__minefield = 0;
-   sdata->__training = sdata->__update = sdata->__store = sdata->__inject = 0;
-
-   for(i=0; i<MAX_RCPT_TO; i++) memset(sdata->rcptto[i], 0, SMALLBUFSIZE);
-
-   time(&(sdata->now));
-   sdata->sent = sdata->now;
-
-   sdata->sql_errno = 0;
-
-   sdata->blackhole = 0;
-   sdata->trapped_client = 0;
-
    sdata->spaminess = DEFAULT_SPAMICITY;
-   sdata->need_signo_check = 0;
-
-   sdata->uid = sdata->gid = 0;
-   sdata->statistically_whitelisted = 0;
-   //sdata->training_request = 0;
-   sdata->mynetwork = 0;
-
-   sdata->uid = sdata->gid = 0;
-   sdata->status = S_HAM;
-
-   sdata->pid = getpid();
-
-   //sdata->skip_id_check = 0;
-   sdata->from_address_in_mydomain = 0;
-   memset(sdata->name, 0, SMALLBUFSIZE);
-   memset(sdata->domain, 0, SMALLBUFSIZE);
-   memset(sdata->clapf_id, 0, SMALLBUFSIZE);
-   //memset(sdata->subject, 0, SMALLBUFSIZE);
-   //memset(sdata->rcpt_minefield, 0, MAX_RCPT_TO);
 }
 
 
@@ -623,28 +501,6 @@ int is_dotted_ipv4_address(char *s){
 
    return 1;
 }
-
-
-#ifndef _GNU_SOURCE
-char *strcasestr(const char *s, const char *find){
-   char c, sc;
-   size_t len;
-
-   if((c = *find++) != 0){
-      c = tolower((unsigned char)c);
-      len = strlen(find);
-      do {
-         do {
-            if((sc = *s++) == 0)
-               return (NULL);
-         } while((char)tolower((unsigned char)sc) != c);
-      } while (strncasecmp(s, find, len) != 0);
-      s--;
-   }
-
-   return((char*)s);
-}
-#endif
 
 long get_local_timezone_offset(){
    time_t t = time(NULL);

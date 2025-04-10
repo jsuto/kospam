@@ -16,7 +16,7 @@
 #include <clapf.h>
 
 
-struct __state parse_message2(struct session_data *sdata, int take_into_pieces, struct __config *cfg){
+struct parser_state parse_message2(struct session_data *sdata, int take_into_pieces, struct config *cfg){
    FILE *f;
    int tumlen;
    int skipped_header = 0, found_clapf_signature = 0;
@@ -24,7 +24,7 @@ struct __state parse_message2(struct session_data *sdata, int take_into_pieces, 
    char tumbuf[SMALLBUFSIZE];
    char abuffer[MAXBUFSIZE];
    char *p;
-   struct __state state;
+   struct parser_state state;
 
    init_state(&state);
 
@@ -88,7 +88,7 @@ struct __state parse_message2(struct session_data *sdata, int take_into_pieces, 
 }
 
 
-void post_parse2(struct __state *state){
+void post_parse2(struct parser_state *state){
    int i;
 
    trim_buffer(state->b_subject);
@@ -126,7 +126,7 @@ void post_parse2(struct __state *state){
 }
 
 
-void storno_attachment(struct __state *state){
+void storno_attachment(struct parser_state *state){
    state->has_to_dump = 0;
 
    if(state->n_attachments <= 0) return;
@@ -146,7 +146,7 @@ void storno_attachment(struct __state *state){
 }
 
 
-int parse_line(char *buf, struct __state *state, struct session_data *sdata, int take_into_pieces, char *abuffer, int abuffersize, struct __config *cfg){
+int parse_line(char *buf, struct parser_state *state, struct session_data *sdata, int take_into_pieces, char *abuffer, int abuffersize, struct config *cfg){
    char *p;
    unsigned char b64buffer[MAXBUFSIZE];
    char tmpbuf[MAXBUFSIZE];

@@ -21,19 +21,21 @@ void usage(){
 }
 
 
-void process_email(char *filename, struct session_data *sdata, int size){
+void process_email(char *filename, MYSQL *conn, int size){
    struct timezone tz;
    struct timeval tv1, tv2;
-   struct __state parser_state;
+   struct parser_state parser_state;
    struct __counters counters;
 
    bzero(&counters, sizeof(counters));
 
-   init_session_data(sdata, &cfg);
+   struct session_data sdata;
 
-   sdata->tot_len = size;
+   init_session_data(&sdata);
 
-   snprintf(sdata->filename, SMALLBUFSIZE-1, "%s", filename);
+   sdata.tot_len = size;
+
+   snprintf(sdata.ttmpfile, sizeof(sdata.ttmpfile)-1, "%s", filename);
 
    // parse message
 
@@ -43,9 +45,12 @@ void process_email(char *filename, struct session_data *sdata, int size){
    parse_message(filename, &parser_state, &m);
    post_parse(&parser_state, &m, &cfg);
    gettimeofday(&tv2, &tz);
-   sdata->__parsed = tvdiff(tv2, tv1);
+   sdata.__parsed = tvdiff(tv2, tv1);
 
-   if (cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "INFO: %s: hostname=%s, ip=%s", sdata->filename, parser_state.hostname, parser_state.ip);
+   // TODO: If the email was bounced back from a remote server's MAILER-DAEMON then check our signo
+   // if((strstr(sdata.mailfrom, "MAILER-DAEMON") || strstr(sdata.mailfrom, "<>")) && strlen(cfg->our_signo) > 3) sdata.need_signo_check = 1;
+
+   if (cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "INFO: %s: hostname=%s, ip=%s", sdata.ttmpfile, parser_state.hostname, parser_state.ip);
 
    // TODO: virus check
 
@@ -54,108 +59,100 @@ void process_email(char *filename, struct session_data *sdata, int size){
    //if(sdata->rav == AVIR_VIRUS) snprintf(virusinfo, sizeof(virusinfo)-1, "MARKED.AS.MALWARE");
 
    if (is_item_on_list(parser_state.ip, cfg.mynetwork, "") == 1) {
-      syslog(LOG_PRIORITY, "%s: client ip (%s) on mynetwork", sdata->ttmpfile, parser_state.ip);
-      sdata->mynetwork = 1;
+      syslog(LOG_PRIORITY, "%s: client ip (%s) on mynetwork", sdata.ttmpfile, parser_state.ip);
+      sdata.mynetwork = 1;
    }
 
-   struct __config my_cfg;
-   memcpy(&my_cfg, &cfg, sizeof(struct __config));
+   struct config my_cfg;
+   memcpy(&my_cfg, &cfg, sizeof(struct config));
 
-   char recipient[SMALLBUFSIZE];
+   if (parser_state.trapped) {
+       counters.c_minefield++;
+       gettimeofday(&tv1, &tz);
+       store_minefield_ip(conn, parser_state.ip);
+       gettimeofday(&tv2, &tz);
+       sdata.__minefield = tvdiff(tv2, tv1);
 
-   snprintf(recipient, sizeof(recipient)-1, "%s", sdata->rcptto[0]);
-   extract_verp_address(recipient);
+       syslog(LOG_PRIORITY, "INFO: %s: we trapped %s on the blackhole", sdata.ttmpfile, parser_state.ip);
+   }
 
 
-   if(cfg.blackhole_email_list[0]) {
-      for(int i=0; i < sdata->num_of_rcpt_to; i++) {
-         if(is_item_on_list(sdata->rcptto[i], cfg.blackhole_email_list, "") == 1){
-            sdata->blackhole = 1;
-            counters.c_minefield++;
+   check_spam(&sdata, conn, &parser_state, &data, &cfg, &my_cfg);
 
-            syslog(LOG_PRIORITY, "INFO: %s: we trapped %s on the blackhole", sdata->filename, sdata->rcptto[i]);
+   char status[SMALLBUFSIZE];
 
-            gettimeofday(&tv1, &tz);
-            store_minefield_ip(sdata, parser_state.ip);
-            gettimeofday(&tv2, &tz);
-            sdata->__minefield = tvdiff(tv2, tv1);
-         }
+   if (parser_state.training_request == 0) {
+      if (write_history_to_sql(&sdata, conn, &parser_state) != OK) {
+         syslog(LOG_PRIORITY, "%s: ERROR: insert to history", sdata.ttmpfile);
       }
+
+      // Update counters
+
+      if(sdata.spaminess >= my_cfg.spam_overall_limit){
+         sdata.status = S_SPAM;
+         counters.c_spam++;
+         snprintf(status, sizeof(status)-1, "SPAM");
+      /*else if(sdata->rav == AVIR_VIRUS){
+         counters.c_virus++;
+         sdata->status = S_VIRUS;
+         snprintf(status, sizeof(status)-1, "VIRUS (%s)", virusinfo);*/
+      } else {
+         sdata.status = S_HAM;
+         counters.c_ham++;
+         snprintf(status, sizeof(status)-1, "HAM");
+
+         if(sdata.spaminess < my_cfg.spam_overall_limit && sdata.spaminess > my_cfg.possible_spam_limit) counters.c_possible_spam++;
+         else if(sdata.spaminess < my_cfg.possible_spam_limit && sdata.spaminess > my_cfg.max_ham_spamicity) counters.c_unsure++;
+      }
+
+      // Modify message, and add our headers
+
+      fix_message_file(&sdata, &cfg);
+
+      // Move message to send dir
+
+      char tmpbuf[SMALLBUFSIZE];
+      snprintf(tmpbuf, sizeof(tmpbuf)-1, "%s/%s", SEND_DIR, sdata.ttmpfile);
+
+      if (rename(filename, tmpbuf)) {
+         syslog(LOG_PRIORITY, "ERROR: failed to rename %s to %s", filename, tmpbuf);
+      }
+
    }
-
-
-   check_spam(sdata, &parser_state, &data, parser_state.fromemail, recipient, &cfg, &my_cfg);
-
-   int rc = ERR;
-
-   if(rc != ERR) unlink(sdata->filename);
-
-   //update_counters(sdata, &counters);
-
-   char delay[SMALLBUFSIZE];
-   float total = sdata->__acquire+sdata->__parsed+sdata->__av+sdata->__user+sdata->__policy+sdata->__minefield+sdata->__as+sdata->__training+sdata->__update+sdata->__store+sdata->__inject;
-
-   snprintf(delay, sizeof(delay)-1, "delay=%.2f, delays=%.2f/%.2f/%.2f/%.2f/%.2f/%.2f/%.2f/%.2f/%.2f/%.2f/%.2f",
-           total/1000000.0,
-           sdata->__acquire/1000000.0,
-           sdata->__parsed/1000000.0,
-           sdata->__av/1000000.0,
-           sdata->__user/1000000.0,
-           sdata->__policy/1000000.0,
-           sdata->__minefield/1000000.0,
-           sdata->__as/1000000.0,
-           sdata->__training/1000000.0,
-           sdata->__update/1000000.0,
-           sdata->__store/1000000.0,
-           sdata->__inject/1000000.0);
-
-
-   char tmpbuf[SMALLBUFSIZE];
-
-   if(sdata->spaminess >= my_cfg.spam_overall_limit){
-      sdata->status = S_SPAM;
-      counters.c_spam++;
-      snprintf(tmpbuf, sizeof(tmpbuf)-1, "SPAM");
-   /*else if(sdata->rav == AVIR_VIRUS){
-      counters.c_virus++;
-      sdata->status = S_VIRUS;
-      snprintf(tmpbuf, sizeof(tmpbuf)-1, "VIRUS (%s)", virusinfo);*/
-   } else {
-      sdata->status = S_HAM;
-      counters.c_ham++;
-      snprintf(tmpbuf, sizeof(tmpbuf)-1, "HAM");
-
-      if(sdata->spaminess < my_cfg.spam_overall_limit && sdata->spaminess > my_cfg.possible_spam_limit) counters.c_possible_spam++;
-      else if(sdata->spaminess < my_cfg.possible_spam_limit && sdata->spaminess > my_cfg.max_ham_spamicity) counters.c_unsure++;
+   else {
+      snprintf(status, sizeof(status)-1, "TRAIN");
+      unlink(filename);
    }
-
-   if(cfg.log_subject == 1) syslog(LOG_PRIORITY, "%s: subject=%s", filename, parser_state.b_subject);
-   syslog(LOG_PRIORITY, "%s: from=%s, result=%s/%.4f, size=%d, attachments=%d, %s", filename, parser_state.fromemail, tmpbuf, sdata->spaminess, sdata->tot_len, m.n_attachments, delay);
-
-   if(parser_state.training_request == 0 && write_history_to_sql(sdata, &parser_state) != OK) syslog(LOG_PRIORITY, "%s: ERROR: insert to history", sdata->ttmpfile);
-
-   unlink(sdata->ttmpfile);
 
    clearhash(parser_state.token_hash);
    clearhash(parser_state.url);
 
-   // Modify message, and add our headers
+   char delay[SMALLBUFSIZE];
+   float total = sdata.__parsed+sdata.__av+sdata.__user+sdata.__policy+sdata.__minefield+sdata.__as+sdata.__training+sdata.__update;
 
-   fix_message_file(filename, sdata, &cfg);
+   snprintf(delay, sizeof(delay)-1, "delay=%.2f, delays=%.2f/%.2f/%.2f/%.2f/%.2f/%.2f/%.2f/%.2f",
+           total/1000000.0,
+           sdata.__parsed/1000000.0,
+           sdata.__av/1000000.0,
+           sdata.__user/1000000.0,
+           sdata.__policy/1000000.0,
+           sdata.__minefield/1000000.0,
+           sdata.__as/1000000.0,
+           sdata.__training/1000000.0,
+           sdata.__update/1000000.0);
 
-   // Move message to send dir
+   if(cfg.log_subject == 1) syslog(LOG_PRIORITY, "%s: subject=%s", filename, parser_state.b_subject);
 
-   snprintf(tmpbuf, sizeof(tmpbuf)-1, "%s/%s", SEND_DIR, filename);
+   syslog(LOG_PRIORITY, "%s: from=%s, result=%s/%.4f, size=%d, attachments=%d, %s",
+          filename, parser_state.envelope_from, status, sdata.spaminess, sdata.tot_len, m.n_attachments, delay);
 
-   if (rename(filename, tmpbuf)) {
-      syslog(LOG_PRIORITY, "ERROR: failed to rename %s to %s", filename, tmpbuf);
-   }
+   counters.c_rcvd++;
 
-   update_counters(sdata, &counters);
+   update_counters(conn, &counters);
 }
 
 
-int process_dir(char *directory, struct session_data *sdata){
+int process_dir(char *directory, MYSQL *conn){
    int tot_msgs=0;
 
    DIR *dir = opendir(directory);
@@ -181,7 +178,7 @@ int process_dir(char *directory, struct session_data *sdata){
          rename(fname, de->d_name);
 
          if(S_ISREG(st.st_mode)) {
-            process_email(de->d_name, sdata, st.st_size);
+            process_email(de->d_name, conn, st.st_size);
             tot_msgs++;
          }
       }
@@ -197,7 +194,6 @@ int process_dir(char *directory, struct session_data *sdata){
 
 
 void child_main(struct child *ptr){
-   struct session_data sdata;
    char dir[TINYBUFSIZE];
 
    /* open directory, then process its files, then sleep 1 sec, and repeat */
@@ -217,9 +213,11 @@ void child_main(struct child *ptr){
 
       sig_block(SIGHUP);
 
-      if(open_database(&sdata, &cfg) == OK){
-         ptr->messages += process_dir(dir, &sdata);
-         close_database(&sdata);
+      MYSQL *conn = open_database(&cfg);
+
+      if (conn) {
+         ptr->messages += process_dir(dir, conn);
+         close_database(conn);
 
          sleep(1);
       }

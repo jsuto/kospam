@@ -22,7 +22,7 @@ void createdir(char *path, mode_t mode){
 }
 
 
-void check_and_create_directories(struct __config *cfg){
+void check_and_create_directories(struct config *cfg){
    char *p;
 
    p = strrchr(cfg->workdir, '/');

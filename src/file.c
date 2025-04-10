@@ -71,9 +71,9 @@ int write_buffers_to_file(const char* filename, const char* buffer1, size_t size
 }
 
 
-int fix_message_file(const char *filename, struct session_data *sdata, struct __config *cfg) {
+int fix_message_file(struct session_data *sdata, struct config *cfg) {
     size_t size_out = 0;
-    char *buffer = read_file(filename, &size_out);
+    char *buffer = read_file(sdata->ttmpfile, &size_out);
 
     if (!buffer) return 1;
 
@@ -150,14 +150,14 @@ int fix_message_file(const char *filename, struct session_data *sdata, struct __
 
     // Write to temp file
     char tmp[SMALLBUFSIZE];
-    snprintf(tmp, sizeof(tmp)-1, "%s.tmp", filename);
+    snprintf(tmp, sizeof(tmp)-1, "%s.tmp", sdata->ttmpfile);
     write_buffers_to_file(tmp, headerbuf, headerbuf_pos, headers_end, body_size);
 
     free(buffer);
 
     // Rename temp file to filename
-    if(rename(tmp, filename)) {
-       syslog(LOG_PRIORITY, "ERROR: failed to rename %s to %s", tmp, filename);
+    if(rename(tmp, sdata->ttmpfile)) {
+       syslog(LOG_PRIORITY, "ERROR: failed to rename %s to %s", tmp, sdata->ttmpfile);
     }
 
     return 0;

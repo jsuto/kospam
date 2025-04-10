@@ -7,7 +7,7 @@
 
 #include "config.h"
 
-struct __config {
+struct config {
    char username[MAXVAL];
 
    char hostname[MAXVAL];
@@ -70,6 +70,7 @@ struct __config {
    int memcached_to_db_interval;
 
    int min_word_len;
+   int max_word_len;
 
    int enable_cjk;
 

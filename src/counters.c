@@ -2,30 +2,24 @@
  * counters.c, SJ
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <strings.h>
-#include <time.h>
-#include <syslog.h>
-#include <clapf.h>
+#include <kospam.h>
 
 
-struct __counters load_counters(struct session_data *sdata){
+struct __counters load_counters(MYSQL *conn){
    char buf[SMALLBUFSIZE];
    struct __counters counters;
-   struct sql sql;
+   struct query sql;
 
    bzero(&counters, sizeof(counters));
 
    snprintf(buf, sizeof(buf)-1, "SELECT `rcvd`, `size`, `ham`, `spam`, `possible_spam`, `unsure`, `minefield`, `virus`, `fp`, `fn`, `zombie`, `mynetwork` FROM `%s`", SQL_COUNTER_TABLE);
 
-   if(prepare_sql_statement(sdata, &sql, buf) == ERR) return counters;
+   if(prepare_sql_statement(conn, &sql, buf) == ERR) return counters;
 
 
    p_bind_init(&sql);
 
-   if(p_exec_stmt(sdata, &sql) == OK){
+   if(p_exec_stmt(conn, &sql) == OK){
 
       p_bind_init(&sql);
 
@@ -53,7 +47,7 @@ struct __counters load_counters(struct session_data *sdata){
 }
 
 
-void update_counters(struct session_data *sdata, struct __counters *counters){
+void update_counters(MYSQL *conn, struct __counters *counters){
    char buf[MAXBUFSIZE];
 #ifdef HAVE_MEMCACHED
    unsigned long long mc, rcvd;
@@ -137,12 +131,10 @@ void update_counters(struct session_data *sdata, struct __counters *counters){
 #endif
       snprintf(buf, sizeof(buf)-1, "UPDATE `%s` SET rcvd=rcvd+%llu, size=size+%llu, mynetwork=mynetwork+%llu, ham=ham+%llu, spam=spam+%llu, possible_spam=possible_spam+%llu, unsure=unsure+%llu, minefield=minefield+%llu, virus=virus+%llu, zombie=zombie+%llu, fp=fp+%llu, fn=fn+%llu", SQL_COUNTER_TABLE, counters->c_rcvd, counters->c_size, counters->c_mynetwork, counters->c_ham, counters->c_spam, counters->c_possible_spam, counters->c_unsure, counters->c_minefield, counters->c_virus, counters->c_zombie, counters->c_fp, counters->c_fn);
 
-      p_query(sdata, buf);
+      p_query(conn, buf);
 
 #ifdef HAVE_MEMCACHED
    }
 #endif
 
 }
-
-

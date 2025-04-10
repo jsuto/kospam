@@ -143,7 +143,7 @@ double chi2inv(double x, double df, double esf){
 #endif
 
 
-double get_spam_probability(struct node *xhash[], int *deviating_tokens, struct __config *cfg){
+double get_spam_probability(struct node *xhash[], int *deviating_tokens, struct config *cfg){
    int i, n_tokens=0;
    struct node *q;
    double H, S, I, ln2, ln_q, ln_p;

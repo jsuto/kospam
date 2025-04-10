@@ -20,7 +20,7 @@
 #include "ijc.h"
 
 
-void init_state(struct __state *state){
+void init_state(struct parser_state *state){
    memset((char*)state, 0, sizeof(*state)); // sizeof(state) is only 8 bytes!
 
    state->tre = '-';
@@ -62,7 +62,7 @@ int is_hex_number(char *p){
 }
 
 
-int extract_boundary(char *p, struct __state *state){
+int extract_boundary(char *p, struct parser_state *state){
    char *q, *q2;
 
    p += strlen("boundary");
@@ -199,7 +199,7 @@ void fixupEncodedHeaderLine(char *buf, int buflen){
 }
 
 
-void fixupSoftBreakInQuotedPritableLine(char *buf, struct __state *state){
+void fixupSoftBreakInQuotedPritableLine(char *buf, struct parser_state *state){
    int i=0;
    char *p, puf[MAXBUFSIZE];
 
@@ -229,7 +229,7 @@ void fixupSoftBreakInQuotedPritableLine(char *buf, struct __state *state){
 }
 
 
-void fixupBase64EncodedLine(char *buf, struct __state *state){
+void fixupBase64EncodedLine(char *buf, struct parser_state *state){
    char *p, puf[MAXBUFSIZE];
 
    if(strlen(state->miscbuf) > 0){
@@ -253,7 +253,7 @@ void fixupBase64EncodedLine(char *buf, struct __state *state){
 }
 
 
-void remove_html(char *buf, struct __state *state){
+void remove_html(char *buf, struct parser_state *state){
    char *s, puf[MAXBUFSIZE], html[SMALLBUFSIZE];
    int k=0, pos=0;
    size_t j=0;
@@ -321,7 +321,7 @@ void remove_html(char *buf, struct __state *state){
 }
 
 
-int append_html_tag(char *buf, char *htmlbuf, int pos, struct __state *state){
+int append_html_tag(char *buf, char *htmlbuf, int pos, struct parser_state *state){
    char *p, *q;
    int len=0;
 
@@ -355,7 +355,7 @@ int append_html_tag(char *buf, char *htmlbuf, int pos, struct __state *state){
 }
 
 
-void translate_line(unsigned char *p, struct __state *state){
+void translate_line(unsigned char *p, struct parser_state *state){
    int url=0;
    int has_url = 0;
 
@@ -747,14 +747,14 @@ int base64_decode_attachment_buffer(char *p, unsigned char *b, int blen){
 }
 
 
-void remove_stripped_attachments(struct __state *state){
+void remove_stripped_attachments(struct parser_state *state){
    int i;
 
    for(i=1; i<=state->n_attachments; i++) unlink(state->attachments[i].internalname);
 }
 
 
-int has_octet_stream(struct __state *state){
+int has_octet_stream(struct parser_state *state){
    int i;
 
    for(i=1; i<=state->n_attachments; i++){
@@ -773,7 +773,7 @@ int has_octet_stream(struct __state *state){
 }
 
 
-int has_image_attachment(struct __state *state){
+int has_image_attachment(struct parser_state *state){
    int i;
 
    for(i=1; i<=state->n_attachments; i++){

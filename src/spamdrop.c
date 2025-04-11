@@ -36,7 +36,7 @@ int main(int argc, char **argv){
    struct stat st;
    struct session_data sdata;
    struct parser_state state;
-   struct config cfg, my_cfg;
+   struct config cfg;
    struct data data;
    struct timezone tz;
    struct timeval tv_start, tv_stop;
@@ -158,8 +158,6 @@ int main(int argc, char **argv){
 
    snprintf(sdata.ttmpfile, SMALLBUFSIZE-1, "%s", message);
 
-   memcpy(&my_cfg, &cfg, sizeof(struct config));
-
    /*if(recipient){
       if(cfg.debug == 1) printf("checking user data...\n");
 
@@ -200,14 +198,14 @@ int main(int argc, char **argv){
       if(train_as_spam == 1) snprintf(s, sizeof(s)-1, "nspam");
       else snprintf(s, sizeof(s)-1, "nham");
 
-      train_message(&state, s, &my_cfg);
+      train_message(&state, s, &cfg);
    }
 
-   check_zombie_sender(&state, &data, &my_cfg);
+   check_zombie_sender(&state, &data, &cfg);
 
    struct timeval tv_spam1, tv_spam2;
    gettimeofday(&tv_spam1, &tz);
-   sdata.spaminess = run_statistical_check(&sdata, &state, conn, &my_cfg);
+   sdata.spaminess = run_statistical_check(&sdata, &state, conn, &cfg);
    gettimeofday(&tv_spam2, &tz);
 
 CLEANUP:

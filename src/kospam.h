@@ -57,7 +57,7 @@ void check_zombie_sender(struct parser_state *state, struct data *data, struct c
 void zombie_free(struct data *data);
 
 int check_for_known_bad_attachments(struct session_data *sdata, struct parser_state *state);
-int check_spam(struct session_data *sdata, MYSQL *conn, struct parser_state *state, struct data *data, struct config *cfg, struct config *my_cfg);
+int check_spam(struct session_data *sdata, MYSQL *conn, struct parser_state *state, struct data *data, struct config *cfg);
 void add_penalties(struct session_data *sdata, struct parser_state *state, struct config *cfg);
 
 int check_rbl_lists(struct parser_state *state, char *domainlist);

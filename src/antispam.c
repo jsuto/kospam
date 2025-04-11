@@ -24,7 +24,7 @@ void add_penalties(struct session_data *sdata, struct parser_state *state, struc
 }
 
 
-int check_spam(struct session_data *sdata, MYSQL *conn, struct parser_state *state, struct data *data, struct config *cfg, struct config *my_cfg){
+int check_spam(struct session_data *sdata, MYSQL *conn, struct parser_state *state, struct data *data, struct config *cfg){
    char tmpbuf[SMALLBUFSIZE];
    struct timezone tz;
    struct timeval tv1, tv2;
@@ -68,7 +68,7 @@ int check_spam(struct session_data *sdata, MYSQL *conn, struct parser_state *sta
       //if(sdata->policy_group > 0) get_policy(sdata, cfg, my_cfg);
 
       gettimeofday(&tv1, &tz);
-      do_training(sdata, state, conn, my_cfg);
+      do_training(sdata, state, conn, cfg);
       gettimeofday(&tv2, &tz);
       sdata->__training += tvdiff(tv2, tv1);
 
@@ -129,17 +129,17 @@ int check_spam(struct session_data *sdata, MYSQL *conn, struct parser_state *sta
     * run zombie test
     */
 
-   check_zombie_sender(state, data, my_cfg);
+   check_zombie_sender(state, data, cfg);
 
-   if(state->tre == '+' && my_cfg->message_from_a_zombie > 0){
+   if(state->tre == '+' && cfg->message_from_a_zombie > 0){
       sdata->spaminess = 0.99;
 
-      if(my_cfg->message_from_a_zombie == 1){
+      if(cfg->message_from_a_zombie == 1){
          syslog(LOG_PRIORITY, "%s: marking message from a zombie as spam", sdata->ttmpfile);
          return OK;
       }
 
-      if(my_cfg->message_from_a_zombie == 2){
+      if(cfg->message_from_a_zombie == 2){
          syslog(LOG_PRIORITY, "%s: dropping message from a zombie (%s) as spam", sdata->ttmpfile, state->hostname);
          return DISCARD;
       }
@@ -168,9 +168,9 @@ int check_spam(struct session_data *sdata, MYSQL *conn, struct parser_state *sta
     * message.
     */
 
-   if(sdata->from_address_in_mydomain == 1 && my_cfg->mydomains_from_outside_is_spam == 1){
+   if(sdata->from_address_in_mydomain == 1 && cfg->mydomains_from_outside_is_spam == 1){
       sdata->spaminess = 0.99;
-      if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: %s matches %s", sdata->ttmpfile, state->from, my_cfg->mydomains);
+      if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: %s matches %s", sdata->ttmpfile, state->from, cfg->mydomains);
       return OK;
    }
 
@@ -192,7 +192,7 @@ int check_spam(struct session_data *sdata, MYSQL *conn, struct parser_state *sta
 
 
 
-   if(my_cfg->use_antispam == 1 && (my_cfg->max_message_size_to_filter == 0 || sdata->tot_len < my_cfg->max_message_size_to_filter || state->n_token < my_cfg->max_number_of_tokens_to_filter) ){
+   if(cfg->use_antispam == 1 && (cfg->max_message_size_to_filter == 0 || sdata->tot_len < cfg->max_message_size_to_filter || state->n_token < cfg->max_number_of_tokens_to_filter) ){
 
       if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: running statistical test", sdata->ttmpfile);
 
@@ -201,7 +201,7 @@ int check_spam(struct session_data *sdata, MYSQL *conn, struct parser_state *sta
       //if(cfg->group_type == GROUP_SHARED) sdata->gid = 0;
 
       gettimeofday(&tv1, &tz);
-      sdata->spaminess = run_statistical_check(sdata, state, conn, my_cfg);
+      sdata->spaminess = run_statistical_check(sdata, state, conn, cfg);
       gettimeofday(&tv2, &tz);
       sdata->__as = tvdiff(tv2, tv1);
 
@@ -210,12 +210,12 @@ int check_spam(struct session_data *sdata, MYSQL *conn, struct parser_state *sta
       /* skip TUM training on a blackhole message, unless it may learn a missed spam as a good email */
 
       if(
-         (sdata->blackhole == 0 && my_cfg->training_mode == T_TUM && ( (sdata->spaminess >= my_cfg->spam_overall_limit && sdata->spaminess < 0.99) || (sdata->spaminess < my_cfg->max_ham_spamicity && sdata->spaminess > 0.1) ))
+         (sdata->blackhole == 0 && cfg->training_mode == T_TUM && ( (sdata->spaminess >= cfg->spam_overall_limit && sdata->spaminess < 0.99) || (sdata->spaminess < cfg->max_ham_spamicity && sdata->spaminess > 0.1) ))
       )
       {
 
          char s[SMALLBUFSIZE];
-         if(sdata->spaminess >= my_cfg->spam_overall_limit){
+         if(sdata->spaminess >= cfg->spam_overall_limit){
             snprintf(s, sizeof(s)-1, "nspam");
             syslog(LOG_PRIORITY, "%s: TUM training a spam", sdata->ttmpfile);
          }
@@ -229,7 +229,7 @@ int check_spam(struct session_data *sdata, MYSQL *conn, struct parser_state *sta
          spaminessbuf_size_left -= strlen(tmpbuf);
 
          gettimeofday(&tv1, &tz);
-         train_message(state, s, my_cfg);
+         train_message(state, s, cfg);
          gettimeofday(&tv2, &tz);
          sdata->__training = tvdiff(tv2, tv1);
       }
@@ -245,7 +245,7 @@ int check_spam(struct session_data *sdata, MYSQL *conn, struct parser_state *sta
          spaminessbuf_size_left -= strlen(tmpbuf);
 
          gettimeofday(&tv1, &tz);
-         train_message(state, "nspam", my_cfg);
+         train_message(state, "nspam", cfg);
          gettimeofday(&tv2, &tz);
          sdata->__training = tvdiff(tv2, tv1);
 
@@ -262,7 +262,7 @@ int check_spam(struct session_data *sdata, MYSQL *conn, struct parser_state *sta
       }
    }
    else {
-      syslog(LOG_PRIORITY, "%s: skipping spam check, size: %d/%d, tokens: %d/%d", sdata->ttmpfile, sdata->tot_len, my_cfg->max_message_size_to_filter, state->n_token, my_cfg->max_number_of_tokens_to_filter);
+      syslog(LOG_PRIORITY, "%s: skipping spam check, size: %d/%d, tokens: %d/%d", sdata->ttmpfile, sdata->tot_len, cfg->max_message_size_to_filter, state->n_token, cfg->max_number_of_tokens_to_filter);
    }
 
 

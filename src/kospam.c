@@ -63,9 +63,6 @@ void process_email(char *filename, MYSQL *conn, int size){
       sdata.mynetwork = 1;
    }
 
-   struct config my_cfg;
-   memcpy(&my_cfg, &cfg, sizeof(struct config));
-
    if (parser_state.trapped) {
        counters.c_minefield++;
        gettimeofday(&tv1, &tz);
@@ -77,7 +74,7 @@ void process_email(char *filename, MYSQL *conn, int size){
    }
 
 
-   check_spam(&sdata, conn, &parser_state, &data, &cfg, &my_cfg);
+   check_spam(&sdata, conn, &parser_state, &data, &cfg);
 
    char status[SMALLBUFSIZE];
 
@@ -88,7 +85,7 @@ void process_email(char *filename, MYSQL *conn, int size){
 
       // Update counters
 
-      if(sdata.spaminess >= my_cfg.spam_overall_limit){
+      if(sdata.spaminess >= cfg.spam_overall_limit){
          sdata.status = S_SPAM;
          counters.c_spam++;
          snprintf(status, sizeof(status)-1, "SPAM");
@@ -101,8 +98,8 @@ void process_email(char *filename, MYSQL *conn, int size){
          counters.c_ham++;
          snprintf(status, sizeof(status)-1, "HAM");
 
-         if(sdata.spaminess < my_cfg.spam_overall_limit && sdata.spaminess > my_cfg.possible_spam_limit) counters.c_possible_spam++;
-         else if(sdata.spaminess < my_cfg.possible_spam_limit && sdata.spaminess > my_cfg.max_ham_spamicity) counters.c_unsure++;
+         if(sdata.spaminess < cfg.spam_overall_limit && sdata.spaminess > cfg.possible_spam_limit) counters.c_possible_spam++;
+         else if(sdata.spaminess < cfg.possible_spam_limit && sdata.spaminess > cfg.max_ham_spamicity) counters.c_unsure++;
       }
 
       // Modify message, and add our headers

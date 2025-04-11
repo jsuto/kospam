@@ -371,9 +371,6 @@ int drop_privileges(struct passwd *pwd){
 
 void init_session_data(struct session_data *sdata){
    memset((char*)sdata, 0, sizeof(*sdata));
-
-   sdata->rav = AVIR_OK;
-
    sdata->spaminess = DEFAULT_SPAMICITY;
 }
 

@@ -59,7 +59,6 @@ int generate_tokens_from_string(struct parser_state *state, const char *s, char 
       snprintf(tmpbuf, sizeof(tmpbuf)-1, "%s%s", label, &v[skiplen]);
       if(len > 2){
          addnode(state->token_hash, tmpbuf, DEFAULT_SPAMICITY, 0);
-         //printf("token: %s\n", tmpbuf);
          n++;
       }
 

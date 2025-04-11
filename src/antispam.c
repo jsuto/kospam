@@ -207,43 +207,9 @@ int check_spam(struct session_data *sdata, MYSQL *conn, struct parser_state *sta
 
 
 
-      /* skip TUM training on a blackhole message, unless it may learn a missed spam as a good email */
-
-      if(
-         (sdata->blackhole == 0 && cfg->training_mode == T_TUM && ( (sdata->spaminess >= cfg->spam_overall_limit && sdata->spaminess < 0.99) || (sdata->spaminess < cfg->max_ham_spamicity && sdata->spaminess > 0.1) ))
-      )
-      {
-
-         char s[SMALLBUFSIZE];
-         if(sdata->spaminess >= cfg->spam_overall_limit){
-            snprintf(s, sizeof(s)-1, "nspam");
-            syslog(LOG_PRIORITY, "%s: TUM training a spam", sdata->ttmpfile);
-         }
-         else {
-            snprintf(s, sizeof(s)-1, "nham");
-            syslog(LOG_PRIORITY, "%s: TUM training a ham", sdata->ttmpfile);
-         }
-
-         snprintf(tmpbuf, sizeof(tmpbuf)-1, "%sTUM\r\n", cfg->clapf_header_field);
-         strncat(sdata->spaminessbuf, tmpbuf, spaminessbuf_size_left);
-         spaminessbuf_size_left -= strlen(tmpbuf);
-
-         gettimeofday(&tv1, &tz);
-         train_message(state, s, cfg);
-         gettimeofday(&tv2, &tz);
-         sdata->__training = tvdiff(tv2, tv1);
-      }
-
-
-
       /* training a blackhole message as spam, if we have to */
 
       if(sdata->blackhole == 1 && sdata->spaminess < 0.99){
-
-         snprintf(tmpbuf, sizeof(tmpbuf)-1, "%sTUM on minefield\r\n", cfg->clapf_header_field);
-         strncat(sdata->spaminessbuf, tmpbuf, spaminessbuf_size_left);
-         spaminessbuf_size_left -= strlen(tmpbuf);
-
          gettimeofday(&tv1, &tz);
          train_message(state, "nspam", cfg);
          gettimeofday(&tv2, &tz);

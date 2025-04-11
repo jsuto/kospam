@@ -12,7 +12,6 @@
 
 #include <openssl/sha.h>
 #include <openssl/ssl.h>
-#include "tai.h"
 #include "config.h"
 
 #define PARTITION_MGMT_INTERVAL 1800
@@ -20,8 +19,6 @@
 #define MAXHASH 8171
 
 #define NUM_OF_REGEXES 30
-
-#define BASE64_RATIO 1.33333333
 
 #define DIGEST_LENGTH SHA256_DIGEST_LENGTH
 
@@ -49,13 +46,6 @@
 
 #define NUMBER_OF_GOOD_FROM 10
 
-#define GROUP_SHARED 0
-#define GROUP_MERGED 1
-
-#define T_TOE 0
-#define T_TUM 1
-
-typedef void signal_func (int);
 typedef unsigned long long uint64;
 
 struct child {
@@ -125,7 +115,7 @@ struct session_data {
    unsigned int status;
    int trapped_client;
    int from_address_in_mydomain;
-   int tot_len, rav;
+   int tot_len;
    int statistically_whitelisted;
    int need_scan, need_signo_check;
    int blackhole;
@@ -136,65 +126,17 @@ struct session_data {
 };
 
 
-#ifdef HAVE_MEMCACHED
-
-#include <stdbool.h>
-#include <netinet/in.h>
-
-struct flags {
-   bool no_block:1;
-   bool no_reply:1;
-   bool tcp_nodelay:1;
-   bool tcp_keepalive:1;
-};
-
-
-struct memcached_server {
-
-   struct flags flags;
-
-   int fd;
-   unsigned int snd_timeout;
-   unsigned int rcv_timeout;
-
-   int send_size;
-   int recv_size;
-   unsigned int tcp_keepidle;
-
-   int last_read_bytes;
-
-   char *result;
-   char buf[MAXBUFSIZE];
-
-   struct sockaddr_in addr;
-
-   char server_ip[IPLEN];
-   int server_port;
-
-   char initialised;
-};
-#endif
-
-
 struct data {
    int quiet;
 #ifdef HAVE_TRE
    int n_regex;
    regex_t pregs[NUM_OF_REGEXES];
 #endif
-   char starttls[TINYBUFSIZE];
    struct node *mydomains[MAXHASH];
-
-#ifdef HAVE_MEMCACHED
-   struct memcached_server memc;
-#endif
-
-   SSL_CTX *ctx;
-   SSL *ssl;
 };
 
 
-struct __counters {
+struct counters {
    uint64 c_rcvd;
    uint64 c_ham;
    uint64 c_spam;

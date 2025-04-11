@@ -45,6 +45,8 @@
 
 #define DEVIATION(n) fabs((n)-0.5f)
 
+typedef void signal_func (int);
+
 signal_func *set_signal_handler(int signo, signal_func * func);
 
 void disable_coredump();
@@ -69,7 +71,7 @@ int update_token_dates(struct parser_state *state, struct config *cfg);
 
 int train_message(struct parser_state *state, char *column, struct config *cfg);
 
-void update_counters(MYSQL *conn, struct __counters *counters);
+void update_counters(MYSQL *conn, struct counters *counters);
 
 
 char *split(char *str, int ch, char *buf, int buflen, int *result);

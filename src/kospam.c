@@ -25,7 +25,7 @@ void process_email(char *filename, MYSQL *conn, int size){
    struct timezone tz;
    struct timeval tv1, tv2;
    struct parser_state parser_state;
-   struct __counters counters;
+   struct counters counters;
 
    bzero(&counters, sizeof(counters));
 

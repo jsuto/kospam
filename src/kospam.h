@@ -33,7 +33,6 @@
 #include <defs.h>
 #include <hash.h>
 #include <chi.h>
-#include <buffer.h>
 #include <parser.h>
 #include <errmsg.h>
 #include <users.h>
@@ -82,7 +81,7 @@ float run_statistical_check(struct session_data *sdata, struct parser_state *sta
 
 void manage_partitions(struct config *cfg);
 
-int write_history_to_sql(struct session_data *sdata, MYSQL *conn, struct parser_state *state);
+void write_history_to_sql(MYSQL *conn, struct session_data *sdata, struct parser_state *state);
 
 void store_minefield_ip(MYSQL *conn, char *ip);
 

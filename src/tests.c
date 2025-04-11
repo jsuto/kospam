@@ -209,12 +209,12 @@ void test_normalize_html() {
 
     TestCaseStrStr tests[] = {
        {
-          "<html><body><script>alert(0);</script><aaa>My text</aaa><img src=\"/aaa.jpg\" /> aaaa<zzz attr=\"aaa\"></zzz>aaa",
-          "     My text   aaaa  aaa"
+          "<html><body><script>alert(0);</script><aaa>My text &lt;&gt;</aaa><img src=\"/aaa.jpg\" /> aaaa<zzz attr=\"aaa\"></zzz>aaa",
+          "     My text <>   aaaa  aaa"
        },
        {
-          "<html>\n<body>\n<script>alert(0);</script>\n<aaa>My text</aaa>\n<img src=\"/aaa.jpg\" /> aaaa<zzz attr=\"aaa\"></zzz>aaa\n",
-          " \n \n  \n My text \n  aaaa  aaa\n"
+          "<html>\n<body>\n<script>alert(0);</script>\n<aaa>My text &amp;</aaa>\n<img src=\"/aaa.jpg\" /> aaaa<zzz attr=\"aaa\"></zzz>aaa\n",
+          " \n \n  \n My text & \n  aaaa  aaa\n"
        },
     };
 

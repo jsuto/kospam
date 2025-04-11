@@ -19,7 +19,7 @@ DEFS = @defs@
 INCDIR = -I. -I.. @INCDIR@ @sql_includes@
 LIBDIR = -L. @LIBDIR@ @LDFLAGS@
 LIBS = @LIBS@ @sql_libs@
-OBJS = file.o strings.o dirs.o misc.o counters.o cfg.o sig.o digest.o hash.o tokenizer.o chi.o antispam.o spam.o buffer.o zombie.o train.o partition.o black.o history.o rbl.o mysql.o xxh3_64.o qqq.o utf8.o parser.o html.o header.o base64.o entities.o qp.o
+OBJS = file.o strings.o dirs.o misc.o counters.o cfg.o sig.o digest.o hash.o tokenizer.o chi.o antispam.o spam.o zombie.o train.o partition.o black.o history.o rbl.o mysql.o xxh3_64.o qqq.o utf8.o parser.o html.o header.o base64.o entities.o qp.o
 RUNNING_USER = @RUNNING_USER@
 RUNNING_GROUP = `@id_bin@ -gn $(RUNNING_USER)`
 

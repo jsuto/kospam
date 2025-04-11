@@ -161,23 +161,6 @@ struct node *findnode(struct node *xhash[], char *s){
 }
 
 
-int is_substr_in_hash(struct node *xhash[], char *s){
-   int i;
-   struct node *q;
-
-   for(i=0;i<MAXHASH;i++){
-      q = xhash[i];
-      while(q != NULL){
-         if(q->str && strstr(s, q->str)) return 1;
-
-         q = q->r;
-      }
-   }
-
-   return 0;
-}
-
-
 /*
  * update token counters
  */
@@ -204,4 +187,22 @@ int updatenode(struct node *xhash[], uint64 key, float nham, float nspam, float 
    }
 
    return 0;
+}
+
+
+int count_existing_tokens_in_token_table(struct node *xhash[]) {
+    struct node *q;
+    int count = 0;
+
+    for(int i=0; i<MAXHASH; i++){
+        q = xhash[i];
+        while(q != NULL) {
+            if (q->nham + q->nspam > 0) {
+               count++;
+            }
+            q = q->r;
+        }
+    }
+
+    return count;
 }

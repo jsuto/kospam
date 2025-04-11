@@ -36,7 +36,7 @@ int check_spam(struct session_data *sdata, MYSQL *conn, struct parser_state *sta
    spaminessbuf_size_left -= strlen(sdata->spaminessbuf);
 
    /*
-    * do training
+    * Handle a training request
     */
 
    if(state->training_request == 1){
@@ -93,9 +93,7 @@ int check_spam(struct session_data *sdata, MYSQL *conn, struct parser_state *sta
    /*if(get_user_data_from_email(sdata, state->envelope_recipient, cfg) == 0){
       p = strchr(state->envelope_recipient, '@');
       if(p) get_user_data_from_email(sdata, p, cfg);
-   }
-
-   if(sdata->policy_group > 0) get_policy(sdata, cfg, my_cfg);*/
+   }*/
 
 
    /*
@@ -195,10 +193,6 @@ int check_spam(struct session_data *sdata, MYSQL *conn, struct parser_state *sta
    if(cfg->use_antispam == 1 && (cfg->max_message_size_to_filter == 0 || sdata->tot_len < cfg->max_message_size_to_filter || state->n_token < cfg->max_number_of_tokens_to_filter) ){
 
       if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: running statistical test", sdata->ttmpfile);
-
-      //if(sdata->blackhole == 1) sdata->gid = 0; // fix gid if it's a blackhole request
-
-      //if(cfg->group_type == GROUP_SHARED) sdata->gid = 0;
 
       gettimeofday(&tv1, &tz);
       sdata->spaminess = run_statistical_check(sdata, state, conn, cfg);

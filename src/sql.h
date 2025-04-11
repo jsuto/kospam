@@ -36,6 +36,5 @@ uint64 p_get_insert_id(struct query *sql);
 int p_get_affected_rows(struct query *sql);
 void close_prepared_statement(struct query *sql);
 struct te get_ham_spam_counters(MYSQL *conn, char *stmt);
-void update_hash(MYSQL *conn, char *qry, struct node *xhash[]);
 
 #endif /* _SQL_H */

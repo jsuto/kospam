@@ -254,27 +254,3 @@ struct te get_ham_spam_counters(MYSQL *conn, char *stmt){
    }
    return te;
 }
-
-
-void update_hash(MYSQL *conn, char *qry, struct node *xhash[]){
-   MYSQL_RES *res;
-   MYSQL_ROW row;
-   float nham, nspam;
-   uint64 token;
-
-   if(mysql_real_query(conn, qry, strlen(qry)) == 0){
-      res = mysql_store_result(conn);
-      if(res != NULL){
-         while((row = mysql_fetch_row(res))){
-            token = strtoull(row[0], NULL, 10);
-            nham = atof(row[1]);
-            nspam = atof(row[2]);
-
-            updatenode(xhash, token, nham, nspam, DEFAULT_SPAMICITY, 0);
-         }
-
-         mysql_free_result(res);
-      }
-
-   }
-}

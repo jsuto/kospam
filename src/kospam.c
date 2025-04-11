@@ -79,9 +79,7 @@ void process_email(char *filename, MYSQL *conn, int size){
    char status[SMALLBUFSIZE];
 
    if (parser_state.training_request == 0) {
-      if (write_history_to_sql(&sdata, conn, &parser_state) != OK) {
-         syslog(LOG_PRIORITY, "%s: ERROR: insert to history", sdata.ttmpfile);
-      }
+      write_history_to_sql(conn, &sdata,  &parser_state);
 
       // Update counters
 

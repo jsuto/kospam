@@ -14,10 +14,6 @@ int get_tokens(struct parser_state *state, char type, struct config *cfg){
     int i, n=0;
     char s[SMALLBUFSIZE];
     struct node *q;
-    buffer *query;
-
-    query = buffer_create(NULL);
-    if(!query) return 1;
 
     MYSQL *conn = mysql_init(NULL);
     if (conn == NULL) {
@@ -40,9 +36,25 @@ int get_tokens(struct parser_state *state, char type, struct config *cfg){
         return 1;
     }
 
-    snprintf(s, sizeof(s)-1, "INSERT INTO %s (token) VALUES (0)", SQL_TEMP_TOKEN_TABLE);
+    // The string representation of the largest unit64 number (18446744073709551615) is 21 character long
+    // Add +3 bytes for ",(" and ")", that's 24 characters, so we need a buffer size like n_token * 24 + SMALLBUFSIZE
 
-    buffer_cat(query, s);
+    size_t len = SMALLBUFSIZE + state->n_token * 24;
+    if (cfg->debug) printf("allocating %ld bytes for %d tokens\n", len, state->n_token);
+    char *query = malloc(len);
+    if (!query) {
+        syslog(LOG_PRIORITY, "ERROR: malloc() error %s", __func__);
+        mysql_close(conn);
+        return 1;
+    }
+
+    memset(query, 0, len);
+    size_t pos = 0;
+
+    snprintf(s, sizeof(s)-1, "INSERT INTO %s (token) VALUES (0)", SQL_TEMP_TOKEN_TABLE);
+    len = strlen(s);
+    memcpy(query+pos, s, len);
+    pos += len;
 
     for(i=0; i<MAXHASH; i++){
         q = state->token_hash[i];
@@ -51,17 +63,20 @@ int get_tokens(struct parser_state *state, char type, struct config *cfg){
            if( type == -1 || (type == 1 && q->type == 1) || (type == 0 && q->type == 0) ){
               n++;
               snprintf(s, sizeof(s)-1, ",(%llu)", xxh3_64(q->str));
-
-              buffer_cat(query, s);
+              len = strlen(s);
+              memcpy(query+pos, s, len);
+              pos += len;
            }
 
            q = q->r;
         }
     }
 
-    int rc = mysql_query(conn, query->data);
+    if (cfg->debug) printf("query: *%s*\n", query);
 
-    buffer_destroy(query);
+    int rc = mysql_query(conn, query);
+
+    if (query) free(query);
 
     if (rc != 0) {
         syslog(LOG_PRIORITY, "ERROR: %s", mysql_error(conn));
@@ -104,10 +119,6 @@ int update_token_dates(struct parser_state *state, struct config *cfg) {
     int utokens = 0;
     char s[SMALLBUFSIZE];
     struct node *q;
-    buffer *query;
-
-    query = buffer_create(NULL);
-    if(!query) return utokens;
 
     MYSQL *conn = mysql_init(NULL);
     if (conn == NULL) {
@@ -132,7 +143,23 @@ int update_token_dates(struct parser_state *state, struct config *cfg) {
 
     snprintf(s, sizeof(s)-1, "INSERT INTO %s (token) VALUES (0)", SQL_TEMP_TOKEN_TABLE);
 
-    buffer_cat(query, s);
+    int count = count_existing_tokens_in_token_table(state->token_hash);
+
+    size_t len = SMALLBUFSIZE + count * 24;
+    if (cfg->debug) printf("allocating %ld bytes for %d tokens\n", len, count);
+    char *query = malloc(len);
+    if (!query) {
+        syslog(LOG_PRIORITY, "ERROR: malloc() error %s", __func__);
+        mysql_close(conn);
+        return utokens;
+    }
+
+    memset(query, 0, len);
+    size_t pos = 0;
+
+    len = strlen(s);
+    memcpy(query+pos, s, len);
+    pos += len;
 
     for(int i=0; i<MAXHASH; i++){
         q = state->token_hash[i];
@@ -140,19 +167,20 @@ int update_token_dates(struct parser_state *state, struct config *cfg) {
             if (q->nham + q->nspam > 0) {
                utokens++;
                snprintf(s, sizeof(s)-1, ",(%llu)", q->key);
-               //printf("%llu, %f, %f\n", q->key, q->nham, q->nspam);
-               buffer_cat(query, s);
+               len = strlen(s);
+               memcpy(query+pos, s, len);
+               pos += len;
             }
 
             q = q->r;
         }
     }
 
-    //if (cfg->debug) printf("update date query: *%s*\n", query->data);
+    if (cfg->debug) printf("update date query: *%s*\n", query);
 
-    int rc = mysql_query(conn, query->data);
+    int rc = mysql_query(conn, query);
 
-    buffer_destroy(query);
+    if (query) free(query);
 
     if (rc != 0) {
         syslog(LOG_PRIORITY, "ERROR: %s", mysql_error(conn));

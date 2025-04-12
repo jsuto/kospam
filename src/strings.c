@@ -92,3 +92,30 @@ void chop_newlines(char *str, size_t len) {
         }
     }
 }
+
+
+void extract_url_token(char *s, char *result, int resultlen) {
+    memset(result, 0, resultlen);
+
+    // Chop the request uri from the URL
+    char *p = strchr(s, '/');
+    if (p) *p = '\0';
+
+    p = strrchr(s, '.');
+    if (p) {
+        *p = '\0';
+        char *q = strrchr(s, '.');
+        if (q) {
+            *p = '.';
+            p = q+1;
+            *q = '\0';
+        } else {
+            *p = '.';
+             p = s;
+        }
+    } else {
+        p = s;
+    }
+
+    snprintf(result, resultlen-1, "URL*%s", p);
+}

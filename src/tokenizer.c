@@ -35,16 +35,10 @@ int generate_tokens_from_string(struct parser_state *state, const char *s, char 
       }
 
       if (url) {
-         char *p = strchr(&v[skiplen], '/');
-         if (p) *p = '\0';
-
-         p = strrchr(&v[skiplen], '.');
-         if (p) {
-            char tmp[SMALLBUFSIZE];
-            snprintf(tmp, sizeof(tmp)-1, "URL*%s", p+1);
-            addnode(state->token_hash, tmp, DEFAULT_SPAMICITY, 0);
-            state->n_token++;
-         }
+         char tmp[SMALLBUFSIZE];
+         extract_url_token(&v[skiplen], &tmp[0], sizeof(tmp));
+         addnode(state->token_hash, tmp, DEFAULT_SPAMICITY, 0);
+         state->n_token++;
       }
 
       // skip single letter or too long words, but keep attachment names

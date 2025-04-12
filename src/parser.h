@@ -92,6 +92,7 @@ struct parser_state {
    bool trapped;
 };
 
+void init_state(struct parser_state *state);
 int parse_message(const char *message, struct parser_state *state, struct Message *m);
 int post_parse(struct parser_state *state, struct Message *m, struct config *cfg);
 char *read_file(const char *filename, size_t *outsize);
@@ -112,5 +113,6 @@ void utf8_tolower(char *s);
 void decode_html_entities_utf8_inplace(char *buffer);
 void normalize_html(char *input);
 void chop_newlines(char *str, size_t len);
+void extract_url_token(char *s, char *result, int resultlen);
 
 #endif /* _PARSER_H */

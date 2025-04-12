@@ -5,7 +5,7 @@ set -o errexit
 
 
 PEMFILE="/etc/kospam/kospam.pem"
-CERT_SUBJECT="/C=US/ST=Illionis/L=Springfield/O=MyCompany/CN=mail.kospam"
+CERT_SUBJECT="/C=US/ST=Illionis/L=Springfield/O=MyCompany/CN=antispam.kospam"
 
 error() {
    echo "ERROR:" "$*" 1>&2
@@ -26,6 +26,8 @@ create_pem_file() {
       echo "Generate PEM file ${pemfile}"
       openssl req -newkey rsa:4096 -new -nodes -x509 -subj "$subject" -days 3650 -sha256 -keyout "$pemfile" -out "1.crt" 2>/dev/null
       cat "1.crt" >> "$pemfile"
+      chown root:kospam "$pemfile"
+      chmod 640 "$pemfile"
       rm -f "1.crt"
    fi
 }

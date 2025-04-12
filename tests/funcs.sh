@@ -6,6 +6,7 @@ VERDICT=0
 # shellcheck disable=SC2034
 RESULT_CRITICAL=2
 LOGFILE="mail.log"
+PEMFILE="${SCRIPT_DIR}/server.pem"
 EML_DIR="${SCRIPT_DIR}/eml"
 # shellcheck disable=SC2034
 TRAINING_DIR="${SCRIPT_DIR}/training"
@@ -28,6 +29,18 @@ get_verdict() {
    exit "$VERDICT"
 }
 
+create_pem_file() {
+   local pemfile="$1"
+   local subject="$2"
+
+   if [[ ! -f "$pemfile" ]]; then
+      echo "Generate PEM file"
+      openssl req -newkey rsa:4096 -new -nodes -x509 -subj "$subject" -days 3650 -sha256 -keyout "$pemfile" -out "1.crt" 2>/dev/null
+      cat "1.crt" >> "$pemfile"
+      rm -f "1.crt"
+   fi
+}
+
 wait_until_emails_are_processed() {
    local container="$1"
    local num=$2
@@ -40,7 +53,7 @@ wait_until_emails_are_processed() {
    loops=$(( num / 100 ))
 
    while true; do
-      processed="$( docker exec "$container" find /var/mail/example.com/bbb/new/ -type f|wc -l )"
+      processed="$( docker exec "$container" find /var/mail/example.com/bbb/new/ -type f | wc -l )"
 
       i=$(( i + 1 ))
       echo "processed ${processed} messages"
@@ -73,6 +86,10 @@ prepare() {
    fi
 
    [[ -f kospam.sql.gz ]] || "$MC_COMMAND" cp ibm/piler-ci/kospam.sql.gz .
+
+   create_pem_file "$PEMFILE" "/C=US/ST=Denial/L=Springfield/O=Dis/CN=mail.kospam"
+
+   chmod 644 "$PEMFILE"
 
    ls -la
 

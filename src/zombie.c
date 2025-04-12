@@ -54,7 +54,7 @@ void check_zombie_sender(struct parser_state *state, struct data *data, struct c
       i++;
    }
 
-   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "zombie check: %c [%d] %s", state->tre, i, state->hostname);
+   if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "DEBUG: zombie check: %c [%d] %s", state->tre, i, state->hostname);
 }
 
 

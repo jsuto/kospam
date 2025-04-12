@@ -26,3 +26,6 @@ virtual_minimum_uid = 100
 virtual_uid_maps = static:1000
 virtual_gid_maps = static:1000
 message_size_limit = 20000000
+
+smtp_send_xforward_command = yes
+content_filter = smtp:[kospam]:10025

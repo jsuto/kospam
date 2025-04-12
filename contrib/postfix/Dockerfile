@@ -15,6 +15,7 @@ RUN apk update && \
 
 COPY run.sh /
 COPY main.cf /etc/postfix/main.cf
+COPY master.cf /etc/postfix/master.cf
 
 EXPOSE 25
 

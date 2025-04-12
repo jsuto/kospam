@@ -123,8 +123,6 @@ int main(int argc, char **argv){
 
    srand(getpid());
 
-   if(!can_i_write_current_directory()) __fatal("cannot write current directory!");
-
    if(stat(message, &st) != 0){
       fprintf(stderr, "%s is not found\n", message);
       return 1;

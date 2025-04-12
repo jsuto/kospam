@@ -23,7 +23,7 @@ void zombie_init(struct data *data, struct config *cfg){
    if(f){
       while(fgets(buf, sizeof(buf)-1, f)){
          if(buf[0] != ';' && buf[0] != '#' && buf[0] != '\r' && buf[0] != '\n'){
-            trim_buffer(buf);
+            chop_newlines(buf, strlen(buf));
             if(regcomp(&(data->pregs[data->n_regex]), buf, REG_ICASE | REG_EXTENDED) == 0){
                i++;
                if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "[%d] compiled: %s", i, buf);

@@ -5,6 +5,14 @@
 #include <kospam.h>
 
 
+static long get_local_timezone_offset(){
+   time_t t = time(NULL);
+   struct tm lt = {0};
+   localtime_r(&t, &lt);
+   return lt.tm_gmtoff;
+}
+
+
 static int is_existing_partition(MYSQL *conn, char *partition, struct config *cfg){
    int count=0;
    char buf[SMALLBUFSIZE];

@@ -2,12 +2,8 @@
  * cfg.c, SJ
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stddef.h>
+#include <kospam.h>
 #include "cfg.h"
-#include "misc.h"
 #include "config.h"
 
 
@@ -163,7 +159,7 @@ int parse_config_file(char *configfile, struct config *target_cfg, struct _parse
       chpos = strchr(line, '=');
 
       if(chpos){
-         trim_buffer(chpos+1);
+         chop_newlines(chpos+1, strlen(chpos+1));
          *chpos = '\0';
          int i = 0;
 
@@ -250,7 +246,7 @@ void print_config_item(struct config *cfg, struct _parse_rule *rules, int i){
       } while(p);
    }
    else {
-      trim_buffer(p);
+      chop_newlines(p, strlen(p));
       printf("%s=%s\n", rules[i].name, p);
    }
 
@@ -306,7 +302,7 @@ void print_config(char *configfile, struct config *cfg){
       chpos = strchr(line, '=');
 
       if(chpos){
-         trim_buffer(chpos+1);
+         chop_newlines(chpos+1, strlen(chpos+1));
          *chpos = '\0';
          int i = 0;
 

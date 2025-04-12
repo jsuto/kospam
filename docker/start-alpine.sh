@@ -4,6 +4,9 @@ set -o nounset
 set -o errexit
 
 
+PEMFILE="/etc/kospam/kospam.pem"
+CERT_SUBJECT="/C=US/ST=Illionis/L=Springfield/O=MyCompany/CN=mail.kospam"
+
 error() {
    echo "ERROR:" "$*" 1>&2
    exit 1
@@ -15,9 +18,21 @@ log() {
 }
 
 
+create_pem_file() {
+   pemfile="$1"
+   subject="$2"
+
+   if [ ! -f "$pemfile" ]; then
+      echo "Generate PEM file ${pemfile}"
+      openssl req -newkey rsa:4096 -new -nodes -x509 -subj "$subject" -days 3650 -sha256 -keyout "$pemfile" -out "1.crt" 2>/dev/null
+      cat "1.crt" >> "$pemfile"
+      rm -f "1.crt"
+   fi
+}
+
 wait_until_mariadb_server_is_ready() {
    while true; do if echo "show databases" | mariadb -uroot -h"$MYSQL_HOSTNAME" -p"$MYSQL_ROOT_PASSWORD" ; then break; fi; log "${MYSQL_HOSTNAME} is not ready"; sleep 3; done
-    log "${MYSQL_HOSTNAME} is ready"
+   log "${MYSQL_HOSTNAME} is ready"
 }
 
 check_database() {
@@ -46,6 +61,10 @@ check_database() {
 }
 
 rsyslogd
+
+if [ ! -f "$PEMFILE" ]; then
+   create_pem_file "$PEMFILE" "$CERT_SUBJECT"
+fi
 
 wait_until_mariadb_server_is_ready
 check_database

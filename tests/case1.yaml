@@ -55,7 +55,6 @@ services:
     volumes:
       - ./11-aaaa.conf:/etc/rsyslog.d/11-aaaa.conf:ro
       - ./kospam.conf:/etc/kospam/kospam.conf
-      - ./server.pem:/etc/kospam/kospam.pem
       - ./kospam.sql.gz:/kospam.sql.gz
     healthcheck:
       test: curl -s --request NOOP smtp://localhost:10025/

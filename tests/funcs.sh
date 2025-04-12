@@ -5,7 +5,6 @@ set -o errexit
 VERDICT=0
 # shellcheck disable=SC2034
 RESULT_CRITICAL=2
-PEMFILE="${SCRIPT_DIR}/server.pem"
 LOGFILE="mail.log"
 EML_DIR="${SCRIPT_DIR}/eml"
 # shellcheck disable=SC2034
@@ -27,18 +26,6 @@ set_verdict() {
 get_verdict() {
    echo "verdict: ${VERDICT}"
    exit "$VERDICT"
-}
-
-create_pem_file() {
-   local pemfile="$1"
-   local subject="$2"
-
-   if [[ ! -f "$pemfile" ]]; then
-      echo "Generate PEM file"
-      openssl req -newkey rsa:4096 -new -nodes -x509 -subj "$subject" -days 3650 -sha256 -keyout "$pemfile" -out "1.crt" 2>/dev/null
-      cat "1.crt" >> "$pemfile"
-      rm -f "1.crt"
-   fi
 }
 
 wait_until_emails_are_processed() {
@@ -84,10 +71,6 @@ prepare() {
       "$MC_COMMAND" cp ibm/piler-ci/piler-test-files.tar.xz .
       tar Jxf piler-test-files.tar.xz
    fi
-
-   create_pem_file "$PEMFILE" "/C=US/ST=Denial/L=Springfield/O=Dis/CN=mail.kospam"
-
-   chmod 644 "$PEMFILE"
 
    [[ -f kospam.sql.gz ]] || "$MC_COMMAND" cp ibm/piler-ci/kospam.sql.gz .
 

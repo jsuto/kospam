@@ -127,19 +127,21 @@ int check_spam(struct session_data *sdata, MYSQL *conn, struct parser_state *sta
     * run zombie test
     */
 
-   check_zombie_sender(state, data, cfg);
+   if (data->n_regex) {
+      check_zombie_sender(state, data, cfg);
 
-   if(state->tre == '+' && cfg->message_from_a_zombie > 0){
-      sdata->spaminess = 0.99;
+      if(state->tre == '+' && cfg->message_from_a_zombie > 0){
+         sdata->spaminess = 0.99;
 
-      if(cfg->message_from_a_zombie == 1){
-         syslog(LOG_PRIORITY, "%s: marking message from a zombie as spam", sdata->ttmpfile);
-         return OK;
-      }
+         if(cfg->message_from_a_zombie == 1){
+            syslog(LOG_PRIORITY, "%s: marking message from a zombie as spam", sdata->ttmpfile);
+            return OK;
+         }
 
-      if(cfg->message_from_a_zombie == 2){
-         syslog(LOG_PRIORITY, "%s: dropping message from a zombie (%s) as spam", sdata->ttmpfile, state->hostname);
-         return DISCARD;
+         if(cfg->message_from_a_zombie == 2){
+            syslog(LOG_PRIORITY, "%s: dropping message from a zombie (%s) as spam", sdata->ttmpfile, state->hostname);
+            return DISCARD;
+         }
       }
    }
 

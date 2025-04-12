@@ -8,7 +8,7 @@ mysql_cmd=( docker exec -i "$CONTAINER" sh -c 'mariadb -h "$MYSQL_HOSTNAME" -u "
 send_emails() {
    echo "Sending emails"
 
-   "$SMTPTEST" -smtpaddr 127.0.0.1:10025 -dir "$EML_DIR"
+   "$SMTPTEST" -smtpaddr 127.0.0.1:22225 -dir "$EML_DIR"
 
    docker exec "$SYSLOG_HOST" tail -20 /var/log/mail.log
 

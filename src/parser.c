@@ -158,7 +158,7 @@ int post_parse(struct parser_state *state, struct Message *m, struct config *cfg
                 size_t len = strlen(q);
                 if (*(q+len-1) == ']') *(q+len-1) = '\0';
                 if(is_dotted_ipv4_address(q) == 1){
-                    if(is_item_on_list(q, cfg->skipped_received_ips, "127.,10.,192.168.,172.16.") == 0) {
+                    if(is_item_on_list(q, cfg->skipped_received_ips) == false && is_item_on_list(q, "127.,10.,192.168.,172.16.") == false) {
                        snprintf(state->ip, sizeof(state->ip)-1, "%s", q);
                     }
                 }

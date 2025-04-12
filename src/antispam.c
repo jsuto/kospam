@@ -100,13 +100,13 @@ int check_spam(struct session_data *sdata, MYSQL *conn, struct parser_state *sta
     * check sender address on the per user whitelist, then blacklist
     */
 
-   if(is_item_on_list(state->envelope_from, sdata->whitelist, "") == 1){
+   if(is_item_on_list(state->envelope_from, sdata->whitelist)){
       syslog(LOG_PRIORITY, "%s: sender (%s) found on whitelist", sdata->ttmpfile, state->envelope_from);
       return OK;
    }
 
 
-   if(is_item_on_list(state->envelope_from, sdata->blacklist, "") == 1){
+   if(is_item_on_list(state->envelope_from, sdata->blacklist)){
       sdata->spaminess = 0.99;
       syslog(LOG_PRIORITY, "%s: sender (%s) found on blacklist", sdata->ttmpfile, state->envelope_from);
       return DISCARD;

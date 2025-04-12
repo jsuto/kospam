@@ -175,7 +175,7 @@ int main(int argc, char **argv){
    }*/
 
 
-   if(is_item_on_list(from, sdata.whitelist, "") == 1){
+   if(is_item_on_list(from, sdata.whitelist)){
       if(cfg.debug == 1) printf(" '%s' found on '%s'\n", from, sdata.whitelist);
    }
 

@@ -58,9 +58,9 @@ void process_email(char *filename, MYSQL *conn, int size){
    //sdata->rav = check_for_known_bad_attachments(sdata, &parser_state);
    //if(sdata->rav == AVIR_VIRUS) snprintf(virusinfo, sizeof(virusinfo)-1, "MARKED.AS.MALWARE");
 
-   if (is_item_on_list(parser_state.ip, cfg.mynetwork, "") == 1) {
-      syslog(LOG_PRIORITY, "%s: client ip (%s) on mynetwork", sdata.ttmpfile, parser_state.ip);
-      sdata.mynetwork = 1;
+   if (is_item_on_list(parser_state.ip, cfg.mynetwork)) {
+       syslog(LOG_PRIORITY, "%s: client ip (%s) on mynetwork", sdata.ttmpfile, parser_state.ip);
+       sdata.mynetwork = 1;
    }
 
    if (parser_state.trapped) {

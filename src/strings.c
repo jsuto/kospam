@@ -119,3 +119,35 @@ void extract_url_token(char *s, char *result, int resultlen) {
 
     snprintf(result, resultlen-1, "URL*%s", p);
 }
+
+
+bool is_item_on_list(char *item, char *list) {
+    if(!item || !list) return false;
+
+    size_t itemlen = strlen(item);
+
+    if (itemlen < 3 || strlen(list) < 3) return false;
+
+    char *p = list;
+
+    while (p) {
+        char v[SMALLBUFSIZE];
+        int result;
+        p = split(p, ',', v, sizeof(v)-1, &result);
+
+        size_t len = strlen(v);
+        if (len < 3) continue;
+
+        if (v[len-1] == '$') {
+            v[len-1] = '\0'; // remove $
+            size_t toklen = len - 1;
+            if (itemlen >= toklen && strncasecmp(item + itemlen - toklen, v, toklen) == 0) {
+                return true;
+            }
+        } else if (strcasestr(item, v)) {
+            return true;
+        }
+   }
+
+   return false;
+}

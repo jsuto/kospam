@@ -134,43 +134,6 @@ void init_session_data(struct session_data *sdata){
 }
 
 
-int is_item_on_list(char *item, char *list, char *extralist){
-   int result;
-   char *p, *q, w[MAXBUFSIZE], my_list[MAXBUFSIZE];
-
-   if(!item) return 0;
-
-   if(strlen(list) + strlen(extralist) < 3) return 0;
-
-   snprintf(my_list, sizeof(my_list)-1, "%s,%s", extralist, list);
-
-   p = my_list;
-
-   while(p) {
-      p = split(p, ',', w, sizeof(w)-1, &result);
-
-      chop_newlines(w, strlen(w));
-
-      if(strlen(w) > 2){
-
-         if(w[strlen(w)-1] == '$'){
-            q = item + strlen(item) - strlen(w) + 1;
-            if(strncasecmp(q, w, strlen(w)-1) == 0){
-               return 1;
-            }
-         }
-         else if(strcasestr(item, w)){
-            return 1;
-         }
-
-      }
-
-   }
-
-   return 0;
-}
-
-
 /*
  * is it a valid dotted IPv4 address
  */

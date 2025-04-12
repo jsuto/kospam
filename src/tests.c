@@ -20,6 +20,11 @@ typedef struct {
     const char *expected;
 } TestCaseStrStrStr;
 
+typedef struct {
+    const char *input;
+    const bool expected;
+} TestCaseStrBool;
+
 struct config cfg;
 
 void aaa(struct node *xhash[], char *s, size_t slen){
@@ -346,6 +351,30 @@ void test_extract_url_token() {
 }
 
 
+void test_is_item_on_list() {
+    TEST_HEADER();
+
+    TestCaseStrBool tests[] = {
+        { "10.1.1.1", true },
+        { "1.1.1.2", false },
+        { "127.0.0.1", true },
+        { "123.123", true },
+        { "123.123.256.256", false },
+    };
+
+    char list[SMALLBUFSIZE];
+    sprintf(list, "127.,10.,192.168.,172.16.,123.123$,xxx.xxx");
+
+    int num_tests = sizeof(tests) / sizeof(TestCaseStrStr);
+
+    for (int i = 0; i < num_tests; i++) {
+        bool result = is_item_on_list((char *)tests[i].input, list);
+        ASSERT(result == tests[i].expected, tests[i].input);
+    }
+
+    TEST_FOOTER();
+}
+
 int main() {
     cfg = read_config("../tests/kospam.conf");
 
@@ -359,6 +388,7 @@ int main() {
     test_decode_html_entities_utf8_inplace();
     test_normalize_html();
     test_utf8_tolower();
-    test_extract_url_token();
     test_generate_tokens_from_string();
+    test_extract_url_token();
+    test_is_item_on_list();
 }

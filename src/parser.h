@@ -114,5 +114,6 @@ void decode_html_entities_utf8_inplace(char *buffer);
 void normalize_html(char *input);
 void chop_newlines(char *str, size_t len);
 void extract_url_token(char *s, char *result, int resultlen);
+bool is_item_on_list(char *item, char *list);
 
 #endif /* _PARSER_H */

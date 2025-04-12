@@ -14,7 +14,6 @@ char *split_str(char *row, char *what, char *s, int size);
 void write_pid_file(char *pidfile);
 int drop_privileges(struct passwd *pwd);
 void init_session_data(struct session_data *sdata);
-int is_item_on_list(char *item, char *list, char *extralist);
 int is_dotted_ipv4_address(char *s);
 
 #endif /* _MISC_H */

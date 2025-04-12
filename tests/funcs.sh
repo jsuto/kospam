@@ -3,14 +3,16 @@
 set -o errexit
 
 VERDICT=0
-###RESULT_CRITICAL=2
 # shellcheck disable=SC2034
-PEMFILE="${SCRIPT_DIR}/server.pem"
+RESULT_CRITICAL=2
 LOGFILE="mail.log"
+PEMFILE="${SCRIPT_DIR}/server.pem"
 EML_DIR="${SCRIPT_DIR}/eml"
 # shellcheck disable=SC2034
+TRAINING_DIR="${SCRIPT_DIR}/training"
+# shellcheck disable=SC2034
 MAIL_HOST="mail.aaa.fu"
-SYSLOG_HOST="syslog.host"
+SYSLOG_HOST="syslog.kospam"
 SMTPTEST="${SCRIPT_DIR}/smtptest"
 
 error() {
@@ -51,7 +53,7 @@ wait_until_emails_are_processed() {
    loops=$(( num / 100 ))
 
    while true; do
-      processed="$( docker exec "$container" find /var/mail/example.com/bbb/new/ -type f|wc -l )"
+      processed="$( docker exec "$container" find /var/mail/example.com/bbb/new/ -type f | wc -l )"
 
       i=$(( i + 1 ))
       echo "processed ${processed} messages"
@@ -83,11 +85,11 @@ prepare() {
       tar Jxf piler-test-files.tar.xz
    fi
 
+   [[ -f kospam.sql.gz ]] || "$MC_COMMAND" cp ibm/piler-ci/kospam.sql.gz .
+
    create_pem_file "$PEMFILE" "/C=US/ST=Denial/L=Springfield/O=Dis/CN=mail.kospam"
 
    chmod 644 "$PEMFILE"
-
-   [[ -f kospam.sql.gz ]] || "$MC_COMMAND" cp ibm/piler-ci/kospam.sql.gz .
 
    ls -la
 

@@ -14,16 +14,17 @@
 } while (0)
 
 
-void init_state(struct __state *state){
+void init_state(struct parser_state *state){
    memset((char*)state, 0, sizeof(*state)); // sizeof(state) is only 8 bytes!
 
    state->tre = '-';
+   state->trapped = false;
 
    inithash(state->token_hash);
    inithash(state->url);
 }
 
-int parse_message(const char *message, struct __state *state, struct Message *m) {
+int parse_message(const char *message, struct parser_state *state, struct Message *m) {
     size_t s;
     char *buffer = read_file(message, &s);
 
@@ -49,7 +50,7 @@ int parse_message(const char *message, struct __state *state, struct Message *m)
     return 0;
 }
 
-int post_parse(struct __state *state, struct Message *m, struct __config *cfg) {
+int post_parse(struct parser_state *state, struct Message *m, struct config *cfg) {
 
     state->n_token = generate_tokens_from_string(state, m->body.data, "", cfg);
 
@@ -57,6 +58,10 @@ int post_parse(struct __state *state, struct Message *m, struct __config *cfg) {
         state->n_subject_token = generate_tokens_from_string(state, m->header.subject, "SUBJ*", cfg);
         state->n_token += generate_tokens_from_string(state, m->header.subject, "", cfg);
         snprintf(state->b_subject, sizeof(state->b_subject)-1, "%s", m->header.subject);
+    }
+
+    if (m->header.kospam_watermark[0]) {
+        snprintf(state->kospam_watermark, sizeof(state->kospam_watermark)-1, "%s", m->header.kospam_watermark);
     }
 
     if (m->header.from[0]) {
@@ -75,17 +80,23 @@ int post_parse(struct __state *state, struct Message *m, struct __config *cfg) {
         addnode(state->token_hash, "NO_MESSAGE_ID*",  REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
     }
 
-    if (m->header.kospam_envelope_from[0]) {
-        snprintf(state->fromemail, sizeof(state->fromemail)-1, "%s", m->header.kospam_envelope_from);
+    if (m->kospam.kospam_envelope_from[0]) {
+        snprintf(state->envelope_from, sizeof(state->envelope_from)-1, "%s", m->kospam.kospam_envelope_from);
     }
 
-    if (m->header.kospam_envelope_recipient[0]) {
-        char *p = m->header.kospam_envelope_recipient;
+    if (m->kospam.kospam_envelope_recipient[0]) {
+        char *p = m->kospam.kospam_envelope_recipient;
 
+        int i = 0;
         while (p) {
             int result;
             char v[SMALLBUFSIZE];
             p = split(p, ',', v, sizeof(v)-1, &result);
+
+            if (i == 0) {
+                snprintf(state->envelope_recipient, sizeof(state->envelope_recipient)-1, "%s", v);
+            }
+
             if (strstr(v, "spam@") ||
                 strstr(v, "+spam@") ||
                 strstr(v, "ham@") ||
@@ -93,15 +104,23 @@ int post_parse(struct __state *state, struct Message *m, struct __config *cfg) {
             ) {
                 state->training_request = 1;
             }
+
+            if(cfg->blackhole_email_list[0]) {
+                if (strcasestr(cfg->blackhole_email_list, v)) {
+                    state->trapped = true;
+                }
+            }
+
+            i++;
         }
     }
 
-    if (m->header.kospam_xforward[0]) {
+    if (m->kospam.kospam_xforward[0]) {
         // Data is expected in this order
         // NAME=smtp.example.com ADDR=1.2.3.4 PROTO=ESMTP HELO=smtp.example.com
 
         int i = 0;
-        char *p = m->header.kospam_xforward;
+        char *p = m->kospam.kospam_xforward;
 
         while (p) {
             int result;
@@ -119,7 +138,7 @@ int post_parse(struct __state *state, struct Message *m, struct __config *cfg) {
         }
     }
 
-    if (!m->header.kospam_xforward[0] && m->header.received[0]) {
+    if (!m->kospam.kospam_xforward[0] && m->header.received[0]) {
         char *p = strstr(m->header.received, " by ");
         if (p) *p = '\0';
 
@@ -139,7 +158,7 @@ int post_parse(struct __state *state, struct Message *m, struct __config *cfg) {
                 size_t len = strlen(q);
                 if (*(q+len-1) == ']') *(q+len-1) = '\0';
                 if(is_dotted_ipv4_address(q) == 1){
-                    if(is_item_on_list(q, cfg->skipped_received_ips, "127.,10.,192.168.,172.16.") == 0) {
+                    if(is_item_on_list(q, cfg->skipped_received_ips) == false && is_item_on_list(q, "127.,10.,192.168.,172.16.") == false) {
                        snprintf(state->ip, sizeof(state->ip)-1, "%s", q);
                     }
                 }
@@ -159,9 +178,9 @@ int post_parse(struct __state *state, struct Message *m, struct __config *cfg) {
         printf("Content-type: %s\n", m->header.content_type);
         printf("Content-Transfer-Encoding: %s\n", m->header.content_encoding);
         printf("Received: %s\n", m->header.received);
-        printf("Kospam-Envelope-From: %s\n", m->header.kospam_envelope_from);
-        printf("Kospam-Envelope-Recipient: %s\n", m->header.kospam_envelope_recipient);
-        printf("Kospam-Xforward: %s\n", m->header.kospam_xforward);
+        printf("Kospam-Envelope-From: %s\n", m->kospam.kospam_envelope_from);
+        printf("Kospam-Envelope-Recipient: %s\n", m->kospam.kospam_envelope_recipient);
+        printf("Kospam-Xforward: %s\n", m->kospam.kospam_xforward);
 
         for(int i=0; i < m->n_attachments; i++){
             printf("i=%d, name=%s, type=%s, size=%ld, digest=%s\n", i, m->attachments[i].filename, m->attachments[i].type, m->attachments[i].size, m->attachments[i].digest);
@@ -203,9 +222,10 @@ int parse_eml_buffer(char *buffer, struct Message *m) {
     extract_header_value(buffer, buffer_len, HEADER_RECEIVED, strlen(HEADER_RECEIVED), m->header.received, sizeof(m->header.received));
 
     // Kospam-* headers
-    extract_header_value(buffer, buffer_len, HEADER_KOSPAM_ENVELOPE_FROM, strlen(HEADER_KOSPAM_ENVELOPE_FROM), m->header.kospam_envelope_from, sizeof(m->header.kospam_envelope_from));
-    extract_header_value(buffer, buffer_len, HEADER_KOSPAM_ENVELOPE_RECIPIENT, strlen(HEADER_KOSPAM_ENVELOPE_RECIPIENT), m->header.kospam_envelope_recipient, sizeof(m->header.kospam_envelope_recipient));
-    extract_header_value(buffer, buffer_len, HEADER_KOSPAM_XFORWARD, strlen(HEADER_KOSPAM_XFORWARD), m->header.kospam_xforward, sizeof(m->header.kospam_xforward));
+    extract_header_value(buffer, buffer_len, HEADER_KOSPAM_ENVELOPE_FROM, strlen(HEADER_KOSPAM_ENVELOPE_FROM), m->kospam.kospam_envelope_from, sizeof(m->kospam.kospam_envelope_from));
+    extract_header_value(buffer, buffer_len, HEADER_KOSPAM_ENVELOPE_RECIPIENT, strlen(HEADER_KOSPAM_ENVELOPE_RECIPIENT), m->kospam.kospam_envelope_recipient, sizeof(m->kospam.kospam_envelope_recipient));
+    extract_header_value(buffer, buffer_len, HEADER_KOSPAM_XFORWARD, strlen(HEADER_KOSPAM_XFORWARD), m->kospam.kospam_xforward, sizeof(m->kospam.kospam_xforward));
+    extract_header_value(buffer, buffer_len, HEADER_KOSPAM_WATERMARK, strlen(HEADER_KOSPAM_WATERMARK), m->header.kospam_watermark, sizeof(m->header.kospam_watermark));
 
     if(!headers_end) return 1;
 

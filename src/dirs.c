@@ -2,15 +2,7 @@
  * dirs.c, SJ
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <strings.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <syslog.h>
-#include <unistd.h>
-#include <clapf.h>
+#include <kospam.h>
 
 
 void createdir(char *path, mode_t mode){
@@ -30,7 +22,7 @@ void createdir(char *path, mode_t mode){
 }
 
 
-void check_and_create_directories(struct __config *cfg){
+void check_and_create_directories(struct config *cfg){
    char *p;
 
    p = strrchr(cfg->workdir, '/');

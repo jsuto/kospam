@@ -10,6 +10,7 @@ import (
     "net/smtp"
     "os"
     "path/filepath"
+    "strings"
     "sync"
 )
 
@@ -22,6 +23,7 @@ var (
     to = []string{"recipient@example.com"}
 
     dir = flag.String("dir", "", "dir where the eml files to be sent are")
+    recipient = flag.String("recipient", "recipient@example.com", "recipient to send the email")
     smtpaddr = flag.String("smtpaddr", "127.0.0.1:10025", "smtp address in host:port format")
     verbose = flag.Bool("verbose", false, "print more verbose stuff")
 )
@@ -31,6 +33,10 @@ func main() {
 
     if *dir == "" {
         log.Fatalf("missing -dir")
+    }
+
+    if *recipient != "" {
+        to = strings.Split(*recipient, ",")
     }
 
     smtpServer := *smtpaddr

@@ -2,21 +2,12 @@
  * users.c, SJ
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <time.h>
-#include <syslog.h>
-#include <clapf.h>
+#include <kospam.h>
 
-
-int get_user_data_from_email(struct session_data *sdata, char *email, struct __config *cfg){
+int get_user_data_from_email(struct session_data *sdata, char *email, struct config *cfg){
    int rc=0;
    char *p, *q, tmpbuf[SMALLBUFSIZE];
-   struct sql sql;
+   struct query sql;
 
    if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: query user data for %s", sdata->ttmpfile, email);
 
@@ -78,7 +69,7 @@ ENDE:
 
 void get_wbl_data(struct session_data *sdata){
    char wh[MAXBUFSIZE], bl[MAXBUFSIZE];
-   struct sql sql;
+   struct query sql;
 
    memset(sdata->whitelist, 0, MAXBUFSIZE);
    memset(sdata->blacklist, 0, MAXBUFSIZE);

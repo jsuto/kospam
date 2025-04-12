@@ -14,6 +14,40 @@ typedef struct {
     const char *expected;
 } TestCaseStrStr;
 
+typedef struct {
+    const char *input;
+    const char *input2;
+    const char *expected;
+} TestCaseStrStrStr;
+
+typedef struct {
+    const char *input;
+    const bool expected;
+} TestCaseStrBool;
+
+struct config cfg;
+
+void aaa(struct node *xhash[], char *s, size_t slen){
+    size_t pos=0;
+
+    memset(s, 0, slen);
+
+    for(int i=0;i<MAXHASH;i++) {
+        struct node *q = xhash[i];
+        while(q != NULL) {
+            size_t len = strlen((char*)q->str);
+            if(slen > pos + len + 2) {
+                memcpy(s+pos, (char*)q->str, len);
+                pos += len;
+                memcpy(s+pos, " ", 1);
+                pos++;
+            }
+
+            q = q->r;
+        }
+    }
+}
+
 void test_xxh3_64() {
     TEST_HEADER();
 
@@ -209,12 +243,12 @@ void test_normalize_html() {
 
     TestCaseStrStr tests[] = {
        {
-          "<html><body><script>alert(0);</script><aaa>My text</aaa><img src=\"/aaa.jpg\" /> aaaa<zzz attr=\"aaa\"></zzz>aaa",
-          "     My text   aaaa  aaa"
+          "<html><body><script>alert(0);</script><aaa>My text &lt;&gt;</aaa><img src=\"/aaa.jpg\" /> aaaa<zzz attr=\"aaa\"></zzz>aaa",
+          "     My text <>   aaaa  aaa"
        },
        {
-          "<html>\n<body>\n<script>alert(0);</script>\n<aaa>My text</aaa>\n<img src=\"/aaa.jpg\" /> aaaa<zzz attr=\"aaa\"></zzz>aaa\n",
-          " \n \n  \n My text \n  aaaa  aaa\n"
+          "<html>\n<body>\n<script>alert(0);</script>\n<aaa>My text &amp;</aaa>\n<img src=\"/aaa.jpg\" /> aaaa<zzz attr=\"aaa\"></zzz>aaa\n",
+          " \n \n  \n My text & \n  aaaa  aaa\n"
        },
     };
 
@@ -230,7 +264,120 @@ void test_normalize_html() {
     TEST_FOOTER();
 }
 
+void test_utf8_tolower() {
+    TEST_HEADER();
+
+    TestCaseStrStr tests[] = {
+        {
+          "VÁLTOZÁS TÖRTÉNT AZ IPARŰZÉSI ADÓBAN BEVEZETTÉK AZ EGYSZERŰSÍTETT TÉTELES VAGY SÁVOS IPARŰZÉSI ADÓT",
+          "változás történt az iparŰzési adóban bevezették az egyszerŰsített tételes vagy sávos iparŰzési adót"
+        },
+        {
+          "ADÓBEVALLÁS GYAKORLATIAS KITÖLTÉSI ÚTMUTATÓJÁT TARtalmaZZA",
+          "adóbevallás gyakorlatias kitöltési útmutatóját tartalmazza"
+        },
+    };
+
+    int num_tests = sizeof(tests) / sizeof(TestCaseStrStr);
+
+    for (int i = 0; i < num_tests; i++) {
+        char s[SMALLBUFSIZE];
+        snprintf(s, sizeof(s)-1, "%s", tests[i].input);
+        utf8_tolower(s);
+        ASSERT(strcmp(s, tests[i].expected) == 0, tests[i].input);
+    }
+
+    TEST_FOOTER();
+}
+
+void test_generate_tokens_from_string() {
+    TEST_HEADER();
+
+    TestCaseStrStrStr tests[] = {
+        {
+          "Dear Friend! Let me give you a hint, someverylongextremelybigstring att*thisisanameforalongattachmentname.jpg for aos-es stuff, please see https://example.com/aaa/bbb and https://aaa/b?=aa or https://aaa.bbb.fu/ for more info.",
+          "",
+          "for+aos-es see+and aaa you+a a+hint URL*example.com me+give att*thisisanameforalongattachmentname.jpg Friend+Let URL*aaa Friend more+info Let+me stuff and+aaa att*thisisanameforalongattachmentname.jpg+for please+see please hint aaa+or you for URL*bbb.fu stuff+please or+aaa Let give+you and aos-es+stuff aos-es give info for+more Dear+Friend see hint+att*thisisanameforalongattachmentname.jpg aaa+for Dear more ",
+        },
+        {
+          "Dear friend! See this someverylongextremelybigstring?",
+          "SUBJ*",
+          "SUBJ*Dear SUBJ*this+SUBJ*someverylongextremelybigstring SUBJ*friend SUBJ*See SUBJ*See+SUBJ*this SUBJ*Dear+SUBJ*friend SUBJ*this SUBJ*friend+SUBJ*See SUBJ*someverylongextremelybigstring "
+        }
+    };
+
+    int num_tests = sizeof(tests) / sizeof(TestCaseStrStrStr);
+
+    for (int i = 0; i < num_tests; i++) {
+        struct parser_state state;
+        init_state(&state);
+
+        generate_tokens_from_string(&state, tests[i].input, (char*)tests[i].input2, &cfg);
+
+        char s[SMALLBUFSIZE];
+        aaa(state.token_hash, &s[0], sizeof(s));
+        //printf("a=*%s*\n", s);
+        ASSERT(strcmp(s, tests[i].expected) == 0, tests[i].input);
+
+        clearhash(state.token_hash);
+        clearhash(state.url);
+    }
+
+    TEST_FOOTER();
+}
+
+
+void test_extract_url_token() {
+    TEST_HEADER();
+
+    TestCaseStrStr tests[] = {
+        { "https://example.com/aaa/bbb", "URL*example.com" },
+        { "https://example/b?a=1", "URL*example" },
+        { "https://example.com", "URL*example.com" },
+        { "https://www.example.com/", "URL*example.com" },
+        { "https://www.example.com", "URL*example.com" },
+    };
+
+    int num_tests = sizeof(tests) / sizeof(TestCaseStrStr);
+
+    for (int i = 0; i < num_tests; i++) {
+        char s[SMALLBUFSIZE], result[SMALLBUFSIZE];
+        snprintf(s, sizeof(s)-1, "%s", &(tests[i].input[8]));
+        extract_url_token(s, &result[0], sizeof(result));
+        ASSERT(strcmp(result, tests[i].expected) == 0, tests[i].input);
+    }
+
+    TEST_FOOTER();
+}
+
+
+void test_is_item_on_list() {
+    TEST_HEADER();
+
+    TestCaseStrBool tests[] = {
+        { "10.1.1.1", true },
+        { "1.1.1.2", false },
+        { "127.0.0.1", true },
+        { "123.123", true },
+        { "123.123.256.256", false },
+    };
+
+    char list[SMALLBUFSIZE];
+    sprintf(list, "127.,10.,192.168.,172.16.,123.123$,xxx.xxx");
+
+    int num_tests = sizeof(tests) / sizeof(TestCaseStrStr);
+
+    for (int i = 0; i < num_tests; i++) {
+        bool result = is_item_on_list((char *)tests[i].input, list);
+        ASSERT(result == tests[i].expected, tests[i].input);
+    }
+
+    TEST_FOOTER();
+}
+
 int main() {
+    cfg = read_config("../tests/kospam.conf");
+
     test_xxh3_64();
     test_chop_newlines();
     test_normalize_buffer();
@@ -240,4 +387,8 @@ int main() {
     test_digest_string();
     test_decode_html_entities_utf8_inplace();
     test_normalize_html();
+    test_utf8_tolower();
+    test_generate_tokens_from_string();
+    test_extract_url_token();
+    test_is_item_on_list();
 }

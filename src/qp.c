@@ -1,6 +1,4 @@
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
+#include <kospam.h>
 
 static char hex_table[] = {
    0,  0,  0,  0,   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,

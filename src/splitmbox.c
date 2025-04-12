@@ -2,11 +2,7 @@
  * splitmbox.c, SJ
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
-#include <clapf.h>
+#include <kospam.h>
 
 
 int main(int argc, char **argv){
@@ -14,16 +10,19 @@ int main(int argc, char **argv){
    char buf[MAXBUFSIZE], fname[MAXBUFSIZE];
    FILE *F, *f=NULL;
 
-   if(argc < 3)
-      __fatal("usage: <mbox file> <messagefile basename>");
-
+   if(argc < 3) {
+      printf("usage: <mbox file> <messagefile basename>\n");
+      return 1;
+   }
 
    F = fopen(argv[1], "r");
-   if(!F)
-      __fatal("open");
+   if(!F) {
+      printf("ERROR: open %s\n", argv[1]);
+      return 1;
+   }
 
    while(fgets(buf, sizeof(buf)-1, F)){
-      trim_buffer(buf);
+      chop_newlines(buf, strlen(buf));
 
       if(buf[0] == 'F' && buf[1] == 'r' && buf[2] == 'o' && buf[3] == 'm' && buf[4] == ' '){
          tot_msgs++;

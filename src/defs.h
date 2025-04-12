@@ -5,10 +5,6 @@
 #ifndef _DEFS_H
    #define _DEFS_H
 
-#ifdef NEED_MYSQL
-  #include <mysql.h>
-  #include <mysqld_error.h>
-#endif
 #ifdef HAVE_TRE
    #include <tre/tre.h>
    #include <tre/regex.h>
@@ -16,32 +12,13 @@
 
 #include <openssl/sha.h>
 #include <openssl/ssl.h>
-#include "tai.h"
 #include "config.h"
-
-#define MSG_UNDEF -1
-#define MSG_BODY 0
-#define MSG_RECEIVED 1
-#define MSG_FROM 2
-#define MSG_TO 3
-#define MSG_CC 4
-#define MSG_SUBJECT 5
-#define MSG_CONTENT_TYPE 6
-#define MSG_CONTENT_TRANSFER_ENCODING 7
-#define MSG_CONTENT_DISPOSITION 8
-#define MSG_MESSAGE_ID 9
-#define MSG_REFERENCES 10
-#define MSG_RECIPIENT 11
-
-#define DELIM ''
 
 #define PARTITION_MGMT_INTERVAL 1800
 
 #define MAXHASH 8171
 
 #define NUM_OF_REGEXES 30
-
-#define BASE64_RATIO 1.33333333
 
 #define DIGEST_LENGTH SHA256_DIGEST_LENGTH
 
@@ -53,8 +30,6 @@
 #define UNDEF 0
 #define READY 1
 #define BUSY 2
-
-#define MAX_SQL_VARS 20
 
 #define TYPE_UNDEF 0
 #define TYPE_SHORT 1
@@ -71,13 +46,6 @@
 
 #define NUMBER_OF_GOOD_FROM 10
 
-#define GROUP_SHARED 0
-#define GROUP_MERGED 1
-
-#define T_TOE 0
-#define T_TUM 1
-
-typedef void signal_func (int);
 typedef unsigned long long uint64;
 
 struct child {
@@ -140,142 +108,35 @@ struct rule {
 };
 
 
-struct __state {
-   char tre;
-   int n_token;
-   int n_subject_token;
-   int n_deviating_token;
-
-   char from[SMALLBUFSIZE];
-   char b_subject[MAXBUFSIZE];
-
-   struct node *token_hash[MAXHASH];
-   struct node *url[MAXHASH];
-
-   char fromemail[SMALLBUFSIZE];
-
-   int found_our_signo;
-   int training_request;
-
-   char has_image_attachment;
-   char has_octet_stream_attachment;
-
-   char ip[SMALLBUFSIZE];
-   char hostname[SMALLBUFSIZE];
-};
-
-
 struct session_data {
-   char filename[SMALLBUFSIZE];
    char ttmpfile[SMALLBUFSIZE];
-   char mailfrom[SMALLBUFSIZE], rcptto[MAX_RCPT_TO][SMALLBUFSIZE];
-   char clapf_id[SMALLBUFSIZE];
-   //char fromemail[SMALLBUFSIZE];
-   char acceptbuf[SMALLBUFSIZE];
-   char attachments[SMALLBUFSIZE];
-   //char ip[SMALLBUFSIZE];
-   //char hostname[SMALLBUFSIZE];
    char whitelist[MAXBUFSIZE], blacklist[MAXBUFSIZE];
-   char name[MAXBUFSIZE], domain[MAXBUFSIZE];
    char spaminessbuf[MAXBUFSIZE];
    unsigned int status;
    int trapped_client;
    int from_address_in_mydomain;
-   int tls;
-   int ipcnt;
-   int fd, hdr_len, tot_len, stored_len, num_of_rcpt_to, rav;
+   int tot_len;
    int statistically_whitelisted;
    int need_scan, need_signo_check;
-   int policy_group, blackhole;
+   int blackhole;
    int mynetwork;
-   unsigned int uid, gid;
-   float __acquire, __parsed, __av, __user, __policy, __training, __update, __store, __inject, __as, __minefield;
+   float __parsed, __av, __user, __policy, __training, __update, __as, __minefield;
    float spaminess;
    float nham, nspam;
-   char bodydigest[2*DIGEST_LENGTH+1];
-   char digest[2*DIGEST_LENGTH+1];
-   time_t now, sent;
-   pid_t pid;
-   unsigned int sql_errno;
-#ifdef NEED_MYSQL
-   MYSQL mysql;
-#endif
 };
 
 
-#ifdef HAVE_MEMCACHED
-
-#include <stdbool.h>
-#include <netinet/in.h>
-
-struct flags {
-   bool no_block:1;
-   bool no_reply:1;
-   bool tcp_nodelay:1;
-   bool tcp_keepalive:1;
-};
-
-
-struct memcached_server {
-
-   struct flags flags;
-
-   int fd;
-   unsigned int snd_timeout;
-   unsigned int rcv_timeout;
-
-   int send_size;
-   int recv_size;
-   unsigned int tcp_keepidle;
-
-   int last_read_bytes;
-
-   char *result;
-   char buf[MAXBUFSIZE];
-
-   struct sockaddr_in addr;
-
-   char server_ip[IPLEN];
-   int server_port;
-
-   char initialised;
-};
-#endif
-
-
-struct __data {
+struct data {
    int quiet;
 #ifdef HAVE_TRE
    int n_regex;
    regex_t pregs[NUM_OF_REGEXES];
 #endif
-   char starttls[TINYBUFSIZE];
    struct node *mydomains[MAXHASH];
-
-#ifdef HAVE_MEMCACHED
-   struct memcached_server memc;
-#endif
-
-   SSL_CTX *ctx;
-   SSL *ssl;
 };
 
 
-struct sql {
-#ifdef NEED_MYSQL
-   MYSQL_STMT *stmt;
-#endif
-   char *sql[MAX_SQL_VARS];
-   int type[MAX_SQL_VARS];
-   int len[MAX_SQL_VARS];
-   unsigned long length[MAX_SQL_VARS];
-   my_bool is_null[MAX_SQL_VARS];
-   my_bool error[MAX_SQL_VARS];
-   int pos;
-};
-
-
-struct __counters {
+struct counters {
    uint64 c_rcvd;
    uint64 c_ham;
    uint64 c_spam;

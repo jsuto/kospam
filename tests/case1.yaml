@@ -3,9 +3,9 @@ x-networks: &networks
     - kospam
 
 services:
-  mysql:
+  mysql2:
     image: mariadb:11.6.2
-    container_name: mysql
+    container_name: mysql2
     restart: unless-stopped
     <<: *networks
     cap_drop:
@@ -20,8 +20,10 @@ services:
       - MYSQL_PASSWORD=kospam123
       - MYSQL_ROOT_PASSWORD=abcde123
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --plugin-load=file_key_management
+    ports:
+      - "33306:3306"
     volumes:
-      - db_data:/var/lib/mysql
+      - db_data_kospam:/var/lib/mysql
 
   postfix:
     image: sutoj/postfix:kospam
@@ -33,10 +35,10 @@ services:
 
   syslog:
     image: sutoj/syslog
-    container_name: syslog.host
+    container_name: syslog.kospam
     <<: *networks
     volumes:
-      - syslog:/var/log
+      - syslog_kospam:/var/log
 
   kospam:
     image: sutoj/kospam:test
@@ -44,7 +46,7 @@ services:
     init: true
     <<: *networks
     environment:
-      - MYSQL_HOSTNAME=mysql
+      - MYSQL_HOSTNAME=mysql2
       - MYSQL_DATABASE=kospam
       - MYSQL_USER=kospam
       - MYSQL_PASSWORD=kospam123
@@ -53,7 +55,6 @@ services:
     volumes:
       - ./11-aaaa.conf:/etc/rsyslog.d/11-aaaa.conf:ro
       - ./kospam.conf:/etc/kospam/kospam.conf
-      - ./server.pem:/etc/kospam/kospam.pem
       - ./kospam.sql.gz:/kospam.sql.gz
     healthcheck:
       test: curl -s --request NOOP smtp://localhost:10025/
@@ -64,13 +65,13 @@ services:
     ports:
       - "10025:10025"
     depends_on:
-      - "mysql"
+      - "mysql2"
       - "postfix"
       - "syslog"
 
 volumes:
-  db_data: {}
-  syslog: {}
+  db_data_kospam: {}
+  syslog_kospam: {}
 
 networks:
   kospam:

@@ -29,15 +29,15 @@ int main(int argc, char **argv){
    int c, debug=0;
    int train_as_ham=0, train_as_spam=0;
    int show_tokens=0;
-   char *p;
    char *configfile=CONFIG_FILE;
    char *message=NULL;
-   char *from=NULL, *recipient=NULL;
+   char *from=NULL;
+   //char *recipient=NULL;
    struct stat st;
    struct session_data sdata;
-   struct __state state;
-   struct __config cfg, my_cfg;
-   struct __data data;
+   struct parser_state state;
+   struct config cfg;
+   struct data data;
    struct timezone tz;
    struct timeval tv_start, tv_stop;
 
@@ -79,7 +79,7 @@ int main(int argc, char **argv){
                     break;
 
          case 'r' :
-                    recipient = optarg;
+                    //recipient = optarg;
                     break;
 
          case 'S' :
@@ -123,8 +123,6 @@ int main(int argc, char **argv){
 
    srand(getpid());
 
-   if(!can_i_write_current_directory()) __fatal("cannot write current directory!");
-
    if(stat(message, &st) != 0){
       fprintf(stderr, "%s is not found\n", message);
       return 1;
@@ -141,7 +139,8 @@ int main(int argc, char **argv){
 
    gettimeofday(&tv_start, &tz);
 
-   if(open_database(&sdata, &cfg) == ERR) return 0;
+   MYSQL *conn = open_database(&cfg);
+   if (conn == NULL) return 0;
 
    if(cfg.debug == 1) printf("locale: %s\n", setlocale(LC_MESSAGES, cfg.locale));
    setlocale(LC_CTYPE, cfg.locale);
@@ -150,18 +149,14 @@ int main(int argc, char **argv){
 
    zombie_init(&data, &cfg);
 
-   init_session_data(&sdata, &cfg);
+   init_session_data(&sdata);
 
-   sdata.sent = 0;
    sdata.tot_len = st.st_size;
-   sdata.num_of_rcpt_to = 1;
+   //sdata.num_of_rcpt_to = 1;
 
    snprintf(sdata.ttmpfile, SMALLBUFSIZE-1, "%s", message);
-   snprintf(sdata.filename, SMALLBUFSIZE-1, "%s", message);
 
-   memcpy(&my_cfg, &cfg, sizeof(struct __config));
-
-   if(recipient){
+   /*if(recipient){
       if(cfg.debug == 1) printf("checking user data...\n");
 
       if(get_user_data_from_email(&sdata, recipient, &cfg) == 0){
@@ -177,10 +172,10 @@ int main(int argc, char **argv){
    if(sdata.policy_group > 0){
       get_policy(&sdata, &cfg, &my_cfg);
       if(cfg.debug == 1) printf("policy settings: %d/%d/%d/%s/%d/%s/%.4f/%.4f/%d/%d/%d/%d/%d/%d/%d/%d/%s\n", my_cfg.deliver_infected_email, my_cfg.silently_discard_infected_email, my_cfg.use_antispam, my_cfg.spam_subject_prefix, my_cfg.max_message_size_to_filter, my_cfg.surbl_domain, my_cfg.spam_overall_limit, my_cfg.spaminess_oblivion_limit, my_cfg.replace_junk_characters, my_cfg.penalize_images, my_cfg.penalize_embed_images, my_cfg.penalize_octet_stream, my_cfg.training_mode, my_cfg.store_emails, my_cfg.store_only_spam, my_cfg.message_from_a_zombie, my_cfg.smtp_addr);
-   }
+   }*/
 
 
-   if(is_item_on_list(from, sdata.whitelist, "") == 1){
+   if(is_item_on_list(from, sdata.whitelist)){
       if(cfg.debug == 1) printf(" '%s' found on '%s'\n", from, sdata.whitelist);
    }
 
@@ -201,21 +196,21 @@ int main(int argc, char **argv){
       if(train_as_spam == 1) snprintf(s, sizeof(s)-1, "nspam");
       else snprintf(s, sizeof(s)-1, "nham");
 
-      train_message(&sdata, &state, s, &my_cfg);
+      train_message(&state, s, &cfg);
    }
 
-   check_zombie_sender(&state, &data, &my_cfg);
+   check_zombie_sender(&state, &data, &cfg);
 
    struct timeval tv_spam1, tv_spam2;
    gettimeofday(&tv_spam1, &tz);
-   sdata.spaminess = run_statistical_check(&sdata, &state, &my_cfg);
+   sdata.spaminess = run_statistical_check(&sdata, &state, conn, &cfg);
    gettimeofday(&tv_spam2, &tz);
 
 CLEANUP:
    clearhash(state.token_hash);
    clearhash(state.url);
 
-   close_database(&sdata);
+   close_database(conn);
 
    zombie_free(&data);
 

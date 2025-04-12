@@ -4,7 +4,7 @@
 
 #include <kospam.h>
 
-void add_penalties(struct session_data *sdata, struct __state *state, struct __config *cfg){
+void add_penalties(struct session_data *sdata, struct parser_state *state, struct config *cfg){
 
    if(cfg->penalize_octet_stream == 1 && state->has_octet_stream_attachment == 1)
        addnode(state->token_hash, "OCTET_STREAM*", REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
@@ -24,29 +24,29 @@ void add_penalties(struct session_data *sdata, struct __state *state, struct __c
 }
 
 
-int check_spam(struct session_data *sdata, struct __state *state, struct __data *data, char *fromemail, char *rcpttoemail, struct __config *cfg, struct __config *my_cfg){
-   char *p, tmpbuf[SMALLBUFSIZE];
+int check_spam(struct session_data *sdata, MYSQL *conn, struct parser_state *state, struct data *data, struct config *cfg){
+   char tmpbuf[SMALLBUFSIZE];
    struct timezone tz;
    struct timeval tv1, tv2;
 
    sdata->spaminess = DEFAULT_SPAMICITY;
 
    int spaminessbuf_size_left = sizeof(sdata->spaminessbuf)-2;
-   snprintf(sdata->spaminessbuf, spaminessbuf_size_left, "%s%s\r\n", cfg->clapf_header_field, sdata->ttmpfile);
+   snprintf(sdata->spaminessbuf, spaminessbuf_size_left, "%s%s\r\n", HEADER_KOSPAM_WATERMARK, sdata->ttmpfile);
    spaminessbuf_size_left -= strlen(sdata->spaminessbuf);
 
    /*
-    * do training
+    * Handle a training request
     */
 
    if(state->training_request == 1){
 
       /* get user from 'MAIL FROM:', 2008.10.25, SJ */
 
-      gettimeofday(&tv1, &tz);
-      get_user_data_from_email(sdata, fromemail, cfg);
+      /*gettimeofday(&tv1, &tz);
+      get_user_data_from_email(sdata, state->envelope_from, cfg);
       gettimeofday(&tv2, &tz);
-      sdata->__user += tvdiff(tv2, tv1);
+      sdata->__user += tvdiff(tv2, tv1);*/
 
       /*
        * If not found, then try to get it from the RCPT TO address.
@@ -57,17 +57,18 @@ int check_spam(struct session_data *sdata, struct __state *state, struct __data 
        * In this case send training emails to xy+spam@mail.domain.com
        */
 
-      if(sdata->name[0] == 0){
+      /*if(sdata->name[0] == 0){
          gettimeofday(&tv1, &tz);
-         get_user_data_from_email(sdata, rcpttoemail, cfg);
+         get_user_data_from_email(sdata, state->envelope_recipient, cfg);
          gettimeofday(&tv2, &tz);
          sdata->__user += tvdiff(tv2, tv1);
-      }
+      }*/
 
-      if(sdata->policy_group > 0) get_policy(sdata, cfg, my_cfg);
+      // FIXME:
+      //if(sdata->policy_group > 0) get_policy(sdata, cfg, my_cfg);
 
       gettimeofday(&tv1, &tz);
-      do_training(sdata, state, rcpttoemail, my_cfg);
+      do_training(sdata, state, conn, cfg);
       gettimeofday(&tv2, &tz);
       sdata->__training += tvdiff(tv2, tv1);
 
@@ -89,27 +90,25 @@ int check_spam(struct session_data *sdata, struct __state *state, struct __data 
     * get per user settings and policy
     */
 
-   if(get_user_data_from_email(sdata, rcpttoemail, cfg) == 0){
-      p = strchr(rcpttoemail, '@');
+   /*if(get_user_data_from_email(sdata, state->envelope_recipient, cfg) == 0){
+      p = strchr(state->envelope_recipient, '@');
       if(p) get_user_data_from_email(sdata, p, cfg);
-   }
-
-   if(sdata->policy_group > 0) get_policy(sdata, cfg, my_cfg);
+   }*/
 
 
    /*
     * check sender address on the per user whitelist, then blacklist
     */
 
-   if(is_item_on_list(fromemail, sdata->whitelist, "") == 1){
-      syslog(LOG_PRIORITY, "%s: sender (%s) found on whitelist", sdata->ttmpfile, fromemail);
+   if(is_item_on_list(state->envelope_from, sdata->whitelist)){
+      syslog(LOG_PRIORITY, "%s: sender (%s) found on whitelist", sdata->ttmpfile, state->envelope_from);
       return OK;
    }
 
 
-   if(is_item_on_list(fromemail, sdata->blacklist, "") == 1){
+   if(is_item_on_list(state->envelope_from, sdata->blacklist)){
       sdata->spaminess = 0.99;
-      syslog(LOG_PRIORITY, "%s: sender (%s) found on blacklist", sdata->ttmpfile, fromemail);
+      syslog(LOG_PRIORITY, "%s: sender (%s) found on blacklist", sdata->ttmpfile, state->envelope_from);
       return DISCARD;
    }
 
@@ -119,7 +118,7 @@ int check_spam(struct session_data *sdata, struct __state *state, struct __data 
     */
 
    gettimeofday(&tv1, &tz);
-   is_sender_on_minefield(sdata, state->ip);
+   sdata->trapped_client = is_sender_on_minefield(conn, state->ip);
    gettimeofday(&tv2, &tz);
    sdata->__minefield += tvdiff(tv2, tv1);
 
@@ -128,17 +127,17 @@ int check_spam(struct session_data *sdata, struct __state *state, struct __data 
     * run zombie test
     */
 
-   check_zombie_sender(state, data, my_cfg);
+   check_zombie_sender(state, data, cfg);
 
-   if(state->tre == '+' && my_cfg->message_from_a_zombie > 0){
+   if(state->tre == '+' && cfg->message_from_a_zombie > 0){
       sdata->spaminess = 0.99;
 
-      if(my_cfg->message_from_a_zombie == 1){
+      if(cfg->message_from_a_zombie == 1){
          syslog(LOG_PRIORITY, "%s: marking message from a zombie as spam", sdata->ttmpfile);
          return OK;
       }
 
-      if(my_cfg->message_from_a_zombie == 2){
+      if(cfg->message_from_a_zombie == 2){
          syslog(LOG_PRIORITY, "%s: dropping message from a zombie (%s) as spam", sdata->ttmpfile, state->hostname);
          return DISCARD;
       }
@@ -152,11 +151,12 @@ int check_spam(struct session_data *sdata, struct __state *state, struct __data 
     * in the RCPT TO commands, mark his messages as spam
     */
 
-    if(sdata->num_of_rcpt_to > my_cfg->max_number_of_recipients_in_ham){
+    // FIXME
+    /*if(sdata->num_of_rcpt_to > my_cfg->max_number_of_recipients_in_ham){
        sdata->spaminess = 0.99;
-       if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: marking message for %s as spam, reason: too many recipients (%d/%d)", sdata->ttmpfile, rcpttoemail, sdata->num_of_rcpt_to, my_cfg->max_number_of_recipients_in_ham);
+       if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: marking message for %s as spam, reason: too many recipients (%d/%d)", sdata->ttmpfile, state->envelope_recipient, sdata->num_of_rcpt_to, my_cfg->max_number_of_recipients_in_ham);
        return OK;
-    }
+    }*/
 
 
    /*
@@ -166,9 +166,9 @@ int check_spam(struct session_data *sdata, struct __state *state, struct __data 
     * message.
     */
 
-   if(sdata->from_address_in_mydomain == 1 && my_cfg->mydomains_from_outside_is_spam == 1){
+   if(sdata->from_address_in_mydomain == 1 && cfg->mydomains_from_outside_is_spam == 1){
       sdata->spaminess = 0.99;
-      if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: %s matches %s", sdata->ttmpfile, state->from, my_cfg->mydomains);
+      if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: %s matches %s", sdata->ttmpfile, state->from, cfg->mydomains);
       return OK;
    }
 
@@ -190,60 +190,22 @@ int check_spam(struct session_data *sdata, struct __state *state, struct __data 
 
 
 
-   if(my_cfg->use_antispam == 1 && (my_cfg->max_message_size_to_filter == 0 || sdata->tot_len < my_cfg->max_message_size_to_filter || state->n_token < my_cfg->max_number_of_tokens_to_filter) ){
+   if(cfg->use_antispam == 1 && (cfg->max_message_size_to_filter == 0 || sdata->tot_len < cfg->max_message_size_to_filter || state->n_token < cfg->max_number_of_tokens_to_filter) ){
 
       if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: running statistical test", sdata->ttmpfile);
 
-      if(sdata->blackhole == 1) sdata->gid = 0; // fix gid if it's a blackhole request
-
-      if(cfg->group_type == GROUP_SHARED) sdata->gid = 0;
-
       gettimeofday(&tv1, &tz);
-      sdata->spaminess = run_statistical_check(sdata, state, my_cfg);
+      sdata->spaminess = run_statistical_check(sdata, state, conn, cfg);
       gettimeofday(&tv2, &tz);
       sdata->__as = tvdiff(tv2, tv1);
-
-
-
-      /* skip TUM training on a blackhole message, unless it may learn a missed spam as a good email */
-
-      if(
-         (sdata->blackhole == 0 && my_cfg->training_mode == T_TUM && ( (sdata->spaminess >= my_cfg->spam_overall_limit && sdata->spaminess < 0.99) || (sdata->spaminess < my_cfg->max_ham_spamicity && sdata->spaminess > 0.1) ))
-      )
-      {
-
-         char s[SMALLBUFSIZE];
-         if(sdata->spaminess >= my_cfg->spam_overall_limit){
-            snprintf(s, sizeof(s)-1, "nspam");
-            syslog(LOG_PRIORITY, "%s: TUM training a spam", sdata->ttmpfile);
-         }
-         else {
-            snprintf(s, sizeof(s)-1, "nham");
-            syslog(LOG_PRIORITY, "%s: TUM training a ham", sdata->ttmpfile);
-         }
-
-         snprintf(tmpbuf, sizeof(tmpbuf)-1, "%sTUM\r\n", cfg->clapf_header_field);
-         strncat(sdata->spaminessbuf, tmpbuf, spaminessbuf_size_left);
-         spaminessbuf_size_left -= strlen(tmpbuf);
-
-         gettimeofday(&tv1, &tz);
-         train_message(sdata, state, s, my_cfg);
-         gettimeofday(&tv2, &tz);
-         sdata->__training = tvdiff(tv2, tv1);
-      }
 
 
 
       /* training a blackhole message as spam, if we have to */
 
       if(sdata->blackhole == 1 && sdata->spaminess < 0.99){
-
-         snprintf(tmpbuf, sizeof(tmpbuf)-1, "%sTUM on minefield\r\n", cfg->clapf_header_field);
-         strncat(sdata->spaminessbuf, tmpbuf, spaminessbuf_size_left);
-         spaminessbuf_size_left -= strlen(tmpbuf);
-
          gettimeofday(&tv1, &tz);
-         train_message(sdata, state, "nspam", my_cfg);
+         train_message(state, "nspam", cfg);
          gettimeofday(&tv2, &tz);
          sdata->__training = tvdiff(tv2, tv1);
 
@@ -260,7 +222,7 @@ int check_spam(struct session_data *sdata, struct __state *state, struct __data 
       }
    }
    else {
-      syslog(LOG_PRIORITY, "%s: skipping spam check, size: %d/%d, tokens: %d/%d", sdata->ttmpfile, sdata->tot_len, my_cfg->max_message_size_to_filter, state->n_token, my_cfg->max_number_of_tokens_to_filter);
+      syslog(LOG_PRIORITY, "%s: skipping spam check, size: %d/%d, tokens: %d/%d", sdata->ttmpfile, sdata->tot_len, cfg->max_message_size_to_filter, state->n_token, cfg->max_number_of_tokens_to_filter);
    }
 
 
@@ -272,7 +234,7 @@ int check_spam(struct session_data *sdata, struct __state *state, struct __data 
       if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: updated %d/%d tokens", sdata->ttmpfile, utokens, state->n_token);
    }
 
-   trim_buffer(sdata->spaminessbuf);
+   chop_newlines(sdata->spaminessbuf, strlen(sdata->spaminessbuf));
 
    return OK;
 }

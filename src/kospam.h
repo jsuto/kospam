@@ -17,9 +17,17 @@
 #include <errno.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
+#include <sys/time.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <netdb.h>
 #include <getopt.h>
 #include <math.h>
 #include <zlib.h>
+#include <pwd.h>
+#include <sys/resource.h>
+#include <mysql.h>
+#include <mysqld_error.h>
 
 #include <sig.h>
 #include <sql.h>
@@ -27,61 +35,63 @@
 #include <defs.h>
 #include <hash.h>
 #include <chi.h>
-#include <buffer.h>
 #include <parser.h>
 #include <errmsg.h>
 #include <users.h>
 #include <child.h>
+#include <cfg.h>
 #include <config.h>
 
 #define PROGNAME "kospam/filter"
 
 #define DEVIATION(n) fabs((n)-0.5f)
 
+typedef void signal_func (int);
+
 signal_func *set_signal_handler(int signo, signal_func * func);
 
 void disable_coredump();
-struct __config read_config(char *configfile);
-void check_and_create_directories(struct __config *cfg);
+struct config read_config(char *configfile);
+void check_and_create_directories(struct config *cfg);
 void kill_children(int sig, char *sig_text);
 
-void zombie_init(struct __data *data, struct __config *cfg);
-void check_zombie_sender(struct __state *state, struct __data *data, struct __config *cfg);
-void zombie_free(struct __data *data);
+void zombie_init(struct data *data, struct config *cfg);
+void check_zombie_sender(struct parser_state *state, struct data *data, struct config *cfg);
+void zombie_free(struct data *data);
 
-int check_for_known_bad_attachments(struct session_data *sdata, struct __state *state);
-int check_spam(struct session_data *sdata, struct __state *state, struct __data *data, char *fromemail, char *rcpttoemail, struct __config *cfg, struct __config *my_cfg);
-void add_penalties(struct session_data *sdata, struct __state *state, struct __config *cfg);
+int check_for_known_bad_attachments(struct session_data *sdata, struct parser_state *state);
+int check_spam(struct session_data *sdata, MYSQL *conn, struct parser_state *state, struct data *data, struct config *cfg);
+void add_penalties(struct session_data *sdata, struct parser_state *state, struct config *cfg);
 
-int check_rbl_lists(struct __state *state, char *domainlist);
+int check_rbl_lists(struct parser_state *state, char *domainlist);
 
 uint64 xxh3_64(const void *data);
 
-int get_tokens(struct __state *state, char type, struct __config *cfg);
-int update_token_dates(struct __state *state, struct __config *cfg);
+int get_tokens(struct parser_state *state, char type, struct config *cfg);
+int update_token_dates(struct parser_state *state, struct config *cfg);
 
-int train_message(struct session_data *sdata, struct __state *state, char *column, struct __config *cfg);
+int train_message(struct parser_state *state, char *column, struct config *cfg);
 
-void update_counters(struct session_data *sdata, struct __counters *counters);
+void update_counters(MYSQL *conn, struct counters *counters);
 
 
 char *split(char *str, int ch, char *buf, int buflen, int *result);
-int fix_message_file(const char *filename, struct session_data *sdata, struct __config *cfg);
+int fix_message_file(struct session_data *sdata, struct config *cfg);
 
-int get_policy(struct session_data *sdata, struct __config *cfg, struct __config *my_cfg);
-float run_statistical_check(struct session_data *sdata, struct __state *state, struct __config *cfg);
+int get_policy(struct session_data *sdata, struct config *cfg, struct config *my_cfg);
+float run_statistical_check(struct session_data *sdata, struct parser_state *state, MYSQL *conn, struct config *cfg);
 
-void manage_partitions(struct __config *cfg);
+void manage_partitions(struct config *cfg);
 
-int write_history_to_sql(struct session_data *sdata, struct __state *state);
+void write_history_to_sql(MYSQL *conn, struct session_data *sdata, struct parser_state *state);
 
-void store_minefield_ip(struct session_data *sdata, char *ip);
+void store_minefield_ip(MYSQL *conn, char *ip);
 
-int generate_tokens_from_string(struct __state *state, const char *s, char *label, struct __config *cfg);
+int generate_tokens_from_string(struct parser_state *state, const char *s, char *label, struct config *cfg);
 
 void digest_string(char *digestname, char *s, char *digest);
 
-void do_training(struct session_data *sdata, struct __state *state, char *email, struct __config *cfg);
-void is_sender_on_minefield(struct session_data *sdata, char *ip);
+void do_training(struct session_data *sdata, struct parser_state *state, MYSQL *conn, struct config *cfg);
+bool is_sender_on_minefield(MYSQL *conn, char *ip);
 
 #endif /* _KOSPAM_H */

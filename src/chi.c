@@ -2,10 +2,7 @@
  * chi.c, SJ
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-#include <clapf.h>
+#include <kospam.h>
 
 #ifdef HAVE_GSL
 
@@ -142,37 +139,11 @@ double chi2inv(double x, double df, double esf){
       return chi2p_few_tokens(x, df, esf);
 }
 
-/*
- * inverse chi-square function, taken from
- * http://www.linuxjournal.com/articles/lj/0107/6467/6467s2.html
- *
- * update (2007.02.26): now it's obsoleted by the previous implementation
- */
-
-double chi2inv_old(double x, int df, double esf){
-   int i, v;
-   double m, sum, term;
-
-   v = df * esf;
-
-   m = x/2;
-   sum = term = exp(-m);
-
-   for(i=1; i<(v/2); i++){
-      term *= m/i;
-      sum += term;
-   }
-
-   if(sum < 1)
-      return sum;
-   else
-      return 1.0;
-}
 
 #endif
 
 
-double get_spam_probability(struct node *xhash[], int *deviating_tokens, struct __config *cfg){
+double get_spam_probability(struct node *xhash[], int *deviating_tokens, struct config *cfg){
    int i, n_tokens=0;
    struct node *q;
    double H, S, I, ln2, ln_q, ln_p;
@@ -235,5 +206,3 @@ double get_spam_probability(struct node *xhash[], int *deviating_tokens, struct 
 
    return I;
 }
-
-

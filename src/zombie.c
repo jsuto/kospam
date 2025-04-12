@@ -5,7 +5,7 @@
 #include <kospam.h>
 
 
-void zombie_init(struct __data *data, struct __config *cfg){
+void zombie_init(struct data *data, struct config *cfg){
    int i;
    char buf[SMALLBUFSIZE];
    FILE *f;
@@ -23,7 +23,7 @@ void zombie_init(struct __data *data, struct __config *cfg){
    if(f){
       while(fgets(buf, sizeof(buf)-1, f)){
          if(buf[0] != ';' && buf[0] != '#' && buf[0] != '\r' && buf[0] != '\n'){
-            trim_buffer(buf);
+            chop_newlines(buf, strlen(buf));
             if(regcomp(&(data->pregs[data->n_regex]), buf, REG_ICASE | REG_EXTENDED) == 0){
                i++;
                if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "[%d] compiled: %s", i, buf);
@@ -42,7 +42,7 @@ void zombie_init(struct __data *data, struct __config *cfg){
 }
 
 
-void check_zombie_sender(struct __state *state, struct __data *data, struct __config *cfg){
+void check_zombie_sender(struct parser_state *state, struct data *data, struct config *cfg){
    int i=0;
    size_t nmatch=0;
 
@@ -58,7 +58,7 @@ void check_zombie_sender(struct __state *state, struct __data *data, struct __co
 }
 
 
-void zombie_free(struct __data *data){
+void zombie_free(struct data *data){
    int i;
 
    for(i=0; i<data->n_regex; i++){

@@ -1,10 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
-#include <stdbool.h>
-#include <parser.h>
-#include <config.h>
+#include <kospam.h>
 
 
 void fixup_encoded_header(char *buf, int buflen){
@@ -317,8 +311,6 @@ void extract_name_from_header_line(char *buffer, char *name, char *resultbuf, in
                q = strchr(p, '\'');
                if(q) p = q + 1;
             }
-
-            //decodeURL(p);
 
             if(strlen(encoding) > 2 && strcasecmp(encoding, "utf-8"))
                utf8_encode(p, strlen(p), resultbuf, resultbuflen-1, encoding);

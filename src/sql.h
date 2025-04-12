@@ -5,26 +5,36 @@
 #ifndef _SQL_H
  #define _SQL_H
 
-#include <config.h>
-#include <defs.h>
 #include <cfg.h>
+#include <defs.h>
 #include <kospam.h>
 
-int open_database(struct session_data *sdata, struct __config *cfg);
-void close_database(struct session_data *sdata);
-int select_db(struct session_data *sdata, const char *db);
-int prepare_sql_statement(struct session_data *sdata, struct sql *sql, char *s);
-void p_query(struct session_data *sdata, char *s);
-int p_exec_stmt(struct session_data *sdata, struct sql *sql);
-int p_store_results(struct sql *sql);
-int p_fetch_results(struct sql *sql);
-void p_free_results(struct sql *sql);
-void p_bind_init(struct sql *sql);
-uint64 p_get_insert_id(struct sql *sql);
-int p_get_affected_rows(struct sql *sql);
-void close_prepared_statement(struct sql *sql);
-struct te get_ham_spam_counters(struct session_data *sdata, char *stmt);
-void update_hash(struct session_data *sdata, char *qry, struct node *xhash[]);
+#define MAX_SQL_VARS 20
+
+struct query {
+   MYSQL_STMT *stmt;
+   char *sql[MAX_SQL_VARS];
+   int type[MAX_SQL_VARS];
+   int len[MAX_SQL_VARS];
+   unsigned long length[MAX_SQL_VARS];
+   my_bool is_null[MAX_SQL_VARS];
+   my_bool error[MAX_SQL_VARS];
+   int pos;
+};
+
+MYSQL *open_database(struct config *cfg);
+void close_database(MYSQL *conn);
+int select_db(MYSQL *conn, const char *db);
+int prepare_sql_statement(MYSQL *conn, struct query *sql, char *s);
+void p_query(MYSQL *conn, char *s);
+int p_exec_stmt(MYSQL *conn, struct query *sql);
+int p_store_results(struct query *sql);
+int p_fetch_results(struct query *sql);
+void p_free_results(struct query *sql);
+void p_bind_init(struct query *sql);
+uint64 p_get_insert_id(struct query *sql);
+int p_get_affected_rows(struct query *sql);
+void close_prepared_statement(struct query *sql);
+struct te get_ham_spam_counters(MYSQL *conn, char *stmt);
 
 #endif /* _SQL_H */
-

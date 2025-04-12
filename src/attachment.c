@@ -11,7 +11,7 @@
 
 
 void update_bad_attachment_counter(struct session_data *sdata, char *digest){
-   struct sql sql;
+   struct query sql;
 
    if(prepare_sql_statement(sdata, &sql, SQL_PREPARED_STMT_UPDATE_ADIGEST) == OK){
 
@@ -25,9 +25,9 @@ void update_bad_attachment_counter(struct session_data *sdata, char *digest){
 }
 
 
-int check_for_known_bad_attachments(struct session_data *sdata, struct __state *state){
+int check_for_known_bad_attachments(struct session_data *sdata, struct parser_state *state){
    int i, counter=0, rc=AVIR_OK;
-   struct sql sql;
+   struct query sql;
 
    if(prepare_sql_statement(sdata, &sql, SQL_PREPARED_STMT_QUERY_ADIGEST) == ERR) return rc;
 

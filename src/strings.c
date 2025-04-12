@@ -1,10 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
-#include <unistd.h>
-#include <stdbool.h>
-#include <errno.h>
+#include <kospam.h>
 
 
 /*
@@ -97,4 +91,63 @@ void chop_newlines(char *str, size_t len) {
             break;
         }
     }
+}
+
+
+void extract_url_token(char *s, char *result, int resultlen) {
+    memset(result, 0, resultlen);
+
+    // Chop the request uri from the URL
+    char *p = strchr(s, '/');
+    if (p) *p = '\0';
+
+    p = strrchr(s, '.');
+    if (p) {
+        *p = '\0';
+        char *q = strrchr(s, '.');
+        if (q) {
+            *p = '.';
+            p = q+1;
+            *q = '\0';
+        } else {
+            *p = '.';
+             p = s;
+        }
+    } else {
+        p = s;
+    }
+
+    snprintf(result, resultlen-1, "URL*%s", p);
+}
+
+
+bool is_item_on_list(char *item, char *list) {
+    if(!item || !list) return false;
+
+    size_t itemlen = strlen(item);
+
+    if (itemlen < 3 || strlen(list) < 3) return false;
+
+    char *p = list;
+
+    while (p) {
+        char v[SMALLBUFSIZE];
+        int result;
+        p = split(p, ',', v, sizeof(v)-1, &result);
+
+        size_t len = strlen(v);
+        if (len < 3) continue;
+
+        if (v[len-1] == '$') {
+            v[len-1] = '\0'; // remove $
+            size_t toklen = len - 1;
+            if (itemlen >= toklen && strncasecmp(item + itemlen - toklen, v, toklen) == 0) {
+                return true;
+            }
+        } else if (strcasestr(item, v)) {
+            return true;
+        }
+   }
+
+   return false;
 }

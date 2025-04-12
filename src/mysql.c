@@ -2,44 +2,44 @@
  * mysql.c, SJ
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <syslog.h>
-#include <clapf.h>
+#include <kospam.h>
 
 
-int open_database(struct session_data *sdata, struct __config *cfg){
+MYSQL *open_database(struct config *cfg){
    int rc=1;
 
-   mysql_init(&(sdata->mysql));
-
-   mysql_options(&(sdata->mysql), MYSQL_OPT_CONNECT_TIMEOUT, (const char*)&cfg->mysql_connect_timeout);
-   mysql_options(&(sdata->mysql), MYSQL_OPT_RECONNECT, (const char*)&rc);
-
-   if(mysql_real_connect(&(sdata->mysql), cfg->mysqlhost, cfg->mysqluser, cfg->mysqlpwd, cfg->mysqldb, cfg->mysqlport, cfg->mysqlsocket, 0) == 0){
-      syslog(LOG_PRIORITY, "ERROR: cant connect to mysql server: '%s'", cfg->mysqldb);
-      return ERR;
+   MYSQL *conn = mysql_init(NULL);
+   if (conn == NULL) {
+      syslog(LOG_PRIORITY, "ERROR: mysql_init() failed");
+      return NULL;
    }
 
-   mysql_real_query(&(sdata->mysql), "SET NAMES utf8mb4", strlen("SET NAMES utf8mb4"));
-   mysql_real_query(&(sdata->mysql), "SET CHARACTER SET utf8mb4", strlen("SET CHARACTER SET utf8mb4"));
+   mysql_options(conn, MYSQL_OPT_CONNECT_TIMEOUT, (const char*)&cfg->mysql_connect_timeout);
+   mysql_options(conn, MYSQL_OPT_RECONNECT, (const char*)&rc);
 
-   return OK;
+   if(mysql_real_connect(conn, cfg->mysqlhost, cfg->mysqluser, cfg->mysqlpwd, cfg->mysqldb, cfg->mysqlport, cfg->mysqlsocket, 0) == 0){
+      syslog(LOG_PRIORITY, "ERROR: cant connect to mysql server: '%s'", cfg->mysqldb);
+      return NULL;
+   }
+
+   mysql_real_query(conn, "SET NAMES utf8mb4", strlen("SET NAMES utf8mb4"));
+   mysql_real_query(conn, "SET CHARACTER SET utf8mb4", strlen("SET CHARACTER SET utf8mb4"));
+
+   return conn;
 }
 
 
-void close_database(struct session_data *sdata){
-   mysql_close(&(sdata->mysql));
+void close_database(MYSQL *conn){
+   mysql_close(conn);
 }
 
 
-int select_db(struct session_data *sdata, const char *db){
-   return mysql_select_db(&(sdata->mysql), db);
+int select_db(MYSQL *conn, const char *db){
+   return mysql_select_db(conn, db);
 }
 
 
-void p_bind_init(struct sql *sql){
+void p_bind_init(struct query *sql){
    int i;
 
    sql->pos = 0;
@@ -52,19 +52,19 @@ void p_bind_init(struct sql *sql){
 }
 
 
-void p_query(struct session_data *sdata, char *s){
-   if(mysql_real_query(&(sdata->mysql), s, strlen(s))){
-      syslog(LOG_PRIORITY, "%s: ERROR: mysql_real_query() '%s' (errno: %d)", sdata->ttmpfile, mysql_error(&(sdata->mysql)), mysql_errno(&(sdata->mysql)));
+void p_query(MYSQL *conn, char *s){
+   if(mysql_real_query(conn, s, strlen(s))){
+      syslog(LOG_PRIORITY, "ERROR: mysql_real_query() '%s' (errno: %d)", mysql_error(conn), mysql_errno(conn));
    }
 }
 
 
-int p_exec_stmt(struct session_data *sdata, struct sql *sql){
+int p_exec_stmt(MYSQL *conn, struct query *sql){
    MYSQL_BIND bind[MAX_SQL_VARS];
    unsigned long length[MAX_SQL_VARS];
    int i, ret=ERR;
 
-   sdata->sql_errno = 0;
+   unsigned int sql_errno = 0;
    memset(bind, 0, sizeof(bind));
 
    for(i=0; i<MAX_SQL_VARS; i++){
@@ -112,14 +112,14 @@ int p_exec_stmt(struct session_data *sdata, struct sql *sql){
    }
 
    if(mysql_stmt_bind_param(sql->stmt, bind)){
-      sdata->sql_errno = mysql_stmt_errno(sql->stmt);
-      syslog(LOG_PRIORITY, "%s: ERROR: mysql_stmt_bind_param() '%s' (errno: %d)", sdata->ttmpfile, mysql_stmt_error(sql->stmt), sdata->sql_errno);
+      sql_errno = mysql_stmt_errno(sql->stmt);
+      syslog(LOG_PRIORITY, "ERROR: mysql_stmt_bind_param() '%s' (errno: %d)", mysql_stmt_error(sql->stmt), sql_errno);
       goto CLOSE;
    }
 
    if(mysql_stmt_execute(sql->stmt)){
-      sdata->sql_errno = mysql_stmt_errno(sql->stmt);
-      syslog(LOG_PRIORITY, "%s: ERROR: mysql_stmt_execute() '%s' (errno: %d)", sdata->ttmpfile, mysql_error(&(sdata->mysql)), sdata->sql_errno);
+      sql_errno = mysql_stmt_errno(sql->stmt);
+      syslog(LOG_PRIORITY, "ERROR: mysql_stmt_execute() '%s' (errno: %d)", mysql_error(conn), sql_errno);
       goto CLOSE;
    }
 
@@ -130,7 +130,7 @@ CLOSE:
 }
 
 
-int p_store_results(struct sql *sql){
+int p_store_results(struct query *sql){
    MYSQL_BIND bind[MAX_SQL_VARS];
    int i, ret=ERR;
 
@@ -191,7 +191,7 @@ CLOSE:
 }
 
 
-int p_fetch_results(struct sql *sql){
+int p_fetch_results(struct query *sql){
 
    if(mysql_stmt_fetch(sql->stmt) == 0) return OK;
 
@@ -199,30 +199,30 @@ int p_fetch_results(struct sql *sql){
 }
 
 
-void p_free_results(struct sql *sql){
+void p_free_results(struct query *sql){
    mysql_stmt_free_result(sql->stmt);
 }
 
 
-uint64 p_get_insert_id(struct sql *sql){
+uint64 p_get_insert_id(struct query *sql){
    return mysql_stmt_insert_id(sql->stmt);
 }
 
 
-int p_get_affected_rows(struct sql *sql){
+int p_get_affected_rows(struct query *sql){
    return mysql_stmt_affected_rows(sql->stmt);
 }
 
 
-int prepare_sql_statement(struct session_data *sdata, struct sql *sql, char *s){
-   sql->stmt = mysql_stmt_init(&(sdata->mysql));
+int prepare_sql_statement(MYSQL *conn, struct query *sql, char *s){
+   sql->stmt = mysql_stmt_init(conn);
    if(!(sql->stmt)){
-      syslog(LOG_PRIORITY, "%s: ERROR: mysql_stmt_init()", sdata->ttmpfile);
+      syslog(LOG_PRIORITY, "ERROR: mysql_stmt_init()");
       return ERR;
    }
 
    if(mysql_stmt_prepare(sql->stmt, s, strlen(s))){
-      syslog(LOG_PRIORITY, "%s: ERROR: mysql_stmt_prepare() %s => sql: %s", sdata->ttmpfile, mysql_stmt_error(sql->stmt), s);
+      syslog(LOG_PRIORITY, "ERROR: mysql_stmt_prepare() %s => sql: %s", mysql_stmt_error(sql->stmt), s);
       return ERR;
    }
 
@@ -230,20 +230,20 @@ int prepare_sql_statement(struct session_data *sdata, struct sql *sql, char *s){
 }
 
 
-void close_prepared_statement(struct sql *sql){
+void close_prepared_statement(struct query *sql){
    if(sql->stmt) mysql_stmt_close(sql->stmt);
 }
 
 
-struct te get_ham_spam_counters(struct session_data *sdata, char *stmt){
+struct te get_ham_spam_counters(MYSQL *conn, char *stmt){
    struct te te;
    MYSQL_RES *res;
    MYSQL_ROW row;
 
    te.nham = te.nspam = 0;
 
-   if(mysql_real_query(&(sdata->mysql), stmt, strlen(stmt)) == 0){
-      res = mysql_store_result(&(sdata->mysql));
+   if(mysql_real_query(conn, stmt, strlen(stmt)) == 0){
+      res = mysql_store_result(conn);
       if(res != NULL){
          while((row = mysql_fetch_row(res))){
             te.nham += atof(row[0]);
@@ -253,29 +253,4 @@ struct te get_ham_spam_counters(struct session_data *sdata, char *stmt){
       }
    }
    return te;
-}
-
-
-void update_hash(struct session_data *sdata, char *qry, struct node *xhash[]){
-   MYSQL_RES *res;
-   MYSQL_ROW row;
-   float nham, nspam;
-   uint64 token;
-
-   if(mysql_real_query(&(sdata->mysql), qry, strlen(qry)) == 0){
-      res = mysql_store_result(&(sdata->mysql));
-      if(res != NULL){
-         while((row = mysql_fetch_row(res))){
-            token = strtoull(row[0], NULL, 10);
-            nham = atof(row[1]);
-            nspam = atof(row[2]);
-
-            updatenode(xhash, token, nham, nspam, DEFAULT_SPAMICITY, 0);
-         }
-
-         mysql_free_result(res);
-      }
-
-   }
-
 }

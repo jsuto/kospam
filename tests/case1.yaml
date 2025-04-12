@@ -34,6 +34,7 @@ services:
       - "22225:25"
     volumes:
       - ./server.pem:/etc/postfix/server.pem
+      - ./11-aaaa.conf:/etc/rsyslog.d/11-aaaa.conf:ro
 
   syslog:
     image: sutoj/syslog

@@ -9,6 +9,7 @@ import (
     "net"
     "os"
     "path/filepath"
+    "regexp"
     "strings"
     "sync"
     "time"
@@ -37,6 +38,8 @@ var (
     configfile = flag.String("config", "/etc/kospam/kospam.conf", "config file to use")
     showVersion = flag.Bool("version", false, "show version number, then exit")
     daemon = flag.Bool("daemon", false, "run in daemon mode")
+
+    dotStart = regexp.MustCompile(`(?m)^(\.)`)
 )
 
 func parseEmailFile(filename string) (string, []string, string, error) {
@@ -65,7 +68,8 @@ func parseEmailFile(filename string) (string, []string, string, error) {
 
     // Don't send the 3rd line, the XFORWARD info
 
-    remainingContent := lines[3]
+    // Apply the dot stuffing
+    remainingContent := dotStart.ReplaceAllString(lines[3], "..")
 
     if sender == "" {
         return "", nil, "", fmt.Errorf("Missing Kospam-Envelope-From: header line")

@@ -27,10 +27,11 @@ services:
 
   postfix:
     image: sutoj/postfix:kospam
-    container_name: mail.aaa.fu
+    container_name: mail.kospam
     init: true
     <<: *networks
     ports:
+      - "10026:10026"
       - "22225:25"
     volumes:
       - ./server.pem:/etc/postfix/server.pem

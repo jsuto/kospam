@@ -40,21 +40,16 @@ create table if not exists email (
 insert into email (uid, email) values(0, 'admin@local');
 
 
-create table if not exists t_white_list (
-   `uid` int unsigned not null primary key,
-   `whitelist` blob default null
+create table if not exists whitelist (
+   email varchar(128) not null primary key
 ) Engine=InnoDB;
 
 insert into t_white_list (uid) values(0);
 
 
-create table if not exists t_black_list (
-   `uid` int unsigned not null primary key,
-   `blacklist` blob default null
+create table if not exists blacklist (
+   email varchar(128) not null primary key
 ) Engine=InnoDB;
-
-insert into t_black_list (uid) values(0);
-
 
 
 create table if not exists domain (

@@ -78,7 +78,6 @@ void update_counters(MYSQL *conn, struct counters *counters);
 char *split(char *str, int ch, char *buf, int buflen, int *result);
 int fix_message_file(struct session_data *sdata, struct config *cfg);
 
-int get_policy(struct session_data *sdata, struct config *cfg, struct config *my_cfg);
 float run_statistical_check(struct session_data *sdata, struct parser_state *state, MYSQL *conn, struct config *cfg);
 
 void manage_partitions(struct config *cfg);
@@ -93,5 +92,7 @@ void digest_string(char *digestname, char *s, char *digest);
 
 void do_training(struct session_data *sdata, struct parser_state *state, MYSQL *conn, struct config *cfg);
 bool is_sender_on_minefield(MYSQL *conn, char *ip);
+
+int check_email_against_list(MYSQL *conn, char *table, char *email);
 
 #endif /* _KOSPAM_H */

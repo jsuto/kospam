@@ -8,7 +8,7 @@
 void store_minefield_ip(MYSQL *conn, char *ip){
    struct query sql;
 
-   if(prepare_sql_statement(conn, &sql, SQL_PREPARED_STMT_INSERT_INTO_BLACKHOLE) == ERR) return;
+   if(prepare_sql_statement(conn, &sql, SQL_PREPARED_STMT_INSERT_INTO_MINEFIELD) == ERR) return;
 
    p_bind_init(&sql);
 

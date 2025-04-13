@@ -65,8 +65,6 @@ int check_spam(struct session_data *sdata, MYSQL *conn, struct parser_state *sta
       }*/
 
       // FIXME:
-      //if(sdata->policy_group > 0) get_policy(sdata, cfg, my_cfg);
-
       gettimeofday(&tv1, &tz);
       do_training(sdata, state, conn, cfg);
       gettimeofday(&tv2, &tz);
@@ -87,26 +85,16 @@ int check_spam(struct session_data *sdata, MYSQL *conn, struct parser_state *sta
 
 
    /*
-    * get per user settings and policy
-    */
-
-   /*if(get_user_data_from_email(sdata, state->envelope_recipient, cfg) == 0){
-      p = strchr(state->envelope_recipient, '@');
-      if(p) get_user_data_from_email(sdata, p, cfg);
-   }*/
-
-
-   /*
     * check sender address on the per user whitelist, then blacklist
     */
 
-   if(is_item_on_list(state->envelope_from, sdata->whitelist)){
+   if (check_email_against_list(conn, SQL_WHITE_LIST, state->envelope_from)) {
       syslog(LOG_PRIORITY, "%s: sender (%s) found on whitelist", sdata->ttmpfile, state->envelope_from);
       return OK;
    }
 
 
-   if(is_item_on_list(state->envelope_from, sdata->blacklist)){
+   if (check_email_against_list(conn, SQL_BLACK_LIST, state->envelope_from)) {
       sdata->spaminess = 0.99;
       syslog(LOG_PRIORITY, "%s: sender (%s) found on blacklist", sdata->ttmpfile, state->envelope_from);
       return DISCARD;

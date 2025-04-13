@@ -87,10 +87,6 @@ void process_email(char *filename, MYSQL *conn, int size){
          sdata.status = S_SPAM;
          counters.c_spam++;
          snprintf(status, sizeof(status)-1, "SPAM");
-      /*else if(sdata->rav == AVIR_VIRUS){
-         counters.c_virus++;
-         sdata->status = S_VIRUS;
-         snprintf(status, sizeof(status)-1, "VIRUS (%s)", virusinfo);*/
       } else {
          sdata.status = S_HAM;
          counters.c_ham++;
@@ -123,14 +119,12 @@ void process_email(char *filename, MYSQL *conn, int size){
    clearhash(parser_state.url);
 
    char delay[SMALLBUFSIZE];
-   float total = sdata.__parsed+sdata.__av+sdata.__user+sdata.__policy+sdata.__minefield+sdata.__as+sdata.__training+sdata.__update;
+   float total = sdata.__parsed+sdata.__user+sdata.__minefield+sdata.__as+sdata.__training+sdata.__update;
 
-   snprintf(delay, sizeof(delay)-1, "delay=%.2f, delays=%.2f/%.2f/%.2f/%.2f/%.2f/%.2f/%.2f/%.2f",
+   snprintf(delay, sizeof(delay)-1, "delay=%.2f, delays=%.2f/%.2f/%.2f/%.2f/%.2f/%.2f",
            total/1000000.0,
            sdata.__parsed/1000000.0,
-           sdata.__av/1000000.0,
            sdata.__user/1000000.0,
-           sdata.__policy/1000000.0,
            sdata.__minefield/1000000.0,
            sdata.__as/1000000.0,
            sdata.__training/1000000.0,

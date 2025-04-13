@@ -1,5 +1,12 @@
 Makefile
+config.log
+config.status
 *.o
 libkospam.so*
 libkospam.a
 go.sum
+kospam
+kospamconf
+splitmbox
+spamdrop
+src/tests

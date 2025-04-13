@@ -21,11 +21,6 @@ struct config {
 
    char smtp_addr[MAXVAL];
 
-   char clamd_addr[MAXVAL];
-   int clamd_port;
-   char clamd_socket[MAXVAL];
-   int always_scan_message;
-
    int tls_enable;
    char pemfile[MAXVAL];
    char cipher_list[MAXVAL];

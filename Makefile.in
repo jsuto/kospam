@@ -85,9 +85,6 @@ installdirs: mkinstalldirs
 	$(INSTALL) -d -m 0755 -o $(RUNNING_USER) -g $(RUNNING_GROUP) $(DESTDIR)$(localstatedir)/kospam/stat
 	$(INSTALL) -d -m 0711 -o $(RUNNING_USER) -g $(RUNNING_GROUP) $(DESTDIR)$(localstatedir)/kospam/tmp
 
-	cp -R $(srcdir)/webui/* $(DESTDIR)$(localstatedir)/kospam/www
-	cp -R $(srcdir)/webui/.ht* $(DESTDIR)$(localstatedir)/kospam/www
-
 install-am:
 
 

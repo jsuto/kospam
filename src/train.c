@@ -22,7 +22,7 @@ int introduce_tokens(MYSQL *conn, struct parser_state *state, struct config *cfg
    // Add +7 bytes for ",(" and ",0,0)", that's 28 characters, so we need a buffer size like n_token * 28 + SMALLBUFSIZE
 
    size_t len = SMALLBUFSIZE + state->n_token * 28;
-   if (cfg->debug) printf("allocating %ld bytes for %d tokens\n", len, state->n_token);
+   if (cfg->debug) printf("allocating %ld bytes for %d new tokens\n", len, state->n_token);
    char *query = malloc(len);
    if (!query) {
        syslog(LOG_PRIORITY, "ERROR: malloc() error %s", __func__);
@@ -100,7 +100,7 @@ int train_message(struct parser_state *state, char *column, struct config *cfg){
     snprintf(s, sizeof(s)-1, "INSERT INTO %s (token) VALUES (0)", SQL_TEMP_TOKEN_TABLE);
 
     size_t len = SMALLBUFSIZE + state->n_token * 24;
-    if (cfg->debug) printf("allocating %ld bytes for %d tokens\n", len, state->n_token);
+    if (cfg->debug) printf("allocating %ld bytes for updating %d tokens\n", len, state->n_token);
     char *query = malloc(len);
     if (!query) {
         syslog(LOG_PRIORITY, "ERROR: malloc() error %s", __func__);
@@ -127,6 +127,8 @@ int train_message(struct parser_state *state, char *column, struct config *cfg){
            q = q->r;
         }
     }
+
+    if (cfg->debug) printf("query: *%s*\n", query);
 
     int rc = mysql_query(conn, query);
 

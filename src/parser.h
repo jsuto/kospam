@@ -104,6 +104,7 @@ void decodeQP(char *p);
 char *decode_mime_encoded_words(const char *input);
 void extract_header_value(const char *buffer, int buffer_len, const char *header_name, int header_name_len, char *result, size_t resultbuflen);
 void extract_name_from_header_line(char *buffer, char *name, char *resultbuf, int resultbuflen);
+void extract_name_from_headers(char *buf, char *resultbuf, size_t resultlen);
 char *find_boundary(const char *buffer);
 void fixup_encoded_header(char *buf, int buflen);
 char *split(char *str, int ch, char *buf, int buflen, int *result);
@@ -115,5 +116,6 @@ void normalize_html(char *input);
 void chop_newlines(char *str, size_t len);
 void extract_url_token(char *s, char *result, int resultlen);
 bool is_item_on_list(char *item, char *list);
+int count_character_in_buffer(char *p, char c);
 
 #endif /* _PARSER_H */

@@ -368,7 +368,10 @@ void extract_mime_parts(char *body, const char *boundary, struct Message *m) {
             bool needs_base64_decode = false;
             bool needs_quoted_printable_decode = false;
 
-            const char *transfer_encoding = strcasestr(part_headers, HEADER_CONTENT_TRANSFER_ENCODING);
+            char part_headers_buf[SMALLBUFSIZE];
+            snprintf(part_headers_buf, sizeof(part_headers_buf)-1, "%s", part_headers);
+
+            const char *transfer_encoding = strcasestr(part_headers_buf, HEADER_CONTENT_TRANSFER_ENCODING);
             if (transfer_encoding) {
                if(strcasestr(transfer_encoding, "base64")) {
                   needs_base64_decode = true;
@@ -398,27 +401,40 @@ void extract_mime_parts(char *body, const char *boundary, struct Message *m) {
             }
 
 
-            char part_headers_buf[SMALLBUFSIZE];
-            snprintf(part_headers_buf, sizeof(part_headers_buf)-1, "%s", part_headers);
-
             *part_body = c;
 
             if (textual_part) {
-               if (needs_base64_decode) {
-                  base64_decode(part_body);
-               } else if (textual_part && needs_quoted_printable_decode) {
-                  decodeQP(part_body);
+               char filename[SMALLBUFSIZE];
+               extract_name_from_headers(part_headers_buf, filename, sizeof(filename));
+
+               bool want_to_process_this_mime_part = true;
+
+               // I dont want textual attachments, eg. .txt file if it's larger than 30 kB
+               if (filename[0]) {
+                   //printf("DEBUG: textual attachment: **%s**\n", filename);
+                   size_t part_body_len = strlen(part_body);
+                   if (part_body_len > 30000) {
+                       want_to_process_this_mime_part = false;
+                   }
                }
 
-               if(!strcmp(charset, "windows-1251")) {
-                  decode_html_entities_utf8_inplace(part_body);
-               }
+               if (want_to_process_this_mime_part) {
+                   if (needs_base64_decode) {
+                       base64_decode(part_body);
+                   } else if (textual_part && needs_quoted_printable_decode) {
+                       decodeQP(part_body);
+                   }
 
-               if (html) {
-                  normalize_html(part_body);
-               }
+                   if (!strcmp(charset, "windows-1251")) {
+                       decode_html_entities_utf8_inplace(part_body);
+                   }
 
-               APPENDTOBODY(part_body, m->body.data, m->body.pos);
+                   if (html) {
+                       normalize_html(part_body);
+                   }
+
+                   APPENDTOBODY(part_body, m->body.data, m->body.pos);
+               }
 
             } else if (rfc822) {
                // drop previous email headers
@@ -428,14 +444,7 @@ void extract_mime_parts(char *body, const char *boundary, struct Message *m) {
             else {
                // Get the filename
                char filename[SMALLBUFSIZE];
-               //printf("aa=**%s**\n", part_headers_buf);
-
-               char *content_disposition = strcasestr(part_headers_buf, HEADER_CONTENT_DISPOSITION);
-               if (content_disposition) {
-                  extract_name_from_header_line(content_disposition, "name", filename, sizeof(filename));
-               } else {
-                  extract_name_from_header_line(part_headers_buf, "name", filename, sizeof(filename));
-               }
+               extract_name_from_headers(part_headers_buf, filename, sizeof(filename));
 
                if (m->n_attachments < MAX_ATTACHMENTS) {
                    CONVERT_WHITESPACE_TO_UNDERSCORE(filename);

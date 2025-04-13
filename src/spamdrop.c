@@ -39,7 +39,6 @@ int main(int argc, char **argv){
    struct config cfg;
    struct data data;
    struct timezone tz;
-   struct timeval tv_start, tv_stop;
 
    while(1){
 
@@ -137,8 +136,6 @@ int main(int argc, char **argv){
       cfg.debug = 1;
    }
 
-   gettimeofday(&tv_start, &tz);
-
    MYSQL *conn = open_database(&cfg);
    if (conn == NULL) return 0;
 
@@ -146,8 +143,6 @@ int main(int argc, char **argv){
    setlocale(LC_CTYPE, cfg.locale);
 
    data.n_regex = 0;
-
-   zombie_init(&data, &cfg);
 
    init_session_data(&sdata);
 
@@ -176,31 +171,32 @@ int main(int argc, char **argv){
       if(train_as_spam == 1) snprintf(s, sizeof(s)-1, "nspam");
       else snprintf(s, sizeof(s)-1, "nham");
 
+      introduce_tokens(conn, &state, &cfg);
       train_message(&state, s, &cfg);
+   } else {
+      zombie_init(&data, &cfg);
+
+      check_zombie_sender(&state, &data, &cfg);
+
+      struct timeval tv_spam1, tv_spam2;
+      gettimeofday(&tv_spam1, &tz);
+      sdata.spaminess = run_statistical_check(&sdata, &state, conn, &cfg);
+      gettimeofday(&tv_spam2, &tz);
+
+      if(cfg.debug == 1) {
+         printf("spaminess: %.4f in %ld [ms]\n", sdata.spaminess, tvdiff(tv_spam2, tv_spam1)/1000);
+         printf("rcvd host/ip/zombie: %s/%s/%c\n", state.hostname, state.ip, state.tre);
+         printf("number of tokens: %d/%d\n", state.n_token, state.n_deviating_token);
+      }
+
+      zombie_free(&data);
    }
-
-   check_zombie_sender(&state, &data, &cfg);
-
-   struct timeval tv_spam1, tv_spam2;
-   gettimeofday(&tv_spam1, &tz);
-   sdata.spaminess = run_statistical_check(&sdata, &state, conn, &cfg);
-   gettimeofday(&tv_spam2, &tz);
 
 CLEANUP:
    clearhash(state.token_hash);
    clearhash(state.url);
 
    close_database(conn);
-
-   zombie_free(&data);
-
-   gettimeofday(&tv_stop, &tz);
-
-   if(cfg.debug == 1){
-      printf("spaminess: %.4f in %ld/%ld [ms]\n", sdata.spaminess, tvdiff(tv_spam2, tv_spam1)/1000, tvdiff(tv_stop, tv_start)/1000);
-      printf("rcvd host/ip/zombie: %s/%s/%c\n", state.hostname, state.ip, state.tre);
-      printf("number of tokens: %d/%d\n", state.n_token, state.n_deviating_token);
-   }
 
    return 0;
 }

@@ -90,6 +90,7 @@ int generate_tokens_from_string(struct parser_state *state, const char *s, char 
 
 void digest_string(char *digestname, char *s, char *digest);
 
+int introduce_tokens(MYSQL *conn, struct parser_state *state, struct config *cfg);
 void do_training(struct session_data *sdata, struct parser_state *state, MYSQL *conn, struct config *cfg);
 bool is_sender_on_minefield(MYSQL *conn, char *ip);
 

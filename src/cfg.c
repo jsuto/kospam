@@ -13,17 +13,6 @@ int string_parser(char *src, char *target, int limit){
    return 0;
 };
 
-int multi_line_string_parser(char *src, char *target, unsigned int limit){
-   if(strlen(src) > 0 && strlen(target) + strlen(src) + 3 < limit){
-      strncat(target, src, limit);
-      strncat(target, "\r\n", limit);
-
-      return 0;
-   }
-
-   return 1;
-};
-
 int int_parser(char *src, int *target){
    *target = strtol(src, (char **) NULL, 10);
 
@@ -59,7 +48,7 @@ struct _parse_rule config_parse_rules[] =
    { "blackhole_email_list", "string", (void*) string_parser, offsetof(struct config, blackhole_email_list), "", MAXVAL-1},
    { "cipher_list", "string", (void*) string_parser, offsetof(struct config, cipher_list), "HIGH:MEDIUM", MAXVAL-1},
    { "clapf_header_field", "string", (void*) string_parser, offsetof(struct config, clapf_header_field), SPAMINESS_HEADER_FIELD, MAXVAL-1},
-   { "clapf_spam_header_field", "multi_line_string", (void*) multi_line_string_parser, offsetof(struct config, clapf_spam_header_field), "", MAXVAL-1},
+   { "clapf_spam_header_field", "string", (void*) string_parser, offsetof(struct config, clapf_spam_header_field), "", MAXVAL-1},
    { "debug", "integer", (void*) int_parser, offsetof(struct config, debug), "0", sizeof(int)},
    { "default_retention_days", "integer", (void*) int_parser, offsetof(struct config, default_retention_days), "2557", sizeof(int)},
    { "enable_cjk", "integer", (void*) int_parser, offsetof(struct config, enable_cjk), "0", sizeof(int)},
@@ -221,7 +210,7 @@ struct config read_config(char *configfile){
 void print_config_item(struct config *cfg, struct _parse_rule *rules, int i){
    int j;
    float f;
-   char *p, buf[MAXVAL];
+   char *p;
 
    p = (char*)cfg + rules[i].offset;
 
@@ -232,14 +221,6 @@ void print_config_item(struct config *cfg, struct _parse_rule *rules, int i){
    else if(strcmp(rules[i].type, "float") == 0){
       memcpy((char*)&f, p, sizeof(float));
       printf("%s=%.4f\n", rules[i].name, f);
-   }
-   else if(strcmp(rules[i].type, "multi_line_string") == 0){
-      j = 0;
-      do {
-         p = split_str(p, "\r\n", buf, sizeof(buf)-1);
-         if(p || !j) printf("%s=%s\n", rules[i].name, buf);
-         j++;
-      } while(p);
    }
    else {
       chop_newlines(p, strlen(p));

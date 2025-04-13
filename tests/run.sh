@@ -13,7 +13,7 @@ if [[ -v GITHUB_RUN_ID ]]; then
 fi
 
 export S3="${S3:-false}"
-export TESTCASE="${TESTCASE:-case3}"
+export TESTCASE="${TESTCASE:-case1}"
 
 echo "Running testcase: ${TESTCASE} on tag ${VERSION:-test}"
 

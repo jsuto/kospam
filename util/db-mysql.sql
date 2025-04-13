@@ -20,8 +20,6 @@ create table if not exists whitelist (
    email varchar(128) not null primary key
 ) Engine=InnoDB;
 
-insert into t_white_list (uid) values(0);
-
 
 create table if not exists blacklist (
    email varchar(128) not null primary key

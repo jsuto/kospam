@@ -43,4 +43,6 @@ training
 
 print_errors
 
+postfix_errors
+
 get_verdict

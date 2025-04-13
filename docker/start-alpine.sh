@@ -77,16 +77,17 @@ if [ ! -f "$PEMFILE" ]; then
    create_pem_file "$PEMFILE" "$CERT_SUBJECT"
 fi
 
-setup_cnf_file
 wait_until_mariadb_server_is_ready
 check_database
 
 if [ -n "${MYSQL_DUMP+x}" ]; then
-   gzip -dc "$MYSQL_DUMP" | mariadb "$MYSQL_DATABASE"
+   gzip -dc "$MYSQL_DUMP" | mariadb -u "$MYSQL_USER" -h "$MYSQL_HOSTNAME" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE"
 fi
 
 /usr/sbin/kospam -d
 /usr/libexec/kospam/kospam-smtpd -daemon
 /usr/libexec/kospam/kospam-send -daemon
+
+setup_cnf_file
 
 sleep infinity

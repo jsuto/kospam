@@ -36,7 +36,7 @@ training() {
    [[ $tokens_after_training -gt $(( tokens_before_training + 10 )) ]] || set_verdict "$RESULT_CRITICAL"
 }
 
-start_containers "${TESTCASE}.yaml" "$CONTAINER"
+start_containers "docker-compose.yaml" "$CONTAINER"
 
 send_emails
 training

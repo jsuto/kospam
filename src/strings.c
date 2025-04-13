@@ -147,7 +147,17 @@ bool is_item_on_list(char *item, char *list) {
         } else if (strcasestr(item, v)) {
             return true;
         }
-   }
+    }
 
-   return false;
+    return false;
+}
+
+int count_character_in_buffer(char *p, char c) {
+    int i=0;
+
+    for(; *p; p++){
+        if(*p == c) i++;
+    }
+
+    return i;
 }

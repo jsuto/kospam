@@ -328,3 +328,16 @@ void extract_name_from_header_line(char *buffer, char *name, char *resultbuf, in
       }
    }
 }
+
+
+void extract_name_from_headers(char *buf, char *resultbuf, size_t resultlen) {
+    memset(resultbuf, 0, resultlen);
+
+    char *p = strcasestr(buf, HEADER_CONTENT_DISPOSITION);
+
+    if (p) {
+        extract_name_from_header_line(p, "name", resultbuf, resultlen-1);
+    } else {
+        extract_name_from_header_line(buf, "name", resultbuf, resultlen-1);
+    }
+}

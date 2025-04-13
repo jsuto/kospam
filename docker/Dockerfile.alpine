@@ -31,6 +31,8 @@ COPY --chown=root:root --from=build /usr/share/kospam/db-mysql.sql /usr/share/ko
 
 COPY docker/start-alpine.sh /start.sh
 
-EXPOSE 25 10025
+EXPOSE 10025
+
+VOLUME ["/var/kospam"]
 
 CMD ["/start.sh"]

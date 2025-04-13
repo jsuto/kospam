@@ -32,6 +32,15 @@ create_pem_file() {
    fi
 }
 
+setup_cnf_file() {
+   my_cnf="/root/.my.cmf"
+
+   printf "[client]\nhost = %s\nuser = %s\npassword = %s\n\n[mysqldump]\nhost = %s\nuser = %s\npassword = %s\n" \
+          "$MYSQL_HOSTNAME" "$MYSQL_USER" "$MYSQL_PASSWORD" "$MYSQL_HOSTNAME" "$MYSQL_USER" "$MYSQL_PASSWORD" > "$my_cnf"
+
+   chmod 600 "$my_cnf"
+}
+
 wait_until_mariadb_server_is_ready() {
    while true; do if echo "show databases" | mariadb -uroot -h"$MYSQL_HOSTNAME" -p"$MYSQL_ROOT_PASSWORD" ; then break; fi; log "${MYSQL_HOSTNAME} is not ready"; sleep 3; done
    log "${MYSQL_HOSTNAME} is ready"
@@ -78,5 +87,7 @@ fi
 /usr/sbin/kospam -d
 /usr/libexec/kospam/kospam-smtpd -daemon
 /usr/libexec/kospam/kospam-send -daemon
+
+setup_cnf_file
 
 sleep infinity

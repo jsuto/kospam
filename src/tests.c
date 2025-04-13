@@ -25,6 +25,12 @@ typedef struct {
     const bool expected;
 } TestCaseStrBool;
 
+typedef struct {
+    const char *input;
+    const char c;
+    const int expected;
+} TestCaseStrCharInt;
+
 struct config cfg;
 
 void aaa(struct node *xhash[], char *s, size_t slen){
@@ -375,6 +381,27 @@ void test_is_item_on_list() {
     TEST_FOOTER();
 }
 
+
+void test_count_character_in_buffer() {
+    TEST_HEADER();
+
+    TestCaseStrCharInt tests[] = {
+        { "aaaaa", 'a', 5 },
+        { "aaaaa", 'b', 0 },
+        { "aaaaa", '\0', 0 },
+        { "ababababab", 'a', 5 },
+    };
+
+    int num_tests = sizeof(tests) / sizeof(TestCaseStrCharInt);
+
+    for (int i = 0; i < num_tests; i++) {
+        int result = count_character_in_buffer((char *)tests[i].input, tests[i].c);
+        ASSERT(result == tests[i].expected, tests[i].input);
+    }
+
+    TEST_FOOTER();
+}
+
 int main() {
     cfg = read_config("../tests/kospam.conf");
 
@@ -391,4 +418,5 @@ int main() {
     test_generate_tokens_from_string();
     test_extract_url_token();
     test_is_item_on_list();
+    test_count_character_in_buffer();
 }

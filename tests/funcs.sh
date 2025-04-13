@@ -11,7 +11,7 @@ EML_DIR="${SCRIPT_DIR}/eml"
 # shellcheck disable=SC2034
 TRAINING_DIR="${SCRIPT_DIR}/training"
 # shellcheck disable=SC2034
-MAIL_HOST="mail.aaa.fu"
+MAIL_HOST="mail.kospam"
 SYSLOG_HOST="syslog.kospam"
 SMTPTEST="${SCRIPT_DIR}/smtptest"
 
@@ -120,4 +120,8 @@ start_containers() {
 print_errors() {
    echo "Getting errors from mail.log"
    docker exec "$SYSLOG_HOST" grep -ri ERROR /var/log/mail.log || true
+}
+
+postfix_errors() {
+   docker exec "$MAIL_HOST" grep -v -E '(connect from|client=|message-id=|from=|removed|relay=virtual|relay=kospam|statistics)' /var/log/mail.log
 }

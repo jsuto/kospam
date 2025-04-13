@@ -3,9 +3,9 @@ x-networks: &networks
     - kospam
 
 services:
-  mysql2:
+  mysql:
     image: mariadb:11.6.2
-    container_name: mysql2
+    container_name: mysql.kospam
     restart: unless-stopped
     <<: *networks
     cap_drop:
@@ -27,10 +27,11 @@ services:
 
   postfix:
     image: sutoj/postfix:kospam
-    container_name: mail.aaa.fu
+    container_name: mail.kospam
     init: true
     <<: *networks
     ports:
+      - "10026:10026"
       - "22225:25"
     volumes:
       - ./server.pem:/etc/postfix/server.pem
@@ -49,7 +50,7 @@ services:
     init: true
     <<: *networks
     environment:
-      - MYSQL_HOSTNAME=mysql2
+      - MYSQL_HOSTNAME=mysql.kospam
       - MYSQL_DATABASE=kospam
       - MYSQL_USER=kospam
       - MYSQL_PASSWORD=kospam123
@@ -68,7 +69,7 @@ services:
     ports:
       - "10025:10025"
     depends_on:
-      - "mysql2"
+      - "mysql"
       - "postfix"
       - "syslog"
 

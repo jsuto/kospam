@@ -27,5 +27,8 @@ virtual_uid_maps = static:1000
 virtual_gid_maps = static:1000
 message_size_limit = 20000000
 
+# Our test emails have a few extremely long lines
+smtp_line_length_limit = 100000
+
 smtp_send_xforward_command = yes
 content_filter = smtp:[kospam]:10025

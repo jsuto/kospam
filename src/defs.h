@@ -120,7 +120,7 @@ struct session_data {
    int need_scan, need_signo_check;
    int blackhole;
    int mynetwork;
-   float __parsed, __av, __user, __policy, __training, __update, __as, __minefield;
+   float __parsed, __user, __training, __update, __as, __minefield;
    float spaminess;
    float nham, nspam;
 };

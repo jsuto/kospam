@@ -55,13 +55,9 @@ struct _parse_rule {
 struct _parse_rule config_parse_rules[] =
 {
 
-   { "always_scan_message", "integer", (void*) int_parser, offsetof(struct config, always_scan_message), "1", sizeof(int)},
    { "backlog", "integer", (void*) int_parser, offsetof(struct config, backlog), "20", sizeof(int)},
    { "blackhole_email_list", "string", (void*) string_parser, offsetof(struct config, blackhole_email_list), "", MAXVAL-1},
    { "cipher_list", "string", (void*) string_parser, offsetof(struct config, cipher_list), "HIGH:MEDIUM", MAXVAL-1},
-   { "clamd_addr", "string", (void*) string_parser, offsetof(struct config, clamd_addr), "", MAXVAL-1},
-   { "clamd_port", "integer", (void*) int_parser, offsetof(struct config, clamd_port), "0", sizeof(int)},
-   { "clamd_socket", "string", (void*) string_parser, offsetof(struct config, clamd_socket), CLAMD_SOCKET, MAXVAL-1},
    { "clapf_header_field", "string", (void*) string_parser, offsetof(struct config, clapf_header_field), SPAMINESS_HEADER_FIELD, MAXVAL-1},
    { "clapf_spam_header_field", "multi_line_string", (void*) multi_line_string_parser, offsetof(struct config, clapf_spam_header_field), "", MAXVAL-1},
    { "debug", "integer", (void*) int_parser, offsetof(struct config, debug), "0", sizeof(int)},

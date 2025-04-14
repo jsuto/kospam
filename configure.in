@@ -86,7 +86,7 @@ echo "#define DISTRO \"${DISTRO:-unknown}\"" >> $CONFIGURE_PARAMS_FILE
 echo "#define ARCH \"${ARCH:-amd64}\"" >> $CONFIGURE_PARAMS_FILE
 
 
-SUBDIRS="src etc init.d util zombie"
+SUBDIRS="src etc util zombie"
 
 
 dnl clamd
@@ -352,7 +352,7 @@ echo; echo
 CFLAGS="-std=c99 -O2 -fPIC -Wall -Wextra -Wimplicit-fallthrough=2 ${GGDB3} -Wuninitialized -Wno-format-truncation"
 LIBS="$antispam_libs"
 
-AC_CONFIG_FILES([Makefile src/Makefile etc/Makefile init.d/Makefile util/Makefile zombie/Makefile])
+AC_CONFIG_FILES([Makefile src/Makefile etc/Makefile util/Makefile zombie/Makefile])
 AC_OUTPUT
 
 

@@ -402,6 +402,26 @@ void test_count_character_in_buffer() {
     TEST_FOOTER();
 }
 
+void test_extract_name_from_headers() {
+    TEST_HEADER();
+
+    TestCaseStrStr tests[] = {
+        { "Content-Type: image/jpeg;\n  name=\"ubaxxezoeycayr.jpeg\"", "ubaxxezoeycayr.jpeg" },
+        { "Content-Type: image/jpeg;\nContent-Transfer-Encoding: base64\nContent-Disposition: attachment;\n   name=\"aaa.jpg\"", "aaa.jpg" },
+        { "Content-Type: image/jpeg;\nContent-Transfer-Encoding: base64\n", "" },
+    };
+
+    int num_tests = sizeof(tests) / sizeof(TestCaseStrStr);
+
+    for (int i = 0; i < num_tests; i++) {
+        char s[SMALLBUFSIZE];
+        extract_name_from_headers((char *)tests[i].input, s, sizeof(s));
+        ASSERT(strcmp(s, tests[i].expected) == 0, tests[i].input);
+    }
+
+    TEST_FOOTER();
+}
+
 int main() {
     cfg = read_config("../tests/kospam.conf");
 
@@ -419,4 +439,5 @@ int main() {
     test_extract_url_token();
     test_is_item_on_list();
     test_count_character_in_buffer();
+    test_extract_name_from_headers();
 }

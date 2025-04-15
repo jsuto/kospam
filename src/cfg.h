@@ -128,6 +128,7 @@ struct config {
 
    char our_signo[MAXVAL];
    char skipped_received_ips[MAXVAL];
+   int received_lines_to_skip;
 
    char maillog[MAXVAL];
 

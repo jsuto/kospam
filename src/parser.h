@@ -92,11 +92,11 @@ struct parser_state {
 };
 
 void init_state(struct parser_state *state);
-int parse_message(const char *message, struct parser_state *state, struct Message *m);
+int parse_message(const char *message, struct parser_state *state, struct Message *m, struct config *cfg);
 int post_parse(struct parser_state *state, struct Message *m, struct config *cfg);
 char *read_file(const char *filename, size_t *outsize);
-int parse_eml_buffer(char *buffer, struct Message *m);
-void extract_mime_parts(char *body, const char *boundary, struct Message *m);
+int parse_eml_buffer(char *buffer, struct Message *m, struct config *cfg);
+void extract_mime_parts(char *body, const char *boundary, struct Message *m, struct config *cfg);
 
 int base64_decode(char *input);
 void decodeQP(char *p);

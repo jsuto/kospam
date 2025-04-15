@@ -422,6 +422,84 @@ void test_extract_name_from_headers() {
     TEST_FOOTER();
 }
 
+void test_fixup_encoded_header() {
+    TEST_HEADER();
+
+    TestCaseStrStr tests[] = {
+        { "=?UTF-8?B?SG9neWFuIMOtcmp1bmsgcGFuYXN6bGV2ZWxldD8=?=", "Hogyan írjunk panaszlevelet?" },
+        { "Happy New Year! =?utf-8?q?=F0=9F=8E=86?=", "Happy New Year! 🎆" },
+        { "=?utf-8?Q?=C3=81ram=C3=BCgyint=C3=A9z=C3=A9s_=C3=BAj_online_=C3=BCgyf?=\n =?utf-8?Q?=C3=A9lszolg=C3=A1laton_=C3=A9s_applik=C3=A1ci=C3=B3ban!?=", "Áramügyintézés új online ügyfélszolgálaton és applikációban!" },
+        { "=?UTF-8?B?RndkOiDimqDvuI8gRW1sw6lrZXp0ZXTFkTogTcOpZyBuZW0gesOhcnRhZCBsZSBmacOzaw==?=\n =?UTF-8?B?b2RiYW4gYSAyMDI0LWVzIMOpdmV0?=", "Fwd: ⚠️ Emlékeztető: Még nem zártad le fiókodban a 2024-es évet" },
+    };
+
+    int num_tests = sizeof(tests) / sizeof(TestCaseStrStr);
+
+    for (int i = 0; i < num_tests; i++) {
+        char s[SMALLBUFSIZE];
+        snprintf(s, sizeof(s)-1, "%s", tests[i].input);
+        fixup_encoded_header(s, strlen(s));
+        //printf("s=*%s*\n", s);
+        ASSERT(strcmp(s, tests[i].expected) == 0, tests[i].input);
+    }
+
+    TEST_FOOTER();
+}
+
+void test_extract_header_value() {
+    TEST_HEADER();
+
+    const char *headers =
+        "Return-Path: <yzpodzc@winskersd.de>\n"
+        "Received: from antispam.localhost (localhost [127.0.0.1])\n"
+        "    by mail.example.com (Postfix) with ESMTP id 8C7823ECCE\n"
+        "    for <bela@acts.hu>; Thu, 20 Feb 2025 20:46:59 +0100 (CET)\n"
+        "Received: from xn--g1agd.058.xn--p1acf (xn--g1agd.058.xn--p1acf [62.173.138.106])\n"
+        "    by mail.example.com (Postfix) with ESMTP id 30BF03EA57\n"
+        "    for <bela@acts.hu>; Thu, 20 Feb 2025 20:46:59 +0100 (CET)\n"
+        "Received: from winskersd.de (osoban.my [185.170.209.70])\n"
+        "    by xn--g1agd.058.xn--p1acf (Postfix) with ESMTPA id BF3BD26FDAD;\n"
+        "    Thu, 20 Feb 2025 21:15:22 +0200 (EET)\n"
+        "Message-ID: <54064738T83184233L67511567U06028373O@id.yzpodzc.winskersd.de>\n"
+        "From: \"Nuubu Detox\" <yzpodzc@winskersd.de>\n"
+        "To: <fake.address@example.com>\n"
+        "Subject: =?utf-8?B?MTAgbmFwb3MgbcOpcmVndGVsZW7DrXTFkSBwcm9ncmFtIE51dWJ1?=\n"
+        "Date: Thu, 20 Feb 2025 21:15:24 +0200\n"
+        "MIME-Version: 1.0\n"
+        "Content-Type: multipart/related;\n"
+        "    type=\"multipart/alternative\";\n"
+        "    boundary=\"----=_NextPart_000_0006_01DB83DC.627F1120\"\n"
+        "X-Clapf-spamicity: 4000000067b786bd1d415b6400d6955091e5\n"
+        "X-Clapf-spamicity: 1.0000\n"
+        "X-Clapf-spamicity: Yes\n";
+
+    size_t hdr_len = strlen(headers);
+
+    TestCaseStrStr tests[] = {
+       { "From:", "\"Nuubu Detox\" <yzpodzc@winskersd.de>" },
+       { "To:", "<fake.address@example.com>" },
+       { "Subject:", "10 napos méregtelenítő program Nuubu" },
+       { "Content-Type:", "multipart/related;"
+         "    type=\"multipart/alternative\";"
+         "    boundary=\"----=_NextPart_000_0006_01DB83DC.627F1120\"" },
+       { "Message-ID:", "<54064738T83184233L67511567U06028373O@id.yzpodzc.winskersd.de>" },
+       { "Received:", "from antispam.localhost (localhost [127.0.0.1])"
+         "    by mail.example.com (Postfix) with ESMTP id 8C7823ECCE"
+         "    for <bela@acts.hu>; Thu, 20 Feb 2025 20:46:59 +0100 (CET)" },
+    };
+
+    int num_tests = sizeof(tests) / sizeof(TestCaseStrStr);
+
+    for (int i = 0; i < num_tests; i++) {
+        char s[SMALLBUFSIZE];
+        snprintf(s, sizeof(s)-1, "%s", tests[i].input);
+        extract_header_value(headers, hdr_len, tests[i].input, strlen(tests[i].input), s, sizeof(s)-1);
+        ASSERT(strcmp(s, tests[i].expected) == 0, tests[i].input);
+    }
+
+    TEST_FOOTER();
+}
+
+
 int main() {
     cfg = read_config("../tests/kospam.conf");
 
@@ -440,4 +518,6 @@ int main() {
     test_is_item_on_list();
     test_count_character_in_buffer();
     test_extract_name_from_headers();
+    test_fixup_encoded_header();
+    test_extract_header_value();
 }

@@ -45,6 +45,8 @@ int parse_message(const char *message, struct parser_state *state, struct Messag
 
     state->has_image_attachment = m->has_image_attachment;
     state->has_octet_stream_attachment = m->has_octet_stream_attachment;
+    state->need_signo_check = m->need_signo_check;
+    state->found_our_signo = m->found_our_signo;
 
     return 0;
 }
@@ -220,6 +222,15 @@ int parse_eml_buffer(char *buffer, struct Message *m, struct config *cfg) {
        p += strlen(HEADER_RECEIVED);
     }
 
+    // Check for our backscatter signo
+
+    if (cfg->our_signo[0] && \
+        (strstr(m->kospam.kospam_envelope_from, "MAILER-DAEMON") || strstr(m->kospam.kospam_envelope_from, "<>"))) {
+        m->need_signo_check = true;
+        if (strstr(buffer, cfg->our_signo)) {
+           m->found_our_signo = true;
+        }
+    }
 
     if(!headers_end) return 1;
 

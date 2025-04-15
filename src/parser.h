@@ -59,6 +59,8 @@ struct Message {
     struct Body body;
     struct attachment attachments[MAX_ATTACHMENTS];
     int n_attachments;
+    bool need_signo_check;
+    bool found_our_signo;
     char has_image_attachment;
     char has_octet_stream_attachment;
 };
@@ -77,7 +79,9 @@ struct parser_state {
    char envelope_from[SMALLBUFSIZE];
    char envelope_recipient[SMALLBUFSIZE];
 
-   int found_our_signo;
+   bool need_signo_check;
+   bool found_our_signo;
+
    int training_request;
 
    char has_image_attachment;

@@ -33,7 +33,7 @@ create_pem_file() {
 }
 
 setup_cnf_file() {
-   my_cnf="/root/.my.cmf"
+   my_cnf="/root/.my.cnf"
 
    printf "[client]\nhost = %s\nuser = %s\npassword = %s\n\n[mysqldump]\nhost = %s\nuser = %s\npassword = %s\n" \
           "$MYSQL_HOSTNAME" "$MYSQL_USER" "$MYSQL_PASSWORD" "$MYSQL_HOSTNAME" "$MYSQL_USER" "$MYSQL_PASSWORD" > "$my_cnf"
@@ -80,14 +80,14 @@ fi
 wait_until_mariadb_server_is_ready
 check_database
 
+setup_cnf_file
+
 if [ -n "${MYSQL_DUMP+x}" ]; then
-   gzip -dc "$MYSQL_DUMP" | mariadb -u "$MYSQL_USER" -h "$MYSQL_HOSTNAME" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE"
+   gzip -dc "$MYSQL_DUMP" | mariadb "$MYSQL_DATABASE"
 fi
 
 /usr/sbin/kospam -d
 /usr/libexec/kospam/kospam-smtpd -daemon
 /usr/libexec/kospam/kospam-send -daemon
-
-setup_cnf_file
 
 sleep infinity

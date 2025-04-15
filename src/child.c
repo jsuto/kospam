@@ -85,8 +85,6 @@ void kill_children(int sig, char *sig_text){
 void p_clean_exit(){
    kill_children(SIGTERM, "SIGTERM");
 
-   clearhash(data.mydomains);
-
 #ifdef HAVE_TRE
    zombie_free(&data);
 #endif

@@ -194,8 +194,6 @@ int main(int argc, char **argv){
 
 CLEANUP:
    clearhash(state.token_hash);
-   clearhash(state.url);
-
    close_database(conn);
 
    return 0;

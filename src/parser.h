@@ -73,7 +73,6 @@ struct parser_state {
    char b_subject[MAXBUFSIZE];
 
    struct node *token_hash[MAXHASH];
-   struct node *url[MAXHASH];
 
    char envelope_from[SMALLBUFSIZE];
    char envelope_recipient[SMALLBUFSIZE];

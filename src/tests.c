@@ -326,7 +326,6 @@ void test_generate_tokens_from_string() {
         ASSERT(strcmp(s, tests[i].expected) == 0, tests[i].input);
 
         clearhash(state.token_hash);
-        clearhash(state.url);
     }
 
     TEST_FOOTER();

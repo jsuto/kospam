@@ -21,7 +21,6 @@ void init_state(struct parser_state *state){
    state->trapped = false;
 
    inithash(state->token_hash);
-   inithash(state->url);
 }
 
 int parse_message(const char *message, struct parser_state *state, struct Message *m) {

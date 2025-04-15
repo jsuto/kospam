@@ -42,7 +42,7 @@ void process_email(char *filename, MYSQL *conn, int size){
    struct Message m;
 
    gettimeofday(&tv1, &tz);
-   parse_message(filename, &parser_state, &m);
+   parse_message(filename, &parser_state, &m, &cfg);
    post_parse(&parser_state, &m, &cfg);
    gettimeofday(&tv2, &tz);
    sdata.__parsed = tvdiff(tv2, tv1);

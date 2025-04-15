@@ -158,8 +158,28 @@ int main(int argc, char **argv){
 
    struct Message m;
 
-   parse_message(message, &state, &m);
+   parse_message(message, &state, &m, &cfg);
    post_parse(&state, &m, &cfg);
+
+   if (cfg.debug == 1) {
+        printf("From: %s\n", m.header.from);
+        printf("Message-ID: %s\n", m.header.message_id);
+        printf("Subject: %s\n", m.header.subject);
+        printf("Content-type: %s\n", m.header.content_type);
+        printf("Content-Transfer-Encoding: %s\n", m.header.content_encoding);
+        printf("Received: %s\n", m.header.received);
+        printf("Kospam-Envelope-From: %s\n", m.kospam.kospam_envelope_from);
+        printf("Kospam-Envelope-Recipient: %s\n", m.kospam.kospam_envelope_recipient);
+        printf("Kospam-Xforward: %s\n", m.kospam.kospam_xforward);
+
+        for(int i=0; i < m.n_attachments; i++){
+            printf("i=%d, name=%s, type=%s, size=%ld, digest=%s\n",
+                   i, m.attachments[i].filename, m.attachments[i].type,
+                   m.attachments[i].size, m.attachments[i].digest);
+        }
+
+        printf("\n\nBODY: %s\n", m.body.data);
+    }
 
    if(show_tokens == 1){
       printhash(state.token_hash);

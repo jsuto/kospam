@@ -96,6 +96,7 @@ struct _parse_rule config_parse_rules[] =
    { "possible_spam_limit", "float", (void*) float_parser, offsetof(struct config, possible_spam_limit), "0.8", sizeof(float)},
    { "possible_spam_subject_prefix", "string", (void*) string_parser, offsetof(struct config, possible_spam_subject_prefix), "", MAXVAL-1},
    { "quarantinedir", "string", (void*) string_parser, offsetof(struct config, quarantinedir), QUARANTINE_DIR, MAXVAL-1},
+   { "received_lines_to_skip", "integer", (void*) int_parser, offsetof(struct config, received_lines_to_skip), "0", sizeof(int)},
    { "replace_junk_characters", "integer", (void*) int_parser, offsetof(struct config, replace_junk_characters), "1", sizeof(int)},
    { "rob_s", "float", (void*) float_parser, offsetof(struct config, rob_s), "1.0", sizeof(float)},
    { "rob_x", "float", (void*) float_parser, offsetof(struct config, rob_x), "0.52", sizeof(float)},

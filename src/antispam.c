@@ -89,14 +89,14 @@ int check_spam(struct session_data *sdata, MYSQL *conn, struct parser_state *sta
     */
 
    if (check_email_against_list(conn, SQL_WHITE_LIST, state->envelope_from)) {
-      syslog(LOG_PRIORITY, "%s: sender (%s) found on whitelist", sdata->ttmpfile, state->envelope_from);
+      syslog(LOG_PRIORITY, "INFO: %s: sender (%s) found on whitelist", sdata->ttmpfile, state->envelope_from);
       return OK;
    }
 
 
    if (check_email_against_list(conn, SQL_BLACK_LIST, state->envelope_from)) {
       sdata->spaminess = 0.99;
-      syslog(LOG_PRIORITY, "%s: sender (%s) found on blacklist", sdata->ttmpfile, state->envelope_from);
+      syslog(LOG_PRIORITY, "INFO: %s: sender (%s) found on blacklist", sdata->ttmpfile, state->envelope_from);
       return DISCARD;
    }
 

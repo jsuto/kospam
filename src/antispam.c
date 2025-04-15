@@ -25,7 +25,6 @@ void add_penalties(struct session_data *sdata, struct parser_state *state, struc
 
 
 int check_spam(struct session_data *sdata, MYSQL *conn, struct parser_state *state, struct data *data, struct config *cfg){
-   char tmpbuf[SMALLBUFSIZE];
    struct timezone tz;
    struct timeval tv1, tv2;
 
@@ -53,9 +52,8 @@ int check_spam(struct session_data *sdata, MYSQL *conn, struct parser_state *sta
     * skip the antispam engine if the email comes from mynetwork
     */
 
-   // TODO
    if(sdata->mynetwork == 1){
-      if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: mynetwork: %s", sdata->ttmpfile, state->ip);
+      if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "INFO: %s: mynetwork: %s", sdata->ttmpfile, state->ip);
       return MESSAGE_OK;
    }
 
@@ -111,40 +109,16 @@ int check_spam(struct session_data *sdata, MYSQL *conn, struct parser_state *sta
    }
 
 
-   /*
-    * if the From: line contains any of our domain names listed in mydomains
-    * and we are absolutely sure that no valid email comes from outside with
-    * our domainname in the email header From: line, then we can condemn the
-    * message.
-    */
+   // Don't run spam check if we found our signo in the bounced message
 
-   // TODO
-   if(sdata->from_address_in_mydomain == 1 && cfg->mydomains_from_outside_is_spam == 1){
-      sdata->spaminess = 0.99;
-      if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: %s matches %s", sdata->ttmpfile, state->from, cfg->mydomains);
+   if (state->need_signo_check == 1 && state->found_our_signo == 1) {
+      syslog(LOG_PRIORITY, "INFO: %s: bounce message, found our signo", sdata->ttmpfile);
       return MESSAGE_OK;
    }
 
 
-   /*
-    * some MTAs strip our signo from the bounce. So if we would raise the spaminess
-    * then we may commit a false positive. Thus in case of a missing signo, let
-    * the statistical analysis decide the fate of a dummy bounce message. 2009.01.20, SJ
-    */
 
-   // TODO
-   if(sdata->need_signo_check == 1){
-      if(state->found_our_signo == 1){
-         syslog(LOG_PRIORITY, "%s: bounce message, found our signo", sdata->ttmpfile);
-         return MESSAGE_OK;
-      }
-      else
-         syslog(LOG_PRIORITY, "%s: looks like a bounce, but our signo is missing", sdata->ttmpfile);
-   }
-
-
-
-   if(cfg->use_antispam == 1 && (cfg->max_message_size_to_filter == 0 || sdata->tot_len < cfg->max_message_size_to_filter || state->n_token < cfg->max_number_of_tokens_to_filter) ){
+   if (cfg->max_message_size_to_filter == 0 || sdata->tot_len < cfg->max_message_size_to_filter) {
 
       if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: running statistical test", sdata->ttmpfile);
 
@@ -167,6 +141,7 @@ int check_spam(struct session_data *sdata, MYSQL *conn, struct parser_state *sta
       }
 
       // TODO: revise if we could replace strncat
+      char tmpbuf[SMALLBUFSIZE];
       snprintf(tmpbuf, SMALLBUFSIZE-1, "%s%.4f\r\n", cfg->clapf_header_field, sdata->spaminess);
       strncat(sdata->spaminessbuf, tmpbuf, spaminessbuf_size_left);
       spaminessbuf_size_left -= strlen(tmpbuf);

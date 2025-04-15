@@ -114,10 +114,8 @@ struct session_data {
    char spaminessbuf[MAXBUFSIZE];
    unsigned int status;
    int trapped_client;
-   int from_address_in_mydomain;
    int tot_len;
    int statistically_whitelisted;
-   int need_scan, need_signo_check;
    int blackhole;
    int mynetwork;
    float __parsed, __user, __training, __update, __as, __minefield;
@@ -132,7 +130,6 @@ struct data {
    int n_regex;
    regex_t pregs[NUM_OF_REGEXES];
 #endif
-   struct node *mydomains[MAXHASH];
 };
 
 

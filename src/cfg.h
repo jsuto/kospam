@@ -12,9 +12,6 @@ struct config {
 
    char hostname[MAXVAL];
 
-   int server_id;
-   int server_mode;
-
    char pidfile[MAXVAL];
 
    char listen_addr[MAXVAL];
@@ -23,17 +20,11 @@ struct config {
 
    int tls_enable;
    char pemfile[MAXVAL];
-   char cipher_list[MAXVAL];
 
    char mynetwork[MAXVAL];
 
-   char memcached_servers[MAXVAL];
-   int memcached_ttl;
-
    int number_of_worker_processes;
    int max_requests_per_child;
-
-   int backlog;
 
    char workdir[MAXVAL];
    char quarantinedir[MAXVAL];
@@ -43,12 +34,8 @@ struct config {
    int verbosity;
    char locale[MAXVAL];
 
-   int helper_timeout;
-
    char spam_subject_prefix[MAXVAL];
    char possible_spam_subject_prefix[MAXVAL];
-
-   int default_retention_days;
 
    // mysql stuff
 
@@ -61,25 +48,13 @@ struct config {
    int mysql_connect_timeout;
 
    int update_tokens;
-   int update_counters_to_memcached;
-   int memcached_to_db_interval;
 
    int min_word_len;
    int max_word_len;
 
-   int enable_cjk;
-
    // training
 
    int training_mode;
-   int group_type;
-   int initial_1000_learning;
-
-   int store_emails;
-   int store_only_spam;
-
-   int invalid_junk_limit;
-   int invalid_junk_line;
 
    int penalize_images;
    int penalize_embed_images;
@@ -117,23 +92,13 @@ struct config {
 
    char blackhole_email_list[MAXVAL];
 
-   int replace_junk_characters;
-
    int message_from_a_zombie;
-
-   int use_antispam;
-   int use_antivirus;
 
    int log_subject;
 
    char our_signo[MAXVAL];
    char skipped_received_ips[MAXVAL];
    int received_lines_to_skip;
-
-   char maillog[MAXVAL];
-
-   char mydomains[2*MAXVAL];
-   int mydomains_from_outside_is_spam;
 
    char enable_xforward[MAXVAL];
 

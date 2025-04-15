@@ -47,9 +47,6 @@ void process_email(char *filename, MYSQL *conn, int size){
    gettimeofday(&tv2, &tz);
    sdata.__parsed = tvdiff(tv2, tv1);
 
-   // TODO: If the email was bounced back from a remote server's MAILER-DAEMON then check our signo
-   // if((strstr(sdata.mailfrom, "MAILER-DAEMON") || strstr(sdata.mailfrom, "<>")) && strlen(cfg->our_signo) > 3) sdata.need_signo_check = 1;
-
    if (cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "DEBUG: %s: hostname=%s, ip=%s", sdata.ttmpfile, parser_state.hostname, parser_state.ip);
 
    // TODO: virus check
@@ -265,10 +262,6 @@ void initialise_configuration(){
 
    setlocale(LC_MESSAGES, cfg.locale);
    setlocale(LC_CTYPE, cfg.locale);
-
-   clearhash(data.mydomains);
-
-   inithash(data.mydomains);
 
 #ifdef HAVE_TRE
    zombie_init(&data, &cfg);

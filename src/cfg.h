@@ -8,37 +8,27 @@
 #include "config.h"
 
 struct config {
-   char username[MAXVAL];
-
-   char hostname[MAXVAL];
-
-   char pidfile[MAXVAL];
-
-   char listen_addr[MAXVAL];
-
-   char smtp_addr[MAXVAL];
-
-   int tls_enable;
-   char pemfile[MAXVAL];
-
-   char mynetwork[MAXVAL];
-
-   int number_of_worker_processes;
-   int max_requests_per_child;
-
-   char workdir[MAXVAL];
-   char quarantinedir[MAXVAL];
-
+   char blackhole_email_list[MAXVAL];
+   char clapf_header_field[MAXVAL];
+   char clapf_spam_header_field[MAXVAL];
+   int debug;
+   char enable_xforward[MAXVAL];
+   float esf_h;
+   float esf_s;
+   float exclusion_radius;
    int history;
-
-   int verbosity;
+   char hostname[MAXVAL];
+   char listen_addr[MAXVAL];
    char locale[MAXVAL];
-
-   char spam_subject_prefix[MAXVAL];
-   char possible_spam_subject_prefix[MAXVAL];
-
-   // mysql stuff
-
+   int log_subject;
+   float max_ham_spamicity;
+   int max_line_len;
+   int max_message_size_to_filter;
+   int max_requests_per_child;
+   int max_word_len;
+   int message_from_a_zombie;
+   int min_word_len;
+   char mynetwork[MAXVAL];
    char mysqlhost[MAXVAL];
    int mysqlport;
    char mysqlsocket[MAXVAL];
@@ -46,63 +36,28 @@ struct config {
    char mysqlpwd[MAXVAL];
    char mysqldb[MAXVAL];
    int mysql_connect_timeout;
-
-   int update_tokens;
-
-   int min_word_len;
-   int max_word_len;
-
-   // training
-
-   int training_mode;
-
-   int penalize_images;
+   int number_of_worker_processes;
+   char our_signo[MAXVAL];
    int penalize_embed_images;
+   int penalize_images;
    int penalize_octet_stream;
-
-   int max_number_of_recipients_in_ham;
-
-   float max_ham_spamicity;
-
-   float spam_overall_limit;
-   float spaminess_oblivion_limit;
+   char pemfile[MAXVAL];
+   char pidfile[MAXVAL];
    float possible_spam_limit;
-
-   char clapf_header_field[MAXVAL];
-   char clapf_spam_header_field[MAXVAL];
-
-   int max_message_size_to_filter;
-   int max_number_of_tokens_to_filter;
-   int max_line_len;
-
-   char rbl_domain[MAXVAL];
-   char surbl_domain[MAXVAL];
-
+   char possible_spam_subject_prefix[MAXVAL];
+   char quarantinedir[MAXVAL];
+   int received_lines_to_skip;
    float rob_s;
    float rob_x;
-   float esf_h;
-   float esf_s;
-
-   float exclusion_radius;
-
-   int silently_discard_infected_email;
-   int deliver_infected_email;
-
-   int surbl_condemns_the_message;
-
-   char blackhole_email_list[MAXVAL];
-
-   int message_from_a_zombie;
-
-   int log_subject;
-
-   char our_signo[MAXVAL];
    char skipped_received_ips[MAXVAL];
-   int received_lines_to_skip;
-
-   char enable_xforward[MAXVAL];
-
-   int debug;
+   char smtp_addr[MAXVAL];
+   float spam_overall_limit;
+   float spaminess_oblivion_limit;
+   char spam_subject_prefix[MAXVAL];
+   int update_tokens;
+   char username[MAXVAL];
+   int verbosity;
+   char workdir[MAXVAL];
 };
 
 

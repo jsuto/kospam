@@ -110,7 +110,6 @@ struct rule {
 
 struct session_data {
    char ttmpfile[SMALLBUFSIZE];
-   char whitelist[MAXBUFSIZE], blacklist[MAXBUFSIZE];
    char spaminessbuf[MAXBUFSIZE];
    unsigned int status;
    int trapped_client;

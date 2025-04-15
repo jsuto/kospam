@@ -13,8 +13,6 @@ void usage(){
    printf("\nusage: spamdrop\n\n");
    printf("    [-c|--config <config file>]\n");
    printf("    [-m|--message <EML file>]\n");
-   printf("    [-f|--from <from address>]\n");
-   printf("    [-r|--recipient <recipient address>]\n");
    printf("    [-H|--ham]\n");
    printf("    [-S|--spam]\n");
    printf("    [-D|--debug]\n");
@@ -31,8 +29,6 @@ int main(int argc, char **argv){
    int show_tokens=0;
    char *configfile=CONFIG_FILE;
    char *message=NULL;
-   char *from=NULL;
-   //char *recipient=NULL;
    struct stat st;
    struct session_data sdata;
    struct parser_state state;
@@ -46,8 +42,6 @@ int main(int argc, char **argv){
       static struct option long_options[] =
          {
             {"config",       required_argument,  0,  'c' },
-            {"from",         required_argument,  0,  'f' },
-            {"recipient",    required_argument,  0,  'r' },
             {"message",      required_argument,  0,  'm' },
             {"ham",          no_argument,        0,  'H' },
             {"spam",         no_argument,        0,  'S' },
@@ -60,9 +54,9 @@ int main(int argc, char **argv){
 
       int option_index = 0;
 
-      c = getopt_long(argc, argv, "c:u:U:f:r:m:HStDv?", long_options, &option_index);
+      c = getopt_long(argc, argv, "c:u:U:m:HStDv?", long_options, &option_index);
 #else
-      c = getopt(argc, argv, "c:u:U:f:r:m:HStDv?");
+      c = getopt(argc, argv, "c:u:U:m:HStDv?");
 #endif
 
       if(c == -1) break;
@@ -71,14 +65,6 @@ int main(int argc, char **argv){
 
          case 'c' :
                     configfile = optarg;
-                    break;
-
-         case 'f' :
-                    from = optarg;
-                    break;
-
-         case 'r' :
-                    //recipient = optarg;
                     break;
 
          case 'S' :
@@ -150,11 +136,6 @@ int main(int argc, char **argv){
 
    snprintf(sdata.ttmpfile, SMALLBUFSIZE-1, "%s", message);
 
-   if(is_item_on_list(from, sdata.whitelist)){
-      if(cfg.debug == 1) printf(" '%s' found on '%s'\n", from, sdata.whitelist);
-   }
-
-   if(cfg.debug == 1) printf("parsing...\n");
 
    struct Message m;
 

@@ -401,6 +401,7 @@ void test_count_character_in_buffer() {
     TEST_FOOTER();
 }
 
+
 void test_extract_name_from_headers() {
     TEST_HEADER();
 
@@ -420,6 +421,7 @@ void test_extract_name_from_headers() {
 
     TEST_FOOTER();
 }
+
 
 void test_fixup_encoded_header() {
     TEST_HEADER();
@@ -443,6 +445,7 @@ void test_fixup_encoded_header() {
 
     TEST_FOOTER();
 }
+
 
 void test_extract_header_value() {
     TEST_HEADER();

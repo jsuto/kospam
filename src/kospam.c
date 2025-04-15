@@ -58,7 +58,7 @@ void process_email(char *filename, MYSQL *conn, int size){
    //sdata->rav = check_for_known_bad_attachments(sdata, &parser_state);
    //if(sdata->rav == AVIR_VIRUS) snprintf(virusinfo, sizeof(virusinfo)-1, "MARKED.AS.MALWARE");
 
-   if (is_item_on_list(parser_state.ip, cfg.mynetwork)) {
+   if (cfg.mynetwork[0] && is_item_on_list(parser_state.ip, cfg.mynetwork)) {
        syslog(LOG_PRIORITY, "%s: client ip (%s) on mynetwork", sdata.ttmpfile, parser_state.ip);
        sdata.mynetwork = 1;
    }
@@ -74,7 +74,7 @@ void process_email(char *filename, MYSQL *conn, int size){
    }
 
 
-   check_spam(&sdata, conn, &parser_state, &data, &cfg);
+   int spamresult = check_spam(&sdata, conn, &parser_state, &data, &cfg);
 
    char status[SMALLBUFSIZE];
 
@@ -96,19 +96,23 @@ void process_email(char *filename, MYSQL *conn, int size){
          else if(sdata.spaminess < cfg.possible_spam_limit && sdata.spaminess > cfg.max_ham_spamicity) counters.c_unsure++;
       }
 
-      // Modify message, and add our headers
+      if (spamresult == MESSAGE_OK) {
+         // Modify message, and add our headers
+         fix_message_file(&sdata, &cfg);
 
-      fix_message_file(&sdata, &cfg);
+         // Move message to send dir
 
-      // Move message to send dir
+         char tmpbuf[SMALLBUFSIZE];
+         snprintf(tmpbuf, sizeof(tmpbuf)-1, "%s/%s", SEND_DIR, sdata.ttmpfile);
 
-      char tmpbuf[SMALLBUFSIZE];
-      snprintf(tmpbuf, sizeof(tmpbuf)-1, "%s/%s", SEND_DIR, sdata.ttmpfile);
-
-      if (rename(filename, tmpbuf)) {
-         syslog(LOG_PRIORITY, "ERROR: failed to rename %s to %s", filename, tmpbuf);
+         if (rename(filename, tmpbuf)) {
+            syslog(LOG_PRIORITY, "ERROR: failed to rename %s to %s", filename, tmpbuf);
+         }
+      } else {
+         // Discard the message
+         snprintf(status, sizeof(status)-1, "DISCARDED");
+         unlink(filename);
       }
-
    }
    else {
       snprintf(status, sizeof(status)-1, "TRAIN");

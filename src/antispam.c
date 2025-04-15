@@ -40,37 +40,12 @@ int check_spam(struct session_data *sdata, MYSQL *conn, struct parser_state *sta
     */
 
    if(state->training_request == 1){
-
-      /* get user from 'MAIL FROM:', 2008.10.25, SJ */
-
-      /*gettimeofday(&tv1, &tz);
-      get_user_data_from_email(sdata, state->envelope_from, cfg);
-      gettimeofday(&tv2, &tz);
-      sdata->__user += tvdiff(tv2, tv1);*/
-
-      /*
-       * If not found, then try to get it from the RCPT TO address.
-       *
-       * This may happen if your email address is xy@mail.domain.com,
-       * but xy@domain.com is set in your email client application as
-       * your email address.
-       * In this case send training emails to xy+spam@mail.domain.com
-       */
-
-      /*if(sdata->name[0] == 0){
-         gettimeofday(&tv1, &tz);
-         get_user_data_from_email(sdata, state->envelope_recipient, cfg);
-         gettimeofday(&tv2, &tz);
-         sdata->__user += tvdiff(tv2, tv1);
-      }*/
-
-      // FIXME:
       gettimeofday(&tv1, &tz);
       do_training(sdata, state, conn, cfg);
       gettimeofday(&tv2, &tz);
       sdata->__training += tvdiff(tv2, tv1);
 
-      return DISCARD;
+      return MESSAGE_DISCARD;
    }
 
 
@@ -78,9 +53,10 @@ int check_spam(struct session_data *sdata, MYSQL *conn, struct parser_state *sta
     * skip the antispam engine if the email comes from mynetwork
     */
 
+   // TODO
    if(sdata->mynetwork == 1){
       if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: mynetwork: %s", sdata->ttmpfile, state->ip);
-      return OK;
+      return MESSAGE_OK;
    }
 
 
@@ -90,15 +66,15 @@ int check_spam(struct session_data *sdata, MYSQL *conn, struct parser_state *sta
 
    if (check_email_against_list(conn, SQL_WHITE_LIST, state->envelope_from)) {
       sdata->spaminess = 0.01;
-      syslog(LOG_PRIORITY, "INFO: %s: sender (%s) found on whitelist", sdata->ttmpfile, state->envelope_from);
-      return OK;
+      syslog(LOG_PRIORITY, "INFO: %s: sender %s found on whitelist", sdata->ttmpfile, state->envelope_from);
+      return MESSAGE_OK;
    }
 
 
    if (check_email_against_list(conn, SQL_BLACK_LIST, state->envelope_from)) {
       sdata->spaminess = 0.99;
-      syslog(LOG_PRIORITY, "INFO: %s: sender (%s) found on blacklist", sdata->ttmpfile, state->envelope_from);
-      return DISCARD;
+      syslog(LOG_PRIORITY, "INFO: %s: sender %s found on blacklist", sdata->ttmpfile, state->envelope_from);
+      return MESSAGE_OK;
    }
 
 
@@ -123,31 +99,16 @@ int check_spam(struct session_data *sdata, MYSQL *conn, struct parser_state *sta
          sdata->spaminess = 0.99;
 
          if(cfg->message_from_a_zombie == 1){
-            syslog(LOG_PRIORITY, "%s: marking message from a zombie as spam", sdata->ttmpfile);
-            return OK;
+            syslog(LOG_PRIORITY, "INFO: %s: marking message from a zombie as spam", sdata->ttmpfile);
+            return MESSAGE_OK;
          }
 
          if(cfg->message_from_a_zombie == 2){
-            syslog(LOG_PRIORITY, "%s: dropping message from a zombie (%s) as spam", sdata->ttmpfile, state->hostname);
-            return DISCARD;
+            syslog(LOG_PRIORITY, "INFO: %s: dropping message from a zombie (%s) as spam", sdata->ttmpfile, state->hostname);
+            return MESSAGE_DISCARD;
          }
       }
    }
-
-
-   /*
-    * sometimes spammers try to send their crap in very few smtp sessions
-    * including lots of recipients in a single smtp session.
-    * If the spammer included at least max_number_of_recipients_in_ham+1 recipients
-    * in the RCPT TO commands, mark his messages as spam
-    */
-
-    // FIXME
-    /*if(sdata->num_of_rcpt_to > my_cfg->max_number_of_recipients_in_ham){
-       sdata->spaminess = 0.99;
-       if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: marking message for %s as spam, reason: too many recipients (%d/%d)", sdata->ttmpfile, state->envelope_recipient, sdata->num_of_rcpt_to, my_cfg->max_number_of_recipients_in_ham);
-       return OK;
-    }*/
 
 
    /*
@@ -157,10 +118,11 @@ int check_spam(struct session_data *sdata, MYSQL *conn, struct parser_state *sta
     * message.
     */
 
+   // TODO
    if(sdata->from_address_in_mydomain == 1 && cfg->mydomains_from_outside_is_spam == 1){
       sdata->spaminess = 0.99;
       if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: %s matches %s", sdata->ttmpfile, state->from, cfg->mydomains);
-      return OK;
+      return MESSAGE_OK;
    }
 
 
@@ -170,10 +132,11 @@ int check_spam(struct session_data *sdata, MYSQL *conn, struct parser_state *sta
     * the statistical analysis decide the fate of a dummy bounce message. 2009.01.20, SJ
     */
 
+   // TODO
    if(sdata->need_signo_check == 1){
       if(state->found_our_signo == 1){
          syslog(LOG_PRIORITY, "%s: bounce message, found our signo", sdata->ttmpfile);
-         return OK;
+         return MESSAGE_OK;
       }
       else
          syslog(LOG_PRIORITY, "%s: looks like a bounce, but our signo is missing", sdata->ttmpfile);
@@ -203,6 +166,7 @@ int check_spam(struct session_data *sdata, MYSQL *conn, struct parser_state *sta
          syslog(LOG_PRIORITY, "%s: training on a blackhole message", sdata->ttmpfile);
       }
 
+      // TODO: revise if we could replace strncat
       snprintf(tmpbuf, SMALLBUFSIZE-1, "%s%.4f\r\n", cfg->clapf_header_field, sdata->spaminess);
       strncat(sdata->spaminessbuf, tmpbuf, spaminessbuf_size_left);
       spaminessbuf_size_left -= strlen(tmpbuf);
@@ -227,5 +191,5 @@ int check_spam(struct session_data *sdata, MYSQL *conn, struct parser_state *sta
 
    chop_newlines(sdata->spaminessbuf, strlen(sdata->spaminessbuf));
 
-   return OK;
+   return MESSAGE_OK;
 }

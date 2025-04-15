@@ -38,15 +38,13 @@ void qry_spaminess(struct session_data *sdata, struct parser_state *state, char 
 
 
 double evaluate_tokens(struct session_data *sdata, struct parser_state *state, struct config *cfg){
-   int n_tokens=0, surbl_hit=0;
+   int n_tokens=0;
    float spaminess=DEFAULT_SPAMICITY;
-   //int has_embed_image=0;
 
    if(cfg->debug == 1) printf("num of tokens: %d\n", state->n_token);
 
    if(cfg->penalize_embed_images == 1 && findnode(state->token_hash, "src+cid")){
       addnode(state->token_hash, "EMBED*", REAL_SPAM_TOKEN_PROBABILITY, DEVIATION(REAL_SPAM_TOKEN_PROBABILITY));
-      //has_embed_image = 1;
    }
 
 
@@ -77,15 +75,8 @@ double evaluate_tokens(struct session_data *sdata, struct parser_state *state, s
 
    /* if we are still unsure, consult blacklists */
 
-   //surbl_hit = check_rbl_lists(state, cfg->surbl_domain);
-
    spaminess = get_spam_probability(state->token_hash, &n_tokens, cfg);
    if(cfg->debug == 1) printf("mix after blacklists: %.4f\n", spaminess);
-
-
-   if(spaminess > cfg->max_ham_spamicity && spaminess < cfg->spam_overall_limit){
-      if(surbl_hit > 0) spaminess = 0.99;
-   }
 
 
 END_OF_EVALUATION:

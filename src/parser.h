@@ -73,7 +73,6 @@ struct parser_state {
    char b_subject[MAXBUFSIZE];
 
    struct node *token_hash[MAXHASH];
-   struct node *url[MAXHASH];
 
    char envelope_from[SMALLBUFSIZE];
    char envelope_recipient[SMALLBUFSIZE];
@@ -103,7 +102,7 @@ int base64_decode(char *input);
 void decodeQP(char *p);
 char *decode_mime_encoded_words(const char *input);
 void extract_header_value(const char *buffer, int buffer_len, const char *header_name, int header_name_len, char *result, size_t resultbuflen);
-void extract_name_from_header_line(char *buffer, char *name, char *resultbuf, int resultbuflen);
+void extract_token_from_header_line(char *buffer, char *name, char *resultbuf, int resultbuflen);
 void extract_name_from_headers(char *buf, char *resultbuf, size_t resultlen);
 char *find_boundary(const char *buffer);
 void fixup_encoded_header(char *buf, int buflen);

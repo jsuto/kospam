@@ -21,6 +21,8 @@ void fixup_encoded_header(char *buf, int buflen){
    while(q) {
       q = split(q, ' ', v, sizeof(v), &result);
 
+      chop_newlines(v, strlen(v));
+
       char *p = v;
 
       do {
@@ -35,6 +37,11 @@ void fixup_encoded_header(char *buf, int buflen){
           *
           * And we have to check the following cases as well:
           *    Happy New Year! =?utf-8?q?=F0=9F=8E=86?=
+          *
+          * multi line Subject:
+          *
+          * =?utf-8?Q?=C3=81ram=C3=BCgyint=C3=A9z=C3=A9s_=C3=BAj_online_=C3=BCgyf?=
+          *  =?utf-8?Q?=C3=A9lszolg=C3=A1laton_=C3=A9s_applik=C3=A1ci=C3=B3ban!?="
           */
 
          int b64=0, qp=0;
@@ -235,18 +242,10 @@ void extract_header_value(const char *buffer, int buffer_len, const char *header
 }
 
 
-void extract_name_from_header_line(char *buffer, char *name, char *resultbuf, int resultbuflen) {
+void extract_token_from_header_line(char *buffer, char *name, char *resultbuf, int resultbuflen) {
    char buf[SMALLBUFSIZE], *p, *q;
 
    snprintf(buf, sizeof(buf)-1, "%s", buffer);
-
-   p = strstr(buf, "\n\r\n");
-   if(p) {
-      *p = '\0';
-   } else {
-      p = strstr(buf, "\n\n");
-      if (p) *p = '\0';
-   }
 
    memset(resultbuf, 0, resultbuflen);
 
@@ -336,8 +335,8 @@ void extract_name_from_headers(char *buf, char *resultbuf, size_t resultlen) {
     char *p = strcasestr(buf, HEADER_CONTENT_DISPOSITION);
 
     if (p) {
-        extract_name_from_header_line(p, "name", resultbuf, resultlen-1);
+        extract_token_from_header_line(p, "name", resultbuf, resultlen-1);
     } else {
-        extract_name_from_header_line(buf, "name", resultbuf, resultlen-1);
+        extract_token_from_header_line(buf, "name", resultbuf, resultlen-1);
     }
 }

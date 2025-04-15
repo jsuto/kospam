@@ -73,5 +73,10 @@
 #define S_HAM 0
 #define S_SPAM 1
 
+#define ERR_CHDIR "ERROR: chdir() to working directory failed"
+#define ERR_DAEMON "ERROR: daemon()"
+#define ERR_NON_EXISTENT_USER "ERROR: non existent user in config file, see the 'username' variable"
+#define ERR_SETUID "ERROR: setuid()"
+#define ERR_SQL_DATA "ERROR: no valid data from sql table"
 
 #endif /* _CONFIG_H */

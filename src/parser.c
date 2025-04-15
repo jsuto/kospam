@@ -21,7 +21,6 @@ void init_state(struct parser_state *state){
    state->trapped = false;
 
    inithash(state->token_hash);
-   inithash(state->url);
 }
 
 int parse_message(const char *message, struct parser_state *state, struct Message *m) {
@@ -332,7 +331,7 @@ void extract_mime_parts(char *body, const char *boundary, struct Message *m) {
 
          if (content_type[0]) {
             snprintf(part_content_type_buf, sizeof(part_content_type_buf)-1, "%s", content_type);
-            extract_name_from_header_line(content_type, "charset", charset, sizeof(charset));
+            extract_token_from_header_line(content_type, "charset", charset, sizeof(charset));
          }
 
          if (content_type[0] && strcasestr(content_type, "multipart/")) {

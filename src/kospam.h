@@ -36,8 +36,6 @@
 #include <hash.h>
 #include <chi.h>
 #include <parser.h>
-#include <errmsg.h>
-#include <users.h>
 #include <child.h>
 #include <cfg.h>
 #include <config.h>
@@ -59,11 +57,8 @@ void zombie_init(struct data *data, struct config *cfg);
 void check_zombie_sender(struct parser_state *state, struct data *data, struct config *cfg);
 void zombie_free(struct data *data);
 
-int check_for_known_bad_attachments(struct session_data *sdata, struct parser_state *state);
 int check_spam(struct session_data *sdata, MYSQL *conn, struct parser_state *state, struct data *data, struct config *cfg);
 void add_penalties(struct session_data *sdata, struct parser_state *state, struct config *cfg);
-
-int check_rbl_lists(struct parser_state *state, char *domainlist);
 
 uint64 xxh3_64(const void *data);
 

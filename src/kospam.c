@@ -116,7 +116,6 @@ void process_email(char *filename, MYSQL *conn, int size){
    }
 
    clearhash(parser_state.token_hash);
-   clearhash(parser_state.url);
 
    char delay[SMALLBUFSIZE];
    float total = sdata.__parsed+sdata.__user+sdata.__minefield+sdata.__as+sdata.__training+sdata.__update;

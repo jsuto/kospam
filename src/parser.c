@@ -239,15 +239,14 @@ int parse_eml_buffer(char *buffer, struct Message *m, struct config *cfg) {
     char *body = headers_end + body_offset;
     // multipart?
     if (m->header.content_type[0] && strstr(m->header.content_type, "multipart/")) {
-       char *boundary = find_boundary(m->header.content_type);
-
-       if (!boundary) return 1; // TODO: error handling
+       char boundary[SMALLBUFSIZE];
+       if(!find_boundary(m->header.content_type, boundary, sizeof(boundary))) {
+          return 1; // TODO: error handling
+       }
 
        extract_mime_parts(body, boundary, m, cfg);
-
-       free(boundary);
-
-    } else {
+    }
+    else {
        // Not multipart, no boundary
 
        // Check if we need to decode
@@ -339,13 +338,10 @@ void extract_mime_parts(char *body, const char *boundary, struct Message *m, str
          }
 
          if (content_type[0] && strcasestr(content_type, "multipart/")) {
-            char *boundary = find_boundary(content_type);
-
-            if (!boundary) return; // TODO: error handling
+            char boundary[SMALLBUFSIZE];
+            if (!find_boundary(content_type, boundary, sizeof(boundary))) return; // TODO: error handling
 
             extract_mime_parts(part_body, boundary, m, cfg);
-
-            free(boundary);
          }
          else {
             char c = *part_body;
@@ -479,12 +475,21 @@ void extract_mime_parts(char *body, const char *boundary, struct Message *m, str
 }
 
 
-char *find_boundary(const char *buffer) {
+int find_boundary(const char *buffer, char *result, size_t resultlen) {
+    memset(result, 0, resultlen);
 
     const char *boundary = strstr(buffer, "boundary");
-    if (!boundary) return NULL;
+    if (!boundary) return 0;
 
     boundary += strlen("boundary");
+
+    // I've seen an idiot spammer using the following boundary definition in the header:
+    //
+    // Content-Type: multipart/alternative; boundary=3D"b1_52b92b01a943615aff28b7f4d2f2d69d"
+    //
+    if (!strncmp(boundary, "=3D", 3)) {
+        boundary += 3;
+    }
 
     // what if boundary = "..." instead of boundary="..."
 
@@ -492,30 +497,24 @@ char *find_boundary(const char *buffer) {
     if (*boundary == '=') boundary++;
     while (isspace(*boundary)) boundary++;
 
-    // Check if boundary is quoted
+    const char *end;
+
     if (*boundary == '"') {
+        // Quoted boundary
         boundary++;
-        const char *end = strchr(boundary, '"');
-        if (!end) return NULL;
-
-        size_t len = end - boundary;
-        char *result = (char *)malloc(len + 1);
-        if (!result) return NULL;
-
-        memcpy(result, boundary, len);
-        result[len] = '\0';
-        return result;
-    } else {
-        // Unquoted boundary
-        const char *end = boundary;
-        while (*end && !isspace(*end) && *end != ';') end++;
-
-        size_t len = end - boundary;
-        char *result = (char *)malloc(len + 1);
-        if (!result) return NULL;
-
-        memcpy(result, boundary, len);
-        result[len] = '\0';
-        return result;
+        end = strchr(boundary, '"');
+        if (!end) return 0;
     }
+    else {
+        // Unquoted boundary
+        end = boundary;
+        while (*end && !isspace(*end) && *end != ';') end++;
+    }
+
+    size_t len = end - boundary;
+
+    if (len > resultlen - 1) len = resultlen - 1;
+    memcpy(result, boundary, len);
+
+    return 1;
 }

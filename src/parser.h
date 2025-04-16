@@ -108,7 +108,7 @@ char *decode_mime_encoded_words(const char *input);
 void extract_header_value(const char *buffer, int buffer_len, const char *header_name, int header_name_len, char *result, size_t resultbuflen);
 void extract_token_from_header_line(char *buffer, char *name, char *resultbuf, int resultbuflen);
 void extract_name_from_headers(char *buf, char *resultbuf, size_t resultlen);
-char *find_boundary(const char *buffer);
+int find_boundary(const char *buffer, char *result, size_t resultlen);
 void fixup_encoded_header(char *buf, int buflen);
 char *split(char *str, int ch, char *buf, int buflen, int *result);
 void normalize_buffer(char *s);

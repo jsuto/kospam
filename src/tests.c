@@ -502,6 +502,49 @@ void test_extract_header_value() {
 }
 
 
+void test_find_boundary() {
+    TEST_HEADER();
+
+    TestCaseStrStr tests[] = {
+        {
+          "Content-Type: multipart/related;\n\ttype=\"multipart/alternative\";\n\tboundary=\"----=_NextPart_000_0006_01DB83DC.F2F8B170\"",
+          "----=_NextPart_000_0006_01DB83DC.F2F8B170"
+        },
+        {
+          "Content-Type: multipart/mixed;\n boundary=\"=_2a783a452f34e0518b182acda6816269\"",
+          "=_2a783a452f34e0518b182acda6816269"
+        },
+        {
+          "Content-Type: multipart/mixed;\n boundary=ABCDEFGHIJKLMN",
+          "ABCDEFGHIJKLMN"
+        },
+        {
+          "Content-Type: multipart/mixed;\n boundary = ABCDEFGHIJKLMN",
+          "ABCDEFGHIJKLMN"
+        },
+        {
+          "Content-Type: multipart/alternative;\n	boundary = \"b1_a86b98916f9be6b9f74a46efce10b359\"",
+          "b1_a86b98916f9be6b9f74a46efce10b359"
+        },
+        {
+          "Content-Type: multipart/alternative;\n  boundary=3D\"b1_52b92b01a943615aff28b7f4d2f2d69d\"",
+          "b1_52b92b01a943615aff28b7f4d2f2d69d"
+        },
+    };
+
+    int num_tests = sizeof(tests) / sizeof(TestCaseStrStr);
+
+    for (int i = 0; i < num_tests; i++) {
+        char s[SMALLBUFSIZE];
+        find_boundary((char *)tests[i].input, s, sizeof(s));
+        //printf("s=%s\n", s);
+        ASSERT(strcmp(s, tests[i].expected) == 0, tests[i].input);
+    }
+
+    TEST_FOOTER();
+}
+
+
 int main() {
     cfg = read_config("../tests/kospam.conf");
 
@@ -522,4 +565,5 @@ int main() {
     test_extract_name_from_headers();
     test_fixup_encoded_header();
     test_extract_header_value();
+    test_find_boundary();
 }

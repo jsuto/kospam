@@ -1,26 +1,17 @@
-clapf is an open source email content filter application.
+kospam is an open source email content filter application
 
 Features:
 
-- statistical (inverse chi-square) antispam modul
-- supports several antivirus products, including ClamAV
-- URI blacklist
+- statistical (inverse chi-square) antispam module
 - email black-, and whitelists
 - zombie detection
-- web user interface (ui) written in PHP for easy administration
-- web based quarantine
-- LDAP support
-- virtual users
-- policies
-- memcached support
-- trap email addresses (blackhole)
+- trap email addresses (minefield)
 
-clapf can be used as an after queue content filter with Postfix
+kospam can be used as an after queue content filter with Postfix
 (including as an appliance) and Exim or via the maildrop local
 delivery agent (LDA).
 
-Mailing list: clapf-users+subscribe@lists.acts.hu
-Archive: http://www.mail-archive.com/clapf-users@lists.acts.hu/
 
-You may find the installation instructions, usage, manuals, license,
-and many more at http://clapf.org/
+History:
+
+Kospam is a reboot of the previous clapf project

@@ -30,9 +30,7 @@ int check_spam(struct session_data *sdata, MYSQL *conn, struct parser_state *sta
 
    sdata->spaminess = DEFAULT_SPAMICITY;
 
-   int spaminessbuf_size_left = sizeof(sdata->spaminessbuf)-2;
-   snprintf(sdata->spaminessbuf, spaminessbuf_size_left, "%s%s\r\n", HEADER_KOSPAM_WATERMARK, sdata->ttmpfile);
-   spaminessbuf_size_left -= strlen(sdata->spaminessbuf);
+   snprintf(sdata->spaminessbuf, sizeof(sdata->spaminessbuf)-1, "%s%s\r\n", HEADER_KOSPAM_WATERMARK, sdata->ttmpfile);
 
    /*
     * Handle a training request
@@ -140,16 +138,14 @@ int check_spam(struct session_data *sdata, MYSQL *conn, struct parser_state *sta
          syslog(LOG_PRIORITY, "%s: training on a blackhole message", sdata->ttmpfile);
       }
 
-      // TODO: revise if we could replace strncat
       char tmpbuf[SMALLBUFSIZE];
-      snprintf(tmpbuf, SMALLBUFSIZE-1, "%s%.4f\r\n", cfg->clapf_header_field, sdata->spaminess);
-      strncat(sdata->spaminessbuf, tmpbuf, spaminessbuf_size_left);
-      spaminessbuf_size_left -= strlen(tmpbuf);
-
       if(sdata->spaminess >= cfg->spam_overall_limit) {
-         strncat(sdata->spaminessbuf, cfg->clapf_spam_header_field, spaminessbuf_size_left);
-         spaminessbuf_size_left -= strlen(cfg->clapf_spam_header_field);
+         snprintf(tmpbuf, SMALLBUFSIZE-1, "%s%s%.4f\r\n%s", sdata->spaminessbuf, cfg->kospam_header_field, sdata->spaminess, cfg->kospam_spam_header_field);
+      } else {
+         snprintf(tmpbuf, SMALLBUFSIZE-1, "%s%s%.4f\r\n", sdata->spaminessbuf, cfg->kospam_header_field, sdata->spaminess);
       }
+
+      snprintf(sdata->spaminessbuf, sizeof(sdata->spaminessbuf)-1, "%s", tmpbuf);
    }
    else {
       syslog(LOG_PRIORITY, "%s: skipping spam check, size: %d/%d, tokens: %d", sdata->ttmpfile, sdata->tot_len, cfg->max_message_size_to_filter, state->n_token);

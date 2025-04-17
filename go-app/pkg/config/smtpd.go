@@ -11,7 +11,6 @@ import (
 
 type SmtpdConfig struct {
     Acl             string
-    EnvelopeDir     string
     Hostname        string
     ListenAddr      string
     MaxLineLength   int

@@ -27,7 +27,6 @@ const syslogId = "kospam/smtpd"
 
 type Backend struct{
     acl []acl.CIDRRule;
-    envelopeDir string;
     queueDir string;
     numWorkers int;
 }
@@ -62,7 +61,6 @@ func (b *Backend) NewSession(c *smtp.Conn) (smtp.Session, error) {
     }
 
     return &Session{
-        envelopeDir: b.envelopeDir,
         queueDir: b.queueDir,
         numWorkers: b.numWorkers,
         },
@@ -80,7 +78,6 @@ type Session struct{
     numWorkers int
     queueID string
     queueDir string
-    envelopeDir string
     mailFrom string
     rcptTo []string
     xforward Xforward
@@ -207,7 +204,6 @@ func main() {
 
     backend := &Backend{
         acl: acl.LoadACL(config.Acl),
-        envelopeDir: config.EnvelopeDir,
         queueDir: config.QueueDir,
         numWorkers: config.NumWorkers,
     }

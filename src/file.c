@@ -96,7 +96,7 @@ int fix_message_file(struct session_data *sdata, struct config *cfg) {
     memset(headerbuf, 0, sizeof(headerbuf));
     int headerbuf_pos = 0;
 
-    int spaminess_header_len = strlen(cfg->clapf_header_field);
+    int spaminess_header_len = strlen(cfg->kospam_header_field);
 
     int i = 0;
 
@@ -118,7 +118,7 @@ int fix_message_file(struct session_data *sdata, struct config *cfg) {
           }
        }
        else {
-          if(strncmp(v, cfg->clapf_header_field, spaminess_header_len) == 0) {
+          if(strncmp(v, cfg->kospam_header_field, spaminess_header_len) == 0) {
              my_header = 1;
              add_to_header = 0;
           }

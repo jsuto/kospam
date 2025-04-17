@@ -101,10 +101,10 @@ $lopts = array(
                'password:',
                'verbose'
          );
-    
+
 if($options = getopt($opts, $lopts)) {
 
-    if(isset($options['dir'])) { 
+    if(isset($options['dir'])) {
         $history_dir = $options['dir'];
     }
 
@@ -128,7 +128,7 @@ if($options = getopt($opts, $lopts)) {
         die("you must specify --password <password>\n");
     }
 
-    if(isset($options['h'])) { 
+    if(isset($options['h'])) {
         display_help();
         exit;
     }
@@ -237,7 +237,7 @@ function processdir($dir = '', $db = '') {
                unlink($filename);
             }
 
-         }         
+         }
       }
 
       closedir($dh);

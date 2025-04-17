@@ -28,20 +28,18 @@ create table if not exists blacklist (
 
 create table if not exists history (
    id bigint unsigned not null auto_increment,
-   clapf_id char(36) not null,
+   kospam_id char(24) not null,
    ts int unsigned not null,
    spam tinyint default 0,
    sender varchar(128) default null,
    subject tinyblob default null,
    size int default 0,
-   hidden tinyint default 0,
    key (id)
 ) ENGINE=InnoDB PARTITION BY RANGE (ts) ( PARTITION p0 VALUES LESS THAN (1) );
 
-create index history_idx1 on history(clapf_id);
-create index history_idx2 on history(hidden);
-create index history_idx3 on history(ts);
-create index history_idx4 on history(spam);
+create index history_idx1 on history(kospam_id);
+create index history_idx2 on history(ts);
+create index history_idx3 on history(spam);
 
 
 create table if not exists minefield (

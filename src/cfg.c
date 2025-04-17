@@ -45,8 +45,6 @@ struct _parse_rule config_parse_rules[] =
 {
 
    { "blackhole_email_list", "string", (void*) string_parser, offsetof(struct config, blackhole_email_list), "", MAXVAL-1},
-   { "clapf_header_field", "string", (void*) string_parser, offsetof(struct config, clapf_header_field), SPAMINESS_HEADER_FIELD, MAXVAL-1},
-   { "clapf_spam_header_field", "string", (void*) string_parser, offsetof(struct config, clapf_spam_header_field), "", MAXVAL-1},
    { "debug", "integer", (void*) int_parser, offsetof(struct config, debug), "0", sizeof(int)},
    { "enable_xforward", "string", (void*) string_parser, offsetof(struct config, enable_xforward), "false", MAXVAL-1},
    { "esf_h", "float", (void*) float_parser, offsetof(struct config, esf_h), "1.0", sizeof(float)},
@@ -54,6 +52,8 @@ struct _parse_rule config_parse_rules[] =
    { "exclusion_radius", "float", (void*) float_parser, offsetof(struct config, exclusion_radius), "0.375", sizeof(float)},
    { "history", "integer", (void*) int_parser, offsetof(struct config, history), "0", sizeof(int)},
    { "hostname", "string", (void*) string_parser, offsetof(struct config, hostname), HOSTNAME, MAXVAL-1},
+   { "kospam_header_field", "string", (void*) string_parser, offsetof(struct config, kospam_header_field), SPAMINESS_HEADER_FIELD, MAXVAL-1},
+   { "kospam_spam_header_field", "string", (void*) string_parser, offsetof(struct config, kospam_spam_header_field), "", MAXVAL-1},
    { "listen_addr", "string", (void*) string_parser, offsetof(struct config, listen_addr), "127.0.0.1:10025", MAXVAL-1},
    { "log_subject", "integer", (void*) int_parser, offsetof(struct config, log_subject), "0", sizeof(int)},
    { "locale", "string", (void*) string_parser, offsetof(struct config, locale), "", MAXVAL-1},
@@ -91,7 +91,7 @@ struct _parse_rule config_parse_rules[] =
    { "spam_overall_limit", "float", (void*) float_parser, offsetof(struct config, spam_overall_limit), "0.92", sizeof(float)},
    { "spam_subject_prefix", "string", (void*) string_parser, offsetof(struct config, spam_subject_prefix), "", MAXVAL-1},
    { "update_tokens", "integer", (void*) int_parser, offsetof(struct config, update_tokens), "1", sizeof(int)},
-   { "username", "string", (void*) string_parser, offsetof(struct config, username), "clapf", MAXVAL-1},
+   { "username", "string", (void*) string_parser, offsetof(struct config, username), "kospam", MAXVAL-1},
    { "verbosity", "integer", (void*) int_parser, offsetof(struct config, verbosity), "1", sizeof(int)},
    { "workdir", "string", (void*) string_parser, offsetof(struct config, workdir), WORK_DIR, MAXVAL-1},
 

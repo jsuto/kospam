@@ -9,8 +9,6 @@
 
 struct config {
    char blackhole_email_list[MAXVAL];
-   char clapf_header_field[MAXVAL];
-   char clapf_spam_header_field[MAXVAL];
    int debug;
    char enable_xforward[MAXVAL];
    float esf_h;
@@ -18,6 +16,8 @@ struct config {
    float exclusion_radius;
    int history;
    char hostname[MAXVAL];
+   char kospam_header_field[MAXVAL];
+   char kospam_spam_header_field[MAXVAL];
    char listen_addr[MAXVAL];
    char locale[MAXVAL];
    int log_subject;

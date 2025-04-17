@@ -18,7 +18,7 @@
 #define QUARANTINE_DIR DATADIR "/kospam/quarantine"
 #define ZOMBIE_NET_REGEX CONFDIR "/kospam/zombienets.regex"
 
-#define SPAMINESS_HEADER_FIELD "X-Clapf-spamicity: "
+#define SPAMINESS_HEADER_FIELD "X-Kospam-spamicity: "
 #define SPAM_HEADER_FIELD SPAMINESS_HEADER_FIELD "Yes"
 
 #define PIDFILE "/var/kospam/run/kospam.pid"
@@ -57,8 +57,8 @@
 
 #define SQL_PREPARED_STMT_QUERY_MINEFIELD "SELECT ts FROM " SQL_MINEFIELD_TABLE " WHERE ip=?"
 #define SQL_PREPARED_STMT_INSERT_INTO_MINEFIELD "REPLACE INTO " SQL_MINEFIELD_TABLE " (ip, ts) VALUES(?, ?)"
-#define SQL_PREPARED_STMT_INSERT_INTO_HISTORY "INSERT INTO " SQL_HISTORY_TABLE " (ts, clapf_id, spam, sender, subject, size) VALUES (?,?,?,?,?,?)"
-#define SQL_PREPARED_STMT_QUERY_TRAINING_ID "SELECT spam FROM " SQL_HISTORY_TABLE " WHERE clapf_id=?"
+#define SQL_PREPARED_STMT_INSERT_INTO_HISTORY "INSERT INTO " SQL_HISTORY_TABLE " (ts, kospam_id, spam, sender, subject, size) VALUES (?,?,?,?,?,?)"
+#define SQL_PREPARED_STMT_QUERY_TRAINING_ID "SELECT spam FROM " SQL_HISTORY_TABLE " WHERE kospam_id=?"
 #define SQL_PREPARED_STMT_QUERY_ADIGEST "SELECT counter FROM " SQL_ATTACH_DIGEST_TABLE " WHERE digest=?"
 #define SQL_PREPARED_STMT_UPDATE_ADIGEST "UPDATE " SQL_ATTACH_DIGEST_TABLE " SET counter=counter+1 WHERE digest=?"
 

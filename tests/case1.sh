@@ -23,7 +23,7 @@ send_emails() {
 }
 
 training() {
-   echo "insert into history (kospam_id, ts, spam) values ('40000000600790f3210ece8400cb72d324e3', 1744277737, 0)" | "${mysql_cmd[@]}"
+   echo "insert into history (kospam_id, ts, spam) values ('TS6ZEUXSRNOKJUZVP2M4XTQ5', 1744277737, 0)" | "${mysql_cmd[@]}"
 
    tokens_before_training="$( echo "select count(*) from token" | "${mysql_cmd[@]}" | tail -1 )"
    echo "Tokens before training: ${tokens_before_training}"

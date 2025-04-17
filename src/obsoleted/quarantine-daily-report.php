@@ -11,10 +11,10 @@ $lopts = array(
     'dry-run',
     'verbose'
     );
-    
+
 if($options = getopt($opts, $lopts)) {
 
-    if(isset($options['webui'])) { 
+    if(isset($options['webui'])) {
         $webuidir = $options['webui'];
     } else {
         echo("\nError: must provide path to WebUI directory\n\n");
@@ -26,7 +26,7 @@ if($options = getopt($opts, $lopts)) {
         $dry_run = 1;
     }
 
-    if(isset($options['h'])) { 
+    if(isset($options['h'])) {
         display_help();
         exit;
     }
@@ -38,7 +38,7 @@ if($options = getopt($opts, $lopts)) {
 }
 else {
     display_help();
-    exit;   
+    exit;
 }
 
 ini_set("session.save_path", "/tmp");

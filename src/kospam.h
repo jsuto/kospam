@@ -91,4 +91,6 @@ bool is_sender_on_minefield(MYSQL *conn, char *ip);
 
 int check_email_against_list(MYSQL *conn, char *table, char *email);
 
+bool has_known_bad_attachment(MYSQL *conn, struct session_data *sdata, struct Message *m);
+
 #endif /* _KOSPAM_H */

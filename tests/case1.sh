@@ -8,6 +8,8 @@ mysql_cmd=( docker exec -i "$CONTAINER" sh -c 'mariadb -h "$MYSQL_HOSTNAME" -u "
 send_emails() {
    echo "Sending emails"
 
+   echo "insert into attach_digest (digest) values('be2d9c8e1fee1123c60f367b286cd497585a0ddf57ea8d86a4df807defdefdf0'),('8964293eb4cd0aa049b9763566fbb8497eeac35decd6cfd2baa9fc5b9dfbf0a6'),('84e641b91ba52636b5013df6a1cc0937a0c4cec70bc7e8d9f2b93233d82afce9')" | "${mysql_cmd[@]}"
+
    "$SMTPTEST" -smtpaddr 127.0.0.1:22225 -dir "$EML_DIR"
 
    docker exec "$SYSLOG_HOST" tail -20 /var/log/mail.log
@@ -40,6 +42,8 @@ start_containers "docker-compose.yaml" "$CONTAINER"
 
 send_emails
 training
+
+count_malwares
 
 print_errors
 

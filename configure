@@ -3703,7 +3703,7 @@ echo "#define DISTRO \"${DISTRO:-unknown}\"" >> $CONFIGURE_PARAMS_FILE
 echo "#define ARCH \"${ARCH:-amd64}\"" >> $CONFIGURE_PARAMS_FILE
 
 
-SUBDIRS="src etc util zombie"
+SUBDIRS="src etc util"
 
 
 
@@ -4579,7 +4579,7 @@ echo; echo
 CFLAGS="-std=c99 -O2 -fPIC -Wall -Wextra -Wimplicit-fallthrough=2 ${GGDB3} -Wuninitialized -Wno-format-truncation"
 LIBS="$antispam_libs"
 
-ac_config_files="$ac_config_files Makefile src/Makefile etc/Makefile util/Makefile zombie/Makefile"
+ac_config_files="$ac_config_files Makefile src/Makefile etc/Makefile util/Makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -5271,7 +5271,6 @@ do
     "src/Makefile") CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
     "etc/Makefile") CONFIG_FILES="$CONFIG_FILES etc/Makefile" ;;
     "util/Makefile") CONFIG_FILES="$CONFIG_FILES util/Makefile" ;;
-    "zombie/Makefile") CONFIG_FILES="$CONFIG_FILES zombie/Makefile" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac

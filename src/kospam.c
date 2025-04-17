@@ -49,11 +49,8 @@ void process_email(char *filename, MYSQL *conn, int size){
 
    if (cfg.verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "DEBUG: %s: hostname=%s, ip=%s", sdata.ttmpfile, parser_state.hostname, parser_state.ip);
 
-   // TODO: virus check
 
-   //char virusinfo[SMALLBUFSIZE];
-   //sdata->rav = check_for_known_bad_attachments(sdata, &parser_state);
-   //if(sdata->rav == AVIR_VIRUS) snprintf(virusinfo, sizeof(virusinfo)-1, "MARKED.AS.MALWARE");
+   bool malware = has_known_bad_attachment(conn, &sdata, &m);
 
    if (cfg.mynetwork[0] && is_item_on_list(parser_state.ip, cfg.mynetwork)) {
        syslog(LOG_PRIORITY, "%s: client ip (%s) on mynetwork", sdata.ttmpfile, parser_state.ip);
@@ -80,7 +77,11 @@ void process_email(char *filename, MYSQL *conn, int size){
 
       // Update counters
 
-      if(sdata.spaminess >= cfg.spam_overall_limit){
+      if (malware) {
+         sdata.status = S_VIRUS;
+         counters.c_virus++;
+         snprintf(status, sizeof(status)-1, "MALWARE");
+      }  else if(sdata.spaminess >= cfg.spam_overall_limit){
          sdata.status = S_SPAM;
          counters.c_spam++;
          snprintf(status, sizeof(status)-1, "SPAM");

@@ -70,5 +70,5 @@ insert into counter values(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
 create table if not exists attach_digest (
    digest char(64) unique not null,
-   counter int default 1
+   counter bigint default 1
 ) Engine=InnoDB;

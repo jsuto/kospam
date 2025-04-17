@@ -73,6 +73,7 @@
 
 #define S_HAM 0
 #define S_SPAM 1
+#define S_VIRUS 2
 
 #define ERR_CHDIR "ERROR: chdir() to working directory failed"
 #define ERR_DAEMON "ERROR: daemon()"

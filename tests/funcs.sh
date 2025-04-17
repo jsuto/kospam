@@ -117,6 +117,12 @@ start_containers() {
    docker compose -f "$compose_file" ps
 }
 
+count_malwares() {
+   echo "Counting malwares"
+
+   docker exec "$SYSLOG_HOST" grep -c result=MALWARE "/var/log/${LOGFILE}"
+}
+
 print_errors() {
    echo "Getting errors from mail.log"
    docker exec "$SYSLOG_HOST" grep -ri ERROR /var/log/mail.log || true

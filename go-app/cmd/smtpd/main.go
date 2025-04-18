@@ -57,6 +57,28 @@ type Session struct{
     xforward Xforward
 }
 
+func runBackgroundJob() {
+    // Create a ticker that ticks every 10 seconds
+    ticker := time.NewTicker(10 * time.Second)
+
+    // Run this loop forever (or until the ticker is stopped)
+    for {
+        select {
+        case <-ticker.C:
+            // This block executes every 10 seconds
+            performBackgroundTask()
+        }
+    }
+}
+
+func performBackgroundTask() {
+    // Log the queue size
+    counter, err := cache.GetQueueCounter(cacheCounterKey);
+    if err == nil {
+        log.Printf("queue size=%d", counter)
+    }
+}
+
 func (b *Backend) NewSession(c *smtp.Conn) (smtp.Session, error) {
     clientAddr := c.Conn().RemoteAddr().(*net.TCPAddr).IP
     log.Printf("connection from %s", clientAddr)
@@ -85,28 +107,6 @@ func (b *Backend) NewSession(c *smtp.Conn) (smtp.Session, error) {
         numWorkers: b.numWorkers,
         },
         nil
-}
-
-func runBackgroundJob() {
-    // Create a ticker that ticks every 10 seconds
-    ticker := time.NewTicker(10 * time.Second)
-
-    // Run this loop forever (or until the ticker is stopped)
-    for {
-        select {
-        case <-ticker.C:
-            // This block executes every 10 seconds
-            performBackgroundTask()
-        }
-    }
-}
-
-func performBackgroundTask() {
-    // Log the queue size
-    counter, err := cache.GetQueueCounter(cacheCounterKey);
-    if err == nil {
-        log.Printf("queue size=%d", counter)
-    }
 }
 
 func (s *Session) Xforward(opts *smtp.XforwardOptions) error {

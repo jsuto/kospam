@@ -216,7 +216,7 @@ func processQueue(config *config.SmtpdConfig) {
                     if sendEmail(config, email) {
                         os.Remove(email.FilePath)
                         if err := cache.UpdateQueueCounter(cacheCounterKey, -1); err != nil {
-                            log.Printf("Error updating incoming queue counter: %v", err)
+                            log.Printf("Error updating queue counter: %v", err)
                         }
 
                     } else {

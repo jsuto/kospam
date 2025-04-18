@@ -17,13 +17,17 @@ import (
     "github.com/jsuto/go-smtp"
 
     "kospam/smtpd/pkg/acl"
+    "kospam/smtpd/pkg/cache"
     "kospam/smtpd/pkg/config"
     "kospam/smtpd/pkg/utils"
     "kospam/smtpd/pkg/version"
 
 )
 
-const syslogId = "kospam/smtpd"
+const (
+    syslogId        = "kospam/smtpd"
+    cacheCounterKey = "kospam"
+)
 
 type Backend struct{
     acl []acl.CIDRRule;
@@ -36,6 +40,22 @@ var (
     showVersion = flag.Bool("version", false, "show version number, then exit")
     daemon = flag.Bool("daemon", false, "run in daemon mode")
 )
+
+type Xforward struct {
+    Name string
+    Addr string
+    Proto string
+    Helo string
+}
+
+type Session struct{
+    numWorkers int
+    queueID string
+    queueDir string
+    mailFrom string
+    rcptTo []string
+    xforward Xforward
+}
 
 func (b *Backend) NewSession(c *smtp.Conn) (smtp.Session, error) {
     clientAddr := c.Conn().RemoteAddr().(*net.TCPAddr).IP
@@ -67,20 +87,26 @@ func (b *Backend) NewSession(c *smtp.Conn) (smtp.Session, error) {
         nil
 }
 
-type Xforward struct {
-    Name string
-    Addr string
-    Proto string
-    Helo string
+func runBackgroundJob() {
+    // Create a ticker that ticks every 10 seconds
+    ticker := time.NewTicker(10 * time.Second)
+
+    // Run this loop forever (or until the ticker is stopped)
+    for {
+        select {
+        case <-ticker.C:
+            // This block executes every 10 seconds
+            performBackgroundTask()
+        }
+    }
 }
 
-type Session struct{
-    numWorkers int
-    queueID string
-    queueDir string
-    mailFrom string
-    rcptTo []string
-    xforward Xforward
+func performBackgroundTask() {
+    // Log the queue size
+    counter, err := cache.GetQueueCounter(cacheCounterKey);
+    if err == nil {
+        log.Printf("queue size=%d", counter)
+    }
 }
 
 func (s *Session) Xforward(opts *smtp.XforwardOptions) error {
@@ -146,6 +172,14 @@ func (s *Session) Data(r io.Reader) error {
 
     log.Printf("%s: from=%s, to=%s, size=%d", s.queueID, s.mailFrom, recipients, bytesWritten)
 
+    // Only increment the counter if it's not a training message
+    // because kospamd doesn't support redis at the moment
+    if strings.Index(recipients, "ham@") == -1 && strings.Index(recipients, "spam@") == -1 {
+        if err := cache.UpdateQueueCounter(cacheCounterKey, 1); err != nil {
+            log.Printf("Error updating incoming queue counter: %v", err)
+        }
+    }
+
     return nil
 }
 
@@ -201,6 +235,8 @@ func main() {
     }
 
     createDirs(config)
+
+    go runBackgroundJob()
 
     backend := &Backend{
         acl: acl.LoadACL(config.Acl),

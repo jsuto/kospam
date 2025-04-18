@@ -14,25 +14,20 @@ import (
     "sync"
     "time"
 
+    "kospam/smtpd/pkg/cache"
     "kospam/smtpd/pkg/config"
     "kospam/smtpd/pkg/utils"
     "kospam/smtpd/pkg/version"
-
 )
 
-const queueDir = "/var/kospam/send"
-const errorDir = "/var/kospam/send-error"
-const maxConcurrency = 10
-const scanInterval = 5 * time.Second
-const syslogId = "kospam/send"
-
-type Email struct {
-    QueueId  string
-    Sender   string
-    Rcpt     []string
-    FilePath string
-    Content  string
-}
+const (
+    cacheCounterKey = "kospam"
+    queueDir = "/var/kospam/send"
+    errorDir = "/var/kospam/send-error"
+    maxConcurrency = 10
+    scanInterval = 5 * time.Second
+    syslogId = "kospam/send"
+)
 
 var (
     configfile = flag.String("config", "/etc/kospam/kospam.conf", "config file to use")
@@ -41,6 +36,14 @@ var (
 
     dotStart = regexp.MustCompile(`(?m)^(\.)`)
 )
+
+type Email struct {
+    QueueId  string
+    Sender   string
+    Rcpt     []string
+    FilePath string
+    Content  string
+}
 
 func parseEmailFile(filename string) (string, []string, string, error) {
     data, err := os.ReadFile(filename)
@@ -212,6 +215,10 @@ func processQueue(config *config.SmtpdConfig) {
                     defer wg.Done()
                     if sendEmail(config, email) {
                         os.Remove(email.FilePath)
+                        if err := cache.UpdateQueueCounter(cacheCounterKey, -1); err != nil {
+                            log.Printf("Error updating queue counter: %v", err)
+                        }
+
                     } else {
                         destPath := filepath.Join(errorDir, filepath.Base(email.FilePath))
                         os.Rename(email.FilePath, destPath)

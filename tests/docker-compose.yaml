@@ -44,6 +44,15 @@ services:
     volumes:
       - syslog_kospam:/var/log
 
+  valkey:
+    image: valkey/valkey:8-alpine
+    container_name: valkey.kospam
+    <<: *networks
+    command: >
+      valkey-server --maxmemory 64mb --maxmemory-policy allkeys-lru
+    volumes:
+      - valkey_kospam:/data
+
   kospam:
     image: sutoj/kospam:test
     container_name: kospam
@@ -56,6 +65,7 @@ services:
       - MYSQL_PASSWORD=kospam123
       - MYSQL_ROOT_PASSWORD=abcde123
       - MYSQL_DUMP=/kospam.sql.gz
+      - REDIS_ADDR=valkey.kospam:6379
     volumes:
       - ./11-aaaa.conf:/etc/rsyslog.d/11-aaaa.conf:ro
       - ./kospam.conf:/etc/kospam/kospam.conf
@@ -72,10 +82,12 @@ services:
       - "mysql"
       - "postfix"
       - "syslog"
+      - "valkey"
 
 volumes:
   db_data_kospam: {}
   syslog_kospam: {}
+  valkey_kospam: {}
 
 networks:
   kospam:

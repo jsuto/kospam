@@ -87,4 +87,4 @@ postlog   unix-dgram n  -       n       -       1       postlogd
    -o smtpd_client_restrictions=
    -o smtpd_sender_restrictions=
    -o smtpd_recipient_restrictions=permit_mynetworks,reject
-   -o mynetworks=172.18.0.0/16
+   -o mynetworks=172.16.0.0/14,172.20.0.0/16

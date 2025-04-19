@@ -51,7 +51,7 @@ int check_spam(struct session_data *sdata, MYSQL *conn, struct parser_state *sta
     */
 
    if(sdata->mynetwork == 1){
-      if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "INFO: %s: mynetwork: %s", sdata->ttmpfile, state->ip);
+      if(cfg->verbosity >= _LOG_DEBUG) syslog(LOG_PRIORITY, "%s: mynetwork: %s", sdata->ttmpfile, state->ip);
       return MESSAGE_OK;
    }
 
@@ -62,14 +62,14 @@ int check_spam(struct session_data *sdata, MYSQL *conn, struct parser_state *sta
 
    if (check_email_against_list(conn, SQL_WHITE_LIST, state->envelope_from)) {
       sdata->spaminess = 0.01;
-      syslog(LOG_PRIORITY, "INFO: %s: sender %s found on whitelist", sdata->ttmpfile, state->envelope_from);
+      syslog(LOG_PRIORITY, "%s: sender %s found on whitelist", sdata->ttmpfile, state->envelope_from);
       return MESSAGE_OK;
    }
 
 
    if (check_email_against_list(conn, SQL_BLACK_LIST, state->envelope_from)) {
       sdata->spaminess = 0.99;
-      syslog(LOG_PRIORITY, "INFO: %s: sender %s found on blacklist", sdata->ttmpfile, state->envelope_from);
+      syslog(LOG_PRIORITY, "%s: sender %s found on blacklist", sdata->ttmpfile, state->envelope_from);
       return MESSAGE_OK;
    }
 
@@ -95,12 +95,12 @@ int check_spam(struct session_data *sdata, MYSQL *conn, struct parser_state *sta
          sdata->spaminess = 0.99;
 
          if(cfg->message_from_a_zombie == 1){
-            syslog(LOG_PRIORITY, "INFO: %s: marking message from a zombie as spam", sdata->ttmpfile);
+            syslog(LOG_PRIORITY, "%s: marking message from a zombie as spam", sdata->ttmpfile);
             return MESSAGE_OK;
          }
 
          if(cfg->message_from_a_zombie == 2){
-            syslog(LOG_PRIORITY, "INFO: %s: dropping message from a zombie (%s) as spam", sdata->ttmpfile, state->hostname);
+            syslog(LOG_PRIORITY, "%s: dropping message from a zombie (%s) as spam", sdata->ttmpfile, state->hostname);
             return MESSAGE_DISCARD;
          }
       }
@@ -110,7 +110,7 @@ int check_spam(struct session_data *sdata, MYSQL *conn, struct parser_state *sta
    // Don't run spam check if we found our signo in the bounced message
 
    if (state->need_signo_check == 1 && state->found_our_signo == 1) {
-      syslog(LOG_PRIORITY, "INFO: %s: bounce message, found our signo", sdata->ttmpfile);
+      syslog(LOG_PRIORITY, "%s: bounce message, found our signo", sdata->ttmpfile);
       return MESSAGE_OK;
    }
 

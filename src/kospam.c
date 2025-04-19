@@ -64,7 +64,7 @@ void process_email(char *filename, MYSQL *conn, int size){
        gettimeofday(&tv2, &tz);
        sdata.__minefield = tvdiff(tv2, tv1);
 
-       syslog(LOG_PRIORITY, "INFO: %s: we trapped %s on the blackhole", sdata.ttmpfile, parser_state.ip);
+       syslog(LOG_PRIORITY, "%s: we trapped %s on the blackhole", sdata.ttmpfile, parser_state.ip);
    }
 
 

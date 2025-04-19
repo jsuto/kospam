@@ -71,7 +71,10 @@ check_database() {
    fi
 }
 
-rsyslogd
+if [ ! -f /dev/log ]; then
+   log "No /dev/log in the container, starting rsyslogd"
+   rsyslogd
+fi
 
 if [ ! -f "$PEMFILE" ]; then
    create_pem_file "$PEMFILE" "$CERT_SUBJECT"

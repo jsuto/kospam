@@ -47,6 +47,7 @@ services:
   valkey:
     image: valkey/valkey:8-alpine
     container_name: valkey.kospam
+    restart: unless-stopped
     <<: *networks
     command: >
       valkey-server --maxmemory 64mb --maxmemory-policy allkeys-lru
@@ -56,6 +57,7 @@ services:
   kospam:
     image: sutoj/kospam:test
     container_name: kospam
+    restart: unless-stopped
     init: true
     <<: *networks
     environment:

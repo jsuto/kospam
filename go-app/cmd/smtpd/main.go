@@ -58,8 +58,8 @@ type Session struct{
 }
 
 func runBackgroundJob() {
-    // Create a ticker that ticks every 10 seconds
-    ticker := time.NewTicker(10 * time.Second)
+    // Create a ticker that ticks every 60 seconds
+    ticker := time.NewTicker(60 * time.Second)
 
     // Run this loop forever (or until the ticker is stopped)
     for {
